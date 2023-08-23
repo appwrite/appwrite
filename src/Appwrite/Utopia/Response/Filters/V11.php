@@ -42,7 +42,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseFunctionsList($content);
                 break;
 
-            // Convert status from boolean to int
+                // Convert status from boolean to int
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseStatus($content);
                 break;
@@ -50,7 +50,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseUserList($content);
                 break;
 
-            // Convert all Health responses back to original
+                // Convert all Health responses back to original
             case Response::MODEL_HEALTH_STATUS:
                 $parsedResponse = $this->parseHealthStatus($content);
                 break;
@@ -67,7 +67,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseHealthAntivirus($content);
                 break;
 
-            // Complex filters
+                // Complex filters
             case Response::MODEL_COLLECTION:
                 $parsedResponse = $this->parseCollection($content);
                 break;
@@ -101,6 +101,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parsePermissions($document);
         }
         $content['documents'] = $parsedResponse;
+
         return $content;
     }
 
@@ -112,6 +113,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parsePermissions($file);
         }
         $content['files'] = $parsedResponse;
+
         return $content;
     }
 
@@ -123,6 +125,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseExecutionPermissions($execution);
         }
         $content['executions'] = $parsedResponse;
+
         return $content;
     }
 
@@ -134,6 +137,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseFunctionPermissions($function);
         }
         $content['functions'] = $parsedResponse;
+
         return $content;
     }
 
@@ -145,6 +149,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseStatus($user);
         }
         $content['users'] = $parsedResponse;
+
         return $content;
     }
 
@@ -159,6 +164,7 @@ class V11 extends Filter
         $parsedResponse = $this->addDate($content, 'dateCreated');
         $parsedResponse = $this->addDate($content, 'dateUpdated');
         $parsedResponse = $this->parseAttributes($content);
+
         return $parsedResponse;
     }
 
@@ -170,6 +176,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseCollection($collection);
         }
         $content['collections'] = $parsedResponse;
+
         return $content;
     }
 
@@ -181,6 +188,7 @@ class V11 extends Filter
         $parsedResponse = $this->removeRule($content, 'userName');
         $parsedResponse = $this->removeRule($content, 'mode');
         $parsedResponse = $this->removeRule($content, 'sum');
+
         return $parsedResponse;
     }
 
@@ -192,6 +200,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseLog($log);
         }
         $content['logs'] = $parsedResponse;
+
         return $content;
     }
 
@@ -203,6 +212,7 @@ class V11 extends Filter
         $parsedResponse = $this->parseOAuths($content);
         $parsedResponse = $this->parseAuthsStatus($content);
         $parsedResponse = $this->removeServicesStatus($content);
+
         return $parsedResponse;
     }
 
@@ -214,6 +224,7 @@ class V11 extends Filter
             $parsedResponse[] = $this->parseProject($project);
         }
         $content['projects'] = $parsedResponse;
+
         return $content;
     }
 
@@ -247,7 +258,6 @@ class V11 extends Filter
 
         return $content;
     }
-
 
     protected function parseHealthQueue(array $content)
     {
@@ -303,15 +313,15 @@ class V11 extends Filter
 
     protected function parseOAuths(array $content)
     {
-        $regexPattern = "/provider([a-zA-Z0-9]+)(Appid|Secret)/";
+        $regexPattern = '/provider([a-zA-Z0-9]+)(Appid|Secret)/';
 
         foreach ($content as $key => $value) {
             \preg_match_all($regexPattern, $key, $regexGroups);
             if (\count($regexGroups[1]) > 0 && \count($regexGroups[2]) > 0) {
                 $providerName = $regexGroups[1][0];
                 $valueKey = $regexGroups[2][0];
-                $content['usersOauth2' . $providerName . $valueKey] = $value;
-                unset($content['provider' . $providerName . $valueKey]);
+                $content['usersOauth2'.$providerName.$valueKey] = $value;
+                unset($content['provider'.$providerName.$valueKey]);
             }
         }
 
@@ -320,7 +330,7 @@ class V11 extends Filter
 
     protected function parseAuthsStatus(array $content)
     {
-        $regexPattern = "/auth([a-zA-Z0-9]+)/";
+        $regexPattern = '/auth([a-zA-Z0-9]+)/';
 
         foreach ($content as $key => $value) {
             \preg_match_all($regexPattern, $key, $regexGroups);
@@ -328,7 +338,7 @@ class V11 extends Filter
                 $providerName = $regexGroups[1][0];
 
                 $content[$providerName] = $value;
-                unset($content['auth' . $providerName]);
+                unset($content['auth'.$providerName]);
             }
         }
 
@@ -377,15 +387,16 @@ class V11 extends Filter
 
     protected function parsePermissions(array $content)
     {
-        $content['$permissions'] = [ 'read' => $content['$read'], 'write' => $content['$write'] ];
+        $content['$permissions'] = ['read' => $content['$read'], 'write' => $content['$write']];
         unset($content['$read']);
         unset($content['$write']);
+
         return $content;
     }
 
     protected function parseFunctionPermissions(array $content)
     {
-        $content['$permissions'] = [ 'execute' => $content['execute'] ];
+        $content['$permissions'] = ['execute' => $content['execute']];
         unset($content['execute']);
 
         return $content;
@@ -393,7 +404,7 @@ class V11 extends Filter
 
     protected function parseExecutionPermissions(array $content)
     {
-        $content['$permissions'] = [ 'read' => $content['$read'] ];
+        $content['$permissions'] = ['read' => $content['$read']];
         unset($content['$read']);
 
         return $content;

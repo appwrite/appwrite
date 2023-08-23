@@ -5,11 +5,9 @@
  *
  * Initializes both Appwrite API entry point, queue workers, and CLI tasks.
  * Set configuration, framework resources & app constants
- *
  */
-
-if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
-    require_once __DIR__ . '/../vendor/autoload.php';
+if (\file_exists(__DIR__.'/../vendor/autoload.php')) {
+    require_once __DIR__.'/../vendor/autoload.php';
 }
 
 ini_set('memory_limit', '512M');
@@ -18,41 +16,54 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone;
-use Appwrite\Event\Delete;
+use Appwrite\Event\Usage;
+use Appwrite\Extend\Exception;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOProxy;
 use Utopia\App;
-use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
+use Utopia\Locale\Locale;
+use Utopia\Logger\Logger;
 use Utopia\Messaging\Adapters\SMS\Mock;
-use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
+use Utopia\Queue;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -61,22 +72,9 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
-use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
-use Appwrite\Event\Func;
-use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Database\PDOProxy;
-use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
-use Utopia\Validator\Range;
 use Utopia\Validator\IP;
+use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
@@ -84,7 +82,7 @@ const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
 const APP_EMAIL_TEAM = 'team@localhost.test'; // Default email address
 const APP_EMAIL_SECURITY = ''; // Default security email address
-const APP_USERAGENT = APP_NAME . '-Server v%s. Please report abuse at %s';
+const APP_USERAGENT = APP_NAME.'-Server v%s. Please report abuse at %s';
 const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
@@ -162,7 +160,7 @@ const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
-const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
+const DELETE_TYPE_CACHE_BY_RESOURCE = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
@@ -184,7 +182,7 @@ const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
-const METRIC_SESSIONS  = 'sessions';
+const METRIC_SESSIONS = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
 const METRIC_DATABASE_ID_COLLECTIONS = '{databaseInternalId}.collections';
@@ -192,28 +190,28 @@ const METRIC_DOCUMENTS = 'documents';
 const METRIC_DATABASE_ID_DOCUMENTS = '{databaseInternalId}.documents';
 const METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS = '{databaseInternalId}.{collectionInternalId}.documents';
 const METRIC_BUCKETS = 'buckets';
-const METRIC_FILES  = 'files';
-const METRIC_FILES_STORAGE  = 'files.storage';
+const METRIC_FILES = 'files';
+const METRIC_FILES_STORAGE = 'files.storage';
 const METRIC_BUCKET_ID_FILES = '{bucketInternalId}.files';
-const METRIC_BUCKET_ID_FILES_STORAGE  = '{bucketInternalId}.files.storage';
-const METRIC_FUNCTIONS  = 'functions';
-const METRIC_DEPLOYMENTS  = 'deployments';
-const METRIC_DEPLOYMENTS_STORAGE  = 'deployments.storage';
-const METRIC_BUILDS  = 'builds';
-const METRIC_BUILDS_STORAGE  = 'builds.storage';
-const METRIC_BUILDS_COMPUTE  = 'builds.compute';
-const METRIC_FUNCTION_ID_BUILDS  = '{functionInternalId}.builds';
+const METRIC_BUCKET_ID_FILES_STORAGE = '{bucketInternalId}.files.storage';
+const METRIC_FUNCTIONS = 'functions';
+const METRIC_DEPLOYMENTS = 'deployments';
+const METRIC_DEPLOYMENTS_STORAGE = 'deployments.storage';
+const METRIC_BUILDS = 'builds';
+const METRIC_BUILDS_STORAGE = 'builds.storage';
+const METRIC_BUILDS_COMPUTE = 'builds.compute';
+const METRIC_FUNCTION_ID_BUILDS = '{functionInternalId}.builds';
 const METRIC_FUNCTION_ID_BUILDS_STORAGE = '{functionInternalId}.builds.storage';
-const METRIC_FUNCTION_ID_BUILDS_COMPUTE  = '{functionInternalId}.builds.compute';
-const METRIC_FUNCTION_ID_DEPLOYMENTS  = '{resourceType}.{resourceInternalId}.deployments';
-const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE  = '{resourceType}.{resourceInternalId}.deployments.storage';
-const METRIC_EXECUTIONS  = 'executions';
-const METRIC_EXECUTIONS_COMPUTE  = 'executions.compute';
-const METRIC_FUNCTION_ID_EXECUTIONS  = '{functionInternalId}.executions';
-const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.compute';
-const METRIC_NETWORK_REQUESTS  = 'network.requests';
-const METRIC_NETWORK_INBOUND  = 'network.inbound';
-const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+const METRIC_FUNCTION_ID_BUILDS_COMPUTE = '{functionInternalId}.builds.compute';
+const METRIC_FUNCTION_ID_DEPLOYMENTS = '{resourceType}.{resourceInternalId}.deployments';
+const METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE = '{resourceType}.{resourceInternalId}.deployments.storage';
+const METRIC_EXECUTIONS = 'executions';
+const METRIC_EXECUTIONS_COMPUTE = 'executions.compute';
+const METRIC_FUNCTION_ID_EXECUTIONS = '{functionInternalId}.executions';
+const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE = '{functionInternalId}.executions.compute';
+const METRIC_NETWORK_REQUESTS = 'network.requests';
+const METRIC_NETWORK_INBOUND = 'network.inbound';
+const METRIC_NETWORK_OUTBOUND = 'network.outbound';
 
 $register = new Registry();
 
@@ -222,42 +220,42 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 /*
  * ENV vars
  */
-Config::load('events', __DIR__ . '/config/events.php');
-Config::load('auth', __DIR__ . '/config/auth.php');
-Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('authProviders', __DIR__ . '/config/authProviders.php');
-Config::load('platforms', __DIR__ . '/config/platforms.php');
-Config::load('collections', __DIR__ . '/config/collections.php');
-Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('usage', __DIR__ . '/config/usage.php');
-Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
-Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
-Config::load('services', __DIR__ . '/config/services.php');  // List of services
-Config::load('variables', __DIR__ . '/config/variables.php');  // List of env variables
-Config::load('regions', __DIR__ . '/config/regions.php'); // List of available regions
-Config::load('avatar-browsers', __DIR__ . '/config/avatars/browsers.php');
-Config::load('avatar-credit-cards', __DIR__ . '/config/avatars/credit-cards.php');
-Config::load('avatar-flags', __DIR__ . '/config/avatars/flags.php');
-Config::load('locale-codes', __DIR__ . '/config/locale/codes.php');
-Config::load('locale-currencies', __DIR__ . '/config/locale/currencies.php');
-Config::load('locale-eu', __DIR__ . '/config/locale/eu.php');
-Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
-Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
-Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
-Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
-Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
-Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
-Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
-Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
-Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-Config::load('messagingProviders', __DIR__ . '/config/messagingProviders.php');
+Config::load('events', __DIR__.'/config/events.php');
+Config::load('auth', __DIR__.'/config/auth.php');
+Config::load('errors', __DIR__.'/config/errors.php');
+Config::load('authProviders', __DIR__.'/config/authProviders.php');
+Config::load('platforms', __DIR__.'/config/platforms.php');
+Config::load('collections', __DIR__.'/config/collections.php');
+Config::load('runtimes', __DIR__.'/config/runtimes.php');
+Config::load('usage', __DIR__.'/config/usage.php');
+Config::load('roles', __DIR__.'/config/roles.php');  // User roles and scopes
+Config::load('scopes', __DIR__.'/config/scopes.php');  // User roles and scopes
+Config::load('services', __DIR__.'/config/services.php');  // List of services
+Config::load('variables', __DIR__.'/config/variables.php');  // List of env variables
+Config::load('regions', __DIR__.'/config/regions.php'); // List of available regions
+Config::load('avatar-browsers', __DIR__.'/config/avatars/browsers.php');
+Config::load('avatar-credit-cards', __DIR__.'/config/avatars/credit-cards.php');
+Config::load('avatar-flags', __DIR__.'/config/avatars/flags.php');
+Config::load('locale-codes', __DIR__.'/config/locale/codes.php');
+Config::load('locale-currencies', __DIR__.'/config/locale/currencies.php');
+Config::load('locale-eu', __DIR__.'/config/locale/eu.php');
+Config::load('locale-languages', __DIR__.'/config/locale/languages.php');
+Config::load('locale-phones', __DIR__.'/config/locale/phones.php');
+Config::load('locale-countries', __DIR__.'/config/locale/countries.php');
+Config::load('locale-continents', __DIR__.'/config/locale/continents.php');
+Config::load('locale-templates', __DIR__.'/config/locale/templates.php');
+Config::load('storage-logos', __DIR__.'/config/storage/logos.php');
+Config::load('storage-mimes', __DIR__.'/config/storage/mimes.php');
+Config::load('storage-inputs', __DIR__.'/config/storage/inputs.php');
+Config::load('storage-outputs', __DIR__.'/config/storage/outputs.php');
+Config::load('messagingProviders', __DIR__.'/config/messagingProviders.php');
 
 $user = App::getEnv('_APP_REDIS_USER', '');
 $pass = App::getEnv('_APP_REDIS_PASS', '');
-if (!empty($user) || !empty($pass)) {
-    Resque::setBackend('redis://' . $user . ':' . $pass . '@' . App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
+if (! empty($user) || ! empty($pass)) {
+    Resque::setBackend('redis://'.$user.':'.$pass.'@'.App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 } else {
-    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
+    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '').':'.App::getEnv('_APP_REDIS_PORT', ''));
 }
 
 /**
@@ -313,8 +311,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
@@ -437,7 +434,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -451,7 +448,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -493,7 +490,7 @@ Database::addFilter(
             return null;
         }
         $value = json_decode($value, true);
-        $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
+        $key = App::getEnv('_APP_OPENSSL_KEY_V'.$value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
     }
@@ -506,11 +503,11 @@ Database::addFilter(
             $user->getId(),
             $user->getAttribute('email', ''),
             $user->getAttribute('name', ''),
-            $user->getAttribute('phone', '')
+            $user->getAttribute('phone', ''),
         ];
 
         foreach ($user->getAttribute('labels', []) as $label) {
-            $searchValues[] = 'label:' . $label;
+            $searchValues[] = 'label:'.$label;
         }
 
         $search = implode(' ', \array_filter($searchValues));
@@ -528,7 +525,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -542,7 +539,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        $provider = Authorization::skip(fn() => $database
+        $provider = Authorization::skip(fn () => $database
             ->findOne('providers', [
                 Query::equal('$id', [$document->getAttribute('providerId')]),
                 Query::select(['type']),
@@ -551,6 +548,7 @@ Database::addFilter(
         if ($provider) {
             return $provider->getAttribute('type');
         }
+
         return null;
     }
 );
@@ -568,6 +566,7 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_DATETIME, function () {
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_ENUM, function ($attribute) {
     $elements = $attribute['formatOptions']['elements'];
+
     return new WhiteList($elements, true);
 }, Database::VAR_STRING);
 
@@ -582,12 +581,14 @@ Structure::addFormat(APP_DATABASE_ATTRIBUTE_URL, function () {
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_INT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
+
     return new Range($min, $max, Range::TYPE_INTEGER);
 }, Database::VAR_INTEGER);
 
 Structure::addFormat(APP_DATABASE_ATTRIBUTE_FLOAT_RANGE, function ($attribute) {
     $min = $attribute['formatOptions']['min'] ?? -INF;
     $max = $attribute['formatOptions']['max'] ?? INF;
+
     return new Range($min, $max, Range::TYPE_FLOAT);
 }, Database::VAR_FLOAT);
 
@@ -603,12 +604,13 @@ $register->set('logger', function () {
         return null;
     }
 
-    if (!Logger::hasProvider($providerName)) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Logging provider not supported. Logging is disabled");
+    if (! Logger::hasProvider($providerName)) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Logging provider not supported. Logging is disabled');
     }
 
-    $classname = '\\Utopia\\Logger\\Adapter\\' . \ucfirst($providerName);
+    $classname = '\\Utopia\\Logger\\Adapter\\'.\ucfirst($providerName);
     $adapter = new $classname($providerConfig);
+
     return new Logger($adapter);
 });
 $register->set('pools', function () {
@@ -677,7 +679,7 @@ $register->set('pools', function () {
         throw new \Exception('Pool size is too small. Increase the number of allowed database connections or decrease the number of workers.', 500);
     }
 
-    $poolSize = (int)($instanceConnections / $workerCount);
+    $poolSize = (int) ($instanceConnections / $workerCount);
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
@@ -688,7 +690,7 @@ $register->set('pools', function () {
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multipe) ? $key.'_'.$dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
@@ -704,8 +706,8 @@ $register->set('pools', function () {
             $dsnScheme = $dsn->getScheme();
             $dsnDatabase = $dsn->getPath();
 
-            if (!in_array($dsnScheme, $schemes)) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid console database scheme");
+            if (! in_array($dsnScheme, $schemes)) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid console database scheme');
             }
 
             /**
@@ -720,21 +722,21 @@ $register->set('pools', function () {
                 case 'mariadb':
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, [
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                                 PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
                                 PDO::ATTR_EMULATE_PREPARES => true,
-                                PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
+                                PDO::ATTR_STRINGIFY_FETCHES => true,
+                            ]);
                         });
                     };
                     break;
                 case 'redis':
                     $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
                         $redis = new Redis();
-                        @$redis->pconnect($dsnHost, (int)$dsnPort);
+                        @$redis->pconnect($dsnHost, (int) $dsnPort);
                         if ($dsnPass) {
                             $redis->auth($dsnPass);
                         }
@@ -745,7 +747,7 @@ $register->set('pools', function () {
                     break;
 
                 default:
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
+                    throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Invalid scheme');
                     break;
             }
 
@@ -779,7 +781,7 @@ $register->set('pools', function () {
                         break;
 
                     default:
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
+                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Server error: Missing adapter implementation.');
                         break;
                 }
 
@@ -789,7 +791,7 @@ $register->set('pools', function () {
             $group->add($pool);
         }
 
-        Config::setParam('pools-' . $key, $config);
+        Config::setParam('pools-'.$key, $config);
     }
 
     return $group;
@@ -806,14 +808,14 @@ $register->set('smtp', function () {
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
     $mail->Port = App::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = (!empty($username) && !empty($password));
+    $mail->SMTPAuth = (! empty($username) && ! empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
     $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', false);
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
-    $from = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+    $from = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'));
     $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
     $mail->setFrom($email, $from);
@@ -824,12 +826,13 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
+    return new Reader(__DIR__.'/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
 $register->set('passwordsDictionary', function () {
-    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = \file_get_contents(__DIR__.'/assets/security/10k-common-passwords');
     $content = explode("\n", $content);
     $content = array_flip($content);
+
     return $content;
 });
 $register->set('promiseAdapter', function () {
@@ -845,12 +848,12 @@ $locales = Config::getParam('locale-codes', []);
 foreach ($locales as $locale) {
     $code = $locale['code'];
 
-    $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
+    $path = __DIR__.'/config/locale/translations/'.$code.'.json';
 
-    if (!\file_exists($path)) {
-        $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
-        if (!\file_exists($path)) {
-            $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+    if (! \file_exists($path)) {
+        $path = __DIR__.'/config/locale/translations/'.\substr($code, 0, 2).'.json'; // if `ar-ae` doesn't exist, look for `ar`
+        if (! \file_exists($path)) {
+            $path = __DIR__.'/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
         }
     }
 
@@ -878,20 +881,20 @@ App::setResource('loggerBreadcrumbs', function () {
     return [];
 });
 
-App::setResource('register', fn() => $register);
-App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+App::setResource('register', fn () => $register);
+App::setResource('locale', fn () => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 App::setResource('localeCodes', function () {
-    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+    return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
 // Queues
-App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Audit());
-App::setResource('mails', fn() => new Mail());
-App::setResource('deletes', fn() => new Delete());
-App::setResource('database', fn() => new EventDatabase());
-App::setResource('messaging', fn() => new Phone());
+App::setResource('events', fn () => new Event('', ''));
+App::setResource('audits', fn () => new Audit());
+App::setResource('mails', fn () => new Mail());
+App::setResource('deletes', fn () => new Delete());
+App::setResource('database', fn () => new EventDatabase());
+App::setResource('messaging', fn () => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -917,7 +920,7 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && ! empty($node['hostname']))
         )
     );
 
@@ -928,7 +931,7 @@ App::setResource('clients', function ($request, $console, $project) {
                 fn ($node) => $node['hostname'],
                 \array_filter(
                     $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && ! empty($node['hostname']))
                 )
             )
         )
@@ -944,23 +947,22 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     /** @var Utopia\Database\Database $dbForProject */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var string $mode */
-
     Authorization::setDefaultStatus(true);
 
-    Auth::setCookieName('a_session_' . $project->getId());
+    Auth::setCookieName('a_session_'.$project->getId());
     $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (APP_MODE_ADMIN === $mode) {
-        Auth::setCookieName('a_session_' . $console->getId());
+        Auth::setCookieName('a_session_'.$console->getId());
         $authDuration = Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     }
 
     $session = Auth::decodeSession(
         $request->getCookie(
             Auth::$cookieName, // Get sessions
-            $request->getCookie(Auth::$cookieName . '_legacy', '')
+            $request->getCookie(Auth::$cookieName.'_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    ); // Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     if ($response) {
@@ -991,7 +993,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
+        || ! Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }
@@ -1006,13 +1008,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
-    if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
+    if (! empty($authJWT) && ! $project->isEmpty()) { // JWT authentication
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);
         } catch (JWTException $error) {
-            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. ' . $error->getMessage());
+            throw new Exception(Exception::USER_JWT_INVALID, 'Failed to verify JWT. '.$error->getMessage());
         }
 
         $jwtUserId = $payload['userId'] ?? '';
@@ -1034,14 +1036,13 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
-
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
     if (empty($projectId) || $projectId === 'console') {
         return $console;
     }
 
-    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
@@ -1076,12 +1077,12 @@ App::setResource('console', function () {
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
         ],
-        'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
-        'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authWhitelistEmails' => (! empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
+        'authWhitelistIPs' => (! empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
         'authProviders' => [
             'githubEnabled' => true,
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
         ],
     ]);
 }, []);
@@ -1094,11 +1095,10 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $dbAdapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+    $database->setNamespace('_'.$project->getInternalId());
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1107,8 +1107,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1125,8 +1124,7 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -1137,15 +1135,15 @@ App::setResource('deviceLocal', function () {
 });
 
 App::setResource('deviceFiles', function ($project) {
-    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_UPLOADS.'/app-'.$project->getId());
 }, ['project']);
 
 App::setResource('deviceFunctions', function ($project) {
-    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_FUNCTIONS.'/app-'.$project->getId());
 }, ['project']);
 
 App::setResource('deviceBuilds', function ($project) {
-    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+    return getDevice(APP_STORAGE_BUILDS.'/app-'.$project->getId());
 }, ['project']);
 
 function getDevice($root): Device
@@ -1167,7 +1165,7 @@ function getDevice($root): Device
         $bucket = $dsn->getPath();
         $region = $dsn->getParam('region');
     } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        Console::error($e->getMessage().'Invalid DSN. Defaulting to Local device.');
     }
 
     switch ($device) {
@@ -1240,7 +1238,6 @@ App::setResource('promiseAdapter', function ($register) {
 }, ['register']);
 
 App::setResource('schema', function ($utopia, $dbForProject) {
-
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
         $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
@@ -1250,7 +1247,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     };
 
     $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));
@@ -1280,7 +1277,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
-            return [ 'queries' => $args['queries']];
+            return ['queries' => $args['queries']];
         },
         'create' => function (string $databaseId, string $collectionId, array $args) {
             $id = $args['id'] ?? 'unique()';
@@ -1328,18 +1325,21 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 App::setResource('contributors', function () {
     $path = 'app/config/cloud/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 }, []);
 
 App::setResource('employees', function () {
     $path = 'app/config/cloud/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 }, []);
 
 App::setResource('heroes', function () {
     $path = 'app/config/cloud/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+
     return $list;
 }, []);
 
@@ -1347,12 +1347,13 @@ App::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
     $timestampHeader = $request->getHeader('x-appwrite-timestamp');
     $requestTimestamp = null;
-    if (!empty($timestampHeader)) {
+    if (! empty($timestampHeader)) {
         try {
             $requestTimestamp = new \DateTime($timestampHeader);
         } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
         }
     }
+
     return $requestTimestamp;
 }, ['request']);

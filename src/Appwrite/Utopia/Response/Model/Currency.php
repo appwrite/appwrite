@@ -51,8 +51,7 @@ class Currency extends Model
                 'description' => 'Currency plural name',
                 'default' => '',
                 'example' => 'US dollars',
-            ])
-        ;
+            ]);
     }
 
     /**

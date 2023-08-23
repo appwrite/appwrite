@@ -51,19 +51,18 @@ class Podio extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/authorize?' .
+        $url = $this->endpoint.'/authorize?'.
             \http_build_query([
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
-                'redirect_uri' => $this->callback
+                'redirect_uri' => $this->callback,
             ]);
 
         return $url;
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -71,14 +70,14 @@ class Podio extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->apiEndpoint . '/oauth/token',
+                $this->apiEndpoint.'/oauth/token',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret
+                    'client_secret' => $this->appSecret,
                 ])
             ), true);
         }
@@ -87,15 +86,14 @@ class Podio extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->apiEndpoint . '/oauth/token',
+            $this->apiEndpoint.'/oauth/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -113,8 +111,7 @@ class Podio extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -125,8 +122,7 @@ class Podio extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -139,8 +135,7 @@ class Podio extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -148,7 +143,7 @@ class Podio extends OAuth2
         $user = $this->getUser($accessToken);
 
         $mails = $user['mails'];
-        $mainMailIndex = \array_search($user['mail'], \array_map(fn($m) => $m['mail'], $mails));
+        $mainMailIndex = \array_search($user['mail'], \array_map(fn ($m) => $m['mail'], $mails));
         $mainMain = $mails[$mainMailIndex];
 
         if ($mainMain['verified'] ?? false) {
@@ -159,8 +154,7 @@ class Podio extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -171,8 +165,7 @@ class Podio extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -180,14 +173,14 @@ class Podio extends OAuth2
         if (empty($this->user)) {
             $user = \json_decode($this->request(
                 'GET',
-                $this->apiEndpoint . '/user',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                $this->apiEndpoint.'/user',
+                ['Authorization: Bearer '.\urlencode($accessToken)]
             ), true);
 
             $profile = \json_decode($this->request(
                 'GET',
-                $this->apiEndpoint . '/user/profile',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                $this->apiEndpoint.'/user/profile',
+                ['Authorization: Bearer '.\urlencode($accessToken)]
             ), true);
 
             $this->user = $user;

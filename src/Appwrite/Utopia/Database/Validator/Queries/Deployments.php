@@ -13,7 +13,6 @@ class Deployments extends Base
 
     /**
      * Expression constructor
-     *
      */
     public function __construct()
     {

@@ -5,8 +5,8 @@ namespace Appwrite\Utopia\Request\Filters;
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class V15 extends Filter
 {
@@ -81,11 +81,11 @@ class V15 extends Filter
     protected function convertLimitAndOffset($content)
     {
         if (isset($content['limit'])) {
-            $content['queries'][] = 'limit(' . $content['limit'] . ')';
+            $content['queries'][] = 'limit('.$content['limit'].')';
         }
 
         if (isset($content['offset'])) {
-            $content['queries'][] = 'offset(' . $content['offset'] . ')';
+            $content['queries'][] = 'offset('.$content['offset'].')';
         }
 
         unset($content['limit']);
@@ -100,9 +100,9 @@ class V15 extends Filter
             $cursorDirection = $content['cursorDirection'] ?? Database::CURSOR_AFTER;
 
             if ($cursorDirection === Database::CURSOR_BEFORE) {
-                $content['queries'][] = 'cursorBefore("' . $content["cursor"] . '")';
+                $content['queries'][] = 'cursorBefore("'.$content['cursor'].'")';
             } else {
-                $content['queries'][] = 'cursorAfter("' . $content["cursor"] . '")';
+                $content['queries'][] = 'cursorAfter("'.$content['cursor'].'")';
             }
         }
 
@@ -133,9 +133,9 @@ class V15 extends Filter
                 $attribute = $content['orderAttributes'][$i] ?? '';
 
                 if ($type === Database::ORDER_DESC) {
-                    $content['queries'][] = 'orderDesc("' . $attribute . '")';
+                    $content['queries'][] = 'orderDesc("'.$attribute.'")';
                 } else {
-                    $content['queries'][] = 'orderAsc("' . $attribute . '")';
+                    $content['queries'][] = 'orderAsc("'.$attribute.'")';
                 }
             }
         }
@@ -194,7 +194,7 @@ class V15 extends Filter
 
     protected function convertFilters($content)
     {
-        if (!isset($content['queries'])) {
+        if (! isset($content['queries'])) {
             return $content;
         }
 
@@ -214,18 +214,19 @@ class V15 extends Filter
                     $parts = explode($middle, $query);
                     if (count($parts) > 1) {
                         $attribute = $parts[0];
-                        $value = rtrim($parts[1], ")");
-                        $content['queries'][$i] = $newOperation . '("' . $attribute . '", [' . $value . '])';
+                        $value = rtrim($parts[1], ')');
+                        $content['queries'][$i] = $newOperation.'("'.$attribute.'", ['.$value.'])';
                     }
                 }
             }
         }
+
         return $content;
     }
 
     protected function convertExecute($content)
     {
-        if (!isset($content['execute'])) {
+        if (! isset($content['execute'])) {
             return $content;
         }
 
@@ -247,7 +248,7 @@ class V15 extends Filter
 
     protected function convertExpire($content)
     {
-        if (!isset($content['expire'])) {
+        if (! isset($content['expire'])) {
             return $content;
         }
 

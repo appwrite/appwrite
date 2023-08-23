@@ -69,7 +69,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'box' => [
         'name' => 'Box',
@@ -79,7 +79,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'dailymotion' => [
         'name' => 'Dailymotion',
@@ -89,7 +89,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'discord' => [
         'name' => 'Discord',
@@ -229,7 +229,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'paypalSandbox' => [
         'name' => 'PayPal Sandbox',
@@ -239,7 +239,7 @@ return [ // Ordered by ABC.
         'sandbox' => true,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'podio' => [
         'name' => 'Podio',
@@ -289,7 +289,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'tradeshift' => [
         'name' => 'Tradeshift',
@@ -329,7 +329,7 @@ return [ // Ordered by ABC.
         'sandbox' => false,
         'form' => false,
         'beta' => false,
-        'mock' => false
+        'mock' => false,
     ],
     'yahoo' => [
         'name' => 'Yahoo',

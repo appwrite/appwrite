@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Tasks;
 
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\Platform\Action;
 use Utopia\CLI\Console;
-use Utopia\Database\Query;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Platform\Action;
 
 class ClearCardCache extends Action
 {
@@ -33,12 +33,12 @@ class ClearCardCache extends Action
         Authorization::setDefaultStatus(false);
 
         Console::title('ClearCardCache V1');
-        Console::success(APP_NAME . ' ClearCardCache v1 has started');
-        $resources = ['card/' . $userId, 'card-back/' . $userId, 'card-og/' . $userId];
+        Console::success(APP_NAME.' ClearCardCache v1 has started');
+        $resources = ['card/'.$userId, 'card-back/'.$userId, 'card-og/'.$userId];
 
         $caches = Authorization::skip(fn () => $dbForConsole->find('cache', [
             Query::equal('resource', $resources),
-            Query::limit(100)
+            Query::limit(100),
         ]));
 
         $count = \count($caches);
@@ -49,7 +49,7 @@ class ClearCardCache extends Action
             $key = $cache->getId();
 
             $cacheFolder = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-console')
+                new Filesystem(APP_STORAGE_CACHE.DIRECTORY_SEPARATOR.'app-console')
             );
 
             $cacheFolder->purge($key);
@@ -57,6 +57,6 @@ class ClearCardCache extends Action
             Authorization::skip(fn () => $dbForConsole->deleteDocument('cache', $cache->getId()));
         }
 
-        Console::success(APP_NAME . ' ClearCardCache v1 has finished');
+        Console::success(APP_NAME.' ClearCardCache v1 has finished');
     }
 }

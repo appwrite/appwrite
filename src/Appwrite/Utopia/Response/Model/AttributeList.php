@@ -27,13 +27,12 @@ class AttributeList extends Model
                     Response::MODEL_ATTRIBUTE_IP,
                     Response::MODEL_ATTRIBUTE_DATETIME,
                     Response::MODEL_ATTRIBUTE_RELATIONSHIP,
-                    Response::MODEL_ATTRIBUTE_STRING // needs to be last, since its condition would dominate any other string attribute
+                    Response::MODEL_ATTRIBUTE_STRING, // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of attributes.',
                 'default' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

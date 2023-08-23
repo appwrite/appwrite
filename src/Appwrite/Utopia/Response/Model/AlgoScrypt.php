@@ -39,8 +39,7 @@ class AlgoScrypt extends Model
                 'description' => 'Length used to compute hash.',
                 'default' => 64,
                 'example' => 64,
-            ])
-        ;
+            ]);
     }
 
     /**

@@ -47,8 +47,7 @@ class AttributeRelationship extends Attribute
                 'description' => 'Whether this is the parent or child side of the relationship',
                 'default' => '',
                 'example' => 'parent|child',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
@@ -83,7 +82,7 @@ class AttributeRelationship extends Attribute
     public function filter(Document $document): Document
     {
         $options = $document->getAttribute('options');
-        if (!\is_null($options)) {
+        if (! \is_null($options)) {
             $document->setAttribute('relatedCollection', $options['relatedCollection']);
             $document->setAttribute('relationType', $options['relationType']);
             $document->setAttribute('twoWay', $options['twoWay']);
@@ -91,6 +90,7 @@ class AttributeRelationship extends Attribute
             $document->setAttribute('side', $options['side']);
             $document->setAttribute('onDelete', $options['onDelete']);
         }
+
         return $document;
     }
 }

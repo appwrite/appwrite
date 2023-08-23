@@ -3,14 +3,14 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
+use League\Csv\Writer;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
-use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use League\Csv\Writer;
-use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 
@@ -21,11 +21,13 @@ class CalcUsersStats extends Action
         'Project Name',
         'Team ID',
         'Team name',
-        'Users'
+        'Users',
     ];
 
     protected string $directory = '/usr/local';
+
     protected string $path;
+
     protected string $date;
 
     public static function getName(): string
@@ -35,7 +37,6 @@ class CalcUsersStats extends Action
 
     public function __construct()
     {
-
         $this
             ->desc('Get stats for projects')
             ->inject('pools')
@@ -52,7 +53,7 @@ class CalcUsersStats extends Action
         //docker compose exec -t appwrite calc-users-stats
 
         Console::title('Cloud Users calculation V1');
-        Console::success(APP_NAME . ' cloud Users calculation has started');
+        Console::success(APP_NAME.' cloud Users calculation has started');
 
         /* Initialise new Utopia app */
         $app = new App('UTC');
@@ -73,9 +74,8 @@ class CalcUsersStats extends Action
         $limit = 30;
         $sum = 30;
         $offset = 0;
-        while (!empty($projects)) {
+        while (! empty($projects)) {
             foreach ($projects as $project) {
-
                 /**
                  * Skip user projects with id 'console'
                  */
@@ -94,14 +94,13 @@ class CalcUsersStats extends Action
 
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDefaultDatabase('appwrite');
-                    $dbForProject->setNamespace('_' . $project->getInternalId());
+                    $dbForProject->setNamespace('_'.$project->getInternalId());
 
                     /** Get Project ID */
                     $stats['Project ID'] = $project->getId();
 
                     /** Get Project Name */
                     $stats['Project Name'] = $project->getAttribute('name');
-
 
                     /** Get Team Name and Id */
                     $teamId = $project->getAttribute('teamId', null);
@@ -111,7 +110,7 @@ class CalcUsersStats extends Action
                         $teamName = $team->getAttribute('name');
                     }
 
-                    $stats['Team ID']   = $teamId;
+                    $stats['Team ID'] = $teamId;
                     $stats['Team name'] = $teamName;
 
                     /** Get Total Users */
@@ -119,7 +118,7 @@ class CalcUsersStats extends Action
 
                     $csv->insertOne(array_values($stats));
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
@@ -137,7 +136,7 @@ class CalcUsersStats extends Action
             $offset = $offset + $limit;
             $count = $count + $sum;
         }
-        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
+        Console::log('Iterated through '.$count - 1 .'/'.$totalProjects.' projects...');
         $pools
             ->get('console')
             ->reclaim();
@@ -166,7 +165,7 @@ class CalcUsersStats extends Action
 
             /** Content */
             $mail->Subject = "Cloud Report for {$this->date}";
-            $mail->Body = "Please find the daily cloud report atttached";
+            $mail->Body = 'Please find the daily cloud report atttached';
             $mail->send();
             Console::success('Email has been sent!');
         } catch (Exception $e) {

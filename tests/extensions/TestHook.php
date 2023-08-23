@@ -3,11 +3,11 @@
 namespace Appwrite\Tests;
 
 use PHPUnit\Runner\AfterTestHook;
-use Exception;
 
 class TestHook implements AfterTestHook
 {
     protected const MAX_SECONDS_ALLOWED = 15;
+
     public function executeAfterTest(string $test, float $time): void
     {
         printf(

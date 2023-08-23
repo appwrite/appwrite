@@ -21,58 +21,57 @@ class UsageProject extends Model
                 'description' => 'Aggregated stats for number of requests.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('network', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for consumed bandwidth.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('executionsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function executions.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('documentsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of documents.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('databasesTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of databases.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('usersTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of users.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('bucketsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of buckets.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

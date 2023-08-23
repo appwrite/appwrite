@@ -28,7 +28,7 @@ class Swoole extends Promise
     /**
      * Returns a promise that completes when all passed in promises complete.
      *
-     * @param iterable|Swoole[] $promises
+     * @param  iterable|Swoole[]  $promises
      * @return Promise
      */
     public static function all(iterable $promises): Promise
@@ -45,6 +45,7 @@ class Swoole extends Promise
                 $promise->then(function ($value) use ($key, &$result, $channel) {
                     $result[$key] = $value;
                     $channel->push(true);
+
                     return $value;
                 }, function ($err) use ($channel, &$error) {
                     $channel->push(true);
@@ -61,6 +62,7 @@ class Swoole extends Promise
 
             if ($error !== null) {
                 $reject($error);
+
                 return;
             }
 

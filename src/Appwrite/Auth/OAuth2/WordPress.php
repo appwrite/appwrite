@@ -39,18 +39,17 @@ class WordPress extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://public-api.wordpress.com/oauth2/authorize?' . \http_build_query([
+        return 'https://public-api.wordpress.com/oauth2/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
             'scope' => $this->getScopes(),
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
         ]);
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -65,7 +64,7 @@ class WordPress extends OAuth2
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
                     'grant_type' => 'authorization_code',
-                    'code' => $code
+                    'code' => $code,
                 ])
             ), true);
         }
@@ -74,8 +73,7 @@ class WordPress extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -88,7 +86,7 @@ class WordPress extends OAuth2
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken
+                'refresh_token' => $refreshToken,
             ])
         ), true);
 
@@ -100,8 +98,7 @@ class WordPress extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -112,8 +109,7 @@ class WordPress extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -132,8 +128,7 @@ class WordPress extends OAuth2
      *
      * @link https://developer.wordpress.com/docs/api/1.1/get/me/
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -148,8 +143,7 @@ class WordPress extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -160,14 +154,13 @@ class WordPress extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://public-api.wordpress.com/rest/v1/me', ['Authorization: Bearer ' . $accessToken]), true);
+            $this->user = \json_decode($this->request('GET', 'https://public-api.wordpress.com/rest/v1/me', ['Authorization: Bearer '.$accessToken]), true);
         }
 
         return $this->user;

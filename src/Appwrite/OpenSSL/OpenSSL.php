@@ -10,12 +10,11 @@ class OpenSSL
      * @param $data
      * @param $method
      * @param $key
-     * @param int    $options
-     * @param string $iv
-     * @param null   $tag
-     * @param string $aad
-     * @param int    $tag_length
-     *
+     * @param  int  $options
+     * @param  string  $iv
+     * @param  null  $tag
+     * @param  string  $aad
+     * @param  int  $tag_length
      * @return string
      */
     public static function encrypt($data, $method, $key, $options = 0, $iv = '', &$tag = null, $aad = '', $tag_length = 16)
@@ -27,11 +26,10 @@ class OpenSSL
      * @param $data
      * @param $method
      * @param $password
-     * @param int    $options
-     * @param string $iv
-     * @param string $tag
-     * @param string $aad
-     *
+     * @param  int  $options
+     * @param  string  $iv
+     * @param  string  $tag
+     * @param  string  $aad
      * @return string
      */
     public static function decrypt($data, $method, $password, $options = 1, $iv = '', $tag = '', $aad = '')
@@ -40,8 +38,7 @@ class OpenSSL
     }
 
     /**
-     * @param string $method
-     *
+     * @param  string  $method
      * @return int
      */
     public static function cipherIVLength($method)
@@ -51,8 +48,7 @@ class OpenSSL
 
     /**
      * @param $length
-     * @param null $crypto_strong
-     *
+     * @param  null  $crypto_strong
      * @return false|string
      */
     public static function randomPseudoBytes($length, &$crypto_strong = null)

@@ -33,8 +33,7 @@ class Error extends Model
                 'description' => 'Server version number.',
                 'default' => '',
                 'example' => '1.0',
-            ])
-        ;
+            ]);
     }
 
     /**

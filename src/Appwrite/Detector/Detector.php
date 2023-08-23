@@ -17,7 +17,7 @@ class Detector
     protected $detctor;
 
     /**
-     * @param string $userAgent
+     * @param  string  $userAgent
      */
     public function __construct(string $userAgent)
     {
@@ -54,7 +54,7 @@ class Detector
                 'type' => 'desktop',
                 'short_name' => 'cli',
                 'name' => 'Appwrite CLI',
-                'version' => $version
+                'version' => $version,
             ];
         } else {
             $client = $this->getDetector()->getClient();
@@ -89,7 +89,7 @@ class Detector
      */
     protected function getDetector(): DeviceDetector
     {
-        if (!$this->detctor) {
+        if (! $this->detctor) {
             $this->detctor = new DeviceDetector($this->userAgent);
             $this->detctor->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
             $this->detctor->parse();
@@ -103,7 +103,7 @@ class Detector
      * It is needed if we want bots to be processed as a simple clients. So we can detect if it is mobile client,
      * or desktop, or enything else. By default all this information is not retrieved for the bots.
      *
-     * @param bool $skip
+     * @param  bool  $skip
      */
     public function skipBotDetection(bool $skip = true): void
     {

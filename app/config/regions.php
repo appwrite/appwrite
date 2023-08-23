@@ -5,5 +5,5 @@ return [
         'name' => 'Default',
         'default' => true,
         'disabled' => false,
-    ]
+    ],
 ];

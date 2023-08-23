@@ -2,9 +2,9 @@
 
 return [
     // Codes based on: https://github.com/matomo-org/device-detector/blob/master/Parser/Client/Browser.php
-    'AND' => __DIR__ . '/os/android.png',
-    'ATV' => __DIR__ . '/os/apple-tv.png',
-    'COS' => __DIR__ . '/os/chrome-os.png',
+    'AND' => __DIR__.'/os/android.png',
+    'ATV' => __DIR__.'/os/apple-tv.png',
+    'COS' => __DIR__.'/os/chrome-os.png',
 
     /*
     'AIX' => 'AIX',

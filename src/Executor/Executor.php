@@ -8,13 +8,21 @@ use Utopia\App;
 class Executor
 {
     public const METHOD_GET = 'GET';
+
     public const METHOD_POST = 'POST';
+
     public const METHOD_PUT = 'PUT';
+
     public const METHOD_PATCH = 'PATCH';
+
     public const METHOD_DELETE = 'DELETE';
+
     public const METHOD_HEAD = 'HEAD';
+
     public const METHOD_OPTIONS = 'OPTIONS';
+
     public const METHOD_CONNECT = 'CONNECT';
+
     public const METHOD_TRACE = 'TRACE';
 
     private bool $selfSigned = false;
@@ -29,7 +37,7 @@ class Executor
 
     public function __construct(string $endpoint)
     {
-        if (!filter_var($endpoint, FILTER_VALIDATE_URL)) {
+        if (! filter_var($endpoint, FILTER_VALIDATE_URL)) {
             throw new Exception('Unsupported endpoint');
         }
 
@@ -38,7 +46,7 @@ class Executor
         $this->memory = intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'authorization' => 'Bearer '.App::getEnv('_APP_EXECUTOR_SECRET', ''),
         ];
     }
 
@@ -47,16 +55,16 @@ class Executor
      *
      * Launches a runtime container for a deployment ready for execution
      *
-     * @param string $deploymentId
-     * @param string $projectId
-     * @param string $source
-     * @param string $image
-     * @param bool $remove
-     * @param string $entrypoint
-     * @param string $workdir
-     * @param string $destination
-     * @param array $variables
-     * @param array $commands
+     * @param  string  $deploymentId
+     * @param  string  $projectId
+     * @param  string  $source
+     * @param  string  $image
+     * @param  bool  $remove
+     * @param  string  $entrypoint
+     * @param  string  $workdir
+     * @param  string  $destination
+     * @param  array  $variables
+     * @param  array  $commands
      */
     public function createRuntime(
         string $deploymentId,
@@ -71,8 +79,8 @@ class Executor
         array $commands = []
     ) {
         $runtimeId = "$projectId-$deploymentId";
-        $route = "/runtimes";
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
+        $route = '/runtimes';
+        $headers = ['x-opr-runtime-id' => $runtimeId];
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -87,7 +95,7 @@ class Executor
             'memory' => $this->memory,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
 
@@ -103,15 +111,14 @@ class Executor
     /**
      * Create an execution
      *
-     * @param string $projectId
-     * @param string $deploymentId
-     * @param string $payload
-     * @param array $variables
-     * @param int $timeout
-     * @param string $image
-     * @param string $source
-     * @param string $entrypoint
-     *
+     * @param  string  $projectId
+     * @param  string  $deploymentId
+     * @param  string  $payload
+     * @param  array  $variables
+     * @param  int  $timeout
+     * @param  string  $image
+     * @param  string  $source
+     * @param  string  $entrypoint
      * @return array
      */
     public function createExecution(
@@ -125,8 +132,8 @@ class Executor
         string $entrypoint,
     ) {
         $runtimeId = "$projectId-$deploymentId";
-        $route = '/runtimes/' . $runtimeId . '/execution';
-        $headers = [ 'x-opr-runtime-id' => $runtimeId ];
+        $route = '/runtimes/'.$runtimeId.'/execution';
+        $headers = ['x-opr-runtime-id' => $runtimeId];
         $params = [
             'runtimeId' => $runtimeId,
             'variables' => $variables,
@@ -140,7 +147,7 @@ class Executor
             'memory' => $this->memory,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $response = $this->call(self::METHOD_POST, $route, $headers, $params, true, $timeout);
 
@@ -158,22 +165,23 @@ class Executor
      *
      * Make an API call
      *
-     * @param string $method
-     * @param string $path
-     * @param array $params
-     * @param array $headers
-     * @param bool $decode
+     * @param  string  $method
+     * @param  string  $path
+     * @param  array  $params
+     * @param  array  $headers
+     * @param  bool  $decode
      * @return array|string
+     *
      * @throws Exception
      */
     public function call(string $method, string $path = '', array $headers = [], array $params = [], bool $decode = true, int $timeout = 15)
     {
-        $headers            = array_merge($this->headers, $headers);
-        $ch                 = curl_init($this->endpoint . $path . (($method == self::METHOD_GET && !empty($params)) ? '?' . http_build_query($params) : ''));
-        $responseHeaders    = [];
-        $responseStatus     = -1;
-        $responseType       = '';
-        $responseBody       = '';
+        $headers = array_merge($this->headers, $headers);
+        $ch = curl_init($this->endpoint.$path.(($method == self::METHOD_GET && ! empty($params)) ? '?'.http_build_query($params) : ''));
+        $responseHeaders = [];
+        $responseStatus = -1;
+        $responseType = '';
+        $responseBody = '';
 
         switch ($headers['content-type']) {
             case 'application/json':
@@ -190,7 +198,7 @@ class Executor
         }
 
         foreach ($headers as $i => $header) {
-            $headers[] = $i . ':' . $header;
+            $headers[] = $i.':'.$header;
             unset($headers[$i]);
         }
 
@@ -223,8 +231,8 @@ class Executor
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
 
-        $responseBody   = curl_exec($ch);
-        $responseType   = $responseHeaders['content-type'] ?? '';
+        $responseBody = curl_exec($ch);
+        $responseType = $responseHeaders['content-type'] ?? '';
         $responseStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 
         if ($decode) {
@@ -233,7 +241,7 @@ class Executor
                     $json = json_decode($responseBody, true);
 
                     if ($json === null) {
-                        throw new Exception('Failed to parse response: ' . $responseBody);
+                        throw new Exception('Failed to parse response: '.$responseBody);
                     }
 
                     $responseBody = $json;
@@ -243,7 +251,7 @@ class Executor
         }
 
         if ((curl_errno($ch)/* || 200 != $responseStatus*/)) {
-            throw new Exception(curl_error($ch) . ' with status code ' . $responseStatus, $responseStatus);
+            throw new Exception(curl_error($ch).' with status code '.$responseStatus, $responseStatus);
         }
 
         curl_close($ch);
@@ -252,21 +260,21 @@ class Executor
 
         return [
             'headers' => $responseHeaders,
-            'body' => $responseBody
+            'body' => $responseBody,
         ];
     }
 
     /**
      * Parse Cookie String
      *
-     * @param string $cookie
+     * @param  string  $cookie
      * @return array
      */
     public function parseCookie(string $cookie): array
     {
         $cookies = [];
 
-        parse_str(strtr($cookie, array('&' => '%26', '+' => '%2B', ';' => '&')), $cookies);
+        parse_str(strtr($cookie, ['&' => '%26', '+' => '%2B', ';' => '&']), $cookies);
 
         return $cookies;
     }
@@ -274,8 +282,8 @@ class Executor
     /**
      * Flatten params array to PHP multiple format
      *
-     * @param array $data
-     * @param string $prefix
+     * @param  array  $data
+     * @param  string  $prefix
      * @return array
      */
     protected function flatten(array $data, string $prefix = ''): array

@@ -13,16 +13,17 @@ use Utopia\Route;
 class Schema
 {
     protected static ?GQLSchema $schema = null;
+
     protected static array $dirty = [];
 
     /**
-     *
-     * @param App $utopia
-     * @param callable $complexity  Function to calculate complexity
-     * @param callable $attributes  Function to get attributes
-     * @param array $urls           Array of functions to get urls for specific method types
-     * @param array $params         Array of functions to build parameters for specific method types
+     * @param  App  $utopia
+     * @param  callable  $complexity  Function to calculate complexity
+     * @param  callable  $attributes  Function to get attributes
+     * @param  array  $urls           Array of functions to get urls for specific method types
+     * @param  array  $params         Array of functions to build parameters for specific method types
      * @return GQLSchema
+     *
      * @throws Exception
      */
     public static function build(
@@ -36,7 +37,7 @@ class Schema
             return $utopia;
         });
 
-        if (!empty(self::$schema)) {
+        if (! empty(self::$schema)) {
             return self::$schema;
         }
 
@@ -67,12 +68,12 @@ class Schema
         return static::$schema = new GQLSchema([
             'query' => new ObjectType([
                 'name' => 'Query',
-                'fields' => $queries
+                'fields' => $queries,
             ]),
             'mutation' => new ObjectType([
                 'name' => 'Mutation',
-                'fields' => $mutations
-            ])
+                'fields' => $mutations,
+            ]),
         ]);
     }
 
@@ -80,9 +81,10 @@ class Schema
      * This function iterates all API routes and builds a GraphQL
      * schema defining types and resolvers for all response models.
      *
-     * @param App $utopia
-     * @param callable $complexity
+     * @param  App  $utopia
+     * @param  callable  $complexity
      * @return array
+     *
      * @throws Exception
      */
     protected static function api(App $utopia, callable $complexity): array
@@ -97,10 +99,9 @@ class Schema
         foreach ($utopia->getRoutes() as $routes) {
             foreach ($routes as $route) {
                 /** @var Route $route */
-
                 $namespace = $route->getLabel('sdk.namespace', '');
                 $method = $route->getLabel('sdk.method', '');
-                $name = $namespace . \ucfirst($method);
+                $name = $namespace.\ucfirst($method);
 
                 if (empty($name)) {
                     continue;
@@ -126,7 +127,7 @@ class Schema
 
         return [
             'query' => $queries,
-            'mutation' => $mutations
+            'mutation' => $mutations,
         ];
     }
 
@@ -134,12 +135,13 @@ class Schema
      * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
-     * @param App $utopia
-     * @param callable $complexity
-     * @param callable $attributes
-     * @param array $urls
-     * @param array $params
+     * @param  App  $utopia
+     * @param  callable  $complexity
+     * @param  callable  $attributes
+     * @param  array  $urls
+     * @param  array  $params
      * @return array
+     *
      * @throws \Exception
      */
     protected static function collections(
@@ -155,7 +157,7 @@ class Schema
         $limit = 1000;
         $offset = 0;
 
-        while (!empty($attrs = $attributes($limit, $offset))) {
+        while (! empty($attrs = $attributes($limit, $offset))) {
             foreach ($attrs as $attr) {
                 if ($attr['status'] !== 'available') {
                     continue;
@@ -182,7 +184,7 @@ class Schema
                 $objectType = new ObjectType([
                     'name' => $collectionId,
                     'fields' => \array_merge(
-                        ["_id" => ['type' => Type::string()]],
+                        ['_id' => ['type' => Type::string()]],
                         $attributes
                     ),
                 ]);
@@ -191,7 +193,7 @@ class Schema
                     Mapper::args('mutate')
                 );
 
-                $queryFields[$collectionId . 'Get'] = [
+                $queryFields[$collectionId.'Get'] = [
                     'type' => $objectType,
                     'args' => Mapper::args('id'),
                     'resolve' => Resolvers::documentGet(
@@ -199,9 +201,9 @@ class Schema
                         $databaseId,
                         $collectionId,
                         $urls['get'],
-                    )
+                    ),
                 ];
-                $queryFields[$collectionId . 'List'] = [
+                $queryFields[$collectionId.'List'] = [
                     'type' => Type::listOf($objectType),
                     'args' => Mapper::args('list'),
                     'resolve' => Resolvers::documentList(
@@ -214,7 +216,7 @@ class Schema
                     'complexity' => $complexity,
                 ];
 
-                $mutationFields[$collectionId . 'Create'] = [
+                $mutationFields[$collectionId.'Create'] = [
                     'type' => $objectType,
                     'args' => $attributes,
                     'resolve' => Resolvers::documentCreate(
@@ -223,14 +225,14 @@ class Schema
                         $collectionId,
                         $urls['create'],
                         $params['create'],
-                    )
+                    ),
                 ];
-                $mutationFields[$collectionId . 'Update'] = [
+                $mutationFields[$collectionId.'Update'] = [
                     'type' => $objectType,
                     'args' => \array_merge(
                         Mapper::args('id'),
                         \array_map(
-                            fn($attr) => $attr['type'] = Type::getNullableType($attr['type']),
+                            fn ($attr) => $attr['type'] = Type::getNullableType($attr['type']),
                             $attributes
                         )
                     ),
@@ -240,9 +242,9 @@ class Schema
                         $collectionId,
                         $urls['update'],
                         $params['update'],
-                    )
+                    ),
                 ];
-                $mutationFields[$collectionId . 'Delete'] = [
+                $mutationFields[$collectionId.'Delete'] = [
                     'type' => Mapper::model('none'),
                     'args' => Mapper::args('id'),
                     'resolve' => Resolvers::documentDelete(
@@ -250,7 +252,7 @@ class Schema
                         $databaseId,
                         $collectionId,
                         $urls['delete'],
-                    )
+                    ),
                 ];
             }
             $offset += $limit;
@@ -258,7 +260,7 @@ class Schema
 
         return [
             'query' => $queryFields,
-            'mutation' => $mutationFields
+            'mutation' => $mutationFields,
         ];
     }
 

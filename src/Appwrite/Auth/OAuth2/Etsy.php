@@ -30,8 +30,8 @@ class Etsy extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        "email_r",
-        "profile_r",
+        'email_r',
+        'profile_r',
     ];
 
     /**
@@ -64,7 +64,7 @@ class Etsy extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://www.etsy.com/oauth/connect/oauth/authorize?' . \http_build_query([
+        return 'https://www.etsy.com/oauth/connect/oauth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -76,8 +76,7 @@ class Etsy extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -87,7 +86,7 @@ class Etsy extends OAuth2
 
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . '/oauth/token',
+                $this->endpoint.'/oauth/token',
                 $headers,
                 \http_build_query([
                     'grant_type' => 'authorization_code',
@@ -103,8 +102,7 @@ class Etsy extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -113,7 +111,7 @@ class Etsy extends OAuth2
 
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . '/oauth/token',
+            $this->endpoint.'/oauth/token',
             $headers,
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -131,7 +129,6 @@ class Etsy extends OAuth2
 
     /**
      * @param $accessToken
-     *
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -143,7 +140,6 @@ class Etsy extends OAuth2
 
     /**
      * @param $accessToken
-     *
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -156,20 +152,18 @@ class Etsy extends OAuth2
      *
      * OAuth is only allowed if account has been verified through Etsy, itself.
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUserEmail($accessToken);
 
-        return !empty($email);
+        return ! empty($email);
     }
 
     /**
      * @param $accessToken
-     *
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -178,21 +172,20 @@ class Etsy extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
-        if (!empty($this->user)) {
+        if (! empty($this->user)) {
             return $this->user;
         }
 
-        $headers = ['Authorization: Bearer ' . $accessToken];
+        $headers = ['Authorization: Bearer '.$accessToken];
 
         $this->user = \json_decode($this->request(
             'GET',
-            'https://api.etsy.com/v3/application/users/' . $this->getUserID($accessToken),
+            'https://api.etsy.com/v3/application/users/'.$this->getUserID($accessToken),
         ), true);
 
         return $this->user;

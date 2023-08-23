@@ -46,8 +46,7 @@ class Team extends Model
                 'description' => 'Team preferences as a key-value object',
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
-            ])
-        ;
+            ]);
     }
 
     /**
@@ -65,6 +64,7 @@ class Team extends Model
         if (is_array($prefs) && empty($prefs)) {
             $document->setAttribute('prefs', new \stdClass());
         }
+
         return $document;
     }
 

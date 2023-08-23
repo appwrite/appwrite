@@ -35,13 +35,12 @@ class AttributeURL extends Attribute
                 'default' => null,
                 'required' => false,
                 'example' => 'http://example.com',
-            ])
-        ;
+            ]);
     }
 
     public array $conditions = [
         'type' => self::TYPE_STRING,
-        'format' => \APP_DATABASE_ATTRIBUTE_URL
+        'format' => \APP_DATABASE_ATTRIBUTE_URL,
     ];
 
     /**

@@ -51,7 +51,7 @@ class Migration extends Model
                 'description' => 'Resources to migration.',
                 'default' => [],
                 'example' => ['user'],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('statusCounters', [
                 'type' => self::TYPE_JSON,
@@ -70,8 +70,7 @@ class Migration extends Model
                 'description' => 'All errors that occurred during the migration process.',
                 'default' => [],
                 'example' => [],
-            ])
-        ;
+            ]);
     }
 
     /**

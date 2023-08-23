@@ -25,35 +25,35 @@ App::get('/v1/messaging/providers')
   ->label('sdk.response.code', Response::STATUS_CODE_OK)
   ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
   ->label('sdk.response.model', Response::MODEL_PROVIDER_LIST)
-  ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+  ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (array $queries, Database $dbForProject, Response $response) {
-    $queries = Query::parseQueries($queries);
+      $queries = Query::parseQueries($queries);
 
-    // Get cursor document if there was a cursor query
-    $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-    $cursor = reset($cursor);
+      // Get cursor document if there was a cursor query
+      $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+      $cursor = reset($cursor);
 
-    if ($cursor) {
-        $providerId = $cursor->getValue();
-        $cursorDocument = Authorization::skip(fn () => $dbForProject->find('providers', [
-        Query::equal('$id', [$providerId]),
-        Query::limit(1),
-      ]));
+      if ($cursor) {
+          $providerId = $cursor->getValue();
+          $cursorDocument = Authorization::skip(fn () => $dbForProject->find('providers', [
+              Query::equal('$id', [$providerId]),
+              Query::limit(1),
+          ]));
 
-        if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
-            throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
-        }
+          if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+              throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
+          }
 
-        $cursor->setValue($cursorDocument[0]);
-    }
+          $cursor->setValue($cursorDocument[0]);
+      }
 
-    $filterQueries = Query::groupByType($queries)['filters'];
-    $response->dynamic(new Document([
-      'total' => $dbForProject->count('providers', $filterQueries, APP_LIMIT_COUNT),
-      'indexes' => $dbForProject->find('providers', $queries),
-    ]), Response::MODEL_PROVIDER_LIST);
+      $filterQueries = Query::groupByType($queries)['filters'];
+      $response->dynamic(new Document([
+          'total' => $dbForProject->count('providers', $filterQueries, APP_LIMIT_COUNT),
+          'indexes' => $dbForProject->find('providers', $queries),
+      ]), Response::MODEL_PROVIDER_LIST);
   });
 
 App::get('/v1/messaging/providers/:id')
@@ -71,13 +71,13 @@ App::get('/v1/messaging/providers/:id')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
 
-    $response->dynamic($provider, Response::MODEL_PROVIDER);
+      $response->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 /**
@@ -101,18 +101,18 @@ App::post('/v1/messaging/providers/mailgun')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'mailgun',
-      'type' => 'email',
-      'credentials' => [
-        'apiKey' => $apiKey,
-        'domain' => $domain,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'mailgun',
+          'type' => 'email',
+          'credentials' => [
+              'apiKey' => $apiKey,
+              'domain' => $domain,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/mailgun')
@@ -134,39 +134,39 @@ App::patch('/v1/messaging/providers/:id/mailgun')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'mailgun') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'mailgun') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($apiKey || $domain) {
-      // Check if all five variables are present
-        if ($apiKey && $domain) {
-            $provider->setAttribute('credentials', [
-            'apiKey' => $apiKey,
-            'domain' => $domain
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($apiKey || $domain) {
+          // Check if all five variables are present
+          if ($apiKey && $domain) {
+              $provider->setAttribute('credentials', [
+                  'apiKey' => $apiKey,
+                  'domain' => $domain,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/sendgrid')
@@ -186,17 +186,17 @@ App::post('/v1/messaging/providers/sendgrid')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $apiKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'sendgrid',
-      'type' => 'email',
-      'credentials' => [
-        'apiKey' => $apiKey,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'sendgrid',
+          'type' => 'email',
+          'credentials' => [
+              'apiKey' => $apiKey,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/sendgrid')
@@ -217,32 +217,32 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $apiKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'sendgrid') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'sendgrid') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($apiKey) {
-        $provider->setAttribute('credentials', [
-        'apiKey' => $apiKey
-        ]);
-    }
+      if ($apiKey) {
+          $provider->setAttribute('credentials', [
+              'apiKey' => $apiKey,
+          ]);
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 /**
@@ -266,18 +266,18 @@ App::post('/v1/messaging/providers/msg91')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'msg91',
-      'type' => 'sms',
-      'credentials' => [
-        'senderId' => $senderId,
-        'authKey' => $authKey,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'msg91',
+          'type' => 'sms',
+          'credentials' => [
+              'senderId' => $senderId,
+              'authKey' => $authKey,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/msg91')
@@ -299,39 +299,39 @@ App::patch('/v1/messaging/providers/:id/msg91')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'msg91') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'msg91') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($senderId || $authKey) {
-      // Check if all five variables are present
-        if ($senderId && $authKey) {
-            $provider->setAttribute('credentials', [
-            'senderId' => $senderId,
-            'authKey' => $authKey
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($senderId || $authKey) {
+          // Check if all five variables are present
+          if ($senderId && $authKey) {
+              $provider->setAttribute('credentials', [
+                  'senderId' => $senderId,
+                  'authKey' => $authKey,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/telesign')
@@ -352,18 +352,18 @@ App::post('/v1/messaging/providers/telesign')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $username, string $password, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'telesign',
-      'type' => 'sms',
-      'credentials' => [
-        'username' => $username,
-        'password' => $password,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'telesign',
+          'type' => 'sms',
+          'credentials' => [
+              'username' => $username,
+              'password' => $password,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/telesign')
@@ -385,39 +385,39 @@ App::patch('/v1/messaging/providers/:id/telesign')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $username, string $password, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'telesign') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'telesign') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($username || $password) {
-      // Check if all five variables are present
-        if ($username && $password) {
-            $provider->setAttribute('credentials', [
-            'username' => $username,
-            'password' => $password
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($username || $password) {
+          // Check if all five variables are present
+          if ($username && $password) {
+              $provider->setAttribute('credentials', [
+                  'username' => $username,
+                  'password' => $password,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/textmagic')
@@ -438,18 +438,18 @@ App::post('/v1/messaging/providers/textmagic')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'text-magic',
-      'type' => 'sms',
-      'credentials' => [
-        'username' => $username,
-        'apiKey' => $apiKey,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'text-magic',
+          'type' => 'sms',
+          'credentials' => [
+              'username' => $username,
+              'apiKey' => $apiKey,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/textmagic')
@@ -471,39 +471,39 @@ App::patch('/v1/messaging/providers/:id/textmagic')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'text-magic') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'text-magic') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($username || $apiKey) {
-      // Check if all five variables are present
-        if ($username && $apiKey) {
-            $provider->setAttribute('credentials', [
-            'username' => $username,
-            'apiKey' => $apiKey
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($username || $apiKey) {
+          // Check if all five variables are present
+          if ($username && $apiKey) {
+              $provider->setAttribute('credentials', [
+                  'username' => $username,
+                  'apiKey' => $apiKey,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/twilio')
@@ -524,18 +524,18 @@ App::post('/v1/messaging/providers/twilio')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'twilio',
-      'type' => 'sms',
-      'credentials' => [
-        'accountSid' => $accountSid,
-        'authToken' => $authToken,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'twilio',
+          'type' => 'sms',
+          'credentials' => [
+              'accountSid' => $accountSid,
+              'authToken' => $authToken,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/twilio')
@@ -557,39 +557,39 @@ App::patch('/v1/messaging/providers/:id/twilio')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'twilio') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'twilio') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($accountSid || $authToken) {
-      // Check if all five variables are present
-        if ($accountSid && $authToken) {
-            $provider->setAttribute('credentials', [
-            'accountSid' => $accountSid,
-            'authToken' => $authToken,
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($accountSid || $authToken) {
+          // Check if all five variables are present
+          if ($accountSid && $authToken) {
+              $provider->setAttribute('credentials', [
+                  'accountSid' => $accountSid,
+                  'authToken' => $authToken,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/vonage')
@@ -610,18 +610,18 @@ App::post('/v1/messaging/providers/vonage')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'vonage',
-      'type' => 'sms',
-      'credentials' => [
-        'apiKey' => $apiKey,
-        'apiSecret' => $apiSecret,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'vonage',
+          'type' => 'sms',
+          'credentials' => [
+              'apiKey' => $apiKey,
+              'apiSecret' => $apiSecret,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/vonage')
@@ -643,39 +643,39 @@ App::patch('/v1/messaging/providers/:id/vonage')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'vonage') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'vonage') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($apiKey || $apiSecret) {
-      // Check if all five variables are present
-        if ($apiKey && $apiSecret) {
-            $provider->setAttribute('credentials', [
-            'apiKey' => $apiKey,
-            'apiSecret' => $apiSecret,
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($apiKey || $apiSecret) {
+          // Check if all five variables are present
+          if ($apiKey && $apiSecret) {
+              $provider->setAttribute('credentials', [
+                  'apiKey' => $apiKey,
+                  'apiSecret' => $apiSecret,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 /**
@@ -698,17 +698,17 @@ App::post('/v1/messaging/providers/fcm')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $serverKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'fcm',
-      'type' => 'push',
-      'credentials' => [
-        'serverKey' => $serverKey,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'fcm',
+          'type' => 'push',
+          'credentials' => [
+              'serverKey' => $serverKey,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/fcm')
@@ -729,30 +729,30 @@ App::patch('/v1/messaging/providers/:id/fcm')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $serverKey, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'fcm') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'fcm') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($serverKey) {
-        $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
-    }
+      if ($serverKey) {
+          $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/apns')
@@ -776,21 +776,21 @@ App::post('/v1/messaging/providers/apns')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->createDocument('providers', new Document([
-      'name' => $name,
-      'provider' => 'apns',
-      'type' => 'push',
-      'credentials' => [
-        'authKey' => $authKey,
-        'authKeyId' => $authKeyId,
-        'teamId' => $teamId,
-        'bundleId' => $bundleId,
-        'endpoint' => $endpoint,
-      ],
-    ]));
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $provider = $dbForProject->createDocument('providers', new Document([
+          'name' => $name,
+          'provider' => 'apns',
+          'type' => 'push',
+          'credentials' => [
+              'authKey' => $authKey,
+              'authKeyId' => $authKeyId,
+              'teamId' => $teamId,
+              'bundleId' => $bundleId,
+              'endpoint' => $endpoint,
+          ],
+      ]));
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::patch('/v1/messaging/providers/:id/apns')
@@ -815,42 +815,42 @@ App::patch('/v1/messaging/providers/:id/apns')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
-    $providerAttr = $provider->getAttribute('provider');
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
+      $providerAttr = $provider->getAttribute('provider');
 
-    if ($providerAttr !== 'apns') {
-        throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
-    }
+      if ($providerAttr !== 'apns') {
+          throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+      }
 
-    if ($name) {
-        $provider->setAttribute('name', $name);
-    }
+      if ($name) {
+          $provider->setAttribute('name', $name);
+      }
 
-    if ($authKey || $authKeyId || $teamId || $bundleId || $endpoint) {
-      // Check if all five variables are present
-        if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
-            $provider->setAttribute('credentials', [
-            'authKey' => $authKey,
-            'authKeyId' => $authKeyId,
-            'teamId' => $teamId,
-            'bundleId' => $bundleId,
-            'endpoint' => $endpoint,
-            ]);
-        } else {
-          // Not all credential params are present
-            throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-        }
-    }
+      if ($authKey || $authKeyId || $teamId || $bundleId || $endpoint) {
+          // Check if all five variables are present
+          if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
+              $provider->setAttribute('credentials', [
+                  'authKey' => $authKey,
+                  'authKeyId' => $authKeyId,
+                  'teamId' => $teamId,
+                  'bundleId' => $bundleId,
+                  'endpoint' => $endpoint,
+              ]);
+          } else {
+              // Not all credential params are present
+              throw new Exception(Exception::DOCUMENT_MISSING_DATA);
+          }
+      }
 
-    $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
-    $response
-      ->dynamic($provider, Response::MODEL_PROVIDER);
+      $response
+        ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::delete('/v1/messaging/providers/:id')
@@ -869,16 +869,16 @@ App::delete('/v1/messaging/providers/:id')
   ->inject('dbForProject')
   ->inject('response')
   ->action(function (string $id, Database $dbForProject, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $id);
+      $provider = $dbForProject->getDocument('providers', $id);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
 
-    $dbForProject->deleteCachedDocument('providers', $provider->getId());
-    $dbForProject->deleteDocument('providers', $provider->getId());
+      $dbForProject->deleteCachedDocument('providers', $provider->getId());
+      $dbForProject->deleteDocument('providers', $provider->getId());
 
-    $response->noContent();
+      $response->noContent();
   });
 
 App::post('/v1/messaging/messages/email')
@@ -904,30 +904,30 @@ App::post('/v1/messaging/messages/email')
   ->inject('events')
   ->inject('response')
   ->action(function (string $providerId, string $to, string $subject, string $content, string $from, string $html, DateTime $deliveryTime, Database $dbForProject, Event $eventsInstance, Response $response) {
-    $provider = $dbForProject->getDocument('providers', $providerId);
+      $provider = $dbForProject->getDocument('providers', $providerId);
 
-    if ($provider->isEmpty()) {
-        throw new Exception(Exception::PROVIDER_NOT_FOUND);
-    }
+      if ($provider->isEmpty()) {
+          throw new Exception(Exception::PROVIDER_NOT_FOUND);
+      }
 
-    $message = $dbForProject->createDocument('messages', new Document([
-      'providerId' => $provider->getId(),
-      'providerInternalId' => $provider->getInternalId(),
-      'to' => $to,
-      'data' => [
-        'subject' => $subject,
-        'content' => $content,
-      ],
-      'deliveryTime' => $deliveryTime,
-      'deliveryError' => null,
-      'deliveredTo' => null,
-      'delivered' => false,
-      'search' => null,
-    ]));
+      $message = $dbForProject->createDocument('messages', new Document([
+          'providerId' => $provider->getId(),
+          'providerInternalId' => $provider->getInternalId(),
+          'to' => $to,
+          'data' => [
+              'subject' => $subject,
+              'content' => $content,
+          ],
+          'deliveryTime' => $deliveryTime,
+          'deliveryError' => null,
+          'deliveredTo' => null,
+          'delivered' => false,
+          'search' => null,
+      ]));
 
-    $eventsInstance->setParam('messageId', $message->getId());
+      $eventsInstance->setParam('messageId', $message->getId());
 
-    $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
-      ->dynamic($provider, Response::MODEL_MESSAGE);
+      $response
+        ->setStatusCode(Response::STATUS_CODE_CREATED)
+        ->dynamic($provider, Response::MODEL_MESSAGE);
   });

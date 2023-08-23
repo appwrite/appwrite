@@ -5,13 +5,13 @@ namespace Appwrite\Auth;
 abstract class Hash
 {
     /**
-     * @var array $options Hashing-algo specific options
-    */
+     * @var array Hashing-algo specific options
+     */
     protected array $options = [];
 
     /**
-     * @param array $options Hashing-algo specific options
-    */
+     * @param  array  $options Hashing-algo specific options
+     */
     public function __construct(array $options = [])
     {
         $this->setOptions($options);
@@ -20,11 +20,12 @@ abstract class Hash
     /**
      * Set hashing algo options
      *
-     * @param array $options Hashing-algo specific options
-    */
+     * @param  array  $options Hashing-algo specific options
+     */
     public function setOptions(array $options): self
     {
         $this->options = \array_merge([], $this->getDefaultOptions(), $options);
+
         return $this;
     }
 
@@ -32,24 +33,22 @@ abstract class Hash
      * Get hashing algo options
      *
      * @return array $options Hashing-algo specific options
-    */
+     */
     public function getOptions(): array
     {
         return $this->options;
     }
 
     /**
-     * @param string $password Input password to hash
-     *
+     * @param  string  $password Input password to hash
      * @return string hash
      */
     abstract public function hash(string $password): string;
 
     /**
-     * @param string $password Input password to validate
-     * @param string $hash Hash to verify password against
-     *
-     * @return boolean true if password matches hash
+     * @param  string  $password Input password to validate
+     * @param  string  $hash Hash to verify password against
+     * @return bool true if password matches hash
      */
     abstract public function verify(string $password, string $hash): bool;
 

@@ -20,7 +20,7 @@ class Metric extends Model
                 'type' => self::TYPE_DATETIME,
                 'description' => 'The date at which this metric was aggregated in ISO 8601 format.',
                 'default' => '',
-                'example' => self::TYPE_DATETIME_EXAMPLE
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ]);
     }
 

@@ -12,7 +12,7 @@ class EnvTest extends TestCase
 
     public function setUp(): void
     {
-        $data = @file_get_contents(__DIR__ . '/../../resources/docker/.env');
+        $data = @file_get_contents(__DIR__.'/../../resources/docker/.env');
 
         if ($data === false) {
             throw new Exception('Failed to read compose file');
@@ -34,10 +34,10 @@ class EnvTest extends TestCase
 
     public function testExport(): void
     {
-        $this->assertEquals("_APP_X=value1
+        $this->assertEquals('_APP_X=value1
 _APP_Y=value2
 _APP_Z=value3
 _APP_W=value5=
-", $this->object->export());
+', $this->object->export());
     }
 }

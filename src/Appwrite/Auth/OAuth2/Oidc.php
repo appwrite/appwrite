@@ -43,7 +43,7 @@ class Oidc extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->getAuthorizationEndpoint() . '?' . \http_build_query([
+        return $this->getAuthorizationEndpoint().'?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'state' => \json_encode($this->state),
@@ -53,8 +53,7 @@ class Oidc extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -71,17 +70,16 @@ class Oidc extends OAuth2
                     'client_secret' => $this->getClientSecret(),
                     'redirect_uri' => $this->callback,
                     'scope' => \implode(' ', $this->getScopes()),
-                    'grant_type' => 'authorization_code'
+                    'grant_type' => 'authorization_code',
                 ])
             ), true);
         }
+
         return $this->tokens;
     }
 
-
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -95,7 +93,7 @@ class Oidc extends OAuth2
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->getClientSecret(),
-                'grant_type' => 'refresh_token'
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -107,8 +105,7 @@ class Oidc extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -123,8 +120,7 @@ class Oidc extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -141,8 +137,7 @@ class Oidc extends OAuth2
     /**
      * Check if the User email is verified
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -153,8 +148,7 @@ class Oidc extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -168,15 +162,14 @@ class Oidc extends OAuth2
         return '';
     }
 
-     /**
-     * @param string $accessToken
-     *
+    /**
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $headers = ['Authorization: Bearer ' . \urlencode($accessToken)];
+            $headers = ['Authorization: Bearer '.\urlencode($accessToken)];
             $user = $this->request('GET', $this->getUserinfoEndpoint(), $headers);
             $this->user = \json_decode($user, true);
         }
@@ -196,7 +189,7 @@ class Oidc extends OAuth2
         return $secret['clientSecret'] ?? '';
     }
 
-     /**
+    /**
      * Extracts the well known endpoint from the JSON stored in appSecret.
      *
      * @return string
@@ -204,13 +197,14 @@ class Oidc extends OAuth2
     protected function getWellKnownEndpoint(): string
     {
         $secret = $this->getAppSecret();
+
         return $secret['wellKnownEndpoint'] ?? '';
     }
 
     /**
-    * Extracts the authorization endpoint from the JSON stored in appSecret.
-    *
-    * If one is not provided, it will be retrieved from the well-known configuration.
+     * Extracts the authorization endpoint from the JSON stored in appSecret.
+     *
+     * If one is not provided, it will be retrieved from the well-known configuration.
      *
      * @return string
      */
@@ -219,56 +213,59 @@ class Oidc extends OAuth2
         $secret = $this->getAppSecret();
 
         $endpoint = $secret['authorizationEndpoint'] ?? '';
-        if (!empty($endpoint)) {
+        if (! empty($endpoint)) {
             return $endpoint;
         }
 
         $wellKnownConfiguration = $this->getWellKnownConfiguration();
+
         return $wellKnownConfiguration['authorization_endpoint'] ?? '';
     }
 
     /**
-    * Extracts the token endpoint from the JSON stored in appSecret.
-    *
-    * If one is not provided, it will be retrieved from the well-known configuration.
-    *
-    * @return string
-    */
+     * Extracts the token endpoint from the JSON stored in appSecret.
+     *
+     * If one is not provided, it will be retrieved from the well-known configuration.
+     *
+     * @return string
+     */
     protected function getTokenEndpoint(): string
     {
         $secret = $this->getAppSecret();
 
         $endpoint = $secret['tokenEndpoint'] ?? '';
-        if (!empty($endpoint)) {
+        if (! empty($endpoint)) {
             return $endpoint;
         }
 
         $wellKnownConfiguration = $this->getWellKnownConfiguration();
+
         return $wellKnownConfiguration['token_endpoint'] ?? '';
     }
 
     /**
-    * Extracts the userinfo endpoint from the JSON stored in appSecret.
-    *
-    * If one is not provided, it will be retrieved from the well-known configuration.
-    *
-    * @return string
-    */
+     * Extracts the userinfo endpoint from the JSON stored in appSecret.
+     *
+     * If one is not provided, it will be retrieved from the well-known configuration.
+     *
+     * @return string
+     */
     protected function getUserinfoEndpoint(): string
     {
         $secret = $this->getAppSecret();
         $endpoint = $secret['userinfoEndpoint'] ?? '';
-        if (!empty($endpoint)) {
+        if (! empty($endpoint)) {
             return $endpoint;
         }
 
         $wellKnownConfiguration = $this->getWellKnownConfiguration();
+
         return $wellKnownConfiguration['userinfo_endpoint'] ?? '';
     }
 
-   /**
-    * Get the well-known configuration using the well known endpoint
-    */
+    /**
+     * Get the well-known configuration using the well known endpoint
+     */
     protected function getWellKnownConfiguration(): array
     {
         if (empty($this->wellKnownConfiguration)) {
@@ -291,6 +288,7 @@ class Oidc extends OAuth2
         } catch (\Throwable $th) {
             throw new \Exception('Invalid secret');
         }
+
         return $secret;
     }
 }

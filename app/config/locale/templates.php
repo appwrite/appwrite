@@ -10,6 +10,6 @@ return [
     'sms' => [
         'verification',
         'login',
-        'invitation'
-    ]
+        'invitation',
+    ],
 ];

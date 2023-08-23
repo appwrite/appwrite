@@ -1,9 +1,9 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Utopia\App;
-use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
@@ -13,7 +13,6 @@ App::init()
     ->inject('request')
     ->inject('project')
     ->action(function (App $utopia, Request $request, Document $project) {
-
         $route = $utopia->match($request);
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());

@@ -7,8 +7,8 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 class AuthTest extends Scope
 {
@@ -17,12 +17,15 @@ class AuthTest extends Scope
     use Base;
 
     private array $account1;
+
     private array $account2;
 
     private string $token1;
+
     private string $token2;
 
     private array $database;
+
     private array $collection;
 
     public function setUp(): void
@@ -32,8 +35,8 @@ class AuthTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_ACCOUNT);
 
-        $email1 = 'test' . \rand() . '@test.com';
-        $email2 = 'test' . \rand() . '@test.com';
+        $email1 = 'test'.\rand().'@test.com';
+        $email2 = 'test'.\rand().'@test.com';
 
         // Create account 1
         $graphQLPayload = [
@@ -66,7 +69,7 @@ class AuthTest extends Scope
             'variables' => [
                 'email' => $email1,
                 'password' => 'password',
-            ]
+            ],
         ];
         $session1 = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -74,8 +77,8 @@ class AuthTest extends Scope
         ], $graphQLPayload);
 
         $this->token1 = $this->client->parseCookie(
-            (string)$session1['headers']['set-cookie']
-        )['a_session_' . $projectId];
+            (string) $session1['headers']['set-cookie']
+        )['a_session_'.$projectId];
 
         // Create session 2
         $graphQLPayload['variables']['email'] = $email2;
@@ -86,8 +89,8 @@ class AuthTest extends Scope
         ], $graphQLPayload);
 
         $this->token2 = $this->client->parseCookie(
-            (string)$session2['headers']['set-cookie']
-        )['a_session_' . $projectId];
+            (string) $session2['headers']['set-cookie']
+        )['a_session_'.$projectId];
 
         // Create database
         $query = $this->getQuery(self::$CREATE_DATABASE);
@@ -96,7 +99,7 @@ class AuthTest extends Scope
             'variables' => [
                 'databaseId' => ID::unique(),
                 'name' => 'Actors',
-            ]
+            ],
         ];
         $this->database = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -115,9 +118,9 @@ class AuthTest extends Scope
                 'name' => 'Actors',
                 'documentSecurity' => true,
                 'permissions' => [
-                    Permission::create(Role::user($userId))
-                ]
-            ]
+                    Permission::create(Role::user($userId)),
+                ],
+            ],
         ];
         $this->collection = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -135,7 +138,7 @@ class AuthTest extends Scope
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
-            ]
+            ],
         ];
         $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
@@ -166,13 +169,13 @@ class AuthTest extends Scope
                     Permission::read(Role::user($userId)),
                     Permission::update(Role::user($userId)),
                     Permission::delete(Role::user($userId)),
-                ]
-            ]
+                ],
+            ],
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
+            'cookie' => 'a_session_'.$projectId.'='.$this->token1,
         ], $gqlPayload);
 
         // Try to read as account 1
@@ -183,12 +186,12 @@ class AuthTest extends Scope
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
                 'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
-            ]
+            ],
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
+            'cookie' => 'a_session_'.$projectId.'='.$this->token1,
         ], $gqlPayload);
 
         $this->assertIsArray($document['body']['data']['databasesGetDocument']);
@@ -198,7 +201,7 @@ class AuthTest extends Scope
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $this->token2,
+            'cookie' => 'a_session_'.$projectId.'='.$this->token2,
         ], $gqlPayload);
 
         $this->assertArrayHasKey('errors', $document['body']);
@@ -226,12 +229,12 @@ class AuthTest extends Scope
                     Permission::update(Role::user($userId)),
                     Permission::delete(Role::user($userId)),
                 ],
-            ]
+            ],
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
+            'cookie' => 'a_session_'.$projectId.'='.$this->token1,
         ], $gqlPayload);
 
         // Try to delete as account 1
@@ -242,12 +245,12 @@ class AuthTest extends Scope
                 'databaseId' => $this->database['body']['data']['databasesCreate']['_id'],
                 'collectionId' => $this->collection['body']['data']['databasesCreateCollection']['_id'],
                 'documentId' => $document['body']['data']['databasesCreateDocument']['_id'],
-            ]
+            ],
         ];
         $document = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'cookie' => 'a_session_' . $projectId . '=' . $this->token1,
+            'cookie' => 'a_session_'.$projectId.'='.$this->token1,
         ], $gqlPayload);
 
         $this->assertIsNotArray($document['body']);

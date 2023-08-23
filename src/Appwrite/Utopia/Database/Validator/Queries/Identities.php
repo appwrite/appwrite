@@ -14,7 +14,6 @@ class Identities extends Base
 
     /**
      * Expression constructor
-     *
      */
     public function __construct()
     {

@@ -34,13 +34,13 @@ class AbuseTest extends Scope
         $max = 120;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            $response = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'documentId' => ID::unique(),
                 'data' => [
-                    'title' => 'The Hulk ' . $i,
+                    'title' => 'The Hulk '.$i,
                 ],
             ]);
 
@@ -59,7 +59,7 @@ class AbuseTest extends Scope
         $collectionId = $data['collectionId'];
         $max = 120;
 
-        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+        $document = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -73,12 +73,12 @@ class AbuseTest extends Scope
         $documentId = $document['body']['$id'];
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents/'.$documentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'data' => [
-                    'title' => 'The Hulk ' . $i,
+                    'title' => 'The Hulk '.$i,
                 ],
             ]);
 
@@ -98,7 +98,7 @@ class AbuseTest extends Scope
         $max = 60;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents', [
+            $document = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -111,7 +111,7 @@ class AbuseTest extends Scope
 
             $documentId = $document['body']['$id'];
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $documentId, [
+            $response = $this->client->call(Client::METHOD_DELETE, '/databases/'.$databaseId.'/collections/'.$collectionId.'/documents/'.$documentId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]);
@@ -131,12 +131,12 @@ class AbuseTest extends Scope
         $max = 60;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', [
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
+                'file' => new CURLFile(realpath(__DIR__.'/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
             if ($i < $max) {
@@ -153,23 +153,23 @@ class AbuseTest extends Scope
         $bucketId = $data['bucketId'];
         $max = 60;
 
-        $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+        $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', [
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'fileId' => ID::unique(),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
+            'file' => new CURLFile(realpath(__DIR__.'/../../resources/logo.png'), 'image/png', 'permissions.png'),
         ]);
 
         $fileId = $response['body']['$id'];
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            $response = $this->client->call(Client::METHOD_PUT, '/storage/buckets/'.$bucketId.'/files/'.$fileId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], [
-                'name' => 'permissions' . $i . '.png',
+                'name' => 'permissions'.$i.'.png',
             ]);
 
             if ($i < $max) {
@@ -187,18 +187,18 @@ class AbuseTest extends Scope
         $max = 60;
 
         for ($i = 0; $i <= $max + 1; $i++) {
-            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', [
+            $response = $this->client->call(Client::METHOD_POST, '/storage/buckets/'.$bucketId.'/files', [
                 'content-type' => 'multipart/form-data',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], [
                 'fileId' => ID::unique(),
-                'file' => new CURLFile(realpath(__DIR__ . '/../../resources/logo.png'), 'image/png', 'permissions.png'),
+                'file' => new CURLFile(realpath(__DIR__.'/../../resources/logo.png'), 'image/png', 'permissions.png'),
             ]);
 
             $fileId = $response['body']['$id'];
 
-            $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
+            $response = $this->client->call(Client::METHOD_DELETE, '/storage/buckets/'.$bucketId.'/files/'.$fileId, [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ]);
@@ -216,7 +216,7 @@ class AbuseTest extends Scope
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'databaseId' => ID::unique(),
             'name' => 'AbuseDatabase',
@@ -227,10 +227,10 @@ class AbuseTest extends Scope
 
         $databaseId = $database['body']['$id'];
 
-        $movies = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', [
+        $movies = $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'collectionId' => ID::unique(),
             'name' => 'Movies',
@@ -244,10 +244,10 @@ class AbuseTest extends Scope
 
         $collectionId = $movies['body']['$id'];
 
-        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/attributes/string', [
+        $this->client->call(Client::METHOD_POST, '/databases/'.$databaseId.'/collections/'.$collectionId.'/attributes/string', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'key' => 'title',
             'size' => 256,

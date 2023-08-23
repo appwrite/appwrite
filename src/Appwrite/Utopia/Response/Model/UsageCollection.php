@@ -21,9 +21,8 @@ class UsageCollection extends Model
                 'description' => 'Aggregated stats for total number of documents.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

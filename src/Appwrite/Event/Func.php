@@ -9,9 +9,13 @@ use Utopia\Queue\Connection;
 class Func extends Event
 {
     protected string $jwt = '';
+
     protected string $type = '';
+
     protected string $data = '';
+
     protected ?Document $function = null;
+
     protected ?Document $execution = null;
 
     public function __construct(protected Connection $connection)
@@ -22,7 +26,7 @@ class Func extends Event
     /**
      * Sets function document for the function event.
      *
-     * @param Document $function
+     * @param  Document  $function
      * @return self
      */
     public function setFunction(Document $function): self
@@ -45,7 +49,7 @@ class Func extends Event
     /**
      * Sets execution for the function event.
      *
-     * @param Document $execution
+     * @param  Document  $execution
      * @return self
      */
     public function setExecution(Document $execution): self
@@ -68,7 +72,7 @@ class Func extends Event
     /**
      * Sets type for the function event.
      *
-     * @param string $type Can be `schedule`, `event` or `http`.
+     * @param  string  $type Can be `schedule`, `event` or `http`.
      * @return self
      */
     public function setType(string $type): self
@@ -91,7 +95,7 @@ class Func extends Event
     /**
      * Sets custom data for the function event.
      *
-     * @param string $data
+     * @param  string  $data
      * @return self
      */
     public function setData(string $data): self
@@ -114,7 +118,7 @@ class Func extends Event
     /**
      * Sets JWT for the function event.
      *
-     * @param string $jwt
+     * @param  string  $jwt
      * @return self
      */
     public function setJWT(string $jwt): self
@@ -138,6 +142,7 @@ class Func extends Event
      * Executes the function event and sends it to the functions worker.
      *
      * @return string|bool
+     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool
@@ -166,10 +171,8 @@ class Func extends Event
     /**
      * Generate a function event from a base event
      *
-     * @param Event $event
-     *
+     * @param  Event  $event
      * @return self
-     *
      */
     public function from(Event $event): self
     {
@@ -178,6 +181,7 @@ class Func extends Event
         $this->payload = $event->getPayload();
         $this->event = $event->getEvent();
         $this->params = $event->getParams();
+
         return $this;
     }
 }

@@ -7,8 +7,11 @@ use Resque;
 class Audit extends Event
 {
     protected string $resource = '';
+
     protected string $mode = '';
+
     protected string $userAgent = '';
+
     protected string $ip = '';
 
     public function __construct()
@@ -19,7 +22,7 @@ class Audit extends Event
     /**
      * Set resource for this audit event.
      *
-     * @param string $resource
+     * @param  string  $resource
      * @return self
      */
     public function setResource(string $resource): self
@@ -42,7 +45,7 @@ class Audit extends Event
     /**
      * Set mode for this audit event
      *
-     * @param string $mode
+     * @param  string  $mode
      * @return self
      */
     public function setMode(string $mode): self
@@ -65,7 +68,7 @@ class Audit extends Event
     /**
      * Set user agent for this audit event.
      *
-     * @param string $userAgent
+     * @param  string  $userAgent
      * @return self
      */
     public function setUserAgent(string $userAgent): self
@@ -88,7 +91,7 @@ class Audit extends Event
     /**
      * Set IP for this audit event.
      *
-     * @param string $ip
+     * @param  string  $ip
      * @return self
      */
     public function setIP(string $ip): self
@@ -112,6 +115,7 @@ class Audit extends Event
      * Executes the event and sends it to the audit worker.
      *
      * @return string|bool
+     *
      * @throws \InvalidArgumentException
      */
     public function trigger(): string|bool

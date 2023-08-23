@@ -30,7 +30,7 @@ class Zoom extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'user_info:read'
+        'user_info:read',
     ];
 
     /**
@@ -46,7 +46,7 @@ class Zoom extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return $this->endpoint . '/oauth/authorize?' . \http_build_query([
+        return $this->endpoint.'/oauth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'response_type' => 'code',
@@ -56,22 +56,21 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
-            $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
+            $headers = ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . '/oauth/token',
+                $this->endpoint.'/oauth/token',
                 $headers,
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'redirect_uri' => $this->callback,
-                    'code' => $code
+                    'code' => $code,
                 ])
             ), true);
         }
@@ -80,16 +79,15 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
-        $headers = ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
+        $headers = ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret), 'Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . '/oauth/token',
+            $this->endpoint.'/oauth/token',
             $headers,
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -105,8 +103,7 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -117,8 +114,7 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -133,8 +129,7 @@ class Zoom extends OAuth2
      *
      * @link https://marketplace.zoom.us/docs/api-reference/zoom-api/methods/#operation/user
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -149,26 +144,24 @@ class Zoom extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
     {
         $response = $this->getUser($accessToken);
 
-        return ($response['first_name'] ?? '') . ' ' . ($response['last_name'] ?? '');
+        return ($response['first_name'] ?? '').' '.($response['last_name'] ?? '');
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken)
     {
         $headers = [
-            'Authorization: Bearer ' . \urlencode($accessToken)
+            'Authorization: Bearer '.\urlencode($accessToken),
         ];
 
         if (empty($this->user)) {

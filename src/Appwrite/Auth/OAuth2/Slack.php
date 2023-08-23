@@ -23,7 +23,7 @@ class Slack extends OAuth2
         'identity.avatar',
         'identity.basic',
         'identity.email',
-        'identity.team'
+        'identity.team',
     ];
 
     /**
@@ -40,17 +40,16 @@ class Slack extends OAuth2
     public function getLoginURL(): string
     {
         // https://api.slack.com/docs/oauth#step_1_-_sending_users_to_authorize_and_or_install
-        return 'https://slack.com/oauth/authorize?' . \http_build_query([
+        return 'https://slack.com/oauth/authorize?'.\http_build_query([
             'client_id' => $this->appID,
             'scope' => \implode(' ', $this->getScopes()),
             'redirect_uri' => $this->callback,
-            'state' => \json_encode($this->state)
+            'state' => \json_encode($this->state),
         ]);
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -59,11 +58,11 @@ class Slack extends OAuth2
             // https://api.slack.com/docs/oauth#step_3_-_exchanging_a_verification_code_for_an_access_token
             $this->tokens = \json_decode($this->request(
                 'GET',
-                'https://slack.com/api/oauth.access?' . \http_build_query([
+                'https://slack.com/api/oauth.access?'.\http_build_query([
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
-                    'redirect_uri' => $this->callback
+                    'redirect_uri' => $this->callback,
                 ])
             ), true);
         }
@@ -72,19 +71,18 @@ class Slack extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'GET',
-            'https://slack.com/api/oauth.access?' . \http_build_query([
+            'https://slack.com/api/oauth.access?'.\http_build_query([
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'refresh_token' => $refreshToken,
-                'grant_type' => 'refresh_token'
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -96,8 +94,7 @@ class Slack extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -108,8 +105,7 @@ class Slack extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -126,20 +122,18 @@ class Slack extends OAuth2
      *
      * @link https://slack.com/help/articles/207262907-Change-your-email-address
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUserEmail($accessToken);
 
-        return !empty($email);
+        return ! empty($email);
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -152,8 +146,7 @@ class Slack extends OAuth2
     /**
      * @link https://api.slack.com/methods/users.identity
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -161,7 +154,7 @@ class Slack extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                'https://slack.com/api/users.identity?token=' . \urlencode($accessToken)
+                'https://slack.com/api/users.identity?token='.\urlencode($accessToken)
             );
 
             $this->user = \json_decode($user, true);

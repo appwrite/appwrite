@@ -39,8 +39,7 @@ class Database extends Model
                 'description' => 'Database enabled.',
                 'default' => true,
                 'example' => false,
-            ])
-        ;
+            ]);
     }
 
     /**

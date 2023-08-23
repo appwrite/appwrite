@@ -2,8 +2,6 @@
 
 namespace Appwrite\Migration\Version;
 
-use Appwrite\Auth\Auth;
-use Utopia\Config\Config;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -13,7 +11,6 @@ class V19 extends Migration
 {
     public function execute(): void
     {
-
         /**
          * Disable SubQueries for Performance.
          */
@@ -25,7 +22,7 @@ class V19 extends Migration
             );
         }
 
-        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::log('Migrating Project: '.$this->project->getAttribute('name').' ('.$this->project->getId().')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
         $this->alterPermissionIndex('_metadata');
@@ -48,6 +45,7 @@ class V19 extends Migration
      * Migrate all Databases.
      *
      * @return void
+     *
      * @throws \Exception
      */
     private function migrateDatabases(): void
@@ -99,7 +97,7 @@ class V19 extends Migration
                 default:
                     break;
             }
-            if (!in_array($id, ['files', 'collections'])) {
+            if (! in_array($id, ['files', 'collections'])) {
                 $this->alterPermissionIndex($id);
                 $this->alterUidType($id);
             }
@@ -111,7 +109,7 @@ class V19 extends Migration
     /**
      * Fix run on each document
      *
-     * @param Document $document
+     * @param  Document  $document
      * @return Document
      */
     protected function fixDocument(Document $document): Document
@@ -163,6 +161,7 @@ class V19 extends Migration
      * Migrating all Bucket tables.
      *
      * @return void
+     *
      * @throws \Exception
      * @throws \PDOException
      */

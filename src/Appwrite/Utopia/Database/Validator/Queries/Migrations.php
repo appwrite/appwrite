@@ -11,12 +11,11 @@ class Migrations extends Base
         'resources',
         'statusCounters',
         'resourceData',
-        'errors'
+        'errors',
     ];
 
     /**
      * Expression constructor
-     *
      */
     public function __construct()
     {

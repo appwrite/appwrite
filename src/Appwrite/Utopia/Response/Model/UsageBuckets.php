@@ -21,16 +21,15 @@ class UsageBuckets extends Model
                 'description' => 'Aggregated stats for total number of files in this bucket.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('filesStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for total storage of files in this bucket.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

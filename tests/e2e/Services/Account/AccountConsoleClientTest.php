@@ -3,11 +3,11 @@
 namespace Tests\E2E\Services\Account;
 
 use Appwrite\Extend\Exception;
-use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
-use Tests\E2E\Client;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class AccountConsoleClientTest extends Scope
@@ -18,7 +18,7 @@ class AccountConsoleClientTest extends Scope
 
     public function testCreateAccountWithInvite(): void
     {
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -34,7 +34,7 @@ class AccountConsoleClientTest extends Scope
             'email' => $email,
             'password' => $password,
             'name' => $name,
-            'code' => 'Invalid Code'
+            'code' => 'Invalid Code',
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 401);
@@ -66,7 +66,7 @@ class AccountConsoleClientTest extends Scope
             'email' => $email,
             'password' => $password,
             'name' => $name,
-            'code' => 'code-zero'
+            'code' => 'code-zero',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -76,7 +76,7 @@ class AccountConsoleClientTest extends Scope
         $this->assertEquals($response['body']['email'], $email);
         $this->assertEquals($response['body']['name'], $name);
 
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $response = $this->client->call(Client::METHOD_POST, '/account/invite', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -86,7 +86,7 @@ class AccountConsoleClientTest extends Scope
             'email' => $email,
             'password' => $password,
             'name' => $name,
-            'code' => 'code-one'
+            'code' => 'code-one',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);

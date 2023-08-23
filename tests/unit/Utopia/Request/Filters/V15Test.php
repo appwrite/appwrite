@@ -28,7 +28,7 @@ class V15Test extends TestCase
         return [
             'basic test' => [
                 ['limit' => '12', 'offset' => '0'],
-                ['queries' => ['limit(12)', 'offset(0)']]
+                ['queries' => ['limit(12)', 'offset(0)']],
             ],
         ];
     }
@@ -72,8 +72,8 @@ class V15Test extends TestCase
                         'limit(12)',
                         'offset(0)',
                         'cursorBefore("abcd")',
-                        'orderAsc("")'
-                    ]
+                        'orderAsc("")',
+                    ],
                 ],
             ],
         ];
@@ -90,7 +90,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'cursorAfter("abcd")',
-                    ]
+                    ],
                 ],
             ],
             'cursorDirection invalid' => [
@@ -101,7 +101,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'cursorAfter("abcd")',
-                    ]
+                    ],
                 ],
             ],
         ];
@@ -117,7 +117,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'orderDesc("")',
-                    ]
+                    ],
                 ],
             ],
             'orderType invalid' => [
@@ -127,7 +127,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'orderAsc("")',
-                    ]
+                    ],
                 ],
             ],
         ];
@@ -239,7 +239,7 @@ class V15Test extends TestCase
             'write invalid' => [
                 ['write' => ['invalid', 'invalid:a']],
                 ['permissions' => ['write("invalid:a")']],
-            ]
+            ],
         ];
     }
 
@@ -320,7 +320,7 @@ class V15Test extends TestCase
                     'queries' => [
                         'orderDesc("lastName")',
                         'orderAsc("firstName")',
-                    ]
+                    ],
                 ],
             ],
             'orderType only' => [
@@ -330,7 +330,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'orderDesc("")',
-                    ]
+                    ],
                 ],
             ],
             'orderType invalid' => [
@@ -341,7 +341,7 @@ class V15Test extends TestCase
                 [
                     'queries' => [
                         'orderAsc("lastName")',
-                    ]
+                    ],
                 ],
             ],
         ];
@@ -371,7 +371,7 @@ class V15Test extends TestCase
                         'greaterThan("age", [20])',
                         'greaterThanEqual("age", [21])',
                         'search("address", ["pla"])',
-                    ]
+                    ],
                 ],
             ],
         ];
@@ -439,7 +439,7 @@ class V15Test extends TestCase
                         'team:b',
                         'team:c/member',
                         'member:z',
-                    ]
+                    ],
                 ],
             ],
         ];

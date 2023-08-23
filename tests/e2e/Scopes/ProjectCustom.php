@@ -13,19 +13,19 @@ trait ProjectCustom
     protected static $project = [];
 
     /**
-     * @param bool $fresh
+     * @param  bool  $fresh
      * @return array
      */
     public function getProject(bool $fresh = false): array
     {
-        if (!empty(self::$project) && !$fresh) {
+        if (! empty(self::$project) && ! $fresh) {
             return self::$project;
         }
 
         $team = $this->client->call(Client::METHOD_POST, '/teams', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'teamId' => ID::unique(),
@@ -38,7 +38,7 @@ trait ProjectCustom
         $project = $this->client->call(Client::METHOD_POST, '/projects', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'projectId' => ID::unique(),
@@ -52,10 +52,10 @@ trait ProjectCustom
         $this->assertEquals(201, $project['headers']['status-code']);
         $this->assertNotEmpty($project['body']);
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/keys', [
+        $key = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Key',
@@ -92,10 +92,10 @@ trait ProjectCustom
         $this->assertNotEmpty($key['body']);
         $this->assertNotEmpty($key['body']['secret']);
 
-        $webhook = $this->client->call(Client::METHOD_POST, '/projects/' . $project['body']['$id'] . '/webhooks', [
+        $webhook = $this->client->call(Client::METHOD_POST, '/projects/'.$project['body']['$id'].'/webhooks', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Webhook Test',
@@ -104,7 +104,7 @@ trait ProjectCustom
                 // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
                 'buckets.*',
                 'teams.*',
-                'users.*'
+                'users.*',
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,
@@ -130,13 +130,12 @@ trait ProjectCustom
 
     public function getNewKey(array $scopes)
     {
-
         $projectId = self::$project['$id'];
 
-        $key = $this->client->call(Client::METHOD_POST, '/projects/' . $projectId . '/keys', [
+        $key = $this->client->call(Client::METHOD_POST, '/projects/'.$projectId.'/keys', [
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'cookie' => 'a_session_console='.$this->getRoot()['session'],
             'x-appwrite-project' => 'console',
         ], [
             'name' => 'Demo Project Key',

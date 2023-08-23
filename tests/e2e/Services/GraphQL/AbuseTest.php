@@ -92,7 +92,7 @@ class AbuseTest extends Scope
 
         $max = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
 
-        $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
+        $this->assertEquals('Max query complexity should be '.$max.' but got 259.', $response['body']['errors'][0]['message']);
     }
 
     public function testTooManyQueriesBlocked()
@@ -122,7 +122,7 @@ class AbuseTest extends Scope
             'variables' => [
                 'databaseId' => 'actors',
                 'name' => 'AbuseDatabase',
-            ]
+            ],
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -145,7 +145,7 @@ class AbuseTest extends Scope
                     Permission::read(Role::any()),
                     Permission::write(Role::any()),
                 ],
-            ]
+            ],
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -165,7 +165,7 @@ class AbuseTest extends Scope
                 'key' => 'name',
                 'size' => 256,
                 'required' => true,
-            ]
+            ],
         ];
 
         $this->client->call(Client::METHOD_POST, '/graphql', [

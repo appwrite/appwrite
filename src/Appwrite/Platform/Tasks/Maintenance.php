@@ -2,14 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 
@@ -31,7 +30,7 @@ class Maintenance extends Action
     public function action(Database $dbForConsole): void
     {
         Console::title('Maintenance V1');
-        Console::success(APP_NAME . ' maintenance process v1 has started');
+        Console::success(APP_NAME.' maintenance process v1 has started');
 
         function notifyDeleteExecutionLogs(int $interval)
         {
@@ -85,20 +84,19 @@ class Maintenance extends Action
             $time = DateTime::now();
 
             $certificates = $dbForConsole->find('certificates', [
-               Query::lessThan('attempts', 5), // Maximum 5 attempts
-               Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
-               Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
+                Query::lessThan('attempts', 5), // Maximum 5 attempts
+                Query::lessThanEqual('renewDate', $time), // includes 60 days cooldown (we have 30 days to renew)
+                Query::limit(200), // Limit 200 comes from LetsEncrypt (300 orders per 3 hours, keeping some for new domains)
             ]);
 
-
             if (\count($certificates) > 0) {
-                Console::info("[{$time}] Found " . \count($certificates) . " certificates for renewal, scheduling jobs.");
+                Console::info("[{$time}] Found ".\count($certificates).' certificates for renewal, scheduling jobs.');
 
                 $event = new Certificate();
                 foreach ($certificates as $certificate) {
                     $event
                         ->setDomain(new Document([
-                            'domain' => $certificate->getAttribute('domain')
+                            'domain' => $certificate->getAttribute('domain'),
                         ]))
                         ->trigger();
                 }
@@ -109,7 +107,6 @@ class Maintenance extends Action
 
         function notifyDeleteCache($interval)
         {
-
             (new Delete())
                 ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
@@ -118,7 +115,6 @@ class Maintenance extends Action
 
         function notifyDeleteSchedules($interval)
         {
-
             (new Delete())
                 ->setType(DELETE_TYPE_SCHEDULES)
                 ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))

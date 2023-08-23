@@ -62,8 +62,7 @@ class Build extends Model
                 'description' => 'The build duration in seconds.',
                 'default' => 0,
                 'example' => 0,
-            ])
-        ;
+            ]);
     }
 
     /**

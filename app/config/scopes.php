@@ -37,7 +37,7 @@ return [ // List of publicly visible scopes
     'indexes.write' => [
         'description' => 'Access to create, update, and delete your project\'s database collection\'s indexes',
     ],
-    'documents.read'  => [
+    'documents.read' => [
         'description' => 'Access to read your project\'s database documents',
     ],
     'documents.write' => [
@@ -111,5 +111,5 @@ return [ // List of publicly visible scopes
     ],
     'targets.write' => [
         'description' => 'Access to create, update, and delete your project\'s targets',
-    ]
+    ],
 ];

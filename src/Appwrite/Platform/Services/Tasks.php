@@ -2,26 +2,25 @@
 
 namespace Appwrite\Platform\Services;
 
-use Utopia\Platform\Service;
+use Appwrite\Platform\Tasks\CalcTierStats;
+use Appwrite\Platform\Tasks\CalcUsersStats;
+use Appwrite\Platform\Tasks\ClearCardCache;
 use Appwrite\Platform\Tasks\Doctor;
+use Appwrite\Platform\Tasks\Hamster;
 use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
-use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\PatchCreateMissingSchedules;
+use Appwrite\Platform\Tasks\PatchDeleteProjectCollections;
+use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
+use Appwrite\Platform\Tasks\Schedule;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
-use Appwrite\Platform\Tasks\Hamster;
-use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
-use Appwrite\Platform\Tasks\ClearCardCache;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
-use Appwrite\Platform\Tasks\CalcUsersStats;
-use Appwrite\Platform\Tasks\CalcTierStats;
-use Appwrite\Platform\Tasks\PatchDeleteProjectCollections;
+use Utopia\Platform\Service;
 
 class Tasks extends Service
 {
@@ -46,7 +45,6 @@ class Tasks extends Service
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcUsersStats::getName(), new CalcUsersStats())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
-            ->addAction(PatchDeleteProjectCollections::getName(), new PatchDeleteProjectCollections())
-        ;
+            ->addAction(PatchDeleteProjectCollections::getName(), new PatchDeleteProjectCollections());
     }
 }

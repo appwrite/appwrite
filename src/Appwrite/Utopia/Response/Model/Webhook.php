@@ -75,8 +75,7 @@ class Webhook extends Model
                 'description' => 'Signature key which can be used to validated incoming',
                 'default' => '',
                 'example' => 'ad3d581ca230e2b7059c545e5a',
-            ])
-        ;
+            ]);
     }
 
     /**

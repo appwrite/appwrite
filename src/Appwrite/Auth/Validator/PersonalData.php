@@ -31,17 +31,16 @@ class PersonalData extends Password
     /**
      * Is valid.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($password): bool
     {
-        if (!parent::isValid($password)) {
+        if (! parent::isValid($password)) {
             return false;
         }
 
-        if (!$this->strict) {
+        if (! $this->strict) {
             $password = strtolower($password);
             $this->userId = strtolower($this->userId);
             $this->email = strtolower($this->email);

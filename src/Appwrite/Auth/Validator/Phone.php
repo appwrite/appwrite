@@ -26,13 +26,12 @@ class Phone extends Validator
     /**
      * Is valid.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
     {
-        return is_string($value) && !!\preg_match('/^\+[1-9]\d{1,14}$/', $value);
+        return is_string($value) && (bool) \preg_match('/^\+[1-9]\d{1,14}$/', $value);
     }
 
     /**

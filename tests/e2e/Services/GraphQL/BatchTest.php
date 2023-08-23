@@ -63,7 +63,7 @@ class BatchTest extends Scope
     public function testArrayBatchedMutations()
     {
         $projectId = $this->getProject()['$id'];
-        $email = 'tester' . \uniqid() . '@example.com';
+        $email = 'tester'.\uniqid().'@example.com';
         $graphQLPayload = [[
             'query' => 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
                 accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
@@ -77,17 +77,17 @@ class BatchTest extends Scope
                 'name' => 'Tester 1',
             ],
         ],
-        [
-            'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
+            [
+                'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
                 teamsCreate(teamId: $teamId, name: $name) {
                     name
                 }
             }',
-            'variables' => [
-                'teamId' => ID::unique(),
-                'name' => 'Team 1',
-            ],
-        ]];
+                'variables' => [
+                    'teamId' => ID::unique(),
+                    'name' => 'Team 1',
+                ],
+            ], ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -107,8 +107,8 @@ class BatchTest extends Scope
     public function testArrayBatchedMutationsOfSameType()
     {
         $projectId = $this->getProject()['$id'];
-        $email1 = 'tester' . \uniqid() . '@example.com';
-        $email2 = 'tester' . \uniqid() . '@example.com';
+        $email1 = 'tester'.\uniqid().'@example.com';
+        $email2 = 'tester'.\uniqid().'@example.com';
         $query = 'mutation CreateAccount($userId: String!, $email: String!, $password: String!, $name: String) {
             accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
                 _id
@@ -152,7 +152,7 @@ class BatchTest extends Scope
     public function testArrayBatchedMixed()
     {
         $projectId = $this->getProject()['$id'];
-        $email = 'tester' . \uniqid() . '@example.com';
+        $email = 'tester'.\uniqid().'@example.com';
         $graphQLPayload = [
             ['query' => 'query { localeListCountries { total countries { code } } }'],
             ['query' => 'query { localeListContinents { total continents { code } } }'],
@@ -167,7 +167,7 @@ class BatchTest extends Scope
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
-                ]
+                ],
             ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -192,7 +192,7 @@ class BatchTest extends Scope
     public function testArrayBatchedMixedOfSameType()
     {
         $projectId = $this->getProject()['$id'];
-        $email = 'tester' . \uniqid() . '@example.com';
+        $email = 'tester'.\uniqid().'@example.com';
         $query = 'query { localeListCountries { total countries { code } } }';
         $graphQLPayload = [
             ['query' => $query],
@@ -208,7 +208,7 @@ class BatchTest extends Scope
                     'email' => $email,
                     'password' => 'password',
                     'name' => 'Tester 1',
-                ]
+                ],
             ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -281,7 +281,7 @@ class BatchTest extends Scope
     public function testQueryBatchedMutations()
     {
         $projectId = $this->getProject()['$id'];
-        $email = 'tester' . \uniqid() . '@example.com';
+        $email = 'tester'.\uniqid().'@example.com';
         $graphQLPayload = [
             'query' => 'mutation CreateAndLogin($userId: String!, $email: String!, $password: String!, $name: String) {
                 accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
@@ -304,7 +304,6 @@ class BatchTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('accountCreate', $response['body']['data']);
@@ -315,8 +314,8 @@ class BatchTest extends Scope
     public function testQueryBatchedMutationsOfSameType()
     {
         $projectId = $this->getProject()['$id'];
-        $email1 = 'tester' . \uniqid() . '@example.com';
-        $email2 = 'tester' . \uniqid() . '@example.com';
+        $email1 = 'tester'.\uniqid().'@example.com';
+        $email2 = 'tester'.\uniqid().'@example.com';
         $graphQLPayload = [
             'query' => 'mutation CreateAndLogin($email1: String!, $email2: String!, $password: String!, $name1: String, $name2: String) {
                 accountCreate(userId: "unique()", email: $email1, password: $password, name: $name1) {
@@ -347,8 +346,8 @@ class BatchTest extends Scope
     public function testQueryBatchedMutationsOfSameTypeWithAlias()
     {
         $projectId = $this->getProject()['$id'];
-        $email1 = 'tester' . \uniqid() . '@example.com';
-        $email2 = 'tester' . \uniqid() . '@example.com';
+        $email1 = 'tester'.\uniqid().'@example.com';
+        $email2 = 'tester'.\uniqid().'@example.com';
         $graphQLPayload = [
             'query' => 'mutation CreateAndLogin($email1: String!, $email2: String!, $password: String!, $name1: String, $name2: String) {
                 account1: accountCreate(userId: "unique()", email: $email1, password: $password, name: $name1) {

@@ -10,6 +10,7 @@ use Appwrite\Auth\OAuth2;
 class Tradeshift extends OAuth2
 {
     public const TRADESHIFT_SANDBOX_API_DOMAIN = 'api-sandbox.tradeshift.com';
+
     public const TRADESHIFT_API_DOMAIN = 'api.tradeshift.com';
 
     private array $apiDomain = [
@@ -18,13 +19,13 @@ class Tradeshift extends OAuth2
     ];
 
     private array $endpoint = [
-        'sandbox' => 'https://' . self::TRADESHIFT_SANDBOX_API_DOMAIN . '/tradeshift/',
-        'live' => 'https://' . self::TRADESHIFT_API_DOMAIN . '/tradeshift/',
+        'sandbox' => 'https://'.self::TRADESHIFT_SANDBOX_API_DOMAIN.'/tradeshift/',
+        'live' => 'https://'.self::TRADESHIFT_API_DOMAIN.'/tradeshift/',
     ];
 
     private array $resourceEndpoint = [
-        'sandbox' => 'https://' . self::TRADESHIFT_SANDBOX_API_DOMAIN . '/tradeshift/rest/external/',
-        'live' => 'https://' . self::TRADESHIFT_API_DOMAIN . '/tradeshift/rest/external/',
+        'sandbox' => 'https://'.self::TRADESHIFT_SANDBOX_API_DOMAIN.'/tradeshift/rest/external/',
+        'live' => 'https://'.self::TRADESHIFT_API_DOMAIN.'/tradeshift/rest/external/',
     ];
 
     protected string $environment = 'live';
@@ -64,18 +65,17 @@ class Tradeshift extends OAuth2
             'response_type' => 'code',
             'client_id' => $this->appID,
             'scope' => \implode(' ', $this->getScopes()),
-            'redirect_uri' => \str_replace("localhost", "127.0.0.1", $this->callback),
+            'redirect_uri' => \str_replace('localhost', '127.0.0.1', $this->callback),
             'state' => \json_encode($this->state),
         ]);
 
-        $url = $this->endpoint[$this->environment] . 'auth/login?' . $httpQuery;
+        $url = $this->endpoint[$this->environment].'auth/login?'.$httpQuery;
 
         return $url;
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -83,8 +83,8 @@ class Tradeshift extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint[$this->environment] . 'auth/token',
-                ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+                $this->endpoint[$this->environment].'auth/token',
+                ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret)],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
                     'code' => $code,
@@ -96,16 +96,15 @@ class Tradeshift extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint[$this->environment] . 'auth/token',
-            ['Authorization: Basic ' . \base64_encode($this->appID . ':' . $this->appSecret)],
+            $this->endpoint[$this->environment].'auth/token',
+            ['Authorization: Basic '.\base64_encode($this->appID.':'.$this->appSecret)],
             \http_build_query([
                 'grant_type' => 'refresh_token',
                 'refresh_token' => $refreshToken,
@@ -120,8 +119,7 @@ class Tradeshift extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -132,8 +130,7 @@ class Tradeshift extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -148,20 +145,18 @@ class Tradeshift extends OAuth2
      *
      * If present, the email is verified. This was verfied through a manual Tradeshift sign up process
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUser($accessToken);
 
-        return !empty($email);
+        return ! empty($email);
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -171,12 +166,11 @@ class Tradeshift extends OAuth2
         $firstName = $user['FirstName'] ?? '';
         $lastName = $user['LastName'] ?? '';
 
-        return $firstName . ' ' . $lastName;
+        return $firstName.' '.$lastName;
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -184,14 +178,14 @@ class Tradeshift extends OAuth2
         $header = [
             'Content-Type: application/json',
             'Accept: application/json',
-            'Host: ' . urlencode($this->apiDomain[$this->environment]),
-            'Authorization: Bearer ' . $accessToken,
+            'Host: '.urlencode($this->apiDomain[$this->environment]),
+            'Authorization: Bearer '.$accessToken,
         ];
 
         if (empty($this->user)) {
             $response = $this->request(
                 'GET',
-                $this->resourceEndpoint[$this->environment] . 'account/info/user',
+                $this->resourceEndpoint[$this->environment].'account/info/user',
                 $header
             );
             $this->user = \json_decode($response, true);

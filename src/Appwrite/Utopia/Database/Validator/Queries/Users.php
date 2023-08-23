@@ -12,12 +12,11 @@ class Users extends Base
         'passwordUpdate',
         'registration',
         'emailVerification',
-        'phoneVerification'
+        'phoneVerification',
     ];
 
     /**
      * Expression constructor
-     *
      */
     public function __construct()
     {

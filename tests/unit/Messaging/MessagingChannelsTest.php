@@ -3,9 +3,9 @@
 namespace Tests\Unit\Messaging;
 
 use Appwrite\Auth\Auth;
-use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -17,10 +17,15 @@ class MessagingChannelsTest extends TestCase
     public $connectionsPerChannel = 10;
 
     public Realtime $realtime;
+
     public $connectionsCount = 0;
+
     public $connectionsAuthenticated = 0;
+
     public $connectionsGuest = 0;
+
     public $connectionsTotal = 0;
+
     public $allChannels = [
         'files',
         'files.1',
@@ -51,19 +56,19 @@ class MessagingChannelsTest extends TestCase
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
                 $user = new Document([
-                    '$id' => ID::custom('user' . $this->connectionsCount),
+                    '$id' => ID::custom('user'.$this->connectionsCount),
                     'memberships' => [
                         [
-                            '$id' => ID::custom('member' . $i),
-                            'teamId' => ID::custom('team' . $i),
+                            '$id' => ID::custom('member'.$i),
+                            'teamId' => ID::custom('team'.$i),
                             'confirm' => true,
                             'roles' => [
                                 empty($index % 2)
                                     ? Auth::USER_ROLE_ADMIN
                                     : 'member',
-                            ]
-                        ]
-                    ]
+                            ],
+                        ],
+                    ],
                 ]);
 
                 $roles = Auth::getRoles($user);
@@ -87,7 +92,7 @@ class MessagingChannelsTest extends TestCase
         for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
             foreach ($this->allChannels as $index => $channel) {
                 $user = new Document([
-                    '$id' => ''
+                    '$id' => '',
                 ]);
 
                 $roles = Auth::getRoles($user);
@@ -170,8 +175,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
-                ]
+                    ],
+                ],
             ];
 
             $receivers = $this->realtime->getSubscribers($event);
@@ -194,7 +199,7 @@ class MessagingChannelsTest extends TestCase
     {
         $roles = [
             Role::guests()->toString(),
-            Role::users()->toString()
+            Role::users()->toString(),
         ];
         foreach ($this->allChannels as $index => $channel) {
             foreach ($roles as $role) {
@@ -206,8 +211,8 @@ class MessagingChannelsTest extends TestCase
                     'data' => [
                         'channels' => [
                             0 => $channel,
-                        ]
-                    ]
+                        ],
+                    ],
                 ];
 
                 $receivers = $this->realtime->getSubscribers($event);
@@ -232,7 +237,7 @@ class MessagingChannelsTest extends TestCase
         foreach ($this->allChannels as $index => $channel) {
             $permissions = [];
             for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
-                $permissions[] = Role::user(ID::custom('user' . (!empty($i) ? $i : '') . $index))->toString();
+                $permissions[] = Role::user(ID::custom('user'.(! empty($i) ? $i : '').$index))->toString();
             }
             $event = [
                 'project' => '1',
@@ -240,8 +245,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
-                ]
+                    ],
+                ],
             ];
 
             $receivers = $this->realtime->getSubscribers($event);
@@ -266,8 +271,8 @@ class MessagingChannelsTest extends TestCase
             $permissions = [];
 
             for ($i = 0; $i < $this->connectionsPerChannel; $i++) {
-                $permissions[] = Role::team(ID::custom('team' . $i))->toString();
-                $permissions[] = Role::member(ID::custom('member' . $i))->toString();
+                $permissions[] = Role::team(ID::custom('team'.$i))->toString();
+                $permissions[] = Role::member(ID::custom('member'.$i))->toString();
             }
             $event = [
                 'project' => '1',
@@ -275,8 +280,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
-                ]
+                    ],
+                ],
             ];
 
             $receivers = $this->realtime->getSubscribers($event);
@@ -298,8 +303,8 @@ class MessagingChannelsTest extends TestCase
                 : 'member';
 
             $permissions = [
-                Role::team(ID::custom('team' . $index), $role)->toString(),
-                Role::member(ID::custom('member' . $index))->toString()
+                Role::team(ID::custom('team'.$index), $role)->toString(),
+                Role::member(ID::custom('member'.$index))->toString(),
             ];
 
             $event = [
@@ -308,8 +313,8 @@ class MessagingChannelsTest extends TestCase
                 'data' => [
                     'channels' => [
                         0 => $channel,
-                    ]
-                ]
+                    ],
+                ],
             ];
 
             $receivers = $this->realtime->getSubscribers($event);

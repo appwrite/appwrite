@@ -21,49 +21,49 @@ class UsageFunctions extends Model
                 'description' => 'Aggregated stats for number of functions.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('deploymentsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function deployments.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('deploymentsStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function deployments storage.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('buildsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function builds.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('buildsStorage', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for builds  storage.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('buildsTime', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for function build compute.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('executionsTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for number of function executions.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
 
             ->addRule('executionsTime', [
@@ -71,9 +71,8 @@ class UsageFunctions extends Model
                 'description' => 'Aggregated stats for function execution compute.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

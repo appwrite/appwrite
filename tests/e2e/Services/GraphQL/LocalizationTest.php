@@ -18,7 +18,7 @@ class LocalizationTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = \urlencode($this->getQuery(self::$GET_LOCALE));
 
-        $locale = $this->client->call(Client::METHOD_GET, '/graphql?query=' . $query, \array_merge([
+        $locale = $this->client->call(Client::METHOD_GET, '/graphql?query='.$query, \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()));

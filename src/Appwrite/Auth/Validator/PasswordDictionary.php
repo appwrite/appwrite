@@ -10,6 +10,7 @@ namespace Appwrite\Auth\Validator;
 class PasswordDictionary extends Password
 {
     protected array $dictionary;
+
     protected bool $enabled;
 
     public function __construct(array $dictionary, bool $enabled = false)
@@ -33,19 +34,19 @@ class PasswordDictionary extends Password
     /**
      * Is valid.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
     {
-        if (!parent::isValid($value)) {
+        if (! parent::isValid($value)) {
             return false;
         }
 
         if ($this->enabled && array_key_exists($value, $this->dictionary)) {
             return false;
         }
+
         return true;
     }
 

@@ -45,7 +45,6 @@ trait AvatarsBase
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_GET, '/avatars/credit-cards/unknown', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -108,7 +107,6 @@ trait AvatarsBase
         /**
          * Test for FAILURE
          */
-
         $response = $this->client->call(Client::METHOD_GET, '/avatars/browsers/unknown', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -262,7 +260,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'invalid://appwrite.io/images/apple.png'
+            'url' => 'invalid://appwrite.io/images/apple.png',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
@@ -349,7 +347,7 @@ trait AvatarsBase
         $this->assertEquals(400, $image->getImageWidth());
         $this->assertEquals(400, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/qr/qr-default.png')), strlen($response['body']));
+        $this->assertEquals(strlen(\file_get_contents(__DIR__.'/../../../resources/qr/qr-default.png')), strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -367,7 +365,7 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/qr/qr-size-200.png')), strlen($response['body']));
+        $this->assertEquals(strlen(\file_get_contents(__DIR__.'/../../../resources/qr/qr-size-200.png')), strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -386,7 +384,7 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png')), strlen($response['body']));
+        $this->assertEquals(strlen(\file_get_contents(__DIR__.'/../../../resources/qr/qr-size-200-margin-10.png')), strlen($response['body']));
 
         $response = $this->client->call(Client::METHOD_GET, '/avatars/qr', [
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -402,7 +400,7 @@ trait AvatarsBase
         $this->assertEquals(200, $image->getImageWidth());
         $this->assertEquals(200, $image->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/qr/qr-size-200-margin-10.png')), strlen($response['body']));
+        $this->assertEquals(strlen(\file_get_contents(__DIR__.'/../../../resources/qr/qr-size-200-margin-10.png')), strlen($response['body']));
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('attachment; filename="qr.png"', $response['headers']['content-disposition']);
@@ -447,7 +445,6 @@ trait AvatarsBase
 
         return [];
     }
-
 
     public function testGetInitials()
     {
@@ -529,11 +526,11 @@ trait AvatarsBase
 
         $image = new \Imagick();
         $image->readImageBlob($response['body']);
-        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+        $original = new \Imagick(__DIR__.'/../../../resources/initials.png');
 
         $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
         $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
         $this->assertEquals('PNG', $image->getImageFormat());
-        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/initials.png')), strlen($response['body']));
+        $this->assertEquals(strlen(\file_get_contents(__DIR__.'/../../../resources/initials.png')), strlen($response['body']));
     }
 }

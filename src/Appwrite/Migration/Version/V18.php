@@ -13,7 +13,6 @@ class V18 extends Migration
 {
     public function execute(): void
     {
-
         /**
          * Disable SubQueries for Performance.
          */
@@ -25,7 +24,7 @@ class V18 extends Migration
             );
         }
 
-        Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
+        Console::log('Migrating Project: '.$this->project->getAttribute('name').' ('.$this->project->getId().')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
         $this->addDocumentSecurityToProject();
 
@@ -43,6 +42,7 @@ class V18 extends Migration
      * Migrate all Databases.
      *
      * @return void
+     *
      * @throws \Exception
      */
     private function migrateDatabases(): void
@@ -154,7 +154,7 @@ class V18 extends Migration
     /**
      * Fix run on each document
      *
-     * @param Document $document
+     * @param  Document  $document
      * @return Document
      */
     protected function fixDocument(Document $document): Document

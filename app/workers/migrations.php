@@ -18,10 +18,10 @@ use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 
-require_once __DIR__ . '/../init.php';
+require_once __DIR__.'/../init.php';
 
 Console::title('Migrations V1 Worker');
-Console::success(APP_NAME . ' Migrations worker v1 has started');
+Console::success(APP_NAME.' Migrations worker v1 has started');
 
 class MigrationsV1 extends Worker
 {

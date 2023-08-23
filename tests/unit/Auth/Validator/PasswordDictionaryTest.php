@@ -4,7 +4,6 @@ namespace Tests\Unit\Auth\Validator;
 
 use Appwrite\Auth\Validator\PasswordDictionary;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\Document;
 
 class PasswordDictionaryTest extends TestCase
 {

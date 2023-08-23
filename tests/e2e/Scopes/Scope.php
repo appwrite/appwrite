@@ -3,8 +3,8 @@
 namespace Tests\E2E\Scopes;
 
 use Appwrite\Tests\Retryable;
-use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
+use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
 abstract class Scope extends TestCase
@@ -12,6 +12,7 @@ abstract class Scope extends TestCase
     use Retryable;
 
     protected ?Client $client = null;
+
     protected string $endpoint = 'http://localhost/v1';
 
     protected function setUp(): void
@@ -72,7 +73,7 @@ abstract class Scope extends TestCase
             return self::$root;
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -98,7 +99,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
+        $session = $this->client->parseCookie((string) $session['headers']['set-cookie'])['a_session_console'];
 
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
@@ -124,7 +125,7 @@ abstract class Scope extends TestCase
             return self::$user[$this->getProject()['$id']];
         }
 
-        $email = uniqid() . 'user@localhost.test';
+        $email = uniqid().'user@localhost.test';
         $password = 'password';
         $name = 'User Name';
 
@@ -150,7 +151,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $token = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $token = $this->client->parseCookie((string) $session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => ID::custom($user['body']['$id']),

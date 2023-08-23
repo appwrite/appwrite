@@ -24,14 +24,14 @@ App::get('/versions')
                     continue;
                 }
 
-                if (isset($language['enabled']) && !$language['enabled']) {
+                if (isset($language['enabled']) && ! $language['enabled']) {
                     continue;
                 }
 
                 $platformKey = $platform['key'] ?? '';
                 $languageKey = $language['key'] ?? '';
                 $version = $language['version'] ?? '';
-                $versions[$platformKey . '-' . $languageKey] = $version;
+                $versions[$platformKey.'-'.$languageKey] = $version;
             }
         }
 

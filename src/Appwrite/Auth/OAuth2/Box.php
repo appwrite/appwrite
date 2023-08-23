@@ -49,7 +49,7 @@ class Box extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . 'authorize?' .
+        $url = $this->endpoint.'authorize?'.
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
@@ -62,8 +62,7 @@ class Box extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -72,15 +71,15 @@ class Box extends OAuth2
             $headers = ['Content-Type: application/x-www-form-urlencoded'];
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'token',
+                $this->endpoint.'token',
                 $headers,
                 \http_build_query([
-                    "client_id" => $this->appID,
-                    "client_secret" => $this->appSecret,
-                    "code" => $code,
-                    "grant_type" => "authorization_code",
-                    "scope" => \implode(',', $this->getScopes()),
-                    "redirect_uri" => $this->callback
+                    'client_id' => $this->appID,
+                    'client_secret' => $this->appSecret,
+                    'code' => $code,
+                    'grant_type' => 'authorization_code',
+                    'scope' => \implode(',', $this->getScopes()),
+                    'redirect_uri' => $this->callback,
                 ])
             ), true);
         }
@@ -89,8 +88,7 @@ class Box extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -98,13 +96,13 @@ class Box extends OAuth2
         $headers = ['Content-Type: application/x-www-form-urlencoded'];
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'token',
+            $this->endpoint.'token',
             $headers,
             \http_build_query([
-                "client_id" => $this->appID,
-                "client_secret" => $this->appSecret,
-                "refresh_token" => $refreshToken,
-                "grant_type" => "refresh_token",
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'refresh_token' => $refreshToken,
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -116,8 +114,7 @@ class Box extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -128,8 +125,7 @@ class Box extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -144,20 +140,18 @@ class Box extends OAuth2
      *
      * If present, the email is verified. This was verfied through a manual Box sign up process
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
         $email = $this->getUserEmail($accessToken);
 
-        return !empty($email);
+        return ! empty($email);
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -168,19 +162,18 @@ class Box extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         $header = [
-            'Authorization: Bearer ' . \urlencode($accessToken),
+            'Authorization: Bearer '.\urlencode($accessToken),
         ];
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->resourceEndpoint . 'me',
+                $this->resourceEndpoint.'me',
                 $header
             );
             $this->user = \json_decode($user, true);

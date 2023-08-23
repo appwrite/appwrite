@@ -28,8 +28,8 @@ class Discord extends OAuth2
      * @var array
      */
     protected array $scopes = [
-            'identify',
-            'email'
+        'identify',
+        'email',
     ];
 
     /**
@@ -45,21 +45,20 @@ class Discord extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . '/oauth2/authorize?' .
+        $url = $this->endpoint.'/oauth2/authorize?'.
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
                 'scope' => \implode(' ', $this->getScopes()),
-                'redirect_uri' => $this->callback
+                'redirect_uri' => $this->callback,
             ]);
 
         return $url;
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -67,7 +66,7 @@ class Discord extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . '/oauth2/token',
+                $this->endpoint.'/oauth2/token',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
@@ -75,7 +74,7 @@ class Discord extends OAuth2
                     'redirect_uri' => $this->callback,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
-                    'scope' => \implode(' ', $this->getScopes())
+                    'scope' => \implode(' ', $this->getScopes()),
                 ])
             ), true);
         }
@@ -84,15 +83,14 @@ class Discord extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . '/oauth2/token',
+            $this->endpoint.'/oauth2/token',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -110,8 +108,7 @@ class Discord extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -122,8 +119,7 @@ class Discord extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -138,8 +134,7 @@ class Discord extends OAuth2
      *
      * @link https://discord.com/developers/docs/resources/user
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -154,8 +149,7 @@ class Discord extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -166,8 +160,7 @@ class Discord extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -175,8 +168,8 @@ class Discord extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->endpoint . '/users/@me',
-                ['Authorization: Bearer ' . \urlencode($accessToken)]
+                $this->endpoint.'/users/@me',
+                ['Authorization: Bearer '.\urlencode($accessToken)]
             );
             $this->user = \json_decode($user, true);
         }

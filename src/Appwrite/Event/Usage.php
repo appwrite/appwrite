@@ -2,14 +2,15 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Database\Document;
 
 class Usage extends Event
 {
     protected array $metrics = [];
-    protected array $reduce  = [];
+
+    protected array $reduce = [];
 
     public function __construct(protected Connection $connection)
     {
@@ -19,7 +20,7 @@ class Usage extends Event
     /**
      * Add reduce.
      *
-     * @param Document $document
+     * @param  Document  $document
      * @return self
      */
     public function addReduce(Document $document): self
@@ -32,8 +33,8 @@ class Usage extends Event
     /**
      * Add metric.
      *
-     * @param string $key
-     * @param int $value
+     * @param  string  $key
+     * @param  int  $value
      * @return self
      */
     public function addMetric(string $key, int $value): self
@@ -57,7 +58,7 @@ class Usage extends Event
 
         return $client->enqueue([
             'project' => $this->getProject(),
-            'reduce'  => $this->reduce,
+            'reduce' => $this->reduce,
             'metrics' => $this->metrics,
         ]);
     }

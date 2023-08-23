@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Messaging;
 
-use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -44,8 +44,8 @@ class MessagingTest extends TestCase
             'data' => [
                 'channels' => [
                     0 => 'account.123',
-                ]
-            ]
+                ],
+            ],
         ];
 
         $receivers = $realtime->getSubscribers($event);
@@ -148,7 +148,7 @@ class MessagingTest extends TestCase
     public function testConvertChannelsGuest(): void
     {
         $user = new Document([
-            '$id' => ''
+            '$id' => '',
         ]);
 
         $channels = [
@@ -156,7 +156,7 @@ class MessagingTest extends TestCase
             1 => 'documents',
             2 => 'documents.789',
             3 => 'account',
-            4 => 'account.456'
+            4 => 'account.456',
         ];
 
         $channels = Realtime::convertChannels($channels, $user->getId());
@@ -170,30 +170,30 @@ class MessagingTest extends TestCase
 
     public function testConvertChannelsUser(): void
     {
-        $user  = new Document([
+        $user = new Document([
             '$id' => ID::custom('123'),
             'memberships' => [
                 [
                     'teamId' => ID::custom('abc'),
                     'roles' => [
                         'administrator',
-                        'moderator'
-                    ]
+                        'moderator',
+                    ],
                 ],
                 [
                     'teamId' => ID::custom('def'),
                     'roles' => [
-                        'guest'
-                    ]
-                ]
-            ]
+                        'guest',
+                    ],
+                ],
+            ],
         ]);
         $channels = [
             0 => 'files',
             1 => 'documents',
             2 => 'documents.789',
             3 => 'account',
-            4 => 'account.456'
+            4 => 'account.456',
         ];
 
         $channels = Realtime::convertChannels($channels, $user->getId());
@@ -321,7 +321,7 @@ class MessagingTest extends TestCase
                     Permission::update(Role::team('123abc')),
                     Permission::delete(Role::team('123abc')),
                 ],
-                'fileSecurity' => true
+                'fileSecurity' => true,
             ])
         );
 

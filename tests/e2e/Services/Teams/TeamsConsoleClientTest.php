@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
@@ -22,10 +22,10 @@ class TeamsConsoleClientTest extends Scope
          */
         $response = $this->client->call(Client::METHOD_POST, '/teams', \array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'
+            'x-appwrite-project' => 'console',
         ], $this->getHeaders()), [
             'name' => 'Latest version Team',
-            'teamId' => ID::unique()
+            'teamId' => ID::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -37,9 +37,9 @@ class TeamsConsoleClientTest extends Scope
         $response = $this->client->call(Client::METHOD_POST, '/teams', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
-            'x-appwrite-response-format' => '0.11.0'
+            'x-appwrite-response-format' => '0.11.0',
         ], $this->getHeaders()), [
-            'name' => 'Latest version Team'
+            'name' => 'Latest version Team',
             // Notice "teamId' is not defined
         ]);
 
@@ -49,14 +49,14 @@ class TeamsConsoleClientTest extends Scope
         /**
          * Cleanup, so I don't invalidate some listTeams requests by mistake
          */
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team1Id, \array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$team1Id, \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], $this->getHeaders()));
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $team2Id, \array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$team2Id, \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console',
         ], $this->getHeaders()));
@@ -71,18 +71,18 @@ class TeamsConsoleClientTest extends Scope
     {
         $teamUid = $data['teamUid'] ?? '';
         $teamName = $data['teamName'] ?? '';
-        $email = uniqid() . 'friend@localhost.test';
+        $email = uniqid().'friend@localhost.test';
         $name = 'Friend User';
         $password = 'password';
 
         // Create a user account before we create a invite so we can check if the user has permissions when it shouldn't
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
-            'x-appwrite-project' => 'console'], [
-            'userId' => 'unique()',
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
+            'x-appwrite-project' => 'console', ], [
+                'userId' => 'unique()',
+                'email' => $email,
+                'password' => $password,
+                'name' => $name,
             ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);
@@ -90,14 +90,14 @@ class TeamsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'email' => $email,
             'name' => $name,
             'roles' => ['admin', 'editor'],
-            'url' => 'http://localhost:5000/join-us#title'
+            'url' => 'http://localhost:5000/join-us#title',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -108,7 +108,7 @@ class TeamsConsoleClientTest extends Scope
         ], $this->getHeaders()));
         $this->assertEquals(401, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/teams/'.$teamUid.'/memberships', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -117,7 +117,7 @@ class TeamsConsoleClientTest extends Scope
 
         $ownerMembershipUid = $response['body']['memberships'][1]['$id'];
 
-        $response = $this->client->call(Client::METHOD_DELETE, '/teams/' . $teamUid . '/memberships/' . $ownerMembershipUid, array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/teams/'.$teamUid.'/memberships/'.$ownerMembershipUid, array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

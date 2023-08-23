@@ -21,7 +21,7 @@ class UsageUsers extends Model
                 'description' => 'Aggregated stats for total number of users.',
                 'default' => [],
                 'example' => [],
-                'array' => true
+                'array' => true,
             ])
 
             ->addRule('sessionsTotal', [
@@ -29,9 +29,8 @@ class UsageUsers extends Model
                 'description' => 'Aggregated stats for sessions created.',
                 'default' => [],
                 'example' => [],
-                'array' => true
-            ])
-        ;
+                'array' => true,
+            ]);
     }
 
     /**

@@ -115,7 +115,7 @@ class ContentTypeTest extends Scope
                     Permission::update(Role::any()),
                     Permission::delete(Role::any()),
                 ],
-            ]
+            ],
         ];
         $bucket = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -138,12 +138,12 @@ class ContentTypeTest extends Scope
                         Permission::update(Role::any()),
                         Permission::delete(Role::any()),
                     ],
-                ]
+                ],
             ]),
             'map' => \json_encode([
-                'file' => ["variables.file"]
+                'file' => ['variables.file'],
             ]),
-            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'file' => new CURLFile(realpath(__DIR__.'/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ];
 
         $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

@@ -24,7 +24,7 @@ class Firebase extends OAuth2
         'https://www.googleapis.com/auth/datastore',
         'https://www.googleapis.com/auth/cloud-platform',
         'https://www.googleapis.com/auth/identitytoolkit',
-        'https://www.googleapis.com/auth/userinfo.profile'
+        'https://www.googleapis.com/auth/userinfo.profile',
     ];
 
     /**
@@ -40,7 +40,7 @@ class Firebase extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?' . \http_build_query([
+        return 'https://accounts.google.com/o/oauth2/v2/auth?'.\http_build_query([
             'access_type' => 'offline',
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
@@ -52,8 +52,7 @@ class Firebase extends OAuth2
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -68,19 +67,18 @@ class Firebase extends OAuth2
                     'redirect_uri' => $this->callback,
                     'client_secret' => $this->appSecret,
                     'code' => $code,
-                    'grant_type' => 'authorization_code'
+                    'grant_type' => 'authorization_code',
                 ])
             );
 
-            $this->tokens =  \json_decode($response, true);
+            $this->tokens = \json_decode($response, true);
         }
 
         return $this->tokens;
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
@@ -93,7 +91,7 @@ class Firebase extends OAuth2
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
                 'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken
+                'refresh_token' => $refreshToken,
             ])
         );
 
@@ -108,10 +106,8 @@ class Firebase extends OAuth2
         return $this->tokens;
     }
 
-
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -122,8 +118,7 @@ class Firebase extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -133,14 +128,12 @@ class Firebase extends OAuth2
         return $user['email'] ?? '';
     }
 
-
     /**
      * Check if the OAuth email is verified
      *
      * @link https://docs.github.com/en/rest/users/emails#list-email-addresses-for-the-authenticated-user
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -155,8 +148,7 @@ class Firebase extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -167,8 +159,7 @@ class Firebase extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken)
@@ -176,7 +167,7 @@ class Firebase extends OAuth2
         if (empty($this->user)) {
             $response = $this->request(
                 'GET',
-                'https://www.googleapis.com/oauth2/v1/userinfo?access_token=' . \urlencode($accessToken),
+                'https://www.googleapis.com/oauth2/v1/userinfo?access_token='.\urlencode($accessToken),
                 [],
             );
 
@@ -188,7 +179,7 @@ class Firebase extends OAuth2
 
     public function getProjects(string $accessToken): array
     {
-        $projects = $this->request('GET', 'https://firebase.googleapis.com/v1beta1/projects', ['Authorization: Bearer ' . \urlencode($accessToken)]);
+        $projects = $this->request('GET', 'https://firebase.googleapis.com/v1beta1/projects', ['Authorization: Bearer '.\urlencode($accessToken)]);
 
         $projects = \json_decode($projects, true);
 
@@ -201,9 +192,9 @@ class Firebase extends OAuth2
     public function assignIAMRoles(string $accessToken, string $email, string $projectId)
     {
         // Get IAM Roles
-        $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':getIamPolicy', [
-            'Authorization: Bearer ' . \urlencode($accessToken),
-            'Content-Type: application/json'
+        $iamRoles = $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':getIamPolicy', [
+            'Authorization: Bearer '.\urlencode($accessToken),
+            'Content-Type: application/json',
         ]);
 
         $iamRoles = \json_decode($iamRoles, true);
@@ -211,23 +202,23 @@ class Firebase extends OAuth2
         $iamRoles['bindings'][] = [
             'role' => 'roles/identitytoolkit.admin',
             'members' => [
-                'serviceAccount:' . $email
-            ]
+                'serviceAccount:'.$email,
+            ],
         ];
 
         $iamRoles['bindings'][] = [
             'role' => 'roles/firebase.admin',
             'members' => [
-                'serviceAccount:' . $email
-            ]
+                'serviceAccount:'.$email,
+            ],
         ];
 
         // Set IAM Roles
-        $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/' . $projectId . ':setIamPolicy', [
-            'Authorization: Bearer ' . \urlencode($accessToken),
-            'Content-Type: application/json'
+        $this->request('POST', 'https://cloudresourcemanager.googleapis.com/v1/projects/'.$projectId.':setIamPolicy', [
+            'Authorization: Bearer '.\urlencode($accessToken),
+            'Content-Type: application/json',
         ], json_encode([
-            'policy' => $iamRoles
+            'policy' => $iamRoles,
         ]));
     }
 
@@ -236,16 +227,16 @@ class Firebase extends OAuth2
         // Create Service Account
         $response = $this->request(
             'POST',
-            'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts',
+            'https://iam.googleapis.com/v1/projects/'.$projectId.'/serviceAccounts',
             [
-                'Authorization: Bearer ' . \urlencode($accessToken),
-                'Content-Type: application/json'
+                'Authorization: Bearer '.\urlencode($accessToken),
+                'Content-Type: application/json',
             ],
             json_encode([
                 'accountId' => 'appwrite-migrations',
                 'serviceAccount' => [
-                    'displayName' => 'Appwrite Migrations'
-                ]
+                    'displayName' => 'Appwrite Migrations',
+                ],
             ])
         );
 
@@ -256,10 +247,10 @@ class Firebase extends OAuth2
         // Create Service Account Key
         $responseKey = $this->request(
             'POST',
-            'https://iam.googleapis.com/v1/projects/' . $projectId . '/serviceAccounts/' . $response['email'] . '/keys',
+            'https://iam.googleapis.com/v1/projects/'.$projectId.'/serviceAccounts/'.$response['email'].'/keys',
             [
-                'Authorization: Bearer ' . \urlencode($accessToken),
-                'Content-Type: application/json'
+                'Authorization: Bearer '.\urlencode($accessToken),
+                'Content-Type: application/json',
             ]
         );
 

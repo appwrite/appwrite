@@ -64,14 +64,14 @@ class Bucket extends Model
                 'description' => 'Allowed file extensions.',
                 'default' => [],
                 'example' => ['jpg', 'png'],
-                'array' => true
+                'array' => true,
             ])
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'description' => 'Compression algorithm choosen for compression. Will be one of '.COMPRESSION_TYPE_NONE.', ['.COMPRESSION_TYPE_GZIP.'](https://en.wikipedia.org/wiki/Gzip), or ['.COMPRESSION_TYPE_ZSTD.'](https://en.wikipedia.org/wiki/Zstd).',
                 'default' => '',
                 'example' => 'gzip',
-                'array' => false
+                'array' => false,
             ])
             ->addRule('encryption', [
                 'type' => self::TYPE_BOOLEAN,
@@ -84,8 +84,7 @@ class Bucket extends Model
                 'description' => 'Virus scanning is enabled.',
                 'default' => true,
                 'example' => false,
-            ])
-        ;
+            ]);
     }
 
     /**

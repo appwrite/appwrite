@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
 use Utopia\App;
-use Utopia\Cache\Cache;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Text;
 
@@ -35,22 +35,23 @@ class Migrate extends Action
         try {
             $redis->del($redis->keys("cache-_{$project->getInternalId()}:*"));
         } catch (\Throwable $th) {
-            Console::error('Failed to clear project ("' . $project->getId() . '") cache with error: ' . $th->getMessage());
+            Console::error('Failed to clear project ("'.$project->getId().'") cache with error: '.$th->getMessage());
         }
     }
 
     public function action(string $version, Registry $register)
     {
         Authorization::disable();
-        if (!array_key_exists($version, Migration::$versions)) {
+        if (! array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
+
             return;
         }
 
         $app = new App('UTC');
 
-        Console::success('Starting Data Migration to version ' . $version);
+        Console::success('Starting Data Migration to version '.$version);
 
         $dbPool = $register->get('dbPool', true);
         $redis = $register->get('cache', true);
@@ -78,10 +79,10 @@ class Migrate extends Action
             $totalProjects = $dbForConsole->count('projects') + 1;
         }
 
-        $class = 'Appwrite\\Migration\\Version\\' . Migration::$versions[$version];
+        $class = 'Appwrite\\Migration\\Version\\'.Migration::$versions[$version];
         $migration = new $class();
 
-        while (!empty($projects)) {
+        while (! empty($projects)) {
             foreach ($projects as $project) {
                 /**
                  * Skip user projects with id 'console'
@@ -99,7 +100,7 @@ class Migrate extends Action
                         ->setProject($project, $projectDB, $dbForConsole)
                         ->execute();
                 } catch (\Throwable $th) {
-                    Console::error('Failed to update project ("' . $project->getId() . '") version with error: ' . $th->getMessage());
+                    Console::error('Failed to update project ("'.$project->getId().'") version with error: '.$th->getMessage());
                     throw $th;
                 }
 
@@ -112,7 +113,7 @@ class Migrate extends Action
             $offset = $offset + $limit;
             $count = $count + $sum;
 
-            Console::log('Migrated ' . $count . '/' . $totalProjects . ' projects...');
+            Console::log('Migrated '.$count.'/'.$totalProjects.' projects...');
         }
 
         Swoole\Event::wait(); // Wait for Coroutines to finish

@@ -45,21 +45,20 @@ class Disqus extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->endpoint . 'oauth/2.0/authorize/?' .
+        $url = $this->endpoint.'oauth/2.0/authorize/?'.
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
                 'state' => \json_encode($this->state),
                 'redirect_uri' => $this->callback,
-                'scope' => \implode(',', $this->getScopes())
+                'scope' => \implode(',', $this->getScopes()),
             ]);
 
         return $url;
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -67,7 +66,7 @@ class Disqus extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                $this->endpoint . 'oauth/2.0/access_token/',
+                $this->endpoint.'oauth/2.0/access_token/',
                 ['Content-Type: application/x-www-form-urlencoded'],
                 \http_build_query([
                     'grant_type' => 'authorization_code',
@@ -79,19 +78,19 @@ class Disqus extends OAuth2
                 ])
             ), true);
         }
+
         return $this->tokens;
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            $this->endpoint . 'oauth/2.0/access_token/?',
+            $this->endpoint.'oauth/2.0/access_token/?',
             ['Content-Type: application/x-www-form-urlencoded'],
             \http_build_query([
                 'grant_type' => 'refresh_token',
@@ -104,12 +103,12 @@ class Disqus extends OAuth2
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
         }
+
         return $this->tokens;
     }
 
     /**
-     * @param string $token
-     *
+     * @param  string  $token
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -122,8 +121,7 @@ class Disqus extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -136,13 +134,11 @@ class Disqus extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
     {
-
         // Look out for the change in their enpoint.
         // It's in Beta so they may provide a parameter in the future.
         // https://disqus.com/api/docs/users/details/
@@ -151,8 +147,7 @@ class Disqus extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -165,8 +160,7 @@ class Disqus extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
@@ -174,10 +168,10 @@ class Disqus extends OAuth2
         if (empty($this->user)) {
             $user = $this->request(
                 'GET',
-                $this->endpoint . '3.0/users/details.json?' . \http_build_query([
+                $this->endpoint.'3.0/users/details.json?'.\http_build_query([
                     'access_token' => $accessToken,
                     'api_key' => $this->appID,
-                    'api_secret' => $this->appSecret
+                    'api_secret' => $this->appSecret,
                 ]),
             );
             $this->user = \json_decode($user, true)['response'];

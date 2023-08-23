@@ -12,12 +12,10 @@ class CustomId extends Key
      * Returns true if valid or false if not.
      *
      * @param $value
-     *
      * @return bool
      */
     public function isValid($value): bool
     {
-
         return $value == 'unique()' || parent::isValid($value);
     }
 }

@@ -4,7 +4,6 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -24,7 +23,6 @@ App::get('/v1/project/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
-
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
         $days = $periods[$range];
@@ -37,7 +35,7 @@ App::get('/v1/project/usage')
             METRIC_DATABASES,
             METRIC_USERS,
             METRIC_BUCKETS,
-            METRIC_FILES_STORAGE
+            METRIC_FILES_STORAGE,
         ];
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
@@ -60,25 +58,23 @@ App::get('/v1/project/usage')
             }
         });
 
-
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric][] = [
+                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
-
 
         $response->dynamic(new Document([
             'range' => $range,

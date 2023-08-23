@@ -22,7 +22,7 @@ class Google extends OAuth2
     protected array $scopes = [
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile',
-        'openid'
+        'openid',
     ];
 
     /**
@@ -48,18 +48,17 @@ class Google extends OAuth2
      */
     public function getLoginURL(): string
     {
-        return 'https://accounts.google.com/o/oauth2/v2/auth?' . \http_build_query([
+        return 'https://accounts.google.com/o/oauth2/v2/auth?'.\http_build_query([
             'client_id' => $this->appID,
             'redirect_uri' => $this->callback,
             'scope' => \implode(' ', $this->getScopes()),
             'state' => \json_encode($this->state),
-            'response_type' => 'code'
+            'response_type' => 'code',
         ]);
     }
 
     /**
-     * @param string $code
-     *
+     * @param  string  $code
      * @return array
      */
     protected function getTokens(string $code): array
@@ -67,13 +66,13 @@ class Google extends OAuth2
         if (empty($this->tokens)) {
             $this->tokens = \json_decode($this->request(
                 'POST',
-                'https://oauth2.googleapis.com/token?' . \http_build_query([
+                'https://oauth2.googleapis.com/token?'.\http_build_query([
                     'code' => $code,
                     'client_id' => $this->appID,
                     'client_secret' => $this->appSecret,
                     'redirect_uri' => $this->callback,
                     'scope' => null,
-                    'grant_type' => 'authorization_code'
+                    'grant_type' => 'authorization_code',
                 ])
             ), true);
         }
@@ -82,19 +81,18 @@ class Google extends OAuth2
     }
 
     /**
-     * @param string $refreshToken
-     *
+     * @param  string  $refreshToken
      * @return array
      */
     public function refreshTokens(string $refreshToken): array
     {
         $this->tokens = \json_decode($this->request(
             'POST',
-            'https://oauth2.googleapis.com/token?' . \http_build_query([
+            'https://oauth2.googleapis.com/token?'.\http_build_query([
                 'refresh_token' => $refreshToken,
                 'client_id' => $this->appID,
                 'client_secret' => $this->appSecret,
-                'grant_type' => 'refresh_token'
+                'grant_type' => 'refresh_token',
             ])
         ), true);
 
@@ -106,8 +104,7 @@ class Google extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserID(string $accessToken): string
@@ -118,8 +115,7 @@ class Google extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserEmail(string $accessToken): string
@@ -134,8 +130,7 @@ class Google extends OAuth2
      *
      * @link https://www.oauth.com/oauth2-servers/signing-in-with-google/verifying-the-user-info/
      *
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return bool
      */
     public function isEmailVerified(string $accessToken): bool
@@ -150,8 +145,7 @@ class Google extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return string
      */
     public function getUserName(string $accessToken): string
@@ -162,14 +156,13 @@ class Google extends OAuth2
     }
 
     /**
-     * @param string $accessToken
-     *
+     * @param  string  $accessToken
      * @return array
      */
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=' . \urlencode($accessToken));
+            $user = $this->request('GET', 'https://www.googleapis.com/oauth2/v3/userinfo?access_token='.\urlencode($accessToken));
             $this->user = \json_decode($user, true);
         }
 

@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Utopia;
 
-use Exception;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V11;
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Database\Document;
@@ -80,8 +80,8 @@ class ResponseTest extends TestCase
                     'string' => 'lorem ipsum',
                     'integer' => 123,
                     'boolean' => true,
-                    'hidden' => 'secret'
-                ])
+                    'hidden' => 'secret',
+                ]),
             ],
             'hidden' => 'secret',
         ]), 'lists');
@@ -107,8 +107,8 @@ class ResponseTest extends TestCase
                         'string' => 'lorem ipsum',
                         'integer' => 123,
                         'boolean' => true,
-                        'hidden' => 'secret'
-                    ])
+                        'hidden' => 'secret',
+                    ]),
                 ],
                 'hidden' => 'secret',
             ]),
@@ -116,7 +116,7 @@ class ResponseTest extends TestCase
                 'string' => 'lorem ipsum',
                 'integer' => 123,
                 'boolean' => true,
-                'hidden' => 'secret'
+                'hidden' => 'secret',
             ]),
             'hidden' => 'secret',
         ]), 'nested');
@@ -125,7 +125,6 @@ class ResponseTest extends TestCase
         $this->assertArrayHasKey('single', $output);
         $this->assertArrayNotHasKey('hidden', $output);
         $this->assertCount(1, $output['lists']['singles']);
-
 
         $single = $output['single'];
         $this->assertArrayHasKey('string', $single);

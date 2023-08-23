@@ -18,7 +18,7 @@ class AccountTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_ACCOUNT);
-        $email = 'test' . \rand() . '@test.com';
+        $email = 'test'.\rand().'@test.com';
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
@@ -51,7 +51,7 @@ class AccountTest extends Scope
             'variables' => [
                 'email' => $this->getUser()['email'],
                 'password' => 'password',
-            ]
+            ],
         ];
 
         $session = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -63,7 +63,7 @@ class AccountTest extends Scope
         $this->assertIsArray($session['body']['data']);
         $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
 
-        $cookie = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $cookie = $this->client->parseCookie((string) $session['headers']['set-cookie'])['a_session_'.$this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
     }
 
@@ -71,13 +71,13 @@ class AccountTest extends Scope
     {
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$CREATE_MAGIC_URL);
-        $email = 'test' . \rand() . '@test.com';
+        $email = 'test'.\rand().'@test.com';
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'userId' => ID::unique(),
                 'email' => $email,
-            ]
+            ],
         ];
 
         $session = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -99,7 +99,7 @@ class AccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'url' => 'http://localhost/verification'
+                'url' => 'http://localhost/verification',
             ],
         ];
 
@@ -117,7 +117,9 @@ class AccountTest extends Scope
 
     /**
      * @depends testUpdateAccountPhone
+     *
      * @return array
+     *
      * @throws \Exception
      */
     public function testCreatePhoneVerification(): array
@@ -274,7 +276,7 @@ class AccountTest extends Scope
             'query' => $query,
             'variables' => [
                 'sessionId' => 'current',
-            ]
+            ],
         ];
 
         $session = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -317,8 +319,8 @@ class AccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'name' => 'Tester Updated'
-            ]
+                'name' => 'Tester Updated',
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -343,7 +345,7 @@ class AccountTest extends Scope
             'variables' => [
                 'email' => 'newemail@appwrite.io',
                 'password' => 'password',
-            ]
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -368,7 +370,7 @@ class AccountTest extends Scope
             'variables' => [
                 'oldPassword' => 'password',
                 'password' => 'password',
-            ]
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -392,7 +394,7 @@ class AccountTest extends Scope
             'variables' => [
                 'phone' => '+123456789',
                 'password' => 'password',
-            ]
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -440,9 +442,9 @@ class AccountTest extends Scope
             'query' => $query,
             'variables' => [
                 'prefs' => [
-                    'key' => 'value'
-                ]
-            ]
+                    'key' => 'value',
+                ],
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -463,7 +465,7 @@ class AccountTest extends Scope
         $projectId = $this->getProject()['$id'];
         $query = $this->getQuery(self::$DELETE_ACCOUNT_SESSIONS);
         $graphQLPayload = [
-            'query' => $query
+            'query' => $query,
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -488,7 +490,7 @@ class AccountTest extends Scope
             'query' => $query,
             'variables' => [
                 'sessionId' => 'current',
-            ]
+            ],
         ];
 
         $account = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

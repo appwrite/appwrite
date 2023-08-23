@@ -3,8 +3,8 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Platform\Action;
 
 class Vars extends Action
@@ -33,7 +33,7 @@ class Vars extends Action
         }
 
         foreach ($vars as $key => $value) {
-            Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
+            Console::log('- '.$value['name'].'='.App::getEnv($value['name'], ''));
         }
     }
 }

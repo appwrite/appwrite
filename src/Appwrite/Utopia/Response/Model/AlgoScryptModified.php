@@ -33,8 +33,7 @@ class AlgoScryptModified extends Model
                 'description' => 'Key used to compute hash.',
                 'default' => '',
                 'example' => 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==',
-            ])
-        ;
+            ]);
     }
 
     /**

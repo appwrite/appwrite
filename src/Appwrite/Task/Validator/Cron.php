@@ -24,8 +24,7 @@ class Cron extends Validator
      *
      * Returns true if valid or false if not.
      *
-     * @param mixed $value
-     *
+     * @param  mixed  $value
      * @return bool
      */
     public function isValid($value): bool
@@ -34,7 +33,7 @@ class Cron extends Validator
             return true;
         }
 
-        if (!CronExpression::isValidExpression($value)) {
+        if (! CronExpression::isValidExpression($value)) {
             return false;
         }
 

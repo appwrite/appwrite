@@ -2,10 +2,10 @@
 
 namespace Appwrite\Messaging\Adapter;
 
-use Utopia\Database\DateTime;
-use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -39,20 +39,20 @@ class Realtime extends Adapter
     /**
      * Adds a subscription.
      *
-     * @param string $projectId
-     * @param mixed $identifier
-     * @param array $roles
-     * @param array $channels
+     * @param  string  $projectId
+     * @param  mixed  $identifier
+     * @param  array  $roles
+     * @param  array  $channels
      * @return void
      */
     public function subscribe(string $projectId, mixed $identifier, array $roles, array $channels): void
     {
-        if (!isset($this->subscriptions[$projectId])) { // Init Project
+        if (! isset($this->subscriptions[$projectId])) { // Init Project
             $this->subscriptions[$projectId] = [];
         }
 
         foreach ($roles as $role) {
-            if (!isset($this->subscriptions[$projectId][$role])) { // Add user first connection
+            if (! isset($this->subscriptions[$projectId][$role])) { // Add user first connection
                 $this->subscriptions[$projectId][$role] = [];
             }
 
@@ -64,14 +64,14 @@ class Realtime extends Adapter
         $this->connections[$identifier] = [
             'projectId' => $projectId,
             'roles' => $roles,
-            'channels' => $channels
+            'channels' => $channels,
         ];
     }
 
     /**
      * Removes Subscription.
      *
-     * @param mixed $connection
+     * @param  mixed  $connection
      * @return void
      */
     public function unsubscribe(mixed $connection): void
@@ -102,9 +102,10 @@ class Realtime extends Adapter
 
     /**
      * Checks if Channel has a subscriber.
-     * @param string $projectId
-     * @param string $role
-     * @param string $channel
+     *
+     * @param  string  $projectId
+     * @param  string  $role
+     * @param  string  $channel
      * @return bool
      */
     public function hasSubscriber(string $projectId, string $role, string $channel = ''): bool
@@ -122,12 +123,13 @@ class Realtime extends Adapter
 
     /**
      * Sends an event to the Realtime Server
-     * @param string $projectId
-     * @param array $payload
-     * @param string $event
-     * @param array $channels
-     * @param array $roles
-     * @param array $options
+     *
+     * @param  string  $projectId
+     * @param  array  $payload
+     * @param  string  $event
+     * @param  array  $channels
+     * @param  array  $roles
+     * @param  array  $options
      * @return void
      */
     public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
@@ -150,8 +152,8 @@ class Realtime extends Adapter
                 'events' => $events,
                 'channels' => $channels,
                 'timestamp' => DateTime::formatTz(DateTime::now()),
-                'payload' => $payload
-            ]
+                'payload' => $payload,
+            ],
         ]));
     }
 
@@ -166,11 +168,10 @@ class Realtime extends Adapter
      *  - 110.201 ms (±2.32%) | 100,000 Connections / 1,000,000 Subscriptions
      *  - 1,121.328 ms (±0.84%) | 1,000,000 Connections / 10,000,000 Subscriptions
      *
-     * @param array $event
+     * @param  array  $event
      */
     public function getSubscribers(array $event)
     {
-
         $receivers = [];
         /**
          * Check if project has subscriber.
@@ -212,8 +213,9 @@ class Realtime extends Adapter
     /**
      * Converts the channels from the Query Params into an array.
      * Also renames the account channel to account.USER_ID and removes all illegal account channel variations.
-     * @param array $channels
-     * @param string $userId
+     *
+     * @param  array  $channels
+     * @param  string  $userId
      * @return array
      */
     public static function convertChannels(array $channels, string $userId): array
@@ -227,8 +229,8 @@ class Realtime extends Adapter
                     break;
 
                 case $key === 'account':
-                    if (!empty($userId)) {
-                        $channels['account.' . $userId] = $value;
+                    if (! empty($userId)) {
+                        $channels['account.'.$userId] = $value;
                     }
                     break;
             }
@@ -240,9 +242,9 @@ class Realtime extends Adapter
     /**
      * Create channels array based on the event name and payload.
      *
-     * @param string $event
-     * @param Document $payload
-     * @param Document|null $project
+     * @param  string  $event
+     * @param  Document  $payload
+     * @param  Document|null  $project
      * @return array
      */
     public static function fromPayload(string $event, Document $payload, Document $project = null, Document $database = null, Document $collection = null, Document $bucket = null): array
@@ -257,18 +259,18 @@ class Realtime extends Adapter
         switch ($parts[0]) {
             case 'users':
                 $channels[] = 'account';
-                $channels[] = 'account.' . $parts[1];
+                $channels[] = 'account.'.$parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;
                     $channels[] = 'memberships';
-                    $channels[] = 'memberships.' . $parts[3];
+                    $channels[] = 'memberships.'.$parts[3];
                 } else {
                     $permissionsChanged = $parts[2] === 'create';
                     $channels[] = 'teams';
-                    $channels[] = 'teams.' . $parts[1];
+                    $channels[] = 'teams.'.$parts[1];
                 }
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
                 break;
@@ -286,8 +288,8 @@ class Realtime extends Adapter
                     }
 
                     $channels[] = 'documents';
-                    $channels[] = 'databases.' . $database->getId() .  '.collections.' . $payload->getAttribute('$collectionId') . '.documents';
-                    $channels[] = 'databases.' . $database->getId() . '.collections.' . $payload->getAttribute('$collectionId') . '.documents.' . $payload->getId();
+                    $channels[] = 'databases.'.$database->getId().'.collections.'.$payload->getAttribute('$collectionId').'.documents';
+                    $channels[] = 'databases.'.$database->getId().'.collections.'.$payload->getAttribute('$collectionId').'.documents.'.$payload->getId();
 
                     $roles = $collection->getAttribute('documentSecurity', false)
                         ? \array_merge($collection->getRead(), $payload->getRead())
@@ -300,8 +302,8 @@ class Realtime extends Adapter
                         throw new \Exception('Bucket needs to be passed to Realtime for File events in the Storage.');
                     }
                     $channels[] = 'files';
-                    $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files';
-                    $channels[] = 'buckets.' . $payload->getAttribute('bucketId') . '.files.' . $payload->getId();
+                    $channels[] = 'buckets.'.$payload->getAttribute('bucketId').'.files';
+                    $channels[] = 'buckets.'.$payload->getAttribute('bucketId').'.files.'.$payload->getId();
 
                     $roles = $bucket->getAttribute('fileSecurity', false)
                         ? \array_merge($bucket->getRead(), $payload->getRead())
@@ -312,11 +314,11 @@ class Realtime extends Adapter
 
             case 'functions':
                 if ($parts[2] === 'executions') {
-                    if (!empty($payload->getRead())) {
+                    if (! empty($payload->getRead())) {
                         $channels[] = 'console';
                         $channels[] = 'executions';
-                        $channels[] = 'executions.' . $payload->getId();
-                        $channels[] = 'functions.' . $payload->getAttribute('functionId');
+                        $channels[] = 'executions.'.$payload->getId();
+                        $channels[] = 'functions.'.$payload->getAttribute('functionId');
                         $roles = $payload->getRead();
                     }
                 } elseif ($parts[2] === 'deployments') {
@@ -332,7 +334,7 @@ class Realtime extends Adapter
             'channels' => $channels,
             'roles' => $roles,
             'permissionsChanged' => $permissionsChanged,
-            'projectId' => $projectId
+            'projectId' => $projectId,
         ];
     }
 }

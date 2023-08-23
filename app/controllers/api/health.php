@@ -28,11 +28,10 @@ App::get('/v1/health')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->action(function (Response $response) {
-
         $output = [
             'name' => 'http',
             'status' => 'pass',
-            'ping' => 0
+            'ping' => 0,
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -47,7 +46,7 @@ App::get('/v1/health/version')
     ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
     ->inject('response')
     ->action(function (Response $response) {
-        $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
+        $response->dynamic(new Document(['version' => APP_VERSION_STABLE]), Response::MODEL_HEALTH_VERSION);
     });
 
 App::get('/v1/health/db')
@@ -64,7 +63,6 @@ App::get('/v1/health/db')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
 
         $configs = [
@@ -81,22 +79,22 @@ App::get('/v1/health/db')
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key . " ($database)",
+                        'name' => $key." ($database)",
                         'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000),
                     ]);
                 }
             }
@@ -122,7 +120,6 @@ App::get('/v1/health/cache')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
 
         $configs = [
@@ -138,22 +135,22 @@ App::get('/v1/health/cache')
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key . " ($database)",
+                        'name' => $key." ($database)",
                         'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000),
                     ]);
                 }
             }
@@ -179,7 +176,6 @@ App::get('/v1/health/queue')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
 
         $configs = [
@@ -195,22 +191,22 @@ App::get('/v1/health/queue')
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key . " ($database)",
+                        'name' => $key." ($database)",
                         'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000),
                     ]);
                 }
             }
@@ -236,7 +232,6 @@ App::get('/v1/health/pubsub')
     ->inject('response')
     ->inject('pools')
     ->action(function (Response $response, Group $pools) {
-
         $output = [];
 
         $configs = [
@@ -252,22 +247,22 @@ App::get('/v1/health/pubsub')
 
                     if ($adapter->ping()) {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'pass',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     } else {
                         $output[] = new Document([
-                            'name' => $key . " ($database)",
+                            'name' => $key." ($database)",
                             'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                            'ping' => \round((\microtime(true) - $checkStart) / 1000),
                         ]);
                     }
                 } catch (\Throwable $th) {
                     $output[] = new Document([
-                        'name' => $key . " ($database)",
+                        'name' => $key." ($database)",
                         'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
+                        'ping' => \round((\microtime(true) - $checkStart) / 1000),
                     ]);
                 }
             }
@@ -292,7 +287,6 @@ App::get('/v1/health/time')
     ->label('sdk.response.model', Response::MODEL_HEALTH_TIME)
     ->inject('response')
     ->action(function (Response $response) {
-
         /*
          * Code from: @see https://www.beliefmedia.com.au/query-ntp-time-server
          */
@@ -305,7 +299,7 @@ App::get('/v1/health/time')
         \socket_connect($sock, $host, 123);
 
         /* Send request */
-        $msg = "\010" . \str_repeat("\0", 47);
+        $msg = "\010".\str_repeat("\0", 47);
 
         \socket_send($sock, $msg, \strlen($msg), 0);
 
@@ -330,7 +324,7 @@ App::get('/v1/health/time')
         $output = [
             'remoteTime' => $timestamp,
             'localTime' => \time(),
-            'diff' => $diff
+            'diff' => $diff,
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_TIME);
@@ -349,8 +343,7 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document(['size' => Resque::size(Event::WEBHOOK_QUEUE_NAME)]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -366,8 +359,7 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document(['size' => Resque::size(Event::AUDITS_QUEUE_NAME)]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -383,8 +375,7 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->action(function (Response $response) {
-
-        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document(['size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME)]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
@@ -402,7 +393,7 @@ App::get('/v1/health/queue/functions')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document(['size' => $client->sumProcessingJobs()]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/storage/local')
@@ -418,31 +409,30 @@ App::get('/v1/health/storage/local')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->action(function (Response $response) {
-
         $checkStart = \microtime(true);
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES,
             ] as $key => $volume
         ) {
             $device = new Local($volume);
 
-            if (!\is_readable($device->getRoot())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device ' . $key . ' dir is not readable');
+            if (! \is_readable($device->getRoot())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device '.$key.' dir is not readable');
             }
 
-            if (!\is_writable($device->getRoot())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device ' . $key . ' dir is not writable');
+            if (! \is_writable($device->getRoot())) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Device '.$key.' dir is not writable');
             }
         }
 
         $output = [
             'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+            'ping' => \round((\microtime(true) - $checkStart) / 1000),
         ];
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
@@ -461,10 +451,9 @@ App::get('/v1/health/anti-virus')
     ->label('sdk.response.model', Response::MODEL_HEALTH_ANTIVIRUS)
     ->inject('response')
     ->action(function (Response $response) {
-
         $output = [
             'status' => '',
-            'version' => ''
+            'version' => '',
         ];
 
         if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
@@ -499,7 +488,6 @@ App::get('/v1/health/stats') // Currently only used internally
     ->inject('register')
     ->inject('deviceFiles')
     ->action(function (Response $response, Registry $register, Device $deviceFiles) {
-
         $cache = $register->get('cache');
 
         $cacheStats = $cache->info();
@@ -507,7 +495,7 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
+                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot().'/')),
                     'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
                     'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
                 ],
