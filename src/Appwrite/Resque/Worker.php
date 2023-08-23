@@ -223,7 +223,7 @@ abstract class Worker
 
         if (isset(self::$databases[$databaseName])) {
             $database = self::$databases[$databaseName];
-            $database->setNamespace('console');
+            $database->setNamespace('_console');
             return $database;
         }
 
@@ -237,7 +237,7 @@ abstract class Worker
 
         self::$databases[$databaseName] = $database;
 
-        $database->setNamespace('console');
+        $database->setNamespace('_console');
 
         return $database;
     }

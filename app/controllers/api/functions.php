@@ -141,7 +141,7 @@ App::post('/v1/functions')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
-    ->param('entrypoint', '', new Text(1028), 'Entrypoint File. This path is relative to the "providerRootDirectory".')
+    ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (version control system) deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
@@ -228,7 +228,7 @@ App::post('/v1/functions')
                 'active' => false,
             ]))
         );
-        
+
         $function->setAttribute('scheduleId', $schedule->getId());
         $function->setAttribute('scheduleInternalId', $schedule->getInternalId());
 
@@ -356,7 +356,9 @@ App::get('/v1/functions')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -665,7 +667,7 @@ App::put('/v1/functions/:functionId')
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
-    ->param('entrypoint', '', new Text(1028), 'Entrypoint File. This path is relative to the "providerRootDirectory".')
+    ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for vcs deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
@@ -706,6 +708,10 @@ App::put('/v1/functions/:functionId')
 
         $repositoryId = $function->getAttribute('repositoryId', '');
         $repositoryInternalId = $function->getAttribute('repositoryInternalId', '');
+
+        if (empty($entrypoint)) {
+            $entrypoint = $function->getAttribute('entrypoint', '');
+        }
 
         $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
@@ -854,7 +860,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->setContentType('application/gzip')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="'.$deploymentId.'.tar.gz"')
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"')
         ;
 
         $size = $deviceFunctions->getFileSize($path);
@@ -1027,6 +1033,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_DEPLOYMENT)
     ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('entrypoint', null, new Text(1028), 'Entrypoint File.', true)
+    ->param('commands', null, new Text(8192, 0), 'Build Commands.', true)
     ->param('code', [], new File(), 'Gzip file with your code package. When used with the Appwrite CLI, pass the path to your code directory, and the CLI will automatically package your code. Use a path that is within the current directory.', skipValidation: true)
     ->param('activate', false, new Boolean(true), 'Automatically activate the deployment when it is finished building.')
     ->inject('request')
@@ -1036,7 +1044,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1045,7 +1053,14 @@ App::post('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $entrypoint = $function->getAttribute('entrypoint', '');
+        if ($entrypoint === null) {
+            $entrypoint = $function->getAttribute('entrypoint', '');
+        }
+
+        if ($commands === null) {
+            $commands = $function->getAttribute('entrypoint', '');
+        }
+
         $commands = $function->getAttribute('commands', '');
 
         if (empty($entrypoint)) {
@@ -1257,7 +1272,9 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1497,10 +1514,11 @@ App::post('/v1/functions/:functionId/executions')
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -1760,13 +1778,13 @@ App::get('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $queries = Query::parseQueries($queries);
@@ -1779,7 +1797,9 @@ App::get('/v1/functions/:functionId/executions')
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1832,13 +1852,13 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);

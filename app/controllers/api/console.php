@@ -30,7 +30,11 @@ App::get('/v1/console/variables')
     ->inject('response')
     ->action(function (Response $response) {
 
-        $isVcsEnabled = !empty(App::getEnv('_APP_VCS_GITHUB_APP_NAME', '')) && !empty(App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', '')) && !empty(App::getEnv('_APP_VCS_GITHUB_APP_ID', '')) && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', '')) && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+        $isVcsEnabled = !empty(App::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
 
         $isAssistantEnabled = !empty(App::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 

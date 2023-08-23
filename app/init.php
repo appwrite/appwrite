@@ -108,7 +108,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 506;
+const APP_CACHE_BUSTER = 507;
 const APP_VERSION_STABLE = '1.4.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -293,7 +293,7 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
+        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
@@ -363,7 +363,7 @@ Database::addFilter(
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit(64),
+                Query::limit($database->getLimitForIndexes()),
             ]);
     }
 );
@@ -1116,7 +1116,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['pools', 'cache']);

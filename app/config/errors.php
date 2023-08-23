@@ -313,6 +313,11 @@ return [
     ],
 
     /** Storage */
+    Exception::STORAGE_FILE_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_FILE_ALREADY_EXISTS,
+        'description' => 'A storage file with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::STORAGE_FILE_NOT_FOUND => [
         'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
@@ -409,7 +414,7 @@ return [
     ],
     Exception::FUNCTION_ENTRYPOINT_MISSING => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
-        'description' => 'Entrypoint for your Appwrite Function is missing. Please update the entry point under your function\'s "Settings" > "Configuration" > "Entrypoint".',
+        'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
 

@@ -589,7 +589,7 @@ class ProjectsConsoleClientTest extends Scope
 
     /**
      * @group smtpAndTemplates
-     * @depends testCreateProject */
+     * @depends testUpdateProject */
     public function testUpdateTemplates($data): array
     {
         $id = $data['projectId'];
@@ -752,7 +752,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
 
         // Check session doesn't expire too soon.
-
         sleep(30);
 
         // Get User

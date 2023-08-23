@@ -29,6 +29,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertTrue($database['body']['enabled']);
 
         $databaseId = $database['body']['$id'];
+
         /**
          * Test for SUCCESS
          */
@@ -51,7 +52,7 @@ class DatabasesConsoleClientTest extends Scope
         $this->assertEquals($movies['body']['name'], 'Movies');
 
         /**
-         * Test When database is disabled but can still create collections
+         * Test when database is disabled but can still create collections
          */
         $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId, array_merge([
             'content-type' => 'application/json',
@@ -78,6 +79,17 @@ class DatabasesConsoleClientTest extends Scope
             'documentSecurity' => true,
         ]);
 
+        /**
+         * Test when collection is disabled but can still modify collections
+         */
+        $database = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $movies['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Movies',
+            'enabled' => false,
+        ]);
+
         $this->assertEquals(201, $tvShows['headers']['status-code']);
         $this->assertEquals($tvShows['body']['name'], 'TvShows');
 
@@ -87,11 +99,12 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      * @param array $data
+     * @throws \Exception
      */
     public function testListCollection(array $data)
     {
         /**
-         * Test When database is disabled but can still call list collections
+         * Test when database is disabled but can still call list collections
          */
         $databaseId = $data['databaseId'];
 
@@ -108,49 +121,77 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      * @param array $data
+     * @throws \Exception
      */
-    // public function testGetDatabaseUsage(array $data)
-    // {
-    //     $databaseId = $data['databaseId'];
-    //     /**
-    //      * Test for FAILURE
-    //      */
+    public function testGetCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $moviesCollectionId = $data['moviesId'];
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id']
-    //     ], $this->getHeaders()), [
-    //         'range' => '32h'
-    //     ]);
+        /**
+         * Test when database and collection are disabled but can still call get collection
+         */
+        $collection = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-    //     $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('Movies', $collection['body']['name']);
+        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
+        $this->assertFalse($collection['body']['enabled']);
+    }
 
-    //     /**
-    //      * Test for SUCCESS
-    //      */
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     * @throws \Exception
+     * @throws \Exception
+     */
+    public function testUpdateCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $moviesCollectionId = $data['moviesId'];
 
-    //     $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id']
-    //     ], $this->getHeaders()), [
-    //         'range' => '24h'
-    //     ]);
+        /**
+         * Test When database and collection are disabled but can still call update collection
+         */
+        $collection = $this->client->call(Client::METHOD_PUT, '/databases/' . $databaseId . '/collections/' . $moviesCollectionId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'Movies Updated',
+            'enabled' => false
+        ]);
 
-    //     $this->assertEquals(200, $response['headers']['status-code']);
-    //     $this->assertEquals(count($response['body']), 11);
-    //     $this->assertEquals($response['body']['range'], '24h');
-    //     $this->assertIsArray($response['body']['documentsCount']);
-    //     $this->assertIsArray($response['body']['collectionsCount']);
-    //     $this->assertIsArray($response['body']['documentsCreate']);
-    //     $this->assertIsArray($response['body']['documentsRead']);
-    //     $this->assertIsArray($response['body']['documentsUpdate']);
-    //     $this->assertIsArray($response['body']['documentsDelete']);
-    //     $this->assertIsArray($response['body']['collectionsCreate']);
-    //     $this->assertIsArray($response['body']['collectionsRead']);
-    //     $this->assertIsArray($response['body']['collectionsUpdate']);
-    //     $this->assertIsArray($response['body']['collectionsDelete']);
-    // }
+        $this->assertEquals(200, $collection['headers']['status-code']);
+        $this->assertEquals('Movies Updated', $collection['body']['name']);
+        $this->assertEquals($moviesCollectionId, $collection['body']['$id']);
+        $this->assertFalse($collection['body']['enabled']);
+    }
 
+    /**
+     * @depends testCreateCollection
+     * @param array $data
+     * @throws \Exception
+     * @throws \Exception
+     */
+    public function testDeleteCollection(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        $tvShowsId = $data['tvShowsId'];
+
+        /**
+         * Test when database and collection are disabled but can still call delete collection
+         */
+        $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $tvShowsId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals($response['body'], "");
+    }
 
     /**
      * @depends testCreateCollection

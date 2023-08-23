@@ -25,6 +25,7 @@ use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
+use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -36,6 +37,7 @@ use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
 use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
+use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -222,6 +224,9 @@ App::init()
                 case version_compare($requestFormat, '0.15.3', '<'):
                     Request::setFilter(new RequestV15());
                     break;
+                case version_compare($requestFormat, '1.4.0', '<'):
+                    Request::setFilter(new RequestV16());
+                    break;
                 default:
                     Request::setFilter(null);
             }
@@ -305,6 +310,9 @@ App::init()
                 case version_compare($responseFormat, '0.15.3', '<='):
                     Response::setFilter(new ResponseV15());
                     break;
+                case version_compare($responseFormat, '1.4.0', '<'):
+                    Response::setFilter(new ResponseV16());
+                    break;
                 default:
                     Response::setFilter(null);
             }
@@ -366,7 +374,7 @@ App::init()
             : Role::users()->toString();
 
         // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
+        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
 
         if ($memberships) {
             foreach ($memberships->getAttribute('roles', []) as $memberRole) {
@@ -755,6 +763,7 @@ include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
     ->groups(['api'])
+    ->label('scope', 'global')
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
