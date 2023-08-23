@@ -3,6 +3,7 @@
 use Appwrite\Auth\Auth;
 
 $member = [
+    'global',
     'public',
     'home',
     'console',
@@ -23,6 +24,7 @@ $member = [
 ];
 
 $admins = [
+    'global',
     'graphql',
     'teams.read',
     'teams.write',
@@ -92,6 +94,6 @@ return [
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['public', 'health.read', 'graphql'],
+        'scopes' => ['global', 'health.read', 'graphql'],
     ],
 ];

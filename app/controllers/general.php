@@ -374,7 +374,7 @@ App::init()
             : Role::users()->toString();
 
         // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId', null), 'memberships');
+        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
 
         if ($memberships) {
             foreach ($memberships->getAttribute('roles', []) as $memberRole) {
@@ -763,7 +763,7 @@ include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
     ->groups(['api'])
-    ->label('scope', 'public')
+    ->label('scope', 'global')
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });
