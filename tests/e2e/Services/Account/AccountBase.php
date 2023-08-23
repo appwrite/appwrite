@@ -363,7 +363,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(3, $response['body']['logs']);
+        $this->assertCount(5, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
         $this->assertContains($response['body']['logs'][1]['event'], ["session.create"]);
         $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));

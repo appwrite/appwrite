@@ -243,7 +243,7 @@ return [
     Exception::USER_TARGET_ALREADY_EXISTS => [
         'name' => Exception::USER_TARGET_ALREADY_EXISTS,
         'description' => 'A target with the same ID already exists.',
-        'code' => 404,
+        'code' => 409,
     ],
 
     /** Teams */

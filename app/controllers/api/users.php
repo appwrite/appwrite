@@ -376,6 +376,8 @@ App::post('/v1/users/:userId/targets')
     ->desc('Create User Target')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -384,14 +386,14 @@ App::post('/v1/users/:userId/targets')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
-    ->param('providerId', '', new UID(), 'ID of the provider.', false)
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', false)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -425,7 +427,8 @@ App::post('/v1/users/:userId/targets')
         ]));
         $dbForProject->deleteCachedDocument('users', $user->getId());
         $events
-            ->setParam('userId', $userId);
+            ->setParam('userId', $userId)
+            ->setParam('targetId', $targetId);
         $response
         ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
@@ -532,7 +535,7 @@ App::get('/v1/users/:userId/prefs')
 App::get('/v1/users/:userId/targets/:targetId')
     ->desc('Get User Target')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'getTarget')
@@ -725,7 +728,7 @@ App::get('/v1/users/:userId/logs')
 App::get('/v1/users/:userId/targets')
     ->desc('List User Targets')
     ->groups(['api', 'users'])
-    ->label('scope', 'users.read')
+    ->label('scope', 'targets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'listTargets')
@@ -1215,6 +1218,8 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->desc('Update user target\'s identifier')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1223,13 +1228,13 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, string $identifier, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1250,10 +1255,10 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('userId', $userId);
+            ->setParam('userId', $userId)
+            ->setParam ('targetId', $targetId);
 
         $response
-        ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
     });
 
@@ -1388,20 +1393,22 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->desc('Delete user target')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].targets.[targetId].delete')
+    ->label('audits.event', 'target.delete')
+    ->label('audits.resource', 'user/{response.$id}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'deleteTarget')
     ->label('sdk.description', '/docs/references/users/delete-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject, Event $events) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1424,6 +1431,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
 
         $events
             ->setParam('userId', $userId)
+            ->setParam('targetId', $targetId)
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();

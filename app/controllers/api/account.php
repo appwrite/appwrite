@@ -1834,9 +1834,9 @@ App::get('/v1/account/targets')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
-    ->inject('response')
     ->inject('user')
-    ->action(function (Response $response, Document $user) {
+    ->inject('response')
+    ->action(function (Document $user, Response $response) {
 
         $targets = $user->getAttribute('targets', []);
 
@@ -1900,13 +1900,13 @@ App::get('/v1/account/targets/:targetId')
     ->label('sdk.description', '/docs/references/account/get-Target.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
     ->label('sdk.offline.model', '/account/targets')
     ->label('sdk.offline.key', '{targetId}')
     ->param('targetId', '', new UID(), 'Target ID.')
-    ->inject('response')
     ->inject('user')
-    ->action(function (string $targetId, Response $response, Document $user) {
+    ->inject('response')
+    ->action(function (string $targetId,  Document $user, Response $response) {
 
         $target = $user->find('$id', $targetId, 'targets');
 
@@ -2999,9 +2999,12 @@ App::put('/v1/account/verification/phone')
     });
 
 App::post('/v1/account/targets')
-    ->desc('Create User Target')
+    ->desc('Create Account\'s Target')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -3010,24 +3013,18 @@ App::post('/v1/account/targets')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
-    ->param('providerId', '', new UID(), 'ID of the provider.', false)
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('user')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
-        $provider = $dbForProject->getDocument('providers', $providerId);
+    ->action(function (string $targetId, string $providerId, string $identifier, Document $user, Response $response, Database $dbForProject, Event $events) {
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $target = $dbForProject->getDocument('targets', $targetId);
@@ -3038,29 +3035,34 @@ App::post('/v1/account/targets')
 
         $target = $dbForProject->createDocument('targets', new Document([
             '$id' => $targetId,
-            // TO DO: what permissions should be given when created a target.
             '$permissions' => [
-                Permission::read(Role::any())
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ],
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),
             'providerType' => null,
-            'userId' => $userId,
+            'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'identifier' => $identifier,
         ]));
         $dbForProject->deleteCachedDocument('users', $user->getId());
         $events
-            ->setParam('userId', $userId);
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $targetId);
         $response
         ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::patch('/v1/account/targets/:targetId/identifier')
-    ->desc('Update user target\'s identifier')
+    ->desc('Update account\'s target identifier')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
@@ -3069,19 +3071,13 @@ App::patch('/v1/account/targets/:targetId/identifier')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('user')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, string $identifier, Response $response, Database $dbForProject, Event $events) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
+    ->action(function (string $targetId, string $identifier, Document $user, Response $response, Database $dbForProject, Event $events) {
 
         $target = $dbForProject->getDocument('targets', $targetId);
 
@@ -3096,37 +3092,34 @@ App::patch('/v1/account/targets/:targetId/identifier')
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $events
-            ->setParam('userId', $userId);
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $targetId);
 
         $response
-        ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::delete('/v1/account/targets/:targetId')
-    ->desc('Delete user target')
+    ->desc('Delete account\'s target')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].targets.[targetId].delete')
+    ->label('audits.event', 'target.delete')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteTarget')
     ->label('sdk.description', '/docs/references/account/delete-target.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('userId', '', new UID(), 'ID of the user.', false)
-    ->param('targetId', '', new UID(), 'Target ID.', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('user')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('events')
-    ->action(function (string $targetId, string $userId, Response $response, Database $dbForProject, Event $events) {
-
-        $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
+    ->action(function (string $targetId, Document $user, Response $response, Database $dbForProject, Event $events) {
 
         $target = $dbForProject->getDocument('targets', $targetId);
 
@@ -3136,13 +3129,14 @@ App::delete('/v1/account/targets/:targetId')
 
         $target = $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
-        $user = $dbForProject->getDocument('users', $userId);
+        $user = $dbForProject->getDocument('users', $user->getId());
 
         // clone user object to send to workers
         $clone = clone $user;
 
         $events
-            ->setParam('userId', $userId)
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $targetId)
             ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();
