@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Storage;
 
+use Appwrite\Extend\Exception;
 use CURLFile;
 use Tests\E2E\Client;
 use Utopia\Database\DateTime;
@@ -262,7 +263,7 @@ trait StorageBase
         ]);
 
         $this->assertEquals(400, $res['headers']['status-code']);
-        $this->assertEquals('The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().', $res['body']['message']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $res['body']['type']);
 
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }

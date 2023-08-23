@@ -847,8 +847,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_USER_EMAIL_VERIFICATION:
-                return 'mutation updateUserVerification($userId: String!, $emailVerification: Boolean!){
-                    usersUpdateVerification(userId: $userId, emailVerification: $emailVerification) {
+                return 'mutation updateUserEmailVerification($userId: String!, $emailVerification: Boolean!){
+                    usersUpdateEmailVerification(userId: $userId, emailVerification: $emailVerification) {
                         name
                         email
                     }

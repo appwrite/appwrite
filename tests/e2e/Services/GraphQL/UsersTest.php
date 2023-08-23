@@ -218,7 +218,7 @@ class UsersTest extends Scope
 
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
-        $this->assertIsArray($user['body']['data']['usersUpdateVerification']);
+        $this->assertIsArray($user['body']['data']['usersUpdateEmailVerification']);
     }
 
     public function testUpdateUserPhoneVerification()

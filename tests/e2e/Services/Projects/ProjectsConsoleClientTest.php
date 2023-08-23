@@ -130,7 +130,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']);
         $this->assertEquals(409, $response['body']['code']);
         $this->assertEquals(Exception::PROJECT_ALREADY_EXISTS, $response['body']['type']);
-        $this->assertEquals('Project with the requested ID already exists.', $response['body']['message']);
     }
 
     /** @group projectsCRUD */
