@@ -408,6 +408,7 @@ class AccountCustomClientTest extends Scope
         ]));
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertArrayHasKey('accessedAt', $response['body']);
+
         $this->assertNotEmpty($response['body']['accessedAt']);
 
         /**

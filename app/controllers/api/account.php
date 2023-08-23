@@ -128,9 +128,10 @@ App::post('/v1/account/invite')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name])
+                'search' => implode(' ', [$userId, $email, $name]),
+                'accessedAt' => DateTime::now(),
             ])));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
@@ -240,10 +241,10 @@ App::post('/v1/account')
                 'tokens' => null,
                 'memberships' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
-                'accessedAt' => DateTime::now(), // Add this here to make sure it's returned in the response
+                'accessedAt' => DateTime::now(),
             ]);
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
@@ -746,10 +747,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
-                        'search' => implode(' ', [$userId, $email, $name])
+                        'search' => implode(' ', [$userId, $email, $name]),
+                        'accessedAt' => DateTime::now(),
                     ]);
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
-                } catch (Duplicate $th) {
+                } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
             }
@@ -1046,7 +1048,8 @@ App::post('/v1/account/sessions/magic-url')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $email])
+                'search' => implode(' ', [$userId, $email]),
+                'accessedAt' => DateTime::now(),
             ]);
 
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
@@ -1335,7 +1338,8 @@ App::post('/v1/account/sessions/phone')
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
-                'search' => implode(' ', [$userId, $phone])
+                'search' => implode(' ', [$userId, $phone]),
+                'accessedAt' => DateTime::now(),
             ]);
 
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
@@ -1586,6 +1590,7 @@ App::post('/v1/account/sessions/anonymous')
             'tokens' => null,
             'memberships' => null,
             'search' => $userId,
+            'accessedAt' => DateTime::now(),
         ]);
         Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 

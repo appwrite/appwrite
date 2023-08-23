@@ -96,7 +96,8 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
-            'search' => implode(' ', [$userId, $email, $phone, $name])
+            'search' => implode(' ', [$userId, $email, $phone, $name]),
+            'accessedAt' => DateTime::now(),
         ]));
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
