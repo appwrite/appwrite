@@ -70,7 +70,7 @@ App::get('/v1/messaging/providers/:id')
   ->param('id', null, new UID(), 'Provider ID.')
   ->inject('dbForProject')
   ->inject('response')
-  ->action(function (string $id, Response $response, Database $dbForProject) {
+  ->action(function (string $id, Database $dbForProject, Response $response) {
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
@@ -86,7 +86,7 @@ App::get('/v1/messaging/providers/:id')
 App::post('/v1/messaging/providers/mailgun')
   ->desc('Create Mailgun Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -118,7 +118,7 @@ App::post('/v1/messaging/providers/mailgun')
 App::patch('/v1/messaging/providers/:id/mailgun')
   ->desc('Update Mailgun Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -166,14 +166,13 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/sendgrid')
   ->desc('Create Sendgrid Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -203,7 +202,7 @@ App::post('/v1/messaging/providers/sendgrid')
 App::patch('/v1/messaging/providers/:id/sendgrid')
   ->desc('Update Sendgrid Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -243,7 +242,6 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
@@ -253,7 +251,7 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
 App::post('/v1/messaging/providers/msg91')
   ->desc('Create Msg91 Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -285,7 +283,7 @@ App::post('/v1/messaging/providers/msg91')
 App::patch('/v1/messaging/providers/:id/msg91')
   ->desc('Update Msg91 Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -333,14 +331,13 @@ App::patch('/v1/messaging/providers/:id/msg91')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/telesign')
   ->desc('Create Telesign Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -372,7 +369,7 @@ App::post('/v1/messaging/providers/telesign')
 App::patch('/v1/messaging/providers/:id/telesign')
   ->desc('Update Telesign Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -420,14 +417,13 @@ App::patch('/v1/messaging/providers/:id/telesign')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/textmagic')
   ->desc('Create Textmagic Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -459,7 +455,7 @@ App::post('/v1/messaging/providers/textmagic')
 App::patch('/v1/messaging/providers/:id/textmagic')
   ->desc('Update Textmagic Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -507,14 +503,13 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/twilio')
   ->desc('Create Twilio Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -546,7 +541,7 @@ App::post('/v1/messaging/providers/twilio')
 App::patch('/v1/messaging/providers/:id/twilio')
   ->desc('Update Twilio Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -594,14 +589,13 @@ App::patch('/v1/messaging/providers/:id/twilio')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/vonage')
   ->desc('Create Vonage Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -633,7 +627,7 @@ App::post('/v1/messaging/providers/vonage')
 App::patch('/v1/messaging/providers/:id/vonage')
   ->desc('Update Vonage Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -681,7 +675,6 @@ App::patch('/v1/messaging/providers/:id/vonage')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
@@ -691,7 +684,7 @@ App::patch('/v1/messaging/providers/:id/vonage')
 App::post('/v1/messaging/providers/fcm')
   ->desc('Create FCM Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -721,7 +714,7 @@ App::post('/v1/messaging/providers/fcm')
 App::patch('/v1/messaging/providers/:id/fcm')
   ->desc('Update FCM Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -759,14 +752,13 @@ App::patch('/v1/messaging/providers/:id/fcm')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::post('/v1/messaging/providers/apns')
   ->desc('Create APNS Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.create')
+  ->label('audits.event', 'messages.providers.create')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -804,7 +796,7 @@ App::post('/v1/messaging/providers/apns')
 App::patch('/v1/messaging/providers/:id/apns')
   ->desc('Update APNS Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.update')
+  ->label('audits.event', 'messages.providers.update')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
@@ -858,27 +850,25 @@ App::patch('/v1/messaging/providers/:id/apns')
     $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
     $response
-      ->setStatusCode(Response::STATUS_CODE_CREATED)
       ->dynamic($provider, Response::MODEL_PROVIDER);
   });
 
 App::delete('/v1/messaging/providers/:id')
   ->desc('Delete Provider')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.providers.[id].delete')
+  ->label('audits.event', 'messages.providers.delete')
   ->label('scope', 'providers.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
   ->label('sdk.namespace', 'messaging')
   ->label('sdk.method', 'deleteProvider')
   ->label('sdk.description', '/docs/references/messaging/delete-provider.md')
-  ->label('sdk.response.code', Response::STATUS_CODE_OK)
+  ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
   ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
   ->label('sdk.response.model', Response::MODEL_NONE)
   ->param('id', '', new UID(), 'Provider ID.')
-  ->inject('response')
   ->inject('dbForProject')
-  ->inject('events')
-  ->action(function (string $id, Response $response, Database $dbForProject) {
+  ->inject('response')
+  ->action(function (string $id, Database $dbForProject, Response $response) {
     $provider = $dbForProject->getDocument('providers', $id);
 
     if ($provider->isEmpty()) {
@@ -894,7 +884,7 @@ App::delete('/v1/messaging/providers/:id')
 App::post('/v1/messaging/messages/email')
   ->desc('Send an email.')
   ->groups(['api', 'messaging'])
-  ->label('event', 'messages.create')
+  ->label('audits.event', 'messages.create')
   ->label('scope', 'messages.write')
   ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
   ->label('sdk.namespace', 'messaging')

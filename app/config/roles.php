@@ -22,6 +22,10 @@ $member = [
     'execution.write',
     'targets.read',
     'targets.write',
+    'providers.write',
+    'providers.read',
+    'messages.write',
+    'messages.read'
 ];
 
 $admins = [
@@ -57,6 +61,10 @@ $admins = [
     'migrations.write',
     'targets.read',
     'targets.write',
+    'providers.write',
+    'providers.read',
+    'messages.write',
+    'messages.read'
 ];
 
 return [
