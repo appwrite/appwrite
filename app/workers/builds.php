@@ -391,6 +391,12 @@ class BuildsV1 extends Worker
                                 projectId: $project->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
                                     if ($response === null) {
+                                        $build = $dbForProject->getDocument('builds', $build->getId());
+
+                                        if ($build->isEmpty()) {
+                                            throw new Exception('Build not found', 404);
+                                        }
+
                                         $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
                                         $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
