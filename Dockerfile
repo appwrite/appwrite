@@ -52,7 +52,6 @@ ENV _APP_SERVER=swoole \
     _APP_CONSOLE_WHITELIST_ROOT=enabled \
     _APP_CONSOLE_WHITELIST_EMAILS= \
     _APP_CONSOLE_WHITELIST_IPS= \
-    _APP_CONSOLE_ROOT_SESSION= \
     _APP_SYSTEM_EMAIL_NAME= \
     _APP_SYSTEM_EMAIL_ADDRESS= \
     _APP_SYSTEM_RESPONSE_FORMAT= \
@@ -96,6 +95,13 @@ ENV _APP_SERVER=swoole \
     _APP_INFLUXDB_PORT=8086 \
     _APP_STATSD_HOST=telegraf \
     _APP_STATSD_PORT=8125 \
+    _APP_SMTP_HOST= \
+    _APP_SMTP_PORT= \
+    _APP_SMTP_SECURE= \
+    _APP_SMTP_USERNAME= \
+    _APP_SMTP_PASSWORD= \
+    _APP_SMS_PROVIDER= \
+    _APP_SMS_FROM= \
     _APP_FUNCTIONS_SIZE_LIMIT=30000000 \
     _APP_FUNCTIONS_TIMEOUT=900 \
     _APP_FUNCTIONS_CONTAINERS=10 \
@@ -158,13 +164,7 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/migrate && \
@@ -173,7 +173,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
     chmod +x /usr/local/bin/ssl && \
-    chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
@@ -186,6 +185,15 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/worker-migrations
+
+# Cloud Executabless
+RUN chmod +x /usr/local/bin/hamster && \
+    chmod +x /usr/local/bin/volume-sync && \
+    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
+    chmod +x /usr/local/bin/patch-delete-project-collections && \
+    chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/calc-users-stats && \
+    chmod +x /usr/local/bin/calc-tier-stats
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
