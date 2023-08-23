@@ -117,7 +117,7 @@ return [
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user by making a request to the Account API\'s "Update Status" endpoint or in the Appwrite Console\'s Auth section.',
+        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -192,7 +192,7 @@ return [
     ],
     Exception::USER_IDENTITY_NOT_FOUND => [
         'name' => Exception::USER_IDENTITY_NOT_FOUND,
-        'description' => 'The identity could not be found. [TODO @meldiron]',
+        'description' => 'The identity could not be found. Please sign in with OAuth provider to create identity first.',
         'code' => 404,
     ],
     Exception::USER_UNAUTHORIZED => [
@@ -254,7 +254,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid. Try requesting a new invitation and try again.',
+        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -281,7 +281,7 @@ return [
     ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
-        'description' => 'Membership already confirmed.',
+        'description' => 'Membership is already confirmed.',
         'code' => 409,
     ],
 
@@ -382,12 +382,12 @@ return [
     ],
     Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
         'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
-        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository',
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
         'code' => 404,
     ],
     Exception::REPOSITORY_NOT_FOUND => [
         'name' => Exception::REPOSITORY_NOT_FOUND,
-        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository',
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
         'code' => 404,
     ],
     Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
@@ -653,7 +653,7 @@ return [
     ],
     Exception::RULE_ALREADY_EXISTS => [
         'name' => Exception::RULE_ALREADY_EXISTS,
-        'description' => 'Domain already used. Please try again with a different domain.',
+        'description' => 'Domain is already used. Please try again with a different domain.',
         'code' => 409,
     ],
     Exception::RULE_VERIFICATION_FAILED => [

@@ -51,7 +51,7 @@ class Func extends Model
             ])
             ->addRule('live', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is the function deployed with the latest configuration? This is set to false if you\'ve changed an environment variable. When the value is false, redeploy the function to update it with the latest configuration.',
+                'description' => 'Is the function deployed with the latest configuration? This is set to false if you\'ve changed an environment variables, entrypoint, commands, or other settings that needs redeploy to be applied. When the value is false, redeploy the function to update it with the latest configuration.',
                 'default' => true,
                 'example' => false,
             ])
