@@ -1,16 +1,20 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Validator\Password;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
-use Utopia\Validator\URL;
+use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -18,25 +22,22 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\Email;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Utopia\Cache\Cache;
+use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
+use Utopia\Registry\Registry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Appwrite\Template\Template;
-use Utopia\Locale\Locale;
-use PHPMailer\PHPMailer\PHPMailer;
 
 App::init()
     ->groups(['projects'])
