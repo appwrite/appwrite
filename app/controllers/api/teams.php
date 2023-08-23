@@ -482,7 +482,8 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name])
+                    'search' => implode(' ', [$userId, $email, $name]),
+                    'accessedAt' => DateTime::now(),
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
