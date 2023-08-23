@@ -87,7 +87,7 @@ class BuildsV1 extends Worker
         }
 
         if (empty($deployment->getAttribute('entrypoint', ''))) {
-            throw new Exception('Function entrypoint is not configured. Please specify it in function settings or when making deployment.', 500);
+            throw new Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
         $runtimes = Config::getParam('runtimes', []);
