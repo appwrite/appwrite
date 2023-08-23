@@ -97,16 +97,67 @@ class MessagingV1 extends Worker
       // call function passing needed credentials returns required provider.
 
         $messageId = $this->args['messageId'];
-        $message =
-        $this
-        ->getConsoleDB()
-        ->getDocument('messages', $messageId);
+        $messageRecord =
+          $this
+          ->getConsoleDB()
+          ->getDocument('messages', $messageId);
 
-      // Contrust Message Object according to each provider type.
-      // Send the message using respective adapter
+        $message = match ($providerRecord->getAttribute('type')) {
+            'sms' => $this->buildSMSMessage($messageRecord->getArrayCopy()),
+            'push' => $this->buildPushMessage($messageRecord->getArrayCopy()),
+            'email' => $this->buildEmailMessage($messageRecord->getArrayCopy()),
+            default => null
+        };
+
+
+        $provider->send($message);
     }
 
     public function shutdown(): void
     {
+    }
+
+    private function buildEmailMessage($data): array
+    {
+        $from = $data['from'];
+        $to = $data['to'];
+        $subject = $data['subject'];
+        $body = $data['content'];
+
+        return [
+            'from' => $from,
+            'to' => $to,
+            'subject' => $subject,
+            'body' => $body,
+        ];
+        return $message;
+    }
+
+    private function buildSMSMessage($data): array
+    {
+        $from = $data['from'];
+        $to = $data['to'];
+        $body = $data['content'];
+
+        return [
+            'from' => $from,
+            'to' => $to,
+            'body' => $body
+        ];
+    }
+
+    private function buildPushMessage($data): array
+    {
+        $to = $data['to'];
+        $title = $data['title'];
+        $body = $data['body'];
+        $data = $data['data'];
+
+        return [
+            'to' => $to,
+            'title' => $title,
+            'body' => $body,
+            'data' => $data
+        ];
     }
 }
