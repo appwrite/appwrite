@@ -105,19 +105,13 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, string $domain, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'mailgun',
             'type' => 'email',
             'credentials' => [
@@ -201,19 +195,13 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('id', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $apiKey, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'sendgrid',
             'type' => 'email',
             'credentials' => [
@@ -292,19 +280,13 @@ App::post('/v1/messaging/providers/msg91')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $senderId, string $authKey, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
             'credentials' => [
@@ -389,19 +371,13 @@ App::post('/v1/messaging/providers/telesign')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('username', '', new Text(0), 'Telesign username.')
     ->param('password', '', new Text(0), 'Telesign password.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $username, string $password, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $username, string $password, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
             'credentials' => [
@@ -486,19 +462,13 @@ App::post('/v1/messaging/providers/textmagic')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('username', '', new Text(0), 'Textmagic username.')
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $username, string $apiKey, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
             'credentials' => [
@@ -583,19 +553,13 @@ App::post('/v1/messaging/providers/twilio')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
     ->param('authToken', '', new Text(0), 'Twilio authentication token.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $accountSid, string $authToken, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
             'credentials' => [
@@ -680,19 +644,13 @@ App::post('/v1/messaging/providers/vonage')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Vonage API key.')
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, string $apiSecret, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
             'credentials' => [
@@ -779,19 +737,13 @@ App::post('/v1/messaging/providers/fcm')
     ->param('id', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('serverKey', '', new Text(0), 'FCM Server Key.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $serverKey, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $serverKey, Database $dbForProject, Response $response) {
 $id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
             'credentials' => [
@@ -868,19 +820,13 @@ App::post('/v1/messaging/providers/apns')
     ->param('teamId', '', new Text(0), 'APNS team ID.')
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.')
-	->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
 		$id = $id == 'unique()' ? ID::unique() : $id;
 		$provider = $dbForProject->createDocument('providers', new Document([
 			'$id' => $id,
-			'$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
-            'name' => $name,
+			'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
             'credentials' => [
