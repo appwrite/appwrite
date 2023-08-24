@@ -414,9 +414,10 @@ App::post('/v1/users/:userId/targets')
 
         $target = $dbForProject->createDocument('targets', new Document([
             '$id' => $targetId,
-            // TO DO: what permissions should be given when created a target.
             '$permissions' => [
-                Permission::read(Role::any())
+                Permission::read(Role::any()),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),

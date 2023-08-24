@@ -1664,6 +1664,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('targets'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => ['subQueryTargets'],
+            ]
         ],
         'indexes' => [
             [
@@ -1702,28 +1713,6 @@ $commonCollections = [
         '$id' => ID::custom('subscribers'),
         'name' => 'Subscribers',
         'attributes' => [
-            [
-                '$id' => ID::custom('userId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('userInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('targetId'),
                 'type' => Database::VAR_STRING,
@@ -1770,20 +1759,6 @@ $commonCollections = [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_userId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['userId'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_userInternalId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['userInternalId'],
-                'lengths' => [128],
-                'orders' => [Database::ORDER_ASC],
-            ],
             [
                 '$id' => ID::custom('_key_targetId'),
                 'type' => Database::INDEX_KEY,
@@ -1886,6 +1861,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('topics'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => ['subQueryTopics'],
+            ]
         ],
         'indexes' => [
             [
@@ -1924,7 +1910,7 @@ $commonCollections = [
                 'orders' => [],
             ],
         ],
-    ]
+    ],
 ];
 
 $projectCollections = array_merge([

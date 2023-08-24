@@ -3038,7 +3038,7 @@ App::post('/v1/account/targets')
         $target = $dbForProject->createDocument('targets', new Document([
             '$id' => $targetId,
             '$permissions' => [
-                Permission::read(Role::user($user->getId())),
+                Permission::read(Role::any()),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ],
