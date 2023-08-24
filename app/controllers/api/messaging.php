@@ -29,7 +29,7 @@ App::get('/v1/messaging/providers')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER_LIST)
-    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, Database $dbForProject, Response $response) {
@@ -107,10 +107,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'mailgun',
             'type' => 'email',
             'credentials' => [
@@ -151,7 +151,7 @@ App::patch('/v1/messaging/providers/:id/mailgun')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'mailgun') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -197,10 +197,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'sendgrid',
             'type' => 'email',
             'credentials' => [
@@ -239,7 +239,7 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'sendgrid') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -275,17 +275,17 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-	->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
             'credentials' => [
@@ -326,7 +326,7 @@ App::patch('/v1/messaging/providers/:id/msg91')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'msg91') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -373,10 +373,10 @@ App::post('/v1/messaging/providers/telesign')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $username, string $password, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
             'credentials' => [
@@ -417,7 +417,7 @@ App::patch('/v1/messaging/providers/:id/telesign')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'telesign') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -464,10 +464,10 @@ App::post('/v1/messaging/providers/textmagic')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
             'credentials' => [
@@ -508,7 +508,7 @@ App::patch('/v1/messaging/providers/:id/textmagic')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'text-magic') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -555,10 +555,10 @@ App::post('/v1/messaging/providers/twilio')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
             'credentials' => [
@@ -599,7 +599,7 @@ App::patch('/v1/messaging/providers/:id/twilio')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'twilio') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -646,10 +646,10 @@ App::post('/v1/messaging/providers/vonage')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
             'credentials' => [
@@ -690,7 +690,7 @@ App::patch('/v1/messaging/providers/:id/vonage')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'vonage') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -739,10 +739,10 @@ App::post('/v1/messaging/providers/fcm')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $serverKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
             'credentials' => [
@@ -781,7 +781,7 @@ App::patch('/v1/messaging/providers/:id/fcm')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'fcm') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -822,10 +822,10 @@ App::post('/v1/messaging/providers/apns')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
             'credentials' => [
@@ -872,7 +872,7 @@ App::patch('/v1/messaging/providers/:id/apns')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'apns') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {

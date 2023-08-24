@@ -6,7 +6,7 @@ use Tests\E2E\Client;
 
 trait MessagingBase
 {
-  public function testCreateProviders(): array
+    public function testCreateProviders(): array
     {
         $providersParams = [
             'sendgrid' => [
