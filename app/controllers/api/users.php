@@ -404,7 +404,7 @@ App::get('/v1/users')
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $filterQueries, (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT)),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -572,7 +572,7 @@ App::get('/v1/users/:userId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? (int) App::getEnv('_APP_LIMIT_COUNT', APP_LIMIT_COUNT);
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);

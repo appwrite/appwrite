@@ -53,6 +53,15 @@ return [
                 'filter' => 'token'
             ],
             [
+                'name' => '_APP_LIMIT_COUNT',
+                'description' => 'This number represents a hard limit on the maximum rows that can be fetched or calculated in a single database query.',
+                'introduction' => '',
+                'default' => '5000',
+                'required' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN',
                 'description' => 'Your Appwrite domain address. When setting a public suffix domain, Appwrite will attempt to issue a valid SSL certificate automatically. When used with a dev domain, Appwrite will assign a self-signed SSL certificate. The default value is \'localhost\'.',
                 'introduction' => '',

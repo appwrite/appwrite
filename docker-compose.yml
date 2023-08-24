@@ -53,7 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -88,7 +88,7 @@ services:
       - mariadb
       - redis
       # - clamav
-    entrypoint: 
+    entrypoint:
       - php
       - -e
       - app/http.php
@@ -107,6 +107,7 @@ services:
       - _APP_OPTIONS_ABUSE
       - _APP_OPTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
+      - _APP_LIMIT_COUNT
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_REDIS_HOST
@@ -184,7 +185,7 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports: 
+    ports:
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -288,7 +289,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -341,7 +342,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -369,7 +370,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -402,7 +403,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -688,7 +689,7 @@ services:
   #     - RELAY_FROM_HOSTS=192.168.0.0/16 ; *.yourdomain.com
   #     - SMARTHOST_HOST=smtp
   #     - SMARTHOST_PORT=587
-  
+
   redis:
     image: redis:7.0.4-alpine
     <<: *x-logging
@@ -728,12 +729,12 @@ services:
     <<: *x-logging
     networks:
       - appwrite
-    environment: 
+    environment:
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
 
   # Dev Tools Start ------------------------------------------------------------------------------------------
-  # 
+  #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
   #
   # Here is a description of the different tools and why are we using them:
@@ -821,7 +822,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-  
+
   graphql-explorer:
     container_name: appwrite-graphql-explorer
     image: appwrite/altair:0.3.0
