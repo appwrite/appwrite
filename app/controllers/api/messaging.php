@@ -108,10 +108,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'mailgun',
             'type' => 'email',
             'credentials' => [
@@ -198,10 +198,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'sendgrid',
             'type' => 'email',
             'credentials' => [
@@ -276,17 +276,17 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-	->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
             'credentials' => [
@@ -374,10 +374,10 @@ App::post('/v1/messaging/providers/telesign')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $username, string $password, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
             'credentials' => [
@@ -465,10 +465,10 @@ App::post('/v1/messaging/providers/textmagic')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
             'credentials' => [
@@ -556,10 +556,10 @@ App::post('/v1/messaging/providers/twilio')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
             'credentials' => [
@@ -647,10 +647,10 @@ App::post('/v1/messaging/providers/vonage')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
             'credentials' => [
@@ -740,10 +740,10 @@ App::post('/v1/messaging/providers/fcm')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $serverKey, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
             'credentials' => [
@@ -823,10 +823,10 @@ App::post('/v1/messaging/providers/apns')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-		$providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-		$provider = $dbForProject->createDocument('providers', new Document([
-			'$id' => $providerId,
-			'name' => $name,
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = $dbForProject->createDocument('providers', new Document([
+            '$id' => $providerId,
+            'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
             'credentials' => [

@@ -193,49 +193,49 @@ trait MessagingBase
 
     public function testCreateTopic(): string
     {
-		$provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
-			'content-type' => 'application/json',
-			'x-appwrite-project' => $this->getProject()['$id'],
-			'x-appwrite-key' => $this->getProject()['apiKey'],
-		]), [
-			'id' => 'unique()',
-			'name' => 'Sengrid1',
-			'apiKey' => 'my-apikey',
-		]);
-		$this->assertEquals(201, $provider['headers']['status-code']);
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'id' => 'unique()',
+            'name' => 'Sengrid1',
+            'apiKey' => 'my-apikey',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-			'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'providerId' => $provider['body']['$id'],
-			'topicId' => 'unique()',
-			'name' => 'my-app',
-			'description' => 'web app'
+            'topicId' => 'unique()',
+            'name' => 'my-app',
+            'description' => 'web app'
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
-		$this->assertEquals('my-app', $response['body']['name']);
+        $this->assertEquals('my-app', $response['body']['name']);
 
         return $response['body']['$id'];
     }
 
-	/**
+    /**
      * @depends testCreateTopic
      */
     public function testUpdateTopic(string $topicId): string
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, [
-			'content-type' => 'application/json',
-			'x-appwrite-project' => $this->getProject()['$id'],
-			'x-appwrite-key' => $this->getProject()['apiKey'],
-		], [
-			'name' => 'android-app',
-			'description' => 'updated-description'
-		]);
-		$this->assertEquals(200, $response['headers']['status-code']);
-		$this->assertEquals('android-app', $response['body']['name']);
-		$this->assertEquals('updated-description', $response['body']['description']);
-		return $topicId;
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'android-app',
+            'description' => 'updated-description'
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('android-app', $response['body']['name']);
+        $this->assertEquals('updated-description', $response['body']['description']);
+        return $topicId;
     }
 
     public function testListTopic()
@@ -249,27 +249,27 @@ trait MessagingBase
         $this->assertEquals(1, \count($response['body']['topics']));
     }
 
-	/**
+    /**
      * @depends testUpdateTopic
      */
     public function testGetTopic(string $topicId)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' .$topicId, [
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-		$this->assertEquals('android-app', $response['body']['name']);
-		$this->assertEquals('updated-description', $response['body']['description']);
+        $this->assertEquals('android-app', $response['body']['name']);
+        $this->assertEquals('updated-description', $response['body']['description']);
     }
 
-	/**
+    /**
      * @depends testUpdateTopic
      */
     public function testDeleteTopic(string $topicId)
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' .$topicId, [
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

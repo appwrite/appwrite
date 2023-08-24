@@ -11,5 +11,4 @@ class MessagingConsoleClientTest extends Scope
     use MessagingBase;
     use ProjectCustom;
     use SideConsole;
-
 }

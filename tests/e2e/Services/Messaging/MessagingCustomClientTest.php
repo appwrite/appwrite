@@ -11,5 +11,4 @@ class MessagingCustomClientTest extends Scope
     use MessagingBase;
     use ProjectCustom;
     use SideClient;
-
 }
