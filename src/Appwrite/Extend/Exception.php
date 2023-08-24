@@ -217,6 +217,9 @@ class Exception extends \Exception
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
 
+    /** Topic */
+    public const TOPIC_NOT_FOUND                    = 'topic_not_found';
+
     protected $type = '';
     protected $errors = [];
 

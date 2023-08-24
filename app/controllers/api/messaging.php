@@ -2,11 +2,15 @@
 
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
+use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
@@ -25,7 +29,7 @@ App::get('/v1/messaging/providers')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER_LIST)
-    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of '.APP_LIMIT_ARRAY_PARAMS_SIZE.' queries are allowed, each '.APP_LIMIT_ARRAY_ELEMENT_SIZE.' characters long. You may filter on the following attributes: '.implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, Database $dbForProject, Response $response) {
@@ -144,7 +148,7 @@ App::patch('/v1/messaging/providers/:id/mailgun')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'mailgun') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -229,7 +233,7 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'sendgrid') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -313,7 +317,7 @@ App::patch('/v1/messaging/providers/:id/msg91')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'msg91') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -401,7 +405,7 @@ App::patch('/v1/messaging/providers/:id/telesign')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'telesign') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -489,7 +493,7 @@ App::patch('/v1/messaging/providers/:id/textmagic')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'text-magic') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -577,7 +581,7 @@ App::patch('/v1/messaging/providers/:id/twilio')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'twilio') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -665,7 +669,7 @@ App::patch('/v1/messaging/providers/:id/vonage')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'vonage') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -753,7 +757,7 @@ App::patch('/v1/messaging/providers/:id/fcm')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'fcm') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -841,7 +845,7 @@ App::patch('/v1/messaging/providers/:id/apns')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'apns') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE.$providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
         if ($name) {
@@ -897,6 +901,192 @@ App::delete('/v1/messaging/providers/:id')
         $dbForProject->deleteCachedDocument('providers', $provider->getId());
         $dbForProject->deleteDocument('providers', $provider->getId());
 
+        $response->noContent();
+    });
+
+App::get('/v1/messaging/topics')
+    ->desc('List topics.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'topics.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listTopics')
+    ->label('sdk.description', '/docs/references/messaging/list-topics.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC_LIST)
+    ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (array $queries, Database $dbForProject, Response $response) {
+        $queries = Query::parseQueries($queries);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $topicId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('topics', [
+                Query::equal('$id', [$topicId]),
+                Query::limit(1),
+            ]));
+
+            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument[0]);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('topics', $filterQueries, APP_LIMIT_COUNT),
+            'indexes' => $dbForProject->find('topics', $queries),
+        ]), Response::MODEL_TOPIC_LIST);
+    });
+
+App::get('/v1/messaging/topics/:id')
+    ->desc('Get a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'topics.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getTopic')
+    ->label('sdk.description', '/docs/references/messaging/get-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('id', '', new UID(), 'Topic ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $id);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $topic = $dbForProject->getDocument('topics', $id);
+
+        $response
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::post('/v1/messaging/topics')
+    ->desc('Create a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.create')
+    ->label('audits.resource', 'topics/{response.$id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTopic')
+    ->label('sdk.description', '/docs/references/messaging/create-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('id', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, string $providerId, string $name, string $description, Document $user, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $topic = new Document([
+            '$id' => $id,
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+            'providerId' => $providerId,
+            'providerInternalId' => $provider->getInternalId(),
+            'name' => $name,
+
+        ]);
+
+        if ($description) {
+            $topic->setAttribute('description', $description);
+        }
+
+        $topic = $dbForProject->createDocument('topics', $topic);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::patch('/v1/messaging/topics/:id')
+    ->desc('Update a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.update')
+    ->label('audits.resource', 'topics/{response.$id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateTopic')
+    ->label('sdk.description', '/docs/references/messaging/update-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('id', '', new UID(), 'Topic ID.')
+    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('description', null, new Text(128), 'Topic Description.', true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, string $name, string $description, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $id);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        if ($name) {
+            $topic->setAttribute('name', $name);
+        }
+
+        if ($description) {
+            $topic->setAttribute('description', $description);
+        }
+
+        $topic = $dbForProject->updateDocument('topics', $id, $topic);
+
+        $response
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::delete('/v1/messaging/topics/:id')
+    ->desc('Delete a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.delete')
+    ->label('audits.resource', 'topics/{request.id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'deleteTopic')
+    ->label('sdk.description', '/docs/references/messaging/delete-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('id', '', new UID(), 'Topic ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $id);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $topic = $dbForProject->deleteDocument('topics', $id);
         $response->noContent();
     });
 

@@ -544,11 +544,10 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         $provider = Authorization::skip(fn () => $database
             ->getDocument(
-                'providers', 
-                $document->getAttribute('providerId'), 
+                'providers',
+                $document->getAttribute('providerId'),
                 [Query::select(['type'])]
-            )
-        );
+            ));
         if ($provider) {
             return $provider->getAttribute('type');
         }
@@ -563,12 +562,13 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $topicIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('topicId'), $database
+            fn ($document) => $document->getAttribute('topicId'),
+            $database
             ->find('subscribers', [
                 Query::equal('targetInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
-            ]))
-        );
+            ])
+        ));
         return $database->find('topics', [Query::equal('$id', $topicIds)]);
     }
 );
@@ -580,12 +580,13 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetId'), $database
+            fn ($document) => $document->getAttribute('targetId'),
+            $database
             ->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
-            ]))
-        );
+            ])
+        ));
         return $database->find('targets', [Query::equal('$id', $targetIds)]);
     }
 );
