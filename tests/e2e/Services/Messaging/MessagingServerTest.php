@@ -5,12 +5,12 @@ namespace Tests\E2E\Services\Messaging;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideConsole;
+use Tests\E2E\Scopes\SideServer;
 
 class MessagingServerTest extends Scope
 {
     use ProjectCustom;
-    use SideConsole;
+    use SideServer;
 
     public function testCreateProviders(): array
     {
@@ -77,7 +77,6 @@ class MessagingServerTest extends Scope
             $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'x-appwrite-key' => $this->getProject()['apiKey'],
             ],$this->getHeaders()), $providersParams[$key]);
             \array_push($providers, $response['body']);
             $this->assertEquals(201, $response['headers']['status-code']);
