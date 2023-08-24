@@ -16,44 +16,53 @@ class MessagingServerTest extends Scope
     {
         $providersParams = [
             'sendgrid' => [
+                'id' => 'unique()',
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
             ],
             'mailgun' => [
+                'id' => 'unique()',
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
             ],
             'twilio' => [
+                'id' => 'unique()',
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
             'telesign' => [
+                'id' => 'unique()',
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
             'textmagic' => [
+                'id' => 'unique()',
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
             'msg91' => [
+                'id' => 'unique()',
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
             ],
             'vonage' => [
+                'id' => 'unique()',
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
             'fcm' => [
+                'id' => 'unique()',
                 'name' => 'FCM1',
                 'serverKey' => 'my-serverkey',
             ],
             'apns' => [
+                'id' => 'unique()',
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -65,11 +74,11 @@ class MessagingServerTest extends Scope
         $providers = [];
 
         foreach (\array_keys($providersParams) as $key) {
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, [
+            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], $providersParams[$key]);
+            ],$this->getHeaders()), $providersParams[$key]);
             \array_push($providers, $response['body']);
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
