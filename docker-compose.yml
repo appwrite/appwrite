@@ -313,6 +313,7 @@ services:
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -364,6 +365,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -394,6 +396,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
@@ -435,6 +438,7 @@ services:
       - ./src:/usr/src/code/src
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -507,6 +511,7 @@ services:
       # - smtp
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
@@ -537,6 +542,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
@@ -562,6 +568,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -594,6 +601,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
       - _APP_DOMAIN_FUNCTIONS
@@ -631,6 +639,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
       - _APP_DB_PORT
@@ -663,6 +672,7 @@ services:
       - redis
     environment:
       - _APP_ENV
+      - _APP_WORKER_PER_CORE
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
