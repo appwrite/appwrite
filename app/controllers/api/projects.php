@@ -1550,10 +1550,16 @@ App::patch('/v1/projects/:projectId/smtp')
         $mail->Port = $port;
         $mail->SMTPSecure = $secure;
         $mail->SMTPAutoTLS = false;
-        $valid = $mail->SmtpConnect();
+        $mail->Timeout = 5;
 
-        if (!$valid) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+        try {
+            $valid = $mail->SmtpConnect();
+
+            if (!$valid) {
+                throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+            }
+        } catch (Throwable $error) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'Could not connect to SMTP server: ' . $error->getMessage());
         }
 
         $smtp = [

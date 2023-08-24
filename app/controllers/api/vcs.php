@@ -806,7 +806,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
 
         $response->dynamic(new Document([
             'branches' => \array_map(function ($branch) {
-                return ['name' => $branch];
+                return new Document(['name' => $branch]);
             }, $branches),
             'total' => \count($branches),
         ]), Response::MODEL_BRANCH_LIST);
