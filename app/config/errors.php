@@ -323,6 +323,11 @@ return [
     ],
 
     /** Storage */
+    Exception::STORAGE_FILE_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_FILE_ALREADY_EXISTS,
+        'description' => 'A storage file with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::STORAGE_FILE_NOT_FOUND => [
         'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
