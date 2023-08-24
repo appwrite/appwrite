@@ -87,6 +87,8 @@ trait ProjectCustom
                 'providers.write',
                 'messages.read',
                 'messages.write',
+                'topics.write',
+                'topics.read'
             ],
         ]);
 

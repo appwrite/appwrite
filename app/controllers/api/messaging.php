@@ -936,7 +936,7 @@ App::get('/v1/messaging/topics')
     ->desc('List topics.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTopics')
     ->label('sdk.description', '/docs/references/messaging/list-topics.md')
@@ -970,7 +970,7 @@ App::get('/v1/messaging/topics')
         $filterQueries = Query::groupByType($queries)['filters'];
         $response->dynamic(new Document([
             'total' => $dbForProject->count('topics', $filterQueries, APP_LIMIT_COUNT),
-            'indexes' => $dbForProject->find('topics', $queries),
+            'topics' => $dbForProject->find('topics', $queries),
         ]), Response::MODEL_TOPIC_LIST);
     });
 
@@ -978,7 +978,7 @@ App::get('/v1/messaging/topics/:id')
     ->desc('Get a topic.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getTopic')
     ->label('sdk.description', '/docs/references/messaging/get-topic.md')
@@ -1007,21 +1007,21 @@ App::post('/v1/messaging/topics')
     ->label('audits.event', 'topics.create')
     ->label('audits.resource', 'topics/{response.$id}')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createTopic')
     ->label('sdk.description', '/docs/references/messaging/create-topic.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
-    ->param('id', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
     ->param('description', '', new Text(2048), 'Topic Description.', true)
-    ->inject('user')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $providerId, string $name, string $description, Document $user, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $providerId, string $name, string $description, Database $dbForProject, Response $response) {
+        $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1029,16 +1029,10 @@ App::post('/v1/messaging/topics')
         }
 
         $topic = new Document([
-            '$id' => $id,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ],
+            '$id' => $topicId,
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),
             'name' => $name,
-
         ]);
 
         if ($description) {
@@ -1052,26 +1046,26 @@ App::post('/v1/messaging/topics')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::patch('/v1/messaging/topics/:id')
+App::patch('/v1/messaging/topics/:topicId')
     ->desc('Update a topic.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topics.update')
     ->label('audits.resource', 'topics/{response.$id}')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateTopic')
     ->label('sdk.description', '/docs/references/messaging/update-topic.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
-    ->param('id', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.', true)
     ->param('description', null, new Text(128), 'Topic Description.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $description, Database $dbForProject, Response $response) {
-        $topic = $dbForProject->getDocument('topics', $id);
+    ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -1085,36 +1079,36 @@ App::patch('/v1/messaging/topics/:id')
             $topic->setAttribute('description', $description);
         }
 
-        $topic = $dbForProject->updateDocument('topics', $id, $topic);
+        $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
 
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::delete('/v1/messaging/topics/:id')
+App::delete('/v1/messaging/topics/:topicId')
     ->desc('Delete a topic.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topics.delete')
-    ->label('audits.resource', 'topics/{request.id}')
+    ->label('audits.resource', 'topics/{request.topicId}')
     ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'deleteTopic')
     ->label('sdk.description', '/docs/references/messaging/delete-topic.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('id', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $topic = $dbForProject->getDocument('topics', $id);
+    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->deleteDocument('topics', $id);
+        $topic = $dbForProject->deleteDocument('topics', $topicId);
         $response->noContent();
     });
 
