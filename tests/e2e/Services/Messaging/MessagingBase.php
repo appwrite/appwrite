@@ -10,53 +10,53 @@ trait MessagingBase
     {
         $providersParams = [
             'sendgrid' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
             ],
             'mailgun' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
             ],
             'twilio' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
             'telesign' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
             'textmagic' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
             'msg91' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
             ],
             'vonage' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
             'fcm' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'FCM1',
                 'serverKey' => 'my-serverkey',
             ],
             'apns' => [
-                'id' => 'unique()',
+                'providerId' => 'unique()',
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -159,7 +159,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(\count($providers), $response['body']['total']);
+        $this->assertEquals(\count($providers), \count($response['body']['providers']));
     }
 
     /**
