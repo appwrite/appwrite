@@ -569,7 +569,10 @@ Database::addFilter(
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]))
         );
-        return $database->find('topics', [Query::equal('$id', $topicIds)]);
+        if (\count($topicIds) > 0) {
+            return $database->find('topics', [Query::equal('$id', $topicIds)]);
+        }
+        return [];
     }
 );
 
@@ -586,7 +589,10 @@ Database::addFilter(
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]))
         );
-        return $database->find('targets', [Query::equal('$id', $targetIds)]);
+        if (\count($targetIds) > 0) {
+            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+        }
+        return [];
     }
 );
 
