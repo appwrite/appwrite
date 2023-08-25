@@ -1673,7 +1673,7 @@ $commonCollections = [
                 'required' => false,
                 'default' => null,
                 'array' => true,
-                'filters' => ['subQueryTargets'],
+                'filters' => ['subQueryTopicTargets'],
             ]
         ],
         'indexes' => [
@@ -1861,17 +1861,6 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('topics'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 16384,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => true,
-                'filters' => ['subQueryTopics'],
-            ]
         ],
         'indexes' => [
             [
@@ -1901,14 +1890,7 @@ $commonCollections = [
                 'attributes' => ['providerInternalId'],
                 'lengths' => [],
                 'orders' => [],
-            ],
-            [
-                '$id' => ID::custom('_key_providerType'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['providerType'],
-                'lengths' => [],
-                'orders' => [],
-            ],
+            ]
         ],
     ],
 ];
