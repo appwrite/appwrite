@@ -555,29 +555,9 @@ Database::addFilter(
     }
 );
 
-Database::addFilter(
-    'subQueryTopics',
-    function (mixed $value) {
-        return null;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        $topicIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('topicId'),
-            $database
-            ->find('subscribers', [
-                Query::equal('targetInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ])
-        ));
-        if (\count($topicIds) > 0) {
-            return $database->find('topics', [Query::equal('$id', $topicIds)]);
-        }
-        return [];
-    }
-);
 
 Database::addFilter(
-    'subQueryTargets',
+    'subQueryTopicTargets',
     function (mixed $value) {
         return null;
     },
