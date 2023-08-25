@@ -198,7 +198,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'id' => 'unique()',
+            'providerId' => 'unique()',
             'name' => 'Sengrid1',
             'apiKey' => 'my-apikey',
         ]);
