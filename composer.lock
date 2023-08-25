@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7cb5852653a858c1846543914c20f87f",
+    "content-hash": "f89bfdb9813378f68d77cb503729b5d6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2220,16 +2220,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.42.3",
+            "version": "dev-feat-document-clone",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1"
+                "reference": "0d6c9de4e2ca43feb26a60debe3254f3194db019"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1",
-                "reference": "ab0e2f8ad46884f69b354cd8ee84a1a75fee26d1",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0d6c9de4e2ca43feb26a60debe3254f3194db019",
+                "reference": "0d6c9de4e2ca43feb26a60debe3254f3194db019",
                 "shasum": ""
             },
             "require": {
@@ -2271,9 +2271,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.42.3"
+                "source": "https://github.com/utopia-php/database/tree/feat-document-clone"
             },
-            "time": "2023-08-22T02:15:28+00:00"
+            "time": "2023-08-24T14:21:25+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6070,9 +6070,18 @@
             "time": "2023-07-26T07:16:09+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-document-clone",
+            "alias": "0.42.99",
+            "alias_normalized": "0.42.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

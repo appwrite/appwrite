@@ -98,6 +98,11 @@ return [
         'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
         'code' => 501,
     ],
+    Exception::GENERAL_NOT_IMPLEMENTED => [
+        'name' => Exception::GENERAL_NOT_IMPLEMENTED,
+        'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
+        'code' => 405,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -666,9 +671,14 @@ return [
         'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
         'code' => 400,
     ],
+    Exception::PROJECT_SMTP_CONFIG_NOT_FOUND => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_NOT_FOUND,
+        'description' => 'SMTP configuration on project is missing. Please configure a custom SMTP server to enable custom email templates.',
+        'code' => 404,
+    ],
     Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
-        'description' => 'The default template for the project cannot be deleted.',
+        'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
         'code' => 401,
     ],
     Exception::WEBHOOK_NOT_FOUND => [

@@ -640,40 +640,41 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('en-us', $response['body']['locale']);
         $this->assertEquals('Please verify your email {{url}}', $response['body']['message']);
 
-        /** Get Default SMS Template */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        // Temporary disabled until implemented
+        // /** Get Default SMS Template */
+        // $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('verification', $response['body']['type']);
-        $this->assertEquals('en-us', $response['body']['locale']);
-        $this->assertEquals('{{token}}', $response['body']['message']);
+        // $this->assertEquals(200, $response['headers']['status-code']);
+        // $this->assertEquals('verification', $response['body']['type']);
+        // $this->assertEquals('en-us', $response['body']['locale']);
+        // $this->assertEquals('{{token}}', $response['body']['message']);
 
-        /** Update SMS template */
-        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'message' => 'Please verify your email {{token}}',
-        ]);
+        // /** Update SMS template */
+        // $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()), [
+        //     'message' => 'Please verify your email {{token}}',
+        // ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('verification', $response['body']['type']);
-        $this->assertEquals('en-us', $response['body']['locale']);
-        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
+        // $this->assertEquals(200, $response['headers']['status-code']);
+        // $this->assertEquals('verification', $response['body']['type']);
+        // $this->assertEquals('en-us', $response['body']['locale']);
+        // $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
 
-        /** Get Updated SMS Template */
-        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        // /** Get Updated SMS Template */
+        // $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/templates/sms/verification/en-us', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()));
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('verification', $response['body']['type']);
-        $this->assertEquals('en-us', $response['body']['locale']);
-        $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
+        // $this->assertEquals(200, $response['headers']['status-code']);
+        // $this->assertEquals('verification', $response['body']['type']);
+        // $this->assertEquals('en-us', $response['body']['locale']);
+        // $this->assertEquals('Please verify your email {{token}}', $response['body']['message']);
 
         return $data;
     }

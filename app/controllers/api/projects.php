@@ -1556,10 +1556,10 @@ App::patch('/v1/projects/:projectId/smtp')
             $valid = $mail->SmtpConnect();
 
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_SMTP_DISABLED);
+                throw new Exception('Connection is not valid.');
             }
         } catch (Throwable $error) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'Could not connect to SMTP server: ' . $error->getMessage());
+            throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
         }
 
         $smtp = [
@@ -1593,6 +1593,8 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1691,11 +1693,15 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
 
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
+
+        // TODO: Ensure SMS is enabled on project
 
         $templates = $project->getAttribute('templates', []);
         $templates['sms.' . $type . '-' . $locale] = [
@@ -1739,6 +1745,11 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
+        $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
+        if(!$smtpEnabled) {
+            throw new Exception(Exception::PROJECT_SMTP_CONFIG_NOT_FOUND);
+        }
+
         $templates = $project->getAttribute('templates', []);
         $templates['email.' . $type . '-' . $locale] = [
             'senderName' => $senderName,
@@ -1777,6 +1788,8 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 

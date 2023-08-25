@@ -54,6 +54,7 @@ class Exception extends \Exception
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
+    public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -188,6 +189,7 @@ class Exception extends \Exception
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
     public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
+    public const PROJECT_SMTP_CONFIG_NOT_FOUND     = 'project_smtp_config_not_found';
 
     public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 

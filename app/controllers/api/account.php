@@ -1098,9 +1098,20 @@ App::post('/v1/account/sessions/magic-url')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'] ?? $body;
+            $body = Template::fromString($customTemplate['message'] ?? '');
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
+
+            $smtp = $project->getAttribute('smtp', []);
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '')
+                ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
+                ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
+                ->setSmtpSenderName($customTemplate['senderName'] ?? '');
         }
 
         $body
@@ -2514,9 +2525,20 @@ App::post('/v1/account/recovery')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'] ?? $body;
+            $body = Template::fromString($customTemplate['message'] ?? '');
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
+
+            $smtp = $project->getAttribute('smtp', []);
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '')
+                ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
+                ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
+                ->setSmtpSenderName($customTemplate['senderName'] ?? '');
         }
 
         $body
@@ -2724,9 +2746,20 @@ App::post('/v1/account/verification')
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = $customTemplate['message'] ?? $body;
+            $body = Template::fromString($customTemplate['message'] ?? '');
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
+
+            $smtp = $project->getAttribute('smtp', []);
+            $mails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '')
+                ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
+                ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
+                ->setSmtpSenderName($customTemplate['senderName'] ?? '');
         }
 
         $body

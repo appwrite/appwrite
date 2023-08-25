@@ -48,12 +48,7 @@ class MailsV1 extends Worker
         $mail->clearAttachments();
         $mail->clearBCCs();
         $mail->clearCCs();
-
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
         $mail->addAddress($recipient, $name);
-        if (isset($smtp['replyTo'])) {
-            $mail->addReplyTo($smtp['replyTo']);
-        }
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);

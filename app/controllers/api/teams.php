@@ -550,9 +550,20 @@ App::post('/v1/teams/:teamId/memberships')
                 $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
                 if ($smtpEnabled && !empty($customTemplate)) {
-                    $body = $customTemplate['message'];
-                    $subject = $customTemplate['subject'];
-                    $from = $customTemplate['senderName'];
+                    $body = Template::fromString($customTemplate['message'] ?? '');
+                    $subject = $customTemplate['subject'] ?? $subject;
+                    $from = $customTemplate['senderName'] ?? $from;
+        
+                    $smtp = $project->getAttribute('smtp', []);
+                    $mails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '')
+                        ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
+                        ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
+                        ->setSmtpSenderName($customTemplate['senderName'] ?? '');
                 }
 
                 $body->setParam('{{owner}}', $user->getAttribute('name'));
