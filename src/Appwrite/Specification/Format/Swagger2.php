@@ -9,6 +9,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
 use Utopia\Validator\Nullable;
+use Utopia\Config\Config;
 
 class Swagger2 extends Format
 {
@@ -486,7 +487,7 @@ class Swagger2 extends Format
         }
 
         foreach ($this->models as $model) {
-            if (!in_array($model->getType(), $usedModels)) {
+            if (!in_array($model->getType(), $usedModels) && $model->getType() != 'appwriteException') {
                 continue;
             }
 
@@ -514,7 +515,11 @@ class Swagger2 extends Format
                 $type = '';
                 $format = null;
                 $items = null;
+                $enum = null;
 
+                if (isset($rule['enum'])) {
+                    $enum = $rule['enum'];
+                }
                 switch ($rule['type']) {
                     case 'string':
                     case 'datetime':
@@ -603,6 +608,20 @@ class Swagger2 extends Format
                 }
                 if ($items) {
                     $output['definitions'][$model->getType()]['properties'][$name]['items'] = $items;
+                }
+                if ($enum) {
+                    $output['definitions'][$model->getType()]['properties'][$name]['enum'] = $enum;
+                }
+                if ($model->getType() == "appwriteException") {
+                    $types = [];
+                    foreach (Config::getParam('errors', []) as $error) {
+                        $types[] = [
+                            'type' => $error['name'],
+                            'code' => $error['code'],
+                            'message' => $error['description'],
+                        ];
+                    }
+                    $output['definitions'][$model->getType()]['x-appwrite']['types'] = $types;
                 }
                 if (!in_array($name, $required)) {
                     $output['definitions'][$model->getType()]['properties'][$name]['x-nullable'] = true;
