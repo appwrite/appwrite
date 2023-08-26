@@ -102,9 +102,7 @@ docker compose up -d
 To get proper autocompletion for all the different functions and classes in the codebase, you'll need to install Appwrite dependencies on your local machine. You can easily do that with PHP's package manager, [Composer](https://getcomposer.org/). If you don't have Composer installed, you can use the Docker Hub image to get the same result:
 
 ```bash
-docker run --rm --interactive --tty \
-  --volume $PWD:/app \
-  composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
+docker run --rm --interactive --tty --volume ${PWD}:/app composer update --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist
 ```
 
 ### User Interface
@@ -342,11 +340,11 @@ Things to remember when releasing SDKs:
 
 ## Debug
 
-Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension. 
+Appwrite uses [yasd](https://github.com/swoole/yasd) debugger, which can be made available during build of Appwrite. You can connect to the debugger using VS Code's [PHP Debug](https://marketplace.visualstudio.com/items?itemName=felixfbecker.php-debug) extension.
 
-If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection: 
+If you are in PHP Storm you don't need any plugin. Below are the settings required for remote debugger connection:
 
-1. Create an init file. 
+1. Create an init file.
 2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
 3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
