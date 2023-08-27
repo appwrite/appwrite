@@ -1525,11 +1525,11 @@ App::patch('/v1/projects/:projectId/smtp')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
-    ->param('sender', '', new Email(), 'SMTP sender email')
-    ->param('host', '', new HostName(), 'SMTP server host name')
-    ->param('port', null, new Integer(), 'SMTP server port')
-    ->param('username', null, new Text(0), 'SMTP server username')
-    ->param('password', null, new Text(0), 'SMTP server password')
+    ->param('sender', '', new Email(), 'SMTP sender email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name', true)
+    ->param('port', null, new Integer(), 'SMTP server port', true)
+    ->param('username', null, new Text(0, 0), 'SMTP server username', true)
+    ->param('password', null, new Text(0, 0), 'SMTP server password', true)
     ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -1645,19 +1645,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-            $message = $message
-                ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{name}}', '')
-                ->setParam('{{body}}', $localeObj->getText("emails.{$type}.body"))
-                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
-                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
-                ->setParam('{{direction}}', $localeObj->getText('settings.direction'))
-                ->setParam('{{bg-body}}', '#f7f7f7')
-                ->setParam('{{bg-content}}', '#ffffff')
-                ->setParam('{{text-content}}', '#000000')
-                ->render();
+            $message = $localeObj->getText("emails.{$type}.body");
 
             $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));
             $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;

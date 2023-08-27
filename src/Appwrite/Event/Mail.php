@@ -13,6 +13,7 @@ class Mail extends Event
     protected string $subject = '';
     protected string $body = '';
     protected array $smtp = [];
+    protected array $variables = [];
 
     public function __construct()
     {
@@ -311,6 +312,28 @@ class Mail extends Event
     }
 
     /**
+     * Get Email Variables
+     * 
+     * @return array
+     */
+    public function getVariables(): array
+    {
+        return $this->variables;
+    }
+
+    /**
+     * Set Email Variables
+     * 
+     * @param array $variables
+     * @return self
+     */
+    public function setVariables(array $variables): self
+    {
+        $this->variables = $variables;
+        return $this;
+    }
+
+    /**
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
@@ -325,6 +348,7 @@ class Mail extends Event
             'subject' => $this->subject,
             'body' => $this->body,
             'smtp' => $this->smtp,
+            'variables' => $this->variables,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
