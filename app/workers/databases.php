@@ -201,15 +201,15 @@ class DatabaseV1 extends Worker
         try {
             if ($status !== 'failed') {
                 if ($type ===  Database::VAR_RELATIONSHIP) {
+                    $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
                     if ($options['twoWay']) {
-                        $relatedCollection = $dbForProject->getDocument('database_' . $database->getInternalId(), $options['relatedCollection']);
                         if ($relatedCollection->isEmpty()) {
                             throw new Exception(Exception::COLLECTION_NOT_FOUND);
                         }
                         $relatedAttribute = $dbForProject->getDocument('attributes', $database->getInternalId() . '_' . $relatedCollection->getInternalId() . '_' . $options['twoWayKey']);
                     }
 
-                    if (!$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
+                    if (!$relatedCollection->isEmpty() && !$dbForProject->deleteRelationship('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key)) {
                         $dbForProject->updateDocument('attributes', $relatedAttribute->getId(), $relatedAttribute->setAttribute('status', 'stuck'));
                         throw new Exception('Failed to delete Relationship');
                     }
