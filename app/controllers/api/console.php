@@ -29,6 +29,10 @@ App::get('/v1/console/variables')
     ->label('sdk.response.model', Response::MODEL_CONSOLE_VARIABLES)
     ->inject('response')
     ->action(function (Response $response) {
+        $isDomainEnabled = !empty(App::getEnv('_APP_DOMAIN', ''))
+            && !empty(App::getEnv('_APP_DOMAIN_TARGET', ''))
+            && App::getEnv('_APP_DOMAIN', '') !== 'localhost'
+            && App::getEnv('_APP_DOMAIN_TARGET', '') !== 'localhost';
 
         $isVcsEnabled = !empty(App::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
             && !empty(App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
@@ -44,6 +48,7 @@ App::get('/v1/console/variables')
             '_APP_FUNCTIONS_SIZE_LIMIT' => +App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => App::getEnv('_APP_USAGE_STATS'),
             '_APP_VCS_ENABLED' => $isVcsEnabled,
+            '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
             '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled
         ]);
 
