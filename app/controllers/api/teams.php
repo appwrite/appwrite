@@ -553,7 +553,7 @@ App::post('/v1/teams/:teamId/memberships')
                     $body = Template::fromString($customTemplate['message'] ?? '');
                     $subject = $customTemplate['subject'] ?? $subject;
                     $from = $customTemplate['senderName'] ?? $from;
-        
+
                     $smtp = $project->getAttribute('smtp', []);
                     $mails
                         ->setSmtpHost($smtp['host'] ?? '')

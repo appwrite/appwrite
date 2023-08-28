@@ -1734,7 +1734,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
-        if(!$smtpEnabled) {
+        if (!$smtpEnabled) {
             throw new Exception(Exception::PROJECT_SMTP_CONFIG_NOT_FOUND);
         }
 

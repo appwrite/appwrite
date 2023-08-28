@@ -43,7 +43,7 @@ class MailsV1 extends Worker
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
 
         foreach ($variables as $key => $value) {
-            $body->setParam('{{'.$key.'}}', $value);
+            $body->setParam('{{' . $key . '}}', $value);
         }
 
         $body = $body->render();
