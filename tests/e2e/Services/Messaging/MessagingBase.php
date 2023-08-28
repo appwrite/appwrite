@@ -268,7 +268,8 @@ trait MessagingBase
     /**
      * @depends testCreateTopic
      */
-    public function testCreateSubscriber (array $topic) {
+    public function testCreateSubscriber(array $topic)
+    {
         $userId = $this->getUser()['$id'];
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
             'content-type' => 'application/json',
@@ -290,8 +291,8 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         return [
-            'topicId' => $topic['$id'], 
-            'targetId' => $target['body']['$id'], 
+            'topicId' => $topic['$id'],
+            'targetId' => $target['body']['$id'],
             'subscriberId' => $response['body']['$id']
         ];
     }
@@ -299,7 +300,8 @@ trait MessagingBase
     /**
      * @depends testCreateSubscriber
      */
-    public function testGetSubscriber(array $data) {
+    public function testGetSubscriber(array $data)
+    {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscriber/' . $data['subscriberId'], \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -312,7 +314,8 @@ trait MessagingBase
     /**
      * @depends testCreateSubscriber
      */
-    public function testListSubscribers(array $data) {
+    public function testListSubscribers(array $data)
+    {
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -327,7 +330,7 @@ trait MessagingBase
      */
     public function testDeleteSubscriber(array $data)
     {
-        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $data['topicId'] .'/subscriber/' .$data['subscriberId'], \array_merge([
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $data['topicId'] . '/subscriber/' . $data['subscriberId'], \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

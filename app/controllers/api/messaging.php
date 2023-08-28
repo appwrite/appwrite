@@ -1040,12 +1040,12 @@ App::post('/v1/messaging/topics')
             $topic->setAttribute('description', $description);
         }
 
-        try{
+        try {
             $topic = $dbForProject->createDocument('topics', $topic);
             $response
                 ->setStatusCode(Response::STATUS_CODE_CREATED)
                 ->dynamic($topic, Response::MODEL_TOPIC);
-        } catch(DuplicateException) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
         }
     });
@@ -1140,13 +1140,13 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $subscribers = $dbForProject->find('subscribers', [
             Query::equal('topicInternalId', [$topic->getInternalId()])
         ]);
-        
+
         $response
             ->dynamic(new Document([
                 'subscribers' => $subscribers,
                 'total' => \count($subscribers),
             ]), Response::MODEL_SUBSCRIBER_LIST);
-    });    
+    });
 
 App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->desc('Get a topic\'s subscriber.')
@@ -1169,10 +1169,10 @@ App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
-        
+
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
-        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId')!==$topicId) {
+        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
@@ -1200,7 +1200,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->inject('response')
     ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
-        
+
         $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
@@ -1231,7 +1231,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
-        } catch(DuplicateException) {
+        } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
     });
