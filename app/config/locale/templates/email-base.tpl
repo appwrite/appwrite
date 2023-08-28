@@ -42,6 +42,10 @@
             border: none;
             border-top: 1px solid #E8E9F0;
         }
+
+        p {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 
