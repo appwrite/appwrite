@@ -1645,19 +1645,16 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
-            $message = $message
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{name}}', '')
-                ->setParam('{{body}}', $localeObj->getText("emails.{$type}.body"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
-                ->setParam('{{direction}}', $localeObj->getText('settings.direction'))
-                ->setParam('{{bg-body}}', '#f7f7f7')
-                ->setParam('{{bg-content}}', '#ffffff')
-                ->setParam('{{text-content}}', '#000000')
-                ->render();
+                ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
+            $message = $message->render();
 
             $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));
             $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;
@@ -1746,7 +1743,7 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
         }
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
-        if(!$smtpEnabled) {
+        if (!$smtpEnabled) {
             throw new Exception(Exception::PROJECT_SMTP_CONFIG_NOT_FOUND);
         }
 

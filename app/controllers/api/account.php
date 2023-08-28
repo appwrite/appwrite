@@ -1092,13 +1092,13 @@ App::post('/v1/account/sessions/magic-url')
         $url = Template::unParseURL($url);
 
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $body = $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = Template::fromString($customTemplate['message'] ?? '');
+            $body = $customTemplate['message'] ?? '';
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
 
@@ -1112,28 +1112,32 @@ App::post('/v1/account/sessions/magic-url')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{name}}', '')
-            ->setParam('{{body}}', $locale->getText("emails.magicSession.body"))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"))
-            ->setParam('{{project}}', $project->getAttribute('name'))
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
-
-        $body = $body->render();
+        $emailVariables = [
+            'subject' => $subject,
+            'hello' => $locale->getText("emails.magicSession.hello"),
+            'name' => '',
+            'body' => $body,
+            'redirect' => $url,
+            'footer' => $locale->getText("emails.magicSession.footer"),
+            'thanks' => $locale->getText("emails.magicSession.thanks"),
+            'signature' => $locale->getText("emails.magicSession.signature"),
+            'project' => $project->getAttribute('name'),
+            'direction' => $locale->getText('settings.direction'),
+            'bg-body' => '#f7f7f7',
+            'bg-content' => '#ffffff',
+            'text-content' => '#000000',
+        ];
 
         $mails
             ->setSubject($subject)
-            ->setBody($body)
+            ->setBody($body->render())
+            ->setVariables($emailVariables)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
             ->trigger()
@@ -2519,13 +2523,13 @@ App::post('/v1/account/recovery')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $body = $locale->getText("emails.recovery.body");
         $subject = $locale->getText("emails.recovery.subject");
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = Template::fromString($customTemplate['message'] ?? '');
+            $body = $customTemplate['message'];
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
 
@@ -2539,30 +2543,34 @@ App::post('/v1/account/recovery')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
-            ->setParam('{{name}}', $profile->getAttribute('name'))
-            ->setParam('{{body}}', $locale->getText("emails.recovery.body"))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"))
-            ->setParam('{{project}}', $projectName)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
-
-        $body = $body->render();
+        $emailVariables = [
+            'subject' => $subject,
+            'hello' => $locale->getText("emails.recovery.hello"),
+            'name' => $profile->getAttribute('name'),
+            'body' => $body,
+            'redirect' => $url,
+            'footer' => $locale->getText("emails.recovery.footer"),
+            'thanks' => $locale->getText("emails.recovery.thanks"),
+            'signature' => $locale->getText("emails.recovery.signature"),
+            'project' => $projectName,
+            'direction' => $locale->getText('settings.direction'),
+            'bg-body' => '#f7f7f7',
+            'bg-content' => '#ffffff',
+            'text-content' => '#000000',
+        ];
 
 
         $mails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name'))
             ->setBody($body)
+            ->setVariables($emailVariables)
             ->setFrom($from)
             ->setSubject($subject)
             ->trigger();
@@ -2740,13 +2748,13 @@ App::post('/v1/account/verification')
 
         $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
         $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-        $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+        $body = $locale->getText("emails.verification.body");
         $subject = $locale->getText("emails.verification.subject");
 
         $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
         if ($smtpEnabled && !empty($customTemplate)) {
-            $body = Template::fromString($customTemplate['message'] ?? '');
+            $body = $customTemplate['message'] ?? '';
             $subject = $customTemplate['subject'] ?? $subject;
             $from = $customTemplate['senderName'] ?? $from;
 
@@ -2760,28 +2768,32 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
-            ->setParam('{{name}}', $user->getAttribute('name'))
-            ->setParam('{{body}}', $locale->getText("emails.verification.body"))
-            ->setParam('{{redirect}}', $url)
-            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"))
-            ->setParam('{{project}}', $projectName)
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
-
-        $body = $body->render();
+        $emailVariables = [
+            'subject' => $subject,
+            'hello' => $locale->getText("emails.verification.hello"),
+            'name' => $user->getAttribute('name'),
+            'body' => $body,
+            'redirect' => $url,
+            'footer' => $locale->getText("emails.verification.footer"),
+            'thanks' => $locale->getText("emails.verification.thanks"),
+            'signature' => $locale->getText("emails.verification.signature"),
+            'project' => $projectName,
+            'direction' => $locale->getText('settings.direction'),
+            'bg-body' => '#f7f7f7',
+            'bg-content' => '#ffffff',
+            'text-content' => '#000000',
+        ];
 
         $mails
             ->setSubject($subject)
             ->setBody($body)
+            ->setVariables($emailVariables)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '')

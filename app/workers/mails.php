@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Resque\Worker;
+use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -32,12 +33,20 @@ class MailsV1 extends Worker
             return;
         }
 
-
         $recipient = $this->args['recipient'];
         $subject = $this->args['subject'];
         $name = $this->args['name'];
         $body = $this->args['body'];
+        $variables = $this->args['variables'];
         $from = $this->args['from'];
+
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+
+        foreach ($variables as $key => $value) {
+            $body->setParam('{{' . $key . '}}', $value);
+        }
+
+        $body = $body->render();
 
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = empty($smtp) ? $register->get('smtp') : $this->getMailer($smtp);
