@@ -79,11 +79,25 @@ class MessagingV1 extends Worker
 
     public function run(): void
     {
-        $providerId = $this->args['providerId'];
-        $providerRecord =
-        $this
-        ->getConsoleDB()
-        ->getDocument('providers', $providerId);
+        $messageId = $this->args['messageId'];
+        $messageRecord =
+          $this
+          ->getConsoleDB()
+          ->getDocument('messages', $messageId);
+
+          $providerId = $messageRecord['providerId'];
+
+          $providerRecord =
+            $this
+            ->getConsoleDB()
+            ->getDocument('providers', $providerId);
+  
+        $message = match ($providerRecord->getAttribute('type')) {
+            'sms' => $this->buildSMSMessage($messageRecord->getArrayCopy()),
+            'push' => $this->buildPushMessage($messageRecord->getArrayCopy()),
+            'email' => $this->buildEmailMessage($messageRecord->getArrayCopy()),
+            default => null
+        };
 
         $provider = match ($providerRecord->getAttribute('type')) {//stubbbbbbed.
             'sms' => $this->sms($providerRecord),
@@ -92,25 +106,21 @@ class MessagingV1 extends Worker
             default => null
         };
 
+        var_dump($provider);
+        die;
+
       // Query for the provider
       // switch on provider name
       // call function passing needed credentials returns required provider.
 
-        $messageId = $this->args['messageId'];
-        $messageRecord =
-          $this
-          ->getConsoleDB()
-          ->getDocument('messages', $messageId);
-
-        $message = match ($providerRecord->getAttribute('type')) {
-            'sms' => $this->buildSMSMessage($messageRecord->getArrayCopy()),
-            'push' => $this->buildPushMessage($messageRecord->getArrayCopy()),
-            'email' => $this->buildEmailMessage($messageRecord->getArrayCopy()),
-            default => null
-        };
 
 
-        $provider->send($message);
+      try {
+          $provider->send($message);
+      } catch (\Exception $error) {
+          throw new Exception('Error sending message: ' . $error->getMessage(), 500);
+      }
+       
     }
 
     public function shutdown(): void

@@ -12,6 +12,7 @@ use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Messaging\Adapters\SMS\Mock as MockProvider;
 
 use function sleep;
 
@@ -766,6 +767,16 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
+
+    public function testCreateMockSMS(): MockProvider
+    {
+
+      $smsMockProvider = new MockProvider('blah', 'blah');
+
+      $this->assertNotEquals(null, $smsMockProvider);
+
+      return $smsMockProvider;
+    }
 
     public function testCreatePhone(): array
     {
