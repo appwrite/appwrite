@@ -557,11 +557,11 @@ App::post('/v1/teams/:teamId/memberships')
                     $senderEmail = $customTemplate['senderEmail'] ?? '';
                     $senderEmail = $senderEmail ?: ($smtp['senderEmail'] ?? '');
                     $senderEmail = $senderEmail ?: App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        
+
                     $senderName = $customTemplate['senderName'] ?? '';
                     $senderName = $senderName ?: ($smtp['senderName'] ?? '');
                     $senderName = $senderName ?: App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-        
+
                     $replyTo = $customTemplate['replyTo'] ?? '';
                     $replyTo = $replyTo ?: ($smtp['replyTo'] ?? '');
                     $replyTo = $senderEmail;

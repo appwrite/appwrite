@@ -1543,15 +1543,15 @@ App::patch('/v1/projects/:projectId/smtp')
         if ($enabled) {
             if (empty($senderName)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender name is required when enabling SMTP.');
-            } else if (empty($senderEmail)) {
+            } elseif (empty($senderEmail)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender email is required when enabling SMTP.');
-            } else if (empty($host)) {
+            } elseif (empty($host)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Host is required when enabling SMTP.');
-            } else if (empty($port)) {
+            } elseif (empty($port)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Port is required when enabling SMTP.');
-            } else if (empty($username)) {
+            } elseif (empty($username)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Username is required when enabling SMTP.');
-            } else if (empty($password)) {
+            } elseif (empty($password)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Password is required when enabling SMTP.');
             }
         }
@@ -1581,7 +1581,6 @@ App::patch('/v1/projects/:projectId/smtp')
 
         // Save SMTP settings
         if ($enabled) {
-
             $smtp = [
                 'enabled' => $enabled,
                 'senderName' => $senderName,
