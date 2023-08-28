@@ -62,6 +62,11 @@ class MailsV1 extends Worker
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
 
+        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
+
         try {
             $mail->send();
         } catch (\Exception $error) {
@@ -87,12 +92,6 @@ class MailsV1 extends Worker
         $mail->SMTPSecure = $smtp['secure'] === 'tls';
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
-
-        $from = \urldecode($smtp['senderName'] ?? App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-        $email = $smtp['senderEmail'] ?? App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-
-        $mail->setFrom($email, $from);
-        $mail->addReplyTo($email, $from);
 
         $mail->isHTML(true);
 

@@ -554,6 +554,18 @@ App::post('/v1/teams/:teamId/memberships')
                     $subject = $customTemplate['subject'] ?? $subject;
                     $from = $customTemplate['senderName'] ?? $from;
 
+                    $senderEmail = $customTemplate['senderEmail'] ?? '';
+                    $senderEmail = $senderEmail ?: ($smtp['senderEmail'] ?? '');
+                    $senderEmail = $senderEmail ?: App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        
+                    $senderName = $customTemplate['senderName'] ?? '';
+                    $senderName = $senderName ?: ($smtp['senderName'] ?? '');
+                    $senderName = $senderName ?: App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        
+                    $replyTo = $customTemplate['replyTo'] ?? '';
+                    $replyTo = $replyTo ?: ($smtp['replyTo'] ?? '');
+                    $replyTo = $senderEmail;
+
                     $smtp = $project->getAttribute('smtp', []);
                     $mails
                         ->setSmtpHost($smtp['host'] ?? '')
@@ -561,13 +573,18 @@ App::post('/v1/teams/:teamId/memberships')
                         ->setSmtpUsername($smtp['username'] ?? '')
                         ->setSmtpPassword($smtp['password'] ?? '')
                         ->setSmtpSecure($smtp['secure'] ?? '')
-                        ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
-                        ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
-                        ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
                 } else {
                     $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                     $message->setParam('{{body}}', $body);
                     $body = $message->render();
+
+                    $mails
+                        ->setSmtpReplyTo(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
+                        ->setSmtpSenderEmail(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM))
+                        ->setSmtpSenderName(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
                 }
 
                 $emailVariables = [

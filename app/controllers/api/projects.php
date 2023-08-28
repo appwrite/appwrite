@@ -61,7 +61,7 @@ App::post('/v1/projects')
     ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -436,17 +436,17 @@ App::patch('/v1/projects/:projectId')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('name', $name)
-                ->setAttribute('description', $description)
-                ->setAttribute('logo', $logo)
-                ->setAttribute('url', $url)
-                ->setAttribute('legalName', $legalName)
-                ->setAttribute('legalCountry', $legalCountry)
-                ->setAttribute('legalState', $legalState)
-                ->setAttribute('legalCity', $legalCity)
-                ->setAttribute('legalAddress', $legalAddress)
-                ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name])));
+            ->setAttribute('name', $name)
+            ->setAttribute('description', $description)
+            ->setAttribute('logo', $logo)
+            ->setAttribute('url', $url)
+            ->setAttribute('legalName', $legalName)
+            ->setAttribute('legalCountry', $legalCountry)
+            ->setAttribute('legalState', $legalState)
+            ->setAttribute('legalCity', $legalCity)
+            ->setAttribute('legalAddress', $legalAddress)
+            ->setAttribute('legalTaxId', $legalTaxId)
+            ->setAttribute('search', implode(' ', [$projectId, $name])));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -479,14 +479,14 @@ App::patch('/v1/projects/:projectId/team')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('teamId', $teamId)
-                ->setAttribute('$permissions', [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-                ]));
+            ->setAttribute('teamId', $teamId)
+            ->setAttribute('$permissions', [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -502,7 +502,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -544,7 +544,7 @@ App::patch('/v1/projects/:projectId/service/all')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $allServices = array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional']));
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
 
         $services = [];
         foreach ($allServices as $service) {
@@ -843,8 +843,7 @@ App::delete('/v1/projects/:projectId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project)
-        ;
+            ->setDocument($project);
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
@@ -1022,8 +1021,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass)
-        ;
+            ->setAttribute('httpPass', $httpPass);
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -1262,8 +1260,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
@@ -1465,8 +1462,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('name', $name)
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
-            ->setAttribute('hostname', $hostname)
-        ;
+            ->setAttribute('hostname', $hostname);
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
@@ -1525,15 +1521,17 @@ App::patch('/v1/projects/:projectId/smtp')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
-    ->param('sender', '', new Email(), 'SMTP sender email')
-    ->param('host', '', new HostName(), 'SMTP server host name')
-    ->param('port', null, new Integer(), 'SMTP server port')
-    ->param('username', null, new Text(0), 'SMTP server username')
-    ->param('password', null, new Text(0), 'SMTP server password')
+    ->param('senderName', '', new Text(255), 'Name of the email sender', true)
+    ->param('senderEmail', '', new Email(), 'Email of the sender', true)
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name', true)
+    ->param('port', 587, new Integer(), 'SMTP server port', true)
+    ->param('username', '', new Text(0), 'SMTP server username', true)
+    ->param('password', '', new Text(0), 'SMTP server password', true)
     ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $enabled, string $sender, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1541,36 +1539,65 @@ App::patch('/v1/projects/:projectId/smtp')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        // validate SMTP settings
-        $mail = new PHPMailer(true);
-        $mail->isSMTP();
-        $mail->Username = $username;
-        $mail->Password = $password;
-        $mail->Host = $host;
-        $mail->Port = $port;
-        $mail->SMTPSecure = $secure;
-        $mail->SMTPAutoTLS = false;
-        $mail->Timeout = 5;
-
-        try {
-            $valid = $mail->SmtpConnect();
-
-            if (!$valid) {
-                throw new Exception('Connection is not valid.');
+        // Ensure required params for when enabling SMTP
+        if ($enabled) {
+            if (empty($senderName)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender name is required when enabling SMTP.');
+            } else if (empty($senderEmail)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender email is required when enabling SMTP.');
+            } else if (empty($host)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Host is required when enabling SMTP.');
+            } else if (empty($port)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Port is required when enabling SMTP.');
+            } else if (empty($username)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Username is required when enabling SMTP.');
+            } else if (empty($password)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Password is required when enabling SMTP.');
             }
-        } catch (Throwable $error) {
-            throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
         }
 
-        $smtp = [
-            'enabled' => $enabled,
-            'sender' => $sender,
-            'host' => $host,
-            'port' => $port,
-            'username' => $username,
-            'password' => $password,
-            'secure' => $secure,
-        ];
+        // validate SMTP settings
+        if ($enabled) {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Username = $username;
+            $mail->Password = $password;
+            $mail->Host = $host;
+            $mail->Port = $port;
+            $mail->SMTPSecure = $secure;
+            $mail->SMTPAutoTLS = false;
+            $mail->Timeout = 5;
+
+            try {
+                $valid = $mail->SmtpConnect();
+
+                if (!$valid) {
+                    throw new Exception('Connection is not valid.');
+                }
+            } catch (Throwable $error) {
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+            }
+        }
+
+        // Save SMTP settings
+        if ($enabled) {
+
+            $smtp = [
+                'enabled' => $enabled,
+                'senderName' => $senderName,
+                'senderEmail' => $senderEmail,
+                'replyTo' => $replyTo,
+                'host' => $host,
+                'port' => $port,
+                'username' => $username,
+                'password' => $password,
+                'secure' => $secure,
+            ];
+        } else {
+            $smtp = [
+                'enabled' => false
+            ];
+        }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('smtp', $smtp));
 
@@ -1589,7 +1616,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
@@ -1607,7 +1634,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
 
         if (is_null($template)) {
             $template = [
-            'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
+                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
             ];
         }
 
@@ -1629,7 +1656,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
@@ -1684,7 +1711,7 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('message', '', new Text(0), 'Template message')
     ->inject('response')
     ->inject('dbForConsole')
@@ -1697,8 +1724,6 @@ App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
-
-        // TODO: Ensure SMS is enabled on project
 
         $templates = $project->getAttribute('templates', []);
         $templates['sms.' . $type . '-' . $locale] = [
@@ -1726,25 +1751,20 @@ App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
-    ->param('senderName', '', new Text(255), 'Name of the email sender')
-    ->param('senderEmail', '', new Email(), 'Email of the sender')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->param('subject', '', new Text(255), 'Email Subject')
     ->param('message', '', new Text(0), 'Template message')
+    ->param('senderName', '', new Text(255), 'Name of the email sender', true)
+    ->param('senderEmail', '', new Email(), 'Email of the sender', true)
     ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $type, string $locale, string $senderName, string $senderEmail, string $subject, string $message, string $replyTo, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $type, string $locale, string $subject, string $message, string $senderName, string $senderEmail, string $replyTo, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
-        if (!$smtpEnabled) {
-            throw new Exception(Exception::PROJECT_SMTP_CONFIG_NOT_FOUND);
         }
 
         $templates = $project->getAttribute('templates', []);
@@ -1781,7 +1801,7 @@ App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
@@ -1824,7 +1844,7 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
     ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
-    ->param('locale', '', fn($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
