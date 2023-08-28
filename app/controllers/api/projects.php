@@ -1645,7 +1645,16 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
 
         $localeObj = new Locale($locale);
         if (is_null($template)) {
-            $message = $localeObj->getText("emails.{$type}.body");
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message
+                ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
+                ->setParam('{{name}}', '')
+                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
+                ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
+                ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
+            $message = $message->render();
 
             $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($localeObj->getText('emails.sender'), $project->getAttribute('name'));
             $from = empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from;

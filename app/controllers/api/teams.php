@@ -564,6 +564,10 @@ App::post('/v1/teams/:teamId/memberships')
                         ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                         ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                         ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+                } else {
+                    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                    $message->setParam('{{body}}', $body);
+                    $body = $message->render();
                 }
 
                 $emailVariables = [

@@ -62,19 +62,7 @@
     <table style="margin-top: 40px">
         <tr>
             <td>
-                <p>{{hello}}</p>
-
-                <p>{{body}}</p>
-
-                <a href="{{redirect}}" target="_blank">{{redirect}}</a>
-
-                <p><br />{{footer}}</p>
-                <br />
-
-                <p>{{thanks}}
-                <br />
-                {{signature}}
-                </p>
+                {{body}}
             </td>
         </tr>
     </table>

@@ -1112,6 +1112,10 @@ App::post('/v1/account/sessions/magic-url')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
         $emailVariables = [
@@ -2539,6 +2543,10 @@ App::post('/v1/account/recovery')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
         $emailVariables = [
@@ -2760,6 +2768,10 @@ App::post('/v1/account/verification')
                 ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
                 ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
                 ->setSmtpSenderName($customTemplate['senderName'] ?? '');
+        } else {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message->setParam('{{body}}', $body);
+            $body = $message->render();
         }
 
         $emailVariables = [
