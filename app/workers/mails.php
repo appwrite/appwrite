@@ -43,15 +43,10 @@ class MailsV1 extends Worker
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
 
         foreach ($variables as $key => $value) {
-            var_dump($key, $value);
             $body->setParam('{{'.$key.'}}', $value);
         }
 
-        var_dump($body);
-
         $body = $body->render();
-
-        var_dump($body);
 
         /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
         $mail = empty($smtp) ? $register->get('smtp') : $this->getMailer($smtp);
