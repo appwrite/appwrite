@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f89bfdb9813378f68d77cb503729b5d6",
+    "content-hash": "7cb5852653a858c1846543914c20f87f",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2220,7 +2220,7 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-document-clone",
+            "version": "0.42.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
@@ -2271,7 +2271,7 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-document-clone"
+                "source": "https://github.com/utopia-php/database/tree/0.42.3"
             },
             "time": "2023-08-25T06:18:31+00:00"
         },
@@ -6070,18 +6070,9 @@
             "time": "2023-07-26T07:16:09+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-document-clone",
-            "alias": "0.42.99",
-            "alias_normalized": "0.42.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
