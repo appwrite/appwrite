@@ -9,6 +9,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -974,7 +975,7 @@ App::get('/v1/messaging/topics')
         ]), Response::MODEL_TOPIC_LIST);
     });
 
-App::get('/v1/messaging/topics/:id')
+App::get('/v1/messaging/topics/:topicId')
     ->desc('Get a topic.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
@@ -985,17 +986,17 @@ App::get('/v1/messaging/topics/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
-    ->param('id', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $topic = $dbForProject->getDocument('topics', $id);
+    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->getDocument('topics', $id);
+        $topic = $dbForProject->getDocument('topics', $topicId);
 
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
@@ -1039,11 +1040,14 @@ App::post('/v1/messaging/topics')
             $topic->setAttribute('description', $description);
         }
 
-        $topic = $dbForProject->createDocument('topics', $topic);
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($topic, Response::MODEL_TOPIC);
+        try{
+            $topic = $dbForProject->createDocument('topics', $topic);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($topic, Response::MODEL_TOPIC);
+        } catch(DuplicateException) {
+            throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
+        }
     });
 
 App::patch('/v1/messaging/topics/:topicId')
@@ -1110,6 +1114,163 @@ App::delete('/v1/messaging/topics/:topicId')
 
         $topic = $dbForProject->deleteDocument('topics', $topicId);
         $response->noContent();
+    });
+
+App::get('/v1/messaging/topics/:topicId/subscribers')
+    ->desc('List topic\'s subscribers.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'subscribers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listSubscribers')
+    ->label('sdk.description', '/docs/references/messaging/list-subscribers.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $subscribers = $dbForProject->find('subscribers', [
+            Query::equal('topicInternalId', [$topic->getInternalId()])
+        ]);
+        
+        $response
+            ->dynamic(new Document([
+                'subscribers' => $subscribers,
+                'total' => \count($subscribers),
+            ]), Response::MODEL_SUBSCRIBER_LIST);
+    });    
+
+App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
+    ->desc('Get a topic\'s subscriber.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'subscribers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/get-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+        
+        $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
+
+        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId')!==$topicId) {
+            throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
+        }
+
+        $response
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+    });
+
+App::post('/v1/messaging/topics/:topicId/subscribers')
+    ->desc('Adds a Subscriber to a Topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'subscribers.create')
+    ->label('audits.resource', 'subscribers/{response.$id}')
+    ->label('scope', 'subscribers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'addSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/add-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
+        $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
+        
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $subscriber = new Document([
+            '$id' => $subscriberId,
+            '$permissions' => [
+                Permission::read(Role::user($target->getAttribute('userId'))),
+                Permission::delete(Role::user($target->getAttribute('userId'))),
+            ],
+            'topicId' => $topicId,
+            'topicInternalId' => $topic->getInternalId(),
+            'targetId' => $targetId,
+            'targetInternalId' => $target->getInternalId(),
+        ]);
+
+        try {
+            $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
+            $dbForProject->deleteCachedDocument('topics', $topicId);
+            $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+        } catch(DuplicateException) {
+            throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
+        }
+    });
+
+App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
+    ->desc('Delete a Subscriber from a Topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'subscribers.delete')
+    ->label('audits.resource', 'subscribers/{request.subscriberId}')
+    ->label('scope', 'subscribers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'deleteSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/delete-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
+
+        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
+            throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
+        }
+        $subscriber = $dbForProject->deleteDocument('subscribers', $subscriberId);
+        $dbForProject->deleteCachedDocument('topics', $topicId);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
     });
 
 App::post('/v1/messaging/messages/email')

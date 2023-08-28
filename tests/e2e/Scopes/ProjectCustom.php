@@ -88,7 +88,9 @@ trait ProjectCustom
                 'messages.read',
                 'messages.write',
                 'topics.write',
-                'topics.read'
+                'topics.read',
+                'subscribers.write',
+                'subscribers.read'
             ],
         ]);
 

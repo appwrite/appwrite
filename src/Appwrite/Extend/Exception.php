@@ -219,6 +219,11 @@ class Exception extends \Exception
 
     /** Topic */
     public const TOPIC_NOT_FOUND                    = 'topic_not_found';
+    public const TOPIC_ALREADY_EXISTS               = 'topic_already_exists';
+
+    /** Subscriber */
+    public const SUBSCRIBER_NOT_FOUND               = 'subscriber_not_found';
+    public const SUBSCRIBER_ALREADY_EXISTS          = 'subscriber_already_exists';
 
     protected $type = '';
     protected $errors = [];
