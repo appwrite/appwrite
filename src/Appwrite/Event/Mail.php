@@ -313,7 +313,7 @@ class Mail extends Event
 
     /**
      * Get Email Variables
-     * 
+     *
      * @return array
      */
     public function getVariables(): array
@@ -323,7 +323,7 @@ class Mail extends Event
 
     /**
      * Set Email Variables
-     * 
+     *
      * @param array $variables
      * @return self
      */
