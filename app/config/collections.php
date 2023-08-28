@@ -1672,7 +1672,7 @@ $commonCollections = [
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => true,
+                'array' => false,
                 'filters' => ['subQueryTopicTargets'],
             ]
         ],
