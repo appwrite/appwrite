@@ -1376,8 +1376,10 @@ trait Base
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
+                        resourceId
                         buildId
                         buildLogs
+                        status
                     }
                 }';
             case self::$CREATE_FUNCTION:
