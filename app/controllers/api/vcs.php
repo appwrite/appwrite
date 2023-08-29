@@ -520,10 +520,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $page = 1;
-        $per_page = 4;
+        $perPage = 4;
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repos = $github->searchRepositories($owner, $page, $per_page, $search);
+        $repos = $github->searchRepositories($owner, $page, $perPage, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
