@@ -8,7 +8,6 @@ use Utopia\Database\Document;
 class Mail extends Event
 {
     protected string $recipient = '';
-    protected string $from = '';
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
@@ -64,29 +63,6 @@ class Mail extends Event
     public function getRecipient(): string
     {
         return $this->recipient;
-    }
-
-    /**
-     * Sets from for the mail event.
-     *
-     * @param string $from
-     * @return self
-     */
-    public function setFrom(string $from): self
-    {
-        $this->from = $from;
-
-        return $this;
-    }
-
-    /**
-     * Returns from for mail event.
-     *
-     * @return string
-     */
-    public function getFrom(): string
-    {
-        return $this->from;
     }
 
     /**
@@ -342,7 +318,6 @@ class Mail extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
-            'from' => $this->from,
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,

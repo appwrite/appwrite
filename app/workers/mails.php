@@ -38,7 +38,6 @@ class MailsV1 extends Worker
         $name = $this->args['name'];
         $body = $this->args['body'];
         $variables = $this->args['variables'];
-        $from = $this->args['from'];
 
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
 
