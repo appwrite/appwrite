@@ -1292,22 +1292,22 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 }, ['utopia', 'dbForProject']);
 
 App::setResource('contributors', function () {
-    $path = 'app/config/cloud/contributors.json';
+    $path = 'app/config/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
 
 App::setResource('employees', function () {
-    $path = 'app/config/cloud/employees.json';
+    $path = 'app/config/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
 
 App::setResource('heroes', function () {
-    $path = 'app/config/cloud/heroes.json';
+    $path = 'app/config/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
 
 App::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
