@@ -544,7 +544,6 @@ class Response extends SwooleResponse
 
             if ($rule['array']) {
                 if (!is_array($data[$key])) {
-                    \var_dump($data);
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
