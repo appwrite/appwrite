@@ -166,8 +166,6 @@ class FunctionsServerTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);
 
-        \var_dump($execution);
-
         $this->assertIsArray($execution['body']['data']);
         $this->assertArrayNotHasKey('errors', $execution['body']);
 

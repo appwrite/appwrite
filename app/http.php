@@ -20,7 +20,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
-use Swoole\Runtime;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
