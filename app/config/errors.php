@@ -700,12 +700,17 @@ return [
     /** Provider Errors */
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,
-        'description' => 'Provider with the request ID could not be found.',
+        'description' => 'Provider with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::PROVIDER_ALREADY_EXISTS => [
+        'name' => Exception::PROVIDER_ALREADY_EXISTS,
+        'description' => 'Provider with the requested ID already exists.',
+        'code' => 409,
     ],
     Exception::PROVIDER_INCORRECT_TYPE => [
         'name' => Exception::PROVIDER_INCORRECT_TYPE,
-        'description' => 'Provider with the request ID is of incorrect type: ',
+        'description' => 'Provider with the requested ID is of incorrect type: ',
         'code' => 400,
     ]
 ];
