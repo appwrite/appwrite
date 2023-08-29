@@ -109,7 +109,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
+
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
