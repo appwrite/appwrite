@@ -38,7 +38,6 @@ class MailsV1 extends Worker
         $name = $this->args['name'];
         $body = $this->args['body'];
         $variables = $this->args['variables'];
-        $from = $this->args['from'];
 
         $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
 
@@ -61,6 +60,11 @@ class MailsV1 extends Worker
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
+
+        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
 
         try {
             $mail->send();
@@ -87,12 +91,6 @@ class MailsV1 extends Worker
         $mail->SMTPSecure = $smtp['secure'] === 'tls';
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
-
-        $from = \urldecode($smtp['senderName'] ?? App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-        $email = $smtp['senderEmail'] ?? App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-
-        $mail->setFrom($email, $from);
-        $mail->addReplyTo($email, $from);
 
         $mail->isHTML(true);
 

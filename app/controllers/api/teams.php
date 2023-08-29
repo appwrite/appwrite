@@ -543,32 +543,59 @@ App::post('/v1/teams/:teamId/memberships')
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
                 $body = $locale->getText("emails.invitation.body");
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-
-                $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
-                if ($smtpEnabled && !empty($customTemplate)) {
-                    $body = Template::fromString($customTemplate['message'] ?? '');
-                    $subject = $customTemplate['subject'] ?? $subject;
-                    $from = $customTemplate['senderName'] ?? $from;
 
-                    $smtp = $project->getAttribute('smtp', []);
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message->setParam('{{body}}', $body);
+                $body = $message->render();
+
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
                     $mails
                         ->setSmtpHost($smtp['host'] ?? '')
                         ->setSmtpPort($smtp['port'] ?? '')
                         ->setSmtpUsername($smtp['username'] ?? '')
                         ->setSmtpPassword($smtp['password'] ?? '')
-                        ->setSmtpSecure($smtp['secure'] ?? '')
-                        ->setSmtpReplyTo($customTemplate['replyTo'] ?? '')
-                        ->setSmtpSenderEmail($customTemplate['senderEmail'] ?? '')
-                        ->setSmtpSenderName($customTemplate['senderName'] ?? '');
-                } else {
-                    $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-                    $message->setParam('{{body}}', $body);
-                    $body = $message->render();
+                        ->setSmtpSecure($smtp['secure'] ?? '');
                 }
+
+                if (!empty($customTemplate)) {
+                    if (!empty($customTemplate['senderEmail'])) {
+                        $senderEmail = $customTemplate['senderEmail'];
+                    }
+                    if (!empty($customTemplate['senderName'])) {
+                        $senderName = $customTemplate['senderName'];
+                    }
+                    if (!empty($customTemplate['replyTo'])) {
+                        $replyTo = $customTemplate['replyTo'];
+                    }
+
+                    $body = $customTemplate['message'] ?? '';
+                    $subject = $customTemplate['subject'] ?? $subject;
+                }
+
+                $mails
+                    ->setSmtpReplyTo($replyTo)
+                    ->setSmtpSenderEmail($senderEmail)
+                    ->setSmtpSenderName($senderName);
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
@@ -591,7 +618,6 @@ App::post('/v1/teams/:teamId/memberships')
                 $mails
                     ->setSubject($subject)
                     ->setBody($body)
-                    ->setFrom($from)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
                     ->setVariables($emailVariables)

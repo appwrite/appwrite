@@ -56,16 +56,6 @@
     <table style="margin-top: 32px">
         <tr>
             <td>
-                <h1>
-                    {{subject}}
-                </h1>
-            </td>
-        </tr>
-    </table>
-
-    <table style="margin-top: 40px">
-        <tr>
-            <td>
                 {{body}}
             </td>
         </tr>
