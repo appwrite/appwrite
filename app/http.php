@@ -24,8 +24,6 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
-//Runtime::enableCoroutine(SWOOLE_HOOK_NATIVE_CURL);
-
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
