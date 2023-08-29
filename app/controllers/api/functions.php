@@ -138,7 +138,9 @@ App::get('/v1/functions')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -778,7 +780,9 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceType', ['functions']);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -998,13 +1002,13 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('queueForFunctions')
     ->inject('queueForUsage')
     ->action(function (string $functionId, string $data, bool $async, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, string $mode, Func $queueForFunctions, Usage $queueForUsage) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $runtimes = Config::getParam('runtimes', []);
@@ -1192,13 +1196,13 @@ App::get('/v1/functions/:functionId/executions')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $queries = Query::parseQueries($queries);
@@ -1211,7 +1215,9 @@ App::get('/v1/functions/:functionId/executions')
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -1264,13 +1270,13 @@ App::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode) {
-
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            if (!($mode === APP_MODE_ADMIN && Auth::isPrivilegedUser(Authorization::getRoles()))) {
-                throw new Exception(Exception::FUNCTION_NOT_FOUND);
-            }
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($function->isEmpty() || (!$function->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
         $execution = $dbForProject->getDocument('executions', $executionId);
