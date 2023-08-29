@@ -520,53 +520,10 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $page = 1;
-        $perPage = 100;
+        $per_page = 4;
 
-        $loadPage = function ($page) use ($github, $perPage) {
-            $repos = $github->listRepositories($page, $perPage);
-            return $repos;
-        };
-
-        $reposPages = batch([
-            function () use ($loadPage) {
-                return $loadPage(1);
-            },
-            function () use ($loadPage) {
-                return $loadPage(2);
-            },
-            function () use ($loadPage) {
-                return $loadPage(3);
-            }
-        ]);
-
-        $page += 3;
-        $repos = [];
-        foreach ($reposPages as $reposPage) {
-            $repos = \array_merge($repos, $reposPage);
-        }
-
-        // All 3 pages were full, we paginate more
-        if (\count($repos) === 3 * $perPage) {
-            do {
-                $reposPage = $loadPage($page);
-                $repos = array_merge($repos, $reposPage);
-                $page++;
-            } while (\count($reposPage) === $perPage);
-        }
-
-        // Filter repositories based on search parameter
-        if (!empty($search)) {
-            $repos = array_filter($repos, function ($repo) use ($search) {
-                return \str_contains(\strtolower($repo['name']), \strtolower($search));
-            });
-        }
-        // Sort repositories by last modified date in descending order
-        usort($repos, function ($repo1, $repo2) {
-            return \strtotime($repo2['pushed_at']) - \strtotime($repo1['pushed_at']);
-        });
-
-        // Limit the maximum results to 5
-        $repos = \array_slice($repos, 0, 5);
+        $owner = $github->getOwnerName($providerInstallationId);
+        $repos = $github->searchRepositories($owner, $page, $per_page, $search);
 
         $repos = \array_map(function ($repo) use ($installation) {
             $repo['id'] = \strval($repo['id'] ?? '');
