@@ -1136,7 +1136,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $mails
             ->setSubject($subject)
-            ->setBody($body->render())
+            ->setBody($body)
             ->setVariables($emailVariables)
             ->setFrom($from)
             ->setRecipient($user->getAttribute('email'))
