@@ -40,6 +40,12 @@ class ConsoleVariables extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('_APP_DOMAIN_ENABLED', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Defines if main domain is configured. If so, custom domains can be created.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('_APP_ASSISTANT_ENABLED', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Defines if AI assistant is enabled.',

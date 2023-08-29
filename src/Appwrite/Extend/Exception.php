@@ -189,7 +189,6 @@ class Exception extends \Exception
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
     public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
-    public const PROJECT_SMTP_CONFIG_NOT_FOUND     = 'project_smtp_config_not_found';
 
     public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
