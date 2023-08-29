@@ -11,13 +11,12 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 App::get('/v1/messaging/providers')
@@ -104,22 +103,41 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'mailgun',
             'type' => 'email',
+            'default' => $default,
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -195,20 +213,38 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $apiKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'sendgrid',
             'type' => 'email',
+            'default' => $default,
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -279,22 +315,40 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $senderId, string $authKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
+            'default' => $default,
             'credentials' => [
                 'senderId' => $senderId,
                 'authKey' => $authKey,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -370,22 +424,40 @@ App::post('/v1/messaging/providers/telesign')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('username', '', new Text(0), 'Telesign username.')
     ->param('password', '', new Text(0), 'Telesign password.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $username, string $password, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $username, string $password, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
+            'default' => $default,
             'credentials' => [
                 'username' => $username,
                 'password' => $password,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -461,22 +533,40 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('username', '', new Text(0), 'Textmagic username.')
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $username, string $apiKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
+            'default' => $default,
             'credentials' => [
                 'username' => $username,
                 'apiKey' => $apiKey,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -552,22 +642,40 @@ App::post('/v1/messaging/providers/twilio')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
     ->param('authToken', '', new Text(0), 'Twilio authentication token.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
+            'default' => $default,
             'credentials' => [
                 'accountSid' => $accountSid,
                 'authToken' => $authToken,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -643,22 +751,40 @@ App::post('/v1/messaging/providers/vonage')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.')
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
+            'default' => $default,
             'credentials' => [
                 'apiKey' => $apiKey,
                 'apiSecret' => $apiSecret,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -737,20 +863,38 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $serverKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
+            'default' => $default,
             'credentials' => [
                 'serverKey' => $serverKey,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -816,6 +960,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
     ->param('teamId', '', new Text(0), 'APNS team ID.')
@@ -823,13 +968,14 @@ App::post('/v1/messaging/providers/apns')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = $dbForProject->createDocument('providers', new Document([
+        $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
+            'default' => $default,
             'credentials' => [
                 'authKey' => $authKey,
                 'authKeyId' => $authKeyId,
@@ -837,7 +983,23 @@ App::post('/v1/messaging/providers/apns')
                 'bundleId' => $bundleId,
                 'endpoint' => $endpoint,
             ],
-        ]));
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);

@@ -215,6 +215,7 @@ class Exception extends \Exception
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
+    public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
 
     /** Topic */
