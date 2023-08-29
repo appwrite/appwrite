@@ -42,6 +42,10 @@
             border: none;
             border-top: 1px solid #E8E9F0;
         }
+
+        p {
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 
@@ -52,29 +56,7 @@
     <table style="margin-top: 32px">
         <tr>
             <td>
-                <h1>
-                    {{subject}}
-                </h1>
-            </td>
-        </tr>
-    </table>
-
-    <table style="margin-top: 40px">
-        <tr>
-            <td>
-                <p>{{hello}}</p>
-
-                <p>{{body}}</p>
-
-                <a href="{{redirect}}" target="_blank">{{redirect}}</a>
-
-                <p><br />{{footer}}</p>
-                <br />
-
-                <p>{{thanks}}
-                <br />
-                {{signature}}
-                </p>
+                {{body}}
             </td>
         </tr>
     </table>

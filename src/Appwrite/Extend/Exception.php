@@ -54,6 +54,7 @@ class Exception extends \Exception
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
+    public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -118,9 +119,17 @@ class Exception extends \Exception
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
     public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
 
+    /** VCS */
+    public const INSTALLATION_NOT_FOUND              = 'installation_not_found';
+    public const PROVIDER_REPOSITORY_NOT_FOUND       = 'provider_repository_not_found';
+    public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
+    public const PROVIDER_CONTRIBUTION_CONFLICT      = 'provider_contribution_conflict';
+    public const GENERAL_PROVIDER_FAILURE            = 'general_provider_failure';
+
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
+    public const FUNCTION_ENTRYPOINT_MISSING      = 'function_entrypoint_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -186,6 +195,16 @@ class Exception extends \Exception
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 
+    /** Router */
+    public const ROUTER_HOST_NOT_FOUND             = 'router_host_not_found';
+    public const ROUTER_DOMAIN_NOT_CONFIGURED      = 'router_domain_not_configured';
+
+    /** Proxy */
+    public const RULE_RESOURCE_NOT_FOUND            = 'rule_resource_not_found';
+    public const RULE_NOT_FOUND                     = 'rule_not_found';
+    public const RULE_ALREADY_EXISTS                = 'rule_already_exists';
+    public const RULE_VERIFICATION_FAILED           = 'rule_verification_failed';
+
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
 
@@ -195,13 +214,6 @@ class Exception extends \Exception
 
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
-
-    /** Domain */
-    public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
-    public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
-    public const DOMAIN_FORBIDDEN                  = 'domain_forbidden';
-    public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
-    public const DOMAIN_TARGET_INVALID             = 'domain_target_invalid';
 
     /** GraphqQL */
     public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';

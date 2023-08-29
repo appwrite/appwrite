@@ -161,7 +161,7 @@ class Swagger2 extends Format
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
                     'method' => $route->getLabel('sdk.method', \uniqid()),
-                    'weight' => $route->getOrder(),
+                    // 'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
                     'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
@@ -347,10 +347,13 @@ class Swagger2 extends Format
                     case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
                     case 'Utopia\Database\Validator\Queries\Documents':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Files':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Teams':

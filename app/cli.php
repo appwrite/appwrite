@@ -58,7 +58,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
+            $dbForConsole->setNamespace('_console');
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -74,7 +74,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $pools->get('console')->reclaim();
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts);
+    } while ($attempts < $maxAttempts && !$ready);
 
     if (!$ready) {
         throw new Exception("Console is not ready yet. Please try again later.");
@@ -116,6 +116,29 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
+CLI::setResource('influxdb', function (Registry $register) {
+    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
+    $attempts = 0;
+    $max = 10;
+    $sleep = 1;
+
+    do { // check if telegraf database is ready
+        try {
+            $attempts++;
+            $database = $client->selectDB('telegraf');
+            if (in_array('telegraf', $client->listDatabases())) {
+                break; // leave the do-while if successful
+            }
+        } catch (\Throwable $th) {
+            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('InfluxDB database not ready yet');
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+    return $database;
+}, ['register']);
 
 CLI::setResource('queueForFunctions', function (Group $pools) {
     return new Func($pools->get('queue')->pop()->getResource());

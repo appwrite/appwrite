@@ -34,7 +34,7 @@ App::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Appwrite Data')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
+    ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -88,7 +88,7 @@ App::post('/v1/migrations/firebase/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (OAuth)')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
+    ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -146,12 +146,13 @@ App::post('/v1/migrations/firebase/oauth')
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
 
-        if ($identity->getAttribute('secret')) {
-            $serviceAccount = $identity->getAttribute('secret');
+        if ($identity->getAttribute('secrets')) {
+            $serviceAccount = $identity->getAttribute('secrets');
         } else {
+            $firebase->cleanupServiceAccounts($accessToken, $projectId);
             $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
             $identity = $identity
-                ->setAttribute('secret', $serviceAccount);
+                ->setAttribute('secrets', json_encode($serviceAccount));
 
             $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
         }
@@ -189,7 +190,7 @@ App::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (Service Account)')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
+    ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -239,7 +240,7 @@ App::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Supabase Data')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
+    ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -299,7 +300,7 @@ App::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
     ->desc('Migrate NHost Data')
     ->label('scope', 'migrations.write')
-    ->label('event', 'migrations.create')
+    ->label('event', 'migrations.[migrationId].create')
     ->label('audits.event', 'migration.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'migrations')
@@ -309,7 +310,7 @@ App::post('/v1/migrations/nhost')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION)
     ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
-    ->param('subdomain', '', new URL(), 'Source\'s Subdomain')
+    ->param('subdomain', '', new Text(512), 'Source\'s Subdomain')
     ->param('region', '', new Text(512), 'Source\'s Region')
     ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret')
     ->param('database', '', new Text(512), 'Source\'s Database Name')
@@ -454,8 +455,8 @@ App::get('/v1/migrations/appwrite/report')
             $response
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($appwrite->report($resources)), Response::MODEL_MIGRATION_REPORT);
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -481,7 +482,7 @@ App::get('/v1/migrations/firebase/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -503,67 +504,77 @@ App::get('/v1/migrations/firebase/report/oauth')
     ->inject('user')
     ->inject('dbForConsole')
     ->action(function (array $resources, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
-        try {
-            $firebase = new OAuth2Firebase(
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
-                $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
-            );
+        $firebase = new OAuth2Firebase(
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
+        );
 
-            $identity = $dbForConsole->findOne('identities', [
-                Query::equal('provider', ['firebase']),
-                Query::equal('userInternalId', [$user->getInternalId()]),
-            ]);
-            if ($identity === false || $identity->isEmpty()) {
-                throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
-            }
+        $identity = $dbForConsole->findOne('identities', [
+            Query::equal('provider', ['firebase']),
+            Query::equal('userInternalId', [$user->getInternalId()]),
+        ]);
 
-            $accessToken = $identity->getAttribute('providerAccessToken');
-            $refreshToken = $identity->getAttribute('providerRefreshToken');
-            $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
-
-            $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
-            if ($isExpired) {
-                $firebase->refreshTokens($refreshToken);
-
-                $accessToken = $firebase->getAccessToken('');
-                $refreshToken = $firebase->getRefreshToken('');
-
-                $verificationId = $firebase->getUserID($accessToken);
-
-                if (empty($verificationId)) {
-                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
-                }
-
-                $identity = $identity
-                    ->setAttribute('providerAccessToken', $accessToken)
-                    ->setAttribute('providerRefreshToken', $refreshToken)
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
-
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
-            }
-
-            // Get Service Account
-            if ($identity->getAttribute('secret')) {
-                $serviceAccount = $identity->getAttribute('secret');
-            } else {
-                $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
-                $identity = $identity
-                    ->setAttribute('secret', $serviceAccount);
-
-                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
-            }
-
-            $firebase = new Firebase(array_merge($serviceAccount, ['project_id' => $projectId]));
-
-            $report = $firebase->report($resources);
-
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+        if ($identity === false || $identity->isEmpty()) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
+
+        $accessToken = $identity->getAttribute('providerAccessToken');
+        $refreshToken = $identity->getAttribute('providerRefreshToken');
+        $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
+
+        if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+        }
+
+        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+        }
+
+        $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+        if ($isExpired) {
+            $firebase->refreshTokens($refreshToken);
+
+            $accessToken = $firebase->getAccessToken('');
+            $refreshToken = $firebase->getRefreshToken('');
+
+            $verificationId = $firebase->getUserID($accessToken);
+
+            if (empty($verificationId)) {
+                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+            }
+
+            $identity = $identity
+                ->setAttribute('providerAccessToken', $accessToken)
+                ->setAttribute('providerRefreshToken', $refreshToken)
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
+
+            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+        }
+
+        // Get Service Account
+        if ($identity->getAttribute('secrets')) {
+            $serviceAccount = $identity->getAttribute('secrets');
+        } else {
+            $firebase->cleanupServiceAccounts($accessToken, $projectId);
+            $serviceAccount = $firebase->createServiceAccount($accessToken, $projectId);
+            $identity = $identity
+                ->setAttribute('secrets', json_encode($serviceAccount));
+
+            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
+        }
+
+        $firebase = new Firebase($serviceAccount);
+
+        try {
+            $report = $firebase->report($resources);
+        } catch (\Exception $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
 App::get('/v1/migrations/firebase/connect')
@@ -614,7 +625,7 @@ App::get('/v1/migrations/firebase/redirect')
     ->groups(['api', 'migrations'])
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->param('code', '', new Text(2048), 'OAuth2 code.', true)
+    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->inject('user')
     ->inject('project')
     ->inject('request')
@@ -747,6 +758,7 @@ App::get('/v1/migrations/firebase/projects')
             Query::equal('provider', ['firebase']),
             Query::equal('userInternalId', [$user->getInternalId()]),
         ]);
+
         if ($identity === false || $identity->isEmpty()) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
@@ -756,46 +768,50 @@ App::get('/v1/migrations/firebase/projects')
         $accessTokenExpiry = $identity->getAttribute('providerAccessTokenExpiry');
 
         if (empty($accessToken) || empty($refreshToken) || empty($accessTokenExpiry)) {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Not authenticated with Firebase');
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
         if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Missing Google OAuth credentials');
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
-        if ($isExpired) {
-            try {
-                $firebase->refreshTokens($refreshToken);
-            } catch (\Exception $e) {
-                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Failed to refresh Firebase access token');
+        try {
+            $isExpired = new \DateTime($accessTokenExpiry) < new \DateTime('now');
+            if ($isExpired) {
+                try {
+                    $firebase->refreshTokens($refreshToken);
+                } catch (\Exception $e) {
+                    throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
+                }
+
+                $accessToken = $firebase->getAccessToken('');
+                $refreshToken = $firebase->getRefreshToken('');
+
+                $verificationId = $firebase->getUserID($accessToken);
+
+                if (empty($verificationId)) {
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+                }
+
+                $identity = $identity
+                    ->setAttribute('providerAccessToken', $accessToken)
+                    ->setAttribute('providerRefreshToken', $refreshToken)
+                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
+
+                $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             }
 
-            $accessToken = $firebase->getAccessToken('');
-            $refreshToken = $firebase->getRefreshToken('');
+            $projects = $firebase->getProjects($accessToken);
 
-            $verificationId = $firebase->getUserID($accessToken);
-
-            if (empty($verificationId)) {
-                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Another request is currently refreshing OAuth token. Please try again.');
+            $output = [];
+            foreach ($projects as $project) {
+                $output[] = [
+                    'displayName' => $project['displayName'],
+                    'projectId' => $project['projectId'],
+                ];
             }
-
-            $identity = $identity
-                ->setAttribute('providerAccessToken', $accessToken)
-                ->setAttribute('providerRefreshToken', $refreshToken)
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$firebase->getAccessTokenExpiry('')));
-
-            $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
-        }
-
-        $projects = $firebase->getProjects($accessToken);
-
-        $output = [];
-        foreach ($projects as $project) {
-            $output[] = [
-                'displayName' => $project['displayName'],
-                'projectId' => $project['projectId'],
-            ];
+        } catch (\Exception $e) {
+            throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
         $response->dynamic(new Document([
@@ -843,12 +859,12 @@ App::get('/v1/migrations/supabase/report')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
     ->param('resources', [], new ArrayList(new WhiteList(Supabase::getSupportedResources(), true)), 'List of resources to migrate')
-    ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint')
-    ->param('apiKey', '', new Text(512), 'Source\'s API Key')
-    ->param('databaseHost', '', new Text(512), 'Source\'s Database Host')
-    ->param('username', '', new Text(512), 'Source\'s Database Username')
-    ->param('password', '', new Text(512), 'Source\'s Database Password')
-    ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
+    ->param('endpoint', '', new URL(), 'Source\'s Supabase Endpoint.')
+    ->param('apiKey', '', new Text(512), 'Source\'s API Key.')
+    ->param('databaseHost', '', new Text(512), 'Source\'s Database Host.')
+    ->param('username', '', new Text(512), 'Source\'s Database Username.')
+    ->param('password', '', new Text(512), 'Source\'s Database Password.')
+    ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response) {
@@ -859,7 +875,7 @@ App::get('/v1/migrations/supabase/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -874,14 +890,14 @@ App::get('/v1/migrations/nhost/report')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MIGRATION_REPORT)
-    ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate')
-    ->param('subdomain', '', new URL(), 'Source\'s Subdomain')
-    ->param('region', '', new Text(512), 'Source\'s Region')
-    ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret')
-    ->param('database', '', new Text(512), 'Source\'s Database Name')
-    ->param('username', '', new Text(512), 'Source\'s Database Username')
-    ->param('password', '', new Text(512), 'Source\'s Database Password')
-    ->param('port', 5432, new Integer(true), 'Source\'s Database Port', true)
+    ->param('resources', [], new ArrayList(new WhiteList(NHost::getSupportedResources())), 'List of resources to migrate.')
+    ->param('subdomain', '', new Text(512), 'Source\'s Subdomain.')
+    ->param('region', '', new Text(512), 'Source\'s Region.')
+    ->param('adminSecret', '', new Text(512), 'Source\'s Admin Secret.')
+    ->param('database', '', new Text(512), 'Source\'s Database Name.')
+    ->param('username', '', new Text(512), 'Source\'s Database Username.')
+    ->param('password', '', new Text(512), 'Source\'s Database Password.')
+    ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
     ->inject('response')
     ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response) {
         try {
@@ -891,7 +907,7 @@ App::get('/v1/migrations/nhost/report')
                 ->setStatusCode(Response::STATUS_CODE_OK)
                 ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
         } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
     });
 
@@ -957,9 +973,8 @@ App::delete('/v1/migrations/:migrationId')
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
     ->inject('events')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Delete $deletes, Event $events) {
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Event $events) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -967,7 +982,7 @@ App::delete('/v1/migrations/:migrationId')
         }
 
         if (!$dbForProject->deleteDocument('migrations', $migration->getId())) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB', 500);
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB');
         }
 
         $events->setParam('migrationId', $migration->getId());

@@ -29,12 +29,27 @@ App::get('/v1/console/variables')
     ->label('sdk.response.model', Response::MODEL_CONSOLE_VARIABLES)
     ->inject('response')
     ->action(function (Response $response) {
+        $isDomainEnabled = !empty(App::getEnv('_APP_DOMAIN', ''))
+            && !empty(App::getEnv('_APP_DOMAIN_TARGET', ''))
+            && App::getEnv('_APP_DOMAIN', '') !== 'localhost'
+            && App::getEnv('_APP_DOMAIN_TARGET', '') !== 'localhost';
+
+        $isVcsEnabled = !empty(App::getEnv('_APP_VCS_GITHUB_APP_NAME', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_APP_ID', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''))
+            && !empty(App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''));
+
+        $isAssistantEnabled = !empty(App::getEnv('_APP_ASSISTANT_OPENAI_API_KEY', ''));
 
         $variables = new Document([
             '_APP_DOMAIN_TARGET' => App::getEnv('_APP_DOMAIN_TARGET'),
             '_APP_STORAGE_LIMIT' => +App::getEnv('_APP_STORAGE_LIMIT'),
             '_APP_FUNCTIONS_SIZE_LIMIT' => +App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT'),
             '_APP_USAGE_STATS' => App::getEnv('_APP_USAGE_STATS'),
+            '_APP_VCS_ENABLED' => $isVcsEnabled,
+            '_APP_DOMAIN_ENABLED' => $isDomainEnabled,
+            '_APP_ASSISTANT_ENABLED' => $isAssistantEnabled
         ]);
 
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
@@ -53,12 +68,12 @@ App::post('/v1/console/assistant')
     ->label('sdk.response.type', Response::CONTENT_TYPE_TEXT)
     ->label('abuse-limit', 15)
     ->label('abuse-key', 'userId:{userId}')
-    ->param('query', '', new Text(2000), 'Query')
+    ->param('prompt', '', new Text(2000), 'Prompt. A string containing questions asked to the AI assistant.')
     ->inject('response')
-    ->action(function (string $query, Response $response) {
+    ->action(function (string $prompt, Response $response) {
         $ch = curl_init('http://appwrite-assistant:3003/');
         $responseHeaders = [];
-        $query = json_encode(['prompt' => $query]);
+        $query = json_encode(['prompt' => $prompt]);
         $headers = ['accept: text/event-stream'];
         $handleEvent = function ($ch, $data) use ($response) {
             $response->chunk($data);

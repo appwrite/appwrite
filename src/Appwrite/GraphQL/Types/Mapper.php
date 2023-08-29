@@ -256,10 +256,12 @@ class Mapper
             case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
             case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
             case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
             case 'Utopia\Database\Validator\Queries\Documents':
             case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Files':
             case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+            case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
             case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
             case 'Utopia\Database\Validator\Permissions':
             case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
