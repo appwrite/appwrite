@@ -55,7 +55,6 @@ App::get('/v1/console/variables')
         $response->dynamic($variables, Response::MODEL_CONSOLE_VARIABLES);
     });
 
-
 App::post('/v1/console/assistant')
     ->desc('Ask Query')
     ->groups(['api', 'assistant'])
