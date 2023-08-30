@@ -610,7 +610,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'bg-content' => '#ffffff',
                     'text-content' => '#000000',
                     /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
-                    'user' => $user->getAttribute('name'), 
+                    'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
                     'project' => $projectName,
                     'redirect' => $url

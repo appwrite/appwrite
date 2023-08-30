@@ -1,3 +1,8 @@
+# Version 1.4.1
+
+## Fixes
+- Add missing parameters required for custom email templates [#6077](https://github.com/appwrite/appwrite/pull/6077)
+
 # Version 1.4.0
 
 ## Features
