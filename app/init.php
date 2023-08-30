@@ -801,8 +801,8 @@ $register->set('smtp', function () {
 
     $mail->isSMTP();
 
-    $username = App::getEnv('_APP_SMTP_USERNAME', null);
-    $password = App::getEnv('_APP_SMTP_PASSWORD', null);
+    $username = App::getEnv('_APP_SMTP_USERNAME');
+    $password = App::getEnv('_APP_SMTP_PASSWORD');
 
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
@@ -810,7 +810,7 @@ $register->set('smtp', function () {
     $mail->SMTPAuth = (!empty($username) && !empty($password));
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 

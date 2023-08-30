@@ -1123,27 +1123,27 @@ App::post('/v1/account/sessions/magic-url')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -1165,9 +1165,8 @@ App::post('/v1/account/sessions/magic-url')
             ->setSubject($subject)
             ->setBody($body)
             ->setVariables($emailVariables)
-            ->setRecipient($user->getAttribute('email'))
-            ->trigger()
-        ;
+            ->setRecipient($email)
+            ->trigger();
 
         $events->setPayload(
             $response->output(
@@ -1284,8 +1283,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1296,16 +1294,14 @@ App::put('/v1/account/sessions/magic-url')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -2580,27 +2576,27 @@ App::post('/v1/account/recovery')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -2626,7 +2622,6 @@ App::post('/v1/account/recovery')
             ->setVariables($emailVariables)
             ->setSubject($subject)
             ->trigger();
-        ;
 
         $events
             ->setParam('userId', $profile->getId())
@@ -2831,27 +2826,27 @@ App::post('/v1/account/verification')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -2875,8 +2870,7 @@ App::post('/v1/account/verification')
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '')
-            ->trigger()
-        ;
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())
@@ -2884,8 +2878,7 @@ App::post('/v1/account/verification')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');

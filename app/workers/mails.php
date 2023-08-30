@@ -47,8 +47,10 @@ class MailsV1 extends Worker
 
         $body = $body->render();
 
-        /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
-        $mail = empty($smtp) ? $register->get('smtp') : $this->getMailer($smtp);
+        /** @var PHPMailer $mail */
+        $mail = empty($smtp)
+            ? $register->get('smtp')
+            : $this->getMailer($smtp);
 
         $mail->clearAddresses();
         $mail->clearAllRecipients();
@@ -60,11 +62,6 @@ class MailsV1 extends Worker
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
-
-        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
-        if (!empty($smtp['replyTo'])) {
-            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
-        }
 
         try {
             $mail->send();
@@ -88,11 +85,17 @@ class MailsV1 extends Worker
         $mail->SMTPAuth = (!empty($username) && !empty($password));
         $mail->Username = $username;
         $mail->Password = $password;
-        $mail->SMTPSecure = $smtp['secure'] === 'tls';
+        $mail->SMTPSecure = $smtp['secure'];
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
 
-        $mail->isHTML(true);
+        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
+
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
+
+        $mail->isHTML();
 
         return $mail;
     }
