@@ -599,7 +599,6 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
-                    'team' => $team->getAttribute('name'),
                     'subject' => $subject,
                     'hello' => $locale->getText("emails.invitation.hello"),
                     'name' => $user->getAttribute('name'),
@@ -613,6 +612,11 @@ App::post('/v1/teams/:teamId/memberships')
                     'bg-body' => '#f7f7f7',
                     'bg-content' => '#ffffff',
                     'text-content' => '#000000',
+                    /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+                    'user' => $user->getAttribute('name'), 
+                    'team' => $team->getAttribute('name'),
+                    'project' => $projectName,
+                    'redirect' => $url
                 ];
 
                 $mails

@@ -2753,15 +2753,17 @@ App::post('/v1/account/verification')
             'hello' => $locale->getText("emails.verification.hello"),
             'name' => $user->getAttribute('name'),
             'body' => $body,
-            'redirect' => $url,
             'footer' => $locale->getText("emails.verification.footer"),
             'thanks' => $locale->getText("emails.verification.thanks"),
             'signature' => $locale->getText("emails.verification.signature"),
-            'project' => $projectName,
             'direction' => $locale->getText('settings.direction'),
             'bg-body' => '#f7f7f7',
             'bg-content' => '#ffffff',
             'text-content' => '#000000',
+            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            'user' => $user->getAttribute('name'), 
+            'project' => $projectName,
+            'redirect' => $url
         ];
 
         $mails
