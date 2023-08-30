@@ -86,20 +86,16 @@ App::get('/v1/health/db')
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
+                        $failure[] = $database;
                     }
                 } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
+                    $failure[] = $database;
                 }
             }
+        }
+
+        if (!empty($failure)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failure));
         }
 
         $response->dynamic(new Document([
