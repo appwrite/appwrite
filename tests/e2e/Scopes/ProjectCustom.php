@@ -120,8 +120,8 @@ trait ProjectCustom
             'senderName' => 'Mailer',
             'host' => 'maildev',
             'port' => 1025,
-            'username' => 'user',
-            'password' => 'password',
+            'username' => '',
+            'password' => '',
         ]);
 
         $project = [
