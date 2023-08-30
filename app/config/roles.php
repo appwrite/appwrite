@@ -57,6 +57,9 @@ $admins = [
     'rules.write',
     'migrations.read',
     'migrations.write',
+    'vcs.read',
+    'vcs.write',
+    'assistant.read',
 ];
 
 return [
