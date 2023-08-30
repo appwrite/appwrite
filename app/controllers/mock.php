@@ -226,8 +226,6 @@ App::get('/v1/mock/tests/general/headers')
         $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
 
-
-
 App::get('/v1/mock/tests/general/download')
     ->desc('Download File')
     ->groups(['mock'])
