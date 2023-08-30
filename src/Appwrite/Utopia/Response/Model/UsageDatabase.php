@@ -81,7 +81,7 @@ class UsageDatabase extends Model
             ])
             ->addRule('collectionsDelete', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for collections delete.',
+                'description' => 'Aggregated stats for collections deleted.',
                 'default' => [],
                 'example' => [],
                 'array' => true
