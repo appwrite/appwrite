@@ -451,7 +451,6 @@ class RealtimeConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response1['headers']['status-code']);
 
-
         $projectId = 'console';
 
         $client = $this->getWebsocket(['console'], [

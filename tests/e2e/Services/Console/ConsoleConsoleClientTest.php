@@ -24,11 +24,12 @@ class ConsoleConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertCount(6, $response['body']);
+        $this->assertCount(7, $response['body']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET']);
         $this->assertIsInt($response['body']['_APP_STORAGE_LIMIT']);
         $this->assertIsInt($response['body']['_APP_FUNCTIONS_SIZE_LIMIT']);
         $this->assertIsString($response['body']['_APP_DOMAIN_TARGET']);
+        $this->assertIsBool($response['body']['_APP_DOMAIN_ENABLED']);
         $this->assertIsBool($response['body']['_APP_VCS_ENABLED']);
         $this->assertIsBool($response['body']['_APP_ASSISTANT_ENABLED']);
     }

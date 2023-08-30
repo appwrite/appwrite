@@ -21,32 +21,6 @@ class AccountCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testCreateAccountWithInvite(): void
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for FAILURE
-         * Make sure the invite endpoint is only accessible through the console project.
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/invite', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-            'code' => 'Invalid Code'
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::GENERAL_ACCESS_FORBIDDEN);
-    }
-
     /**
      * @depends testCreateAccountSession
      */

@@ -1526,8 +1526,8 @@ App::patch('/v1/projects/:projectId/smtp')
     ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->param('host', '', new HostName(), 'SMTP server host name', true)
     ->param('port', 587, new Integer(), 'SMTP server port', true)
-    ->param('username', '', new Text(0), 'SMTP server username', true)
-    ->param('password', '', new Text(0), 'SMTP server password', true)
+    ->param('username', '', new Text(0, 0), 'SMTP server username', true)
+    ->param('password', '', new Text(0, 0), 'SMTP server password', true)
     ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
@@ -1549,10 +1549,6 @@ App::patch('/v1/projects/:projectId/smtp')
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Host is required when enabling SMTP.');
             } elseif (empty($port)) {
                 throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Port is required when enabling SMTP.');
-            } elseif (empty($username)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Username is required when enabling SMTP.');
-            } elseif (empty($password)) {
-                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Password is required when enabling SMTP.');
             }
         }
 

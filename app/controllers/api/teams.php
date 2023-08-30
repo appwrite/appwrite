@@ -575,27 +575,27 @@ App::post('/v1/teams/:teamId/memberships')
                         ->setSmtpUsername($smtp['username'] ?? '')
                         ->setSmtpPassword($smtp['password'] ?? '')
                         ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $mails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
                 }
-
-                if (!empty($customTemplate)) {
-                    if (!empty($customTemplate['senderEmail'])) {
-                        $senderEmail = $customTemplate['senderEmail'];
-                    }
-                    if (!empty($customTemplate['senderName'])) {
-                        $senderName = $customTemplate['senderName'];
-                    }
-                    if (!empty($customTemplate['replyTo'])) {
-                        $replyTo = $customTemplate['replyTo'];
-                    }
-
-                    $body = $customTemplate['message'] ?? '';
-                    $subject = $customTemplate['subject'] ?? $subject;
-                }
-
-                $mails
-                    ->setSmtpReplyTo($replyTo)
-                    ->setSmtpSenderEmail($senderEmail)
-                    ->setSmtpSenderName($senderName);
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),

@@ -540,7 +540,8 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'enabled' => true,
-            'sender' => 'mailer@appwrite.io',
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
             'host' => 'maildev',
             'port' => 1025,
             'username' => 'user',
@@ -549,7 +550,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
-        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
+        $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
         $this->assertEquals('maildev', $response['body']['smtpHost']);
         $this->assertEquals(1025, $response['body']['smtpPort']);
         $this->assertEquals('user', $response['body']['smtpUsername']);
@@ -564,7 +566,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['smtpEnabled']);
-        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSender']);
+        $this->assertEquals('mailer@appwrite.io', $response['body']['smtpSenderEmail']);
+        $this->assertEquals('Mailer', $response['body']['smtpSenderName']);
         $this->assertEquals('maildev', $response['body']['smtpHost']);
         $this->assertEquals(1025, $response['body']['smtpPort']);
         $this->assertEquals('user', $response['body']['smtpUsername']);
@@ -590,7 +593,7 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Account Verification', $response['body']['subject']);
-        $this->assertEquals('team@appwrite.io', $response['body']['senderEmail']);
+        $this->assertEquals('', $response['body']['senderEmail']);
         $this->assertEquals('verification', $response['body']['type']);
         $this->assertEquals('en-us', $response['body']['locale']);
 

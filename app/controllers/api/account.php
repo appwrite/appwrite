@@ -49,106 +49,6 @@ use Appwrite\Auth\Validator\PersonalData;
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-App::post('/v1/account/invite')
-    ->desc('Create account using an invite code')
-    ->groups(['api', 'account', 'auth'])
-    ->label('event', 'users.[userId].create')
-    ->label('scope', 'public')
-    ->label('auth.type', 'emailPassword')
-    ->label('audits.event', 'user.create')
-    ->label('audits.resource', 'user/{response.$id}')
-    ->label('audits.userId', '{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createWithInviteCode')
-    ->label('sdk.description', '/docs/references/account/create.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_ACCOUNT)
-    ->label('abuse-limit', 10)
-    ->param('userId', '', new CustomId(), 'Unique Id. Choose your own unique ID or pass the string `ID.unique()` to auto generate it. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
-    ->param('code', '', new Text(128), 'An invite code to restrict user signups on the Appwrite console. Users with an invite code will be able to create accounts irrespective of email and IP whitelists.', true)
-    ->inject('request')
-    ->inject('response')
-    ->inject('project')
-    ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, string $code, Request $request, Response $response, Document $project, Database $dbForProject, Event $events) {
-
-        if ($project->getId() !== 'console') {
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN);
-        }
-
-        $email = \strtolower($email);
-
-        $codes = App::getEnv('_APP_CONSOLE_WHITELIST_CODES');
-        $whitelistCodes = !empty($codes)
-            ? \explode(',', $codes)
-            : [];
-
-        if (empty($whitelistCodes)) {
-            throw new Exception(Exception::GENERAL_CODES_DISABLED);
-        }
-
-        if (!\in_array($code, $whitelistCodes)) {
-            throw new Exception(Exception::USER_INVALID_CODE);
-        }
-
-        $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-        if ($limit !== 0) {
-            $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-            if ($total >= $limit) {
-                throw new Exception(Exception::USER_COUNT_EXCEEDED);
-            }
-        }
-
-        try {
-            $userId = $userId == 'unique()' ? ID::unique() : $userId;
-            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
-                '$id' => $userId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'email' => $email,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                'passwordUpdate' => DateTime::now(),
-                'registration' => DateTime::now(),
-                'reset' => false,
-                'name' => $name,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId, $email, $name]),
-                'accessedAt' => DateTime::now(),
-            ])));
-        } catch (Duplicate) {
-            throw new Exception(Exception::USER_ALREADY_EXISTS);
-        }
-
-        Authorization::unsetRole(Role::guests()->toString());
-        Authorization::setRole(Role::user($user->getId())->toString());
-        Authorization::setRole(Role::users()->toString());
-
-        $events->setParam('userId', $user->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($user, Response::MODEL_ACCOUNT);
-    });
-
 App::post('/v1/account')
     ->desc('Create Account')
     ->groups(['api', 'account', 'auth'])
@@ -1123,27 +1023,27 @@ App::post('/v1/account/sessions/magic-url')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -1165,9 +1065,8 @@ App::post('/v1/account/sessions/magic-url')
             ->setSubject($subject)
             ->setBody($body)
             ->setVariables($emailVariables)
-            ->setRecipient($user->getAttribute('email'))
-            ->trigger()
-        ;
+            ->setRecipient($email)
+            ->trigger();
 
         $events->setPayload(
             $response->output(
@@ -1284,8 +1183,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $events
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1296,16 +1194,14 @@ App::put('/v1/account/sessions/magic-url')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -2580,27 +2476,27 @@ App::post('/v1/account/recovery')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -2626,7 +2522,6 @@ App::post('/v1/account/recovery')
             ->setVariables($emailVariables)
             ->setSubject($subject)
             ->trigger();
-        ;
 
         $events
             ->setParam('userId', $profile->getId())
@@ -2831,27 +2726,27 @@ App::post('/v1/account/verification')
                 ->setSmtpUsername($smtp['username'] ?? '')
                 ->setSmtpPassword($smtp['password'] ?? '')
                 ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $mails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
         }
-
-        if (!empty($customTemplate)) {
-            if (!empty($customTemplate['senderEmail'])) {
-                $senderEmail = $customTemplate['senderEmail'];
-            }
-            if (!empty($customTemplate['senderName'])) {
-                $senderName = $customTemplate['senderName'];
-            }
-            if (!empty($customTemplate['replyTo'])) {
-                $replyTo = $customTemplate['replyTo'];
-            }
-
-            $body = $customTemplate['message'] ?? '';
-            $subject = $customTemplate['subject'] ?? $subject;
-        }
-
-        $mails
-            ->setSmtpReplyTo($replyTo)
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName);
 
         $emailVariables = [
             'subject' => $subject,
@@ -2875,8 +2770,7 @@ App::post('/v1/account/verification')
             ->setVariables($emailVariables)
             ->setRecipient($user->getAttribute('email'))
             ->setName($user->getAttribute('name') ?? '')
-            ->trigger()
-        ;
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())
@@ -2884,8 +2778,7 @@ App::post('/v1/account/verification')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $verificationSecret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
