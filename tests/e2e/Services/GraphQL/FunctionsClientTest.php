@@ -121,10 +121,11 @@ class FunctionsClientTest extends Scope
         ];
 
         while (true) {
-            $deployment = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            $deployment = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $projectId,
-            ], $this->getHeaders()), $gqlPayload);
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ], $gqlPayload);
 
             $this->assertIsArray($deployment['body']['data']);
             $this->assertArrayNotHasKey('errors', $deployment['body']);
