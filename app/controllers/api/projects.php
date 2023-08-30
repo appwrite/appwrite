@@ -1,40 +1,42 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Validator\Password;
-use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
-use Appwrite\Network\Validator\CNAME;
-use Utopia\Validator\Domain as DomainValidator;
+use Appwrite\Extend\Exception;
+use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
-use Utopia\Validator\URL;
-use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Validator\ProjectId;
+use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
 use Utopia\Audit\Audit;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
-use Utopia\Domains\Domain;
+use Utopia\Locale\Locale;
+use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\Queries\Projects;
-use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Integer;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 App::init()
@@ -56,10 +58,10 @@ App::post('/v1/projects')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('projectId', '', new ProjectId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, and hyphen. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', null, new Text(128), 'Project name. Max length: 128 chars.')
     ->param('teamId', '', new UID(), 'Team unique ID.')
-    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn($config) => !$config['disabled']))), 'Project Region.', true)
+    ->param('region', App::getEnv('_APP_REGION', 'default'), new Whitelist(array_keys(array_filter(Config::getParam('regions'), fn ($config) => !$config['disabled']))), 'Project Region.', true)
     ->param('description', '', new Text(256), 'Project description. Max length: 256 chars.', true)
     ->param('logo', '', new Text(1024), 'Project logo.', true)
     ->param('url', '', new URL(), 'Project URL.', true)
@@ -71,8 +73,10 @@ App::post('/v1/projects')
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Database $dbForProject) {
+    ->inject('cache')
+    ->inject('pools')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -81,12 +85,46 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG];
+        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
+        $backups['database_db_fra1_06'] = ['from' => '16:30', 'to' => '17:15'];
+
+        $databases = Config::getParam('pools-database', []);
+
+        /**
+         * Extract db from list while backing
+         */
+        if (count($databases) > 1) {
+            $now = new \DateTime();
+
+            foreach ($databases as $index => $database) {
+                if (empty($backups[$database])) {
+                    continue;
+                }
+                $backup = $backups[$database];
+                $from = \DateTime::createFromFormat('H:i', $backup['from']);
+                $to = \DateTime::createFromFormat('H:i', $backup['to']);
+                if ($now >= $from && $now <= $to) {
+                    unset($databases[$index]);
+                    break;
+                }
+            }
+        }
+
+        if ($index = array_search('database_db_fra1_06', $databases)) {
+            $database = $databases[$index];
+        } else {
+            $database = $databases[array_rand($databases)];
+        }
 
         if ($projectId === 'console') {
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
@@ -121,17 +159,15 @@ App::post('/v1/projects')
                 'authProviders' => [],
                 'webhooks' => null,
                 'keys' => null,
-                'domains' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
+                'database' => $database
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
-
+        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
@@ -140,6 +176,9 @@ App::post('/v1/projects')
 
         $adapter = new TimeLimit('', 0, 1, $dbForProject);
         $adapter->setup();
+
+        /** @var array $collections */
+        $collections = Config::getParam('collections', [])['projects'] ?? [];
 
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
@@ -203,7 +242,9 @@ App::get('/v1/projects')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -395,17 +436,57 @@ App::patch('/v1/projects/:projectId')
         }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
-                ->setAttribute('name', $name)
-                ->setAttribute('description', $description)
-                ->setAttribute('logo', $logo)
-                ->setAttribute('url', $url)
-                ->setAttribute('legalName', $legalName)
-                ->setAttribute('legalCountry', $legalCountry)
-                ->setAttribute('legalState', $legalState)
-                ->setAttribute('legalCity', $legalCity)
-                ->setAttribute('legalAddress', $legalAddress)
-                ->setAttribute('legalTaxId', $legalTaxId)
-                ->setAttribute('search', implode(' ', [$projectId, $name])));
+            ->setAttribute('name', $name)
+            ->setAttribute('description', $description)
+            ->setAttribute('logo', $logo)
+            ->setAttribute('url', $url)
+            ->setAttribute('legalName', $legalName)
+            ->setAttribute('legalCountry', $legalCountry)
+            ->setAttribute('legalState', $legalState)
+            ->setAttribute('legalCity', $legalCity)
+            ->setAttribute('legalAddress', $legalAddress)
+            ->setAttribute('legalTaxId', $legalTaxId)
+            ->setAttribute('search', implode(' ', [$projectId, $name])));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/team')
+    ->desc('Update Project Team')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateTeam')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('teamId', '', new UID(), 'Team ID of the team to transfer project to.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $teamId, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+        $team = $dbForConsole->getDocument('teams', $teamId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        if ($team->isEmpty()) {
+            throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('teamId', $teamId)
+            ->setAttribute('$permissions', [
+                Permission::read(Role::team(ID::custom($teamId))),
+                Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+            ]));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -421,7 +502,7 @@ App::patch('/v1/projects/:projectId/service')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn($element) => $element['optional'])), true), 'Service name.')
+    ->param('service', '', new WhiteList(array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional'])), true), 'Service name.')
     ->param('status', null, new Boolean(), 'Service status.')
     ->inject('response')
     ->inject('dbForConsole')
@@ -435,6 +516,40 @@ App::patch('/v1/projects/:projectId/service')
 
         $services = $project->getAttribute('services', []);
         $services[$service] = $status;
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/service/all')
+    ->desc('Update all service status')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateServiceStatusAll')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('status', null, new Boolean(), 'Service status.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $status, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $allServices = array_keys(array_filter(Config::getParam('services'), fn ($element) => $element['optional']));
+
+        $services = [];
+        foreach ($allServices as $service) {
+            $services[$service] = $status;
+        }
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('services', $services));
 
@@ -613,7 +728,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     });
 
 App::patch('/v1/projects/:projectId/auth/password-dictionary')
-    ->desc('Update authentication password disctionary status. Use this endpoint to enable or disable the dicitonary check for user password')
+    ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -636,6 +751,37 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
 
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::patch('/v1/projects/:projectId/auth/personal-data')
+    ->desc('Enable or disable checking user passwords for similarity with their personal data.')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updatePersonalDataCheck')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(false), 'Set whether or not to check a password for similarity with personal data. Default is false.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['personalDataCheck'] = $enabled;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
@@ -697,8 +843,7 @@ App::delete('/v1/projects/:projectId')
 
         $deletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project)
-        ;
+            ->setDocument($project);
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
@@ -820,7 +965,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -862,7 +1007,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
         $security = ($security === '1' || $security === 'true' || $security === 1 || $security === true);
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -876,8 +1021,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass)
-        ;
+            ->setAttribute('httpPass', $httpPass);
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -908,7 +1052,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -946,7 +1090,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         }
 
         $webhook = $dbForConsole->findOne('webhooks', [
-            Query::equal('_uid', [$webhookId]),
+            Query::equal('$id', [$webhookId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1068,7 +1212,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1105,7 +1249,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1116,8 +1260,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
         $key
             ->setAttribute('name', $name)
             ->setAttribute('scopes', $scopes)
-            ->setAttribute('expire', $expire)
-        ;
+            ->setAttribute('expire', $expire);
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
@@ -1148,7 +1291,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
         }
 
         $key = $dbForConsole->findOne('keys', [
-            Query::equal('_uid', [$keyId]),
+            Query::equal('$id', [$keyId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1270,7 +1413,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1307,7 +1450,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1319,8 +1462,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
             ->setAttribute('name', $name)
             ->setAttribute('key', $key)
             ->setAttribute('store', $store)
-            ->setAttribute('hostname', $hostname)
-        ;
+            ->setAttribute('hostname', $hostname);
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
@@ -1351,7 +1493,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         }
 
         $platform = $dbForConsole->findOne('platforms', [
-            Query::equal('_uid', [$platformId]),
+            Query::equal('$id', [$platformId]),
             Query::equal('projectInternalId', [$project->getInternalId()]),
         ]);
 
@@ -1366,87 +1508,30 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
         $response->noContent();
     });
 
-// Domains
-
-App::post('/v1/projects/:projectId/domains')
-    ->desc('Create Domain')
+// CUSTOM SMTP and Templates
+App::patch('/v1/projects/:projectId/smtp')
+    ->desc('Update SMTP configuration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'createDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domain', null, new DomainValidator(), 'Domain name.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domain, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $document = $dbForConsole->findOne('domains', [
-            Query::equal('domain', [$domain]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($document && !$document->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_ALREADY_EXISTS);
-        }
-
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::DOMAIN_TARGET_INVALID, 'Unreachable CNAME target (' . $target->get() . '). Please check the _APP_DOMAIN_TARGET environment variable of your Appwrite server.');
-        }
-
-        $domain = new Domain($domain);
-
-        $domain = new Document([
-            '$id' => ID::unique(),
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'projectInternalId' => $project->getInternalId(),
-            'projectId' => $project->getId(),
-            'updated' => DateTime::now(),
-            'domain' => $domain->get(),
-            'tld' => $domain->getSuffix(),
-            'registerable' => $domain->getRegisterable(),
-            'verification' => false,
-            'certificateId' => null,
-        ]);
-
-        $domain = $dbForConsole->createDocument('domains', $domain);
-
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($domain, Response::MODEL_DOMAIN);
-    });
-
-App::get('/v1/projects/:projectId/domains')
-    ->desc('List Domains')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'listDomains')
+    ->label('sdk.method', 'updateSmtpConfiguration')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN_LIST)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('enabled', false, new Boolean(), 'Enable custom SMTP service')
+    ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
+    ->param('senderEmail', '', new Email(), 'Email of the sender', true)
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name', true)
+    ->param('port', 587, new Integer(), 'SMTP server port', true)
+    ->param('username', '', new Text(0, 0), 'SMTP server username', true)
+    ->param('password', '', new Text(0, 0), 'SMTP server password', true)
+    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1454,66 +1539,220 @@ App::get('/v1/projects/:projectId/domains')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-            Query::limit(5000),
-        ]);
+        // Ensure required params for when enabling SMTP
+        if ($enabled) {
+            if (empty($senderName)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender name is required when enabling SMTP.');
+            } elseif (empty($senderEmail)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Sender email is required when enabling SMTP.');
+            } elseif (empty($host)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Host is required when enabling SMTP.');
+            } elseif (empty($port)) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Port is required when enabling SMTP.');
+            }
+        }
+
+        // validate SMTP settings
+        if ($enabled) {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Username = $username;
+            $mail->Password = $password;
+            $mail->Host = $host;
+            $mail->Port = $port;
+            $mail->SMTPSecure = $secure;
+            $mail->SMTPAutoTLS = false;
+            $mail->Timeout = 5;
+
+            try {
+                $valid = $mail->SmtpConnect();
+
+                if (!$valid) {
+                    throw new Exception('Connection is not valid.');
+                }
+            } catch (Throwable $error) {
+                throw new Exception(Exception::PROJECT_SMTP_CONFIG_INVALID, 'Could not connect to SMTP server: ' . $error->getMessage());
+            }
+        }
+
+        // Save SMTP settings
+        if ($enabled) {
+            $smtp = [
+                'enabled' => $enabled,
+                'senderName' => $senderName,
+                'senderEmail' => $senderEmail,
+                'replyTo' => $replyTo,
+                'host' => $host,
+                'port' => $port,
+                'username' => $username,
+                'password' => $password,
+                'secure' => $secure,
+            ];
+        } else {
+            $smtp = [
+                'enabled' => false
+            ];
+        }
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('smtp', $smtp));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
+    ->desc('Get custom SMS template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getSmsTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
+
+        if (is_null($template)) {
+            $template = [
+                'message' => Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl')->render(),
+            ];
+        }
+
+        $template['type'] = $type;
+        $template['locale'] = $locale;
+
+        $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
+    });
+
+App::get('/v1/projects/:projectId/templates/email/:type/:locale')
+    ->desc('Get custom email template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getEmailTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+
+        $localeObj = new Locale($locale);
+        if (is_null($template)) {
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message
+                ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
+                ->setParam('{{name}}', '')
+                ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
+                ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
+                ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
+                ->setParam('{{direction}}', $localeObj->getText('settings.direction'));
+            $message = $message->render();
+
+            $template = [
+                'message' => $message,
+                'subject' => $localeObj->getText('emails.' . $type . '.subject'),
+                'senderEmail' => '',
+                'senderName' => ''
+            ];
+        }
+
+        $template['type'] = $type;
+        $template['locale'] = $locale;
+
+        $response->dynamic(new Document($template), Response::MODEL_EMAIL_TEMPLATE);
+    });
+
+App::patch('/v1/projects/:projectId/templates/sms/:type/:locale')
+    ->desc('Update custom SMS template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSmsTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('message', '', new Text(0), 'Template message')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, string $message, Response $response, Database $dbForConsole) {
+
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $templates['sms.' . $type . '-' . $locale] = [
+            'message' => $message
+        ];
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
         $response->dynamic(new Document([
-            'domains' => $domains,
-            'total' => count($domains),
-        ]), Response::MODEL_DOMAIN_LIST);
+            'message' => $message,
+            'type' => $type,
+            'locale' => $locale,
+        ]), Response::MODEL_SMS_TEMPLATE);
     });
 
-App::get('/v1/projects/:projectId/domains/:domainId')
-    ->desc('Get Domain')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
-
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
-        }
-
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
-    });
-
-App::patch('/v1/projects/:projectId/domains/:domainId/verification')
-    ->desc('Update Domain Verification Status')
+App::patch('/v1/projects/:projectId/templates/email/:type/:locale')
+    ->desc('Update custom email templates')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateDomainVerification')
+    ->label('sdk.method', 'updateEmailTemplate')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_DOMAIN)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->param('subject', '', new Text(255), 'Email Subject')
+    ->param('message', '', new Text(0), 'Template message')
+    ->param('senderName', '', new Text(255, 0), 'Name of the email sender', true)
+    ->param('senderEmail', '', new Email(), 'Email of the sender', true)
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $type, string $locale, string $subject, string $message, string $senderName, string $senderEmail, string $replyTo, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1521,59 +1760,46 @@ App::patch('/v1/projects/:projectId/domains/:domainId/verification')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
+        $templates = $project->getAttribute('templates', []);
+        $templates['email.' . $type . '-' . $locale] = [
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'subject' => $subject,
+            'replyTo' => $replyTo,
+            'message' => $message
+        ];
 
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
-        }
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
-
-        if (!$target->isKnown() || $target->isTest()) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
-        }
-
-        if ($domain->getAttribute('verification') === true) {
-            return $response->dynamic($domain, Response::MODEL_DOMAIN);
-        }
-
-        $validator = new CNAME($target->get()); // Verify Domain with DNS records
-
-        if (!$validator->isValid($domain->getAttribute('domain', ''))) {
-            throw new Exception(Exception::DOMAIN_VERIFICATION_FAILED);
-        }
-
-
-        $dbForConsole->updateDocument('domains', $domain->getId(), $domain->setAttribute('verification', true));
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-
-        // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
-            ->setDomain($domain)
-            ->trigger();
-
-        $response->dynamic($domain, Response::MODEL_DOMAIN);
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'senderName' => $senderName,
+            'senderEmail' => $senderEmail,
+            'subject' => $subject,
+            'replyTo' => $replyTo,
+            'message' => $message
+        ]), Response::MODEL_EMAIL_TEMPLATE);
     });
 
-App::delete('/v1/projects/:projectId/domains/:domainId')
-    ->desc('Delete Domain')
+App::delete('/v1/projects/:projectId/templates/sms/:type/:locale')
+    ->desc('Reset custom SMS template')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'deleteDomain')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.method', 'deleteSmsTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SMS_TEMPLATE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('domainId', '', new UID(), 'Domain unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['sms'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, string $domainId, Response $response, Database $dbForConsole, Delete $deletes) {
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1581,22 +1807,65 @@ App::delete('/v1/projects/:projectId/domains/:domainId')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $domain = $dbForConsole->findOne('domains', [
-            Query::equal('_uid', [$domainId]),
-            Query::equal('projectInternalId', [$project->getInternalId()]),
-        ]);
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['sms.' . $type . '-' . $locale] ?? null;
 
-        if ($domain === false || $domain->isEmpty()) {
-            throw new Exception(Exception::DOMAIN_NOT_FOUND);
+        if (is_null($template)) {
+            throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
         }
 
-        $dbForConsole->deleteDocument('domains', $domain->getId());
+        unset($template['sms.' . $type . '-' . $locale]);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
 
-        $deletes
-            ->setType(DELETE_TYPE_CERTIFICATES)
-            ->setDocument($domain);
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'message' => $template['message']
+        ]), Response::MODEL_SMS_TEMPLATE);
+    });
 
-        $response->noContent();
+App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
+    ->desc('Reset custom email template')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteEmailTemplate')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_EMAIL_TEMPLATE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('type', '', new WhiteList(Config::getParam('locale-templates')['email'] ?? []), 'Template type')
+    ->param('locale', '', fn ($localeCodes) => new WhiteList($localeCodes), 'Template locale', false, ['localeCodes'])
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, string $type, string $locale, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $templates = $project->getAttribute('templates', []);
+        $template  = $templates['email.' . $type . '-' . $locale] ?? null;
+
+        if (is_null($template)) {
+            throw new Exception(Exception::PROJECT_TEMPLATE_DEFAULT_DELETION);
+        }
+
+        unset($templates['email.' . $type . '-' . $locale]);
+
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('templates', $templates));
+
+        $response->dynamic(new Document([
+            'type' => $type,
+            'locale' => $locale,
+            'senderName' => $template['senderName'],
+            'senderEmail' => $template['senderEmail'],
+            'subject' => $template['subject'],
+            'replyTo' => $template['replyTo'],
+            'message' => $template['message']
+        ]), Response::MODEL_EMAIL_TEMPLATE);
     });

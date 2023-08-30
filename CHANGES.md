@@ -1,4 +1,32 @@
+# Version 1.4.0
+
+## Features
+
+- Add error attribute to indexes and attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+- Add new index validation rules [#5710](https://github.com/appwrite/appwrite/pull/5710)
+- Added support for disallowing passwords that contain personal data [#5371](https://github.com/appwrite/appwrite/pull/5371)
+
+## Fixes
+
+- Fix cascading deletes across multiple levels [DB #269](https://github.com/utopia-php/database/pull/269)
+- Fix identical two-way keys not throwing duplicate exceptions [DB #273](https://github.com/utopia-php/database/pull/273)
+- Fix search wildcards [DB #279](https://github.com/utopia-php/database/pull/279)
+- Fix permissions returning as an object instead of list [DB #281](https://github.com/utopia-php/database/pull/281)
+- Fix missing collection not found error [DB #282](https://github.com/utopia-php/database/pull/282)
+
+## Changes
+
+- Improve permission indexes [DB #248](https://github.com/utopia-php/database/pull/248)
+- Validators back-ported to Utopia [#5439](https://github.com/appwrite/appwrite/pull/5439)
+
 # Version 1.3.8
+
+## Changes
+
+- Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
+- Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 
 ## Bugs
 - Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
@@ -93,7 +121,6 @@
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
-
 ## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 

@@ -1,6 +1,7 @@
 <?php
 
-return [ // Ordered by ABC.
+// Ordered by ABC.
+return [
     'amazon' => [
         'name' => 'Amazon',
         'developers' => 'https://developer.amazon.com/apps-and-games/services-and-apis',

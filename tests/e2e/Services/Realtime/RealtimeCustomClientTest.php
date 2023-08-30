@@ -1263,6 +1263,7 @@ class RealtimeCustomClientTest extends Scope
             'name' => 'Test',
             'execute' => ['users'],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 
@@ -1293,8 +1294,23 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($deployment['headers']['status-code'], 202);
         $this->assertNotEmpty($deployment['body']['$id']);
 
-        // Wait for deployment to be built.
-        sleep(5);
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
 
         $response = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
             'content-type' => 'application/json',

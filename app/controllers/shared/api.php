@@ -5,6 +5,8 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
+use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -96,14 +98,15 @@ App::init()
     ->inject('user')
     ->inject('events')
     ->inject('audits')
-    ->inject('usage')
     ->inject('deletes')
     ->inject('database')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->inject('mails')
+    ->inject('usage')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails, Stats $usage) use ($databaseListener) {
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
 
         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
             throw new Exception(Exception::PROJECT_UNKNOWN);
@@ -120,11 +123,11 @@ App::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
-            ->setParam('{userId}', $user->getId())
-            ->setParam('{userAgent}', $request->getUserAgent(''))
-            ->setParam('{ip}', $request->getIP())
-            ->setParam('{url}', $request->getHostname() . $route->getPath())
-            ->setParam('{method}', $request->getMethod());
+                ->setParam('{userId}', $user->getId())
+                ->setParam('{userAgent}', $request->getUserAgent(''))
+                ->setParam('{ip}', $request->getIP())
+                ->setParam('{url}', $request->getHostname() . $route->getPath())
+                ->setParam('{method}', $request->getMethod());
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -167,9 +170,9 @@ App::init()
             }
         }
 
-    /*
-     * Background Jobs
-     */
+        /*
+        * Background Jobs
+        */
         $events
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
@@ -194,9 +197,8 @@ App::init()
         $deletes->setProject($project);
         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
-
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
         $useCache = $route->getLabel('cache', false);
 
@@ -218,7 +220,10 @@ App::init()
 
                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
                     }
 
@@ -264,7 +269,7 @@ App::init()
     ->inject('project')
     ->action(function (App $utopia, Request $request, Document $project) {
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -356,14 +361,17 @@ App::shutdown()
     ->inject('request')
     ->inject('response')
     ->inject('project')
+    ->inject('user')
     ->inject('events')
     ->inject('audits')
     ->inject('usage')
     ->inject('deletes')
     ->inject('database')
-    ->inject('mode')
     ->inject('dbForProject')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, string $mode, Database $dbForProject) use ($parseLabel) {
+    ->inject('queueForFunctions')
+    ->inject('mode')
+    ->inject('dbForConsole')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -371,12 +379,12 @@ App::shutdown()
             if (empty($events->getPayload())) {
                 $events->setPayload($responsePayload);
             }
+
             /**
              * Trigger functions.
              */
-            $events
-                ->setClass(Event::FUNCTIONS_CLASS_NAME)
-                ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            $queueForFunctions
+                ->from($events)
                 ->trigger();
 
             /**
@@ -422,9 +430,8 @@ App::shutdown()
             }
         }
 
-        $route = $utopia->match($request);
+        $route = $utopia->getRoute();
         $requestParams = $route->getParamsValues();
-        $user = $audits->getUser();
 
         /**
          * Audit labels
@@ -437,10 +444,7 @@ App::shutdown()
             }
         }
 
-        $pattern = $route->getLabel('audits.userId', null);
-        if (!empty($pattern)) {
-            $userId = $parseLabel($pattern, $responsePayload, $requestParams, $user);
-            $user = $dbForProject->getDocument('users', $userId);
+        if (!$user->isEmpty()) {
             $audits->setUser($user);
         }
 
@@ -489,14 +493,14 @@ App::shutdown()
 
                 $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
                 $data = json_encode([
-                'resourceType' => $resourceType,
-                'resource' => $resource,
-                'contentType' => $response->getContentType(),
-                'payload' => base64_encode($data['payload']),
+                    'resourceType' => $resourceType,
+                    'resource' => $resource,
+                    'contentType' => $response->getContentType(),
+                    'payload' => base64_encode($data['payload']),
                 ]) ;
 
                 $signature = md5($data);
-                $cacheLog  = $dbForProject->getDocument('cache', $key);
+                $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
@@ -550,13 +554,5 @@ App::shutdown()
                 ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
                 ->setParam('project.{scope}.network.outbound', $response->getSize())
                 ->submit();
-        }
-    });
-
-App::init()
-    ->groups(['usage'])
-    ->action(function () {
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
-            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

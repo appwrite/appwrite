@@ -12,11 +12,11 @@ use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
-use Appwrite\Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Memberships;
 use Appwrite\Utopia\Database\Validator\Queries\Teams;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
@@ -153,7 +153,9 @@ App::get('/v1/teams')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -338,19 +340,6 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $memberships = $dbForProject->find('memberships', [
-            Query::equal('teamId', [$teamId]),
-            Query::limit(2000), // TODO fix members limit
-        ]);
-
-        // Memberships are deleted here instead of in the worker to make sure user permisions are updated instantly
-        foreach ($memberships as $membership) {
-            if (!$dbForProject->deleteDocument('memberships', $membership->getId())) {
-                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership for team from DB');
-            }
-            $dbForProject->deleteCachedDocument('users', $membership->getAttribute('userId'));
-        }
-
         if (!$dbForProject->deleteDocument('teams', $teamId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
@@ -455,6 +444,14 @@ App::post('/v1/teams/:teamId/memberships')
                 }
             }
 
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
             try {
                 $userId = ID::unique();
                 $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
@@ -485,7 +482,8 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name])
+                    'search' => implode(' ', [$userId, $email, $name]),
+                    'accessedAt' => DateTime::now(),
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -545,41 +543,100 @@ App::post('/v1/teams/:teamId/memberships')
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+                $body = $locale->getText("emails.invitation.body");
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
+                $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
-                $body
-                    ->setParam('{{subject}}', $subject)
-                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                    ->setParam('{{name}}', $user->getAttribute('name'))
-                    ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
-                    ->setParam('{{redirect}}', $url)
-                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
-                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
-                    ->setParam('{{project}}', $projectName)
-                    ->setParam('{{direction}}', $locale->getText('settings.direction'))
-                    ->setParam('{{bg-body}}', '#f7f7f7')
-                    ->setParam('{{bg-content}}', '#ffffff')
-                    ->setParam('{{text-content}}', '#000000');
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message->setParam('{{body}}', $body);
+                $body = $message->render();
 
-                $body = $body->render();
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $mails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $mails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
+                }
+
+                $emailVariables = [
+                    'owner' => $user->getAttribute('name'),
+                    'team' => $team->getAttribute('name'),
+                    'subject' => $subject,
+                    'hello' => $locale->getText("emails.invitation.hello"),
+                    'name' => $user->getAttribute('name'),
+                    'body' => $body,
+                    'redirect' => $url,
+                    'footer' => $locale->getText("emails.invitation.footer"),
+                    'thanks' => $locale->getText("emails.invitation.thanks"),
+                    'signature' => $locale->getText("emails.invitation.signature"),
+                    'project' => $projectName,
+                    'direction' => $locale->getText('settings.direction'),
+                    'bg-body' => '#f7f7f7',
+                    'bg-content' => '#ffffff',
+                    'text-content' => '#000000',
+                ];
 
                 $mails
                     ->setSubject($subject)
                     ->setBody($body)
-                    ->setFrom($from)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
+                    ->setVariables($emailVariables)
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
+                if (!empty($customTemplate)) {
+                    $message = $customTemplate['message'];
+                }
+
+                $message = $message->setParam('{{token}}', $url);
+                $message = $message->render();
+
                 $messaging
                     ->setRecipient($phone)
-                    ->setMessage($url)
+                    ->setMessage($message)
                     ->trigger();
             }
         }
@@ -635,7 +692,9 @@ App::get('/v1/teams/:teamId/memberships')
         $queries[] = Query::equal('teamId', [$teamId]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -725,7 +784,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Update Membership Roles')
+    ->desc('Update Membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
@@ -733,8 +792,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->label('audits.resource', 'team/{request.teamId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'teams')
-    ->label('sdk.method', 'updateMembershipRoles')
-    ->label('sdk.description', '/docs/references/teams/update-team-membership-roles.md')
+    ->label('sdk.method', 'updateMembership')
+    ->label('sdk.description', '/docs/references/teams/update-team-membership.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MEMBERSHIP)
@@ -849,7 +908,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         }
 
         if ($user->isEmpty()) {
-            $user = $dbForProject->getDocument('users', $userId); // Get user
+            $user->setAttributes($dbForProject->getDocument('users', $userId)->getArrayCopy()); // Get user
         }
 
         if ($membership->getAttribute('userId') !== $user->getId()) {
@@ -865,7 +924,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->setAttribute('confirm', true)
         ;
 
-        $user = Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
@@ -1008,7 +1067,7 @@ App::get('/v1/teams/:teamId/logs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
     ->param('teamId', '', new UID(), 'Team ID.')
-    ->param('queries', [], new Queries(new Limit(), new Offset()), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('locale')

@@ -132,6 +132,12 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('authPersonalDataCheck', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to check the user password for similarity with their personal data.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('providers', [
                 'type' => Response::MODEL_PROVIDER,
                 'description' => 'List of Providers.',
@@ -160,12 +166,60 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
+            ->addRule('smtpEnabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Status for custom SMTP',
+                'default' => false,
+                'example' => false,
+                'array' => false
+            ])
+            ->addRule('smtpSenderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender name',
+                'default' => '',
+                'example' => 'John Appwrite',
+            ])
+            ->addRule('smtpSenderEmail', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender email',
+                'default' => '',
+                'example' => 'john@appwrite.io',
+            ])
+            ->addRule('smtpReplyTo', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to email',
+                'default' => '',
+                'example' => 'support@appwrite.io',
+            ])
+            ->addRule('smtpHost', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server host name',
+                'default' => '',
+                'example' => 'mail.appwrite.io',
+            ])
+            ->addRule('smtpPort', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'SMTP server port',
+                'default' => '',
+                'example' => 25,
+            ])
+            ->addRule('smtpUsername', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server username',
+                'default' => '',
+                'example' => 'emailuser',
+            ])
+            ->addRule('smtpPassword', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server password',
+                'default' => '',
+                'example' => 'securepassword',
+            ])
+            ->addRule('smtpSecure', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP server secure protocol',
+                'default' => '',
+                'example' => 'tls',
             ])
         ;
 
@@ -232,6 +286,18 @@ class Project extends Model
      */
     public function filter(Document $document): Document
     {
+        // SMTP
+        $smtp = $document->getAttribute('smtp', []);
+        $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
+        $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
+        $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
+        $document->setAttribute('smtpReplyTo', $smtp['replyTo'] ?? '');
+        $document->setAttribute('smtpHost', $smtp['host'] ?? '');
+        $document->setAttribute('smtpPort', $smtp['port'] ?? '');
+        $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
+        $document->setAttribute('smtpPassword', $smtp['password'] ?? '');
+        $document->setAttribute('smtpSecure', $smtp['secure'] ?? '');
+
         // Services
         $values = $document->getAttribute('services', []);
         $services = Config::getParam('services', []);
@@ -254,6 +320,7 @@ class Project extends Model
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
+        $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
 
         foreach ($auth as $index => $method) {
             $key = $method['key'];

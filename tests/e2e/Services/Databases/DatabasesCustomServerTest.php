@@ -593,6 +593,110 @@ class DatabasesCustomServerTest extends Scope
         $this->assertFalse($collection['body']['enabled']);
     }
 
+    /**
+    * @depends testListCollections
+     */
+    public function testCreateEncryptedAttribute(array $data): void
+    {
+
+        $databaseId = $data['databaseId'];
+
+        /**
+         * Test for SUCCESS
+         */
+
+        // Create collection
+        $actors = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Encrypted Actors Data',
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $actors['headers']['status-code']);
+        $this->assertEquals($actors['body']['name'], 'Encrypted Actors Data');
+
+        /**
+         * Test for creating encrypted attributes
+         */
+
+        $attributesPath = '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/attributes';
+
+        $firstName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'firstName',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $lastName = $this->client->call(Client::METHOD_POST, $attributesPath . '/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'lastName',
+            'size' => 256,
+            'required' => true,
+            'encrypt' => true,
+        ]);
+
+
+        /**
+         * Check status of every attribute
+         */
+        $this->assertEquals(202, $firstName['headers']['status-code']);
+        $this->assertEquals('firstName', $firstName['body']['key']);
+        $this->assertEquals('string', $firstName['body']['type']);
+
+        $this->assertEquals(202, $lastName['headers']['status-code']);
+        $this->assertEquals('lastName', $lastName['body']['key']);
+        $this->assertEquals('string', $lastName['body']['type']);
+
+        // Wait for database worker to finish creating attributes
+        sleep(2);
+
+        // Creating document to ensure cache is purged on schema change
+        $document = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'firstName' => 'Jonah',
+                'lastName' => 'Jameson',
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        // Check document to ensure cache is purged on schema change
+        $document = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $actors['body']['$id'] . '/documents/' . $document['body']['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]));
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Jonah', $document['body']['firstName']);
+        $this->assertEquals('Jameson', $document['body']['lastName']);
+    }
+
     public function testDeleteAttribute(): array
     {
         $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([

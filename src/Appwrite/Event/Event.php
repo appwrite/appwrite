@@ -23,6 +23,9 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    public const USAGE_QUEUE_NAME = 'v1-usage';
+    public const USAGE_CLASS_NAME = 'UsageV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -35,6 +38,9 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
+    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
@@ -43,6 +49,7 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected bool $paused = false;
 
     /**
      * @param string $queue
@@ -116,9 +123,9 @@ class Event
     /**
      * Get project for this event.
      *
-     * @return Document
+     * @return ?Document
      */
-    public function getProject(): Document
+    public function getProject(): ?Document
     {
         return $this->project;
     }
@@ -137,11 +144,11 @@ class Event
     }
 
     /**
-     * Get project for this event.
+     * Get user responsible for triggering this event.
      *
-     * @return Document
+     * @return ?Document
      */
-    public function getUser(): Document
+    public function getUser(): ?Document
     {
         return $this->user;
     }
@@ -260,6 +267,10 @@ class Event
      */
     public function trigger(): string|bool
     {
+        if ($this->paused) {
+            return false;
+        }
+
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
@@ -336,8 +347,6 @@ class Event
             $hasSubResource && $count > 4 => $parts[4],
             default => false
         };
-
-
 
         return [
             'type' => $type,
@@ -466,5 +475,23 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
+    }
+
+    /**
+     * Get the value of paused
+     */
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
+     * Set the value of paused
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
     }
 }
