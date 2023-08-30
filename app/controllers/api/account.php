@@ -1054,11 +1054,15 @@ App::post('/v1/account/sessions/magic-url')
             'footer' => $locale->getText("emails.magicSession.footer"),
             'thanks' => $locale->getText("emails.magicSession.thanks"),
             'signature' => $locale->getText("emails.magicSession.signature"),
-            'project' => $project->getAttribute('name'),
             'direction' => $locale->getText('settings.direction'),
             'bg-body' => '#f7f7f7',
             'bg-content' => '#ffffff',
             'text-content' => '#000000',
+            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            'user' => '',
+            'team' => '',
+            'project' => $project->getAttribute('name'),
+            'redirect' => $url
         ];
 
         $mails
@@ -2503,15 +2507,18 @@ App::post('/v1/account/recovery')
             'hello' => $locale->getText("emails.recovery.hello"),
             'name' => $profile->getAttribute('name'),
             'body' => $body,
-            'redirect' => $url,
             'footer' => $locale->getText("emails.recovery.footer"),
             'thanks' => $locale->getText("emails.recovery.thanks"),
             'signature' => $locale->getText("emails.recovery.signature"),
-            'project' => $projectName,
             'direction' => $locale->getText('settings.direction'),
             'bg-body' => '#f7f7f7',
             'bg-content' => '#ffffff',
             'text-content' => '#000000',
+            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            'user' => $user->getAttribute('name'),
+            'team' => '',
+            'project' => $projectName,
+            'redirect' => $url
         ];
 
 
@@ -2761,7 +2768,8 @@ App::post('/v1/account/verification')
             'bg-content' => '#ffffff',
             'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
-            'user' => $user->getAttribute('name'), 
+            'user' => $user->getAttribute('name'),
+            'team' => '',
             'project' => $projectName,
             'redirect' => $url
         ];
