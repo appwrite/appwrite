@@ -412,6 +412,12 @@ App::get('/v1/avatars/favicon')
             $outputExt = 'ico';
         }
 
+        $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
         if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
             $data = @\file_get_contents($outputHref, false);
 
