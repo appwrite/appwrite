@@ -134,7 +134,6 @@ App::post('/v1/proxy/rules')
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-
 App::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('List Rules')
