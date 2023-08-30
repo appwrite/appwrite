@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\Query;
 
 class V19 extends Migration
 {
@@ -33,6 +34,11 @@ class V19 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
+        if ($this->project->getId() == 'console') {
+            Console::info('Migrating Domains');
+            $this->migrateDomains();
+        }
+
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
 
@@ -41,6 +47,33 @@ class V19 extends Migration
 
         Console::log('Cleaning Up Collections');
         $this->cleanCollections();
+    }
+
+    protected function migrateDomains(): void
+    {
+        foreach ($this->documentsIterator('domains') as $domain) {
+            $status = 'created';
+            if ($domain->getAttribute('verification', false)) {
+                $status = 'verified';
+            }
+
+            $ruleDocument = new Document([
+                'projectId' => $domain->getAttribute('projectId'),
+                'projectInternalId' => $domain->getAttribute('projectInternalId'),
+                'domain' => $domain->getAttribute('domain'),
+                'resourceType' => 'api',
+                'resourceInternalId' => '',
+                'resourceId' => '',
+                'status' => $status,
+                'certificateId' => $domain->getAttribute('certificateId'),
+            ]);
+
+            try {
+                $this->consoleDB->createDocument('rules', $ruleDocument);
+            } catch (\Throwable $th) {
+                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+            }
+        }
     }
 
     /**
@@ -610,30 +643,6 @@ class V19 extends Migration
                 $document->setAttribute('database', $database);
                 $document->setAttribute('smtp', []);
                 $document->setAttribute('templates', []);
-
-                break;
-            case 'rules':
-                $status = 'created';
-                if ($document->getAttribute('verification', false)) {
-                    $status = 'verified';
-                }
-
-                $ruleDocument = new Document([
-                    'projectId' => $this->project->getId(),
-                    'projectInternalId' => $this->project->getInternalId(),
-                    'domain' => $document->getAttribute('domain'),
-                    'resourceType' => 'api',
-                    'resourceInternalId' => '',
-                    'resourceId' => '',
-                    'status' => $status,
-                    'certificateId' => $document->getAttribute('certificateId'),
-                ]);
-
-                try {
-                    $this->consoleDB->createDocument('rules', $ruleDocument);
-                } catch (\Throwable $th) {
-                    Console::warning("Error migrating domain {$document->getAttribute('domain')}: {$th->getMessage()}");
-                }
 
                 break;
             default:

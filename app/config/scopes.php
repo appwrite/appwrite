@@ -87,5 +87,14 @@ return [ // List of publicly visible scopes
     ],
     'migrations.write' => [
         'description' => 'Access to create, update, and delete your project\'s migrations.',
-    ]
+    ],
+    'vcs.read' => [
+        'description' => 'Access to read your project\'s VCS repositories',
+    ],
+    'vcs.write' => [
+        'description' => 'Access to create, update, and delete your project\'s VCS repositories',
+    ],
+    'assistant.read' => [
+        'description' => 'Access to read the Assistant service',
+    ],
 ];

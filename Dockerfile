@@ -167,6 +167,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
+    chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
     chmod +x /usr/local/bin/schedule && \
