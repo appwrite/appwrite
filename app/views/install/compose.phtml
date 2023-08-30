@@ -650,7 +650,7 @@ services:
       - MYSQL_DATABASE=${_APP_DB_SCHEMA}
       - MYSQL_USER=${_APP_DB_USER}
       - MYSQL_PASSWORD=${_APP_DB_PASS}
-    command: 'mysqld --innodb-flush-method=fsync --max_connections=${_APP_CONNECTIONS_MAX}'
+    command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
     image: redis:7.0.4-alpine
