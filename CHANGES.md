@@ -1,3 +1,17 @@
+# Version 1.4.1
+
+## Features
+
+- Add upgrade task [#6068](https://github.com/appwrite/appwrite/pull/6068)
+
+## Fixes
+
+- Fix VCS/migration/assistant scopes [#6071](https://github.com/appwrite/appwrite/pull/6071)
+
+## Changes
+
+- Update console to 3.0.2 [#6071](https://github.com/appwrite/appwrite/pull/6071)
+
 # Version 1.4.0
 
 ## Features
