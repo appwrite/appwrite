@@ -222,7 +222,7 @@ class Install extends Action
 
         Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker compose --project-directory {$path} up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("${env} docker compose --project-directory ${path} up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
