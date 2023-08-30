@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "da69524986688cd62b44496034269a68",
+    "content-hash": "f3c47c80cc59e23da8f54b3a47d5803b",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2801,16 +2801,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.4.1",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "f87dbd14265addbb7dee5c6471dad088696ecaca"
+                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f87dbd14265addbb7dee5c6471dad088696ecaca",
-                "reference": "f87dbd14265addbb7dee5c6471dad088696ecaca",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
+                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
                 "shasum": ""
             },
             "require": {
@@ -2818,7 +2818,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.30.*"
+                "utopia-php/framework": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2844,9 +2844,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.4.1"
+                "source": "https://github.com/utopia-php/platform/tree/0.4.2"
             },
-            "time": "2023-08-07T09:49:30+00:00"
+            "time": "2023-08-30T16:28:31+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -3228,23 +3228,23 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.3.0",
+            "version": "0.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "24a6c05809438f953276f595090e4f874072a0b0"
+                "reference": "08078af30865827adb8aafb32929c968ce541a28"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/24a6c05809438f953276f595090e4f874072a0b0",
-                "reference": "24a6c05809438f953276f595090e4f874072a0b0",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/08078af30865827adb8aafb32929c968ce541a28",
+                "reference": "08078af30865827adb8aafb32929c968ce541a28",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "php": ">=8.0",
                 "utopia-php/cache": "^0.8.0",
-                "utopia-php/framework": "0.30.*"
+                "utopia-php/framework": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3271,9 +3271,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.3.0"
+                "source": "https://github.com/utopia-php/vcs/tree/0.4.0"
             },
-            "time": "2023-08-29T16:31:30+00:00"
+            "time": "2023-08-30T16:17:03+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -6070,14 +6070,7 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/framework",
-            "version": "0.31.0.0",
-            "alias": "0.30.0",
-            "alias_normalized": "0.30.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": [],
     "prefer-stable": false,
