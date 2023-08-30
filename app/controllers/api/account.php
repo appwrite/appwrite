@@ -1049,7 +1049,6 @@ App::post('/v1/account/sessions/magic-url')
             'subject' => $subject,
             'hello' => $locale->getText("emails.magicSession.hello"),
             'body' => $body,
-            'redirect' => $url,
             'footer' => $locale->getText("emails.magicSession.footer"),
             'thanks' => $locale->getText("emails.magicSession.thanks"),
             'signature' => $locale->getText("emails.magicSession.signature"),
