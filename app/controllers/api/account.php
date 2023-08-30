@@ -2515,7 +2515,7 @@ App::post('/v1/account/recovery')
             'bg-content' => '#ffffff',
             'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
-            'user' => $user->getAttribute('name'),
+            'user' => $profile->getAttribute('name'),
             'team' => '',
             'project' => $projectName,
             'redirect' => $url
