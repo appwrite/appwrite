@@ -1048,7 +1048,6 @@ App::post('/v1/account/sessions/magic-url')
         $emailVariables = [
             'subject' => $subject,
             'hello' => $locale->getText("emails.magicSession.hello"),
-            'name' => '',
             'body' => $body,
             'redirect' => $url,
             'footer' => $locale->getText("emails.magicSession.footer"),
@@ -2505,7 +2504,6 @@ App::post('/v1/account/recovery')
         $emailVariables = [
             'subject' => $subject,
             'hello' => $locale->getText("emails.recovery.hello"),
-            'name' => $profile->getAttribute('name'),
             'body' => $body,
             'footer' => $locale->getText("emails.recovery.footer"),
             'thanks' => $locale->getText("emails.recovery.thanks"),
@@ -2758,7 +2756,6 @@ App::post('/v1/account/verification')
         $emailVariables = [
             'subject' => $subject,
             'hello' => $locale->getText("emails.verification.hello"),
-            'name' => $user->getAttribute('name'),
             'body' => $body,
             'footer' => $locale->getText("emails.verification.footer"),
             'thanks' => $locale->getText("emails.verification.thanks"),

@@ -601,7 +601,6 @@ App::post('/v1/teams/:teamId/memberships')
                     'owner' => $user->getAttribute('name'),
                     'subject' => $subject,
                     'hello' => $locale->getText("emails.invitation.hello"),
-                    'name' => $user->getAttribute('name'),
                     'body' => $body,
                     'footer' => $locale->getText("emails.invitation.footer"),
                     'thanks' => $locale->getText("emails.invitation.thanks"),
