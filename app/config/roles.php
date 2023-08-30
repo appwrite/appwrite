@@ -21,6 +21,8 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'vcs.read',
+    'vcs.write',
 ];
 
 $admins = [
