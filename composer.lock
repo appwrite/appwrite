@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e47df16e69bf04fffbc28c7deee26f2b",
+    "content-hash": "da69524986688cd62b44496034269a68",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2384,16 +2384,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.30.0",
+            "version": "0.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "0969d429997996ceade53e477fce31221b415651"
+                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/0969d429997996ceade53e477fce31221b415651",
-                "reference": "0969d429997996ceade53e477fce31221b415651",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/207f77378965fca9a9bc3783ea379d3549f86bc0",
+                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0",
                 "shasum": ""
             },
             "require": {
@@ -2423,9 +2423,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.30.0"
+                "source": "https://github.com/utopia-php/framework/tree/0.31.0"
             },
-            "time": "2023-08-07T07:55:48+00:00"
+            "time": "2023-08-30T16:10:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -6070,7 +6070,14 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/framework",
+            "version": "0.31.0.0",
+            "alias": "0.30.0",
+            "alias_normalized": "0.30.0.0"
+        }
+    ],
     "minimum-stability": "stable",
     "stability-flags": [],
     "prefer-stable": false,
