@@ -1,4 +1,5 @@
 using Appwrite;
+using Appwrite.Services;
 using Appwrite.Models;
 
 var client = new Client()
@@ -11,4 +12,4 @@ var storage = new Storage(client);
 File result = await storage.CreateFile(
     bucketId: "[BUCKET_ID]",
     fileId: "[FILE_ID]",
-    file: new File("./path-to-files/image.jpg"));
+    file: InputFile.FromPath("./path-to-files/image.jpg"));

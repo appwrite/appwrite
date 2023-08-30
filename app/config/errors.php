@@ -227,6 +227,11 @@ return [
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
     ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists.',
+        'code' => 409,
+    ],
 
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
@@ -317,6 +322,11 @@ return [
         'name' => Exception::STORAGE_INVALID_RANGE,
         'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
         'code' => 416,
+    ],
+    Exception::STORAGE_INVALID_APPWRITE_ID => [
+        'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is valid id and not unique().',
+        'code' => 400,
     ],
 
     /** Functions  */

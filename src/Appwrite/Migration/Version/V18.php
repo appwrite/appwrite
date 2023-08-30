@@ -133,6 +133,16 @@ class V18 extends Migration
                         Console::warning("'options' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                case 'audit':
+                    try {
+                        /**
+                         * Delete 'userInternalId' attribute
+                         */
+                        $this->projectDB->deleteAttribute($id, 'userInternalId');
+                    } catch (\Throwable $th) {
+                        Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -191,6 +201,34 @@ class V18 extends Migration
                     $permissions = $document->getPermissions();
                     $fileSecurity = $document->getAttribute('fileSecurity', false);
                     $this->projectDB->updateCollection($internalBucketId, $permissions, $fileSecurity);
+                } catch (\Throwable $th) {
+                    Console::warning($th->getMessage());
+                }
+                break;
+            case 'audit':
+                /**
+                 * Set the userId to the userInternalId and add userId to data
+                 */
+                try {
+                    $userId = $document->getAttribute('userId');
+                    $data = $document->getAttribute('data', []);
+                    $mode = $data['mode'] ?? 'default';
+                    $user = match ($mode) {
+                        'admin' => $this->consoleDB->getDocument('users', $userId),
+                        default => $this->projectDB->getDocument('users', $userId),
+                    };
+
+                    if ($user->isEmpty()) {
+                        // The audit userId could already be an internal Id.
+                        // Otherwise, the user could have been deleted.
+                        // Nonetheless, there's nothing else we can do here.
+                        break;
+                    }
+                    $internalId = $user->getInternalId();
+                    $document->setAttribute('userId', $internalId);
+                    $data = $document->getAttribute('data', []);
+                    $data['userId'] = $user->getId();
+                    $document->setAttribute('data', $data);
                 } catch (\Throwable $th) {
                     Console::warning($th->getMessage());
                 }

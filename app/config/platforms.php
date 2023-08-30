@@ -285,7 +285,7 @@ return [
             [
                 'key' => 'python',
                 'name' => 'Python',
-                'version' => '2.0.0',
+                'version' => '2.0.2',
                 'url' => 'https://github.com/appwrite/sdk-for-python',
                 'package' => 'https://pypi.org/project/appwrite/',
                 'enabled' => true,
@@ -357,7 +357,7 @@ return [
             [
                 'key' => 'dotnet',
                 'name' => '.NET',
-                'version' => '0.4.0',
+                'version' => '0.4.2',
                 'url' => 'https://github.com/appwrite/sdk-for-dotnet',
                 'package' => 'https://www.nuget.org/packages/Appwrite',
                 'enabled' => true,
