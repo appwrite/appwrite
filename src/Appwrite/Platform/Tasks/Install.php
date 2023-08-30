@@ -16,6 +16,8 @@ use Utopia\Platform\Action;
 
 class Install extends Action
 {
+    protected string $path = '/usr/src/code/appwrite';
+
     public static function getName(): string
     {
         return 'install';
@@ -36,7 +38,6 @@ class Install extends Action
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
     {
         $config = Config::getParam('variables');
-        $path = '/usr/src/code/appwrite';
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
         $vars = [];
@@ -56,19 +57,28 @@ class Install extends Action
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
-        if (!\file_exists(\dirname($path))) {
-            if (!@\mkdir(\dirname($path), 0755, true)) {
-                Console::error('Can\'t create directory ' . \dirname($path));
+        if (!\file_exists(\dirname($this->path))) {
+            if (!@\mkdir(\dirname($this->path), 0755, true)) {
+                Console::error('Can\'t create directory ' . \dirname($this->path));
                 Console::exit(1);
             }
         }
 
-        $data = @file_get_contents($path . '/docker-compose.yml');
+        $data = @file_get_contents($this->path . '/docker-compose.yml');
 
         if ($data !== false) {
+            if ($interactive == 'Y' && Console::isInteractive()) {
+                $answer = Console::confirm('Previous installation found, do you want to overwrite it (a backup will be created before overwriting)? (Y/n)');
+
+                if ($answer !== 'Y') {
+                    Console::info('No action taken.');
+                    return;
+                }
+            }
+
             $time = \time();
             Console::info('Compose file found, creating backup: docker-compose.yml.' . $time . '.backup');
-            file_put_contents($path . '/docker-compose.yml.' . $time . '.backup', $data);
+            file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
             $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
@@ -102,11 +112,11 @@ class Install extends Action
                     }
                 }
 
-                $data = @file_get_contents($path . '/.env');
+                $data = @file_get_contents($this->path . '/.env');
 
                 if ($data !== false) { // Fetch all env vars from previous .env file
                     Console::info('Env file found, creating backup: .env.' . $time . '.backup');
-                    file_put_contents($path . '/.env.' . $time . '.backup', $data);
+                    file_put_contents($this->path . '/.env.' . $time . '.backup', $data);
                     $env = new Env($data);
 
                     foreach ($env->list() as $key => $value) {
@@ -196,14 +206,14 @@ class Install extends Action
 
         $templateForEnv->setParam('vars', $input);
 
-        if (!file_put_contents($path . '/docker-compose.yml', $templateForCompose->render(false))) {
+        if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
             $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::exit(1);
         }
 
-        if (!file_put_contents($path . '/.env', $templateForEnv->render(false))) {
+        if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
             $this->sendEvent($analytics, $message);
             Console::error($message);
@@ -222,7 +232,7 @@ class Install extends Action
 
         Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker compose --project-directory ${path} up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
