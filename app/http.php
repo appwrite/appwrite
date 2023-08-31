@@ -66,24 +66,47 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         App::setResource('pools', fn () => $pools);
 
         // wait for database to be ready
-        $attempts = 0;
-        $max = 10;
-        $sleep = 1;
-
-        do {
-            try {
-                $attempts++;
-                $dbForConsole = $app->getResource('dbForConsole');
-                /** @var Utopia\Database\Database $dbForConsole */
-                break; // leave the do-while if successful
-            } catch (\Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new \Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-                sleep($sleep);
+        $rounds = 0;
+        $max = 10; //max attempts per round
+        $sleep = 1; // initial sleep value
+        $maxRounds = 2; // max round
+        $delay = 5; // delay each round
+        $sleepInc = 5; // Increment sleep after each round
+        $leave = false; // exit rounds loop
+        while (true) {
+            if ($leave === true) {
+                break;
             }
-        } while ($attempts < $max);
+
+            $attempts = 0;
+
+            do {
+                try {
+                    $attempts++;
+
+                    if ($attempts === $max) {
+                        $sleep = + $sleepInc;
+                    }
+
+                    $dbForConsole = $app->getResource('dbForConsole');
+
+                    /** @var Utopia\Database\Database $dbForConsole */
+                    $leave = true;
+                    break; // leave the do-while if successful
+                } catch (\Exception $e) {
+                    Console::warning("Database not ready. Retrying connection ({$attempts})...");
+
+                    if ($attempts >= $max && $rounds >= $maxRounds) {
+                        throw new \Exception('Failed to connect to database: ' . $e->getMessage());
+                    }
+
+                    sleep($sleep);
+                }
+            } while ($attempts < $max);
+
+            $rounds++;
+            sleep($delay);
+        }
 
         Console::success('[Setup] - Server database init started...');
 
