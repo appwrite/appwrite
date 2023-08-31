@@ -482,7 +482,8 @@ App::post('/v1/teams/:teamId/memberships')
                     'sessions' => null,
                     'tokens' => null,
                     'memberships' => null,
-                    'search' => implode(' ', [$userId, $email, $name])
+                    'search' => implode(' ', [$userId, $email, $name]),
+                    'accessedAt' => DateTime::now(),
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -542,44 +543,85 @@ App::post('/v1/teams/:teamId/memberships')
             if (!empty($email)) {
                 $projectName = $project->isEmpty() ? 'Console' : $project->getAttribute('name', '[APP-NAME]');
 
-                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $projectName);
-                $body = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-base.tpl');
+                $body = $locale->getText("emails.invitation.body");
                 $subject = \sprintf($locale->getText("emails.invitation.subject"), $team->getAttribute('name'), $projectName);
-
-                $smtpEnabled = $project->getAttribute('smtp', [])['enabled'] ?? false;
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
-                if ($smtpEnabled && !empty($customTemplate)) {
-                    $body = $customTemplate['message'];
-                    $subject = $customTemplate['subject'];
-                    $from = $customTemplate['senderName'];
+
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+                $message->setParam('{{body}}', $body);
+                $body = $message->render();
+
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $mails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $mails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
                 }
 
-                $body->setParam('{{owner}}', $user->getAttribute('name'));
-                $body->setParam('{{team}}', $team->getAttribute('name'));
-
-                $body
-                    ->setParam('{{subject}}', $subject)
-                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
-                    ->setParam('{{name}}', $user->getAttribute('name'))
-                    ->setParam('{{body}}', $locale->getText("emails.invitation.body"))
-                    ->setParam('{{redirect}}', $url)
-                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
-                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
-                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"))
-                    ->setParam('{{project}}', $projectName)
-                    ->setParam('{{direction}}', $locale->getText('settings.direction'))
-                    ->setParam('{{bg-body}}', '#f7f7f7')
-                    ->setParam('{{bg-content}}', '#ffffff')
-                    ->setParam('{{text-content}}', '#000000');
-
-                $body = $body->render();
+                $emailVariables = [
+                    'owner' => $user->getAttribute('name'),
+                    'subject' => $subject,
+                    'hello' => $locale->getText("emails.invitation.hello"),
+                    'body' => $body,
+                    'footer' => $locale->getText("emails.invitation.footer"),
+                    'thanks' => $locale->getText("emails.invitation.thanks"),
+                    'signature' => $locale->getText("emails.invitation.signature"),
+                    'direction' => $locale->getText('settings.direction'),
+                    'bg-body' => '#f7f7f7',
+                    'bg-content' => '#ffffff',
+                    'text-content' => '#000000',
+                    /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+                    'user' => $user->getAttribute('name'),
+                    'team' => $team->getAttribute('name'),
+                    'project' => $projectName,
+                    'redirect' => $url
+                ];
 
                 $mails
                     ->setSubject($subject)
                     ->setBody($body)
-                    ->setFrom($from)
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
+                    ->setVariables($emailVariables)
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
