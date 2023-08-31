@@ -63,6 +63,12 @@ class Build extends Model
                 'default' => 0,
                 'example' => 0,
             ])
+            ->addRule('size', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'The code size in bytes.',
+                'default' => 0,
+                'example' => 128,
+            ])
         ;
     }
 

@@ -8,11 +8,11 @@ use Utopia\Database\Document;
 class Mail extends Event
 {
     protected string $recipient = '';
-    protected string $from = '';
     protected string $name = '';
     protected string $subject = '';
     protected string $body = '';
     protected array $smtp = [];
+    protected array $variables = [];
 
     public function __construct()
     {
@@ -63,29 +63,6 @@ class Mail extends Event
     public function getRecipient(): string
     {
         return $this->recipient;
-    }
-
-    /**
-     * Sets from for the mail event.
-     *
-     * @param string $from
-     * @return self
-     */
-    public function setFrom(string $from): self
-    {
-        $this->from = $from;
-
-        return $this;
-    }
-
-    /**
-     * Returns from for mail event.
-     *
-     * @return string
-     */
-    public function getFrom(): string
-    {
-        return $this->from;
     }
 
     /**
@@ -166,7 +143,7 @@ class Mail extends Event
      */
     public function setSmtpUsername(string $username): self
     {
-        $this->smtp['username'];
+        $this->smtp['username'] = $username;
         return $this;
     }
 
@@ -178,7 +155,19 @@ class Mail extends Event
      */
     public function setSmtpPassword(string $password): self
     {
-        $this->smtp['password'];
+        $this->smtp['password'] = $password;
+        return $this;
+    }
+
+    /**
+     * Set SMTP secure
+     *
+     * @param string $password
+     * @return self
+     */
+    public function setSmtpSecure(string $secure): self
+    {
+        $this->smtp['secure'] = $secure;
         return $this;
     }
 
@@ -191,6 +180,18 @@ class Mail extends Event
     public function setSmtpSenderEmail(string $senderEmail): self
     {
         $this->smtp['senderEmail'] = $senderEmail;
+        return $this;
+    }
+
+    /**
+     * Set SMTP sender name
+     *
+     * @param string $senderName
+     * @return self
+     */
+    public function setSmtpSenderName(string $senderName): self
+    {
+        $this->smtp['senderName'] = $senderName;
         return $this;
     }
 
@@ -247,6 +248,16 @@ class Mail extends Event
     }
 
     /**
+     * Get SMTP secure
+     *
+     * @return string
+     */
+    public function getSmtpSecure(): string
+    {
+        return $this->smtp['secure'] ?? '';
+    }
+
+    /**
      * Get SMTP sender email
      *
      * @return string
@@ -254,6 +265,16 @@ class Mail extends Event
     public function getSmtpSenderEmail(): string
     {
         return $this->smtp['senderEmail'] ?? '';
+    }
+
+    /**
+     * Get SMTP sender name
+     *
+     * @return string
+     */
+    public function getSmtpSenderName(): string
+    {
+        return $this->smtp['senderName'] ?? '';
     }
 
     /**
@@ -267,6 +288,28 @@ class Mail extends Event
     }
 
     /**
+     * Get Email Variables
+     *
+     * @return array
+     */
+    public function getVariables(): array
+    {
+        return $this->variables;
+    }
+
+    /**
+     * Set Email Variables
+     *
+     * @param array $variables
+     * @return self
+     */
+    public function setVariables(array $variables): self
+    {
+        $this->variables = $variables;
+        return $this;
+    }
+
+    /**
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
@@ -275,12 +318,12 @@ class Mail extends Event
     public function trigger(): string|bool
     {
         return Resque::enqueue($this->queue, $this->class, [
-            'from' => $this->from,
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
             'body' => $this->body,
             'smtp' => $this->smtp,
+            'variables' => $this->variables,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }

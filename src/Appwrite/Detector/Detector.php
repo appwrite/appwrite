@@ -77,10 +77,14 @@ class Detector
      */
     public function getDevice(): array
     {
+        $deviceName = $this->getDetector()->getDeviceName();
+        $deviceBrand = $this->getDetector()->getBrandName();
+        $deviceModel = $this->getDetector()->getModel();
+
         return [
-            'deviceName' => $this->getDetector()->getDeviceName(),
-            'deviceBrand' => $this->getDetector()->getBrandName(),
-            'deviceModel' => $this->getDetector()->getModel(),
+            'deviceName' => empty($deviceName) ? null : $deviceName,
+            'deviceBrand' => empty($deviceBrand) ? null : $deviceBrand,
+            'deviceModel' => empty($deviceModel) ? null : $deviceModel,
         ];
     }
 
