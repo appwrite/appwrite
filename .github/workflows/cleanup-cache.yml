@@ -1,12 +1,9 @@
 name: Cleanup Cache
 
-# for testing
-on: [pull_request]
-
-# on:
-#   pull_request:
-#     types:
-#       - closed
+on:
+  pull_request:
+    types:
+      - closed
 
 jobs:
   cleanup:
