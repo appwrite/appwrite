@@ -1,15 +1,15 @@
-import { Client, Vcs } from "@appwrite.io/console";
+import { Client, Teams } from "@appwrite.io/console";
 
 const client = new Client();
 
-const vcs = new Vcs(client);
+const teams = new Teams(client);
 
 client
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = vcs.listRepositoryBranches('[INSTALLATION_ID]', '[PROVIDER_REPOSITORY_ID]');
+const promise = teams.updateMembershipRoles('[TEAM_ID]', '[MEMBERSHIP_ID]', []);
 
 promise.then(function (response) {
     console.log(response); // Success

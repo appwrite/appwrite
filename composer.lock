@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bc47430e5cb3430f354b4eee6fd8c9c7",
+    "content-hash": "0cf0a0a54adb45ecc1886467c6bcbe55",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3460,16 +3460,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.34.1",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "81538d10abacd81350c265b516c72ef315116013"
+                "reference": "d6f5fe4f65a9e1234febd207db2c5dacfa85b63a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/81538d10abacd81350c265b516c72ef315116013",
-                "reference": "81538d10abacd81350c265b516c72ef315116013",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/d6f5fe4f65a9e1234febd207db2c5dacfa85b63a",
+                "reference": "d6f5fe4f65a9e1234febd207db2c5dacfa85b63a",
                 "shasum": ""
             },
             "require": {
@@ -3485,6 +3485,7 @@
                 "phpunit/phpunit": "^9.5.21",
                 "squizlabs/php_codesniffer": "^3.6"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -3505,9 +3506,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.34.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/master"
             },
-            "time": "2023-08-30T07:57:31+00:00"
+            "time": "2023-08-31T21:58:28+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -6072,7 +6073,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
