@@ -119,6 +119,21 @@ trait ProjectCustom
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
 
+        $this->client->call(Client::METHOD_PATCH, '/projects/' . $project['body']['$id'] . '/smtp', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ], [
+            'enabled' => true,
+            'senderEmail' => 'mailer@appwrite.io',
+            'senderName' => 'Mailer',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => '',
+            'password' => '',
+        ]);
+
         $project = [
             '$id' => $project['body']['$id'],
             'name' => $project['body']['name'],

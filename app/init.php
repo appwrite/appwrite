@@ -32,6 +32,7 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -68,6 +69,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -75,6 +77,7 @@ use Swoole\Database\PDOProxy;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
@@ -105,8 +108,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 506;
-const APP_VERSION_STABLE = '1.3.8';
+const APP_CACHE_BUSTER = 508;
+const APP_VERSION_STABLE = '1.4.1';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -133,6 +136,7 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
+const APP_HOSTNAME_INTERNAL = 'appwrite';
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -156,10 +160,11 @@ const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+const DELETE_TYPE_INSTALLATIONS = 'installations';
+const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
@@ -181,6 +186,9 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Function headers
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
+const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -229,7 +237,6 @@ Config::load('authProviders', __DIR__ . '/config/authProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
-Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -377,20 +384,6 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryDomains',
-    function (mixed $value) {
-        return null;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('domains', [
-                Query::equal('projectInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
-    }
-);
-
-Database::addFilter(
     'subQueryKeys',
     function (mixed $value) {
         return null;
@@ -467,7 +460,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
-                Query::equal('functionInternalId', [$document->getInternalId()]),
+                Query::equal('resourceInternalId', [$document->getInternalId()]),
+                Query::equal('resourceType', ['function']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -496,6 +490,21 @@ Database::addFilter(
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+// READ-ONLY! TO update, write directly to 'variables' collection. After update to vars, make sure to deleteCachedDocument()
+Database::addFilter(
+    'subQueryProjectVariables',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]);
     }
 );
 
@@ -636,14 +645,15 @@ $register->set('logger', function () {
 $register->set('pools', function () {
     $group = new Group();
 
-    $fallbackForDB = AppwriteURL::unparse([
+    $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mariadb',
         'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => App::getEnv('_APP_DB_PORT', '3306'),
         'user' => App::getEnv('_APP_DB_USER', ''),
         'pass' => App::getEnv('_APP_DB_PASS', ''),
+        'path' => App::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForRedis = AppwriteURL::unparse([
+    $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
@@ -817,21 +827,46 @@ $register->set('pools', function () {
     return $group;
 });
 
+$register->set('influxdb', function () {
+
+ // Register DB connection
+    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
+    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
+
+    if (empty($host) || empty($port)) {
+        return;
+    }
+    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
+    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
+    $client->setDriver($driver);
+
+    return $client;
+});
+$register->set('statsd', function () {
+    // Register DB connection
+    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
+    $port = App::getEnv('_APP_STATSD_PORT', 8125);
+
+    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
+    $statsd = new \Domnikl\Statsd\Client($connection);
+
+    return $statsd;
+});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
     $mail->isSMTP();
 
-    $username = App::getEnv('_APP_SMTP_USERNAME', null);
-    $password = App::getEnv('_APP_SMTP_PASSWORD', null);
+    $username = App::getEnv('_APP_SMTP_USERNAME');
+    $password = App::getEnv('_APP_SMTP_PASSWORD');
 
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
     $mail->Port = App::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = (!empty($username) && !empty($password));
+    $mail->SMTPAuth = !empty($username) && !empty($password);
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
@@ -920,9 +955,9 @@ App::setResource('queue', function (Group $pools) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
-App::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
+App::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
+}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -1005,7 +1040,11 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         if ($project->isEmpty()) {
             $user = new Document([]);
         } else {
-            $user = $dbForProject->getDocument('users', Auth::$unique);
+            if ($project->getId() === 'console') {
+                $user = $dbForConsole->getDocument('users', Auth::$unique);
+            } else {
+                $user = $dbForProject->getDocument('users', Auth::$unique);
+            }
         }
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -1134,10 +1173,43 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['pools', 'cache']);
+
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get($databaseName)
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
+
+        $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
@@ -1174,38 +1246,81 @@ function getDevice($root): Device
 {
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    $acl = 'private';
-    $device = Storage::DEVICE_LOCAL;
-    $accessKey = '';
-    $accessSecret = '';
-    $bucket = '';
-    $region = '';
+    if (!empty($connection)) {
+        $acl = 'private';
+        $device = Storage::DEVICE_LOCAL;
+        $accessKey = '';
+        $accessSecret = '';
+        $bucket = '';
+        $region = '';
 
-    try {
-        $dsn = new DSN($connection);
-        $device = $dsn->getScheme();
-        $accessKey = $dsn->getUser();
-        $accessSecret = $dsn->getPassword();
-        $bucket = $dsn->getPath();
-        $region = $dsn->getParam('region');
-    } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
-    }
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+            $accessKey = $dsn->getUser() ?? '';
+            $accessSecret = $dsn->getPassword() ?? '';
+            $bucket = $dsn->getPath() ?? '';
+            $region = $dsn->getParam('region');
+        } catch (\Exception $e) {
+            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        }
 
-    switch ($device) {
-        case Storage::DEVICE_S3:
-            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE::DEVICE_DO_SPACES:
-            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_BACKBLAZE:
-            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_LINODE:
-            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_WASABI:
-            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_LOCAL:
-        default:
-            return new Local($root);
+        switch ($device) {
+            case Storage::DEVICE_S3:
+                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case STORAGE::DEVICE_DO_SPACES:
+                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_BACKBLAZE:
+                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LINODE:
+                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_WASABI:
+                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+        }
+    } else {
+        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+            case Storage::DEVICE_S3:
+                $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+                $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+                $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+                $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+                $s3Acl = 'private';
+                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+            case Storage::DEVICE_DO_SPACES:
+                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+                $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+                $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+                $doSpacesAcl = 'private';
+                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            case Storage::DEVICE_BACKBLAZE:
+                $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+                $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+                $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+                $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+                $backblazeAcl = 'private';
+                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            case Storage::DEVICE_LINODE:
+                $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+                $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+                $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+                $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+                $linodeAcl = 'private';
+                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+            case Storage::DEVICE_WASABI:
+                $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+                $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+                $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+                $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+                $wasabiAcl = 'private';
+                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+        }
     }
 }
 
@@ -1348,22 +1463,26 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 }, ['utopia', 'dbForProject']);
 
 App::setResource('contributors', function () {
-    $path = 'app/config/cloud/contributors.json';
+    $path = 'app/config/contributors.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
 
 App::setResource('employees', function () {
-    $path = 'app/config/cloud/employees.json';
+    $path = 'app/config/employees.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
 
 App::setResource('heroes', function () {
-    $path = 'app/config/cloud/heroes.json';
+    $path = 'app/config/heroes.json';
     $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
     return $list;
-}, []);
+});
+
+App::setResource('gitHub', function (Cache $cache) {
+    return new VcsGitHub($cache);
+}, ['cache']);
 
 App::setResource('requestTimestamp', function ($request) {
     //TODO: Move this to the Request class itself
