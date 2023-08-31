@@ -10,7 +10,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
-use Utopia\Database\Query;
 
 class V19 extends Migration
 {
@@ -343,6 +342,7 @@ class V19 extends Migration
                         'providerSilentMode',
                         'logging',
                         'deploymentInternalId',
+                        'schedule',
                         'scheduleInternalId',
                         'scheduleId',
                         'version',
@@ -661,14 +661,6 @@ class V19 extends Migration
         }
 
         $this->projectDB->deleteCachedCollection('projects');
-
-        try {
-            $this->projectDB->deleteAttribute('functions', 'schedule');
-        } catch (\Throwable $th) {
-            Console::warning("'schedule' from functions: {$th->getMessage()}");
-        }
-
-        $this->projectDB->deleteCachedCollection('functions');
 
         try {
             $this->projectDB->deleteAttribute('builds', 'stderr');
