@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Resque\Worker;
+use Appwrite\Template\Template;
 use Utopia\App;
 use Utopia\CLI\Console;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -32,15 +33,24 @@ class MailsV1 extends Worker
             return;
         }
 
-
         $recipient = $this->args['recipient'];
         $subject = $this->args['subject'];
-        $name = $this->args['name'];
         $body = $this->args['body'];
-        $from = $this->args['from'];
+        $variables = $this->args['variables'];
+        $name = $this->args['name'];
 
-        /** @var \PHPMailer\PHPMailer\PHPMailer $mail */
-        $mail = empty($smtp) ? $register->get('smtp') : $this->getMailer($smtp);
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+
+        foreach ($variables as $key => $value) {
+            $body->setParam('{{' . $key . '}}', $value);
+        }
+
+        $body = $body->render();
+
+        /** @var PHPMailer $mail */
+        $mail = empty($smtp)
+            ? $register->get('smtp')
+            : $this->getMailer($smtp);
 
         $mail->clearAddresses();
         $mail->clearAllRecipients();
@@ -48,12 +58,7 @@ class MailsV1 extends Worker
         $mail->clearAttachments();
         $mail->clearBCCs();
         $mail->clearCCs();
-
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
         $mail->addAddress($recipient, $name);
-        if (isset($smtp['replyTo'])) {
-            $mail->addReplyTo($smtp['replyTo']);
-        }
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
@@ -80,17 +85,17 @@ class MailsV1 extends Worker
         $mail->SMTPAuth = (!empty($username) && !empty($password));
         $mail->Username = $username;
         $mail->Password = $password;
-        $mail->SMTPSecure = $smtp['secure'] === 'tls';
+        $mail->SMTPSecure = $smtp['secure'];
         $mail->SMTPAutoTLS = false;
         $mail->CharSet = 'UTF-8';
 
-        $from = \urldecode($smtp['senderName'] ?? App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-        $email = $smtp['senderEmail'] ?? App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
 
-        $mail->setFrom($email, $from);
-        $mail->addReplyTo($email, $from);
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
 
-        $mail->isHTML(true);
+        $mail->isHTML();
 
         return $mail;
     }
