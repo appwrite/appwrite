@@ -1,11 +1,8 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Utopia\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -14,6 +11,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
 use Utopia\Image\Image;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -21,7 +19,10 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -276,7 +277,13 @@ App::get('/v1/avatars/image')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $fetch = @\file_get_contents($url, false);
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $fetch = @\file_get_contents($url);
 
         if (!$fetch) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
@@ -324,6 +331,12 @@ App::get('/v1/avatars/favicon')
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $curl = \curl_init();
@@ -397,6 +410,12 @@ App::get('/v1/avatars/favicon')
 
             $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
             $outputExt = 'ico';
+        }
+
+        $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
@@ -544,8 +563,6 @@ App::get('/v1/avatars/initials')
         $image->newImage($width, $height, $background);
         $image->setImageFormat("png");
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
-
-        //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache

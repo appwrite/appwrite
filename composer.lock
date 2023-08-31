@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2098172fc4b71eb0d41dcdbfea2f5061",
+    "content-hash": "bc47430e5cb3430f354b4eee6fd8c9c7",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -64,6 +64,47 @@
             "time": "2021-02-20T09:56:44+00:00"
         },
         {
+            "name": "appwrite/appwrite",
+            "version": "8.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/appwrite/sdk-for-php.git",
+                "reference": "2b9e966edf35c4061179ed98ea364698ab30de8b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2b9e966edf35c4061179ed98ea364698ab30de8b",
+                "reference": "2b9e966edf35c4061179ed98ea364698ab30de8b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=7.1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "3.7.35"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Appwrite\\": "src/Appwrite"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "description": "Appwrite is an open-source self-hosted backend server that abstract and simplify complex and repetitive development tasks behind a very simple REST API",
+            "support": {
+                "email": "team@appwrite.io",
+                "issues": "https://github.com/appwrite/sdk-for-php/issues",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/8.0.0",
+                "url": "https://appwrite.io/support"
+            },
+            "time": "2023-04-12T10:16:28+00:00"
+        },
+        {
             "name": "appwrite/php-clamav",
             "version": "2.0.0",
             "source": {
@@ -115,15 +156,15 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.11.1",
+            "version": "0.12.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "9d74a477ba3333cbcfac565c46fcf19606b7b603"
+                "reference": "5aa672ae744be0d7a3d4bf4c93455c65e9a23b4f"
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/system": "0.6.*"
+                "utopia-php/system": "0.7.*"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -154,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2022-11-07T16:45:52+00:00"
+            "time": "2023-08-07T09:56:11+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -480,6 +521,398 @@
             "time": "2022-09-10T18:51:20+00:00"
         },
         {
+            "name": "guzzlehttp/guzzle",
+            "version": "7.8.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/guzzle.git",
+                "reference": "1110f66a6530a40fe7aea0378fe608ee2b2248f9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/guzzle/zipball/1110f66a6530a40fe7aea0378fe608ee2b2248f9",
+                "reference": "1110f66a6530a40fe7aea0378fe608ee2b2248f9",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "guzzlehttp/promises": "^1.5.3 || ^2.0.1",
+                "guzzlehttp/psr7": "^1.9.1 || ^2.5.1",
+                "php": "^7.2.5 || ^8.0",
+                "psr/http-client": "^1.0",
+                "symfony/deprecation-contracts": "^2.2 || ^3.0"
+            },
+            "provide": {
+                "psr/http-client-implementation": "1.0"
+            },
+            "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.8.1",
+                "ext-curl": "*",
+                "php-http/client-integration-tests": "dev-master#2c025848417c1135031fdf9c728ee53d0a7ceaee as 3.0.999",
+                "php-http/message-factory": "^1.1",
+                "phpunit/phpunit": "^8.5.29 || ^9.5.23",
+                "psr/log": "^1.1 || ^2.0 || ^3.0"
+            },
+            "suggest": {
+                "ext-curl": "Required for CURL handler support",
+                "ext-intl": "Required for Internationalized Domain Name (IDN) support",
+                "psr/log": "Required for using the Log middleware"
+            },
+            "type": "library",
+            "extra": {
+                "bamarni-bin": {
+                    "bin-links": true,
+                    "forward-command": false
+                }
+            },
+            "autoload": {
+                "files": [
+                    "src/functions_include.php"
+                ],
+                "psr-4": {
+                    "GuzzleHttp\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                },
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                },
+                {
+                    "name": "Jeremy Lindblom",
+                    "email": "jeremeamia@gmail.com",
+                    "homepage": "https://github.com/jeremeamia"
+                },
+                {
+                    "name": "George Mponos",
+                    "email": "gmponos@gmail.com",
+                    "homepage": "https://github.com/gmponos"
+                },
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com",
+                    "homepage": "https://github.com/Nyholm"
+                },
+                {
+                    "name": "Márk Sági-Kazár",
+                    "email": "mark.sagikazar@gmail.com",
+                    "homepage": "https://github.com/sagikazarmark"
+                },
+                {
+                    "name": "Tobias Schultze",
+                    "email": "webmaster@tubo-world.de",
+                    "homepage": "https://github.com/Tobion"
+                }
+            ],
+            "description": "Guzzle is a PHP HTTP client library",
+            "keywords": [
+                "client",
+                "curl",
+                "framework",
+                "http",
+                "http client",
+                "psr-18",
+                "psr-7",
+                "rest",
+                "web service"
+            ],
+            "support": {
+                "issues": "https://github.com/guzzle/guzzle/issues",
+                "source": "https://github.com/guzzle/guzzle/tree/7.8.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/Nyholm",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/guzzlehttp/guzzle",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-08-27T10:20:53+00:00"
+        },
+        {
+            "name": "guzzlehttp/promises",
+            "version": "2.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/promises.git",
+                "reference": "111166291a0f8130081195ac4556a5587d7f1b5d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/promises/zipball/111166291a0f8130081195ac4556a5587d7f1b5d",
+                "reference": "111166291a0f8130081195ac4556a5587d7f1b5d",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2.5 || ^8.0"
+            },
+            "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.8.1",
+                "phpunit/phpunit": "^8.5.29 || ^9.5.23"
+            },
+            "type": "library",
+            "extra": {
+                "bamarni-bin": {
+                    "bin-links": true,
+                    "forward-command": false
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "GuzzleHttp\\Promise\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                },
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                },
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com",
+                    "homepage": "https://github.com/Nyholm"
+                },
+                {
+                    "name": "Tobias Schultze",
+                    "email": "webmaster@tubo-world.de",
+                    "homepage": "https://github.com/Tobion"
+                }
+            ],
+            "description": "Guzzle promises library",
+            "keywords": [
+                "promise"
+            ],
+            "support": {
+                "issues": "https://github.com/guzzle/promises/issues",
+                "source": "https://github.com/guzzle/promises/tree/2.0.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/Nyholm",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/guzzlehttp/promises",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-08-03T15:11:55+00:00"
+        },
+        {
+            "name": "guzzlehttp/psr7",
+            "version": "2.6.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/guzzle/psr7.git",
+                "reference": "be45764272e8873c72dbe3d2edcfdfcc3bc9f727"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/guzzle/psr7/zipball/be45764272e8873c72dbe3d2edcfdfcc3bc9f727",
+                "reference": "be45764272e8873c72dbe3d2edcfdfcc3bc9f727",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2.5 || ^8.0",
+                "psr/http-factory": "^1.0",
+                "psr/http-message": "^1.1 || ^2.0",
+                "ralouphie/getallheaders": "^3.0"
+            },
+            "provide": {
+                "psr/http-factory-implementation": "1.0",
+                "psr/http-message-implementation": "1.0"
+            },
+            "require-dev": {
+                "bamarni/composer-bin-plugin": "^1.8.1",
+                "http-interop/http-factory-tests": "^0.9",
+                "phpunit/phpunit": "^8.5.29 || ^9.5.23"
+            },
+            "suggest": {
+                "laminas/laminas-httphandlerrunner": "Emit PSR-7 responses"
+            },
+            "type": "library",
+            "extra": {
+                "bamarni-bin": {
+                    "bin-links": true,
+                    "forward-command": false
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "GuzzleHttp\\Psr7\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Graham Campbell",
+                    "email": "hello@gjcampbell.co.uk",
+                    "homepage": "https://github.com/GrahamCampbell"
+                },
+                {
+                    "name": "Michael Dowling",
+                    "email": "mtdowling@gmail.com",
+                    "homepage": "https://github.com/mtdowling"
+                },
+                {
+                    "name": "George Mponos",
+                    "email": "gmponos@gmail.com",
+                    "homepage": "https://github.com/gmponos"
+                },
+                {
+                    "name": "Tobias Nyholm",
+                    "email": "tobias.nyholm@gmail.com",
+                    "homepage": "https://github.com/Nyholm"
+                },
+                {
+                    "name": "Márk Sági-Kazár",
+                    "email": "mark.sagikazar@gmail.com",
+                    "homepage": "https://github.com/sagikazarmark"
+                },
+                {
+                    "name": "Tobias Schultze",
+                    "email": "webmaster@tubo-world.de",
+                    "homepage": "https://github.com/Tobion"
+                },
+                {
+                    "name": "Márk Sági-Kazár",
+                    "email": "mark.sagikazar@gmail.com",
+                    "homepage": "https://sagikazarmark.hu"
+                }
+            ],
+            "description": "PSR-7 message implementation that also provides common utility methods",
+            "keywords": [
+                "http",
+                "message",
+                "psr-7",
+                "request",
+                "response",
+                "stream",
+                "uri",
+                "url"
+            ],
+            "support": {
+                "issues": "https://github.com/guzzle/psr7/issues",
+                "source": "https://github.com/guzzle/psr7/tree/2.6.1"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/GrahamCampbell",
+                    "type": "github"
+                },
+                {
+                    "url": "https://github.com/Nyholm",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/guzzlehttp/psr7",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-08-27T10:13:57+00:00"
+        },
+        {
+            "name": "influxdb/influxdb-php",
+            "version": "1.15.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/influxdata/influxdb-php.git",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/influxdata/influxdb-php/zipball/d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "reference": "d6e59f4f04ab9107574fda69c2cbe36671253d03",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.0|^7.0",
+                "php": "^5.5 || ^7.0 || ^8.0"
+            },
+            "require-dev": {
+                "dms/phpunit-arraysubset-asserts": "^0.2.1",
+                "phpunit/phpunit": "^9.5"
+            },
+            "suggest": {
+                "ext-curl": "Curl extension, needed for Curl driver",
+                "stefanotorresi/influxdb-php-async": "An asyncronous client for InfluxDB, implemented via ReactPHP."
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "InfluxDB\\": "src/InfluxDB"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stephen Hoogendijk",
+                    "email": "stephen@tca0.nl"
+                },
+                {
+                    "name": "Daniel Martinez",
+                    "email": "danimartcas@hotmail.com"
+                },
+                {
+                    "name": "Gianluca Arbezzano",
+                    "email": "gianarb92@gmail.com"
+                }
+            ],
+            "description": "InfluxDB client library for PHP",
+            "keywords": [
+                "client",
+                "influxdata",
+                "influxdb",
+                "influxdb class",
+                "influxdb client",
+                "influxdb library",
+                "time series"
+            ],
+            "support": {
+                "issues": "https://github.com/influxdata/influxdb-php/issues",
+                "source": "https://github.com/influxdata/influxdb-php/tree/1.15.2"
+            },
+            "abandoned": true,
+            "time": "2020-12-26T17:45:17+00:00"
+        },
+        {
             "name": "jean85/pretty-package-versions",
             "version": "1.6.0",
             "source": {
@@ -686,16 +1119,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.4",
+            "version": "6.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112"
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/74f6c4f6732b3ad6cdf25560746841d522969112",
-                "reference": "74f6c4f6732b3ad6cdf25560746841d522969112",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
                 "shasum": ""
             },
             "require": {
@@ -751,7 +1184,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-02T08:48:53+00:00"
+            "time": "2023-08-17T16:17:41+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -952,6 +1385,166 @@
             "time": "2023-03-06T14:43:22+00:00"
         },
         {
+            "name": "psr/http-client",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-client.git",
+                "reference": "0955afe48220520692d2d09f7ab7e0f93ffd6a31"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-client/zipball/0955afe48220520692d2d09f7ab7e0f93ffd6a31",
+                "reference": "0955afe48220520692d2d09f7ab7e0f93ffd6a31",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0 || ^8.0",
+                "psr/http-message": "^1.0 || ^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP clients",
+            "homepage": "https://github.com/php-fig/http-client",
+            "keywords": [
+                "http",
+                "http-client",
+                "psr",
+                "psr-18"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-client/tree/1.0.2"
+            },
+            "time": "2023-04-10T20:12:12+00:00"
+        },
+        {
+            "name": "psr/http-factory",
+            "version": "1.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-factory.git",
+                "reference": "e616d01114759c4c489f93b099585439f795fe35"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-factory/zipball/e616d01114759c4c489f93b099585439f795fe35",
+                "reference": "e616d01114759c4c489f93b099585439f795fe35",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.0",
+                "psr/http-message": "^1.0 || ^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interfaces for PSR-7 HTTP message factories",
+            "keywords": [
+                "factory",
+                "http",
+                "message",
+                "psr",
+                "psr-17",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-factory/tree/1.0.2"
+            },
+            "time": "2023-04-10T20:10:41+00:00"
+        },
+        {
+            "name": "psr/http-message",
+            "version": "2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "reference": "402d35bcb92c70c026d1a6a9883f06b2ead23d71",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "homepage": "https://github.com/php-fig/http-message",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-message/tree/2.0"
+            },
+            "time": "2023-04-04T09:54:51+00:00"
+        },
+        {
             "name": "psr/log",
             "version": "1.1.4",
             "source": {
@@ -1000,6 +1593,50 @@
                 "source": "https://github.com/php-fig/log/tree/1.1.4"
             },
             "time": "2021-05-03T11:20:27+00:00"
+        },
+        {
+            "name": "ralouphie/getallheaders",
+            "version": "3.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ralouphie/getallheaders.git",
+                "reference": "120b605dfeb996808c31b6477290a714d356e822"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ralouphie/getallheaders/zipball/120b605dfeb996808c31b6477290a714d356e822",
+                "reference": "120b605dfeb996808c31b6477290a714d356e822",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.6"
+            },
+            "require-dev": {
+                "php-coveralls/php-coveralls": "^2.1",
+                "phpunit/phpunit": "^5 || ^6.5"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/getallheaders.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ralph Khattar",
+                    "email": "ralph.khattar@gmail.com"
+                }
+            ],
+            "description": "A polyfill for getallheaders.",
+            "support": {
+                "issues": "https://github.com/ralouphie/getallheaders/issues",
+                "source": "https://github.com/ralouphie/getallheaders/tree/develop"
+            },
+            "time": "2019-03-08T08:55:37+00:00"
         },
         {
             "name": "resque/php-resque",
@@ -1141,17 +1778,84 @@
             "time": "2021-06-04T20:33:46+00:00"
         },
         {
-            "name": "symfony/polyfill-php80",
-            "version": "v1.27.0",
+            "name": "symfony/deprecation-contracts",
+            "version": "v3.3.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/symfony/polyfill-php80.git",
-                "reference": "7a6ff3f1959bb01aefccb463a0f2cd3d3d2fd936"
+                "url": "https://github.com/symfony/deprecation-contracts.git",
+                "reference": "7c3aff79d10325257a001fcf92d991f24fc967cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/7a6ff3f1959bb01aefccb463a0f2cd3d3d2fd936",
-                "reference": "7a6ff3f1959bb01aefccb463a0f2cd3d3d2fd936",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/7c3aff79d10325257a001fcf92d991f24fc967cf",
+                "reference": "7c3aff79d10325257a001fcf92d991f24fc967cf",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "3.4-dev"
+                },
+                "thanks": {
+                    "name": "symfony/contracts",
+                    "url": "https://github.com/symfony/contracts"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "function.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "A generic function and convention to trigger deprecation notices",
+            "homepage": "https://symfony.com",
+            "support": {
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.3.0"
+            },
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-05-23T14:45:45+00:00"
+        },
+        {
+            "name": "symfony/polyfill-php80",
+            "version": "v1.28.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "6caa57379c4aec19c0a12a38b59b26487dcfe4b5"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/6caa57379c4aec19c0a12a38b59b26487dcfe4b5",
+                "reference": "6caa57379c4aec19c0a12a38b59b26487dcfe4b5",
                 "shasum": ""
             },
             "require": {
@@ -1160,7 +1864,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.27-dev"
+                    "dev-main": "1.28-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -1205,7 +1909,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php80/tree/v1.27.0"
+                "source": "https://github.com/symfony/polyfill-php80/tree/v1.28.0"
             },
             "funding": [
                 {
@@ -1221,27 +1925,27 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-03T14:55:06+00:00"
+            "time": "2023-01-26T09:26:14+00:00"
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.31.0",
+            "version": "0.31.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "d771c2c8d7d1237b1d04b5bf57b07a9b4736e627"
+                "reference": "b2ad372d1070f55f9545cb811b6ed2d40094e6dd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/d771c2c8d7d1237b1d04b5bf57b07a9b4736e627",
-                "reference": "d771c2c8d7d1237b1d04b5bf57b07a9b4736e627",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/b2ad372d1070f55f9545cb811b6ed2d40094e6dd",
+                "reference": "b2ad372d1070f55f9545cb811b6ed2d40094e6dd",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.42.*"
+                "utopia-php/database": "0.43.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1268,9 +1972,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.31.0"
+                "source": "https://github.com/utopia-php/abuse/tree/0.31.1"
             },
-            "time": "2023-08-11T01:17:15+00:00"
+            "time": "2023-08-29T11:07:46+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1320,21 +2024,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.33.0",
+            "version": "0.33.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "6fb82331c58c66cbdb8a419314a687fcb18a1d22"
+                "reference": "c117e8e9ce4e3e1b369e8b5b55b2d6ab3138eadd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/6fb82331c58c66cbdb8a419314a687fcb18a1d22",
-                "reference": "6fb82331c58c66cbdb8a419314a687fcb18a1d22",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/c117e8e9ce4e3e1b369e8b5b55b2d6ab3138eadd",
+                "reference": "c117e8e9ce4e3e1b369e8b5b55b2d6ab3138eadd",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "0.42.*"
+                "utopia-php/database": "0.43.*"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1361,9 +2065,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.33.0"
+                "source": "https://github.com/utopia-php/audit/tree/0.33.1"
             },
-            "time": "2023-08-11T01:17:28+00:00"
+            "time": "2023-08-29T11:07:40+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1516,19 +2220,20 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.42.1",
+            "version": "0.43.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90"
+                "reference": "fb96fc6c94d5efcd43913c34bece62daba76a5e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/9ff69a9b9eadc581771798833d423829c9d8cc90",
-                "reference": "9ff69a9b9eadc581771798833d423829c9d8cc90",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/fb96fc6c94d5efcd43913c34bece62daba76a5e9",
+                "reference": "fb96fc6c94d5efcd43913c34bece62daba76a5e9",
                 "shasum": ""
             },
             "require": {
+                "ext-mbstring": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
@@ -1566,29 +2271,31 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.42.1"
+                "source": "https://github.com/utopia-php/database/tree/0.43.0"
             },
-            "time": "2023-08-14T16:09:09+00:00"
+            "time": "2023-08-29T10:18:39+00:00"
         },
         {
             "name": "utopia-php/domains",
-            "version": "v1.1.0",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73"
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
-                "reference": "1665e1d9932afa3be63b5c1e0dcfe01fe77d8e73",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
+                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=8.0",
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
-                "phpunit/phpunit": "^7.0"
+                "laravel/pint": "1.2.*",
+                "phpunit/phpunit": "^9.3"
             },
             "type": "library",
             "autoload": {
@@ -1604,6 +2311,10 @@
                 {
                     "name": "Eldad Fux",
                     "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Wess Cope",
+                    "email": "wess@appwrite.io"
                 }
             ],
             "description": "Utopia Domains library is simple and lite library for parsing web domains. This library is aiming to be as simple and easy to learn and use.",
@@ -1620,9 +2331,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/master"
+                "source": "https://github.com/utopia-php/domains/tree/0.3.2"
             },
-            "time": "2020-02-23T07:40:02+00:00"
+            "time": "2023-07-19T16:39:24+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -1673,16 +2384,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.28.4",
+            "version": "0.31.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac"
+                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/98c5469efe195aeecc63745dbf8e2f357f8cedac",
-                "reference": "98c5469efe195aeecc63745dbf8e2f357f8cedac",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/207f77378965fca9a9bc3783ea379d3549f86bc0",
+                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0",
                 "shasum": ""
             },
             "require": {
@@ -1690,9 +2401,9 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpstan/phpstan": "1.9.x-dev",
-                "phpunit/phpunit": "^9.5.25",
-                "vimeo/psalm": "4.27.0"
+                "phpbench/phpbench": "^1.2",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5.25"
             },
             "type": "library",
             "autoload": {
@@ -1712,9 +2423,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.28.4"
+                "source": "https://github.com/utopia-php/framework/tree/0.31.0"
             },
-            "time": "2023-06-03T14:09:22+00:00"
+            "time": "2023-08-30T16:10:04+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1921,6 +2632,64 @@
             "time": "2023-02-07T05:42:46+00:00"
         },
         {
+            "name": "utopia-php/migration",
+            "version": "0.3.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/migration.git",
+                "reference": "49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70",
+                "reference": "49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70",
+                "shasum": ""
+            },
+            "require": {
+                "appwrite/appwrite": "^8.0",
+                "php": ">=8.0",
+                "utopia-php/cli": "^0.15.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.10",
+                "phpunit/phpunit": "^9.3",
+                "vlucas/phpdotenv": "^5.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\Migration\\": "src/Migration"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Eldad Fux",
+                    "email": "eldad@appwrite.io"
+                },
+                {
+                    "name": "Bradley Schofield",
+                    "email": "bradley@appwrite.io"
+                }
+            ],
+            "description": "A simple library to migrate resources between services.",
+            "keywords": [
+                "framework",
+                "migration",
+                "php",
+                "upf",
+                "utopia"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/migration/issues",
+                "source": "https://github.com/utopia-php/migration/tree/0.3.2"
+            },
+            "time": "2023-08-31T04:11:35+00:00"
+        },
+        {
             "name": "utopia-php/mongo",
             "version": "0.2.0",
             "source": {
@@ -2032,16 +2801,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.4.0",
+            "version": "0.4.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f"
+                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/a2a91940314dc7e23ae0b487be456ca508920e7f",
-                "reference": "a2a91940314dc7e23ae0b487be456ca508920e7f",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
+                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
                 "shasum": ""
             },
             "require": {
@@ -2049,7 +2818,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.28.*"
+                "utopia-php/framework": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2075,9 +2844,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.4.0"
+                "source": "https://github.com/utopia-php/platform/tree/0.4.2"
             },
-            "time": "2023-05-30T07:18:41+00:00"
+            "time": "2023-08-30T16:28:31+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2351,28 +3120,28 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.8.0",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "5b60e7f730641cc182bc36b1f9939d4a76d3439b"
+                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/5b60e7f730641cc182bc36b1f9939d4a76d3439b",
-                "reference": "5b60e7f730641cc182bc36b1f9939d4a76d3439b",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
+                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.28.*"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
-                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "5.0.2"
+                "swoole/ide-helper": "4.8.3",
+                "vimeo/psalm": "4.15.0"
             },
             "type": "library",
             "autoload": {
@@ -2396,27 +3165,27 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.8.0"
+                "source": "https://github.com/utopia-php/swoole/tree/0.5.0"
             },
-            "time": "2023-07-25T10:29:58+00:00"
+            "time": "2022-10-19T22:19:07+00:00"
         },
         {
             "name": "utopia-php/system",
-            "version": "0.6.0",
+            "version": "0.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "289c4327713deadc9c748b5317d248133a02f245"
+                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/289c4327713deadc9c748b5317d248133a02f245",
-                "reference": "289c4327713deadc9c748b5317d248133a02f245",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
+                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
                 "shasum": ""
             },
             "require": {
                 "laravel/pint": "1.2.*",
-                "php": ">=7.4"
+                "php": ">=8.0.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "^9.3",
@@ -2453,9 +3222,58 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.6.0"
+                "source": "https://github.com/utopia-php/system/tree/0.7.1"
             },
-            "time": "2022-11-07T13:51:59+00:00"
+            "time": "2023-08-30T09:14:37+00:00"
+        },
+        {
+            "name": "utopia-php/vcs",
+            "version": "0.4.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/vcs.git",
+                "reference": "08078af30865827adb8aafb32929c968ce541a28"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/08078af30865827adb8aafb32929c968ce541a28",
+                "reference": "08078af30865827adb8aafb32929c968ce541a28",
+                "shasum": ""
+            },
+            "require": {
+                "adhocore/jwt": "^1.1",
+                "php": ">=8.0",
+                "utopia-php/cache": "^0.8.0",
+                "utopia-php/framework": "0.31.*"
+            },
+            "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.8.*",
+                "phpunit/phpunit": "^9.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\VCS\\": "src/VCS",
+                    "Utopia\\Detector\\": "src/Detector"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple library to integrate version control systems like GitHub, GitLab etc. to receive webhook events",
+            "keywords": [
+                "framework",
+                "php",
+                "utopia",
+                "vcs"
+            ],
+            "support": {
+                "issues": "https://github.com/utopia-php/vcs/issues",
+                "source": "https://github.com/utopia-php/vcs/tree/0.4.0"
+            },
+            "time": "2023-08-30T16:17:03+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -2642,16 +3460,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.33.7",
+            "version": "0.34.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc"
+                "reference": "81538d10abacd81350c265b516c72ef315116013"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/9f5db4a637b23879ceacea9ed2d33b0486771ffc",
-                "reference": "9f5db4a637b23879ceacea9ed2d33b0486771ffc",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/81538d10abacd81350c265b516c72ef315116013",
+                "reference": "81538d10abacd81350c265b516c72ef315116013",
                 "shasum": ""
             },
             "require": {
@@ -2687,9 +3505,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.33.7"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.34.1"
             },
-            "time": "2023-07-12T12:15:43+00:00"
+            "time": "2023-08-30T07:57:31+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -4918,16 +5736,16 @@
         },
         {
             "name": "symfony/polyfill-ctype",
-            "version": "v1.27.0",
+            "version": "v1.28.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-ctype.git",
-                "reference": "5bbc823adecdae860bb64756d639ecfec17b050a"
+                "reference": "ea208ce43cbb04af6867b4fdddb1bdbf84cc28cb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/5bbc823adecdae860bb64756d639ecfec17b050a",
-                "reference": "5bbc823adecdae860bb64756d639ecfec17b050a",
+                "url": "https://api.github.com/repos/symfony/polyfill-ctype/zipball/ea208ce43cbb04af6867b4fdddb1bdbf84cc28cb",
+                "reference": "ea208ce43cbb04af6867b4fdddb1bdbf84cc28cb",
                 "shasum": ""
             },
             "require": {
@@ -4942,7 +5760,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.27-dev"
+                    "dev-main": "1.28-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -4980,7 +5798,7 @@
                 "portable"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.27.0"
+                "source": "https://github.com/symfony/polyfill-ctype/tree/v1.28.0"
             },
             "funding": [
                 {
@@ -4996,20 +5814,20 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-03T14:55:06+00:00"
+            "time": "2023-01-26T09:26:14+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.27.0",
+            "version": "v1.28.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
-                "reference": "8ad114f6b39e2c98a8b0e3bd907732c207c2b534"
+                "reference": "42292d99c55abe617799667f454222c54c60e229"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/8ad114f6b39e2c98a8b0e3bd907732c207c2b534",
-                "reference": "8ad114f6b39e2c98a8b0e3bd907732c207c2b534",
+                "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/42292d99c55abe617799667f454222c54c60e229",
+                "reference": "42292d99c55abe617799667f454222c54c60e229",
                 "shasum": ""
             },
             "require": {
@@ -5024,7 +5842,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-main": "1.27-dev"
+                    "dev-main": "1.28-dev"
                 },
                 "thanks": {
                     "name": "symfony/polyfill",
@@ -5063,7 +5881,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.27.0"
+                "source": "https://github.com/symfony/polyfill-mbstring/tree/v1.28.0"
             },
             "funding": [
                 {
@@ -5079,7 +5897,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-11-03T14:55:06+00:00"
+            "time": "2023-07-28T09:04:16+00:00"
         },
         {
             "name": "textalk/websocket",
@@ -5182,16 +6000,16 @@
         },
         {
             "name": "twig/twig",
-            "version": "v3.7.0",
+            "version": "v3.7.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b"
+                "reference": "a0ce373a0ca3bf6c64b9e3e2124aca502ba39554"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/5cf942bbab3df42afa918caeba947f1b690af64b",
-                "reference": "5cf942bbab3df42afa918caeba947f1b690af64b",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/a0ce373a0ca3bf6c64b9e3e2124aca502ba39554",
+                "reference": "a0ce373a0ca3bf6c64b9e3e2124aca502ba39554",
                 "shasum": ""
             },
             "require": {
@@ -5201,7 +6019,7 @@
             },
             "require-dev": {
                 "psr/container": "^1.0|^2.0",
-                "symfony/phpunit-bridge": "^4.4.9|^5.0.9|^6.0"
+                "symfony/phpunit-bridge": "^5.4.9|^6.3"
             },
             "type": "library",
             "autoload": {
@@ -5237,7 +6055,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigphp/Twig/issues",
-                "source": "https://github.com/twigphp/Twig/tree/v3.7.0"
+                "source": "https://github.com/twigphp/Twig/tree/v3.7.1"
             },
             "funding": [
                 {
@@ -5249,7 +6067,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-07-26T07:16:09+00:00"
+            "time": "2023-08-28T11:09:02+00:00"
         }
     ],
     "aliases": [],

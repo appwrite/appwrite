@@ -166,13 +166,6 @@ class Project extends Model
                 'example' => new \stdClass(),
                 'array' => true,
             ])
-            ->addRule('domains', [
-                'type' => Response::MODEL_DOMAIN,
-                'description' => 'List of Domains.',
-                'default' => [],
-                'example' => new \stdClass(),
-                'array' => true,
-            ])
             ->addRule('smtpEnabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Status for custom SMTP',
@@ -180,11 +173,23 @@ class Project extends Model
                 'example' => false,
                 'array' => false
             ])
-            ->addRule('smtpSender', [
+            ->addRule('smtpSenderName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP sender name',
+                'default' => '',
+                'example' => 'John Appwrite',
+            ])
+            ->addRule('smtpSenderEmail', [
                 'type' => self::TYPE_STRING,
                 'description' => 'SMTP sender email',
                 'default' => '',
                 'example' => 'john@appwrite.io',
+            ])
+            ->addRule('smtpReplyTo', [
+                'type' => self::TYPE_STRING,
+                'description' => 'SMTP reply to email',
+                'default' => '',
+                'example' => 'support@appwrite.io',
             ])
             ->addRule('smtpHost', [
                 'type' => self::TYPE_STRING,
@@ -284,7 +289,9 @@ class Project extends Model
         // SMTP
         $smtp = $document->getAttribute('smtp', []);
         $document->setAttribute('smtpEnabled', $smtp['enabled'] ?? false);
-        $document->setAttribute('smtpSender', $smtp['sender'] ?? '');
+        $document->setAttribute('smtpSenderEmail', $smtp['senderEmail'] ?? '');
+        $document->setAttribute('smtpSenderName', $smtp['senderName'] ?? '');
+        $document->setAttribute('smtpReplyTo', $smtp['replyTo'] ?? '');
         $document->setAttribute('smtpHost', $smtp['host'] ?? '');
         $document->setAttribute('smtpPort', $smtp['port'] ?? '');
         $document->setAttribute('smtpUsername', $smtp['username'] ?? '');
