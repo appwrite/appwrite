@@ -36,6 +36,7 @@ use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
 use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
+use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Collection;
 use Appwrite\Utopia\Response\Model\Database;
 use Appwrite\Utopia\Response\Model\Continent;
@@ -69,6 +70,8 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
+use Appwrite\Utopia\Response\Model\Detection;
+use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
 use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
@@ -78,9 +81,10 @@ use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
-use Appwrite\Utopia\Response\Model\Mock; // Keep last
 use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Runtime;
 use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
@@ -97,6 +101,8 @@ use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
+// Keep last
+use Appwrite\Utopia\Response\Model\Mock;
 
 /**
  * @method int getStatusCode()
@@ -208,6 +214,15 @@ class Response extends SwooleResponse
     public const MODEL_MEMBERSHIP = 'membership';
     public const MODEL_MEMBERSHIP_LIST = 'membershipList';
 
+    // VCS
+    public const MODEL_INSTALLATION = 'installation';
+    public const MODEL_INSTALLATION_LIST = 'installationList';
+    public const MODEL_PROVIDER_REPOSITORY = 'providerRepository';
+    public const MODEL_PROVIDER_REPOSITORY_LIST = 'providerRepositoryList';
+    public const MODEL_BRANCH = 'branch';
+    public const MODEL_BRANCH_LIST = 'branchList';
+    public const MODEL_DETECTION = 'detection';
+
     // Functions
     public const MODEL_FUNCTION = 'function';
     public const MODEL_FUNCTION_LIST = 'functionList';
@@ -220,6 +235,11 @@ class Response extends SwooleResponse
     public const MODEL_BUILD = 'build';
     public const MODEL_BUILD_LIST = 'buildList';  // Not used anywhere yet
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
+    public const MODEL_HEADERS = 'headers';
+
+    // Proxy
+    public const MODEL_PROXY_RULE = 'proxyRule';
+    public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';
 
     // Migrations
     public const MODEL_MIGRATION = 'migration';
@@ -239,10 +259,9 @@ class Response extends SwooleResponse
     public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM = 'platform';
     public const MODEL_PLATFORM_LIST = 'platformList';
-    public const MODEL_DOMAIN = 'domain';
-    public const MODEL_DOMAIN_LIST = 'domainList';
     public const MODEL_VARIABLE = 'variable';
     public const MODEL_VARIABLE_LIST = 'variableList';
+    public const MODEL_VCS = 'vcs';
     public const MODEL_SMS_TEMPLATE = 'smsTemplate';
     public const MODEL_EMAIL_TEMPLATE = 'emailTemplate';
 
@@ -261,6 +280,8 @@ class Response extends SwooleResponse
     public const MODEL_PERMISSIONS = 'permissions';
     public const MODEL_RULE = 'rule';
     public const MODEL_TASK = 'task';
+    public const MODEL_DOMAIN = 'domain';
+    public const MODEL_DOMAIN_LIST = 'domainList';
 
     // Tests (keep last)
     public const MODEL_MOCK = 'mock';
@@ -302,6 +323,9 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
+            ->setModel(new BaseList('Installations List', self::MODEL_INSTALLATION_LIST, 'installations', self::MODEL_INSTALLATION))
+            ->setModel(new BaseList('Provider Repositories List', self::MODEL_PROVIDER_REPOSITORY_LIST, 'providerRepositories', self::MODEL_PROVIDER_REPOSITORY))
+            ->setModel(new BaseList('Branches List', self::MODEL_BRANCH_LIST, 'branches', self::MODEL_BRANCH))
             ->setModel(new BaseList('Runtimes List', self::MODEL_RUNTIME_LIST, 'runtimes', self::MODEL_RUNTIME))
             ->setModel(new BaseList('Deployments List', self::MODEL_DEPLOYMENT_LIST, 'deployments', self::MODEL_DEPLOYMENT))
             ->setModel(new BaseList('Executions List', self::MODEL_EXECUTION_LIST, 'executions', self::MODEL_EXECUTION))
@@ -311,7 +335,6 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
             ->setModel(new BaseList('Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
-            ->setModel(new BaseList('Domains List', self::MODEL_DOMAIN_LIST, 'domains', self::MODEL_DOMAIN, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
             ->setModel(new BaseList('Languages List', self::MODEL_LANGUAGE_LIST, 'languages', self::MODEL_LANGUAGE))
@@ -320,6 +343,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Metric List', self::MODEL_METRIC_LIST, 'metrics', self::MODEL_METRIC, true, false))
             ->setModel(new BaseList('Variables List', self::MODEL_VARIABLE_LIST, 'variables', self::MODEL_VARIABLE))
             ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
+            ->setModel(new BaseList('Rule List', self::MODEL_PROXY_RULE_LIST, 'rules', self::MODEL_PROXY_RULE))
             ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
             ->setModel(new BaseList('Provider list', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER))
             ->setModel(new BaseList('Message list', self::MODEL_MESSAGE_LIST, 'messages', self::MODEL_MESSAGE))
@@ -367,6 +391,10 @@ class Response extends SwooleResponse
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
+            ->setModel(new Installation())
+            ->setModel(new ProviderRepository())
+            ->setModel(new Detection())
+            ->setModel(new Branch())
             ->setModel(new Runtime())
             ->setModel(new Deployment())
             ->setModel(new Execution())
@@ -374,7 +402,6 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Domain())
             ->setModel(new AuthProvider())
             ->setModel(new Platform())
             ->setModel(new Variable())
@@ -398,6 +425,8 @@ class Response extends SwooleResponse
             ->setModel(new UsageFunctions())
             ->setModel(new UsageFunction())
             ->setModel(new UsageProject())
+            ->setModel(new Headers())
+            ->setModel(new Rule())
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
@@ -478,7 +507,7 @@ class Response extends SwooleResponse
      */
     public function dynamic(Document $document, string $model): void
     {
-        $output = $this->output(new Document($document->getArrayCopy()), $model);
+        $output = $this->output(clone $document, $model);
 
         // If filter is set, parse the output
         if (self::hasFilter()) {
@@ -519,11 +548,11 @@ class Response extends SwooleResponse
      */
     public function output(Document $document, string $model): array
     {
-        $data       = new Document($document->getArrayCopy());
+        $data       = clone $document;
         $model      = $this->getModel($model);
         $output     = [];
 
-        $data = $model->filter($document);
+        $data = $model->filter($data);
 
         if ($model->isAny()) {
             $this->payload = $data->getArrayCopy();
@@ -532,7 +561,7 @@ class Response extends SwooleResponse
         }
 
         foreach ($model->getRules() as $key => $rule) {
-            if (!$document->isSet($key) && $rule['required']) { // do not set attribute in response if not required
+            if (!$data->isSet($key) && $rule['required']) { // do not set attribute in response if not required
                 if (\array_key_exists('default', $rule)) {
                     $data->setAttribute($key, $rule['default']);
                 } else {
@@ -541,11 +570,11 @@ class Response extends SwooleResponse
             }
 
             if ($rule['array']) {
-                if (!is_array($document[$key])) {
+                if (!is_array($data[$key])) {
                     throw new Exception($key . ' must be an array of type ' . $rule['type']);
                 }
 
-                foreach ($document[$key] as $index => $item) {
+                foreach ($data[$key] as $index => $item) {
                     if ($item instanceof Document) {
                         if (\is_array($rule['type'])) {
                             foreach ($rule['type'] as $type) {
@@ -573,7 +602,7 @@ class Response extends SwooleResponse
                     }
                 }
             } else {
-                if ($document[$key] instanceof Document) {
+                if ($data[$key] instanceof Document) {
                     $data[$key] = $this->output($data[$key], $rule['type']);
                 }
             }
@@ -666,5 +695,17 @@ class Response extends SwooleResponse
     public static function hasFilter(): bool
     {
         return self::$filter != null;
+    }
+
+    /**
+     * Set Header
+     *
+     * @param  string  $key
+     * @param  string  $value
+     * @return void
+     */
+    public function setHeader(string $key, string $value): void
+    {
+        $this->sendHeader($key, $value);
     }
 }

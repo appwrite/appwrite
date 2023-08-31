@@ -16,13 +16,13 @@ class Exception extends AppwriteException
         $this->message = $response;
         $decoded = json_decode($response, true);
         if (\is_array($decoded)) {
-            if (\is_array($decoded['error'])) {
+            if (\is_array($decoded['error'] ?? '')) {
                 $this->error = $decoded['error']['status'];
                 $this->errorDescription = $decoded['error']['message'];
                 $this->message =  $this->error . ': ' . $this->errorDescription;
             } else {
-                $this->error = $decoded['error'];
-                $this->errorDescription = $decoded['error_description'];
+                $this->error = $decoded['error'] ?? $decoded['message'] ?? 'Unknown error';
+                $this->errorDescription = $decoded['error_description'] ?? 'No description';
                 $this->message =  $this->error . ': ' . $this->errorDescription;
             }
         }

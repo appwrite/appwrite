@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Executor\Executor;
 use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
@@ -66,6 +67,12 @@ class DeletesV1 extends Worker
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($document, $project);
                         break;
+                    case DELETE_TYPE_INSTALLATIONS:
+                        $this->deleteInstallation($document, $project);
+                        break;
+                    case DELETE_TYPE_RULES:
+                        $this->deleteRule($document, $project);
+                        break;
                     default:
                         if (\str_starts_with($document->getCollection(), 'database_')) {
                             $this->deleteCollection($document, $project);
@@ -104,11 +111,6 @@ class DeletesV1 extends Worker
 
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions();
-                break;
-
-            case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
-                $this->deleteCertificates($document);
                 break;
 
             case DELETE_TYPE_USAGE:
@@ -589,15 +591,29 @@ class DeletesV1 extends Worker
     {
         $projectId = $project->getId();
         $dbForProject = $this->getProjectDB($project);
+        $dbForConsole = $this->getConsoleDB();
         $functionId = $document->getId();
         $functionInternalId = $document->getInternalId();
+
+        /**
+         * Delete rules
+         */
+        Console::info("Deleting rules for function " . $functionId);
+        $this->deleteByGroup('rules', [
+            Query::equal('resourceType', ['function']),
+            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('projectInternalId', [$project->getInternalId()])
+        ], $dbForConsole, function (Document $document) use ($project) {
+            $this->deleteRule($document, $project);
+        });
 
         /**
          * Delete Variables
          */
         Console::info("Deleting variables for function " . $functionId);
         $this->deleteByGroup('variables', [
-            Query::equal('functionInternalId', [$functionInternalId])
+            Query::equal('resourceType', ['function']),
+            Query::equal('resourceInternalId', [$functionInternalId])
         ], $dbForProject);
 
         /**
@@ -605,11 +621,11 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting deployments for function " . $functionId);
         $storageFunctions = $this->getFunctionsDevice($projectId);
-        $deploymentIds = [];
+        $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
-            Query::equal('resourceId', [$functionId])
-        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentIds) {
-            $deploymentIds[] = $document->getId();
+            Query::equal('resourceInternalId', [$functionInternalId])
+        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentInternalIds) {
+            $deploymentInternalIds[] = $document->getInternalId();
             if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
                 Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
             } else {
@@ -622,14 +638,14 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting builds for function " . $functionId);
         $storageBuilds = $this->getBuildsDevice($projectId);
-        foreach ($deploymentIds as $deploymentId) {
+        foreach ($deploymentInternalIds as $deploymentInternalId) {
             $this->deleteByGroup('builds', [
-                Query::equal('deploymentId', [$deploymentId])
-            ], $dbForProject, function (Document $document) use ($storageBuilds, $deploymentId) {
-                if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
-                    Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+                Query::equal('deploymentInternalId', [$deploymentInternalId])
+            ], $dbForProject, function (Document $document) use ($storageBuilds) {
+                if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
+                    Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
                 } else {
-                    Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                    Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
                 }
             });
         }
@@ -639,10 +655,14 @@ class DeletesV1 extends Worker
          */
         Console::info("Deleting executions for function " . $functionId);
         $this->deleteByGroup('executions', [
-            Query::equal('functionId', [$functionId])
+            Query::equal('functionInternalId', [$functionInternalId])
         ], $dbForProject);
 
-        // TODO: Request executor to delete runtime
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
+        $this->deleteRuntimes($document, $project);
     }
 
     /**
@@ -654,7 +674,7 @@ class DeletesV1 extends Worker
         $projectId = $project->getId();
         $dbForProject = $this->getProjectDB($project);
         $deploymentId = $document->getId();
-        $functionId = $document->getAttribute('resourceId');
+        $deploymentInternalId = $document->getInternalId();
 
         /**
          * Delete deployment files
@@ -673,16 +693,21 @@ class DeletesV1 extends Worker
         Console::info("Deleting builds for deployment " . $deploymentId);
         $storageBuilds = $this->getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
-            Query::equal('deploymentId', [$deploymentId])
+            Query::equal('deploymentInternalId', [$deploymentInternalId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            if ($storageBuilds->delete($document->getAttribute('outputPath', ''), true)) {
-                Console::success('Deleted build files: ' . $document->getAttribute('outputPath', ''));
+            if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
+                Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
             } else {
-                Console::error('Failed to delete build files: ' . $document->getAttribute('outputPath', ''));
+                Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
             }
         });
 
-        // TODO: Request executor to delete runtime
+
+        /**
+         * Request executor to delete all deployment containers
+         */
+        Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
+        $this->deleteRuntimes($document, $project);
     }
 
 
@@ -833,50 +858,29 @@ class DeletesV1 extends Worker
     }
 
     /**
-     * @param Document $document certificates document
-     * @throws \Utopia\Database\Exception\Authorization
+     * @param Document $document rule document
+     * @param Document $project project document
      */
-    protected function deleteCertificates(Document $document): void
+    protected function deleteRule(Document $document, Document $project): void
     {
         $consoleDB = $this->getConsoleDB();
-
-        // If domain has certificate generated
-        if (isset($document['certificateId'])) {
-            $domainUsingCertificate = $consoleDB->findOne('domains', [
-                Query::equal('certificateId', [$document['certificateId']])
-            ]);
-
-            if (!$domainUsingCertificate) {
-                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
-                if ($mainDomain === $document->getAttribute('domain')) {
-                    $domainUsingCertificate = $mainDomain;
-                }
-            }
-
-            // If certificate is still used by some domain, mark we can't delete.
-            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
-            if ($domainUsingCertificate) {
-                Console::warning("Skipping certificate deletion, because a domain is still using it.");
-                return;
-            }
-        }
 
         $domain = $document->getAttribute('domain');
         $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
         $checkTraversal = realpath($directory) === $directory;
 
-        if ($domain && $checkTraversal && is_dir($directory)) {
-            // Delete certificate document, so Appwrite is aware of change
-            if (isset($document['certificateId'])) {
-                $consoleDB->deleteDocument('certificates', $document['certificateId']);
-            }
-
+        if ($checkTraversal && is_dir($directory)) {
             // Delete files, so Traefik is aware of change
             array_map('unlink', glob($directory . '/*.*'));
             rmdir($directory);
             Console::info("Deleted certificate files for {$domain}");
         } else {
             Console::info("No certificate files found for {$domain}");
+        }
+
+        // Delete certificate document, so Appwrite is aware of change
+        if (isset($document['certificateId'])) {
+            $consoleDB->deleteDocument('certificates', $document['certificateId']);
         }
     }
 
@@ -889,5 +893,73 @@ class DeletesV1 extends Worker
         $device = $this->getFilesDevice($projectId);
 
         $device->deletePath($document->getId());
+    }
+
+    protected function deleteInstallation(Document $document, Document $project)
+    {
+        $dbForProject = $this->getProjectDB($project);
+        $dbForConsole = $this->getConsoleDB();
+
+        $this->listByGroup('functions', [
+            Query::equal('installationInternalId', [$document->getInternalId()])
+        ], $dbForProject, function ($function) use ($dbForProject, $dbForConsole) {
+            $dbForConsole->deleteDocument('repositories', $function->getAttribute('repositoryId'));
+
+            $function = $function
+                ->setAttribute('installationId', '')
+                ->setAttribute('installationInternalId', '')
+                ->setAttribute('providerRepositoryId', '')
+                ->setAttribute('providerBranch', '')
+                ->setAttribute('providerSilentMode', false)
+                ->setAttribute('providerRootDirectory', '')
+                ->setAttribute('repositoryId', '')
+                ->setAttribute('repositoryInternalId', '');
+            $dbForProject->updateDocument('functions', $function->getId(), $function);
+        });
+    }
+
+    protected function deleteRuntimes(?Document $function, Document $project)
+    {
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+
+        $deleteByFunction = function (Document $function) use ($project, $executor) {
+            $this->listByGroup(
+                'deployments',
+                [
+                    Query::equal('resourceInternalId', [$function->getInternalId()]),
+                    Query::equal('resourceType', ['functions']),
+                ],
+                $this->getProjectDB($project),
+                function (Document $deployment) use ($project, $executor) {
+                    $deploymentId = $deployment->getId();
+
+                    try {
+                        $executor->deleteRuntime($project->getId(), $deploymentId);
+                        Console::info("Runtime for deployment {$deploymentId} deleted.");
+                    } catch (Throwable $th) {
+                        Console::warning("Runtime for deployment {$deploymentId} skipped:");
+                        Console::error('[Error] Type: ' . get_class($th));
+                        Console::error('[Error] Message: ' . $th->getMessage());
+                        Console::error('[Error] File: ' . $th->getFile());
+                        Console::error('[Error] Line: ' . $th->getLine());
+                    }
+                }
+            );
+        };
+
+        if ($function !== null) {
+            // Delete function runtimes
+            $deleteByFunction($function);
+        } else {
+            // Delete all project runtimes
+            $this->listByGroup(
+                'functions',
+                [],
+                $this->getProjectDB($project),
+                function (Document $function) use ($deleteByFunction) {
+                    $deleteByFunction($function);
+                }
+            );
+        }
     }
 }
