@@ -42,7 +42,7 @@ app/config/providers.php
 
 Make sure to fill in all data needed and that your provider array key name:
 
-- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format
+- is in [`camelCase`](https://en.wikipedia.org/wiki/Camel_case) format for sentence, but lowercase for names. `github` must be all lowercased, but `paypalSandbox` should have uppercase S
 - has no spaces or special characters
 
 > Please make sure to keep the list of providers in `providers.php` in the alphabetical order A-Z.
