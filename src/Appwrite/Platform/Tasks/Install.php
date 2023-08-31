@@ -70,7 +70,7 @@ class Install extends Action
             if ($interactive == 'Y' && Console::isInteractive()) {
                 $answer = Console::confirm('Previous installation found, do you want to overwrite it (a backup will be created before overwriting)? (Y/n)');
 
-                if ($answer !== 'Y') {
+                if (\strtolower($answer) !== 'y') {
                     Console::info('No action taken.');
                     return;
                 }
