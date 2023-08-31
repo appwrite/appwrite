@@ -62,6 +62,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_FUNCTIONS',
+                'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
+                'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
@@ -106,15 +115,6 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CONSOLE_ROOT_SESSION',
-                'description' => 'Domain policy for the Appwrite console session cookie. By default, set to \'disabled\', meaning the session cookie will be set to the domain of the Appwrite console (e.g. cloud.appwrite.io). When set to \'enabled\', the session cookie will be set to the registerable domain of the Appwrite server (e.g. appwrite.io).',
-                'introduction' => '',
-                'default' => 'disabled',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
                 'name' => '_APP_SYSTEM_EMAIL_NAME',
                 'description' => 'This is the sender name value that will appear on email messages sent to developers from the Appwrite console. The default value is: \'Appwrite\'. You can use url encoded strings for spaces and special chars.',
                 'introduction' => '0.7.0',
@@ -152,7 +152,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container to reduce resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -161,7 +161,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\'',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -209,15 +209,6 @@ return [
                 'description' => 'Internal Worker per core for the API, Realtime and Executor containers. Can be configured to optimize performance.',
                 'introduction' => '0.13.0',
                 'default' => 6,
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ],
-            [
-                'name' => '_APP_CONSOLE_INVITES',
-                'description' => 'This option allows you to disable the invitation of new users to the Appwrite console. When enabled, console users are allowed to invite new users to a project. By default this option is enabled.',
-                'introduction' => '1.2.0',
-                'default' => 'enabled',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -324,33 +315,54 @@ return [
                 'question' => '',
                 'filter' => 'password'
             ],
+        ],
+    ],
+    [
+        'category' => 'InfluxDB',
+        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
+        'variables' => [
             [
-                'name' => '_APP_CONNECTIONS_MAX',
-                'description' => 'MariaDB server maximum connections.',
-                'introduction' => 'TBD',
-                'default' => 251,
+                'name' => '_APP_INFLUXDB_HOST',
+                'description' => 'InfluxDB server host name address. Default value is: \'influxdb\'.',
+                'introduction' => '',
+                'default' => 'influxdb',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
             ],
-//             [
-//                 'name' => '_APP_CONNECTIONS_DB_PROJECT',
-//                 'description' => 'A list of comma-separated key value pairs representing Project DBs where key is the database name and value is the DSN connection string.',
-//                 'introduction' => 'TBD',
-//                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
-//                 'required' => true,
-//                 'question' => '',
-//                 'filter' => ''
-//             ],
-//             [
-//                 'name' => '_APP_CONNECTIONS_DB_CONSOLE',
-//                 'description' => 'A key value pair representing the Console DB where key is the database name and value is the DSN connection string.',
-//                 'introduction' => 'TBD',
-//                 'default' => 'db_fra1_01=mysql://user:password@mariadb:3306/appwrite',
-//                 'required' => true,
-//                 'question' => '',
-//                 'filter' => ''
-//             ]
+            [
+                'name' => '_APP_INFLUXDB_PORT',
+                'description' => 'InfluxDB server TCP port. Default value is: \'8086\'.',
+                'introduction' => '',
+                'default' => '8086',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'StatsD',
+        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
+        'variables' => [
+            [
+                'name' => '_APP_STATSD_HOST',
+                'description' => 'StatsD server host name address. Default value is: \'telegraf\'.',
+                'introduction' => '',
+                'default' => 'telegraf',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_STATSD_PORT',
+                'description' => 'StatsD server TCP port. Default value is: \'8125\'.',
+                'introduction' => '',
+                'default' => '8125',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
         ],
     ],
     [
@@ -478,16 +490,8 @@ return [
                 'filter' => ''
             ],
             [
-                'name' => '_APP_CONNECTIONS_STORAGE',
-                'description' => 'A DSN representing the storage device to connect to. The DSN takes the following format <device>://<access_key>:<access_secret>@<host>:<port>/<bucket>?region=<region>. For example, for S3: \'s3://access_key:access_secret@host:port/bucket?region=us-east-1\'. To use the local filesystem, you can leave this variable empty. Available devices are local, s3, dospaces, linode, backblaze and wasabi.',
-                'introduction' => '1.1.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-            ],
-            [
                 'name' => '_APP_STORAGE_DEVICE',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Select default storage device. The default value is \'local\'. List of supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\' and \'wasabi\'.',
                 'introduction' => '0.13.0',
                 'default' => 'local',
                 'required' => false,
@@ -495,7 +499,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_ACCESS_KEY',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'AWS S3 storage access key. Required when the storage adapter is set to S3. You can get your access key from your AWS console',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -503,7 +507,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_SECRET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'AWS S3 storage secret key. Required when the storage adapter is set to S3. You can get your secret key from your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -511,7 +515,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_REGION',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'AWS S3 storage region. Required when storage adapter is set to S3. You can find your region info for your bucket from AWS console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -519,7 +523,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_S3_BUCKET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'AWS S3 storage bucket. Required when storage adapter is set to S3. You can create buckets in your AWS console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -527,7 +531,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_ACCESS_KEY',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'DigitalOcean spaces access key. Required when the storage adapter is set to DOSpaces. You can get your access key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -535,7 +539,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_SECRET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'DigitalOcean spaces secret key. Required when the storage adapter is set to DOSpaces. You can get your secret key from your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -543,7 +547,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_REGION',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'DigitalOcean spaces region. Required when storage adapter is set to DOSpaces. You can find your region info for your space from DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => 'us-east-1',
                 'required' => false,
@@ -551,7 +555,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_DO_SPACES_BUCKET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'DigitalOcean spaces bucket. Required when storage adapter is set to DOSpaces. You can create spaces in your DigitalOcean console.',
                 'introduction' => '0.13.0',
                 'default' => '',
                 'required' => false,
@@ -559,7 +563,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_ACCESS_KEY',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Backblaze access key. Required when the storage adapter is set to Backblaze. Your Backblaze keyID will be your access key. You can get your keyID from your Backblaze console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -567,7 +571,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_SECRET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Backblaze secret key. Required when the storage adapter is set to Backblaze. Your Backblaze applicationKey will be your secret key. You can get your applicationKey from your Backblaze console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -575,7 +579,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_REGION',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Backblaze region. Required when storage adapter is set to Backblaze. You can find your region info from your Backblaze console.',
                 'introduction' => '0.14.2',
                 'default' => 'us-west-004',
                 'required' => false,
@@ -583,7 +587,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_BACKBLAZE_BUCKET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Backblaze bucket. Required when storage adapter is set to Backblaze. You can create your bucket from your Backblaze console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -591,7 +595,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_ACCESS_KEY',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Linode object storage access key. Required when the storage adapter is set to Linode. You can get your access key from your Linode console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -599,7 +603,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_SECRET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Linode object storage secret key. Required when the storage adapter is set to Linode. You can get your secret key from your Linode console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -607,7 +611,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_REGION',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Linode object storage region. Required when storage adapter is set to Linode. You can find your region info from your Linode console.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -615,7 +619,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_LINODE_BUCKET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Linode object storage bucket. Required when storage adapter is set to Linode. You can create buckets in your Linode console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -623,7 +627,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_ACCESS_KEY',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Wasabi access key. Required when the storage adapter is set to Wasabi. You can get your access key from your Wasabi console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -631,7 +635,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_SECRET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Wasabi secret key. Required when the storage adapter is set to Wasabi. You can get your secret key from your Wasabi console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -639,7 +643,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_REGION',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Wasabi region. Required when storage adapter is set to Wasabi. You can find your region info from your Wasabi console.',
                 'introduction' => '0.14.2',
                 'default' => 'eu-central-1',
                 'required' => false,
@@ -647,7 +651,7 @@ return [
             ],
             [
                 'name' => '_APP_STORAGE_WASABI_BUCKET',
-                'description' => 'Deprecated since 1.2.0. Use _APP_CONNECTIONS_STORAGE instead.',
+                'description' => 'Wasabi bucket. Required when storage adapter is set to Wasabi. You can create buckets in your Wasabi console.',
                 'introduction' => '0.14.2',
                 'default' => '',
                 'required' => false,
@@ -814,7 +818,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'The docker network used for communication between the executor and runtimes.',
                 'introduction' => '1.2.0',
                 'default' => 'runtimes',
                 'required' => false,
@@ -844,6 +848,66 @@ return [
                 'description' => 'Interval how often executor checks for inactive runimes. The default value is 60 seconds.',
                 'introduction' => '1.2.0',
                 'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'VCS (Version Control System)',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_VCS_GITHUB_APP_NAME',
+                'description' => 'Name of your GitHub app. This value should be set to your GitHub application\'s URL.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_PRIVATE_KEY',
+                'description' => 'GitHub app RSA private key. You can generate private keys from GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_APP_ID',
+                'description' => 'GitHub application ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_ID',
+                'description' => 'GitHub client ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_SECRET',
+                'description' => 'GitHub client secret. You can generate secrets in your GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
+                'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
+                'introduction' => '1.4.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -952,4 +1016,43 @@ return [
             ],
         ],
     ],
+    [
+        'category' => 'Migrations',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
+                'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
+                'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ]
+    ],
+    [
+        'category' => 'Assistant',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
+                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ]
+    ]
 ];

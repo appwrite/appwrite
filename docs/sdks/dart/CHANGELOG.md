@@ -1,3 +1,18 @@
+## 9.0.0
+
+* Support for Appwrite 1.4.0
+* New endpoints for fetching user identities
+* New endpoints for listing locale codes
+* New endpoint for downloading a function deployment
+* Updated documentation
+* Breaking changes:
+  * The `createFunction` method has a new signature.
+  * The `createExecution` method has a new signature.
+  * The `updateFunction` method has a new signature.
+  * The `createDeployment` method no longer requires an entrypoint.
+  * The `updateFile` method now includes the ability to update the file name.
+  * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
 ## 8.0.0
 
 * Added relationships support
