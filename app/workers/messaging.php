@@ -1,9 +1,9 @@
 <?php
 
-use Appwrite\DSN\DSN;
 use Appwrite\Resque\Worker;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\DSN\DSN;
 use Utopia\Messaging\Adapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;

@@ -9,7 +9,6 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\Role;
@@ -456,13 +455,16 @@ class Auth
             }
         }
 
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $roles[] = 'label:' . $label;
+        }
+
         return $roles;
     }
 
     public static function isAnonymousUser(Document $user): bool
     {
-        return (is_null($user->getAttribute('email'))
-            || is_null($user->getAttribute('phone'))
-        ) && is_null($user->getAttribute('password'));
+        return is_null($user->getAttribute('email'))
+            && is_null($user->getAttribute('phone'));
     }
 }

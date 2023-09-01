@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.2.2 as final
+FROM appwrite/base:0.4.3 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -51,6 +51,7 @@ COPY --from=node /usr/local/src/console/build /usr/src/code/console
 
 # Add Source Code
 COPY ./app /usr/src/code/app
+COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
@@ -71,12 +72,12 @@ RUN mkdir -p /storage/uploads && \
 
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/maintenance && \
+    chmod +x /usr/local/bin/maintenance &&  \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
+    chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/migrate && \
     chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/executor && \
     chmod +x /usr/local/bin/schedule && \
     chmod +x /usr/local/bin/sdks && \
     chmod +x /usr/local/bin/specs && \
@@ -91,7 +92,17 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
-    chmod +x /usr/local/bin/worker-webhooks
+    chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-migrations
+
+# Cloud Executabless
+RUN chmod +x /usr/local/bin/hamster && \
+    chmod +x /usr/local/bin/volume-sync && \
+    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
+    chmod +x /usr/local/bin/patch-delete-project-collections && \
+    chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/calc-users-stats && \
+    chmod +x /usr/local/bin/calc-tier-stats
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

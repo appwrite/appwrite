@@ -260,6 +260,11 @@ class Realtime extends Adapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'rules':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;
@@ -325,6 +330,11 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'migrations':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 
