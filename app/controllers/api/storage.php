@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\Hash\Sha;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -41,6 +42,7 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
 
 App::post('/v1/storage/buckets')
@@ -62,8 +64,8 @@ App::post('/v1/storage/buckets')
     ->param('name', '', new Text(128), 'Bucket name')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
-    ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self-hosted setups you can change the max limit by changing the `_APP_STORAGE_LIMIT` environment variable. [Learn more about storage environment variables](/docs/environment-variables#storage)', true)
+    ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
+    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ',  [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -79,7 +81,7 @@ App::post('/v1/storage/buckets')
         $permissions = Permission::aggregate($permissions);
 
         try {
-            $files = Config::getParam('collections', [])['files'] ?? [];
+            $files = (Config::getParam('collections', [])['buckets'] ?? [])['files'] ?? [];
             if (empty($files)) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files collection is not configured.');
             }
@@ -167,7 +169,9 @@ App::get('/v1/storage/buckets')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -234,8 +238,8 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('name', null, new Text(128), 'Bucket name', false)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](/docs/permissions).', true)
-    ->param('enabled', true, new Boolean(true), 'Is bucket enabled?', true)
-    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '. For self hosted version you can change the limit by changing _APP_STORAGE_LIMIT environment variable. [Learn more about storage environment variables](/docs/environment-variables#storage)', true)
+    ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
+    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -360,10 +364,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
     ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
-
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -496,19 +502,26 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
         if (!$file->isEmpty()) {
             $chunks = $file->getAttribute('chunksTotal', 1);
+            $uploaded = $file->getAttribute('chunksUploaded', 0);
             $metadata = $file->getAttribute('metadata', []);
+
             if ($chunk === -1) {
                 $chunk = $chunks;
+            }
+
+            if ($uploaded === $chunks) {
+                throw new Exception(Exception::STORAGE_FILE_ALREADY_EXISTS);
             }
         }
 
         $chunksUploaded = $deviceFiles->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed uploading file');
         }
 
         if ($chunksUploaded === $chunks) {
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)) === Storage::DEVICE_LOCAL) {
+            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceFiles->getType() === Storage::DEVICE_LOCAL) {
                 $antivirus = new Network(
                     App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
                     (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
@@ -574,6 +587,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => $fileId,
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
+                        'bucketInternalId' => $bucket->getInternalId(),
                         'name' => $fileName,
                         'path' => $path,
                         'signature' => $fileHash,
@@ -623,6 +637,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         '$id' => ID::custom($fileId),
                         '$permissions' => $permissions,
                         'bucketId' => $bucket->getId(),
+                        'bucketInternalId' => $bucket->getInternalId(),
                         'name' => $fileName,
                         'path' => $path,
                         'signature' => '',
@@ -688,10 +703,12 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
-
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -709,7 +726,9 @@ App::get('/v1/storage/buckets/:bucketId/files')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE);
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */
@@ -764,10 +783,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, string $mode) {
-
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -836,7 +857,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -982,7 +1006,10 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -1119,10 +1146,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('mode')
     ->inject('deviceFiles')
     ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceFiles) {
-
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -1270,17 +1299,20 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('sdk.response.model', Response::MODEL_FILE)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('name', null, new Text(255), 'Name of the file', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
-
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
@@ -1332,6 +1364,10 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
 
         $file->setAttribute('$permissions', $permissions);
 
+        if (!is_null($name)) {
+            $file->setAttribute('name', $name);
+        }
+
         if ($fileSecurity && !$valid) {
             try {
                 $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
@@ -1352,7 +1388,6 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     });
 
 App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
-    ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -1381,7 +1416,10 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $deletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && $mode !== APP_MODE_ADMIN)) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 

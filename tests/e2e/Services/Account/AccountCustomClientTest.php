@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
+use Appwrite\Extend\Exception;
 use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
@@ -369,6 +370,21 @@ class AccountCustomClientTest extends Scope
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
+        \usleep(1000 * 30); // wait for 30ms to let the shutdown update accessedAt
+
+        $apiKey = $this->getProject()['apiKey'];
+        $userId = $response['body']['userId'];
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+        ]));
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+
+        $this->assertNotEmpty($response['body']['accessedAt']);
+
         /**
          * Test for FAILURE
          */
@@ -481,8 +497,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -746,8 +761,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -847,8 +861,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $number);
         $this->assertTrue($response['body']['phoneVerification']);
 
@@ -899,8 +912,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -942,8 +954,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**
@@ -993,8 +1004,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         \sleep(2);
 

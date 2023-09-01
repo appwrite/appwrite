@@ -200,11 +200,11 @@ class V15 extends Filter
 
         $operations = [
             'equal' => Query::TYPE_EQUAL,
-            'notEqual' => Query::TYPE_NOTEQUAL,
+            'notEqual' => Query::TYPE_NOT_EQUAL,
             'lesser' => Query::TYPE_LESSER,
-            'lesserEqual' => Query::TYPE_LESSEREQUAL,
+            'lesserEqual' => Query::TYPE_LESSER_EQUAL,
             'greater' => Query::TYPE_GREATER,
-            'greaterEqual' => Query::TYPE_GREATEREQUAL,
+            'greaterEqual' => Query::TYPE_GREATER_EQUAL,
             'search' => Query::TYPE_SEARCH,
         ];
         foreach ($content['queries'] as $i => $query) {
