@@ -1,3 +1,11 @@
+# Version 1.4.2
+
+## Fixes
+
+## Changes
+
+- Make installation confirmation case insensitive [#6097](https://github.com/appwrite/appwrite/pull/6097)
+
 # Version 1.4.1
 
 ## Features
