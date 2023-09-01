@@ -37,7 +37,8 @@ ARG VERSION=dev
 ARG DEBUG=false
 ENV DEBUG=$DEBUG
 
-ENV _APP_VERSION=$VERSION
+ENV _APP_VERSION=$VERSION \
+    _APP_HOME=https://appwrite.io
 
 RUN \
   if [ "$DEBUG" == "true" ]; then \
