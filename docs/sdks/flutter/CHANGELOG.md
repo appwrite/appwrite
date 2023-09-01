@@ -1,3 +1,9 @@
+## 10.0.1
+
+* Added a new `label` function to the `Role` helper class
+* Update internal variable names to prevent name collision
+* Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648)
+
 ## 10.0.0
 
 * Support for Appwrite 1.4.0
