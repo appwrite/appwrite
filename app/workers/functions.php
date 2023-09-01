@@ -335,6 +335,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
+                        log: $log,
                         statsd: $statsd,
                         dbForProject: $dbForProject,
                         project: $project,
