@@ -56,10 +56,10 @@ Table of Contents:
     - [Client](#client)
     - [Server](#server)
     - [Community](#community)
+- [Community](#community)
 - [Architecture](#architecture)
 - [Contributing](#contributing)
 - [Security](#security)
-- [Follow Us](#follow-us)
 - [License](#license)
 
 ## Installation
@@ -196,7 +196,7 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 Join our growing community around the world! Check out our official [Blog](https://dev.to/appwrite). Follow us on [Twitter](https://twitter.com/appwrite), or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
 
-<a href="https://appwrite.io/discord" alt="Melt UI Discord community">
+<a href="https://appwrite.io/discord" alt="Appwrite Discord community">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://invidget.switchblade.xyz/GSeTUeA">
   <img alt="Melt UI Discord community" src="https://invidget.switchblade.xyz/GSeTUeA?theme=light">
