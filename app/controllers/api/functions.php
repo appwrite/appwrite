@@ -660,7 +660,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
+    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -702,6 +702,10 @@ App::put('/v1/functions/:functionId')
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if (empty($runtime)) {
+            $runtime = $function->getAttribute('runtime');
         }
 
         $enabled ??= $function->getAttribute('enabled', true);
