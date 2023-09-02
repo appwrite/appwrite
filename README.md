@@ -12,19 +12,19 @@
 
 <!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
+[![X/Twitter Account](https://img.shields.io/static/v1?color=00acee&label=Follow%20us&style=flat-square&message=on%20X%20(Twitter))](https://x.com/appwrite)
 [![We're Hiring](https://img.shields.io/static/v1?label=We're&message=Hiring&color=blue&style=flat-square)](https://appwrite.io/company/careers)
-[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=ready&color=191120&style=flat-square)](https://hacktoberfest.appwrite.io)
 [![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
 [![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/appwrite/appwrite/actions)
-[![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 
+<!--[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=ready&color=191120&style=flat-square)](https://hacktoberfest.appwrite.io)-->
 <!-- [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite) -->
 <!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
 English | [简体中文](README-CN.md)
 
-[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
+[**Appwrite 1.4 has been released!**]([https://cloud.appwrite.io](https://dev.to/appwrite/appwrite-14-brings-command-center-ai-one-click-migrations-and-upgraded-functions-1ch2))
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -192,6 +192,17 @@ Below is a list of currently supported platforms and languages. If you would lik
 
 Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
 
+## Community
+
+Join our growing community around the world! Check out our official [Blog](https://dev.to/appwrite). Follow us on [Twitter](https://twitter.com/appwrite), or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
+
+<a href="https://appwrite.io/discord" alt="Melt UI Discord community">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://invidget.switchblade.xyz/GSeTUeA">
+  <img alt="Melt UI Discord community" src="https://invidget.switchblade.xyz/GSeTUeA?theme=light">
+</picture>
+</a>
+
 ## Architecture
 
 ![Appwrite Architecture](docs/specs/overview.drawio.svg)
@@ -209,10 +220,6 @@ We truly ❤️ pull requests! If you wish to help, you can learn more about how
 ## Security
 
 For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
-
-## Follow Us
-
-Join our growing community around the world! Check out our official [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
 
 ## License
 
