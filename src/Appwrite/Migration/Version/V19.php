@@ -227,7 +227,25 @@ class V19 extends Migration
                     $attributesToCreate = [
                         'resourceInternalId',
                         'buildInternalId',
+                        'commands',
                         'type',
+                        'installationId',
+                        'installationInternalId',
+                        'providerRepositoryId',
+                        'repositoryId',
+                        'repositoryInternalId',
+                        'providerRepositoryName',
+                        'providerRepositoryOwner',
+                        'providerRepositoryUrl',
+                        'providerCommitHash',
+                        'providerCommitAuthorUrl',
+                        'providerCommitAuthor',
+                        'providerCommitMessage',
+                        'providerCommitUrl',
+                        'providerBranch',
+                        'providerBranchUrl',
+                        'providerRootDirectory',
+                        'providerCommentId',
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
@@ -558,6 +576,25 @@ class V19 extends Migration
         }
     }
 
+    private function getFunctionCommands(Document $function): string
+    {
+        $runtime = $function->getAttribute('runtime');
+        $language = explode('-', $runtime)[0];
+        $commands = match($language) {
+            'dart' => 'dart pub get',
+            'deno' => 'deno cache ' . $function->getAttribute('entrypoint'),
+            'dotnet' => 'dotnet restore',
+            'node' => 'npm install',
+            'php' => 'composer install',
+            'python' => 'pip install -r requirements.txt',
+            'ruby' => 'bundle install',
+            'swift' => 'swift package resolve',
+            default => '',
+        };
+
+        return $commands;
+    }
+
     /**
      * Fix run on each document
      *
@@ -597,6 +634,9 @@ class V19 extends Migration
                     $document->setAttribute('buildInternalId', $build->getInternalId());
                 }
 
+                $commands = $this->getFunctionCommands($function);
+                $document->setAttribute('commands', $commands);
+
                 $document->setAttribute('type', 'manual');
                 break;
             case 'executions':
@@ -619,6 +659,9 @@ class V19 extends Migration
                     $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                     $document->setAttribute('entrypoint', $deployment->getAttribute('entrypoint'));
                 }
+
+                $commands = $this->getFunctionCommands($document);
+                $document->setAttribute('commands', $commands);
 
                 $schedule = $this->consoleDB->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
