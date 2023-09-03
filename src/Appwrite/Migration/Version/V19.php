@@ -696,6 +696,9 @@ class V19 extends Migration
                 $document->setAttribute('templates', []);
 
                 break;
+            case 'variables':
+                $document->setAttribute('resourceType', 'function');
+                break;
             default:
                 break;
         }
