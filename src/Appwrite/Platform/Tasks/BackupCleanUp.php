@@ -41,7 +41,6 @@ class BackupCleanUp extends Action
      */
     public function action(string $database): void
     {
-        var_dump(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE'));
         if (empty(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE'))) {
             Console::error('Can\'t read ' . '_APP_CONNECTIONS_BACKUPS_STORAGE');
             Console::exit();
