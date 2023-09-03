@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\Backup;
+use Appwrite\Platform\Tasks\BackupCleanUp;
 use Appwrite\Platform\Tasks\Restore;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
@@ -52,6 +53,7 @@ class Tasks extends Service
             ->addAction(PatchDeleteProjectCollections::getName(), new PatchDeleteProjectCollections())
             ->addAction(Backup::getName(), new Backup())
             ->addAction(Restore::getName(), new Restore())
+            ->addAction(BackupCleanUp::getName(), new BackupCleanUp())
         ;
     }
 }
