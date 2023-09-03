@@ -1062,10 +1062,8 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         if ($commands === null) {
-            $commands = $function->getAttribute('entrypoint', '');
+            $commands = $function->getAttribute('commands', '');
         }
-
-        $commands = $function->getAttribute('commands', '');
 
         if (empty($entrypoint)) {
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);

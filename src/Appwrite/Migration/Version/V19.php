@@ -615,7 +615,7 @@ class V19 extends Migration
     {
         $runtime = $function->getAttribute('runtime');
         $language = explode('-', $runtime)[0];
-        $commands = match($language) {
+        $commands = match ($language) {
             'dart' => 'dart pub get',
             'deno' => 'deno cache ' . $function->getAttribute('entrypoint'),
             'dotnet' => 'dotnet restore',
