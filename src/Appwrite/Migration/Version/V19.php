@@ -56,6 +56,14 @@ class V19 extends Migration
                 $status = 'verified';
             }
 
+            $projectId = $domain->getAttribute('projectId');
+            $projectInternalId = $domain->getAttribute('projectInternalId');
+
+            if (empty($projectId) || empty($projectInternalId)) {
+                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
+                continue;
+            }
+
             $ruleDocument = new Document([
                 'projectId' => $domain->getAttribute('projectId'),
                 'projectInternalId' => $domain->getAttribute('projectInternalId'),
