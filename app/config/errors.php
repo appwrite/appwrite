@@ -240,6 +240,27 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_NAME_INVALID => [
+        'name' => Exception::USER_NAME_INVALID,
+        'description' => 'Name must be at least 2 characters long.',
+        'code' => 400,
+    ],
+    Exception::USER_EMAIL_INVALID => [
+        'name' => Exception::USER_EMAIL_INVALID,
+        'description' => 'Invalid email format.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_INVALID => [
+        'name' => Exception::USER_PASSWORD_INVALID,
+        'description' => 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.',
+        'code' => 400,
+    ],
+    Exception::EMAIL_REQUIRED => [
+        'name' => Exception::EMAIL_REQUIRED,
+        'description' => 'Email address is missing. Please enter it to continue.',
+        'code' => 400,
+    ],
+
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

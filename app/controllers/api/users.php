@@ -59,6 +59,33 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
     }
 
     try {
+        // Validation logic
+        // Regular expression for validating an email address
+        $emailRegex = '/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/';
+
+        // Regular expression for validating a phone number, starting with '+'
+        $phoneRegex = '/^\+[0-9]{1,15}$/';
+
+        // Regular expression for validating a password with at least one uppercase letter, one lowercase letter, and one number
+        $passwordRegex = '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/';
+
+        if (!isset($name) || strlen($name) < 2) {
+            throw new Exception(Exception::USER_NAME_INVALID);
+        }
+
+        if (is_null($email)) {
+            throw new Exception(Exception::EMAIL_REQUIRED);
+        }
+
+        if (!is_null($email) && !preg_match($emailRegex, $email)) {
+            throw new Exception(Exception::USER_EMAIL_INVALID);
+        }
+
+        if (!preg_match($passwordRegex, $password)) {
+            throw new Exception(Exception::USER_PASSWORD_INVALID);
+}
+
+
         $userId = $userId == 'unique()'
             ? ID::unique()
             : ID::custom($userId);
