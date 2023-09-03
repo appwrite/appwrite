@@ -87,6 +87,7 @@ class BackupCleanUp extends Action
                         $backupDate = new \DateTime($date);
                         $difference = $now->getTimestamp() - $backupDate->getTimestamp();
                         if ($difference > self::CLEANUP_LOCAL_FILES_SECONDS) {
+                            // todo do we want to check if file exist on cloud before delete locally?
                             if ($this->s3->exists($this->s3->getRoot() . '/' . $item)) {
                                 self::log('Deleting ' . $local->getPath($item));
                                 //unlink($local->getPath($item));
