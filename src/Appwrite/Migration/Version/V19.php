@@ -295,16 +295,31 @@ class V19 extends Migration
 
                     break;
                 case 'executions':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'functionInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'functionInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToCreate = [
+                        'functionInternalId',
+                        'deploymentInternalId',
+                        'requestMethod',
+                        'requestPath',
+                        'requestHeaders',
+                        'responseHeaders',
+                    ];
+                    foreach ($attributesToCreate as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                        }
                     }
 
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToDelete = [
+                        'response'
+                    ];
+                    foreach ($attributesToDelete as $attribute) {
+                        try {
+                            $this->projectDB->deleteAttribute($id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     try {
@@ -323,6 +338,18 @@ class V19 extends Migration
                         $this->projectDB->renameAttribute($id, 'statusCode', 'responseStatusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'responseStatusCode' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->projectDB->deleteIndex($id, '_key_statusCode');
+                    } catch (\Throwable $th) {
+                        Console::warning("'_key_statusCode' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_responseStatusCode');
+                    } catch (\Throwable $th) {
+                        Console::warning("'_key_responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
