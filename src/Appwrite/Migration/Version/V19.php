@@ -190,16 +190,23 @@ class V19 extends Migration
 
                     break;
                 case 'builds':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToCreate = [
+                        'size',
+                        'deploymentInternalId',
+                        'logs',
+                    ];
+                    foreach ($attributesToCreate as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->projectDB->renameAttribute($id, 'outputPath', 'path');
                     } catch (\Throwable $th) {
-                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
+                        Console::warning("'path' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
@@ -209,13 +216,13 @@ class V19 extends Migration
                     try {
                         $this->projectDB->renameAttribute($id, 'log', 'logs');
                     } catch (\Throwable $th) {
-                        Console::warning("'errors' from {$id}: {$th->getMessage()}");
+                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->updateAttribute($id, 'logs', size: 1000000);
                     } catch (\Throwable $th) {
-                        Console::warning("'errors' from {$id}: {$th->getMessage()}");
+                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
