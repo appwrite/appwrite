@@ -15,7 +15,6 @@ use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
 use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
 use Appwrite\Platform\Tasks\ClearCardCache;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
@@ -31,7 +30,6 @@ class Tasks extends Service
         $this->type = self::TYPE_CLI;
         $this
             ->addAction(Version::getName(), new Version())
-            ->addAction(Usage::getName(), new Usage())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Hamster::getName(), new Hamster())

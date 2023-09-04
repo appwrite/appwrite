@@ -490,23 +490,19 @@ class BuildsV1 extends Worker
                 channels: $target['channels'],
                 roles: $target['roles']
             );
-
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $statsd = $register->get('statsd');
-                $usage = new Stats($statsd);
-                $usage
-                    ->setParam('projectInternalId', $project->getInternalId())
-                    ->setParam('projectId', $project->getId())
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('builds.{scope}.compute', 1)
-                    ->setParam('buildStatus', $build->getAttribute('status', ''))
-                    ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('networkRequestSize', 0)
-                    ->setParam('networkResponseSize', 0)
-                    ->submit();
-            }
         }
+
+        /** Trigger usage queue */
+        $this
+            ->getUsageQueue()
+            ->setProject($project)
+            ->addMetric(METRIC_BUILDS, 1) // per project
+            ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+            ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+            ->trigger();
     }
 
     protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void

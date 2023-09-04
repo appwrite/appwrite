@@ -91,10 +91,6 @@ ENV _APP_SERVER=swoole \
     _APP_DB_USER=root \
     _APP_DB_PASS=password \
     _APP_DB_SCHEMA=appwrite \
-    _APP_INFLUXDB_HOST=influxdb \
-    _APP_INFLUXDB_PORT=8086 \
-    _APP_STATSD_HOST=telegraf \
-    _APP_STATSD_PORT=8125 \
     _APP_SMTP_HOST= \
     _APP_SMTP_PORT= \
     _APP_SMTP_SECURE= \
@@ -165,7 +161,6 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/migrate && \
@@ -185,16 +180,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-migrations
-
-# Cloud Executabless
-RUN chmod +x /usr/local/bin/hamster && \
-    chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats
+    chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-usage
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

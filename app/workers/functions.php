@@ -2,12 +2,11 @@
 
 require_once __DIR__ . '/../worker.php';
 
-use Domnikl\Statsd\Client;
+use Appwrite\Event\Usage;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
 use Executor\Executor;
 use Utopia\App;
@@ -31,7 +30,7 @@ Server::setResource('execute', function () {
         Log $log,
         Func $queueForFunctions,
         Database $dbForProject,
-        Client $statsd,
+        Usage $queueForUsage,
         Document $project,
         Document $function,
         string $trigger,
@@ -47,6 +46,7 @@ Server::setResource('execute', function () {
     ) {
         $user ??= new Document();
         $functionId = $function->getId();
+        $functionInternalId = $function->getInternalId();
         $deploymentId = $function->getAttribute('deployment', '');
 
         $log->addTag('functionId', $functionId);
@@ -54,6 +54,7 @@ Server::setResource('execute', function () {
 
         /** Check if deployment exists */
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deploymentInternalId = $deployment->getInternalId();
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
@@ -127,6 +128,14 @@ Server::setResource('execute', function () {
             if ($execution->isEmpty()) {
                 throw new Exception('Failed to create or read execution');
             }
+
+            /**
+             * Usage
+             */
+
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1) // per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         if ($execution->getAttribute('status') !== 'processing') {
@@ -265,20 +274,13 @@ Server::setResource('execute', function () {
             roles: $target['roles']
         );
 
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage = new Stats($statsd);
-            $usage
-                ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-                ->setParam('executions.{scope}.compute', 1)
-                ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('duration'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
-        }
+        /** Trigger usage queue */
+        $queueForUsage
+            ->setProject($project)
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+            ->trigger()
+        ;
 
         if (!empty($error)) {
             throw new Exception($error, $errorCode);
@@ -290,10 +292,10 @@ $server->job()
     ->inject('message')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
-    ->inject('statsd')
+    ->inject('queueForUsage')
     ->inject('execute')
     ->inject('log')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute, Log $log) {
+    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Usage $queueForUsage, callable $execute, Log $log) {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -335,7 +337,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
-                        statsd: $statsd,
+                        queueForUsage: $queueForUsage,
                         dbForProject: $dbForProject,
                         project: $project,
                         function: $function,
@@ -383,7 +385,7 @@ $server->job()
                     path: $payload['path'],
                     method: $payload['method'],
                     headers: $payload['headers'],
-                    statsd: $statsd,
+                    queueForUsage: $queueForUsage,
                 );
                 break;
             case 'schedule':
@@ -403,7 +405,7 @@ $server->job()
                     path: $payload['path'],
                     method: $payload['method'],
                     headers: $payload['headers'],
-                    statsd: $statsd,
+                    queueForUsage: $queueForUsage,
                 );
                 break;
         }
