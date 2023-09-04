@@ -764,4 +764,54 @@ class V19 extends Migration
 
         $this->projectDB->deleteCachedCollection('builds');
     }
+
+    /**
+     * Overwrite parent to skip cache collection as well
+     *
+     * @param callable $callback
+     * @return void
+     */
+    public function forEachDocument(callable $callback): void
+    {
+        $internalProjectId = $this->project->getInternalId();
+
+        $collections = match ($internalProjectId) {
+            'console' => $this->collections['console'],
+            default => $this->collections['projects'],
+        };
+
+        foreach ($collections as $collection) {
+            // Also skip cache collection because the we don't need to migrate
+            // it and the $ids cause issues with the cursor pagination
+            if ($collection['$collection'] !== Database::METADATA || $collection['$id'] === 'cache') {
+                continue;
+            }
+
+            Console::log('Migrating Collection ' . $collection['$id'] . ':');
+
+            \Co\run(function (array $collection, callable $callback) {
+                foreach ($this->documentsIterator($collection['$id']) as $document) {
+                    go(function (Document $document, callable $callback) {
+                        if (empty($document->getId()) || empty($document->getCollection())) {
+                            return;
+                        }
+
+                        $old = $document->getArrayCopy();
+                        $new = call_user_func($callback, $document);
+
+                        if (is_null($new) || $new->getArrayCopy() == $old) {
+                            return;
+                        }
+
+                        try {
+                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                        } catch (\Throwable $th) {
+                            Console::error('Failed to update document: ' . $th->getMessage());
+                            return;
+                        }
+                    }, $document, $callback);
+                }
+            }, $collection, $callback);
+        }
+    }
 }
