@@ -41,11 +41,17 @@ class Variable extends Model
                 'default' => '',
                 'example' => 'myPa$$word1',
             ])
-            ->addRule('functionId', [
+            ->addRule('resourceType', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Function ID.',
+                'description' => 'Service to which the variable belongs. Possible values are "project", "function"',
                 'default' => '',
-                'example' => '5e5ea5c16897e',
+                'example' => 'function',
+            ])
+            ->addRule('resourceId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'ID of resource to which the variable belongs. If resourceType is "project", it is empty. If resourceType is "function", it is ID of the function.',
+                'default' => '',
+                'example' => 'myAwesomeFunction',
             ])
         ;
     }
