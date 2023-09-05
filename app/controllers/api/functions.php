@@ -13,7 +13,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\Validator\Assoc;
-use Appwrite\Usage\Stats;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
