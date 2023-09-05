@@ -250,7 +250,7 @@ App::get('/v1/vcs/github/authorize')
 
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
 
-        if(empty($appName)) {
+        if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
         }
 

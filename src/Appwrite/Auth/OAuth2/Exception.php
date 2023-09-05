@@ -19,7 +19,7 @@ class Exception extends AppwriteException
             if (\is_array($decoded['error'] ?? '')) {
                 $this->error = $decoded['error']['status'] ?? 'Unknown error';
                 $this->errorDescription = $decoded['error']['message'] ?? 'No description';
-            } else if (\is_array($decoded['errors'] ?? '')) {
+            } elseif (\is_array($decoded['errors'] ?? '')) {
                 $this->error = $decoded['error'] ?? $decoded['message'] ?? 'Unknown error';
                 $this->errorDescription = $decoded['errors'][0]['message'] ?? 'No description';
             } else {
