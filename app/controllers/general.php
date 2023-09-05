@@ -47,8 +47,6 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
-    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
-
     $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
@@ -59,14 +57,11 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
-
-        if ($mainDomain === 'localhost') {
-            throw new AppwriteException(AppwriteException::ROUTER_DOMAIN_NOT_CONFIGURED);
-        } else {
-            throw new AppwriteException(AppwriteException::ROUTER_HOST_NOT_FOUND);
-        }
+        // Act as API - no Proxy logic
+        return false;
     }
+
+    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
@@ -193,7 +188,7 @@ App::init()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
+        if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
@@ -327,7 +322,7 @@ App::init()
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // Localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
                 }
@@ -497,7 +492,7 @@ App::options()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
+        if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
@@ -763,7 +758,7 @@ include_once __DIR__ . '/shared/api/auth.php';
 
 App::wildcard()
     ->groups(['api'])
-    ->label('scope', 'global')
+    ->label('scope', 'public')
     ->action(function () {
         throw new AppwriteException(AppwriteException::GENERAL_ROUTE_NOT_FOUND);
     });

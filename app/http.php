@@ -229,21 +229,16 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
-    // Serve static files (console) only for main domain
-    $host = $request->getHostname() ?? '';
-    $mainDomain = App::getEnv('_APP_DOMAIN', '');
-    if ($host === $mainDomain || $host === 'localhost') {
-        if (Files::isFileLoaded($request->getURI())) {
-            $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
+    if (Files::isFileLoaded($request->getURI())) {
+        $time = (60 * 60 * 24 * 365 * 2); // 45 days cache
 
-            $response
-                ->setContentType(Files::getFileMimeType($request->getURI()))
-                ->addHeader('Cache-Control', 'public, max-age=' . $time)
-                ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
-                ->send(Files::getFileContents($request->getURI()));
+        $response
+            ->setContentType(Files::getFileMimeType($request->getURI()))
+            ->addHeader('Cache-Control', 'public, max-age=' . $time)
+            ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $time) . ' GMT') // 45 days cache
+            ->send(Files::getFileContents($request->getURI()));
 
-            return;
-        }
+        return;
     }
 
     $app = new App('UTC');
