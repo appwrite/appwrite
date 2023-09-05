@@ -33,6 +33,12 @@ class Provider extends Model
                 'default' => '',
                 'example' => 'mailgun',
             ])
+            ->addRule('default', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Default provider or not.',
+                'default' => '',
+                'example' => true,
+            ])
             ->addRule('type', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Type of provider.',
