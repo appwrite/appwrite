@@ -28,7 +28,7 @@ class StatsTest extends TestCase
                 ]));
 
         $dsn = explode('=', $env);
-        $dsn = $dsn[1] ?? '';
+        $dsn = count($dsn) > 1 ? $dsn[1] : $dsn[0];
         $dsn = new DSN($dsn);
         $this->connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
         $this->client     = new Client(self::QUEUE_NAME, $this->connection);
