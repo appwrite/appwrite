@@ -627,7 +627,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             } elseif (!empty($phone)) {
                 $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-                    Query::equal('default', [true, false]), 
+                    Query::equal('default', [true, false]),
                     Query::equal('type', ['sms'])
                 ]));
 

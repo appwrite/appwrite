@@ -743,7 +743,7 @@ class AccountCustomClientTest extends Scope
     public function testCreatePhone(): array
     {
         $number = '+123456789';
-        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/general' , \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/general', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

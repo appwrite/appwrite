@@ -91,7 +91,7 @@ class MessagingV1 extends Worker
         $message = new Document($this->args['message']);
 
         $providerId = $message->getAttribute('providerId');
-        $providerRecord =$dbForProject->getDocument('providers', $providerId);
+        $providerRecord = $dbForProject->getDocument('providers', $providerId);
 
         $provider = match ($providerRecord->getAttribute('type')) {//stubbbbbbed.
             'sms' => $this->sms($providerRecord),
@@ -110,7 +110,7 @@ class MessagingV1 extends Worker
             'email' => $this->buildEmailMessage($message->getArrayCopy()),
             default => null
         };
-        
+
 
         $provider->send($message);
     }
