@@ -21,6 +21,7 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'assistant.read',
 ];
 
 $admins = [
@@ -59,7 +60,6 @@ $admins = [
     'migrations.write',
     'vcs.read',
     'vcs.write',
-    'assistant.read',
 ];
 
 return [
