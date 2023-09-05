@@ -1,1 +1,1 @@
-Check the Appwrite in-memory cache server is up and connection is successful.
+Check the Appwrite in-memory cache servers are up and connection is successful.
