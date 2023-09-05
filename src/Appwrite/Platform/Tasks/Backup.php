@@ -16,8 +16,11 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    //public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    public const BACKUP_INTERVAL_SECONDS = 120; // 4 hours;
     public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
+    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 1; // 2 days?
+    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 1; // 14 days?;
     protected string $filename;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
@@ -95,6 +98,9 @@ class Backup extends Action
         }, self::BACKUP_INTERVAL_SECONDS);
     }
 
+    /**
+     * @throws Exception
+     */
     public function start(): void
     {
         $start = microtime(true);
@@ -108,6 +114,8 @@ class Backup extends Action
 
         $this->fullBackup($local);
         $this->upload($local);
+        $this->cleanLocalFiles($local);
+        $this->cleanCloudFiles();
 
         self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
@@ -195,6 +203,91 @@ class Backup extends Action
             Console::error($e->getMessage());
             Console::exit();
         }
+    }
+
+    public function cleanLocalFiles(Device $local)
+    {
+        self::log('cleanLocalFiles start');
+
+        $folder = scandir($local->getRoot());
+        if ($folder !== false) {
+            foreach ($folder as $item) {
+                if ($this->isDelete($item, self::CLEANUP_LOCAL_FILES_SECONDS)) {
+                    if (str_ends_with($item, '.xbstream.log')) {
+                        $delete = true;
+                    } else {
+                        // Check if file exist on cloud before delete
+                        if ($this->s3->exists($this->s3->getRoot() . '/' . $item)) {
+                            $delete = true;
+                        } else {
+                            if ($this->isDelete($item, self::CLEANUP_CLOUD_FILES_SECONDS)) {
+                                $delete = true;
+                            } else {
+                                Console::warning('Skipping delete not found on cloud: ' . $local->getPath($item) . ' ');
+                                $delete = false;
+                            }
+                        }
+                    }
+
+                    if ($delete === true) {
+                        if (unlink($local->getPath($item))) {
+                            Console::success($local->getPath($item) . ' Deleted!');
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function cleanCloudFiles(): void
+    {
+        self::log('cleanCloudFiles start');
+
+        $files = $this->s3->getFiles($this->s3->getRoot());
+
+        if ($files['KeyCount'] > 0 && $files['IsTruncated'] === false) {
+            foreach ($files['Contents'] as $file) {
+                if ($this->isDelete(basename($file['Key']), self::CLEANUP_CLOUD_FILES_SECONDS)) {
+                    if ($this->s3->delete($file['Key'])) {
+                        Console::success($file['Key'] . ' Deleted!');
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * @param string $item
+     * @param int $seconds
+     * @return bool
+     */
+    public function isDelete(string $item, int $seconds): bool
+    {
+        if (str_ends_with($item, '.xbstream')) {
+            $item = substr($item, 0, -9);
+        } elseif (str_ends_with($item, '.xbstream.log')) {
+            $item = substr($item, 0, -13);
+        } else {
+            return false;
+        }
+
+        $now = new \DateTime();
+        [$year, $month, $day, $hour, $minute, $second] = explode('_', $item);
+        $date = $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second;
+
+        try {
+            $backupDate = new \DateTime($date);
+            $difference = $now->getTimestamp() - $backupDate->getTimestamp();
+            if ($difference > $seconds) {
+                return true;
+            }
+        } catch (Exception $e) {
+        }
+
+        return false;
     }
 
     public static function log(string $message): void
