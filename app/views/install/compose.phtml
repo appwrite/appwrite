@@ -594,7 +594,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: executor
+    hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
     image: openruntimes/executor:0.3.5
