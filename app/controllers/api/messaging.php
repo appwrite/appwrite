@@ -16,7 +16,9 @@ use Utopia\Database\Validator\Datetime;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::get('/v1/messaging/providers')
     ->desc('List Providers')
@@ -1056,6 +1058,101 @@ App::patch('/v1/messaging/providers/:id/apns')
                 // Not all credential params are present
                 throw new Exception(Exception::DOCUMENT_MISSING_DATA);
             }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+        $dbForProject->deleteCachedDocument('providers', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+/**
+ * General Purpose Provider
+ */
+App::post('/v1/messaging/providers/general')
+    ->desc('Create General Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createGeneralProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-general-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('provider', '', new Text(128), 'Provider Internal Name')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('type', '', new WhiteList(['push', 'email', 'sms']), 'Provider type.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('credentials', '', new JSON(), 'Provider credentials object.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $provider, string $name, string $type, bool $default, array $credentials, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => $provider,
+            'type' => $type,
+            'default' => $default,
+            'credentials' => $credentials,
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/:id/general')
+    ->desc('Update General Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.update')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateProviderGeneral')
+    ->label('sdk.description', '/docs/references/messaging/update-provider-general.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('credentials', '', new JSON(), 'Provider credentials.', true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, string $name, array $credentials, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $id);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($name) {
+            $provider->setAttribute('name', $name);
+        }
+
+        if (!empty($credentials)) {
+            $provider->setAttribute('credentials', $credentials);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);

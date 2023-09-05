@@ -2,7 +2,9 @@
 
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\Messaging\Adapters\SMS as SMSAdapter;
+use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
@@ -14,6 +16,9 @@ use Utopia\Messaging\Adapters\Push\FCM;
 use Utopia\Messaging\Adapters\Email as EmailAdapter;
 use Utopia\Messaging\Adapters\Email\Mailgun;
 use Utopia\Messaging\Adapters\Email\SendGrid;
+use Utopia\Messaging\Messages\Email;
+use Utopia\Messaging\Messages\Push;
+use Utopia\Messaging\Messages\SMS;
 
 require_once __DIR__ . '/../init.php';
 
@@ -38,6 +43,7 @@ class MessagingV1 extends Worker
     {
         $credentials = $record->getAttribute('credentials');
         return match ($record->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'text-magic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
@@ -79,11 +85,13 @@ class MessagingV1 extends Worker
 
     public function run(): void
     {
-        $providerId = $this->args['providerId'];
-        $providerRecord =
-        $this
-        ->getConsoleDB()
-        ->getDocument('providers', $providerId);
+        $project = new Document($this->args['project']);
+
+        $dbForProject = $this->getProjectDB($project);
+        $message = new Document($this->args['message']);
+
+        $providerId = $message->getAttribute('providerId');
+        $providerRecord =$dbForProject->getDocument('providers', $providerId);
 
         $provider = match ($providerRecord->getAttribute('type')) {//stubbbbbbed.
             'sms' => $this->sms($providerRecord),
@@ -96,19 +104,13 @@ class MessagingV1 extends Worker
       // switch on provider name
       // call function passing needed credentials returns required provider.
 
-        $messageId = $this->args['messageId'];
-        $messageRecord =
-          $this
-          ->getConsoleDB()
-          ->getDocument('messages', $messageId);
-
         $message = match ($providerRecord->getAttribute('type')) {
-            'sms' => $this->buildSMSMessage($messageRecord->getArrayCopy()),
-            'push' => $this->buildPushMessage($messageRecord->getArrayCopy()),
-            'email' => $this->buildEmailMessage($messageRecord->getArrayCopy()),
+            'sms' => $this->buildSMSMessage($message->getArrayCopy()),
+            'push' => $this->buildPushMessage($message->getArrayCopy()),
+            'email' => $this->buildEmailMessage($message->getArrayCopy()),
             default => null
         };
-
+        
 
         $provider->send($message);
     }
@@ -117,46 +119,37 @@ class MessagingV1 extends Worker
     {
     }
 
-    private function buildEmailMessage($data): array
+    private function buildEmailMessage($data): Email
     {
-        $from = $data['from'];
+        $from = $data['data']['from'];
         $to = $data['to'];
-        $subject = $data['subject'];
-        $body = $data['content'];
-
-        return [
-            'from' => $from,
-            'to' => $to,
-            'subject' => $subject,
-            'body' => $body,
-        ];
+        $subject = $data['data']['subject'];
+        $content = $data['data']['content'];
+        $html = $data['data']['html'];
+        return  new Email(to: $to, subject: $subject, content: $content, from: $from, html: $html);
     }
 
-    private function buildSMSMessage($data): array
+    private function buildSMSMessage($data): SMS
     {
-        $from = $data['from'];
         $to = $data['to'];
-        $body = $data['content'];
+        $content = $data['data']['content'];
+        $from = $data['data']['from'];
 
-        return [
-            'from' => $from,
-            'to' => $to,
-            'body' => $body
-        ];
+        return new SMS($to, $content, $from);
     }
 
-    private function buildPushMessage($data): array
+    private function buildPushMessage($data): Push
     {
         $to = $data['to'];
-        $title = $data['title'];
-        $body = $data['body'];
-        $data = $data['data'];
-
-        return [
-            'to' => $to,
-            'title' => $title,
-            'body' => $body,
-            'data' => $data
-        ];
+        $title = $data['data']['title'];
+        $body = $data['data']['body'];
+        $data = $data['data']['data'];
+        $action = $data['data']['action'];
+        $sound = $data['data']['sound'];
+        $icon = $data['data']['icon'];
+        $color = $data['data']['color'];
+        $tag = $data['data']['tag'];
+        $badge = $data['data']['badge'];
+        return new Push($to, $title, $body, $data, $action, $sound, $icon, $color, $tag, $badge);
     }
 }

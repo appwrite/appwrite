@@ -8,7 +8,6 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -45,6 +44,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Event\Messaging;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -1227,6 +1227,7 @@ App::post('/v1/account/sessions/phone')
     ->label('abuse-key', 'url:{url},email:{param-phone}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
+    ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1235,9 +1236,12 @@ App::post('/v1/account/sessions/phone')
     ->inject('events')
     ->inject('messaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+    ->action(function (string $userId, string $phone, string $from, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, Messaging $messaging, Locale $locale) {
+        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
+            Query::equal('default', [true, false]), 
+            Query::equal('type', ['sms'])
+        ]));
+        if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1322,11 +1326,22 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $messaging
-            ->setRecipient($phone)
-            ->setMessage($message)
-            ->trigger();
+        $messageDoc = $dbForProject->createDocument('messages', new Document([
+            'to' => [$phone],
+            'data' => [
+                'content' => $message,
+                'from' => $from,
+            ],
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'deliveryTime' => Datetime::now(),
+        ]));
 
+        $messaging
+        ->setMessage($messageDoc)
+        ->setProject($project)
+        ->trigger();
+        
         $events->setPayload(
             $response->output(
                 $token->setAttribute('secret', $secret),
@@ -2872,6 +2887,7 @@ App::post('/v1/account/verification/phone')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{userId}')
+    ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2880,10 +2896,13 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging, Document $project, Locale $locale) {
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+    ->action(function (string $from, Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Messaging $messaging, Document $project, Locale $locale) {
+        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
+            Query::equal('default', [true, false]), 
+            Query::equal('type', ['sms'])
+        ]));
+        if ($provider === false || $provider->isEmpty()) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         if (empty($user->getAttribute('phone'))) {
@@ -2928,11 +2947,21 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        $messageDoc = $dbForProject->createDocument('messages', new Document([
+            'to' => [$user->getAttribute('phone')],
+            'data' => [
+                'content' => $message,
+                'from' => $from,
+            ],
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'deliveryTime' => Datetime::now(),
+        ]));
+
         $messaging
-            ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($message)
-            ->trigger()
-        ;
+        ->setMessage($messageDoc)
+        ->setProject($project)
+        ->trigger();
 
         $events
             ->setParam('userId', $user->getId())
