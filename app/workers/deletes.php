@@ -123,6 +123,9 @@ class DeletesV1 extends Worker
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate($this->args['datetime']);
                 break;
+            case DELETE_TYPE_SCHEDULES:
+                $this->deleteSchedules($this->args['datetime']);
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -175,7 +178,7 @@ class DeletesV1 extends Worker
     protected function deleteCacheByResource(Document $project, string $resource, string $resourceType = null): void
     {
         $projectId = $project->getId();
-        $dbForProject = $this->getProjectDB($projectId);
+        $dbForProject = $this->getProjectDB($project);
 
         $cache = new Cache(
             new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
@@ -201,41 +204,6 @@ class DeletesV1 extends Worker
             }
         );
     }
-
-    /**
-     * @param string $datetime
-     * @throws Exception
-     */
-    protected function deleteCacheByDate(string $datetime): void
-    {
-        $this->deleteForProjectIds(function (string $projectId) use ($datetime) {
-
-            $dbForProject = $this->getProjectDB($projectId);
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-            );
-
-            $query = [
-                Query::lessThan('accessedAt', $datetime),
-            ];
-
-            $this->deleteByGroup(
-                'cache',
-                $query,
-                $dbForProject,
-                function (Document $document) use ($cache, $projectId) {
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
-
-                    if ($cache->purge($document->getId())) {
-                        Console::success('Deleting cache file: ' . $path);
-                    } else {
-                        Console::error('Failed to delete cache file: ' . $path);
-                    }
-                }
-            );
-        });
-    }
-
 
     /**
      * @param string $datetime
@@ -270,7 +238,6 @@ class DeletesV1 extends Worker
             );
         });
     }
-
 
     /**
      * @param Document $document database document

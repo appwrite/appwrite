@@ -253,8 +253,6 @@ App::init()
                     ->setContentType($cacheLog->getAttribute('mimeType'))
                     ->send($data)
                 ;
-
-                $route->setIsActive(false);
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
