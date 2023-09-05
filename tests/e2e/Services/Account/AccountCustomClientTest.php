@@ -2,8 +2,6 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Extend\Exception;
-use Appwrite\SMS\Adapter\Mock;
 use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
@@ -745,7 +743,22 @@ class AccountCustomClientTest extends Scope
     public function testCreatePhone(): array
     {
         $number = '+123456789';
-
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/general' , \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => 'unique()',
+            'name' => 'Mock',
+            'provider' => 'mock',
+            'type' => 'sms',
+            'credentials' => [
+                'username' => 'username',
+                'password' => 'password',
+            ],
+            'default' => true,
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
         /**
          * Test for SUCCESS
          */
@@ -756,6 +769,7 @@ class AccountCustomClientTest extends Scope
         ]), [
             'userId' => ID::unique(),
             'phone' => $number,
+            'from' => $number,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -999,7 +1013,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
 
-        ]));
+        ]), ['from' => 'Appwrite']);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
