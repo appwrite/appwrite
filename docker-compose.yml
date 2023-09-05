@@ -690,7 +690,7 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: executor
+    hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
     image: openruntimes/executor:0.3.5
@@ -754,7 +754,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=executor
+      - OPR_PROXY_EXECUTORS=appwrite-executor
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
