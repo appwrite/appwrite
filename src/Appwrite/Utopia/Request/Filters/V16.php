@@ -22,6 +22,15 @@ class V16 extends Filter
                 break;
         }
 
+        if (isset($content['queries'])) {
+            $queries = $content['queries'];
+            foreach ($queries as $index => $query) {
+                if (\str_starts_with($query, 'select([')) {
+                    $content['queries'][$index] = \str_replace('select([', 'select(["$id","$createdAt","$updatedAt","$permissions",', $query);
+                }
+            }
+        }
+
         return $content;
     }
 
