@@ -1661,15 +1661,14 @@ App::post('/v1/functions/:functionId/executions')
         $vars = [];
 
         // Shared vars
-        foreach ($project->getAttribute('variables', []) as $var) {
+        foreach ($function->getAttribute('varsProject', []) as $var) {
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
         // Function vars
-        $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-            return $carry;
-        }, []));
+        foreach ($function->getAttribute('vars', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -1976,8 +1975,8 @@ App::get('/v1/functions/:functionId/variables')
         }
 
         $response->dynamic(new Document([
-            'variables' => $function->getAttribute('vars'),
-            'total' => \count($function->getAttribute('vars')),
+            'variables' => $function->getAttribute('vars', []),
+            'total' => \count($function->getAttribute('vars', [])),
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
