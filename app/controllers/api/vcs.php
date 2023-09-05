@@ -228,6 +228,7 @@ App::get('/v1/vcs/github/authorize')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.method', 'createGitHubInstallation')
     ->label('sdk.description', '')
@@ -248,6 +249,11 @@ App::get('/v1/vcs/github/authorize')
         ]);
 
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
+
+        if(empty($appName)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
+        }
+
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
             'state' => $state,
             'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
