@@ -13,7 +13,7 @@ class Messaging extends Event
     {
         parent::__construct(Event::MESSAGING_QUEUE_NAME, Event::MESSAGING_CLASS_NAME);
     }
-    
+
 
 
     /**

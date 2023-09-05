@@ -1238,7 +1238,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('locale')
     ->action(function (string $userId, string $phone, string $from, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, Messaging $messaging, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true, false]), 
+            Query::equal('default', [true, false]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
@@ -1341,7 +1341,7 @@ App::post('/v1/account/sessions/phone')
         ->setMessage($messageDoc)
         ->setProject($project)
         ->trigger();
-        
+
         $events->setPayload(
             $response->output(
                 $token->setAttribute('secret', $secret),
@@ -2898,7 +2898,7 @@ App::post('/v1/account/verification/phone')
     ->inject('locale')
     ->action(function (string $from, Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Messaging $messaging, Document $project, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true, false]), 
+            Query::equal('default', [true, false]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
