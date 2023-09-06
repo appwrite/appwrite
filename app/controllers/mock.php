@@ -608,8 +608,8 @@ App::get('/v1/mock/tests/general/oauth2/failure')
     });
 
 App::patch('/v1/mock/functions-v2')
-    ->desc('OAuth2 Failure')
-    ->groups(['mock'])
+    ->desc('Update Function Version to V2 (outdated code syntax)')
+    ->groups(['mock', 'api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('docs', false)
     ->param('functionId', '', new UID(), 'Function ID.')
