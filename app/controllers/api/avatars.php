@@ -526,8 +526,10 @@ App::get('/v1/avatars/initials')
         $code = 0;
 
         foreach ($words as $key => $w) {
-            $initials .= $w[0] ?? '';
-            $code += (isset($w[0])) ? \ord($w[0]) : 0;
+            if (ctype_alnum($w[0] ?? '')) {
+                $initials .= $w[0];
+                $code += ord($w[0]);
+            }
 
             if ($key == 1) {
                 break;
