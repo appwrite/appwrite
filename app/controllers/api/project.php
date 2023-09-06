@@ -168,7 +168,6 @@ App::post('/v1/project/variables')
 
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
-            $dbForProject->deleteCachedDocument('functions', $function->getId());
         }
 
         $response
@@ -266,7 +265,6 @@ App::put('/v1/project/variables/:variableId')
 
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
-            $dbForProject->deleteCachedDocument('functions', $function->getId());
         }
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
@@ -300,7 +298,6 @@ App::delete('/v1/project/variables/:variableId')
 
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
-            $dbForProject->deleteCachedDocument('functions', $function->getId());
         }
 
         $response->noContent();

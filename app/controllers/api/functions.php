@@ -1940,8 +1940,6 @@ App::post('/v1/functions/:functionId/variables')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($variable, Response::MODEL_VARIABLE);
@@ -2071,8 +2069,6 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
-
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
@@ -2120,8 +2116,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
     });
