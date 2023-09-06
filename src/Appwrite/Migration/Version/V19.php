@@ -651,9 +651,9 @@ class V19 extends Migration
         switch ($document->getCollection()) {
             case 'attributes':
             case 'indexes':
-                $status = $document->getAttribute('status', $document->getAttribute('status', ''));
+                $status = $document->getAttribute('status');
                 if ($status === 'failed') {
-                    $document->setAttribute('error', 'Unknown problem');
+                    $document->setAttribute('error', $document->getAttribute('error', 'Unknown problem'));
                 }
                 break;
             case 'builds':
