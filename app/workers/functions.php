@@ -106,7 +106,7 @@ Server::setResource('execute', function () {
                 'functionId' => $function->getId(),
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
-                'trigger' => 'http',
+                'trigger' => $trigger,
                 'status' => 'processing',
                 'responseStatusCode' => 0,
                 'responseHeaders' => [],
