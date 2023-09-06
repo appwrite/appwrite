@@ -693,7 +693,7 @@ services:
     hostname: executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.3.5
+    image: openruntimes/executor:0.4.0
     networks:
       - appwrite
       - runtimes
@@ -742,7 +742,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.3.0
+    image: openruntimes/proxy:0.3.1
     networks:
       - appwrite
       - runtimes
