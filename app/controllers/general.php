@@ -265,7 +265,7 @@ App::init()
                             'resourceType' => 'api',
                             'status' => 'verifying',
                             'projectId' => 'console',
-                            'projectInternalId' => 0
+                            'projectInternalId' => 'console'
                         ]);
 
                         $domainDocument = $dbForConsole->createDocument('rules', $domainDocument);
