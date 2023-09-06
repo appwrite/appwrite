@@ -3,7 +3,6 @@
 use Appwrite\Auth\Auth;
 
 $member = [
-    'global',
     'public',
     'home',
     'console',
@@ -25,7 +24,6 @@ $member = [
 ];
 
 $admins = [
-    'global',
     'graphql',
     'teams.read',
     'teams.write',
