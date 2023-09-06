@@ -1248,5 +1248,5 @@ App::post('/v1/messaging/messages/email')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_MESSAGE);
+            ->dynamic($message, Response::MODEL_MESSAGE);
     });
