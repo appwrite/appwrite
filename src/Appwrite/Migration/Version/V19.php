@@ -651,7 +651,7 @@ class V19 extends Migration
         switch ($document->getCollection()) {
             case 'attributes':
             case 'indexes':
-                $status = $document->getAttribute('status', '');
+                $status = $document->getAttribute('status', $document->getAttribute('status', ''));
                 if ($status === 'failed') {
                     $document->setAttribute('error', 'Unknown problem');
                 }
@@ -663,10 +663,10 @@ class V19 extends Migration
 
                 $stdout = $document->getAttribute('stdout', '');
                 $stderr = $document->getAttribute('stderr', '');
-                $document->setAttribute('logs', $stdout . PHP_EOL . $stderr);
+                $document->setAttribute('logs', $document->getAttribute('logs', $stdout . PHP_EOL . $stderr));
                 break;
             case 'databases':
-                $document->setAttribute('enabled', true);
+                $document->setAttribute('enabled', $document->getAttribute('enabled', true));
                 break;
             case 'deployments':
                 $resourceId = $document->getAttribute('resourceId');
@@ -680,9 +680,8 @@ class V19 extends Migration
                 }
 
                 $commands = $this->getFunctionCommands($function);
-                $document->setAttribute('commands', $commands);
-
-                $document->setAttribute('type', 'manual');
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
+                $document->setAttribute('type', $document->getAttribute('type', 'manual'));
                 break;
             case 'executions':
                 $functionId = $document->getAttribute('functionId');
@@ -694,9 +693,9 @@ class V19 extends Migration
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 break;
             case 'functions':
-                $document->setAttribute('live', true);
-                $document->setAttribute('logging', true);
-                $document->setAttribute('version', 'v2');
+                $document->setAttribute('live', $document->getAttribute('live', true));
+                $document->setAttribute('logging', $document->getAttribute('logging', true));
+                $document->setAttribute('version', $document->getAttribute('version', 'v2'));
                 $deploymentId = $document->getAttribute('deployment');
 
                 if (!empty($deploymentId)) {
@@ -706,7 +705,7 @@ class V19 extends Migration
                 }
 
                 $commands = $this->getFunctionCommands($document);
-                $document->setAttribute('commands', $commands);
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
                 $schedule = $this->consoleDB->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
@@ -728,13 +727,13 @@ class V19 extends Migration
                 $databases = Config::getParam('pools-database', []);
                 $database = $databases[0];
 
-                $document->setAttribute('database', $database);
-                $document->setAttribute('smtp', []);
-                $document->setAttribute('templates', []);
+                $document->setAttribute('database', $document->getAttribute('live', $database));
+                $document->setAttribute('smtp', $document->getAttribute('smtp', []));
+                $document->setAttribute('templates', $document->getAttribute('templates', []));
 
                 break;
             case 'variables':
-                $document->setAttribute('resourceType', 'function');
+                $document->setAttribute('resourceType', $document->getAttribute('resourceType', 'function'));
                 break;
             default:
                 break;

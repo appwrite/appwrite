@@ -4,8 +4,8 @@
 
 ## Changes
 
-* Fix create phone session abuse key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6134
-* Fix CLI backwards compatibility by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6125
+- Fix create phone session abuse key by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6134
+- Fix CLI backwards compatibility by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6125
 * Override forEachDocument() to skip the cache collection by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6144
 * Fix Not Found error when deploying function from git by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6133
 * Add required params for scheduled functions by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6148
@@ -15,12 +15,11 @@
 * Fix create execution request filter from previous SDK version by @stnguyen90 in https://github.com/appwrite/appwrite/pull/6146
 * Fix: AI Assistant by @Meldiron in https://github.com/appwrite/appwrite/pull/6153
 * Make URL optional for Create Membership API and Serverside Requests by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/6157
-* Fix: v2 functions by @Meldiron in https://github.com/appwrite/appwrite/pull/6142
+* Support for v2 functions [#6142](https://github.com/appwrite/appwrite/pull/6142)
 * Fix migrations worker by @abnegate in https://github.com/appwrite/appwrite/pull/6116
-* Fix: Global variables by @Meldiron in https://github.com/appwrite/appwrite/pull/6150
+* Fix: Global variables by [#6150](https://github.com/appwrite/appwrite/pull/6150)
 * Fix webhook secret validation and executor path validation by @vermakhushboo in https://github.com/appwrite/appwrite/pull/6162
 * Fix: Untrusted custom domains + auto-ssl by @Meldiron in https://github.com/appwrite/appwrite/pull/6155
-* Update composer.lock by @PineappleIOnic in https://github.com/appwrite/appwrite/pull/6161
 
 # Version 1.4.1
 
