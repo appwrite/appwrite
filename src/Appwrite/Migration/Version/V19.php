@@ -707,19 +707,22 @@ class V19 extends Migration
                 $commands = $this->getFunctionCommands($document);
                 $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
-                $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                    'resourceType' => 'function',
-                    'resourceId' => $document->getId(),
-                    'resourceInternalId' => $document->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $this->project->getId(),
-                    'schedule'  => $document->getAttribute('schedule'),
-                    'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
-                ]));
-
-                $document->setAttribute('scheduleId', $schedule->getId());
-                $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                if ($document->getAttribute('schedule') && !$document->getAttribute('scheduleId', null)) {
+                    $schedule = $this->consoleDB->createDocument('schedules', new Document([
+                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'resourceType' => 'function',
+                        'resourceId' => $document->getId(),
+                        'resourceInternalId' => $document->getInternalId(),
+                        'resourceUpdatedAt' => DateTime::now(),
+                        'projectId' => $this->project->getId(),
+                        'schedule'  => $document->getAttribute('schedule'),
+                        'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
+                    ]));
+    
+                    $document->setAttribute('scheduleId', $schedule->getId());
+                    $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                }
+                
                 break;
             case 'projects':
                 $document->setAttribute('version', '1.4.0');
