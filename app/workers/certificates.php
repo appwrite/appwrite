@@ -440,7 +440,7 @@ class CertificatesV1 extends Worker
             $projectId = $rule->getAttribute('projectId');
 
             // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
-            if($projectId === 'console') {
+            if ($projectId === 'console') {
                 return;
             }
 
