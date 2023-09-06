@@ -1523,7 +1523,8 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $runtimes = Config::getParam('runtimes', []);
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -1684,7 +1685,9 @@ App::post('/v1/functions/:functionId/executions')
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
+            $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
+            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -1694,11 +1697,11 @@ App::post('/v1/functions/:functionId/executions')
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $function->getAttribute('version'),
+                version: $version,
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
+                runtimeEntrypoint: $command
             );
 
             $headersFiltered = [];
