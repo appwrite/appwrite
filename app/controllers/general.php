@@ -158,6 +158,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
         return true;
     } elseif ($type === 'api') {
+        $utopia->getRoute()?->label('error', '');
         return false;
     } else {
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
