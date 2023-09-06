@@ -408,6 +408,7 @@ class V19 extends Migration
                         'version',
                         'entrypoint',
                         'commands',
+                        'varsProject'
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {

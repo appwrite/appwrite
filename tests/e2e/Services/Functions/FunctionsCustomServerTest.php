@@ -344,6 +344,24 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(15, $response1['body']['timeout']);
 
         /**
+         * Create global variable to test in execution later
+         */
+        $headers = [
+            'content-type' => 'application/json',
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin',
+        ];
+
+         $variable = $this->client->call(Client::METHOD_POST, '/project/variables', $headers, [
+            'key' => 'GLOBAL_VARIABLE',
+            'value' => 'Global Variable Value',
+         ]);
+
+        $this->assertEquals(201, $variable['headers']['status-code']);
+
+        /**
          * Test for FAILURE
          */
 
@@ -640,6 +658,7 @@ class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', $execution['body']['responseBody']);
         $this->assertStringContainsString('PHP', $execution['body']['responseBody']);
         $this->assertStringContainsString('8.0', $execution['body']['responseBody']);
+        $this->assertStringContainsString('Global Variable Value', $execution['body']['responseBody']);
         // $this->assertStringContainsString('êä', $execution['body']['responseBody']); // tests unknown utf-8 chars
         $this->assertEquals('', $execution['body']['errors']);
         $this->assertEquals('', $execution['body']['logs']);
