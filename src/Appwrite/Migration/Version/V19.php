@@ -50,35 +50,37 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        foreach ($this->documentsIterator('domains') as $domain) {
-            $status = 'created';
-            if ($domain->getAttribute('verification', false)) {
-                $status = 'verified';
-            }
-
-            $projectId = $domain->getAttribute('projectId');
-            $projectInternalId = $domain->getAttribute('projectInternalId');
-
-            if (empty($projectId) || empty($projectInternalId)) {
-                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
-                continue;
-            }
-
-            $ruleDocument = new Document([
-                'projectId' => $domain->getAttribute('projectId'),
-                'projectInternalId' => $domain->getAttribute('projectInternalId'),
-                'domain' => $domain->getAttribute('domain'),
-                'resourceType' => 'api',
-                'resourceInternalId' => '',
-                'resourceId' => '',
-                'status' => $status,
-                'certificateId' => $domain->getAttribute('certificateId'),
-            ]);
-
-            try {
-                $this->consoleDB->createDocument('rules', $ruleDocument);
-            } catch (\Throwable $th) {
-                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+        if ($this->consoleDB->exists($this->consoleDB->getDefaultDatabase(), 'domains')) {
+            foreach ($this->documentsIterator('domains') as $domain) {
+                $status = 'created';
+                if ($domain->getAttribute('verification', false)) {
+                    $status = 'verified';
+                }
+    
+                $projectId = $domain->getAttribute('projectId');
+                $projectInternalId = $domain->getAttribute('projectInternalId');
+    
+                if (empty($projectId) || empty($projectInternalId)) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
+                    continue;
+                }
+    
+                $ruleDocument = new Document([
+                    'projectId' => $domain->getAttribute('projectId'),
+                    'projectInternalId' => $domain->getAttribute('projectInternalId'),
+                    'domain' => $domain->getAttribute('domain'),
+                    'resourceType' => 'api',
+                    'resourceInternalId' => '',
+                    'resourceId' => '',
+                    'status' => $status,
+                    'certificateId' => $domain->getAttribute('certificateId'),
+                ]);
+    
+                try {
+                    $this->consoleDB->createDocument('rules', $ruleDocument);
+                } catch (\Throwable $th) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+                }
             }
         }
     }
