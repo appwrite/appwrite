@@ -384,9 +384,9 @@ $server->job()
                     data: $data,
                     user: $user,
                     jwt: $jwt,
-                    path: $payload['path'],
-                    method: $payload['method'],
-                    headers: $payload['headers'],
+                    path: $payload['path'] ?? '',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     statsd: $statsd,
                 );
                 break;
@@ -404,9 +404,9 @@ $server->job()
                     data: null,
                     user: null,
                     jwt: null,
-                    path: $payload['path'],
-                    method: $payload['method'],
-                    headers: $payload['headers'],
+                    path: $payload['path'] ?? '/',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     statsd: $statsd,
                 );
                 break;
