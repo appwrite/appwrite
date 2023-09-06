@@ -556,6 +556,197 @@ App::patch('/v1/projects/:projectId/service/all')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::post('/v1/projects/variables')
+    ->desc('Create Variable')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('audits.event', 'variable.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createVariable')
+    ->label('sdk.description', '/docs/references/project/create-variable.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
+    ->inject('project')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+        $variableId = ID::unique();
+
+        $variable = new Document([
+            '$id' => $variableId,
+            '$permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+            'resourceInternalId' => '',
+            'resourceId' => '',
+            'resourceType' => 'project',
+            'key' => $key,
+            'value' => $value,
+            'search' => implode(' ', [$variableId, $key, 'project']),
+        ]);
+
+        try {
+            $variable = $dbForProject->createDocument('variables', $variable);
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
+        }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
+        $dbForProject->deleteCachedDocument('projects', $project->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::get('/v1/projects/variables')
+    ->desc('List Variables')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'listVariables')
+    ->label('sdk.description', '/docs/references/project/list-variables.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE_LIST)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (Response $response, Database $dbForProject) {
+        $variables = $dbForProject->find('variables', [
+            Query::equal('resourceType', ['project']),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        $response->dynamic(new Document([
+            'variables' => $variables,
+            'total' => \count($variables),
+        ]), Response::MODEL_VARIABLE_LIST);
+    });
+
+App::get('/v1/projects/variables/:variableId')
+    ->desc('Get Variable')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getVariable')
+    ->label('sdk.description', '/docs/references/project/get-variable.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->action(function (string $variableId, Response $response, Document $project, Database $dbForProject) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $response->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::put('/v1/projects/variables/:variableId')
+    ->desc('Update Variable')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateVariable')
+    ->label('sdk.description', '/docs/references/project/update-variable.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_VARIABLE)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
+    ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
+    ->inject('project')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $variable
+            ->setAttribute('key', $key)
+            ->setAttribute('value', $value ?? $variable->getAttribute('value'))
+            ->setAttribute('search', implode(' ', [$variableId, $key, 'project']));
+
+        try {
+            $dbForProject->updateDocument('variables', $variable->getId(), $variable);
+        } catch (Duplicate $th) {
+            throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
+        }
+        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
+        $dbForProject->deleteCachedDocument('projects', $project->getId());
+
+        $response->dynamic($variable, Response::MODEL_VARIABLE);
+    });
+
+App::delete('/v1/projects/variables/:variableId')
+    ->desc('Delete Variable')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'deleteVariable')
+    ->label('sdk.description', '/docs/references/project/delete-variable.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('variableId', '', new UID(), 'Variable unique ID.', false)
+    ->inject('project')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $variableId, Document $project, Response $response, Database $dbForProject) {
+        $variable = $dbForProject->getDocument('variables', $variableId);
+        if ($variable === false || $variable->isEmpty() || $variable->getAttribute('resourceType') !== 'project') {
+            throw new Exception(Exception::VARIABLE_NOT_FOUND);
+        }
+
+        $functions = $dbForProject->find('functions', [
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        foreach ($functions as $function) {
+            $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
+        }
+
+        $dbForProject->deleteDocument('variables', $variable->getId());
+        $dbForProject->deleteCachedDocument('projects', $project->getId());
+
+        $response->noContent();
+    });
+
+
 App::patch('/v1/projects/:projectId/oauth2')
     ->desc('Update Project OAuth2')
     ->groups(['api', 'projects'])
