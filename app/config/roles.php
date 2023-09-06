@@ -95,6 +95,6 @@ return [
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['public', 'health.read', 'graphql'],
+        'scopes' => ['health.read', 'graphql'],
     ],
 ];
