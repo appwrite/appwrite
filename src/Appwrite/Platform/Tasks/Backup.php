@@ -16,11 +16,12 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    //public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
-    public const BACKUP_INTERVAL_SECONDS = 120; // 4 hours;
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
+    //public const BACKUP_INTERVAL_SECONDS = 100;
     public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
     public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 1; // 2 days?
     public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 1; // 14 days?;
+    public const UPLOAD_CHUNK_SIZE = 20 * 1024 * 1024; // Must be greater than 5MB;
     protected string $filename;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
@@ -55,17 +56,11 @@ class Backup extends Action
         $this->database = $database;
         $this->dsn = $this->getDsn($database);
         if (is_null($this->dsn)) {
-            Console::error('No DSN match');
-            Console::exit();
+            throw new Exception('No DSN match');
         }
 
-        try {
-            $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
-            $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
-        } catch (\Exception $e) {
-            Console::error($e->getMessage());
-            Console::exit();
-        }
+        $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
+        $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
 
         $attempts = 0;
         $max = 10;
@@ -94,7 +89,13 @@ class Backup extends Action
         $this->setProcessors();
 
         Console::loop(function () {
-            $this->start();
+            try {
+                $this->start();
+            } catch (Exception $e) {
+                //todo: send alerts to admin!
+                // todo: Do we want to terminate the script? or wait for next backup iteration?
+                Console::error($e->getMessage());
+            }
         }, self::BACKUP_INTERVAL_SECONDS);
     }
 
@@ -104,22 +105,42 @@ class Backup extends Action
     public function start(): void
     {
         $start = microtime(true);
-        $time = date('Y_m_d_H_i_s');
-        $this->filename = $time . '.xbstream';
+        $this->filename = date('Y_m_d_H_i_s') . '.xbstream';
+        //$this->filename = '2023_09_06_08_19_24.xbstream';
 
-        self::log('--- Backup Start ' . $time . ' --- ');
+        self::log('--- Backup Start ' . $this->filename . ' --- ');
 
         $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full');
-        $local->setTransferChunkSize(5 * 1024 * 1024); // 5MB
+        $local->setTransferChunkSize(self::UPLOAD_CHUNK_SIZE);
 
-        $this->fullBackup($local);
-        $this->upload($local);
+        //$this->fullBackup($local);
+
+        $max = 1;
+        $i = 0;
+        while (true) {
+            $i++;
+            try {
+                $this->upload($local);
+                break; // exit while
+            } catch (Exception $e) {
+                if ($i <= $max) {
+                    Console::warning($e->getMessage() . ' (' . $i . ' attempt)');
+                    sleep(1);
+                } else {
+                    throw new Exception($e->getMessage());
+                }
+            }
+        }
+
         $this->cleanLocalFiles($local);
         $this->cleanCloudFiles();
 
         self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
 
+    /**
+     * @throws Exception
+     */
     public function fullBackup(Device $device)
     {
         self::log('Backup start');
@@ -129,13 +150,11 @@ class Backup extends Action
         $file = $device->getPath($this->filename);
 
         if (!file_exists(self::BACKUPS_PATH)) {
-            Console::error('Mount directory does not exist');
-            Console::exit();
+            throw new Exception('Mount directory does not exist');
         }
 
         if (!file_exists($target) && !mkdir($target, 0755, true)) {
-            Console::error('Error creating directory: ' . $target);
-            Console::exit();
+            throw new Exception('Error creating directory: ' . $target);
         }
 
         $args = [
@@ -166,16 +185,17 @@ class Backup extends Action
         $stderr = shell_exec('tail -1 ' . $log);
 
         if (!str_contains($stderr, 'completed OK!')) {
-            Console::error('Backup failed: ' . $stderr);
-            Console::exit();
+            throw new Exception('Backup failed: ' . $stderr);
         }
 
         if (!unlink($log)) {
-            Console::error('Error deleting: ' . $log);
-            Console::exit();
+            throw new Exception('Error deleting: ' . $log);
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function upload(Device $local)
     {
         self::log('Upload start');
@@ -183,25 +203,17 @@ class Backup extends Action
         $file = $local->getPath($this->filename);
 
         if (!$this->s3->exists('/')) {
-            Console::error('Can\'t read s3 root directory');
-            Console::exit();
+            throw new Exception('Can\'t read s3 root directory');
         }
 
-        try {
-            $destination = $this->s3->getRoot() . '/' . $this->filename;
+        $destination = $this->s3->getRoot() . '/' . $this->filename;
 
-            if (!$local->transfer($file, $destination, $this->s3)) {
-                Console::error('Error uploading to ' . $destination);
-                Console::exit();
-            }
+        if (!$local->transfer($file, $destination, $this->s3)) {
+            throw new Exception('Error uploading to ' . $destination);
+        }
 
-            if (!$this->s3->exists($destination)) {
-                Console::error('File not found in destination: ' . $destination);
-                Console::exit();
-            }
-        } catch (Exception $e) {
-            Console::error($e->getMessage());
-            Console::exit();
+        if (!$this->s3->exists($destination)) {
+            throw new Exception('File not found in destination: ' . $destination);
         }
     }
 
@@ -248,7 +260,7 @@ class Backup extends Action
 
         $files = $this->s3->getFiles($this->s3->getRoot());
 
-        if ($files['KeyCount'] > 0 && $files['IsTruncated'] === false) {
+        if ($files['KeyCount'] > 0) {
             foreach ($files['Contents'] as $file) {
                 if ($this->isDelete(basename($file['Key']), self::CLEANUP_CLOUD_FILES_SECONDS)) {
                     if ($this->s3->delete($file['Key'])) {
@@ -297,6 +309,9 @@ class Backup extends Action
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function checkEnvVariables(): void
     {
         foreach (
@@ -306,8 +321,7 @@ class Backup extends Action
             ] as $env
         ) {
             if (empty(App::getEnv($env))) {
-                Console::error('Can\'t read ' . $env);
-                Console::exit();
+                throw new Exception('Can\'t read ' . $env);
             }
         }
     }
@@ -323,41 +337,43 @@ class Backup extends Action
         return null;
     }
 
+    /**
+     * @throws Exception
+     */
     public function setContainerId()
     {
         $stdout = '';
         $stderr = '';
         Console::execute('docker ps -f "name=xtrabackup" --format "{{.ID}}"', '', $stdout, $stderr);
         if (!empty($stderr)) {
-            Console::error('Error setting container Id: ' . $stderr);
-            Console::exit();
+            throw new Exception('Error setting container Id: ' . $stderr);
         }
 
         $containerId = str_replace(PHP_EOL, '', $stdout);
         if (empty($containerId)) {
-            Console::error('Xtrabackup Container ID not found');
-            Console::exit();
+            throw new Exception('Xtrabackup Container ID not found');
         }
 
         $this->xtrabackupContainerId = $containerId;
     }
 
+    /**
+     * @throws Exception
+     */
     public function setProcessors()
     {
         $stdout = '';
         $stderr = '';
         Console::execute('docker exec ' . $this->xtrabackupContainerId . ' nproc', '', $stdout, $stderr);
         if (!empty($stderr)) {
-            Console::error('Error setting processors: ' . $stderr);
-            Console::exit();
+            throw new Exception('Error setting processors: ' . $stderr);
         }
 
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = intval($processors);
 
         if ($processors === 0) {
-            Console::error('Set Processors Error');
-            Console::exit();
+            throw new Exception('Set Processors Error');
         }
 
         $this->processors = $processors;

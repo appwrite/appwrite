@@ -189,7 +189,6 @@ $cli
     ->error()
     ->inject('error')
     ->action(function (Throwable $error) {
-        var_dump($error);
         Console::error($error->getMessage());
     });
 
