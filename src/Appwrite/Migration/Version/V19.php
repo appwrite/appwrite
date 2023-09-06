@@ -727,7 +727,7 @@ class V19 extends Migration
                 $databases = Config::getParam('pools-database', []);
                 $database = $databases[0];
 
-                $document->setAttribute('database', $document->getAttribute('live', $database));
+                $document->setAttribute('database', $document->getAttribute('database', $database));
                 $document->setAttribute('smtp', $document->getAttribute('smtp', []));
                 $document->setAttribute('templates', $document->getAttribute('templates', []));
 
