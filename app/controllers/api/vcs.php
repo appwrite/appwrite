@@ -789,14 +789,14 @@ App::post('/v1/vcs/github/events')
     ->inject('getProjectDB')
     ->action(
         function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
-            $signature = $request->getHeader('x-hub-signature-256', '');
             $payload = $request->getRawPayload();
+            $signatureRemote = $request->getHeader('x-hub-signature-256', '');
+            $signatureLocal = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
-            $signatureKey = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+            $valid = empty($signatureRemote) ? true : $github->validateWebhookEvent($payload, $signatureRemote, $signatureLocal);
 
-            $valid = $github->validateWebhookEvent($payload, $signature, $signatureKey);
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook signature.");
+                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
             }
 
             $event = $request->getHeader('x-github-event', '');
