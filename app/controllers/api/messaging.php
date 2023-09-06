@@ -1,7 +1,9 @@
 <?php
 
-use Appwrite\Event\Event;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
+use Appwrite\Permission;
+use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
@@ -13,7 +15,7 @@ use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\Datetime;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -1546,16 +1548,17 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(0)), 'Email Recepient.', true)
-    ->param('subject', null, new Text(0), 'Email Subject.', true)
-    ->param('content', null, new Text(0), 'Email Content.', true)
-    ->param('from', null, new Text(0), 'Email from.', false)
-    ->param('html', null, new Text(0), 'Is content of type HTML', false)
-    ->param('deliveryTime', null, new Datetime(), 'Delivery time of the message', false)
+    ->param('to', [], new ArrayList(new Text(0)), 'Email Recepient.')
+    ->param('subject', '', new Text(0), 'Email Subject.')
+    ->param('content', '', new Text(0), 'Email Content.')
+    ->param('from', '', new Text(0), 'Email from.')
+    ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
+    ->param('deliveryTime', '', new DatetimeValidator(), 'Delivery time of the message', true)
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('project')
+    ->inject('messaging')
     ->inject('response')
-    ->action(function (string $providerId, string $to, string $subject, string $content, string $from, string $html, DateTime $deliveryTime, Database $dbForProject, Event $eventsInstance, Response $response) {
+    ->action(function (string $providerId, array $to, string $subject, string $content, string $from, string $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1569,6 +1572,8 @@ App::post('/v1/messaging/messages/email')
             'data' => [
                 'subject' => $subject,
                 'content' => $content,
+                'from' => $from,
+                'html' => $html
             ],
             'deliveryTime' => $deliveryTime,
             'deliveryError' => null,
@@ -1577,7 +1582,10 @@ App::post('/v1/messaging/messages/email')
             'search' => null,
         ]));
 
-        $eventsInstance->setParam('messageId', $message->getId());
+        $messaging
+        ->setMessage($message)
+        ->setProject($project)
+        ->trigger();
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
