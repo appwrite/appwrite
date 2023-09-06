@@ -718,11 +718,11 @@ class V19 extends Migration
                         'schedule'  => $document->getAttribute('schedule'),
                         'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
                     ]));
-    
+
                     $document->setAttribute('scheduleId', $schedule->getId());
                     $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
                 }
-                
+
                 break;
             case 'projects':
                 $document->setAttribute('version', '1.4.0');
