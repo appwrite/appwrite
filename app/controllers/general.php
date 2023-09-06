@@ -248,7 +248,7 @@ App::init()
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
                 } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('_id')]);
+                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
                     $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
                 }
 
