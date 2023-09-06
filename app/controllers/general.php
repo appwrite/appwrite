@@ -378,7 +378,7 @@ App::init()
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // APP_HOSTNAME_INTERNAL allowed for migrations
+            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
                 }
