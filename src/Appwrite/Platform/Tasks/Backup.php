@@ -16,11 +16,10 @@ use Utopia\Validator\Text;
 class Backup extends Action
 {
     public const BACKUPS_PATH = '/backups';
-    //public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
-    public const BACKUP_INTERVAL_SECONDS = 100;
+    public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
-    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 1; // 2 days?
-    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 1; // 14 days?;
+    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 7; // 2 days?
+    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 14; // 14 days?;
     public const UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // Must be greater than 5MB;
     protected string $filename;
     protected ?DSN $dsn = null;
@@ -184,6 +183,7 @@ class Backup extends Action
         $stderr = shell_exec('tail -1 ' . $log);
 
         if (!str_contains($stderr, 'completed OK!')) {
+            unlink($file);
             throw new Exception('Backup failed: ' . $stderr);
         }
 
