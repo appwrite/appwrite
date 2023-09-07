@@ -40,6 +40,7 @@ class Install extends Action
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
+        /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
 
         /**
@@ -50,7 +51,7 @@ class Install extends Action
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
-                $vars[] = $var;
+                $vars[$var['name']] = $var;
             }
         }
 
@@ -104,10 +105,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as $i => $var) {
-                            if ($var['name'] === $key) {
-                                $vars[$i]['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }
@@ -123,10 +124,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as $i => $var) {
-                            if ($var['name'] === $key) {
-                                $vars[$i]['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }

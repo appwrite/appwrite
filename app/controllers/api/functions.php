@@ -660,7 +660,7 @@ App::put('/v1/functions/:functionId')
     ->label('sdk.response.model', Response::MODEL_FUNCTION)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
-    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
+    ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -702,6 +702,10 @@ App::put('/v1/functions/:functionId')
 
         if ($function->isEmpty()) {
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        if (empty($runtime)) {
+            $runtime = $function->getAttribute('runtime');
         }
 
         $enabled ??= $function->getAttribute('enabled', true);
@@ -923,10 +927,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('events')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $events, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -986,9 +989,8 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('deletes')
     ->inject('events')
-    ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Document $project, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1058,10 +1060,8 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         if ($commands === null) {
-            $commands = $function->getAttribute('entrypoint', '');
+            $commands = $function->getAttribute('commands', '');
         }
-
-        $commands = $function->getAttribute('commands', '');
 
         if (empty($entrypoint)) {
             throw new Exception(Exception::FUNCTION_ENTRYPOINT_MISSING);
@@ -1432,11 +1432,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('dbForConsole')
     ->inject('project')
-    ->inject('gitHub')
     ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, GitHub $github, Event $events) use ($redeployVcs) {
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $events) use ($redeployVcs) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1460,6 +1458,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$id' => $deploymentId,
+            '$internalId' => '',
             'buildId' => '',
             'buildInternalId' => '',
             'entrypoint' => $function->getAttribute('entrypoint'),
@@ -1521,7 +1520,8 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $runtimes = Config::getParam('runtimes', []);
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
         $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
 
@@ -1659,15 +1659,14 @@ App::post('/v1/functions/:functionId/executions')
         $vars = [];
 
         // Shared vars
-        foreach ($project->getAttribute('variables', []) as $var) {
+        foreach ($function->getAttribute('varsProject', []) as $var) {
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
         // Function vars
-        $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-            return $carry;
-        }, []));
+        foreach ($function->getAttribute('vars', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -1682,7 +1681,9 @@ App::post('/v1/functions/:functionId/executions')
         /** Execute function */
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         try {
+            $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
+            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deployment->getId(),
@@ -1692,11 +1693,11 @@ App::post('/v1/functions/:functionId/executions')
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $function->getAttribute('version'),
+                version: $version,
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
+                runtimeEntrypoint: $command
             );
 
             $headersFiltered = [];
@@ -1900,11 +1901,10 @@ App::post('/v1/functions/:functionId/variables')
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('key', null, new Text(Database::LENGTH_KEY), 'Variable key. Max length: ' . Database::LENGTH_KEY  . ' chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', false)
-    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $key, string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1933,7 +1933,6 @@ App::post('/v1/functions/:functionId/variables')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
@@ -1944,8 +1943,6 @@ App::post('/v1/functions/:functionId/variables')
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1974,8 +1971,8 @@ App::get('/v1/functions/:functionId/variables')
         }
 
         $response->dynamic(new Document([
-            'variables' => $function->getAttribute('vars'),
-            'total' => \count($function->getAttribute('vars')),
+            'variables' => $function->getAttribute('vars', []),
+            'total' => \count($function->getAttribute('vars', [])),
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
@@ -2035,11 +2032,10 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
     ->param('key', null, new Text(255), 'Variable key. Max length: 255 chars.', false)
     ->param('value', null, new Text(8192, 0), 'Variable value. Max length: 8192 chars.', true)
-    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -2066,7 +2062,6 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
 
@@ -2077,8 +2072,6 @@ App::put('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -2097,11 +2090,10 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('functionId', '', new UID(), 'Function unique ID.', false)
     ->param('variableId', '', new UID(), 'Variable unique ID.', false)
-    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, Document $project, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2128,8 +2120,6 @@ App::delete('/v1/functions/:functionId/variables/:variableId')
             ->setAttribute('schedule', $function->getAttribute('schedule'))
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
-
-        $dbForProject->deleteCachedDocument('functions', $function->getId());
 
         $response->noContent();
     });

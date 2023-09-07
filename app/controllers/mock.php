@@ -8,12 +8,14 @@ use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Database\Database;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\UID;
 use Utopia\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
@@ -603,6 +605,32 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ->json([
                 'result' => 'failure',
             ]);
+    });
+
+App::patch('/v1/mock/functions-v2')
+    ->desc('Update Function Version to V2 (outdated code syntax)')
+    ->groups(['mock', 'api', 'functions'])
+    ->label('scope', 'functions.write')
+    ->label('docs', false)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
+        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
+
+        $response->noContent();
     });
 
 App::shutdown()
