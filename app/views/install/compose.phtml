@@ -351,9 +351,6 @@ services:
     restart: unless-stopped
     networks:
       - appwrite
-    volumes:
-      - appwrite-functions:/storage/functions:rw
-      - appwrite-builds:/storage/builds:rw
     depends_on:
       - redis
       - mariadb
