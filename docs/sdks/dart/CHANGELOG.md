@@ -9,12 +9,6 @@
 * Update internal variable names to prevent name collision
 * Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648) 
 
-## 8.0.1
-
-* Added documentation comments
-* Added unit tests
-* Upgraded dependencies
-
 ## 9.0.0
 
 * Support for Appwrite 1.4.0
@@ -29,6 +23,12 @@
   * The `createDeployment` method no longer requires an entrypoint.
   * The `updateFile` method now includes the ability to update the file name.
   * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
+## 8.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
 
 ## 8.0.0
 
