@@ -707,7 +707,7 @@ class V19 extends Migration
                 $commands = $this->getFunctionCommands($document);
                 $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
-                if ($document->getAttribute('schedule') && !$document->getAttribute('scheduleId', null)) {
+                if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->consoleDB->createDocument('schedules', new Document([
                         'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                         'resourceType' => 'function',
