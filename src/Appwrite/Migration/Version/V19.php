@@ -56,15 +56,15 @@ class V19 extends Migration
                 if ($domain->getAttribute('verification', false)) {
                     $status = 'verified';
                 }
-    
+
                 $projectId = $domain->getAttribute('projectId');
                 $projectInternalId = $domain->getAttribute('projectInternalId');
-    
+
                 if (empty($projectId) || empty($projectInternalId)) {
                     Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
                     continue;
                 }
-    
+
                 $ruleDocument = new Document([
                     'projectId' => $domain->getAttribute('projectId'),
                     'projectInternalId' => $domain->getAttribute('projectInternalId'),
@@ -75,7 +75,7 @@ class V19 extends Migration
                     'status' => $status,
                     'certificateId' => $domain->getAttribute('certificateId'),
                 ]);
-    
+
                 try {
                     $this->consoleDB->createDocument('rules', $ruleDocument);
                 } catch (\Throwable $th) {
