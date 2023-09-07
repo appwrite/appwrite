@@ -10,7 +10,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
-use Utopia\Database\Query;
 
 class V19 extends Migration
 {
@@ -51,27 +50,37 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        foreach ($this->documentsIterator('domains') as $domain) {
-            $status = 'created';
-            if ($domain->getAttribute('verification', false)) {
-                $status = 'verified';
-            }
+        if ($this->consoleDB->exists($this->consoleDB->getDefaultDatabase(), 'domains')) {
+            foreach ($this->documentsIterator('domains') as $domain) {
+                $status = 'created';
+                if ($domain->getAttribute('verification', false)) {
+                    $status = 'verified';
+                }
 
-            $ruleDocument = new Document([
-                'projectId' => $domain->getAttribute('projectId'),
-                'projectInternalId' => $domain->getAttribute('projectInternalId'),
-                'domain' => $domain->getAttribute('domain'),
-                'resourceType' => 'api',
-                'resourceInternalId' => '',
-                'resourceId' => '',
-                'status' => $status,
-                'certificateId' => $domain->getAttribute('certificateId'),
-            ]);
+                $projectId = $domain->getAttribute('projectId');
+                $projectInternalId = $domain->getAttribute('projectInternalId');
 
-            try {
-                $this->consoleDB->createDocument('rules', $ruleDocument);
-            } catch (\Throwable $th) {
-                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+                if (empty($projectId) || empty($projectInternalId)) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
+                    continue;
+                }
+
+                $ruleDocument = new Document([
+                    'projectId' => $domain->getAttribute('projectId'),
+                    'projectInternalId' => $domain->getAttribute('projectInternalId'),
+                    'domain' => $domain->getAttribute('domain'),
+                    'resourceType' => 'api',
+                    'resourceInternalId' => '',
+                    'resourceId' => '',
+                    'status' => $status,
+                    'certificateId' => $domain->getAttribute('certificateId'),
+                ]);
+
+                try {
+                    $this->consoleDB->createDocument('rules', $ruleDocument);
+                } catch (\Throwable $th) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+                }
             }
         }
     }
@@ -183,16 +192,23 @@ class V19 extends Migration
 
                     break;
                 case 'builds':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToCreate = [
+                        'size',
+                        'deploymentInternalId',
+                        'logs',
+                    ];
+                    foreach ($attributesToCreate as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->projectDB->renameAttribute($id, 'outputPath', 'path');
                     } catch (\Throwable $th) {
-                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
+                        Console::warning("'path' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
@@ -202,13 +218,13 @@ class V19 extends Migration
                     try {
                         $this->projectDB->renameAttribute($id, 'log', 'logs');
                     } catch (\Throwable $th) {
-                        Console::warning("'errors' from {$id}: {$th->getMessage()}");
+                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     try {
                         $this->projectDB->updateAttribute($id, 'logs', size: 1000000);
                     } catch (\Throwable $th) {
-                        Console::warning("'errors' from {$id}: {$th->getMessage()}");
+                        Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
@@ -228,7 +244,25 @@ class V19 extends Migration
                     $attributesToCreate = [
                         'resourceInternalId',
                         'buildInternalId',
+                        'commands',
                         'type',
+                        'installationId',
+                        'installationInternalId',
+                        'providerRepositoryId',
+                        'repositoryId',
+                        'repositoryInternalId',
+                        'providerRepositoryName',
+                        'providerRepositoryOwner',
+                        'providerRepositoryUrl',
+                        'providerCommitHash',
+                        'providerCommitAuthorUrl',
+                        'providerCommitAuthor',
+                        'providerCommitMessage',
+                        'providerCommitUrl',
+                        'providerBranch',
+                        'providerBranchUrl',
+                        'providerRootDirectory',
+                        'providerCommentId',
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
@@ -270,16 +304,31 @@ class V19 extends Migration
 
                     break;
                 case 'executions':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'functionInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'functionInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToCreate = [
+                        'functionInternalId',
+                        'deploymentInternalId',
+                        'requestMethod',
+                        'requestPath',
+                        'requestHeaders',
+                        'responseHeaders',
+                    ];
+                    foreach ($attributesToCreate as $attribute) {
+                        try {
+                            $this->createAttributeFromCollection($this->projectDB, $id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("$attribute from {$id}: {$th->getMessage()}");
+                        }
                     }
 
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'deploymentInternalId');
-                    } catch (\Throwable $th) {
-                        Console::warning("'deploymentInternalId' from {$id}: {$th->getMessage()}");
+                    $attributesToDelete = [
+                        'response'
+                    ];
+                    foreach ($attributesToDelete as $attribute) {
+                        try {
+                            $this->projectDB->deleteAttribute($id, $attribute);
+                        } catch (\Throwable $th) {
+                            Console::warning("'$attribute' from {$id}: {$th->getMessage()}");
+                        }
                     }
 
                     try {
@@ -298,6 +347,18 @@ class V19 extends Migration
                         $this->projectDB->renameAttribute($id, 'statusCode', 'responseStatusCode');
                     } catch (\Throwable $th) {
                         Console::warning("'responseStatusCode' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->projectDB->deleteIndex($id, '_key_statusCode');
+                    } catch (\Throwable $th) {
+                        Console::warning("'_key_statusCode' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->projectDB, $id, '_key_responseStatusCode');
+                    } catch (\Throwable $th) {
+                        Console::warning("'_key_responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
 
                     $this->projectDB->deleteCachedCollection($id);
@@ -343,11 +404,13 @@ class V19 extends Migration
                         'providerSilentMode',
                         'logging',
                         'deploymentInternalId',
+                        'schedule',
                         'scheduleInternalId',
                         'scheduleId',
                         'version',
                         'entrypoint',
                         'commands',
+                        'varsProject'
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
@@ -558,6 +621,25 @@ class V19 extends Migration
         }
     }
 
+    private function getFunctionCommands(Document $function): string
+    {
+        $runtime = $function->getAttribute('runtime');
+        $language = explode('-', $runtime)[0];
+        $commands = match ($language) {
+            'dart' => 'dart pub get',
+            'deno' => 'deno cache ' . $function->getAttribute('entrypoint'),
+            'dotnet' => 'dotnet restore',
+            'node' => 'npm install',
+            'php' => 'composer install',
+            'python' => 'pip install -r requirements.txt',
+            'ruby' => 'bundle install',
+            'swift' => 'swift package resolve',
+            default => '',
+        };
+
+        return $commands;
+    }
+
     /**
      * Fix run on each document
      *
@@ -569,9 +651,9 @@ class V19 extends Migration
         switch ($document->getCollection()) {
             case 'attributes':
             case 'indexes':
-                $status = $document->getAttribute('status', '');
+                $status = $document->getAttribute('status');
                 if ($status === 'failed') {
-                    $document->setAttribute('error', 'Unknown problem');
+                    $document->setAttribute('error', $document->getAttribute('error', 'Unknown problem'));
                 }
                 break;
             case 'builds':
@@ -581,10 +663,10 @@ class V19 extends Migration
 
                 $stdout = $document->getAttribute('stdout', '');
                 $stderr = $document->getAttribute('stderr', '');
-                $document->setAttribute('logs', $stdout . PHP_EOL . $stderr);
+                $document->setAttribute('logs', $document->getAttribute('logs', $stdout . PHP_EOL . $stderr));
                 break;
             case 'databases':
-                $document->setAttribute('enabled', true);
+                $document->setAttribute('enabled', $document->getAttribute('enabled', true));
                 break;
             case 'deployments':
                 $resourceId = $document->getAttribute('resourceId');
@@ -597,7 +679,9 @@ class V19 extends Migration
                     $document->setAttribute('buildInternalId', $build->getInternalId());
                 }
 
-                $document->setAttribute('type', 'manual');
+                $commands = $this->getFunctionCommands($function);
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
+                $document->setAttribute('type', $document->getAttribute('type', 'manual'));
                 break;
             case 'executions':
                 $functionId = $document->getAttribute('functionId');
@@ -609,9 +693,9 @@ class V19 extends Migration
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 break;
             case 'functions':
-                $document->setAttribute('live', true);
-                $document->setAttribute('logging', true);
-                $document->setAttribute('version', 'v2');
+                $document->setAttribute('live', $document->getAttribute('live', true));
+                $document->setAttribute('logging', $document->getAttribute('logging', true));
+                $document->setAttribute('version', $document->getAttribute('version', 'v2'));
                 $deploymentId = $document->getAttribute('deployment');
 
                 if (!empty($deploymentId)) {
@@ -620,19 +704,25 @@ class V19 extends Migration
                     $document->setAttribute('entrypoint', $deployment->getAttribute('entrypoint'));
                 }
 
-                $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                    'resourceType' => 'function',
-                    'resourceId' => $document->getId(),
-                    'resourceInternalId' => $document->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $this->project->getId(),
-                    'schedule'  => $document->getAttribute('schedule'),
-                    'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
-                ]));
+                $commands = $this->getFunctionCommands($document);
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
-                $document->setAttribute('scheduleId', $schedule->getId());
-                $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                if (empty($document->getAttribute('scheduleId', null))) {
+                    $schedule = $this->consoleDB->createDocument('schedules', new Document([
+                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'resourceType' => 'function',
+                        'resourceId' => $document->getId(),
+                        'resourceInternalId' => $document->getInternalId(),
+                        'resourceUpdatedAt' => DateTime::now(),
+                        'projectId' => $this->project->getId(),
+                        'schedule'  => $document->getAttribute('schedule'),
+                        'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
+                    ]));
+
+                    $document->setAttribute('scheduleId', $schedule->getId());
+                    $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                }
+
                 break;
             case 'projects':
                 $document->setAttribute('version', '1.4.0');
@@ -640,10 +730,13 @@ class V19 extends Migration
                 $databases = Config::getParam('pools-database', []);
                 $database = $databases[0];
 
-                $document->setAttribute('database', $database);
-                $document->setAttribute('smtp', []);
-                $document->setAttribute('templates', []);
+                $document->setAttribute('database', $document->getAttribute('database', $database));
+                $document->setAttribute('smtp', $document->getAttribute('smtp', []));
+                $document->setAttribute('templates', $document->getAttribute('templates', []));
 
+                break;
+            case 'variables':
+                $document->setAttribute('resourceType', $document->getAttribute('resourceType', 'function'));
                 break;
             default:
                 break;
@@ -663,14 +756,6 @@ class V19 extends Migration
         $this->projectDB->deleteCachedCollection('projects');
 
         try {
-            $this->projectDB->deleteAttribute('functions', 'schedule');
-        } catch (\Throwable $th) {
-            Console::warning("'schedule' from functions: {$th->getMessage()}");
-        }
-
-        $this->projectDB->deleteCachedCollection('functions');
-
-        try {
             $this->projectDB->deleteAttribute('builds', 'stderr');
         } catch (\Throwable $th) {
             Console::warning("'stderr' from builds: {$th->getMessage()}");
@@ -683,5 +768,55 @@ class V19 extends Migration
         }
 
         $this->projectDB->deleteCachedCollection('builds');
+    }
+
+    /**
+     * Overwrite parent to skip cache collection as well
+     *
+     * @param callable $callback
+     * @return void
+     */
+    public function forEachDocument(callable $callback): void
+    {
+        $internalProjectId = $this->project->getInternalId();
+
+        $collections = match ($internalProjectId) {
+            'console' => $this->collections['console'],
+            default => $this->collections['projects'],
+        };
+
+        foreach ($collections as $collection) {
+            // Also skip cache collection because the we don't need to migrate
+            // it and the $ids cause issues with the cursor pagination
+            if ($collection['$collection'] !== Database::METADATA || $collection['$id'] === 'cache') {
+                continue;
+            }
+
+            Console::log('Migrating Collection ' . $collection['$id'] . ':');
+
+            \Co\run(function (array $collection, callable $callback) {
+                foreach ($this->documentsIterator($collection['$id']) as $document) {
+                    go(function (Document $document, callable $callback) {
+                        if (empty($document->getId()) || empty($document->getCollection())) {
+                            return;
+                        }
+
+                        $old = $document->getArrayCopy();
+                        $new = call_user_func($callback, $document);
+
+                        if (is_null($new) || $new->getArrayCopy() == $old) {
+                            return;
+                        }
+
+                        try {
+                            $this->projectDB->updateDocument($document->getCollection(), $document->getId(), $document);
+                        } catch (\Throwable $th) {
+                            Console::error('Failed to update document: ' . $th->getMessage());
+                            return;
+                        }
+                    }, $document, $callback);
+                }
+            }, $collection, $callback);
+        }
     }
 }
