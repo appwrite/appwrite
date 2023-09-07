@@ -11,5 +11,4 @@ var teams = new Teams(client);
 
 Membership result = await teams.CreateMembership(
     teamId: "[TEAM_ID]",
-    roles: new List<string> {},
-    url: "https://example.com");
+    roles: new List<string> {});

@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const promise = teams.createMembership('[TEAM_ID]', [], 'https://example.com');
+const promise = teams.createMembership('[TEAM_ID]', []);
 
 promise.then(function (response) {
     console.log(response);
