@@ -199,6 +199,10 @@ RUN chmod +x /usr/local/bin/hamster && \
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
+RUN apk add git openssh-client 
+RUN git config --global user.email "christyjacob4@gmail.com"
+RUN git config --global user.name "Christy Jacob"
+
 # Enable Extensions
 RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/src/code/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
 

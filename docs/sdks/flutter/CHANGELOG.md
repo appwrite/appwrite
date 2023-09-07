@@ -1,3 +1,7 @@
+## 11.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+
 ## 10.0.1
 
 * Added a new `label` function to the `Role` helper class

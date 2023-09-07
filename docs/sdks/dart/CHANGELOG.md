@@ -1,3 +1,8 @@
+## 10.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+* Parameter `runtime` is now optional in the `update` endpoint of the `Functions` class
+
 ## 9.0.1
 
 * Added a new `label` function to the `Role` helper class
