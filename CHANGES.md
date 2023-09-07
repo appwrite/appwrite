@@ -2,7 +2,7 @@
 
 ## Fixes
 
-- Fix create phone session abuse key [#6134][https://github.com/appwrite/appwrite/pull/6134]
+- Fix create phone session abuse key [#6134](https://github.com/appwrite/appwrite/pull/6134)
 - Fix CLI backwards compatibility [#6125](https://github.com/appwrite/appwrite/pull/6125)
 - Fix Not Found error when deploying function from git [#6133](https://github.com/appwrite/appwrite/pull/6133)
 - Fix _APP_EXECUTOR_HOST for upgrades [#6141](https://github.com/appwrite/appwrite/pull/6141)
