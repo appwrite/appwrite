@@ -17,7 +17,7 @@ class V16 extends Filter
                 $content['commands'] = $this->getCommands($content['runtime'] ?? '');
                 break;
             case 'functions.createExecution':
-                $content['body'] = $content['data'];
+                $content['body'] = $content['data'] ?? '';
                 unset($content['data']);
                 break;
         }
