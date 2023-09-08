@@ -38,11 +38,11 @@ jobs:
       with:
         context: .
         push: false
-        tags: $TAG
+        tags: ${{ env.TAG }}
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: type=docker,dest=/tmp/$TAG.tar
+        outputs: type=docker,dest=/tmp/${{ env.TAG }}.tar
         build-args: |
           DEBUG=false
           TESTING=true
@@ -51,8 +51,8 @@ jobs:
     - name: Upload Docker Image
       uses: actions/upload-artifact@v3
       with:
-        name: $TAG
-        path: /tmp/$TAG.tar
+        name: ${{ env.TAG }}
+        path: /tmp/${{ env.TAG }}.tar
 
 
     # - name: Start Appwrite
