@@ -13,7 +13,6 @@ class Delete extends Event
     protected ?string $datetime = null;
     protected ?string $hourlyUsageRetentionDatetime = null;
 
-
     public function __construct()
     {
         parent::__construct(Event::DELETE_QUEUE_NAME, Event::DELETE_CLASS_NAME);
@@ -127,7 +126,7 @@ class Delete extends Event
             'document' => $this->document,
             'resource' => $this->resource,
             'datetime' => $this->datetime,
-            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
+            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime
         ]);
     }
 }

@@ -1,4 +1,71 @@
+# Version 1.4.2
+
+## Fixes
+
+- Fix create phone session abuse key [#6134](https://github.com/appwrite/appwrite/pull/6134)
+- Fix CLI backwards compatibility [#6125](https://github.com/appwrite/appwrite/pull/6125)
+- Fix Not Found error when deploying function from git [#6133](https://github.com/appwrite/appwrite/pull/6133)
+- Fix _APP_EXECUTOR_HOST for upgrades [#6141](https://github.com/appwrite/appwrite/pull/6141)
+- Fix create execution request filter from previous SDK version [#6146](https://github.com/appwrite/appwrite/pull/6146)
+- Fix migrations worker [#6116](https://github.com/appwrite/appwrite/pull/6116)
+- Fix: Global variables by [#6150](https://github.com/appwrite/appwrite/pull/6150)
+- Fix webhook secret validation and executor path validation [#6162](https://github.com/appwrite/appwrite/pull/6162)
+- Fix: Untrusted custom domains + auto-ssl [#6155](https://github.com/appwrite/appwrite/pull/6155)
+- Fix: AI Assistant [#6153](https://github.com/appwrite/appwrite/pull/6153)
+
+## Changes
+- Add required params for scheduled functions [#6148](https://github.com/appwrite/appwrite/pull/6148)
+- Update the error message for router_domain_not_configured [#6145](https://github.com/appwrite/appwrite/pull/6145)
+- Override forEachDocument() to skip the cache collection [#6144](https://github.com/appwrite/appwrite/pull/6144)
+- Support for v2 functions [#6142](https://github.com/appwrite/appwrite/pull/6142)
+- Change executor hostname back to appwrite-executor [#6160](https://github.com/appwrite/appwrite/pull/6160)
+- Make URL optional for Create Membership API and Serverside Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
+
+# Version 1.4.1
+
+## Features
+
+- Add upgrade task [#6068](https://github.com/appwrite/appwrite/pull/6068)
+
+## Fixes
+
+- Fix VCS/migration/assistant scopes [#6071](https://github.com/appwrite/appwrite/pull/6071)
+- Add missing parameters required for custom email templates [#6077](https://github.com/appwrite/appwrite/pull/6077)
+- Fix `Call to a member function label() on null` error when using a custom domain [#6079](https://github.com/appwrite/appwrite/pull/6079)
+
+## Changes
+
+- Update console to 3.0.2 [#6071](https://github.com/appwrite/appwrite/pull/6071)
+
+# Version 1.4.0
+
+## Features
+
+- Add error attribute to indexes and attributes [#4575](https://github.com/appwrite/appwrite/pull/4575)
+- Add new index validation rules [#5710](https://github.com/appwrite/appwrite/pull/5710)
+- Added support for disallowing passwords that contain personal data [#5371](https://github.com/appwrite/appwrite/pull/5371)
+
+## Fixes
+
+- Fix cascading deletes across multiple levels [DB #269](https://github.com/utopia-php/database/pull/269)
+- Fix identical two-way keys not throwing duplicate exceptions [DB #273](https://github.com/utopia-php/database/pull/273)
+- Fix search wildcards [DB #279](https://github.com/utopia-php/database/pull/279)
+- Fix permissions returning as an object instead of list [DB #281](https://github.com/utopia-php/database/pull/281)
+- Fix missing collection not found error [DB #282](https://github.com/utopia-php/database/pull/282)
+
+## Changes
+
+- Improve permission indexes [DB #248](https://github.com/utopia-php/database/pull/248)
+- Validators back-ported to Utopia [#5439](https://github.com/appwrite/appwrite/pull/5439)
+
 # Version 1.3.8
+
+## Changes
+
+- Replace Appwrite executor with OpenRuntimes Executor [#4650](https://github.com/appwrite/appwrite/pull/4650)
+- Add `_APP_CONNECTIONS_MAX` env var [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Increase Traefik TCP + file limits [#4673](https://github.com/appwrite/appwrite/pull/4673)
+- Store build output file size [#4844](https://github.com/appwrite/appwrite/pull/4844)
 
 ## Bugs
 - Fix audit user internal [#5809](https://github.com/appwrite/appwrite/pull/5809)
@@ -93,7 +160,6 @@
 - Get default region from environment on project create [#4780](https://github.com/appwrite/appwrite/pull/4780)
 - Fix french translation [#4782](https://github.com/appwrite/appwrite/pull/4782)
 - Fix max mimetype size [#4814](https://github.com/appwrite/appwrite/pull/4814)
-
 ## Bugs
 - Fix invited account verified status [#4776](https://github.com/appwrite/appwrite/pull/4776)
 
