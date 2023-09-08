@@ -42,10 +42,23 @@ jobs:
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
         build-args: |
           DEBUG=false
           TESTING=true
           VERSION=dev
+    
+    - name: Cache Docker Image
+      uses: actions/cache@v3
+      with:
+        key: ${{ env.IMAGE }}-${{ github.sha }}
+        path: /tmp/${{ env.IMAGE }}.tar
+
+    # - name: Upload Docker Image
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: ${{ env.IMAGE }}
+    #     path: /tmp/${{ env.IMAGE }}.tar
 
   unit_test:
     name: Unit Test
@@ -58,10 +71,20 @@ jobs:
         with:
           fetch-depth: 1
           submodules: recursive
-
-      - name: Start Appwrite
+    
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.IMAGE }}-${{ github.sha }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+      
+      - name: Load and Start Appwrite
+        if: steps.load-cache.outputs.cache-hit == 'true'
         run:  |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
+          sleep 10
 
       - name: Doctor
         run: docker compose exec -T appwrite doctor
@@ -88,8 +111,17 @@ jobs:
           fetch-depth: 2
           submodules: recursive
 
-      - name: Start Appwrite
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.IMAGE }}-${{ github.sha }}
+          path: /tmp/${{ env.IMAGE }}.tar
+          fail-on-cache-miss: true
+
+      - name: Load and Start Appwrite
+        if: steps.load-cache.outputs.cache-hit == 'true'
         run:  |
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 20
     
