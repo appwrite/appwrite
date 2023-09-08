@@ -1521,11 +1521,11 @@ $commonCollections = [
                 '$id' => ID::custom('deliveryError'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 16834,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
-                'array' => false,
+                'array' => true,
                 'filters' => [],
             ],
             [
