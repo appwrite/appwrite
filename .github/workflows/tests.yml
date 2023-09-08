@@ -31,13 +31,13 @@ jobs:
     # This is a separate action that sets up buildx runner
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-      
+
     - name: Build Appwrite
       uses: docker/build-push-action@v3
       with:
         context: .
         push: false
-        tags: $TAG
+        tags: TAG
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
