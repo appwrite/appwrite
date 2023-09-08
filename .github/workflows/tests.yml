@@ -53,11 +53,9 @@ jobs:
     
     - name: List Files and images
       run: |
-        ls
-        docker image ls
-        docker compose images
-        # docker compose images | sed '1d' | awk '{ print $2 ":" $3 }' | sort -u
-        # docker save $(docker compose images | sed '1d' | awk '{ print $2 ":" $3 }' | sort -u) -o allinone.tar
+        docker compose config --images | sort -u
+        docker save $(docker compose config --images | sort -u) -o allinone.tar
+        stat allinone.tar
 
     # - name: Cache Docker Image
     #   uses: actions/cache@v3
