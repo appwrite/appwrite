@@ -22,6 +22,12 @@
   * The `updateFile` method now includes the ability to update the file name.
   * The `updateMembershipRoles` method has been renamed to `updateMembership`.
 
+## 9.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
 ## 9.0.0
 
 * Added relationships support
