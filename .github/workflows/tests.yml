@@ -50,7 +50,7 @@ jobs:
     
     - name: Save Docker Images
       run: |
-        docker images --filter="dangling=false" | sed '1d' | awk '{print $1 ":" $2 }'
+        docker compose images | sed '1d' | awk '{ print $2 ":" $3 }' | sort -u
 
     # - name: Cache Docker Image
     #   uses: actions/cache@v3
