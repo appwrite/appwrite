@@ -104,19 +104,55 @@ jobs:
         run: docker compose exec appwrite test /usr/src/code/tests/unit 
 
 
-  accounts_test:
-    name: Accounts Test
+  # accounts_test:
+  #   name: Accounts Test
+  #   runs-on: ubuntu-latest
+  #   needs: setup
+
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 1
+  #         submodules: recursive
+
+  #     - name: Load Cache
+  #       uses: actions/cache@v3
+  #       with:
+  #         key: ${{ env.TAG }}
+  #         path: /tmp/${{ env.TAG }}.tar
+      
+  #     - name: Load Docker image
+  #       run: |
+  #         docker load --input /tmp/${{ env.TAG }}.tar
+  #         docker image ls -a
+
+  #     - name: Start Appwrite
+  #       run:  |
+  #         docker compose up -d
+  #         sleep 10
+
+  #     - name: Run Accounts Tests
+  #       run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/Account --debug
+
+  e2e_test:
+    name: E2E Test
     runs-on: ubuntu-latest
     needs: setup
+    strategy:
+      fail-fast: false
+      matrix:
+        services: [Account,Avatars,Console,Databases,Functions,GraphQL,Health,Locale,Projects,Realtime,Storage,Teams,Users,Webhooks]
 
     steps:
       - name: checkout
         uses: actions/checkout@v2
         with:
-          fetch-depth: 1
+          fetch-depth: 2
           submodules: recursive
 
       - name: Load Cache
+        id: load-cache
         uses: actions/cache@v3
         with:
           key: ${{ env.TAG }}
@@ -128,33 +164,10 @@ jobs:
           docker image ls -a
 
       - name: Start Appwrite
+        if: steps.load-cache.outputs.cache-hit == 'true'
         run:  |
           docker compose up -d
-          sleep 10
-
-      - name: Run Accounts Tests
-        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/Account --debug
-
-  # e2e_test:
-  #   name: E2E Test
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       services: [Account,Avatars,Console,Databases,Functions,GraphQL,Health,Locale,Projects,Realtime,Storage,Teams,Users,Webhooks]
-
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 2
-  #         submodules: recursive
-
-  #     - name: Start Appwrite
-  #       run:  |
-  #         docker compose up -d
-  #         sleep 30
+          sleep 20
     
-  #     - name: Run ${{matrix.services}} Tests
-  #       run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
+      - name: Run ${{matrix.services}} Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
