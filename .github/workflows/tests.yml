@@ -48,26 +48,17 @@ jobs:
           TESTING=true
           VERSION=dev
     
-    - name: Upload Docker Image
-      uses: actions/upload-artifact@v3
+    - name: Cache Docker Image
+      uses: actions/cache@v3
       with:
-        name: ${{ env.TAG }}
+        key: ${{ env.TAG }}
         path: /tmp/${{ env.TAG }}.tar
 
-
-    # - name: Start Appwrite
-    #   run:  |
-    #     docker compose up -d
-    #     sleep 30
-
-    # - name: Doctor
-    #   run: docker compose exec -T appwrite doctor
-
-    # - name: Environment Variables
-    #   run:  docker compose exec -T appwrite vars
-
-    # - name: Run Unit Tests
-    #   run: docker compose exec appwrite test /usr/src/code/tests/unit 
+    # - name: Upload Docker Image
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: ${{ env.TAG }}
+    #     path: /tmp/${{ env.TAG }}.tar
 
   unit_test:
     name: Unit Test
@@ -91,6 +82,20 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.TAG }}.tar
           docker image ls -a
+
+      - name: Start Appwrite
+        run:  |
+          docker compose up -d
+          sleep 10
+
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
+
+      - name: Environment Variables
+        run:  docker compose exec -T appwrite vars
+
+      - name: Run Unit Tests
+        run: docker compose exec appwrite test /usr/src/code/tests/unit 
 
 
   # e2e_test:
