@@ -690,13 +690,11 @@ App::error()
                 $message = 'Server Error';
         }
 
-        //$_SERVER = []; // Reset before reporting to error log to avoid keys being compromised
-
         $type = $error->getType();
 
         $output = ((App::isDevelopment())) ? [
-            'message' => $message,
-            'code' => $code,
+            'message' => $error->getMessage(), // Allow all errors to be shown in development mode
+            'code' => $error->getCode(),
             'file' => $file,
             'line' => $line,
             'trace' => $trace,
