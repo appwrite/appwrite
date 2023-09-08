@@ -51,7 +51,6 @@ jobs:
     - name: Cache Docker Image
       uses: actions/cache@v3
       with:
-        key: ${{ env.TAG }}
         path: /tmp/${{ env.TAG }}.tar
 
     # - name: Upload Docker Image
