@@ -28,6 +28,10 @@ jobs:
     - run: git checkout HEAD^2
       if: ${{ github.event_name == 'pull_request' }}
 
+    # This is a separate action that sets up buildx runner
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      
     - name: Build Appwrite
       uses: docker/build-push-action@v3
       with:
