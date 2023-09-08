@@ -80,7 +80,6 @@ jobs:
           fail-on-cache-miss: true
       
       - name: Load and Start Appwrite
-        if: steps.load-cache.outputs.cache-hit == 'true'
         run:  |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
@@ -119,7 +118,6 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
-        if: steps.load-cache.outputs.cache-hit == 'true'
         run:  |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
