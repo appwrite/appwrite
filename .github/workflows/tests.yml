@@ -84,12 +84,12 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: $TAG
+          name: ${{ env.TAG }}
           path: /tmp
       
       - name: Load Docker image
         run: |
-          docker load --input /tmp/$TAG.tar
+          docker load --input /tmp/${{ env.TAG }}.tar
           docker image ls -a
 
 
