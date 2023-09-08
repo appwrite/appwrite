@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d165291f1be92644ba081f9c39050602",
+    "content-hash": "1fe72c576bd9209f9db6e56cac8cd16a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3460,16 +3460,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.34.2",
+            "version": "0.35.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "06ea25aace27790e42d57fdbc7ccf97e0b31a6ba"
+                "reference": "edd5da6763d7f8f28155b77200682c69d08c9954"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/06ea25aace27790e42d57fdbc7ccf97e0b31a6ba",
-                "reference": "06ea25aace27790e42d57fdbc7ccf97e0b31a6ba",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/edd5da6763d7f8f28155b77200682c69d08c9954",
+                "reference": "edd5da6763d7f8f28155b77200682c69d08c9954",
                 "shasum": ""
             },
             "require": {
@@ -3505,9 +3505,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.34.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.35.0"
             },
-            "time": "2023-08-31T14:10:33+00:00"
+            "time": "2023-09-07T17:13:18+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -4214,16 +4214,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.23.1",
+            "version": "1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26"
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/846ae76eef31c6d7790fac9bc399ecee45160b26",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/3510b0a6274cc42f7219367cb3abfc123ffa09d6",
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6",
                 "shasum": ""
             },
             "require": {
@@ -4255,9 +4255,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.23.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.24.0"
             },
-            "time": "2023-08-03T16:32:59+00:00"
+            "time": "2023-09-07T20:46:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

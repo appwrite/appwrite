@@ -1,15 +1,15 @@
-import { Client, Vcs } from "@appwrite.io/console";
+import { Client, Projects } from "@appwrite.io/console";
 
 const client = new Client();
 
-const vcs = new Vcs(client);
+const projects = new Projects(client);
 
 client
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = vcs.listRepositoryBranches('[INSTALLATION_ID]', '[PROVIDER_REPOSITORY_ID]');
+const promise = projects.listDomains('[PROJECT_ID]');
 
 promise.then(function (response) {
     console.log(response); // Success
