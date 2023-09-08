@@ -8,6 +8,7 @@ env:
   TAG: appwrite-dev
 
 on: [pull_request]
+
 jobs:
   setup:
     name: Setup & Build Appwrite Image
@@ -37,7 +38,7 @@ jobs:
       with:
         context: .
         push: false
-        tags: ${{ TAG }}
+        tags: $TAG
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
