@@ -5,7 +5,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TAG: appwrite-dev
+  IMAGE: appwrite-dev
 
 on: [pull_request]
 
@@ -38,27 +38,27 @@ jobs:
       with:
         context: .
         push: false
-        tags: ${{ env.TAG }}
+        tag: ${{ env.IMAGE }}
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: type=docker,dest=/tmp/${{ env.TAG }}.tar
+        outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
         build-args: |
           DEBUG=false
           TESTING=true
           VERSION=dev
     
-    # - name: Cache Docker Image
-    #   uses: actions/cache@v3
-    #   with:
-    #     key: ${{ env.TAG }}
-    #     path: /tmp/${{ env.TAG }}.tar
+    - name: Cache Docker Image
+      uses: actions/cache@v3
+      with:
+        key: ${{ env.IMAGE }}
+        path: /tmp/${{ env.IMAGE }}.tar
 
     # - name: Upload Docker Image
     #   uses: actions/upload-artifact@v3
     #   with:
-    #     name: ${{ env.TAG }}
-    #     path: /tmp/${{ env.TAG }}.tar
+    #     name: ${{ env.IMAGE }}
+    #     path: /tmp/${{ env.IMAGE }}.tar
 
   unit_test:
     name: Unit Test
@@ -75,18 +75,18 @@ jobs:
       # - name: Download artifact
       #   uses: actions/download-artifact@v3
       #   with:
-      #     name: ${{ env.TAG }}
+      #     name: ${{ env.IMAGE }}
       #     path: /tmp
     
       - name: Load Cache
         uses: actions/cache@v3
         with:
-          key: ${{ env.TAG }}
-          path: /tmp/${{ env.TAG }}.tar
+          key: ${{ env.IMAGE }}
+          path: /tmp/${{ env.IMAGE }}.tar
       
       - name: Load Docker image
         run: |
-          docker load --input /tmp/${{ env.TAG }}.tar
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker image ls -a
 
       - name: Start Appwrite
@@ -119,12 +119,12 @@ jobs:
   #     - name: Load Cache
   #       uses: actions/cache@v3
   #       with:
-  #         key: ${{ env.TAG }}
-  #         path: /tmp/${{ env.TAG }}.tar
+  #         key: ${{ env.IMAGE }}
+  #         path: /tmp/${{ env.IMAGE }}.tar
       
   #     - name: Load Docker image
   #       run: |
-  #         docker load --input /tmp/${{ env.TAG }}.tar
+  #         docker load --input /tmp/${{ env.IMAGE }}.tar
   #         docker image ls -a
 
   #     - name: Start Appwrite
@@ -155,12 +155,12 @@ jobs:
         id: load-cache
         uses: actions/cache@v3
         with:
-          key: ${{ env.TAG }}
-          path: /tmp/${{ env.TAG }}.tar
+          key: ${{ env.IMAGE }}
+          path: /tmp/${{ env.IMAGE }}.tar
       
       - name: Load Docker image
         run: |
-          docker load --input /tmp/${{ env.TAG }}.tar
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker image ls -a
 
       - name: Start Appwrite
