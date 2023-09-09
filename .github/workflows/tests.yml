@@ -54,14 +54,13 @@ jobs:
     - name: List Files and images
       run: |
         docker compose config --images | sort -u
-        docker save $(docker compose config --images | sort -u) -o allinone.tar
-        stat allinone.tar
+        docker save $(docker compose config --images | sort -u) -o /tmp/allinone.tar
 
-    # - name: Cache Docker Image
-    #   uses: actions/cache@v3
-    #   with:
-    #     key: ${{ env.IMAGE }}-${{ github.sha }}
-    #     path: /tmp/${{ env.IMAGE }}.tar
+    - name: Cache Docker Image
+      uses: actions/cache@v3
+      with:
+        key: ${{ env.IMAGE }}-${{ github.sha }}
+        path: /tmp/allinone.tar
 
     # - name: Upload Docker Image
     #   uses: actions/upload-artifact@v3
@@ -69,39 +68,39 @@ jobs:
     #     name: ${{ env.IMAGE }}
     #     path: /tmp/${{ env.IMAGE }}.tar
 
-  # unit_test:
-  #   name: Unit Test
-  #   runs-on: ubuntu-latest
-  #   needs: setup
+  unit_test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    needs: setup
 
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 1
-  #         submodules: recursive
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 1
+          submodules: recursive
     
-  #     - name: Load Cache
-  #       uses: actions/cache@v3
-  #       with:
-  #         key: ${{ env.IMAGE }}-${{ github.sha }}
-  #         path: /tmp/${{ env.IMAGE }}.tar
-  #         fail-on-cache-miss: true
+      - name: Load Cache
+        uses: actions/cache@v3
+        with:
+          key: ${{ env.IMAGE }}-${{ github.sha }}
+          path: /tmp/allinone.tar
+          fail-on-cache-miss: true
       
-  #     - name: Load and Start Appwrite
-  #       run:  |
-  #         docker load --input /tmp/${{ env.IMAGE }}.tar
-  #         docker compose up -d
-  #         sleep 10
+      - name: Load and Start Appwrite
+        run:  |
+          docker load --input /tmp/allinone.tar
+          docker compose up -d
+          sleep 10
 
-  #     - name: Doctor
-  #       run: docker compose exec -T appwrite doctor
+      - name: Doctor
+        run: docker compose exec -T appwrite doctor
 
-  #     - name: Environment Variables
-  #       run:  docker compose exec -T appwrite vars
+      - name: Environment Variables
+        run:  docker compose exec -T appwrite vars
 
-  #     - name: Run Unit Tests
-  #       run: docker compose exec appwrite test /usr/src/code/tests/unit 
+      - name: Run Unit Tests
+        run: docker compose exec appwrite test /usr/src/code/tests/unit 
 
   # e2e_test:
   #   name: E2E Test
