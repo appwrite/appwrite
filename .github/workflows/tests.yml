@@ -130,6 +130,10 @@ jobs:
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 20
+
+      - name: Additional Sleep for Functions and GraphQL
+        if: ${{ matrix.services == 'Functions' || matrix.services == 'GraphQL' }}
+        run: sleep 30
     
       - name: Run ${{matrix.services}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
