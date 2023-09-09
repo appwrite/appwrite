@@ -131,9 +131,9 @@ jobs:
           docker compose up -d
           sleep 10
 
-      - name: Additional Sleep for GraphQL
+      - name: Output build logs
         if: ${{ matrix.services == 'GraphQL' }}
-        run: sleep 60
+        run: docker compose logs appwrite-worker-builds
     
       - name: Run ${{matrix.services}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
