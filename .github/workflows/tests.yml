@@ -135,5 +135,5 @@ jobs:
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
 
       - name: Output build logs
-        if: ${{ matrix.services == 'GraphQL' }}
+        if: always() && ${{ matrix.services == 'GraphQL' }}
         run: docker compose logs appwrite-worker-builds
