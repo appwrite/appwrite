@@ -42,25 +42,25 @@ jobs:
         load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        # outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
+        outputs: type=docker,dest=/tmp/${{ env.IMAGE }}.tar
         build-args: |
           DEBUG=false
           TESTING=true
           VERSION=dev
 
-    - name: Pull Docker Images
-      run: docker compose pull --ignore-pull-failures --ignore-buildable
+    # - name: Pull Docker Images
+    #   run: docker compose pull --ignore-pull-failures --ignore-buildable
     
-    - name: List Files and images
-      run: |
-        docker compose config --images | sort -u
-        docker save $(docker compose config --images | sort -u) -o /tmp/allinone.tar
+    # - name: List Files and images
+    #   run: |
+    #     docker compose config --images | sort -u
+    #     docker save $(docker compose config --images | sort -u) -o /tmp/allinone.tar
 
     - name: Cache Docker Image
       uses: actions/cache@v3
       with:
         key: ${{ env.IMAGE }}-${{ github.sha }}
-        path: /tmp/allinone.tar
+        path: /tmp/${{ env.IMAGE }}.tar
 
     # - name: Upload Docker Image
     #   uses: actions/upload-artifact@v3
@@ -84,12 +84,12 @@ jobs:
         uses: actions/cache@v3
         with:
           key: ${{ env.IMAGE }}-${{ github.sha }}
-          path: /tmp/allinone.tar
+          path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
       
       - name: Load and Start Appwrite
         run:  |
-          docker load --input /tmp/allinone.tar
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 10
 
@@ -122,12 +122,12 @@ jobs:
         uses: actions/cache@v3
         with:
           key: ${{ env.IMAGE }}-${{ github.sha }}
-          path: /tmp/allinone.tar
+          path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
       - name: Load and Start Appwrite
         run:  |
-          docker load --input /tmp/allinone.tar
+          docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
           sleep 20
     
