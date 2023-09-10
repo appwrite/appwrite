@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;

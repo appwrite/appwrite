@@ -4,7 +4,7 @@ namespace Tests\Unit\Usage;
 
 use Appwrite\Usage\Stats;
 use PHPUnit\Framework\TestCase;
-use Utopia\App;
+use Utopia\Http\Http;
 
 class StatsTest extends TestCase
 {

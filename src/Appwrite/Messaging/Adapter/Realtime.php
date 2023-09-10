@@ -5,7 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 

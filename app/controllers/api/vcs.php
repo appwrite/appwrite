@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
-use Utopia\App;
+use Utopia\Http\Http;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Utopia\Validator\Host;

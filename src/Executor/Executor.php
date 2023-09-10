@@ -3,7 +3,7 @@
 namespace Executor;
 
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 
 class Executor
 {

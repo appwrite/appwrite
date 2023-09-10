@@ -7,7 +7,7 @@ use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
@@ -58,7 +58,7 @@ Files::load(__DIR__ . '/../console');
 include __DIR__ . '/controllers/general.php';
 
 $http->on('start', function (Server $http) use ($payloadSize, $register) {
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
@@ -241,7 +241,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         return;
     }
 
-    $app = new App('UTC');
+    $app = new Http('UTC');
 
     $pools = $register->get('pools');
     App::setResource('pools', fn () => $pools);

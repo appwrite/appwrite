@@ -6,7 +6,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Usage\Stats;
 use Swoole\Runtime;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;

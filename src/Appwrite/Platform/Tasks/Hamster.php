@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Network\Validator\Origin;
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -286,7 +286,7 @@ class Hamster extends Action
             $loopStart = microtime(true);
 
             /* Initialise new Utopia app */
-            $app = new App('UTC');
+            $app = new Http('UTC');
 
             Console::info('Getting stats for all projects');
             $this->getStatsPerProject($pools, $cache, $dbForConsole);

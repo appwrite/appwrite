@@ -2,7 +2,7 @@
 
 namespace Appwrite\Specification;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Route;
 use Appwrite\Utopia\Response\Model;

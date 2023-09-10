@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 
 App::get('/versions')

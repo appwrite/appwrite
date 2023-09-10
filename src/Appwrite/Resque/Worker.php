@@ -4,7 +4,7 @@ namespace Appwrite\Resque;
 
 use Appwrite\Event\Usage;
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Cache\Adapter\Sharding;

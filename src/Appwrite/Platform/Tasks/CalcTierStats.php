@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Exception;
 use League\Csv\CannotInsertRecord;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
@@ -84,7 +84,7 @@ class CalcTierStats extends Action
         Console::success(APP_NAME . ' cloud free tier  stats calculation has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $console = $app->getResource('console');
 
         /** CSV stuff */

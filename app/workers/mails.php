@@ -2,7 +2,7 @@
 
 use Appwrite\Resque\Worker;
 use Appwrite\Template\Template;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use PHPMailer\PHPMailer\PHPMailer;
 

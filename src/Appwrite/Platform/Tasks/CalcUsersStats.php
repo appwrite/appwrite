@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -55,7 +55,7 @@ class CalcUsersStats extends Action
         Console::success(APP_NAME . ' cloud Users calculation has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $console = $app->getResource('console');
 
         /** CSV stuff */

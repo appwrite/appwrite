@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Request;
-use Utopia\App;
+use Utopia\Http\Http;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;

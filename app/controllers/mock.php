@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;

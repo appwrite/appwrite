@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Appwrite\ClamAV\Network;
 use Utopia\Logger\Logger;

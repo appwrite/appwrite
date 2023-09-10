@@ -10,7 +10,7 @@ use Executor\Executor;
 use Appwrite\Usage\Stats;
 use Appwrite\Vcs\Comment;
 use Utopia\Database\DateTime;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;

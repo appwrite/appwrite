@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Cron\CronExpression;
 use Swoole\Timer;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;

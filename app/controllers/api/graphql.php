@@ -12,7 +12,7 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Document;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;

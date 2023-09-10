@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -51,7 +51,7 @@ class PatchDeleteProjectCollections extends Action
         Console::success(APP_NAME . ' delete project collections has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $console = $app->getResource('console');
 
         /** Database connections */

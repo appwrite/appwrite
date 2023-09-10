@@ -2,7 +2,7 @@
 
 namespace Appwrite\Usage;
 
-use Utopia\App;
+use Utopia\Http\Http;
 
 class Stats
 {

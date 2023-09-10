@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Utopia\Platform\Action;
 use Appwrite\Event\Certificate;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Validator\Hostname;

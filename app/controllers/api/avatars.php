@@ -3,7 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;

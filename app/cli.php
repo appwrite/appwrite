@@ -8,7 +8,7 @@ use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
