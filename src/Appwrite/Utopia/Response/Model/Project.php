@@ -138,7 +138,7 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('providers', [
+            ->addRule('authProviders', [
                 'type' => Response::MODEL_AUTH_PROVIDER,
                 'description' => 'List of Auth Providers.',
                 'default' => [],

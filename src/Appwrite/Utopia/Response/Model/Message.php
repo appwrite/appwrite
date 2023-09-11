@@ -6,7 +6,7 @@ use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
 
-class Message extends Model
+class Message extends Any
 {
     /**
      * @var bool
@@ -27,13 +27,6 @@ class Message extends Model
                 'description' => 'Provider Id for the message.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
-            ])
-            ->addRule('data', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Message Data.',
-                'default' => '',
-                'required' => false,
-                'example' => '',
             ])
             ->addRule('to', [
                 'type' => self::TYPE_STRING,
@@ -66,12 +59,6 @@ class Message extends Model
                 'description' => 'Status of delivery.',
                 'default' => '',
                 'example' => true,
-            ])
-            ->addRule('search', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Field that can be used for searching message.',
-                'default' => '',
-                'example' => 'Hello everyone',
             ]);
     }
 
