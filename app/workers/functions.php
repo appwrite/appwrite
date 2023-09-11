@@ -140,7 +140,24 @@ Server::setResource('execute', function () {
 
         $durationStart = \microtime(true);
 
+        $body = $eventData ?? '';
+        if (empty($body)) {
+            $body = $data ?? '';
+        }
+
         $vars = [];
+
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
 
         // Shared vars
         foreach ($function->getAttribute('varsProject', []) as $var) {
@@ -161,11 +178,6 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
         ]);
-
-        $body = $eventData ?? '';
-        if (empty($body)) {
-            $body = $data ?? '';
-        }
 
         /** Execute function */
         try {
