@@ -23,19 +23,19 @@ class Provider extends Model
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The user-given name for the provider instance.',
+                'description' => 'The name for the provider instance.',
                 'default' => '',
                 'example' => 'Mailgun',
             ])
             ->addRule('provider', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider name setup in Utopia.',
+                'description' => 'The name of the provider service.',
                 'default' => '',
                 'example' => 'mailgun',
             ])
             ->addRule('default', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Default provider or not.',
+                'description' => 'Is this a pre-configured provider instance?',
                 'default' => '',
                 'example' => true,
             ])
