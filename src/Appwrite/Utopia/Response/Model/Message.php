@@ -32,6 +32,7 @@ class Message extends Any
                 'type' => self::TYPE_STRING,
                 'description' => 'Recipient of message.',
                 'default' => '',
+                'array' => true,
                 'example' => ['user-1'],
             ])
             ->addRule('deliveryTime', [
@@ -46,6 +47,7 @@ class Message extends Any
                 'description' => 'Delivery error if any.',
                 'required' => false,
                 'default' => '',
+                'array' => true,
                 'example' => 'Provider not valid.',
             ])
             ->addRule('deliveredTo', [
