@@ -1576,7 +1576,7 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html
             ],
             'deliveryTime' => $deliveryTime,
-            'deliveryError' => null,
+            'deliveryErrors' => null,
             'deliveredTo' => null,
             'delivered' => false,
             'search' => null,
