@@ -166,7 +166,7 @@ class Backup extends Action
             '--strict',
             '--history="' . $this->database . '|' . pathinfo($this->filename, PATHINFO_FILENAME) . '"', // PERCONA_SCHEMA.xtrabackup_history
             '--slave-info',
-            '--safe-slave-backup',
+            '--safe-slave-backup', // https://docs.percona.com/percona-xtrabackup/8.0/make-backup-in-replication-env.html
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . self::BACKUPS_PATH,

@@ -103,7 +103,7 @@ class Restore extends Action
 
         $this->decompress($stream, $files);
         $this->prepare($files);
-        //$this->restore($files, $datadir);
+        $this->restore($files, $datadir);
 
         $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
     }

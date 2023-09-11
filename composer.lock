@@ -2632,12 +2632,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "ec38203edf42752cbaaf8ccf0c8762ae0a8033e3"
+                "reference": "76e440f1374bf23bb82f28701786af1a5a3b2d05"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/ec38203edf42752cbaaf8ccf0c8762ae0a8033e3",
-                "reference": "ec38203edf42752cbaaf8ccf0c8762ae0a8033e3",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/76e440f1374bf23bb82f28701786af1a5a3b2d05",
+                "reference": "76e440f1374bf23bb82f28701786af1a5a3b2d05",
                 "shasum": ""
             },
             "require": {
@@ -2679,7 +2679,7 @@
                 "issues": "https://github.com/utopia-php/storage/issues",
                 "source": "https://github.com/utopia-php/storage/tree/s3-getfiles"
             },
-            "time": "2023-09-04T14:19:07+00:00"
+            "time": "2023-09-05T08:27:10+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -3662,16 +3662,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.23.1",
+            "version": "1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26"
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/846ae76eef31c6d7790fac9bc399ecee45160b26",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/3510b0a6274cc42f7219367cb3abfc123ffa09d6",
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6",
                 "shasum": ""
             },
             "require": {
@@ -3703,9 +3703,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.23.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.24.0"
             },
-            "time": "2023-08-03T16:32:59+00:00"
+            "time": "2023-09-07T20:46:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
