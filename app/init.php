@@ -544,6 +544,47 @@ Database::addFilter(
             ]));
     }
 );
+
+Database::addFilter(
+    'subQueryProviderType',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $provider = Authorization::skip(fn () => $database
+            ->getDocument(
+                'providers',
+                $document->getAttribute('providerId'),
+                [Query::select(['type'])]
+            ));
+        if ($provider) {
+            return $provider->getAttribute('type');
+        }
+        return null;
+    }
+);
+
+
+Database::addFilter(
+    'subQueryTopicTargets',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $targetIds = Authorization::skip(fn () => \array_map(
+            fn ($document) => $document->getAttribute('targetId'),
+            $database
+            ->find('subscribers', [
+                Query::equal('topicInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ])
+        ));
+        if (\count($targetIds) > 0) {
+            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+        }
+        return [];
+    }
+);
 /**
  * DB Formats
  */
