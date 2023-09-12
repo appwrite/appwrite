@@ -1862,17 +1862,6 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('provider'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['subQueryProvider'],
-            ],
-            [
                 '$id' => ID::custom('identifier'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
