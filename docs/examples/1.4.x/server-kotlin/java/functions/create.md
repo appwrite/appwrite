@@ -12,7 +12,7 @@ Functions functions = new Functions(client);
 functions.create(
     "[FUNCTION_ID]",
     "[NAME]",
-    "node-14.5",
+    "node-18.0",
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
