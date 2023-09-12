@@ -333,7 +333,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
+            ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
