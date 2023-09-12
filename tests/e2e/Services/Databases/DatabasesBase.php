@@ -128,8 +128,7 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertTrue($response['body']['enabled']);
     }
-
-
+    
     /**
      * @depends testCreateCollection
      */
