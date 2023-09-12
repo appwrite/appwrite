@@ -156,8 +156,8 @@ class Restore extends Action
             '--decompress',
             '--strict',
             '--remove-original',
+            '--compress-threads=' . $this->processors / 2,
             '--parallel=' . $this->processors,
-            '--compress-threads=' . intval($this->processors / 2),
             '--target-dir=' . $target,
             '2> ' . $logfile,
         ];

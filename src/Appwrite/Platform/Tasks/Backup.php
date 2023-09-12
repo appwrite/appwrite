@@ -57,6 +57,7 @@ class Backup extends Action
             throw new Exception('No DSN match');
         }
 
+        //todo: remove this:
         console::info('Trying to connect to ' . $this->dsn->getHost() . ' : ' . $this->dsn->getPort() . ' user: ' . $this->dsn->getUser() . ' password: ' . $this->dsn->getPassword());
 
         $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
@@ -94,7 +95,7 @@ class Backup extends Action
             } catch (Exception $e) {
                 //todo: send alerts to admin!
                 // todo: Do we want to terminate the script? or wait for next backup iteration?
-                Console::error($e->getMessage());
+                Console::error(date('Y-m-d H:i:s') . ' Error: ' . $e->getMessage());
             }
         }, self::BACKUP_INTERVAL_SECONDS);
     }
@@ -154,7 +155,7 @@ class Backup extends Action
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
             '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . intval($this->processors / 2),
+            '--compress-threads=' . $this->processors, // Better not using all processors
             '--parallel=' . $this->processors,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '2> ' . $logfile,
@@ -164,9 +165,9 @@ class Backup extends Action
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-
-        if (!str_contains($stderr, 'completed OK!') || !file_exists($target . '/xtrabackup_checkpoints')) {
-            throw new Exception(' Backup failed:' . $stderr);
+        if (!str_contains($stderr, 'completed OK!')) {
+            shell_exec('rm -rf ' . $target);
+            throw new Exception(' Backup failed: ' . $stderr);
         }
 
         if (!unlink($logfile)) {
