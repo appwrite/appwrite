@@ -26,16 +26,9 @@ class V20 extends Migration
         }
 
         $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
-        $this->createInfStatsMetric('project.$all.network.outbound', 'network.outbound');
-
         $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
-        $this->createInfStatsMetric('project.$all.network.inbound', 'network.inbound');
-
         $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
-        $this->createInfStatsMetric('project.$all.network.requests', 'network.requests');
-
         $this->migrateStatsMetric('users.$all.count.total', 'users');
-        $this->createInfStatsMetric('users.$all.count.total', 'users');
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
@@ -63,30 +56,23 @@ class V20 extends Migration
             $to = $this->pdo->quote($to);
 
             $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
-        } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
-        }
-    }
 
-    protected function createInfStatsMetric(string $from, string $to): void
-    {
-        try {
-            $from = $this->pdo->quote($from);
-
+            // Create Inf metric
             $result = $this->pdo->prepare("SELECT SUM(value) AS total FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` 
                                                  WHERE metric = {$from} 
                                                  AND period=1d 
                                                  AND value > 0")->execute();
 
-            $id = \md5("null_inf_{$to}");
-            $this->pdo->prepare("INSERT INTO `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` 
+            if (!empty($result)) {
+                $id = \md5("null_inf_{$to}");
+                $this->pdo->prepare("INSERT INTO `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` 
                                         (id, metric, period ,time, `value`, region) values ({$id}, {$to}, null, inf, {$result['total']}, default)
                                  ")->execute();
+            }
         } catch (\Throwable $th) {
-            Console::warning("Creating inf metric to {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
+            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
     }
-
     /**
      * Migrate Functions usage.
      *
@@ -109,19 +95,10 @@ class V20 extends Migration
             $functionInternalId = $function->getInternalId();
 
             $this->migrateStatsMetric("deployment.$functionId.storage.size", "function.$functionInternalId.deployments.storage");
-            $this->createInfStatsMetric("deployment.$functionId.storage.size", "function.$functionInternalId.deployments.storage");
-
             $this->migrateStatsMetric("builds.$functionId.compute.total", "$functionInternalId.builds");
-            $this->createInfStatsMetric("builds.$functionId.compute.total", "$functionInternalId.builds");
-
             $this->migrateStatsMetric("builds.$functionId.compute.time", "$functionInternalId.builds.compute");
-            $this->createInfStatsMetric("builds.$functionId.compute.time", "$functionInternalId.builds.compute");
-
             $this->migrateStatsMetric("executions.$functionId.compute.total", "$functionInternalId.executions");
-            $this->createInfStatsMetric("executions.$functionId.compute.total", "$functionInternalId.executions");
-
             $this->migrateStatsMetric("executions.$functionId.compute.time", "$functionInternalId.executions.compute");
-            $this->createInfStatsMetric("executions.$functionId.compute.time", "$functionInternalId.executions");
         }
     }
 
@@ -148,10 +125,7 @@ class V20 extends Migration
             $databaseInternalId = $database->getInternalId();
 
             $this->migrateStatsMetric("databases.$databaseId.collections.count", "$databaseInternalId.collections");
-            $this->createInfStatsMetric("databases.$databaseId.collections.count", "$databaseInternalId.collections");
-
             $this->migrateStatsMetric("databases.$databaseId.documents.count", "$databaseInternalId.documents");
-            $this->createInfStatsMetric("databases.$databaseId.documents.count", "$databaseInternalId.documents");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
@@ -162,7 +136,6 @@ class V20 extends Migration
                 $collectionInternalId =  $collection->getInternalId();
 
                 $this->migrateStatsMetric("documents.$databaseId.$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
-                $this->createInfStatsMetric("documents.$databaseId.$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
             }
         }
     }
@@ -226,10 +199,7 @@ class V20 extends Migration
             $bucketInternalId = $bucket->getInternalId();
 
             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
-            $this->createInfStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
-
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
-            $this->createInfStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
         }
     }
 }
