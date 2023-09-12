@@ -546,7 +546,7 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryProviderType',
+    'subQueryProvider',
     function (mixed $value) {
         return null;
     },
@@ -555,15 +555,13 @@ Database::addFilter(
             ->getDocument(
                 'providers',
                 $document->getAttribute('providerId'),
-                [Query::select(['type'])]
             ));
-        if ($provider) {
-            return $provider->getAttribute('type');
+        if (!$provider->isEmpty()) {
+            return $provider;
         }
         return null;
     }
 );
-
 
 Database::addFilter(
     'subQueryTopicTargets',
