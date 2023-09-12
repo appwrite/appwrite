@@ -60,7 +60,7 @@ class Restore extends Action
 
         if (file_exists($datadir . '/sys') || file_exists($datadir . '/appwrite')) {
             Console::error('Datadir ' . $datadir . ' must be empty!');
-            //Console::exit();
+            Console::exit();
         }
 
         $this->log('--- Restore Start ' . $id . ' --- ');

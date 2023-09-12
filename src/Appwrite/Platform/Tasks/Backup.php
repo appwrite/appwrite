@@ -169,17 +169,19 @@ class Backup extends Action
             '--safe-slave-backup', // https://docs.percona.com/percona-xtrabackup/8.0/make-backup-in-replication-env.html
             '--safe-slave-backup-timeout=300',
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
-            '--target-dir=' . self::BACKUPS_PATH,
-            '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . intval($this->processors / 2),
+            '--target-dir=./',
+            //'--compress=' . self::COMPRESS_ALGORITHM,
+            '--compress=lz4',
+            '--compress-threads=' . $this->processors,
             '--parallel=' . $this->processors,
             '> ' . $file,
             '2> ' . $log,
         ];
 
         $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        shell_exec($cmd);
         Console::success($cmd);
+        shell_exec($cmd);
+
         $stderr = shell_exec('tail -1 ' . $log);
 
         if (!str_contains($stderr, 'completed OK!')) {
@@ -190,6 +192,13 @@ class Backup extends Action
         if (!unlink($log)) {
             throw new Exception('Error deleting: ' . $log);
         }
+
+        // tar if using lz4...
+//        $tar = basename($this->filename, '.xbstream') . '.tar.gz';
+//        $cmd = 'cd ' . $target . ' && tar zcf ' . $tar . ' ' . $this->filename . ' && cd ' . getcwd();
+//        console::success($cmd);
+//        shell_exec($cmd);
+
     }
 
     /**
