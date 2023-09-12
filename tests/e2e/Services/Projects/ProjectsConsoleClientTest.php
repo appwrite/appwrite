@@ -825,7 +825,7 @@ class ProjectsConsoleClientTest extends Scope
 
         foreach ($providers as $key => $provider) {
             $asserted = false;
-            foreach ($response['body']['providers'] as $responseProvider) {
+            foreach ($response['body']['authProviders'] as $responseProvider) {
                 if ($responseProvider['key'] === $key) {
                     $this->assertEquals('AppId-' . ucfirst($key), $responseProvider['appId']);
                     $this->assertEquals('Secret-' . ucfirst($key), $responseProvider['secret']);
@@ -867,7 +867,7 @@ class ProjectsConsoleClientTest extends Scope
         $i = 0;
         foreach ($providers as $key => $provider) {
             $asserted = false;
-            foreach ($response['body']['providers'] as $responseProvider) {
+            foreach ($response['body']['authProviders'] as $responseProvider) {
                 if ($responseProvider['key'] === $key) {
                     // On first provider, test enabled=false
                     $this->assertEquals($i !== 0, $responseProvider['enabled']);
