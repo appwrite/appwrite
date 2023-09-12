@@ -430,7 +430,6 @@ App::post('/v1/users/:userId/targets')
             ],
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),
-            'providerType' => null,
             'userId' => $userId,
             'userInternalId' => $user->getInternalId(),
             'identifier' => $identifier,
