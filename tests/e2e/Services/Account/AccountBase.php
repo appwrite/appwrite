@@ -346,7 +346,7 @@ trait AccountBase
      */
     public function testGetAccountLogs($data): array
     {
-        sleep(10);
+        sleep(5);
         $session = $data['session'] ?? '';
         $sessionId = $data['sessionId'] ?? '';
         $userId = $data['id'] ?? '';

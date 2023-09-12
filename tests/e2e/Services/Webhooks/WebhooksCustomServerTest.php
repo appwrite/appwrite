@@ -401,6 +401,7 @@ class WebhooksCustomServerTest extends Scope
             'name' => 'Test',
             'execute' => [Role::any()->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'timeout' => 10,
         ]);
 
@@ -415,17 +416,9 @@ class WebhooksCustomServerTest extends Scope
         $this->assertEquals($webhook['method'], 'POST');
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
-        // $this->assertStringContainsString('functions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString('functions.*.create', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("functions.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        // $this->assertStringContainsString("functions.{$id}.create", $webhook['headers']['X-Appwrite-Webhook-Events']); TODO @christyjacob4 : enable test once we allow functions.* events
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
-
-        /**
-         * Test for FAILURE
-         */
 
         return [
             'functionId' => $id,
@@ -448,6 +441,7 @@ class WebhooksCustomServerTest extends Scope
         ], $this->getHeaders()), [
             'name' => 'Test',
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'execute' => [Role::any()->toString()],
             'vars' => [
                 'key1' => 'value1',
