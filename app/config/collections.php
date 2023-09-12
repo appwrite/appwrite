@@ -1862,7 +1862,7 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('providerType'),
+                '$id' => ID::custom('provider'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -1870,7 +1870,7 @@ $commonCollections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => ['subQueryProviderType'],
+                'filters' => ['subQueryProvider'],
             ],
             [
                 '$id' => ID::custom('identifier'),
