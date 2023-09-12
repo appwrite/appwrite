@@ -1,8 +1,7 @@
 mutation {
     teamsCreateMembership(
         teamId: "[TEAM_ID]",
-        roles: [],
-        url: "https://example.com"
+        roles: []
     ) {
         _id
         _createdAt

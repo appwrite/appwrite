@@ -90,7 +90,8 @@ class BuildsV1 extends Worker
             throw new Exception('Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".', 500);
         }
 
-        $runtimes = Config::getParam('runtimes', []);
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
         $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
         if (\is_null($runtime)) {
@@ -320,21 +321,15 @@ class BuildsV1 extends Worker
 
             $vars = [];
 
-            // Global vars
-            $varsFromProject = $dbForProject->find('variables', [
-                Query::equal('resourceType', ['project']),
-                Query::limit(APP_LIMIT_SUBQUERY)
-            ]);
-
-            foreach ($varsFromProject as $var) {
-                $vars[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
+            // Shared vars
+            foreach ($function->getAttribute('varsProject', []) as $var) {
+                $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
             }
 
             // Function vars
-            $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-                $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-                return $carry;
-            }, []));
+            foreach ($function->getAttribute('vars', []) as $var) {
+                $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+            }
 
             // Appwrite vars
             $vars = \array_merge($vars, [
@@ -358,17 +353,20 @@ class BuildsV1 extends Worker
                 Co::join([
                     Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                         try {
+                            $version = $function->getAttribute('version', 'v2');
+                            $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+
                             $response = $this->executor->createRuntime(
                                 deploymentId: $deployment->getId(),
                                 projectId: $project->getId(),
                                 source: $source,
                                 image: $runtime['image'],
-                                version: $function->getAttribute('version'),
+                                version: $version,
                                 remove: true,
                                 entrypoint: $deployment->getAttribute('entrypoint'),
                                 destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
                                 variables: $vars,
-                                command: 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"'
+                                command: $command
                             );
                         } catch (Exception $error) {
                             $err = $error;

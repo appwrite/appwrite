@@ -75,7 +75,8 @@ Server::setResource('execute', function () {
         }
 
         /** Check if  runtime is supported */
-        $runtimes = Config::getParam('runtimes', []);
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
         if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
@@ -106,7 +107,7 @@ Server::setResource('execute', function () {
                 'functionId' => $function->getId(),
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
-                'trigger' => 'http',
+                'trigger' => $trigger,
                 'status' => 'processing',
                 'responseStatusCode' => 0,
                 'responseHeaders' => [],
@@ -151,17 +152,14 @@ Server::setResource('execute', function () {
         $vars = [];
 
         // Shared vars
-        $varsShared = $project->getAttribute('variables', []);
-        $vars = \array_merge($vars, \array_reduce($varsShared, function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value') ?? '';
-            return $carry;
-        }, []));
+        foreach ($function->getAttribute('varsProject', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Function vars
-        $vars = \array_merge($vars, array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-            return $carry;
-        }, []));
+        foreach ($function->getAttribute('vars', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
 
         // Appwrite vars
         $vars = \array_merge($vars, [
@@ -180,8 +178,10 @@ Server::setResource('execute', function () {
 
         /** Execute function */
         try {
+            $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
             $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
@@ -191,11 +191,11 @@ Server::setResource('execute', function () {
                 image: $runtime['image'],
                 source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $function->getAttribute('version'),
+                version: $version,
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"'
+                runtimeEntrypoint: $command
             );
 
             $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
@@ -337,6 +337,7 @@ $server->job()
                     }
                     Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
+                        log: $log,
                         queueForUsage: $queueForUsage,
                         dbForProject: $dbForProject,
                         project: $project,
@@ -382,9 +383,9 @@ $server->job()
                     data: $data,
                     user: $user,
                     jwt: $jwt,
-                    path: $payload['path'],
-                    method: $payload['method'],
-                    headers: $payload['headers'],
+                    path: $payload['path'] ?? '',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     queueForUsage: $queueForUsage,
                 );
                 break;
@@ -402,9 +403,9 @@ $server->job()
                     data: null,
                     user: null,
                     jwt: null,
-                    path: $payload['path'],
-                    method: $payload['method'],
-                    headers: $payload['headers'],
+                    path: $payload['path'] ?? '/',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     queueForUsage: $queueForUsage,
                 );
                 break;

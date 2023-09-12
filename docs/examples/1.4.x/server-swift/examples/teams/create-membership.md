@@ -9,7 +9,6 @@ let teams = Teams(client)
 
 let membership = try await teams.createMembership(
     teamId: "[TEAM_ID]",
-    roles: [],
-    url: "https://example.com"
+    roles: []
 )
 

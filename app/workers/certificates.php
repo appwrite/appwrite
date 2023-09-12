@@ -438,6 +438,12 @@ class CertificatesV1 extends Worker
             $this->dbForConsole->updateDocument('rules', $rule->getId(), $rule);
 
             $projectId = $rule->getAttribute('projectId');
+
+            // Skip events for console project (triggered by auto-ssl generation for 1 click setups)
+            if ($projectId === 'console') {
+                return;
+            }
+
             $project = $this->dbForConsole->getDocument('projects', $projectId);
 
             /** Trigger Webhook */

@@ -21,6 +21,7 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'assistant.read',
 ];
 
 $admins = [
@@ -59,13 +60,13 @@ $admins = [
     'migrations.write',
     'vcs.read',
     'vcs.write',
-    'assistant.read',
 ];
 
 return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
+            'global',
             'public',
             'home',
             'console',

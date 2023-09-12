@@ -1296,7 +1296,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $fileSecurity = $bucket->getAttributes('fileSecurity', false);
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_UPDATE);
         $valid = $validator->isValid($bucket->getUpdate());
         if (!$fileSecurity && !$valid) {
@@ -1401,7 +1401,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $fileSecurity = $bucket->getAttributes('fileSecurity', false);
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
         $validator = new Authorization(Database::PERMISSION_DELETE);
         $valid = $validator->isValid($bucket->getDelete());
         if (!$fileSecurity && !$valid) {
