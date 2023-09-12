@@ -154,9 +154,9 @@ class V16Test extends TestCase
     public function projectProvider(): array
     {
         return [
-            'providers' => [
+            'authProviders' => [
                 [
-                    'providers' => [
+                    'authProviders' => [
                         [
                             'key' => 'github',
                             'name' => 'GitHub',
@@ -167,7 +167,7 @@ class V16Test extends TestCase
                     ],
                 ],
                 [
-                    'providers' => [
+                    'authProviders' => [
                         [
                             'name' => 'Github',
                             'appId' => 'client_id',
