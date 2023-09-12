@@ -23,10 +23,8 @@ $member = [
     'execution.write',
     'targets.read',
     'targets.write',
-    'providers.write',
-    'providers.read',
-    'messages.write',
-    'messages.read'
+    'subscribers.write',
+    'subscribers.read'
 ];
 
 $admins = [
@@ -72,6 +70,16 @@ $admins = [
     'vcs.read',
     'vcs.write',
     'assistant.read',
+    'targets.read',
+    'targets.write',
+    'providers.write',
+    'providers.read',
+    'messages.write',
+    'messages.read',
+    'topics.write',
+    'topics.read',
+    'subscribers.write',
+    'subscribers.read'
 ];
 
 return [
