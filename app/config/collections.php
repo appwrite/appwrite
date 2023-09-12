@@ -1482,7 +1482,7 @@ $commonCollections = [
             [
                 '$id' => ID::custom('_key_default_type'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['default, type'],
+                'attributes' => ['default','type'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],
