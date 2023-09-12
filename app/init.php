@@ -545,24 +545,6 @@ Database::addFilter(
 );
 
 Database::addFilter(
-    'subQueryProvider',
-    function (mixed $value) {
-        return null;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        $provider = Authorization::skip(fn () => $database
-            ->getDocument(
-                'providers',
-                $document->getAttribute('providerId'),
-            ));
-        if (!$provider->isEmpty()) {
-            return $provider;
-        }
-        return null;
-    }
-);
-
-Database::addFilter(
     'subQueryTopicTargets',
     function (mixed $value) {
         return null;
