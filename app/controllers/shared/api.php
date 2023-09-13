@@ -254,7 +254,6 @@ App::init()
                     ->setContentType($data['contentType'])
                     ->send(base64_decode($data['payload']))
                 ;
-
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
