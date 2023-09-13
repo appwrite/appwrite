@@ -20,8 +20,9 @@ class Linkedin extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        'r_liteprofile',
-        'r_emailaddress',
+        'openid',
+        'profile',
+        'email'
     ];
 
     /**
@@ -118,7 +119,7 @@ class Linkedin extends OAuth2
     {
         $user = $this->getUser($accessToken);
 
-        return $user['id'] ?? '';
+        return $user['sub'] ?? '';
     }
 
     /**
@@ -128,9 +129,8 @@ class Linkedin extends OAuth2
      */
     public function getUserEmail(string $accessToken): string
     {
-        $email = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/emailAddress?q=members&projection=(elements*(handle~))', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
-
-        return $email['elements'][0]['handle~']['emailAddress'] ?? '';
+        $user = $this->getUser($accessToken);
+        return $user['email'] ?? '';
     }
 
     /**
@@ -144,9 +144,8 @@ class Linkedin extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        $email = $this->getUserEmail($accessToken);
-
-        return !empty($email);
+        $user = $this->getUser($accessToken);
+        return $user['email_verified'] ?? '';
     }
 
     /**
@@ -159,12 +158,12 @@ class Linkedin extends OAuth2
         $user = $this->getUser($accessToken);
         $name = '';
 
-        if (isset($user['localizedFirstName'])) {
-            $name = $user['localizedFirstName'];
+        if (isset($user['given_name'])) {
+            $name = $user['given_name'];
         }
 
-        if (isset($user['localizedLastName'])) {
-            $name = (empty($name)) ? $user['localizedLastName'] : $name . ' ' . $user['localizedLastName'];
+        if (isset($user['family_name'])) {
+            $name = (empty($name)) ? $user['family_name'] : $name . ' ' . $user['family_name'];
         }
 
         return $name;
@@ -178,7 +177,7 @@ class Linkedin extends OAuth2
     protected function getUser(string $accessToken)
     {
         if (empty($this->user)) {
-            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/me', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
+            $this->user = \json_decode($this->request('GET', 'https://api.linkedin.com/v2/userinfo', ['Authorization: Bearer ' . \urlencode($accessToken)]), true);
         }
 
         return $this->user;
