@@ -93,13 +93,15 @@ class Backup extends Action
             try {
                 $this->start();
             } catch (Exception $e) {
-                //todo: send alerts to admin!
-                // todo: Do we want to terminate the script? or wait for next backup iteration?
+                //todo: send alerts sentry?
                 Console::error(date('Y-m-d H:i:s') . ' Error: ' . $e->getMessage());
             }
         }, self::BACKUP_INTERVAL_SECONDS);
     }
 
+    /**
+     * @throws Exception
+     */
     public function start(): void
     {
         $start = microtime(true);
@@ -114,7 +116,7 @@ class Backup extends Action
         $backups = $local->getRoot() . '/files';
         $tarFile = $local->getPath($filename);
 
-        $this->fullBackup($backups);
+        $this->backup($backups);
         $this->tar($backups, $tarFile);
         $this->upload($tarFile, $local);
 
@@ -124,7 +126,7 @@ class Backup extends Action
     /**
      * @throws Exception
      */
-    public function fullBackup(string $target)
+    public function backup(string $target)
     {
         $start = microtime(true);
         self::log('Xtrabackup start');
@@ -195,11 +197,6 @@ class Backup extends Action
 
         if (!file_exists($file)) {
             throw new Exception('Can\'t find tar file: ' . $file);
-        }
-
-        $filesize = \filesize($file);
-        if ($filesize < 5 * 1024 * 1024) {
-            throw new Exception('Tar file size is very small: ' . $file);
         }
 
         self::log('Tar took ' . (microtime(true) - $start) . ' seconds');
@@ -307,11 +304,7 @@ class Backup extends Action
         }
 
         $processors = str_replace(PHP_EOL, '', $stdout);
-        $processors = intval($processors);
-
-        if ($processors === 0) {
-            throw new Exception('Set Processors Error');
-        }
+        $processors = empty($processors) ? 1 : intval($processors);
 
         $this->processors = \max(1, $processors - 2);
     }
