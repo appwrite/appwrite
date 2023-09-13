@@ -313,6 +313,6 @@ class Backup extends Action
             throw new Exception('Set Processors Error');
         }
 
-        $this->processors = $processors;
+        $this->processors = \max(1, $processors - 2);
     }
 }
