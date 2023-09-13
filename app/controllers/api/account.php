@@ -146,7 +146,6 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
-            // remove internalId from new user
             $user->removeAttribute('$internalId');
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         } catch (Duplicate) {
@@ -655,7 +654,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
-                    // Remove internalId from new user
                     $user->removeAttribute('$internalId');
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate) {
@@ -959,7 +957,6 @@ App::post('/v1/account/sessions/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            // Remove internalId from new user
             $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
@@ -1290,7 +1287,6 @@ App::post('/v1/account/sessions/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
-            // Remove internalId from new user
             $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
@@ -1542,7 +1538,6 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
-        // Remove internalId from new user
         $user->removeAttribute('$internalId');
         Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
