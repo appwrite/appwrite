@@ -774,7 +774,6 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./backup-data:/backups:rw
-
     depends_on:
       - redis
     environment:
