@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Subscriber extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
