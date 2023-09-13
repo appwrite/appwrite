@@ -1456,9 +1456,10 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $deploymentId = ID::unique();
 
+        // Remove internalId from new deployment
+        $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$id' => $deploymentId,
-            '$internalId' => '',
             'buildId' => '',
             'buildInternalId' => '',
             'entrypoint' => $function->getAttribute('entrypoint'),
