@@ -295,6 +295,6 @@ class Restore extends Action
             Console::exit();
         }
 
-        $this->processors = $processors;
+        $this->processors = \max(1, $processors - 2);
     }
 }
