@@ -108,11 +108,12 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $provider = new Document([
@@ -121,6 +122,7 @@ App::post('/v1/messaging/providers/mailgun')
             'provider' => 'mailgun',
             'type' => 'email',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
@@ -162,11 +164,12 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -182,8 +185,12 @@ App::patch('/v1/messaging/providers/:id/mailgun')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($apiKey || $domain) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($apiKey && $domain) {
                 $provider->setAttribute('credentials', [
                     'apiKey' => $apiKey,
@@ -218,10 +225,11 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -229,6 +237,7 @@ App::post('/v1/messaging/providers/sendgrid')
             'provider' => 'sendgrid',
             'type' => 'email',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
@@ -269,10 +278,11 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -286,6 +296,10 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+        }
+
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
         }
 
         if ($apiKey) {
@@ -320,11 +334,12 @@ App::post('/v1/messaging/providers/msg91')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -332,6 +347,7 @@ App::post('/v1/messaging/providers/msg91')
             'provider' => 'msg91',
             'type' => 'sms',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'senderId' => $senderId,
                 'authKey' => $authKey,
@@ -373,11 +389,12 @@ App::patch('/v1/messaging/providers/:id/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -393,8 +410,12 @@ App::patch('/v1/messaging/providers/:id/msg91')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($senderId || $authKey) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($senderId && $authKey) {
                 $provider->setAttribute('credentials', [
                     'senderId' => $senderId,
@@ -429,11 +450,12 @@ App::post('/v1/messaging/providers/telesign')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Telesign username.')
     ->param('password', '', new Text(0), 'Telesign password.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $username, string $password, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -441,6 +463,7 @@ App::post('/v1/messaging/providers/telesign')
             'provider' => 'telesign',
             'type' => 'sms',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
                 'password' => $password,
@@ -482,11 +505,12 @@ App::patch('/v1/messaging/providers/:id/telesign')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $username, string $password, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -502,8 +526,12 @@ App::patch('/v1/messaging/providers/:id/telesign')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($username || $password) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($username && $password) {
                 $provider->setAttribute('credentials', [
                     'username' => $username,
@@ -538,11 +566,12 @@ App::post('/v1/messaging/providers/textmagic')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.')
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $username, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -550,6 +579,7 @@ App::post('/v1/messaging/providers/textmagic')
             'provider' => 'text-magic',
             'type' => 'sms',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
                 'apiKey' => $apiKey,
@@ -591,11 +621,12 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $username, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -611,8 +642,12 @@ App::patch('/v1/messaging/providers/:id/textmagic')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($username || $apiKey) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($username && $apiKey) {
                 $provider->setAttribute('credentials', [
                     'username' => $username,
@@ -647,11 +682,12 @@ App::post('/v1/messaging/providers/twilio')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
     ->param('authToken', '', new Text(0), 'Twilio authentication token.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -659,6 +695,7 @@ App::post('/v1/messaging/providers/twilio')
             'provider' => 'twilio',
             'type' => 'sms',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'accountSid' => $accountSid,
                 'authToken' => $authToken,
@@ -700,11 +737,12 @@ App::patch('/v1/messaging/providers/:id/twilio')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -720,8 +758,12 @@ App::patch('/v1/messaging/providers/:id/twilio')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($accountSid || $authToken) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($accountSid && $authToken) {
                 $provider->setAttribute('credentials', [
                     'accountSid' => $accountSid,
@@ -756,11 +798,12 @@ App::post('/v1/messaging/providers/vonage')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.')
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -768,6 +811,7 @@ App::post('/v1/messaging/providers/vonage')
             'provider' => 'vonage',
             'type' => 'sms',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'apiKey' => $apiKey,
                 'apiSecret' => $apiSecret,
@@ -809,11 +853,12 @@ App::patch('/v1/messaging/providers/:id/vonage')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -829,8 +874,12 @@ App::patch('/v1/messaging/providers/:id/vonage')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($apiKey || $apiSecret) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($apiKey && $apiSecret) {
                 $provider->setAttribute('credentials', [
                     'apiKey' => $apiKey,
@@ -868,10 +917,11 @@ App::post('/v1/messaging/providers/fcm')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -879,6 +929,7 @@ App::post('/v1/messaging/providers/fcm')
             'provider' => 'fcm',
             'type' => 'push',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'serverKey' => $serverKey,
             ],
@@ -919,10 +970,11 @@ App::patch('/v1/messaging/providers/:id/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -936,6 +988,10 @@ App::patch('/v1/messaging/providers/:id/fcm')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+        }
+
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
         }
 
         if ($serverKey) {
@@ -965,6 +1021,7 @@ App::post('/v1/messaging/providers/apns')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
     ->param('teamId', '', new Text(0), 'APNS team ID.')
@@ -972,7 +1029,7 @@ App::post('/v1/messaging/providers/apns')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -980,6 +1037,7 @@ App::post('/v1/messaging/providers/apns')
             'provider' => 'apns',
             'type' => 'push',
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => [
                 'authKey' => $authKey,
                 'authKeyId' => $authKeyId,
@@ -1024,6 +1082,7 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
@@ -1031,7 +1090,7 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -1047,8 +1106,12 @@ App::patch('/v1/messaging/providers/:id/apns')
             $provider->setAttribute('name', $name);
         }
 
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
+        }
+
         if ($authKey || $authKeyId || $teamId || $bundleId || $endpoint) {
-            // Check if all five variables are present
+            // Check if all credential variables are present
             if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
                 $provider->setAttribute('credentials', [
                     'authKey' => $authKey,
@@ -1091,10 +1154,11 @@ App::post('/v1/messaging/providers/general')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('type', '', new WhiteList(['push', 'email', 'sms']), 'Provider type.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('credentials', '', new JSON(), 'Provider credentials object.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $provider, string $name, string $type, bool $default, array $credentials, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $provider, string $name, string $type, bool $default, bool $enabled, array $credentials, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -1102,6 +1166,7 @@ App::post('/v1/messaging/providers/general')
             'provider' => $provider,
             'type' => $type,
             'default' => $default,
+            'enabled' => $enabled,
             'credentials' => $credentials,
         ]);
 
@@ -1140,10 +1205,11 @@ App::patch('/v1/messaging/providers/:id/general')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('credentials', '', new JSON(), 'Provider credentials.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, array $credentials, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, array $credentials, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -1152,6 +1218,10 @@ App::patch('/v1/messaging/providers/:id/general')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+        }
+
+        if ($enabled === false) {
+            $provider->setAttribute('enabled', $enabled);
         }
 
         if (!empty($credentials)) {

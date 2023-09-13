@@ -348,7 +348,7 @@ class Project extends Model
             ]);
         }
 
-        $document->setAttribute("authProviders", $projectProviders);
+        $document->setAttribute('authProviders', $projectProviders);
 
         return $document;
     }

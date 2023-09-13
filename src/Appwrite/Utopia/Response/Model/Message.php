@@ -24,7 +24,7 @@ class Message extends Any
             ])
             ->addRule('providerId', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider Id for the message.',
+                'description' => 'Provider ID for the message.',
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
@@ -40,26 +40,26 @@ class Message extends Any
                 'description' => 'Recipient of message.',
                 'required' => false,
                 'default' => DateTime::now(),
-                'example' => DateTime::now(),
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('deliveryError', [
+            ->addRule('deliveryErrors', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Delivery error if any.',
+                'description' => 'Delivery errors if any.',
                 'required' => false,
                 'default' => '',
                 'array' => true,
-                'example' => 'Provider not valid.',
+                'example' => 'Credentials not valid.',
             ])
             ->addRule('deliveredTo', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of recipients the message was delivered to.',
-                'default' => '',
+                'default' => 0,
                 'example' => 1,
             ])
             ->addRule('delivered', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Status of delivery.',
-                'default' => '',
+                'default' => false,
                 'example' => true,
             ]);
     }
