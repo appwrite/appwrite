@@ -10,5 +10,4 @@ val teams = Teams(client)
 val response = teams.createMembership(
     teamId = "[TEAM_ID]",
     roles = listOf(),
-    url = "https://example.com",
 )

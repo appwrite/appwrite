@@ -34,6 +34,12 @@ class V16Test extends TestCase
                     'body' => 'Lorem ipsum'
                 ],
             ],
+            'no data' => [
+                [],
+                [
+                    'body' => ''
+                ],
+            ],
         ];
     }
 
