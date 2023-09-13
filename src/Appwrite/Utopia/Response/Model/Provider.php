@@ -7,9 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Provider extends Model
 {
-    /**
-     * @var bool
-     */
     protected bool $public = false;
 
     public function __construct()
@@ -36,7 +33,13 @@ class Provider extends Model
             ->addRule('default', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is this a pre-configured provider instance?',
-                'default' => '',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is provider enabled?',
+                'default' => true,
                 'example' => true,
             ])
             ->addRule('type', [

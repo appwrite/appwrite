@@ -7,11 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Target extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
@@ -33,12 +28,6 @@ class Target extends Model
                 'required' => false,
                 'default' => '',
                 'example' => '259125845563242502',
-            ])
-            ->addRule('providerType', [
-                'type' => self::TYPE_STRING,
-                'description' => 'The type of provider supported by this target.',
-                'default' => '',
-                'example' => 'sms',
             ])
             ->addRule('identifier', [
                 'type' => self::TYPE_STRING,
