@@ -662,6 +662,47 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/jwt-expiration')
+    ->desc('Update Project JWT Expiration Duration')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateJwtExpiration')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('jwtExpiration', 31536000, new Range(0, 31536000), 'Project jwt expiration in seconds. Max length: 31536000 seconds.')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $jwtExpiration, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $duration = $auths['duration'] ?? 0;
+
+        if (!isset($auths['duration'])) {
+            throw new Exception(Exception::PROJECT_INVALID_SESSION_LENGTH);
+        }
+
+        if ($jwtExpiration > $duration) {
+            throw new Exception('Project jwt expiration in seconds. JWT expiration duration cannot exceed project session length.');
+        }
+
+        $auths['jwtExpiration'] = $jwtExpiration;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
