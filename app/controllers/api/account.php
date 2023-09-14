@@ -1610,8 +1610,8 @@ App::post('/v1/account/jwt')
     ->label('abuse-limit', 100)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
-    ->inject('project')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->action(function (Response $response, Document $user, Document $project, Database $dbForProject) {
 
