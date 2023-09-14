@@ -17,6 +17,7 @@ class Restore extends Action
 {
     public const BACKUPS_PATH = '/backups';
     public const DATADIR = '/var/lib/mysql';
+    public const DOWNLOAD_CHUNK_SIZE = 40 * 1024 * 1024; // Must be greater than 5MB;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
@@ -48,7 +49,7 @@ class Restore extends Action
             try {
                 $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
                 $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
-                $this->s3->setTransferChunkSize(40 * 1024 * 1024); // 5MB
+                $this->s3->setTransferChunkSize(self::DOWNLOAD_CHUNK_SIZE);
             } catch (\Exception $e) {
                 throw new Exception($e->getMessage() . 'Invalid DSN.');
             }
@@ -99,7 +100,7 @@ class Restore extends Action
             $this->log('Restore Finish in ' . (microtime(true) - $start) . ' seconds');
         } catch (Exception $e) {
             //todo: send alerts sentry?
-            Console::error(date('Y-m-d H:i:s') . ' Error: ' . $e->getMessage());
+            Console::error(date('Y-m-d H:i:s ') . $e->getMessage());
         }
     }
 

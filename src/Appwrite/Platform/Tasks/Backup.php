@@ -21,6 +21,9 @@ class Backup extends Action
     public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 7; // 2 days?
     public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 14; // 14 days?;
     public const UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // Must be greater than 5MB;
+    public const RETRY_BACKUP = 1;
+    public const RETRY_TAR = 1;
+    public const RETRY_UPLOAD = 2;
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
@@ -47,8 +50,25 @@ class Backup extends Action
     /**
      * @throws Exception
      */
+    public function hello(string $str): void
+    {
+        Console::success($str);
+        //throw new Exception('kaka');
+    }
+
+    /**
+     * @throws Exception
+     */
     public function action(string $database, Group $pools): void
     {
+
+//        $this->retry(function () {
+//            $this->hello('David123');
+//        }, 1, 2);
+//
+//        exit;
+
+
         $this->checkEnvVariables();
 
         $this->database = $database;
@@ -63,28 +83,16 @@ class Backup extends Action
         $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
         $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
 
-        $attempts = 0;
-        $max = 10;
-        $sleep = 5;
-
-        do {
-            try {
-                $attempts++;
+        try {
+            $this->retry(function () use ($pools, $database) {
                 $pools
-                    ->get('replica_' . $database)
-                    ->pop()
-                    ->getResource();
-
-                break; // leave the do-while if successful
-            } catch (Exception $e) {
-                Console::warning("Database not ready. Retrying connection ({$attempts})...");
-                if ($attempts >= $max) {
-                    throw new Exception('Failed to connect to database: ' . $e->getMessage());
-                }
-
-                sleep($sleep);
-            }
-        } while ($attempts < $max);
+                ->get('replica_' . $database)
+                ->pop()
+                ->getResource();
+            }, 10, 5);
+        } catch (Exception $e) {
+            throw new Exception('Failed to connect to database: ' . $e->getMessage());
+        }
 
         $this->setContainerId();
         $this->setProcessors();
@@ -109,16 +117,19 @@ class Backup extends Action
 
         self::log('--- Backup Start ' . $time . ' --- ');
 
-        $filename = $time . '.tar.gz';
         $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full/' . $time);
         $local->setTransferChunkSize(self::UPLOAD_CHUNK_SIZE);
 
+        $tarFile = $local->getPath($time . '.tar.gz');
         $backups = $local->getRoot() . '/files';
-        $tarFile = $local->getPath($filename);
 
         $this->backup($backups);
         $this->tar($backups, $tarFile);
         $this->upload($tarFile, $local);
+
+        if (!unlink($tarFile)) {
+            throw new Exception('Error deleting: ' . $tarFile);
+        }
 
         self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
@@ -157,20 +168,20 @@ class Backup extends Action
             '--check-privileges', // checks if Percona XtraBackup has all the required privileges.
             '--target-dir=' . $target,
             '--compress=' . self::COMPRESS_ALGORITHM,
-            '--compress-threads=' . $this->processors, // Better not using all processors
+            '--compress-threads=' . $this->processors,
             '--parallel=' . $this->processors,
             '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        shell_exec($cmd);
-
-        $stderr = shell_exec('tail -1 ' . $logfile);
-        if (!str_contains($stderr, 'completed OK!')) {
-            shell_exec('rm -rf ' . $target);
-            throw new Exception(' Backup failed: ' . $stderr);
-        }
+        $this->retry(function () use ($args, $logfile, $target) {
+            shell_exec('docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args));
+            $stderr = shell_exec('tail -1 ' . $logfile);
+            if (!str_contains($stderr, 'completed OK!')) {
+                shell_exec('rm -rf ' . $target . '/*');
+                throw new Exception(' Backup failed: ' . $stderr);
+            }
+        }, self::RETRY_BACKUP);
 
         if (!unlink($logfile)) {
             throw new Exception('Error deleting: ' . $logfile);
@@ -184,19 +195,21 @@ class Backup extends Action
      */
     public function tar(string $directory, string $file)
     {
-        $start = microtime(true);
         self::log('Tar start');
+        $start = microtime(true);
 
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            throw new Exception('Tar failed:' . $stderr);
-        }
+        $this->retry(function () use ($directory, $file) {
+            $stdout = '';
+            $stderr = '';
+            $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
+            Console::execute($cmd, '', $stdout, $stderr);
+            if (!empty($stderr)) {
+                throw new Exception('Tar failed:' . $stderr);
+            }
+        }, self::RETRY_TAR);
 
         if (!file_exists($file)) {
-            throw new Exception('Can\'t find tar file: ' . $file);
+            throw new Exception('Tar file not found: ' . $file);
         }
 
         self::log('Tar took ' . (microtime(true) - $start) . ' seconds');
@@ -217,20 +230,14 @@ class Backup extends Action
 
         $destination = $this->s3->getRoot() . '/' . $filename;
 
-        try {
+        $this->retry(function () use ($local, $file, $destination) {
             if (!$local->transfer($file, $destination, $this->s3)) {
                 throw new Exception('Error uploading to ' . $destination);
             }
-        } catch (Exception $e) {
-            throw new Exception($e->getMessage());
-        }
+        }, self::RETRY_UPLOAD);
 
         if (!$this->s3->exists($destination)) {
             throw new Exception('File not found in destination: ' . $destination);
-        }
-
-        if (!unlink($file)) {
-            throw new Exception('Error deleting: ' . $file);
         }
 
         self::log('Upload took ' . (microtime(true) - $start) . ' seconds');
@@ -307,5 +314,23 @@ class Backup extends Action
         $processors = empty($processors) ? 1 : intval($processors);
 
         $this->processors = \max(1, $processors - 2);
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function retry(callable $f, int $retries, int $sleep = 1)
+    {
+        try {
+            return $f();
+        } catch (Exception $e) {
+            if ($retries > 0) {
+                Console::warning('Retrying (' . $retries . ') ' . $e->getMessage());
+                sleep($sleep);
+                return $this->retry($f, $retries - 1, $sleep);
+            } else {
+                throw $e;
+            }
+        }
     }
 }
