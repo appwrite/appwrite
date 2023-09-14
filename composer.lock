@@ -65,16 +65,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "8.0.0",
+            "version": "10.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "2b9e966edf35c4061179ed98ea364698ab30de8b"
+                "reference": "461eedf4efd502dc905c3055f36f0e3583f67390"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/2b9e966edf35c4061179ed98ea364698ab30de8b",
-                "reference": "2b9e966edf35c4061179ed98ea364698ab30de8b",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/461eedf4efd502dc905c3055f36f0e3583f67390",
+                "reference": "461eedf4efd502dc905c3055f36f0e3583f67390",
                 "shasum": ""
             },
             "require": {
@@ -99,10 +99,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/8.0.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/10.0.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2023-04-12T10:16:28+00:00"
+            "time": "2023-09-07T23:28:31+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -2564,27 +2564,27 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.3.3",
+            "version": "0.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "45bd831ed9819994f05cb3b467c58f8155e27692"
+                "reference": "ade836d61b3e1547bc9f0dc300ee75b24ab49f7a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/45bd831ed9819994f05cb3b467c58f8155e27692",
-                "reference": "45bd831ed9819994f05cb3b467c58f8155e27692",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/ade836d61b3e1547bc9f0dc300ee75b24ab49f7a",
+                "reference": "ade836d61b3e1547bc9f0dc300ee75b24ab49f7a",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "^8.0",
-                "php": ">=8.0",
-                "utopia-php/cli": "^0.15.0"
+                "appwrite/appwrite": "10.0.*",
+                "php": "8.*",
+                "utopia-php/cli": "0.*"
             },
             "require-dev": {
-                "laravel/pint": "^1.10",
-                "phpunit/phpunit": "^9.3",
-                "vlucas/phpdotenv": "^5.5"
+                "laravel/pint": "1.*",
+                "phpunit/phpunit": "9.*",
+                "vlucas/phpdotenv": "5.*"
             },
             "type": "library",
             "autoload": {
@@ -2616,9 +2616,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.3.3"
+                "source": "https://github.com/utopia-php/migration/tree/0.3.4"
             },
-            "time": "2023-09-06T03:54:54+00:00"
+            "time": "2023-09-14T17:17:55+00:00"
         },
         {
             "name": "utopia-php/mongo",
