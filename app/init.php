@@ -950,6 +950,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     Auth::setCookieName('a_session_' . $project->getId());
     $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $jwtExpiration = $project->getAttribute('auths', [])['jwtExpiration'] ?? Auth::TOKEN_EXPIRATION_PHONE;
 
     if (APP_MODE_ADMIN === $mode) {
         Auth::setCookieName('a_session_' . $console->getId());
@@ -1012,7 +1013,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     $authJWT = $request->getHeader('x-appwrite-jwt', '');
 
     if (!empty($authJWT) && !$project->isEmpty()) { // JWT authentication
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiration, 10); // Instantiate with key, algo, maxAge and leeway.
 
         try {
             $payload = $jwt->decode($authJWT);

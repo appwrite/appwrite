@@ -1610,9 +1610,10 @@ App::post('/v1/account/jwt')
     ->label('abuse-limit', 100)
     ->label('abuse-key', 'url:{url},userId:{userId}')
     ->inject('response')
+    ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
-    ->action(function (Response $response, Document $user, Database $dbForProject) {
+    ->action(function (Response $response, Document $user, Document $project, Database $dbForProject) {
 
 
         $sessions = $user->getAttribute('sessions', []);
@@ -1628,7 +1629,8 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwtExpiration = $project->getAttribute('auths', [])['jwtExpiration'] ?? Auth::TOKEN_EXPIRATION_PHONE;
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiration, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
