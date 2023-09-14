@@ -1,3 +1,14 @@
+# Version 1.4.3
+
+## Features
+- Support for the all new bun runtime
+
+## Fixes
+- Add _APP_OPENSSL_KEY_V1 to the compose file [#6199](https://github.com/appwrite/appwrite/pull/6199)
+- Fix: V2 functions env vars [#6215](https://github.com/appwrite/appwrite/pull/6215)
+- Fix: Don't update User Accessed At for Users and Teams APIs [#6222](https://github.com/appwrite/appwrite/pull/6222)
+- Fix: Git deploys with S3 [#6227](https://github.com/appwrite/appwrite/pull/6227)
+
 # Version 1.4.2
 
 ## Fixes
