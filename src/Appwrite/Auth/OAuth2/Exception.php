@@ -17,14 +17,17 @@ class Exception extends AppwriteException
         $decoded = json_decode($response, true);
         if (\is_array($decoded)) {
             if (\is_array($decoded['error'] ?? '')) {
-                $this->error = $decoded['error']['status'];
-                $this->errorDescription = $decoded['error']['message'];
-                $this->message =  $this->error . ': ' . $this->errorDescription;
+                $this->error = $decoded['error']['status'] ?? 'Unknown error';
+                $this->errorDescription = $decoded['error']['message'] ?? 'No description';
+            } elseif (\is_array($decoded['errors'] ?? '')) {
+                $this->error = $decoded['error'] ?? $decoded['message'] ?? 'Unknown error';
+                $this->errorDescription = $decoded['errors'][0]['message'] ?? 'No description';
             } else {
                 $this->error = $decoded['error'] ?? $decoded['message'] ?? 'Unknown error';
                 $this->errorDescription = $decoded['error_description'] ?? 'No description';
-                $this->message =  $this->error . ': ' . $this->errorDescription;
             }
+
+            $this->message = $this->error . ': ' . $this->errorDescription;
         }
         $type = match ($code) {
             400 => AppwriteException::USER_OAUTH2_BAD_REQUEST,

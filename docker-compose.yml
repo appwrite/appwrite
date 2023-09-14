@@ -171,6 +171,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_ABUSE
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
+      - _APP_MAINTENANCE_RETENTION_SCHEDULES
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_GRAPHQL_MAX_BATCH_SIZE
@@ -682,7 +683,7 @@ services:
 
   appwrite-assistant:
     container_name: appwrite-assistant
-    image: appwrite/assistant:0.2.0
+    image: appwrite/assistant:0.2.1
     networks:
       - appwrite
     environment:
@@ -690,10 +691,10 @@ services:
 
   openruntimes-executor:
     container_name: openruntimes-executor
-    hostname: executor
+    hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.3.5
+    image: openruntimes/executor:0.4.0
     networks:
       - appwrite
       - runtimes
@@ -713,6 +714,7 @@ services:
       - OPR_EXECUTOR_ENV=$_APP_ENV
       - OPR_EXECUTOR_RUNTIMES=$_APP_FUNCTIONS_RUNTIMES
       - OPR_EXECUTOR_SECRET=$_APP_EXECUTOR_SECRET
+      - OPR_EXECUTOR_RUNTIME_VERSIONS=v2,v3
       - OPR_EXECUTOR_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_EXECUTOR_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_EXECUTOR_STORAGE_DEVICE=$_APP_STORAGE_DEVICE
@@ -742,7 +744,7 @@ services:
     hostname: proxy
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/proxy:0.3.0
+    image: openruntimes/proxy:0.3.1
     networks:
       - appwrite
       - runtimes
@@ -754,7 +756,7 @@ services:
       - OPR_PROXY_LOGGING_PROVIDER=$_APP_LOGGING_PROVIDER
       - OPR_PROXY_LOGGING_CONFIG=$_APP_LOGGING_CONFIG
       - OPR_PROXY_ALGORITHM=random
-      - OPR_PROXY_EXECUTORS=executor
+      - OPR_PROXY_EXECUTORS=appwrite-executor
       - OPR_PROXY_HEALTHCHECK_INTERVAL=10000
       - OPR_PROXY_MAX_TIMEOUT=600
       - OPR_PROXY_HEALTHCHECK=enabled
