@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bc47430e5cb3430f354b4eee6fd8c9c7",
+    "content-hash": "1fe72c576bd9209f9db6e56cac8cd16a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2633,16 +2633,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.3.2",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70"
+                "reference": "45bd831ed9819994f05cb3b467c58f8155e27692"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70",
-                "reference": "49a28adfbb781f0c08f1eaf459a8fbb8ab9fcc70",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/45bd831ed9819994f05cb3b467c58f8155e27692",
+                "reference": "45bd831ed9819994f05cb3b467c58f8155e27692",
                 "shasum": ""
             },
             "require": {
@@ -2685,9 +2685,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.3.2"
+                "source": "https://github.com/utopia-php/migration/tree/0.3.3"
             },
-            "time": "2023-08-31T04:11:35+00:00"
+            "time": "2023-09-06T03:54:54+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3460,16 +3460,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.34.1",
+            "version": "0.35.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "81538d10abacd81350c265b516c72ef315116013"
+                "reference": "edd5da6763d7f8f28155b77200682c69d08c9954"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/81538d10abacd81350c265b516c72ef315116013",
-                "reference": "81538d10abacd81350c265b516c72ef315116013",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/edd5da6763d7f8f28155b77200682c69d08c9954",
+                "reference": "edd5da6763d7f8f28155b77200682c69d08c9954",
                 "shasum": ""
             },
             "require": {
@@ -3505,9 +3505,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.34.1"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.35.0"
             },
-            "time": "2023-08-30T07:57:31+00:00"
+            "time": "2023-09-07T17:13:18+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -4214,16 +4214,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.23.1",
+            "version": "1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26"
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/846ae76eef31c6d7790fac9bc399ecee45160b26",
-                "reference": "846ae76eef31c6d7790fac9bc399ecee45160b26",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/3510b0a6274cc42f7219367cb3abfc123ffa09d6",
+                "reference": "3510b0a6274cc42f7219367cb3abfc123ffa09d6",
                 "shasum": ""
             },
             "require": {
@@ -4255,9 +4255,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.23.1"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.24.0"
             },
-            "time": "2023-08-03T16:32:59+00:00"
+            "time": "2023-09-07T20:46:32+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

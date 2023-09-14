@@ -49,7 +49,7 @@
         "utopia-php/cache": "0.8.*",
         "utopia-php/cli": "0.15.*",
         "utopia-php/config": "0.2.*",
-        "utopia-php/database": "0.43.*",
+        "utopia-php/database": "0.43.0",
         "utopia-php/domains": "0.3.*",
         "utopia-php/dsn": "0.1.*",
         "utopia-php/framework": "0.31.0",
@@ -86,7 +86,7 @@
         }
     ],
     "require-dev": {
-        "appwrite/sdk-generator": "0.34.*",
+        "appwrite/sdk-generator": "0.35.0",
         "ext-fileinfo": "*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.7",
