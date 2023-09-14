@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Storage\Storage;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Storage\Device\Local;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/../init.php';
@@ -248,22 +249,25 @@ class BuildsV1 extends Worker
                     );
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . \escapeshellcmd($buildId) . '/code.tar.gz -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
+                $tmpPathFile = $tmpPath . '/code.tar.gz';
+
+                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
-                $fileName = 'code.tar.gz';
-                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+                $localDevice = new Local();
+                $buffer = $localDevice->read($tmpPathFile);
+                $mimeType = $localDevice->getFileMimeType($tmpPathFile);
 
-                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-
-                $result = $deviceFunctions->move($fileTmpName, $path);
+                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $deviceFunctions->write($path, $buffer, $mimeType);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
 
                 $source = $path;
 
