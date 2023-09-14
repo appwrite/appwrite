@@ -216,6 +216,8 @@ class Schedule extends Action
                                 $functions
                                     ->setType('schedule')
                                     ->setFunction($schedule['function'])
+                                    ->setMethod('POST')
+                                    ->setPath('/')
                                     ->setProject($schedule['project'])
                                     ->trigger();
                             }

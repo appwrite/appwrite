@@ -7,7 +7,7 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 
 {
   "name": "[NAME]",
-  "runtime": "node-14.5",
+  "runtime": "node-18.0",
   "execute": ["any"],
   "events": [],
   "schedule": ,
