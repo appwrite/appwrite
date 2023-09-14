@@ -8,6 +8,8 @@
 - Fix: V2 functions env vars [#6215](https://github.com/appwrite/appwrite/pull/6215)
 - Fix: Don't update User Accessed At for Users and Teams APIs [#6222](https://github.com/appwrite/appwrite/pull/6222)
 - Fix: Git deploys with S3 [#6227](https://github.com/appwrite/appwrite/pull/6227)
+- Fix: manual internal id insertion [#6232](https://github.com/appwrite/appwrite/pull/6232)
+- Fix: function timeout [#6235](https://github.com/appwrite/appwrite/pull/6235)
 
 # Version 1.4.2
 
