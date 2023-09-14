@@ -65,7 +65,7 @@ return [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
-                'default' => '',
+                'default' => 'functions.localhost',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
