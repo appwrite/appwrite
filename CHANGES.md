@@ -11,6 +11,10 @@
 - Fix: manual internal id insertion [#6232](https://github.com/appwrite/appwrite/pull/6232)
 - Fix: function timeout [#6235](https://github.com/appwrite/appwrite/pull/6235)
 - Fix: Missing keys when updating document via relationship [#320](https://github.com/utopia-php/database/pull/320)
+- Ensure collections with datetime attributes are migrated [#17](https://github.com/utopia-php/migration/pull/17)
+- Ensure all user data are migrated including status, preferences, and labels [#17](https://github.com/utopia-php/migration/pull/17)
+- Fix team memberships migration [#16](https://github.com/utopia-php/migration/pull/16)
+- Fix events validation on create/update webhooks [#6219](https://github.com/appwrite/appwrite/pull/6219)
 
 # Version 1.4.2
 
