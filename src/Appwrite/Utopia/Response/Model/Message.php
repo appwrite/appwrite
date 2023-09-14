@@ -43,7 +43,7 @@ class Message extends Any
                 'required' => false,
                 'default' => '',
                 'array' => true,
-                'example' => 'Credentials not valid.',
+                'example' => ['Failed to send message to target 5e5ea5c16897e: Credentials not valid.'],
             ])
             ->addRule('deliveredTo', [
                 'type' => self::TYPE_INTEGER,
