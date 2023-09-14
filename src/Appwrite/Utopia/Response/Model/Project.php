@@ -138,9 +138,9 @@ class Project extends Model
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('providers', [
-                'type' => Response::MODEL_PROVIDER,
-                'description' => 'List of Providers.',
+            ->addRule('authProviders', [
+                'type' => Response::MODEL_AUTH_PROVIDER,
+                'description' => 'List of Auth Providers.',
                 'default' => [],
                 'example' => [new \stdClass()],
                 'array' => true,
@@ -329,7 +329,7 @@ class Project extends Model
         }
 
         // Providers
-        $providers = Config::getParam('providers', []);
+        $providers = Config::getParam('authProviders', []);
         $providerValues = $document->getAttribute('authProviders', []);
         $projectProviders = [];
 
@@ -348,7 +348,7 @@ class Project extends Model
             ]);
         }
 
-        $document->setAttribute("providers", $projectProviders);
+        $document->setAttribute('authProviders', $projectProviders);
 
         return $document;
     }

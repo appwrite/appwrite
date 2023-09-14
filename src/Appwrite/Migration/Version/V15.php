@@ -34,7 +34,7 @@ class V15 extends Migration
             ['email', 'anonymous'],
             \array_map(
                 fn ($value) => "oauth-" . $value,
-                \array_keys(Config::getParam('providers', []))
+                \array_keys(Config::getParam('authProviders', []))
             )
         );
 

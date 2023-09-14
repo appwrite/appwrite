@@ -7,44 +7,45 @@ use Appwrite\Utopia\Response\Model;
 
 class Provider extends Model
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
-            ->addRule('key', [
+            ->addRule('$id', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider.',
+                'description' => 'Provider ID.',
                 'default' => '',
-                'example' => 'github',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Provider name.',
+                'description' => 'The name for the provider instance.',
                 'default' => '',
-                'example' => 'GitHub',
+                'example' => 'Mailgun',
             ])
-            ->addRule('appId', [
+            ->addRule('provider', [
                 'type' => self::TYPE_STRING,
-                'description' => 'OAuth 2.0 application ID.',
+                'description' => 'The name of the provider service.',
                 'default' => '',
-                'example' => '259125845563242502',
+                'example' => 'mailgun',
             ])
-            ->addRule('secret', [
-                'type' => self::TYPE_STRING,
-                'description' => 'OAuth 2.0 application secret. Might be JSON string if provider requires extra configuration.',
-                'default' => '',
-                'example' => 'Bpw_g9c2TGXxfgLshDbSaL8tsCcqgczQ',
+            ->addRule('default', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is this a pre-configured provider instance?',
+                'default' => false,
+                'example' => true,
             ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Provider is active and can be used to create session.',
-                'example' => '',
+                'description' => 'Is provider enabled?',
+                'default' => true,
+                'example' => true,
             ])
-        ;
+            ->addRule('type', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Type of provider.',
+                'default' => '',
+                'example' => 'sms',
+            ]);
     }
 
     /**

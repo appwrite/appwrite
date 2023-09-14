@@ -126,7 +126,7 @@ class V16 extends Migration
                  */
                 $authProviders = $document->getAttribute('authProviders', []);
 
-                foreach (Config::getParam('providers') as $provider => $value) {
+                foreach (Config::getParam('authProviders') as $provider => $value) {
                     if (!$value['enabled']) {
                         continue;
                     }

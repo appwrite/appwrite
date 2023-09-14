@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
-$providers = Config::getParam('providers', []);
+$providers = Config::getParam('authProviders', []);
 $auth = Config::getParam('auth', []);
 
 /**
@@ -1425,6 +1425,17 @@ $commonCollections = [
                 'filters' => [],
                 'required' => false,
                 'default' => false,
+                'array' => false,
+            ],
+            [
+                '$id' => ID::custom('enabled'),
+                'type' => Database::VAR_BOOLEAN,
+                'signed' => true,
+                'size' => 0,
+                'format' => '',
+                'filters' => [],
+                'required' => true,
+                'default' => true,
                 'array' => false,
             ],
             [
