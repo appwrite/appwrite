@@ -10,6 +10,7 @@
 - Fix: Git deploys with S3 [#6227](https://github.com/appwrite/appwrite/pull/6227)
 - Fix: manual internal id insertion [#6232](https://github.com/appwrite/appwrite/pull/6232)
 - Fix: function timeout [#6235](https://github.com/appwrite/appwrite/pull/6235)
+- Fix: Missing keys when updating document via relationship [#320](https://github.com/utopia-php/database/pull/320)
 
 # Version 1.4.2
 
