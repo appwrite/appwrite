@@ -118,7 +118,6 @@ class Linkedin extends OAuth2
     public function getUserID(string $accessToken): string
     {
         $user = $this->getUser($accessToken);
-
         return $user['sub'] ?? '';
     }
 
@@ -145,7 +144,7 @@ class Linkedin extends OAuth2
     public function isEmailVerified(string $accessToken): bool
     {
         $user = $this->getUser($accessToken);
-        return $user['email_verified'] ?? '';
+        return $user['email_verified'] ?? false;
     }
 
     /**
@@ -157,6 +156,10 @@ class Linkedin extends OAuth2
     {
         $user = $this->getUser($accessToken);
         $name = '';
+
+        if (isset($user['name'])) {
+            return $user['name'];
+        }
 
         if (isset($user['given_name'])) {
             $name = $user['given_name'];
