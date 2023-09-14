@@ -1,7 +1,7 @@
 # Version 1.4.3
 
 ## Features
-- Support for the all new bun runtime
+- Support for the all new bun runtime [#6230](https://github.com/appwrite/appwrite/pull/6230)
 
 ## Fixes
 - Add _APP_OPENSSL_KEY_V1 to the compose file [#6199](https://github.com/appwrite/appwrite/pull/6199)
