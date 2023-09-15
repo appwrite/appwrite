@@ -15,6 +15,7 @@
 - Ensure all user data are migrated including status, preferences, and labels [#17](https://github.com/utopia-php/migration/pull/17)
 - Fix team memberships migration [#16](https://github.com/utopia-php/migration/pull/16)
 - Fix events validation on create/update webhooks [#6219](https://github.com/appwrite/appwrite/pull/6219)
+- Fix: add a try catch block in the schedules task [#6246](https://github.com/appwrite/appwrite/pull/6246)
 
 # Version 1.4.2
 
