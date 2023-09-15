@@ -65,7 +65,7 @@ return [
                 'name' => '_APP_DOMAIN_FUNCTIONS',
                 'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
                 'introduction' => '',
-                'default' => '',
+                'default' => 'functions.localhost',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -846,10 +846,11 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
-                'description' => 'Interval how often executor checks for inactive runimes. The default value is 60 seconds.',
-                'introduction' => '1.2.0',
-                'default' => '60',
+                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
+                'introduction' => '1.4.0',
+                'default' => '3600',
                 'required' => false,
+                'overwrite' => true,
                 'question' => '',
                 'filter' => ''
             ],

@@ -1456,9 +1456,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $deploymentId = ID::unique();
 
+        $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$id' => $deploymentId,
-            '$internalId' => '',
             'buildId' => '',
             'buildInternalId' => '',
             'entrypoint' => $function->getAttribute('entrypoint'),
@@ -1657,6 +1657,16 @@ App::post('/v1/functions/:functionId/executions')
         $durationStart = \microtime(true);
 
         $vars = [];
+
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
 
         // Shared vars
         foreach ($function->getAttribute('varsProject', []) as $var) {
