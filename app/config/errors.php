@@ -240,6 +240,11 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_MISSING_IDENTIFIER => [
+        'name' => Exception::USER_MISSING_IDENTIFIER,
+        'description' => 'The user phone and email are missing. You must provide either a phone or an email.',
+        'code' => 400,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

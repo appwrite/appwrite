@@ -172,6 +172,18 @@ trait UsersBase
         $this->assertEquals($res['body']['hashOptions']['signerKey'], 'XyEKE9RcTDeLEsL/RjwPDBv/RqDl8fb3gpYEOQaPihbxf1ZAtSOHCjuAAa7Q3oHpCYhXSN9tizHgVOwn6krflQ==');
         $this->assertEquals($res['body']['hashOptions']['saltSeparator'], 'Bw==');
 
+        /**
+         * Test for failure
+         */
+        $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
+            'content-type' => 'application/json',
+        ], $this->getHeaders()), [
+            'userId' => ID::unique(),
+            'password' => 'AxbbHBlhjbdxnrnKLJsde',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 400);
+
         return ['userId' => $body['$id']];
     }
 
