@@ -113,7 +113,7 @@ class BuildsV1 extends Worker
         $isNewBuild = empty($buildId);
 
         $deviceFunctions = $this->getFunctionsDevice($project->getId());
-        
+
         if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
