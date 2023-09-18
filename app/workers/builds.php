@@ -257,11 +257,8 @@ class BuildsV1 extends Worker
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
                 $localDevice = new Local();
-                $buffer = $localDevice->read($tmpPathFile);
-                $mimeType = $localDevice->getFileMimeType($tmpPathFile);
-
                 $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $deviceFunctions->write($path, $buffer, $mimeType);
+                $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
