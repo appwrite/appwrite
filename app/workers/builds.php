@@ -251,12 +251,22 @@ class BuildsV1 extends Worker
 
                 $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
+                $localDevice = new Local();
+
+                if (substr($tmpDirectory, -1) !== '/') {
+                    $tmpDirectory .= '/';
+                }
+
+                $directorySize = $localDevice->getDirectorySize($tmpDirectory);
+                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0);
+                if ($directorySize > $functionsSizeLimit) {
+                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                }
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
-                $localDevice = new Local();
                 $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
                 $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
 
@@ -477,7 +487,7 @@ class BuildsV1 extends Worker
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
