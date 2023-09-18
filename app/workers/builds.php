@@ -112,6 +112,8 @@ class BuildsV1 extends Worker
 
         $isNewBuild = empty($buildId);
 
+        $deviceFunctions = $this->getFunctionsDevice($project->getId());
+        
         if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -124,7 +126,7 @@ class BuildsV1 extends Worker
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower($deviceFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
@@ -253,8 +255,6 @@ class BuildsV1 extends Worker
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
-
-                $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
                 $localDevice = new Local();
                 $buffer = $localDevice->read($tmpPathFile);
