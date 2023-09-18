@@ -509,12 +509,11 @@ App::get('/v1/avatars/initials')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['background' => '#FFA1CE'], // Default (Pink)
-            ['background' => '#FDC584'], // Orange
-            ['background' => '#94DBD1'], // Green
-            ['background' => '#A1C4FF'], // Blue
-            ['background' => '#FFA1CE'], // Pink
-            ['background' => '#CBB1FC'] // Purple
+            ['background' => '#FD366E'], // Default (Pink)
+            ['background' => '#FE9567'], // Orange
+            ['background' => '#7C67FE'], // Purple
+            ['background' => '#68A3FE'], // Blue
+            ['background' => '#85DBD8'], // Mint
         ];
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
@@ -548,8 +547,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
+        $image->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
@@ -724,7 +723,7 @@ App::get('/v1/cards/cloud')
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -1108,7 +1107,7 @@ App::get('/v1/cards/cloud-og')
 
         $textName = new \ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textName->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $textName->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $textName->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
