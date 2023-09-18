@@ -59,15 +59,15 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
-        if($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
-        
-        if(\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+
+        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
         }
 
-        if(App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
         }
 

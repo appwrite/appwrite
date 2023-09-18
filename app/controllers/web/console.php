@@ -34,7 +34,7 @@ App::get('/console/*')
     ->action(function (App $utopia, Request $request, Response $response) {
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
-        if(App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled' && $host !== $mainDomain) {
+        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled' && $host !== $mainDomain) {
             $utopia->getRoute()?->label('error', __DIR__ . '/../../views/general/error.phtml');
             throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite Console over custom domain. Please disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
         }
