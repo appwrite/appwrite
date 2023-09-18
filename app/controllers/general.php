@@ -83,6 +83,16 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
+        if (App::getEnv('_APP_OPTIONS_FORCE_FUNCTIONS_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+            if ($request->getProtocol() !== 'https') {
+                if ($request->getMethod() !== Request::METHOD_GET) {
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
+                }
+
+                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+            }
+        }
+
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
@@ -380,7 +390,7 @@ App::init()
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
-                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
