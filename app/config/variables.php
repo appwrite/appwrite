@@ -44,6 +44,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_OPTIONS_ROUTER_PROTECTION',
+                'description' => 'Protects server from serving requests from unknown hostnames, and from serving Console for custom project domains. By default, set to \'disabled\'. To start router protection, set to \'enabled\'. It is recommended to enable this variable on production environment.',
+                'introduction' => '1.4.4',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_OPENSSL_KEY_V1',
                 'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
                 'introduction' => '',
