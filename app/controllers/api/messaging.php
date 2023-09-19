@@ -108,11 +108,12 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $provider = new Document([
@@ -122,9 +123,11 @@ App::post('/v1/messaging/providers/mailgun')
             'type' => 'email',
             'default' => $default,
             'enabled' => $enabled,
+            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
+                'isEuRegion' => $isEuRegion,
             ],
         ]);
 
@@ -164,11 +167,12 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -182,9 +186,19 @@ App::patch('/v1/messaging/providers/:id/mailgun')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email');
         }
 
-        if ($enabled === false) {
+        if ($isEuRegion === true || $isEuRegion === false) {
+            $credentials = $provider->getAttribute('credentials');
+            $provider->setAttribute('credentials', [
+                'isEuRegion' => $isEuRegion,
+                'apiKey' => $credentials['apiKey'],
+                'domain' => $credentials['domain'],
+            ]);
+        }
+
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -237,6 +251,7 @@ App::post('/v1/messaging/providers/sendgrid')
             'type' => 'email',
             'default' => $default,
             'enabled' => $enabled,
+            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
@@ -295,9 +310,10 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -345,6 +361,7 @@ App::post('/v1/messaging/providers/msg91')
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -407,9 +424,10 @@ App::patch('/v1/messaging/providers/:id/msg91')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -461,6 +479,7 @@ App::post('/v1/messaging/providers/telesign')
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -523,9 +542,10 @@ App::patch('/v1/messaging/providers/:id/telesign')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -577,6 +597,7 @@ App::post('/v1/messaging/providers/textmagic')
             'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -639,9 +660,10 @@ App::patch('/v1/messaging/providers/:id/textmagic')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'textmagic' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -693,6 +715,7 @@ App::post('/v1/messaging/providers/twilio')
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -755,9 +778,10 @@ App::patch('/v1/messaging/providers/:id/twilio')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -809,6 +833,7 @@ App::post('/v1/messaging/providers/vonage')
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -871,9 +896,10 @@ App::patch('/v1/messaging/providers/:id/vonage')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -927,6 +953,7 @@ App::post('/v1/messaging/providers/fcm')
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -987,9 +1014,10 @@ App::patch('/v1/messaging/providers/:id/fcm')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'fcm' . ' ' . 'push');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1035,6 +1063,7 @@ App::post('/v1/messaging/providers/apns')
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -1103,9 +1132,10 @@ App::patch('/v1/messaging/providers/:id/apns')
 
         if ($name) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'apns' . ' ' . 'push');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1219,7 +1249,7 @@ App::patch('/v1/messaging/providers/:id/general')
             $provider->setAttribute('name', $name);
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1280,9 +1310,8 @@ App::post('/v1/messaging/messages/email')
     ->param('to', [], new ArrayList(new Text(0)), 'Email Recepient.')
     ->param('subject', '', new Text(0), 'Email Subject.')
     ->param('content', '', new Text(0), 'Email Content.')
-    ->param('from', '', new Text(0), 'Email from.')
+    ->param('from', '', new Text(0), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
-    ->param('deliveryTime', '', new DatetimeValidator(), 'Delivery time of the message', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
@@ -1304,11 +1333,7 @@ App::post('/v1/messaging/messages/email')
                 'from' => $from,
                 'html' => $html
             ],
-            'deliveryTime' => $deliveryTime,
-            'deliveryErrors' => null,
-            'deliveredTo' => null,
-            'delivered' => false,
-            'search' => null,
+            'search' => $subject . ' ' . $from,
         ]));
 
         $messaging
