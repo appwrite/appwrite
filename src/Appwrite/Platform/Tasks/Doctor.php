@@ -93,7 +93,7 @@ class Doctor extends Action
             Console::log('🟢 HTTPS force option is enabled');
         }
 
-        if ('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_FUNCTIONS_HTTPS', 'disabled')) {
+        if ('enabled' !== App::getEnv('_APP_OPTIONS_FORCE_HTTPS_FUNCTIONS', 'disabled')) {
             Console::log('🔴 HTTPS force option is disabled for function domains');
         } else {
             Console::log('🟢 HTTPS force option is enabled for function domains');

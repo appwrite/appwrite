@@ -83,7 +83,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
-        if (App::getEnv('_APP_OPTIONS_FORCE_FUNCTIONS_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS_FUNCTIONS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
