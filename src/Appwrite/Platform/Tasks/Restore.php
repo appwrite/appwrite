@@ -18,6 +18,11 @@ class Restore extends Action
     public const BACKUPS_PATH = '/backups';
     public const DATADIR = '/var/lib/mysql';
     public const DOWNLOAD_CHUNK_SIZE = 40 * 1024 * 1024; // Must be greater than 5MB;
+    public const VERSION = 'v1';
+    public const RETRY_DOWNLOAD = 5;
+    public const RETRY_PREPARE = 5;
+    public const RETRY_DECOMPRESS = 5;
+    public const RETRY_TAR = 5;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
     protected int $processors = 1;
@@ -28,7 +33,7 @@ class Restore extends Action
             ->desc('Restore a DB')
             ->param('id', '', new Text(19), 'The backup identification')
             ->param('cloud', null, new Boolean(true), 'Download backup from cloud or use local directory')
-            ->param('database', null, new Text(10), 'The Database name for example db_fra1_01')
+            ->param('database', null, new Text(15), 'The Database name for example db_fra1_01')
             ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
     }
 
@@ -48,7 +53,7 @@ class Restore extends Action
 
             try {
                 $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
-                $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+                $this->s3 = new DOSpaces('/' . $database . '/' . self::VERSION, $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
                 $this->s3->setTransferChunkSize(self::DOWNLOAD_CHUNK_SIZE);
             } catch (\Exception $e) {
                 throw new Exception($e->getMessage() . 'Invalid DSN.');
@@ -68,32 +73,36 @@ class Restore extends Action
             $start = microtime(true);
             $cloud = $cloud === 'true' || $cloud === '1';
 
+            $local = new Local(self::BACKUPS_PATH . '/restore/' . $id);
+            $files = $local->getRoot() . '/files';
+
+            if (file_exists($local->getRoot())) {
+                shell_exec('mv ' . $local->getRoot() . ' ' . $local->getRoot() . '/../DELETE_ME/' . time());
+            }
+
+            if (!mkdir($files, 0755, true)) {
+                throw new Exception('Error creating directory: ' . $files);
+            }
+
             if ($cloud) {
-                $local = new Local(self::BACKUPS_PATH . '/downloads/' . $id);
-
-                $files = $local->getRoot() . '/files';
-
-                if (!file_exists($files) && !mkdir($files, 0755, true)) {
-                    throw new Exception('Error creating directory: ' . $files);
-                }
-
-                $file = $local->getPath($filename);
-
-                if (!file_exists($file)) {
-                    $this->download($file, $local);
-                }
-
-                $this->untar($file, $files);
+                $this->download($local->getPath($filename), $local); // Fast!
+                $this->untar($local->getPath($filename), $files);
             } else {
-                $local = new Local(self::BACKUPS_PATH . '/' . $database . '/full/' . $id);
-                $files = $local->getRoot() . '/files';
+                $source = self::BACKUPS_PATH . '/' . $database . '/' . self::VERSION . '/' . $id;
+                $this->log('Copying... ' . $source);
+
+                if (!file_exists($source)) {
+                    throw new Exception('Source not found: ' . $source);
+                }
+
+                shell_exec('cp -r ' . $source . ' ' . $local->getRoot() . '/../');
             }
 
             if (!file_exists($files)) {
-                throw new Exception('Directory not found: ' . $files);
+                throw new Exception('Files directory not found: ' . $files);
             }
 
-            $this->decompress($files);
+            $this->decompress($files); // Uncompressed is long!
             $this->prepare($files);
             $this->restore($files, $cloud, $datadir);
 
@@ -109,8 +118,6 @@ class Restore extends Action
      */
     public function download(string $file, Device $local)
     {
-        $this->log('Download start');
-
         $filename = basename($file);
         $path = $this->s3->getPath($filename);
 
@@ -118,9 +125,20 @@ class Restore extends Action
             throw new Exception('File: ' . $path . ' does not exist on cloud');
         }
 
-        if (!$this->s3->transfer($path, $file, $local)) {
-            throw new Exception('Error Downloading ' . $file);
-        }
+        $this->retry(function () use ($path, $file, $local, $filename) {
+            if (file_exists($local->getPath('tmp_' . $filename))) {
+                Console::warning('Deleting tmp_' . $filename);
+                if (!$local->deletePath('tmp_' . $filename)) {
+                    throw new Exception('Error deleting tmp download dir');
+                }
+            }
+
+            $this->log('Download start');
+
+            if (!$this->s3->transfer($path, $file, $local)) {
+                throw new Exception('Error Downloading ' . $file);
+            }
+        }, self::RETRY_DOWNLOAD);
     }
 
     /**
@@ -130,13 +148,15 @@ class Restore extends Action
     {
         $this->log('Untar Start');
 
-        $stdout = '';
-        $stderr = '';
-        $cmd = 'tar -xzf ' . $file . ' -C ' . $directory;
-        Console::execute($cmd, '', $stdout, $stderr);
-        if (!empty($stderr)) {
-            throw new Exception($stderr);
-        }
+        $this->retry(function () use ($file, $directory) {
+            $stdout = '';
+            $stderr = '';
+            $cmd = 'tar -xzf ' . $file . ' -C ' . $directory;
+            Console::execute($cmd, '', $stdout, $stderr);
+            if (!empty($stderr)) {
+                throw new Exception($stderr);
+            }
+        }, self::RETRY_TAR);
 
         if (!file_exists($file)) {
             throw new Exception('Restore file not found: ' . $file);
@@ -156,21 +176,21 @@ class Restore extends Action
             'xtrabackup',
             '--decompress',
             '--strict',
-            '--remove-original',
+            '--remove-original', // Time consuming.
             '--compress-threads=' . $this->processors,
             '--parallel=' . $this->processors,
             '--target-dir=' . $target,
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        shell_exec($cmd);
+        $this->retry(function () use ($args, $logfile) {
+            shell_exec('docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args));
 
-        $stderr = shell_exec('tail -1 ' . $logfile);
-
-        if (!str_contains($stderr, 'completed OK!')) {
-            throw new Exception('Decompress failed');
-        }
+            $stderr = shell_exec('tail -1 ' . $logfile);
+            if (!str_contains($stderr, 'completed OK!')) {
+                throw new Exception('Decompress failed');
+            }
+        }, self::RETRY_DECOMPRESS);
     }
 
     /**
@@ -195,14 +215,15 @@ class Restore extends Action
             '2> ' . $logfile,
         ];
 
-        $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
-        shell_exec($cmd);
+        $this->retry(function () use ($args, $logfile) {
+            $cmd = 'docker exec ' . $this->xtrabackupContainerId . ' ' . implode(' ', $args);
+            shell_exec($cmd);
 
-        $stderr = shell_exec('tail -1 ' . $logfile);
-
-        if (!str_contains($stderr, 'completed OK!')) {
-            throw new Exception(' Prepare failed:' . $stderr);
-        }
+            $stderr = shell_exec('tail -1 ' . $logfile);
+            if (!str_contains($stderr, 'completed OK!')) {
+                throw new Exception(' Prepare failed:' . $stderr);
+            }
+        }, self::RETRY_PREPARE);
     }
 
     /**
@@ -220,7 +241,7 @@ class Restore extends Action
 
         $args = [
             'xtrabackup',
-            $cloud ? '--move-back' : '--copy-back',
+            '--move-back',
             '--strict',
             '--parallel=' . $this->processors,
             '--target-dir=' . $target,
@@ -232,7 +253,6 @@ class Restore extends Action
         shell_exec($cmd);
 
         $stderr = shell_exec('tail -1 ' . $logfile);
-
         if (!str_contains($stderr, 'completed OK!')) {
             throw new Exception('Restore failed: ' . $stderr);
         }
@@ -297,6 +317,25 @@ class Restore extends Action
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = empty($processors) ? 1 : intval($processors);
 
-        $this->processors = \max(1, $processors - 2);
+        //$this->processors = \max(1, $processors - 2);
+        $this->processors = $processors;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function retry(callable $action, int $retries, int $sleep = 1)
+    {
+        try {
+            return $action();
+        } catch (Exception $e) {
+            if ($retries > 0) {
+                Console::warning('Retrying (' . $retries . ') ' . $e->getMessage());
+                sleep($sleep);
+                return $this->retry($action, $retries - 1, $sleep);
+            } else {
+                throw $e;
+            }
+        }
     }
 }

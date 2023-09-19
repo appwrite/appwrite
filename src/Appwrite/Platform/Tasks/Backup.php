@@ -18,17 +18,18 @@ class Backup extends Action
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
-    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 7; // 2 days?
-    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 14; // 14 days?;
+    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 30; // 2 days?
+    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 30; // 14 days?;
     public const UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // Must be greater than 5MB;
     public const RETRY_BACKUP = 1;
     public const RETRY_TAR = 1;
     public const RETRY_UPLOAD = 2;
+    public const VERSION = 'v1';
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
     protected string $xtrabackupContainerId;
-    protected int $processors;
+    protected int $processors = 1;
 
     /**
      * @throws Exception
@@ -50,25 +51,8 @@ class Backup extends Action
     /**
      * @throws Exception
      */
-    public function hello(string $str): void
-    {
-        Console::success($str);
-        //throw new Exception('kaka');
-    }
-
-    /**
-     * @throws Exception
-     */
     public function action(string $database, Group $pools): void
     {
-
-//        $this->retry(function () {
-//            $this->hello('David123');
-//        }, 1, 2);
-//
-//        exit;
-
-
         $this->checkEnvVariables();
 
         $this->database = $database;
@@ -81,7 +65,7 @@ class Backup extends Action
         console::info('Trying to connect to ' . $this->dsn->getHost() . ' : ' . $this->dsn->getPort() . ' user: ' . $this->dsn->getUser() . ' password: ' . $this->dsn->getPassword());
 
         $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
-        $this->s3 = new DOSpaces('/' . $database . '/full', $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
+        $this->s3 = new DOSpaces('/' . $database . '/' . self::VERSION, $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
 
         try {
             $this->retry(function () use ($pools, $database) {
@@ -117,7 +101,8 @@ class Backup extends Action
 
         self::log('--- Backup Start ' . $time . ' --- ');
 
-        $local = new Local(self::BACKUPS_PATH . '/' . $this->database . '/full/' . $time);
+        $path = self::BACKUPS_PATH . '/' . $this->database . '/' . self::VERSION;
+        $local = new Local($path . '/' . $time);
         $local->setTransferChunkSize(self::UPLOAD_CHUNK_SIZE);
 
         $tarFile = $local->getPath($time . '.tar.gz');
@@ -128,8 +113,11 @@ class Backup extends Action
         $this->upload($tarFile, $local);
 
         if (!unlink($tarFile)) {
-            throw new Exception('Error deleting: ' . $tarFile);
+            Console::error('Error deleting: ' . $tarFile);
         }
+
+        $this->cleanLocalFiles($path);
+        $this->cleanCloudFiles();
 
         self::log('--- Backup Finish ' . (microtime(true) - $start) . ' seconds --- '   . PHP_EOL . PHP_EOL);
     }
@@ -139,8 +127,9 @@ class Backup extends Action
      */
     public function backup(string $target)
     {
-        $start = microtime(true);
         self::log('Xtrabackup start');
+
+        $start = microtime(true);
 
         if (!file_exists(self::BACKUPS_PATH)) {
             throw new Exception('Mount directory does not exist');
@@ -170,7 +159,6 @@ class Backup extends Action
             '--compress=' . self::COMPRESS_ALGORITHM,
             '--compress-threads=' . $this->processors,
             '--parallel=' . $this->processors,
-            '--rsync', // https://docs.percona.com/percona-xtrabackup/8.0/accelerate-backup-process.html
             '2> ' . $logfile,
         ];
 
@@ -187,7 +175,7 @@ class Backup extends Action
             throw new Exception('Error deleting: ' . $logfile);
         }
 
-        self::log('Xtrabackup end ' . (microtime(true) - $start) . ' seconds');
+        self::log('Xtrabackup Finish ' . (microtime(true) - $start) . ' seconds');
     }
 
     /**
@@ -201,10 +189,10 @@ class Backup extends Action
         $this->retry(function () use ($directory, $file) {
             $stdout = '';
             $stderr = '';
-            $cmd = 'cd ' . $directory . ' && tar zcf ' . $file . ' . && cd ' . getcwd();
+            $cmd = 'cd ' . $directory . ' && tar -zcf ' . $file . ' . && cd ' . getcwd();
             Console::execute($cmd, '', $stdout, $stderr);
             if (!empty($stderr)) {
-                throw new Exception('Tar failed:' . $stderr);
+                throw new Exception($stderr);
             }
         }, self::RETRY_TAR);
 
@@ -212,7 +200,7 @@ class Backup extends Action
             throw new Exception('Tar file not found: ' . $file);
         }
 
-        self::log('Tar took ' . (microtime(true) - $start) . ' seconds');
+        self::log('Tar finish ' . (microtime(true) - $start) . ' seconds');
     }
 
     /**
@@ -237,10 +225,10 @@ class Backup extends Action
         }, self::RETRY_UPLOAD);
 
         if (!$this->s3->exists($destination)) {
-            throw new Exception('File not found in destination: ' . $destination);
+            throw new Exception('File not found on cloud: ' . $destination);
         }
 
-        self::log('Upload took ' . (microtime(true) - $start) . ' seconds');
+        self::log('Upload finish ' . (microtime(true) - $start) . ' seconds');
     }
 
     public static function log(string $message): void
@@ -313,24 +301,114 @@ class Backup extends Action
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = empty($processors) ? 1 : intval($processors);
 
-        $this->processors = \max(1, $processors - 2);
+        //$this->processors = \max(1, $processors - 2);
+        $this->processors = $processors;
     }
 
     /**
      * @throws Exception
      */
-    public function retry(callable $f, int $retries, int $sleep = 1)
+    public function retry(callable $action, int $retries, int $sleep = 1)
     {
         try {
-            return $f();
+            return $action();
         } catch (Exception $e) {
             if ($retries > 0) {
                 Console::warning('Retrying (' . $retries . ') ' . $e->getMessage());
                 sleep($sleep);
-                return $this->retry($f, $retries - 1, $sleep);
+                return $this->retry($action, $retries - 1, $sleep);
             } else {
                 throw $e;
             }
         }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function cleanLocalFiles(string $path)
+    {
+        self::log('Clean local start');
+
+        $start = microtime(true);
+
+        $folder = scandir($path);
+        if ($folder === false) {
+            throw new Exception('Scan directory error ' . $path);
+        }
+
+        foreach ($folder as $item) {
+            $filename = $item . '.tar.gz';
+            $fullPath = $path . '/' . $item;
+            if ($this->isDelete($item, self::CLEANUP_LOCAL_FILES_SECONDS)) {
+                // Check if file exist on cloud before delete
+                if ($this->s3->exists($this->s3->getRoot() . '/' . $filename)) {
+                    $delete = true;
+                } else {
+                    if ($this->isDelete($item, self::CLEANUP_CLOUD_FILES_SECONDS)) {
+                        $delete = true;
+                    } else {
+                        Console::warning('Skipping delete not found on cloud: ' . $filename . ' ');
+                        $delete = false;
+                    }
+                }
+
+                if ($delete === true) {
+                    Console::success('Deleting: ' . $fullPath);
+                    shell_exec('rm -rf ' . $fullPath);
+                }
+            }
+        }
+
+        self::log('Clean local finish ' . (microtime(true) - $start) . ' seconds');
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function cleanCloudFiles(): void
+    {
+        self::log('Clean cloud start');
+        $start = microtime(true);
+        $files = $this->s3->getFiles($this->s3->getRoot());
+
+        if ($files['KeyCount'] > 0) {
+            foreach ($files['Contents'] as $file) {
+                $date = basename(basename($file['Key']), '.tar.gz');
+                if ($this->isDelete($date, self::CLEANUP_CLOUD_FILES_SECONDS)) {
+                    if ($this->s3->delete($file['Key'])) {
+                        Console::success('Deleting: ' . $file['Key']);
+                    }
+                }
+            }
+        }
+
+        self::log('Clean cloud finish ' . (microtime(true) - $start) . ' seconds');
+    }
+
+    /**
+     * @param string $item
+     * @param int $seconds
+     * @return bool
+     */
+    public function isDelete(string $item, int $seconds): bool
+    {
+        if (!str_contains($item, '_')) {
+            return false;
+        }
+
+        [$year, $month, $day, $hour, $minute, $second] = explode('_', $item);
+        $date = $year . '-' . $month . '-' . $day . ' ' . $hour . ':' . $minute . ':' . $second;
+
+        try {
+            $now = new \DateTime();
+            $backupDate = new \DateTime($date);
+            if (($now->getTimestamp() - $backupDate->getTimestamp()) > $seconds) {
+                return true;
+            }
+        } catch (Exception $e) {
+        }
+
+        return false;
     }
 }
