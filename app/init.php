@@ -539,7 +539,6 @@ Database::addFilter(
         return Authorization::skip(fn() => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
 );
@@ -555,7 +554,6 @@ Database::addFilter(
             $database
             ->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
             ])
         ));
         if (\count($targetIds) > 0) {

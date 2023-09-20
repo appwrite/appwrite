@@ -1307,7 +1307,7 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(0)), 'Email Recepient.')
+    ->param('to', [], new ArrayList(new Text(0)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(0), 'Email Subject.')
     ->param('content', '', new Text(0), 'Email Content.')
     ->param('from', '', new Text(0), 'Email from.', true)
@@ -1333,6 +1333,7 @@ App::post('/v1/messaging/messages/email')
                 'from' => $from,
                 'html' => $html
             ],
+            'status' => 'processing',
             'search' => $subject . ' ' . $from,
         ]));
 

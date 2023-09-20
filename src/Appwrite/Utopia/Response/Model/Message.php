@@ -51,11 +51,11 @@ class Message extends Any
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule('delivered', [
-                'type' => self::TYPE_BOOLEAN,
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
-                'default' => false,
-                'example' => true,
+                'default' => 'processing',
+                'example' => 'Message status can be one of the following: processing, sent, failed.',
             ]);
     }
 
