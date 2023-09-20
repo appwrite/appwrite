@@ -2,3 +2,6 @@
 	path = app/console
 	url = https://github.com/appwrite/console
 	branch = 3.0.1
+[submodule "console"]
+	path = console
+	url = https://github.com/nick2432/console.git
