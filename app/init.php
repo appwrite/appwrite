@@ -562,7 +562,6 @@ Database::addFilter(
         return [];
     }
 );
-
 /**
  * DB Formats
  */

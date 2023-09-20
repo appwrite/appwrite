@@ -383,9 +383,8 @@ App::post('/v1/users/scrypt-modified')
 App::post('/v1/users/:userId/targets')
     ->desc('Create User Target')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('audits.event', 'targets.create')
-    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.event', 'users.targets.create')
+    ->label('audits.resource', 'target/response.$id')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -422,11 +421,6 @@ App::post('/v1/users/:userId/targets')
 
         $target = $dbForProject->createDocument('targets', new Document([
             '$id' => $targetId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
-            ],
             'providerId' => $providerId,
             'providerInternalId' => $provider->getInternalId(),
             'userId' => $userId,
@@ -434,9 +428,6 @@ App::post('/v1/users/:userId/targets')
             'identifier' => $identifier,
         ]));
         $dbForProject->deleteCachedDocument('users', $user->getId());
-        $events
-            ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId);
         $response
         ->setStatusCode(Response::STATUS_CODE_CREATED)
         ->dynamic($target, Response::MODEL_TARGET);
@@ -1207,9 +1198,8 @@ App::patch('/v1/users/:userId/prefs')
 App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->desc('Update user target\'s identifier')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].targets.[targetId].update')
-    ->label('audits.event', 'targets.update')
-    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.event', 'users.targets.update')
+    ->label('audits.resource', 'target/{response.$id}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1385,9 +1375,8 @@ App::delete('/v1/users/:userId')
 App::delete('/v1/users/:userId/targets/:targetId')
     ->desc('Delete user target')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].targets.[targetId].delete')
-    ->label('audits.event', 'targets.delete')
-    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.event', 'users.targets.delete')
+    ->label('audits.resource', 'target/{request.$targetId}')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1417,15 +1406,6 @@ App::delete('/v1/users/:userId/targets/:targetId')
 
         $target = $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
-        $user = $dbForProject->getDocument('users', $userId);
-
-        // clone user object to send to workers
-        $clone = clone $user;
-
-        $events
-            ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId)
-            ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();
     });

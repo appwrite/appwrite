@@ -359,6 +359,7 @@ trait AccountBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
