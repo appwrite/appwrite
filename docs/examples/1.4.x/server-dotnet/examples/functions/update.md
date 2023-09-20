@@ -11,5 +11,4 @@ var functions = new Functions(client);
 
 Function result = await functions.Update(
     functionId: "[FUNCTION_ID]",
-    name: "[NAME]",
-    runtime: "node-14.5");
+    name: "[NAME]");

@@ -7,8 +7,6 @@ use Appwrite\Utopia\Response\Model;
 
 class Provider extends Model
 {
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
