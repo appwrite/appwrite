@@ -123,6 +123,28 @@ class AccountTest extends Scope
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'providerId' => 'unique()',
+                'name' => 'Mock',
+                'provider' => 'mock',
+                'type' => 'sms',
+                'credentials' => [
+                    'username' => 'username',
+                    'password' => 'password',
+                ],
+                'default' => true,
+            ],
+        ];
+
+        $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $graphQLPayload);
+
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,

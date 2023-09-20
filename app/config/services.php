@@ -260,7 +260,7 @@ return [
         'sdk' => true,
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/server/messaging',
-        'tests' => false,
+        'tests' => true,
         'optional' => true,
         'icon' => '/images/services/messaging.png',
     ]

@@ -296,6 +296,8 @@ trait Base
         }
     ';
 
+    public static string $CREATE_PROVIDER = 'create_provider';
+
     public function getQuery(string $name): string
     {
         switch ($name) {
@@ -1929,6 +1931,33 @@ trait Base
                         }
                     }
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
+            case self::$CREATE_PROVIDER: 
+                return 'mutation CreateGeneralProvider(
+                    $providerId: String!,
+                    $provider: String!,
+                    $name: String!,
+                    $type: String!,
+                    $default: Boolean,
+                    $enabled: Boolean,
+                    $credentials: Json!
+                  ) {
+                    messagingCreateGeneralProvider(
+                      providerId: $providerId,
+                      provider: $provider,
+                      name: $name,
+                      type: $type,
+                      default: $default,
+                      enabled: $enabled,
+                      credentials: $credentials
+                    ) {
+                      _id
+                      name
+                      provider
+                      type
+                      default
+                      enabled
+                    }
+                  }';
         }
 
         throw new \InvalidArgumentException('Invalid query type');
