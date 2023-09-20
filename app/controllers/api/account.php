@@ -145,6 +145,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -648,6 +649,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
+                    $user->removeAttribute('$internalId');
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -950,6 +952,7 @@ App::post('/v1/account/sessions/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1277,6 +1280,7 @@ App::post('/v1/account/sessions/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1525,6 +1529,7 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
+        $user->removeAttribute('$internalId');
         Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
