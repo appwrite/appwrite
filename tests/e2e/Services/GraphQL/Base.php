@@ -1931,7 +1931,7 @@ trait Base
                         }
                     }
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
-            case self::$CREATE_PROVIDER: 
+            case self::$CREATE_PROVIDER:
                 return 'mutation CreateGeneralProvider(
                     $providerId: String!,
                     $provider: String!,
