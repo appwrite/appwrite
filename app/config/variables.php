@@ -750,6 +750,7 @@ return [
                 'introduction' => '0.13.0',
                 'default' => 'http://appwrite-executor/v1',
                 'required' => false,
+                'overwrite' => true,
                 'question' => '',
                 'filter' => ''
             ],

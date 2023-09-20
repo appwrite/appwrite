@@ -9,6 +9,6 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.create_membership(team_id: '[TEAM_ID]', roles: [], url: 'https://example.com')
+response = teams.create_membership(team_id: '[TEAM_ID]', roles: [])
 
 puts response.inspect

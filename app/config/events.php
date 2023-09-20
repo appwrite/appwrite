@@ -258,20 +258,6 @@ return [
         'create' => [
             '$description' => 'This event triggers when a message is created.',
         ],
-        'providers' => [
-            '$model' => Response::MODEL_PROVIDER,
-            '$resource' => true,
-            '$description' => 'This event triggers on any provider event.',
-            'create' => [
-                '$description' => 'This event triggers when a provider is created.',
-            ],
-            'update' => [
-                '$description' => 'This event triggers when a provider is updated.',
-            ],
-            'delete' => [
-                '$description' => 'This event triggers when a provider is deleted.'
-            ],
-        ],
         'topics' => [
             '$model' => Response::MODEL_TOPIC,
             '$resource' => true,
@@ -295,6 +281,20 @@ return [
             ],
         ],
 
+    ],
+    'providers' => [
+        '$model' => Response::MODEL_PROVIDER,
+        '$resource' => true,
+        '$description' => 'This event triggers on any provider event.',
+        'create' => [
+            '$description' => 'This event triggers when a provider is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a provider is updated.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a provider is deleted.'
+        ],
     ],
     'rules' => [
         '$model' => Response::MODEL_PROXY_RULE,

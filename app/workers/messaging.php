@@ -2,7 +2,10 @@
 
 use Appwrite\Resque\Worker;
 use Utopia\CLI\Console;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
 use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -31,8 +34,8 @@ class MessagingV1 extends Worker
     protected ?PushAdapter $push = null;
     protected ?EmailAdapter $email = null;
 
+    protected ?Database $dbForProject = null;
 
-    protected ?string $from = null;
 
     public function getName(): string
     {
@@ -86,33 +89,85 @@ class MessagingV1 extends Worker
     public function run(): void
     {
         $project = new Document($this->args['project']);
+        $this->dbForProject = $this->getProjectDB($project);
 
-        $dbForProject = $this->getProjectDB($project);
-        $message = new Document($this->args['message']);
+        $messageRecord = new Document($this->args['message']);
 
-        $providerId = $message->getAttribute('providerId');
-        $providerRecord = $dbForProject->getDocument('providers', $providerId);
+        $providerId = $messageRecord->getAttribute('providerId');
+        $providerRecord = $this->dbForProject->getDocument('providers', $providerId);
 
-        $provider = match ($providerRecord->getAttribute('type')) {//stubbbbbbed.
+        $this->processMessage($messageRecord, $providerRecord);
+    }
+
+    private function processMessage(Document $messageRecord, Document $providerRecord): void
+    {
+        $provider = match ($providerRecord->getAttribute('type')) {
             'sms' => $this->sms($providerRecord),
             'push' => $this->push($providerRecord),
             'email' => $this->email($providerRecord),
             default => null
         };
 
-      // Query for the provider
-      // switch on provider name
-      // call function passing needed credentials returns required provider.
+        $recipientsId = $messageRecord->getAttribute('to');
 
-        $message = match ($providerRecord->getAttribute('type')) {
-            'sms' => $this->buildSMSMessage($message->getArrayCopy()),
-            'push' => $this->buildPushMessage($message->getArrayCopy()),
-            'email' => $this->buildEmailMessage($message->getArrayCopy()),
-            default => null
-        };
+        /**
+        * @var Document[] $recipients
+        */
+        $recipients = [];
 
 
-        $provider->send($message);
+        $topics = $this->dbForProject->find('topics', [Query::equal('$id', $recipientsId)]);
+        foreach ($topics as $topic) {
+            $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
+        }
+
+        $users = $this->dbForProject->find('users', [Query::equal('$id', $recipientsId)]);
+        foreach ($users as $user) {
+            $recipients = \array_merge($recipients, $user->getAttribute('targets'));
+        }
+
+        $targets = $this->dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
+        \array_merge($recipients, $targets);
+
+        $identifiers = \array_map(function (Document $recipient) {
+            return $recipient->getAttribute('identifier');
+        }, $recipients);
+
+        $maxBatchSize = $provider->getMaxMessagesPerRequest();
+        $batches = \array_chunk($identifiers, $maxBatchSize);
+        $message = $messageRecord->getArrayCopy();
+        $deliveredTo = 0;
+
+        foreach ($batches as $batch) {
+            $message['to'] = $batch;
+            $message = match ($providerRecord->getAttribute('type')) {
+                'sms' => $this->buildSMSMessage($message),
+                'push' => $this->buildPushMessage($message),
+                'email' => $this->buildEmailMessage($message),
+                default => null
+            };
+            try {
+                $provider->send($message);
+                $deliveredTo += \count($batch);
+            } catch (Exception $e) {
+                $deliveryErrors = $messageRecord->getAttribute('deliveryErrors');
+                foreach ($batch as $identifier) {
+                    $deliveryErrors[] = 'Failed to send message to target' . $identifier . ': ' . $e->getMessage();
+                }
+                $messageRecord->setAttribute('deliveryErrors', $deliveryErrors);
+            }
+        }
+
+        if (\count($messageRecord->getAttribute('deliveryErrors')) > 0) {
+            $messageRecord->setAttribute('status', 'failed');
+        } else {
+            $messageRecord->setAttribute('status', 'sent');
+        }
+
+        $messageRecord->setAttribute('deliveredTo', $deliveredTo);
+        $messageRecord->setAttribute('deliveryTime', DateTime::now());
+
+        $this->dbForProject->updateDocument('messages', $messageRecord->getId(), $messageRecord);
     }
 
     public function shutdown(): void

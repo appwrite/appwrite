@@ -146,6 +146,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -653,6 +654,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
+                    $user->removeAttribute('$internalId');
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -955,6 +957,7 @@ App::post('/v1/account/sessions/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1224,7 +1227,7 @@ App::post('/v1/account/sessions/phone')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
-    ->label('abuse-key', 'url:{url},email:{param-phone}')
+    ->label('abuse-key', 'url:{url},phone:{param-phone}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
@@ -1288,6 +1291,7 @@ App::post('/v1/account/sessions/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1549,6 +1553,7 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
+        $user->removeAttribute('$internalId');
         Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token

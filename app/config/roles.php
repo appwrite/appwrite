@@ -24,7 +24,8 @@ $member = [
     'targets.read',
     'targets.write',
     'subscribers.write',
-    'subscribers.read'
+    'subscribers.read',
+    'assistant.read',
 ];
 
 $admins = [
@@ -69,7 +70,6 @@ $admins = [
     'messages.read',
     'vcs.read',
     'vcs.write',
-    'assistant.read',
     'targets.read',
     'targets.write',
     'providers.write',
@@ -86,6 +86,7 @@ return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
+            'global',
             'public',
             'home',
             'console',

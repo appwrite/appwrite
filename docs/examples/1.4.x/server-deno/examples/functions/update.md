@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = functions.update('[FUNCTION_ID]', '[NAME]', 'node-14.5');
+let promise = functions.update('[FUNCTION_ID]', '[NAME]');
 
 promise.then(function (response) {
     console.log(response);

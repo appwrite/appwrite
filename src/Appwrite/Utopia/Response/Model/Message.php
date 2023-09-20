@@ -8,11 +8,6 @@ use Utopia\Database\DateTime;
 
 class Message extends Any
 {
-    /**
-     * @var bool
-     */
-    protected bool $public = false;
-
     public function __construct()
     {
         $this
@@ -30,14 +25,14 @@ class Message extends Any
             ])
             ->addRule('to', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Recipient of message.',
+                'description' => 'Message recipients.',
                 'default' => '',
                 'array' => true,
                 'example' => ['user-1'],
             ])
             ->addRule('deliveryTime', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Recipient of message.',
+                'description' => 'Time the message is delivered at.',
                 'required' => false,
                 'default' => DateTime::now(),
                 'example' => self::TYPE_DATETIME_EXAMPLE,
@@ -48,7 +43,7 @@ class Message extends Any
                 'required' => false,
                 'default' => '',
                 'array' => true,
-                'example' => 'Credentials not valid.',
+                'example' => ['Failed to send message to target 5e5ea5c16897e: Credentials not valid.'],
             ])
             ->addRule('deliveredTo', [
                 'type' => self::TYPE_INTEGER,
@@ -56,11 +51,11 @@ class Message extends Any
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule('delivered', [
-                'type' => self::TYPE_BOOLEAN,
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
-                'default' => false,
-                'example' => true,
+                'default' => 'processing',
+                'example' => 'Message status can be one of the following: processing, sent, failed.',
             ]);
     }
 

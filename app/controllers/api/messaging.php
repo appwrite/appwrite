@@ -109,11 +109,12 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $provider = new Document([
@@ -123,9 +124,11 @@ App::post('/v1/messaging/providers/mailgun')
             'type' => 'email',
             'default' => $default,
             'enabled' => $enabled,
+            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
+                'isEuRegion' => $isEuRegion,
             ],
         ]);
 
@@ -164,12 +167,13 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -181,11 +185,21 @@ App::patch('/v1/messaging/providers/:id/mailgun')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email');
         }
 
-        if ($enabled === false) {
+        if ($isEuRegion === true || $isEuRegion === false) {
+            $credentials = $provider->getAttribute('credentials');
+            $provider->setAttribute('credentials', [
+                'isEuRegion' => $isEuRegion,
+                'apiKey' => $credentials['apiKey'],
+                'domain' => $credentials['domain'],
+            ]);
+        }
+
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -238,6 +252,7 @@ App::post('/v1/messaging/providers/sendgrid')
             'type' => 'email',
             'default' => $default,
             'enabled' => $enabled,
+            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
@@ -278,11 +293,11 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -294,11 +309,12 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -346,6 +362,7 @@ App::post('/v1/messaging/providers/msg91')
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -389,12 +406,12 @@ App::patch('/v1/messaging/providers/:id/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -406,11 +423,12 @@ App::patch('/v1/messaging/providers/:id/msg91')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -462,6 +480,7 @@ App::post('/v1/messaging/providers/telesign')
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -505,12 +524,12 @@ App::patch('/v1/messaging/providers/:id/telesign')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -522,11 +541,12 @@ App::patch('/v1/messaging/providers/:id/telesign')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -578,6 +598,7 @@ App::post('/v1/messaging/providers/textmagic')
             'name' => $name,
             'provider' => 'text-magic',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -621,12 +642,12 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -638,11 +659,12 @@ App::patch('/v1/messaging/providers/:id/textmagic')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'textmagic' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -694,6 +716,7 @@ App::post('/v1/messaging/providers/twilio')
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -737,12 +760,12 @@ App::patch('/v1/messaging/providers/:id/twilio')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -754,11 +777,12 @@ App::patch('/v1/messaging/providers/:id/twilio')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -810,6 +834,7 @@ App::post('/v1/messaging/providers/vonage')
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -853,12 +878,12 @@ App::patch('/v1/messaging/providers/:id/vonage')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -870,11 +895,12 @@ App::patch('/v1/messaging/providers/:id/vonage')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -928,6 +954,7 @@ App::post('/v1/messaging/providers/fcm')
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -970,11 +997,11 @@ App::patch('/v1/messaging/providers/:id/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -986,11 +1013,12 @@ App::patch('/v1/messaging/providers/:id/fcm')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'fcm' . ' ' . 'push');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1036,6 +1064,7 @@ App::post('/v1/messaging/providers/apns')
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
             'default' => $default,
             'enabled' => $enabled,
             'credentials' => [
@@ -1082,7 +1111,7 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
@@ -1090,7 +1119,7 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -1102,11 +1131,12 @@ App::patch('/v1/messaging/providers/:id/apns')
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
+            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'apns' . ' ' . 'push');
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1205,22 +1235,22 @@ App::patch('/v1/messaging/providers/:id/general')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('credentials', '', new JSON(), 'Provider credentials.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, bool $enabled, array $credentials, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, array $credentials, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $provider->setAttribute('name', $name);
         }
 
-        if ($enabled === false) {
+        if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1618,12 +1648,11 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(0)), 'Email Recepient.')
+    ->param('to', [], new ArrayList(new Text(0)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(0), 'Email Subject.')
     ->param('content', '', new Text(0), 'Email Content.')
-    ->param('from', '', new Text(0), 'Email from.')
+    ->param('from', '', new Text(0), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
-    ->param('deliveryTime', '', new DatetimeValidator(), 'Delivery time of the message', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
@@ -1645,11 +1674,8 @@ App::post('/v1/messaging/messages/email')
                 'from' => $from,
                 'html' => $html
             ],
-            'deliveryTime' => $deliveryTime,
-            'deliveryErrors' => null,
-            'deliveredTo' => null,
-            'delivered' => false,
-            'search' => null,
+            'status' => 'processing',
+            'search' => $subject . ' ' . $from,
         ]));
 
         $messaging

@@ -146,6 +146,21 @@ trait MessagingBase
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
         }
 
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[1]['$id'] . '/mailgun', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+          'name' => 'Mailgun2',
+          'apiKey' => 'my-apikey',
+          'domain' => 'my-domain',
+          'isEuRegion' => true,
+          'enabled' => false,
+        ]);
+        $providers[1] = $response['body'];
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('Mailgun2', $response['body']['name']);
+        $this->assertEquals(false, $response['body']['enabled']);
         return $providers;
     }
 
