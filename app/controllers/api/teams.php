@@ -389,7 +389,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('mails')
     ->inject('messaging')
     ->inject('events')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, string $from, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, string $from, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Messaging $messaging, Event $events) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
