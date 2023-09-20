@@ -1330,15 +1330,22 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        $target = $dbForProject->createDocument('targets', new Document([
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'identifier' => $phone,
+        ]));
+
         $messageDoc = $dbForProject->createDocument('messages', new Document([
-            'to' => [$phone],
+            'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
                 'from' => $from,
             ],
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
-            'deliveryTime' => Datetime::now(),
         ]));
 
         $messaging
@@ -2952,15 +2959,22 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        $target = $dbForProject->createDocument('targets', new Document([
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'identifier' => $user->getAttribute('phone'),
+        ]));
+
         $messageDoc = $dbForProject->createDocument('messages', new Document([
-            'to' => [$user->getAttribute('phone')],
+            'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
                 'from' => $from,
             ],
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
-            'deliveryTime' => Datetime::now(),
         ]));
 
         $messaging

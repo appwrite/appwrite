@@ -127,7 +127,7 @@ class MessagingV1 extends Worker
         }
 
         $targets = $this->dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
-        \array_merge($recipients, $targets);
+        $recipients = \array_merge($recipients, $targets);
 
         $identifiers = \array_map(function (Document $recipient) {
             return $recipient->getAttribute('identifier');
