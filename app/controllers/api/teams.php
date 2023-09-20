@@ -652,8 +652,16 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
+                $target = $dbForProject->createDocument('targets', new Document([
+                    'userId' => $invitee->getId(),
+                    'userInternalId' => $invitee->getInternalId(),
+                    'providerId' => $provider->getId(),
+                    'providerInternalId' => $provider->getInternalId(),
+                    'identifier' => $phone,
+                ]));
+
                 $messageDoc = $dbForProject->createDocument('messages', new Document([
-                    'to' => [$phone],
+                    'to' => [$target->getId()],
                     'data' => [
                         'content' => $message,
                         'from' => $from,
