@@ -754,5 +754,12 @@ return [
         'name' => Exception::PROVIDER_INCORRECT_TYPE,
         'description' => 'Provider with the requested ID is of incorrect type: ',
         'code' => 400,
+    ],
+
+    /** Message Errors */
+    Exception::MESSAGE_NOT_FOUND => [
+        'name' => Exception::MESSAGE_NOT_FOUND,
+        'description' => 'Message with the requested ID could not be found.',
+        'code' => 404,
     ]
 ];

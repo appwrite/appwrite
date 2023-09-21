@@ -230,6 +230,9 @@ class Exception extends \Exception
     public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
 
+    /** Message */
+    public const MESSAGE_NOT_FOUND                  = 'message_not_found';
+
     protected $type = '';
     protected $errors = [];
 

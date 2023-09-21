@@ -75,7 +75,7 @@ App::get('/v1/messaging/providers/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', null, new UID(), 'Provider ID.')
+    ->param('id', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $id, Database $dbForProject, Response $response) {
@@ -1291,6 +1291,30 @@ App::delete('/v1/messaging/providers/:id')
         $dbForProject->deleteDocument('providers', $provider->getId());
 
         $response->noContent();
+    });
+
+App::get('/v1/messaging/messages/:id')
+    ->desc('Get Message')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getMessage')
+    ->label('sdk.description', '/docs/references/messaging/get-message.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('id', '', new UID(), 'Message ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, Database $dbForProject, Response $response) {
+        $message = $dbForProject->getDocument('message', $id);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $response->dynamic($message, Response::MODEL_MESSAGE);
     });
 
 App::post('/v1/messaging/messages/email')
