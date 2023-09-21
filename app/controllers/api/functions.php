@@ -84,6 +84,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
+        'resourceInternalId' => $function->getInternalId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
