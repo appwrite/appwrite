@@ -47,6 +47,8 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
+    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
+
     $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
@@ -57,11 +59,22 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
+        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
+        }
+
+        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
+        }
+
+        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
+        }
+
         // Act as API - no Proxy logic
+        $utopia->getRoute()?->label('error', '');
         return false;
     }
-
-    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
@@ -174,6 +187,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
     }
 
+    $utopia->getRoute()?->label('error', '');
     return false;
 }
 
