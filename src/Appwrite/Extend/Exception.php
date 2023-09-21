@@ -238,6 +238,9 @@ class Exception extends \Exception
     public const SUBSCRIBER_NOT_FOUND               = 'subscriber_not_found';
     public const SUBSCRIBER_ALREADY_EXISTS          = 'subscriber_already_exists';
 
+    /** Message */
+    public const MESSAGE_NOT_FOUND                  = 'message_not_found';
+
     protected $type = '';
     protected $errors = [];
 

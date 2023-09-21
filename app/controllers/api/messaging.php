@@ -27,7 +27,7 @@ App::get('/v1/messaging/providers')
     ->desc('List Providers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listProviders')
     ->label('sdk.description', '/docs/references/messaging/list-providers.md')
@@ -69,14 +69,14 @@ App::get('/v1/messaging/providers/:id')
     ->desc('Get Provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getProvider')
     ->label('sdk.description', '/docs/references/messaging/get-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', null, new UID(), 'Provider ID.')
+    ->param('id', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $id, Database $dbForProject, Response $response) {
@@ -98,7 +98,7 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderMailgun')
     ->label('sdk.description', '/docs/references/messaging/create-provider-mailgun.md')
@@ -158,7 +158,7 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderMailgun')
     ->label('sdk.description', '/docs/references/messaging/update-provider-mailgun.md')
@@ -229,7 +229,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderSendgrid')
     ->label('sdk.description', '/docs/references/messaging/create-provider-sendgrid.md')
@@ -284,7 +284,7 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderSendgrid')
     ->label('sdk.description', '/docs/references/messaging/update-provider-sendgrid.md')
@@ -340,7 +340,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderMsg91')
     ->label('sdk.description', '/docs/references/messaging/create-provider-msg91.md')
@@ -397,7 +397,7 @@ App::patch('/v1/messaging/providers/:id/msg91')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderMsg91')
     ->label('sdk.description', '/docs/references/messaging/update-provider-msg91.md')
@@ -458,7 +458,7 @@ App::post('/v1/messaging/providers/telesign')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderTelesign')
     ->label('sdk.description', '/docs/references/messaging/create-provider-telesign.md')
@@ -515,7 +515,7 @@ App::patch('/v1/messaging/providers/:id/telesign')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderTelesign')
     ->label('sdk.description', '/docs/references/messaging/update-provider-telesign.md')
@@ -576,7 +576,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderTextmagic')
     ->label('sdk.description', '/docs/references/messaging/create-provider-textmagic.md')
@@ -633,7 +633,7 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderTextmagic')
     ->label('sdk.description', '/docs/references/messaging/update-provider-textmagic.md')
@@ -694,7 +694,7 @@ App::post('/v1/messaging/providers/twilio')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderTwilio')
     ->label('sdk.description', '/docs/references/messaging/create-provider-twilio.md')
@@ -751,7 +751,7 @@ App::patch('/v1/messaging/providers/:id/twilio')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderTwilio')
     ->label('sdk.description', '/docs/references/messaging/update-provider-twilio.md')
@@ -812,7 +812,7 @@ App::post('/v1/messaging/providers/vonage')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderVonage')
     ->label('sdk.description', '/docs/references/messaging/create-provider-vonage.md')
@@ -869,7 +869,7 @@ App::patch('/v1/messaging/providers/:id/vonage')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderVonage')
     ->label('sdk.description', '/docs/references/messaging/update-provider-vonage.md')
@@ -933,7 +933,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderFCM')
     ->label('sdk.description', '/docs/references/messaging/create-provider-fcm.md')
@@ -988,7 +988,7 @@ App::patch('/v1/messaging/providers/:id/fcm')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderFCM')
     ->label('sdk.description', '/docs/references/messaging/update-provider-fcm.md')
@@ -1039,7 +1039,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('audits.event', 'providers.create')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createProviderAPNS')
     ->label('sdk.description', '/docs/references/messaging/create-provider-apns.md')
@@ -1102,7 +1102,7 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->label('audits.event', 'providers.update')
     ->label('audits.resource', 'providers/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateProviderAPNS')
     ->label('sdk.description', '/docs/references/messaging/update-provider-apns.md')
@@ -1163,115 +1163,13 @@ App::patch('/v1/messaging/providers/:id/apns')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-/**
- * General Purpose Provider
- */
-App::post('/v1/messaging/providers/general')
-    ->desc('Create General Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createGeneralProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-general-provider.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('provider', '', new Text(128), 'Provider Internal Name')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('type', '', new WhiteList(['push', 'email', 'sms']), 'Provider type.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('credentials', '', new JSON(), 'Provider credentials object.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $provider, string $name, string $type, bool $default, bool $enabled, array $credentials, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => $provider,
-            'type' => $type,
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => $credentials,
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/general')
-    ->desc('Update General Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.update')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderGeneral')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-general.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
-    ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('credentials', '', new JSON(), 'Provider credentials.', true)
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, array $credentials, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        if (!empty($name)) {
-            $provider->setAttribute('name', $name);
-        }
-
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
-        if (!empty($credentials)) {
-            $provider->setAttribute('credentials', $credentials);
-        }
-
-        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
-
-        $response
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
 App::delete('/v1/messaging/providers/:id')
     ->desc('Delete Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.delete')
     ->label('audits.resource', 'providers/{request.id}')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'deleteProvider')
     ->label('sdk.description', '/docs/references/messaging/delete-provider.md')
@@ -1634,6 +1532,30 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
             ->noContent();
     });
 
+App::get('/v1/messaging/messages/:id')
+    ->desc('Get Message')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getMessage')
+    ->label('sdk.description', '/docs/references/messaging/get-message.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('id', '', new UID(), 'Message ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, Database $dbForProject, Response $response) {
+        $message = $dbForProject->getDocument('messages', $id);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $response->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
 App::post('/v1/messaging/messages/email')
     ->desc('Send an email.')
     ->groups(['api', 'messaging'])
@@ -1647,17 +1569,20 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(0)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
-    ->param('subject', '', new Text(0), 'Email Subject.')
-    ->param('content', '', new Text(0), 'Email Content.')
-    ->param('from', '', new Text(0), 'Email from.', true)
+    ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('subject', '', new Text(128), 'Email Subject.')
+    ->param('content', '', new Text(65407), 'Email Content.')
+    ->param('from', '', new Text(128), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $providerId, array $to, string $subject, string $content, string $from, string $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1665,6 +1590,7 @@ App::post('/v1/messaging/messages/email')
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
+            '$id' => $messageId,
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
             'to' => $to,

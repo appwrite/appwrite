@@ -1339,6 +1339,7 @@ App::post('/v1/account/sessions/phone')
         ]));
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
+            '$id' => $token->getId(),
             'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
@@ -2968,6 +2969,7 @@ App::post('/v1/account/verification/phone')
         ]));
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
+            '$id' => $verification->getId(),
             'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
