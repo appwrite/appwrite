@@ -62,7 +62,7 @@ class V20 extends Migration
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
 
                 if ($stat['period'] === '1d') {
-                    $sum = $this->projectDB->sum('stats', [
+                    $sum = $this->projectDB->sum('stats', 'value', [
                         Query::equal('metric', [$from]),
                         Query::equal('period', ['1d']),
                         Query::greaterThan('value', 0),
