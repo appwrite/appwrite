@@ -679,12 +679,25 @@ class DeletesV1 extends Worker
         /**
          * Delete deployment files
          */
-        Console::info("Deleting deployment files for deployment " . $deploymentId);
-        $storageFunctions = $this->getFunctionsDevice($projectId);
-        if ($storageFunctions->delete($document->getAttribute('path', ''), true)) {
-            Console::success('Deleted deployment files: ' . $document->getAttribute('path', ''));
+        $deploymentPath = $document->getAttribute('path', '');
+        if (empty($deploymentPath)) {
+            Console::info("No deployment files for deployment " . $deploymentId);
         } else {
-            Console::error('Failed to delete deployment files: ' . $document->getAttribute('path', ''));
+            Console::info("Deleting deployment files for deployment " . $deploymentId);
+            $storageFunctions = $this->getFunctionsDevice($projectId);
+            try {
+                if ($storageFunctions->delete($deploymentPath, true)) {
+                    Console::success('Deleted deployment files: ' . $deploymentPath);
+                } else {
+                    Console::error('Failed to delete deployment files: ' . $deploymentPath);
+                }
+            } catch (\Throwable $th) {
+                Console::error('Failed to delete deployment files: ' . $deploymentPath);
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
         }
 
         /**
@@ -695,10 +708,24 @@ class DeletesV1 extends Worker
         $this->deleteByGroup('builds', [
             Query::equal('deploymentInternalId', [$deploymentInternalId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            if ($storageBuilds->delete($document->getAttribute('path', ''), true)) {
-                Console::success('Deleted build files: ' . $document->getAttribute('path', ''));
-            } else {
-                Console::error('Failed to delete build files: ' . $document->getAttribute('path', ''));
+            $buildPath = $document->getAttribute('path', '');
+            if (empty($buildPath)) {
+                Console::info("No build files for build " . $document->getId());
+                return;
+            }
+
+            try {
+                if ($storageBuilds->delete($buildPath, true)) {
+                    Console::success('Deleted build files: ' . $buildPath);
+                } else {
+                    Console::error('Failed to delete build files: ' . $buildPath);
+                }
+            } catch (\Throwable $th) {
+                Console::error('Failed to delete deployment files: ' . $buildPath);
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
             }
         });
 
