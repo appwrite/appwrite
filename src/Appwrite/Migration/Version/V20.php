@@ -37,16 +37,16 @@ class V20 extends Migration
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        Console::info('Migrating Functions');
+        Console::info('Migrating Functions usage');
         $this->migrateFunctionsMetric();
 
-        Console::info('Migrating Databases');
+        Console::info('Migrating Databases usage');
         $this->migrateDatabases();
 
-        Console::info('Migrating Collections');
+        Console::info('Migrating Collections usage');
         $this->migrateCollections();
 
-        Console::info('Migrating Buckets');
+        Console::info('Migrating Buckets usage');
         $this->migrateBuckets();
     }
 
@@ -228,7 +228,7 @@ class V20 extends Migration
             var_dump('-------------------');
             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
-            // some stats come with $prefix
+            // some stats come with $ prefix infront of the id
             $this->migrateStatsMetric("files.$$bucketId.storage.size", "$bucketInternalId.files.storage");
         }
     }
