@@ -1308,7 +1308,7 @@ App::get('/v1/messaging/messages/:id')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $id, Database $dbForProject, Response $response) {
-        $message = $dbForProject->getDocument('message', $id);
+        $message = $dbForProject->getDocument('messages', $id);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
