@@ -31,22 +31,22 @@ class V20 extends Migration
             );
         }
 
-        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
-        $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
-        $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
-        $this->migrateStatsMetric('users.$all.count.total', 'users');
+//        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
+//        $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
+//        $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
+//        $this->migrateStatsMetric('users.$all.count.total', 'users');
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        Console::info('Migrating Functions usage');
-        $this->migrateFunctionsMetric();
-
-        Console::info('Migrating Databases usage');
-        $this->migrateDatabases();
-
-        Console::info('Migrating Collections usage');
-        $this->migrateCollections();
+//        Console::info('Migrating Functions usage');
+//        $this->migrateFunctionsMetric();
+//
+//        Console::info('Migrating Databases usage');
+//        $this->migrateDatabases();
+//
+//        Console::info('Migrating Collections usage');
+//        $this->migrateCollections();
 
         Console::info('Migrating Buckets usage');
         $this->migrateBuckets();
@@ -60,6 +60,7 @@ class V20 extends Migration
                     Query::equal('period', ['1d']),
                     Query::greaterThan('value', 0),
                 ]);
+
             try {
                 $this->projectDB->createDocument('stats', new Document([
                     '$id' => \md5("null_inf_{$to}"),
@@ -85,12 +86,11 @@ class V20 extends Migration
             $cnt = 0;
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
+                var_dump($stat->getId());
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
                 $cnt++;
             }
-
-            //var_dump($cnt);
-
+            var_dump($cnt);
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
@@ -104,7 +104,6 @@ class V20 extends Migration
     private function migrateFunctionsMetric(): void
     {
 
-        $this->migrateStatsMetric('executions.$all.compute.time', 'executions.compute');
         $this->migrateStatsMetric('deployment.$all.storage.size', 'deployments.storage');
         $this->migrateStatsMetric('builds.$all.compute.total', 'builds');
         $this->migrateStatsMetric('builds.$all.compute.time', 'builds.compute');
