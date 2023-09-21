@@ -71,28 +71,18 @@ class V20 extends Migration
                     'region' => 'default',
                 ]));
             } catch (Duplicate $th) {
-                var_dump('duplicate');
-//                var_dump([
-//                    'id' => \md5("null_inf_{$to}"),
-//                    'from' => $from,
-//                    'to' => $to,
-//                ]);
+                ;
             }
 
             $stats = $this->projectDB->find('stats', [
                 Query::equal('metric', [$from]),
+                Query::limit(5000),
             ]);
 
-            var_dump($from);
-            $cnt = 0;
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
-                var_dump($cnt . '' . $stat->getId());
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
-                $cnt++;
             }
-            var_dump($cnt);
-            var_dump('==================');
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
