@@ -76,7 +76,7 @@ class MessagingV1 extends Worker
     {
         $credentials = $record->getAttribute('credentials');
         return match ($record->getAttribute('provider')) {
-            'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain']),
+            'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain'], $credentials['isEuRegion']),
             'sendgrid' => new SendGrid($credentials['apiKey']),
             default => null
         };

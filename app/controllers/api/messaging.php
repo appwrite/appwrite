@@ -1307,16 +1307,16 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(0)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
-    ->param('subject', '', new Text(0), 'Email Subject.')
-    ->param('content', '', new Text(0), 'Email Content.')
-    ->param('from', '', new Text(0), 'Email from.', true)
+    ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('subject', '', new Text(128), 'Email Subject.')
+    ->param('content', '', new Text(65407), 'Email Content.')
+    ->param('from', '', new Text(128), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $providerId, array $to, string $subject, string $content, string $from, string $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $providerId, array $to, string $subject, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
