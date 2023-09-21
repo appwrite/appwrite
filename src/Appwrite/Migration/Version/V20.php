@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 
 class V20 extends Migration
 {
@@ -13,6 +14,9 @@ class V20 extends Migration
      */
     public function execute(): void
     {
+        if ($this->project->getInternalId() == 'console') {
+            return;
+        }
 
         /**
          * Disable SubQueries for Performance.
@@ -33,41 +37,46 @@ class V20 extends Migration
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        Console::info('Migrating Function usage');
+        Console::info('Migrating Functions');
         $this->migrateFunctionsMetric();
 
-        Console::info('Migrating Databases usage');
+        Console::info('Migrating Databases');
         $this->migrateDatabases();
 
-        Console::info('Migrating Collections usage');
+        Console::info('Migrating Collections');
         $this->migrateCollections();
 
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
-
-        Console::info('Migrating Documents');
-        $this->forEachDocument([$this, 'fixDocument']);
     }
 
     protected function migrateStatsMetric(string $from, string $to): void
     {
         try {
-            $from = $this->pdo->quote($from);
-            $to = $this->pdo->quote($to);
+            $stats = $this->projectDB->find('stats', [
+                Query::equal('metric', [$from]),
+            ]);
 
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
+            foreach ($stats as $stat) {
+                $stat->setAttribute('metric', $to);
+                $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
 
-            // Create Inf metric
-            $result = $this->pdo->prepare("SELECT SUM(value) AS total FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` 
-                                                 WHERE metric = {$from} 
-                                                 AND period=1d 
-                                                 AND value > 0")->execute();
+                if ($stat['period'] === '1d') {
+                    $sum = $this->projectDB->sum('stats', [
+                        Query::equal('metric', [$from]),
+                        Query::equal('period', ['1d']),
+                        Query::greaterThan('value', 0),
+                    ]);
 
-            if (!empty($result)) {
-                $id = \md5("null_inf_{$to}");
-                $this->pdo->prepare("INSERT INTO `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` 
-                                        (id, metric, period ,time, `value`, region) values ({$id}, {$to}, null, inf, {$result['total']}, default)
-                                 ")->execute();
+                    $stat
+                        ->setAttribute('id', \md5("null_inf_{$to}"))
+                        ->setAttribute('period', 'inf')
+                        ->setAttribute('value', ($sum + 0))
+                        ->setAttribute('region', 'default')
+                    ;
+                    $x = $this->projectDB->createDocument('stats', $stat);
+                    var_dump($x);
+                }
             }
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
@@ -81,7 +90,7 @@ class V20 extends Migration
      */
     private function migrateFunctionsMetric(): void
     {
-
+        return;
         $this->migrateStatsMetric('deployment.$all.storage.size', 'deployments.storage');
         $this->migrateStatsMetric('builds.$all.compute.total', 'builds');
         $this->migrateStatsMetric('builds.$all.compute.time', 'builds.compute');
@@ -148,12 +157,24 @@ class V20 extends Migration
      */
     private function migrateCollections(): void
     {
-        foreach ($this->collections as $collection) {
+        $internalProjectId = $this->project->getInternalId();
+        $collectionType = match ($internalProjectId) {
+            'console' => 'console',
+            default => 'projects',
+        };
+
+        $collections = $this->collections[$collectionType];
+
+        foreach ($collections as $collection) {
             $id = $collection['$id'];
+
+            if ($id === 'schedules' && $internalProjectId === 'console') {
+                continue;
+            }
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $this->projectDB->setNamespace("_$internalProjectId");
 
             switch ($id) {
                 case 'stats':
@@ -163,9 +184,9 @@ class V20 extends Migration
                          */
                         $this->projectDB->deleteAttribute($id, 'type');
                         /**
-                         * Alter signed attribute internal yype
+                         * Alter `signed` attribute internal type
                          */
-                        $this->changeAttributeInternalType($id, 'signed', true);
+                        $this->projectDB->updateAttribute($id, 'signed', null, null, null, null, true);
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
@@ -174,7 +195,6 @@ class V20 extends Migration
             }
         }
     }
-
 
     /**
      * Migrating all Bucket tables.

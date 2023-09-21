@@ -1356,44 +1356,44 @@ $commonCollections = [
         ],
     ],
 
-    'statsLogger' => [
-        '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('statsLogger'),
-        'name' => 'StatsLogger',
-        'attributes' => [
-            [
-                '$id' => ID::custom('time'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => ID::custom('metrics'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 5012,
-                'signed' => true,
-                'required' => false,
-                'default' => [],
-                'array' => false,
-                'filters' => ['json'],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => ID::custom('_key_time'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['time'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_DESC],
-            ],
-        ],
-    ],
+//    'statsLogger' => [
+//        '$collection' => ID::custom(Database::METADATA),
+//        '$id' => ID::custom('statsLogger'),
+//        'name' => 'StatsLogger',
+//        'attributes' => [
+//            [
+//                '$id' => ID::custom('time'),
+//                'type' => Database::VAR_DATETIME,
+//                'format' => '',
+//                'size' => 0,
+//                'signed' => false,
+//                'required' => false,
+//                'default' => null,
+//                'array' => false,
+//                'filters' => ['datetime'],
+//            ],
+//            [
+//                '$id' => ID::custom('metrics'),
+//                'type' => Database::VAR_STRING,
+//                'format' => '',
+//                'size' => 5012,
+//                'signed' => true,
+//                'required' => false,
+//                'default' => [],
+//                'array' => false,
+//                'filters' => ['json'],
+//            ],
+//        ],
+//        'indexes' => [
+//            [
+//                '$id' => ID::custom('_key_time'),
+//                'type' => Database::INDEX_KEY,
+//                'attributes' => ['time'],
+//                'lengths' => [],
+//                'orders' => [Database::ORDER_DESC],
+//            ],
+//        ],
+//    ],
 ];
 
 $projectCollections = array_merge([
