@@ -70,25 +70,27 @@ class V20 extends Migration
                     'region' => 'default',
                 ]));
             } catch (Duplicate $th) {
-                var_dump([
-                    'id' => \md5("null_inf_{$to}"),
-                    'from' => $from,
-                    'to' => $to,
-                ]);
-                ;
+                var_dump('duplicate');
+//                var_dump([
+//                    'id' => \md5("null_inf_{$to}"),
+//                    'from' => $from,
+//                    'to' => $to,
+//                ]);
             }
 
             $stats = $this->projectDB->find('stats', [
                 Query::equal('metric', [$from]),
             ]);
-
+            var_dump($from);
             $cnt = 0;
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
                 $cnt++;
-                var_dump($cnt);
             }
+
+            //var_dump($cnt);
+
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
@@ -230,10 +232,8 @@ class V20 extends Migration
             // bucket level
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
-            var_dump($bucketId);
-            var_dump($bucketInternalId);
-            var_dump('-------------------');
-            $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
+
+            // $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
             // some stats come with $ prefix infront of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
