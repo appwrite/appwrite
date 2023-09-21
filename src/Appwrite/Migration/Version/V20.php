@@ -233,7 +233,7 @@ class V20 extends Migration
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
 
-            // $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
+             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
             // some stats come with $ prefix infront of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
