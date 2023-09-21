@@ -748,7 +748,7 @@ class AccountCustomClientTest extends Scope
         $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
         $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
 
-        if($to === '' || $from === '' || $authKey === '' || $senderId === '') {
+        if ($to === '' || $from === '' || $authKey === '' || $senderId === '') {
             $this->markTestSkipped('SMS provider not configured');
         }
 
