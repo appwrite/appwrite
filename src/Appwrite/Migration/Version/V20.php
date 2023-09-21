@@ -5,6 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 
 class V20 extends Migration
@@ -53,13 +54,31 @@ class V20 extends Migration
     protected function migrateStatsMetric(string $from, string $to): void
     {
         try {
+
+
+                $sum = $this->projectDB->sum('stats', 'value', [
+                    Query::equal('metric', [$from]),
+                    Query::equal('period', ['1d']),
+                    Query::greaterThan('value', 0),
+                ]);
+
+                $this->projectDB->createDocument('stats', new Document([
+                    '$id' => \md5("null_inf_{$to}"),
+                    'metric' => $to,
+                    'period' => 'inf',
+                    'value' => ($sum + 0),
+                    'time' => null,
+                    'region' => 'default',
+                ]));
+
+
             $stats = $this->projectDB->find('stats', [
                 Query::equal('metric', [$from]),
             ]);
 
+            $cnt = 0;
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
-
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
                 var_dump([
                     'id' => $stat->getInternalId(),
@@ -67,21 +86,8 @@ class V20 extends Migration
                     'to' => $to,
                     ]);
 
-                if ($stat['period'] === '1d') {
-                    $sum = $this->projectDB->sum('stats', 'value', [
-                        Query::equal('metric', [$from]),
-                        Query::equal('period', ['1d']),
-                        Query::greaterThan('value', 0),
-                    ]);
-
-                    $stat
-                        ->setAttribute('$id', \md5("null_inf_{$to}"))
-                        ->setAttribute('period', 'inf')
-                        ->setAttribute('value', ($sum + 0))
-                        ->setAttribute('region', 'default')
-                    ;
-                    $this->projectDB->createDocument('stats', $stat);
-                }
+                $cnt++;
+                var_dump($cnt);
             }
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
