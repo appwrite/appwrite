@@ -58,7 +58,10 @@ class V20 extends Migration
             ]);
 
             foreach ($stats as $stat) {
+                var_dump($stat->getAttribute('metric'));
                 $stat->setAttribute('metric', $to);
+                var_dump($stat->getAttribute('metric'));
+                //exit;
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
 
                 if ($stat['period'] === '1d') {
@@ -69,13 +72,13 @@ class V20 extends Migration
                     ]);
 
                     $stat
-                        ->setAttribute('id', \md5("null_inf_{$to}"))
+                        ->setAttribute('$id', \md5("null_inf_{$to}"))
                         ->setAttribute('period', 'inf')
                         ->setAttribute('value', ($sum + 0))
                         ->setAttribute('region', 'default')
                     ;
-                    $x = $this->projectDB->createDocument('stats', $stat);
-                    var_dump($x);
+                    //$x = $this->projectDB->createDocument('stats', $stat);
+                    //var_dump($x);
                 }
             }
         } catch (\Throwable $th) {
@@ -90,7 +93,8 @@ class V20 extends Migration
      */
     private function migrateFunctionsMetric(): void
     {
-        return;
+
+        $this->migrateStatsMetric('executions.$all.compute.time', 'executions.compute');
         $this->migrateStatsMetric('deployment.$all.storage.size', 'deployments.storage');
         $this->migrateStatsMetric('builds.$all.compute.total', 'builds');
         $this->migrateStatsMetric('builds.$all.compute.time', 'builds.compute');
@@ -133,8 +137,8 @@ class V20 extends Migration
             $databaseId = $database->getId();
             $databaseInternalId = $database->getInternalId();
 
-            $this->migrateStatsMetric("databases.$databaseId.collections.count", "$databaseInternalId.collections");
-            $this->migrateStatsMetric("databases.$databaseId.documents.count", "$databaseInternalId.documents");
+            $this->migrateStatsMetric("collections.$databaseId.count.total", "$databaseInternalId.collections");
+            $this->migrateStatsMetric("documents.$databaseId.count.total", "$databaseInternalId.documents");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
@@ -144,7 +148,7 @@ class V20 extends Migration
                 $collectionId =  $collection->getId() ;
                 $collectionInternalId =  $collection->getInternalId();
 
-                $this->migrateStatsMetric("documents.$databaseId.$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
+                $this->migrateStatsMetric("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
             }
         }
     }
