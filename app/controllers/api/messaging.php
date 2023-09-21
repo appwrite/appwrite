@@ -1330,6 +1330,7 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
     ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(128), 'Email Subject.')
@@ -1340,7 +1341,9 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $providerId, array $to, string $subject, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1348,6 +1351,7 @@ App::post('/v1/messaging/messages/email')
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
+            '$id' => $messageId,
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
             'to' => $to,

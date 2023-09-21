@@ -661,6 +661,8 @@ App::post('/v1/teams/:teamId/memberships')
                 ]));
 
                 $messageDoc = $dbForProject->createDocument('messages', new Document([
+                    // Here membership ID is used as message ID so that it can be used in test cases to verify the message
+                    '$id' => $membership->getId(),
                     'to' => [$target->getId()],
                     'data' => [
                         'content' => $message,
