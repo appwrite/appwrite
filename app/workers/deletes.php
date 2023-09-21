@@ -366,7 +366,6 @@ class DeletesV1 extends Worker
         $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
-        // Delete project certificates
         $dbForConsole = $this->getConsoleDB();
 
         // Delete project tables
