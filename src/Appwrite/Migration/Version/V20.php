@@ -31,22 +31,22 @@ class V20 extends Migration
             );
         }
 
-//        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
-//        $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
-//        $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
-//        $this->migrateStatsMetric('users.$all.count.total', 'users');
+        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
+        $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
+        $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
+        $this->migrateStatsMetric('users.$all.count.total', 'users');
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-//        Console::info('Migrating Functions usage');
-//        $this->migrateFunctionsMetric();
-//
-//        Console::info('Migrating Databases usage');
-//        $this->migrateDatabases();
-//
-//        Console::info('Migrating Collections usage');
-//        $this->migrateCollections();
+        Console::info('Migrating Functions usage');
+        $this->migrateFunctionsMetric();
+
+        Console::info('Migrating Databases usage');
+        $this->migrateDatabases();
+
+        Console::info('Migrating Collections usage');
+        $this->migrateCollections();
 
         Console::info('Migrating Buckets usage');
         $this->migrateBuckets();
@@ -82,15 +82,17 @@ class V20 extends Migration
             $stats = $this->projectDB->find('stats', [
                 Query::equal('metric', [$from]),
             ]);
+
             var_dump($from);
             $cnt = 0;
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
-                var_dump($stat->getId());
+                var_dump($cnt . '' . $stat->getId());
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
                 $cnt++;
             }
             var_dump($cnt);
+            var_dump('==================');
         } catch (\Throwable $th) {
             Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
