@@ -17,7 +17,7 @@ class ProjectId extends Validator
      */
     public function isValid($value): bool
     {
-        return $value == 'unique()' || preg_match('/^[a-z0-9][a-z0-9-]{1,35}$/', $value);
+        return $value == 'unique()' || preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-_.]{1,35}$/', $value);
     }
 
     /**
@@ -27,7 +27,7 @@ class ProjectId extends Validator
      */
     public function getDescription(): string
     {
-        return 'Project IDs must contain at most 36 chars. Valid chars are a-z, 0-9, and hyphen. Can\'t start with a special char.';
+        return 'Project IDs must contain at most 36 chars. Valid chars are A-Z, a-z, 0-9, and hyphen. Can\'t start with a special char.';
     }
 
     /**
