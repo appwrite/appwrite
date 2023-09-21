@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 
 class V20 extends Migration
@@ -54,14 +55,12 @@ class V20 extends Migration
     protected function migrateStatsMetric(string $from, string $to): void
     {
         try {
-
-
                 $sum = $this->projectDB->sum('stats', 'value', [
                     Query::equal('metric', [$from]),
                     Query::equal('period', ['1d']),
                     Query::greaterThan('value', 0),
                 ]);
-
+            try {
                 $this->projectDB->createDocument('stats', new Document([
                     '$id' => \md5("null_inf_{$to}"),
                     'metric' => $to,
@@ -70,7 +69,14 @@ class V20 extends Migration
                     'time' => null,
                     'region' => 'default',
                 ]));
-
+            } catch (Duplicate $th) {
+                var_dump([
+                    'id' => \md5("null_inf_{$to}"),
+                    'from' => $from,
+                    'to' => $to,
+                ]);
+                ;
+            }
 
             $stats = $this->projectDB->find('stats', [
                 Query::equal('metric', [$from]),
@@ -80,12 +86,6 @@ class V20 extends Migration
             foreach ($stats as $stat) {
                 $stat->setAttribute('metric', $to);
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
-                var_dump([
-                    'id' => $stat->getInternalId(),
-                    'from' => $from,
-                    'to' => $to,
-                    ]);
-
                 $cnt++;
                 var_dump($cnt);
             }
@@ -221,6 +221,7 @@ class V20 extends Migration
         $this->migrateStatsMetric('buckets.$all.count.total', 'buckets');
         $this->migrateStatsMetric('files.$all.count.total', 'files');
         $this->migrateStatsMetric('files.$all.storage.size', 'files.storage');
+        // There is also project.$all.storage.size which is the same as  files.$all.storage.size
 
         foreach ($this->documentsIterator('buckets') as $bucket) {
             $id = "bucket_{$bucket->getInternalId()}";
@@ -234,8 +235,7 @@ class V20 extends Migration
             var_dump('-------------------');
             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
-            // some stats come with $ prefix infront of the id
-            $this->migrateStatsMetric("files.$$bucketId.storage.size", "$bucketInternalId.files.storage");
+            // some stats come with $ prefix infront of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
     }
 }

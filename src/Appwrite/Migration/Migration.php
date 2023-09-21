@@ -191,9 +191,6 @@ abstract class Migration
         $sum = 0;
         $nextDocument = null;
         $collectionCount = $this->projectDB->count($collectionId);
-          var_dump('###################');
-          var_dump($collectionCount);
-          var_dump('###################');
         do {
             $queries = [Query::limit($this->limit)];
             if ($nextDocument !== null) {
