@@ -29,9 +29,9 @@ class V20 extends Migration
             );
         }
 
+        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
         $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
         $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
-        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
         $this->migrateStatsMetric('users.$all.count.total', 'users');
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
@@ -58,11 +58,14 @@ class V20 extends Migration
             ]);
 
             foreach ($stats as $stat) {
-                var_dump($stat->getAttribute('metric'));
                 $stat->setAttribute('metric', $to);
-                var_dump($stat->getAttribute('metric'));
-                //exit;
+
                 $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
+                var_dump([
+                    'id' => $stat->getInternalId(),
+                    'from' => $from,
+                    'to' => $to,
+                    ]);
 
                 if ($stat['period'] === '1d') {
                     $sum = $this->projectDB->sum('stats', 'value', [
@@ -77,8 +80,7 @@ class V20 extends Migration
                         ->setAttribute('value', ($sum + 0))
                         ->setAttribute('region', 'default')
                     ;
-                    //$x = $this->projectDB->createDocument('stats', $stat);
-                    //var_dump($x);
+                    $this->projectDB->createDocument('stats', $stat);
                 }
             }
         } catch (\Throwable $th) {
@@ -190,7 +192,7 @@ class V20 extends Migration
                         /**
                          * Alter `signed` attribute internal type
                          */
-                        $this->projectDB->updateAttribute($id, 'signed', null, null, null, null, true);
+                        $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
@@ -221,9 +223,13 @@ class V20 extends Migration
             // bucket level
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
-
+            var_dump($bucketId);
+            var_dump($bucketInternalId);
+            var_dump('-------------------');
             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
+            // some stats come with $prefix
+            $this->migrateStatsMetric("files.$$bucketId.storage.size", "$bucketInternalId.files.storage");
         }
     }
 }
