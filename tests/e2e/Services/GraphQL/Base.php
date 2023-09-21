@@ -1932,23 +1932,21 @@ trait Base
                     }
                 }' . PHP_EOL . self::$FRAGMENT_ATTRIBUTES;
             case self::$CREATE_PROVIDER:
-                return 'mutation CreateGeneralProvider(
+                return 'mutation createProviderMsg91(
                     $providerId: String!,
-                    $provider: String!,
                     $name: String!,
-                    $type: String!,
+                    $senderId: String!,
+                    $authKey: String!
                     $default: Boolean,
                     $enabled: Boolean,
-                    $credentials: Json!
                   ) {
-                    messagingCreateGeneralProvider(
+                    messagingCreateProviderMsg91(
                       providerId: $providerId,
-                      provider: $provider,
                       name: $name,
-                      type: $type,
+                      senderId: $senderId,
+                      authKey: $authKey
                       default: $default,
                       enabled: $enabled,
-                      credentials: $credentials
                     ) {
                       _id
                       name

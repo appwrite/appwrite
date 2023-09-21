@@ -7,6 +7,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
@@ -742,20 +743,27 @@ class AccountCustomClientTest extends Scope
 
     public function testCreatePhone(): array
     {
-        $number = '+123456789';
-        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/general', \array_merge([
+        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
+        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
+        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
+
+        if($to === '' || $from === '' || $authKey === '' || $senderId === '') {
+            $this->markTestSkipped('SMS provider not configured');
+        }
+
+        $number = $to;
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/msg91', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'providerId' => 'unique()',
-            'name' => 'Mock',
-            'provider' => 'mock',
+            'name' => 'Sms provider',
+            'provider' => 'msg91',
             'type' => 'sms',
-            'credentials' => [
-                'username' => 'username',
-                'password' => 'password',
-            ],
+            'senderId' => $senderId,
+            'authKey' => $authKey,
             'default' => true,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -769,7 +777,7 @@ class AccountCustomClientTest extends Scope
         ]), [
             'userId' => ID::unique(),
             'phone' => $number,
-            'from' => $number,
+            'from' => $from,
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -778,6 +786,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
+        $messageId = $response['body']['$id'];
 
         /**
          * Test for FAILURE
@@ -794,17 +803,19 @@ class AccountCustomClientTest extends Scope
 
         \sleep(5);
 
-        $smsRequest = $this->getLastRequest();
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $messageId, [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
 
-        $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
-        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
-        $this->assertEquals('username', $smsRequest['headers']['X-Username']);
-        $this->assertEquals('password', $smsRequest['headers']['X-Key']);
-        $this->assertEquals('POST', $smsRequest['method']);
-        $this->assertEquals('+123456789', $smsRequest['data']['from']);
-        $this->assertEquals($number, $smsRequest['data']['to']);
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
-        $data['token'] = $smsRequest['data']['message'];
+
+        $data['token'] = $message['body']['data']['content'];
         $data['id'] = $userId;
         $data['number'] = $number;
 
@@ -1013,7 +1024,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
 
-        ]), ['from' => '+123456789']);
+        ]), ['from' => App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM')]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -1022,10 +1033,19 @@ class AccountCustomClientTest extends Scope
 
         \sleep(2);
 
-        $smsRequest = $this->getLastRequest();
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $response['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return \array_merge($data, [
-            'token' => $smsRequest['data']['message']
+            'token' => $message['body']['data']['content']
         ]);
     }
 
