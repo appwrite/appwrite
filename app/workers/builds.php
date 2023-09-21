@@ -112,6 +112,8 @@ class BuildsV1 extends Worker
 
         $isNewBuild = empty($buildId);
 
+        $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
         if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -124,7 +126,7 @@ class BuildsV1 extends Worker
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower($deviceFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
