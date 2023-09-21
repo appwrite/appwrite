@@ -70,7 +70,7 @@ class Executor
         array $variables = [],
         string $command = null,
     ) {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
         $params = [
             'runtimeId' => $runtimeId,
