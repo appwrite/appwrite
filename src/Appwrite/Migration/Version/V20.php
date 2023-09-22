@@ -45,7 +45,7 @@ class V20 extends Migration
         Console::info('Migrating Databases usage');
         $this->migrateDatabases();
 
-        Console::info('Migrating Collections usage');
+        Console::info('Migrating Collections');
         $this->migrateCollections();
 
         Console::info('Migrating Buckets usage');
@@ -54,41 +54,65 @@ class V20 extends Migration
 
     protected function migrateStatsMetric(string $from, string $to): void
     {
+
         try {
-                $sum = $this->projectDB->sum('stats', 'value', [
-                    Query::equal('metric', [$from]),
-                    Query::equal('period', ['1d']),
-                    Query::greaterThan('value', 0),
-                ]);
-
-            try {
-                $this->projectDB->createDocument('stats', new Document([
-                    '$id' => \md5("null_inf_{$to}"),
-                    'metric' => $to,
-                    'period' => 'inf',
-                    'value' => ($sum + 0),
-                    'time' => null,
-                    'region' => 'default',
-                ]));
-            } catch (Duplicate $th) {
-                ;
-            }
-
-            $stats = $this->projectDB->find('stats', [
+            /**
+             * Creating inf metric
+             */
+            $sum = $this->projectDB->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
-                Query::limit(5000),
+                Query::equal('period', ['1d']),
+                Query::greaterThan('value', 0),
             ]);
 
-            foreach ($stats as $stat) {
-                $stat->setAttribute('metric', $to);
-                $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
+            $id = \md5("null_inf_{$to}");
+
+            console::log("Creating inf metric  to {$to}");
+            $this->projectDB->createDocument('stats', new Document([
+                '$id' => $id,
+                'metric' => $to,
+                'period' => 'inf',
+                'value' => ($sum + 0),
+                'time' => null,
+                'region' => 'default',
+            ]));
+        } catch (Duplicate $th) {
+            console::log("Error while creating inf metric: duplicate id {$to}  {$id}");
+        }
+
+        try {
+            /**
+             * Update old metric format to new
+             */
+            $limit = 1000;
+            $sum = $limit;
+            $total = 0;
+            $latestDocument = null;
+            while ($sum === $limit) {
+                $paginationQueries = [Query::limit($limit)];
+                if ($latestDocument !== null) {
+                    $paginationQueries[] =  Query::cursorAfter($latestDocument);
+                }
+                $stats = $this->projectDB->find('stats', \array_merge($paginationQueries, [
+                    Query::equal('metric', [$from]),
+                ]));
+
+                $sum = count($stats);
+                $total = $total + $sum;
+                foreach ($stats as $stat) {
+                    $stat->setAttribute('metric', $to);
+                    console::log("updating metric  {$from} to {$to}");
+                    $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
+                }
+
+                $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
         } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
+            Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
         }
     }
     /**
-     * Migrate Functions usage.
+     * Migrate functions usage.
      *
      * @return void
      * @throws \Exception
@@ -117,14 +141,14 @@ class V20 extends Migration
     }
 
     /**
-     * Migrate all Databases.
+     * Migrate  Databases usage.
      *
      * @return void
      * @throws \Exception
      */
     private function migrateDatabases(): void
     {
-        // project level
+        // Project level
         $this->migrateStatsMetric('databases.$all.count.total', 'databases');
         $this->migrateStatsMetric('collections.$all.count.total', 'collections');
         $this->migrateStatsMetric('documents.$all.count.total', 'documents');
@@ -134,7 +158,7 @@ class V20 extends Migration
 
             $databaseTable = "database_{$database->getInternalId()}";
 
-            // database level
+            // Database level
             $databaseId = $database->getId();
             $databaseInternalId = $database->getInternalId();
 
@@ -145,7 +169,7 @@ class V20 extends Migration
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
 
-                // collection level
+                // Collection level
                 $collectionId =  $collection->getId() ;
                 $collectionInternalId =  $collection->getInternalId();
 
@@ -155,7 +179,7 @@ class V20 extends Migration
     }
 
     /**
-     * Migrate all Collections.
+     * Migrate Collections.
      *
      * @return void
      * @throws \Exception
@@ -173,10 +197,6 @@ class V20 extends Migration
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 
-            if ($id === 'schedules' && $internalProjectId === 'console') {
-                continue;
-            }
-
             Console::log("Migrating Collection \"{$id}\"");
 
             $this->projectDB->setNamespace("_$internalProjectId");
@@ -189,7 +209,7 @@ class V20 extends Migration
                          */
                         $this->projectDB->deleteAttribute($id, 'type');
                         /**
-                         * Alter `signed` attribute internal type
+                         * Alter `signed`  internal type on `value` attr
                          */
                         $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
                         $this->projectDB->deleteCachedCollection($id);
@@ -210,7 +230,7 @@ class V20 extends Migration
      */
     protected function migrateBuckets(): void
     {
-        // project level
+        // Project level
         $this->migrateStatsMetric('buckets.$all.count.total', 'buckets');
         $this->migrateStatsMetric('files.$all.count.total', 'files');
         $this->migrateStatsMetric('files.$all.storage.size', 'files.storage');
@@ -220,7 +240,7 @@ class V20 extends Migration
             $id = "bucket_{$bucket->getInternalId()}";
             Console::log("Migrating Bucket {$id} {$bucket->getId()} ({$bucket->getAttribute('name')})");
 
-            // bucket level
+            // Bucket level
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
 
