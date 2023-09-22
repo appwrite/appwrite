@@ -2669,8 +2669,8 @@ App::post('/v1/account/verification')
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
-        
-        if($user->getAttribute('emailVerification') == true){
+
+        if ($user->getAttribute('emailVerification')) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
         }
 
@@ -2898,8 +2898,8 @@ App::post('/v1/account/verification/phone')
         if (empty($user->getAttribute('phone'))) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
-        
-        if($user->getAttribute('phoneVerification') == true){
+
+        if ($user->getAttribute('phoneVerification')) {
             throw new Exception(Exception::USER_PHONE_ALREADY_VERIFIED);
         }
 

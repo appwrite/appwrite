@@ -242,12 +242,12 @@ return [
     Exception::USER_EMAIL_ALREADY_VERIFIED => [
         'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
         'description' => 'User email is already verified',
-        'code' => 400,
+        'code' => 409,
     ],
     Exception::USER_PHONE_ALREADY_VERIFIED => [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
         'description' => 'User phone is already verified',
-        'code' => 400
+        'code' => 409
     ],
 
     /** Teams */
