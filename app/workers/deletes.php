@@ -72,7 +72,7 @@ class DeletesV1 extends Worker
                         $this->deleteInstallation($document, $project);
                         break;
                     case DELETE_TYPE_RULES:
-                        $this->deleteRule($document, $project);
+                        $this->deleteRule($document);
                         break;
                     default:
                         if (\str_starts_with($document->getCollection(), 'database_')) {
@@ -367,16 +367,7 @@ class DeletesV1 extends Worker
         $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
-        // Delete project certificates
         $dbForConsole = $this->getConsoleDB();
-
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$projectInternalId])
-        ]);
-
-        foreach ($domains as $domain) {
-            $this->deleteCertificates($domain);
-        }
 
         // Delete project tables
         $dbForProject = $this->getProjectDB($document);
@@ -398,10 +389,12 @@ class DeletesV1 extends Worker
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
-        // Delete Domains
-        $this->deleteByGroup('domains', [
+        // Delete project and function rules
+        $this->deleteByGroup('rules', [
             Query::equal('projectInternalId', [$projectInternalId])
-        ], $dbForConsole);
+        ], $dbForConsole, function (Document $document) {
+            $this->deleteRule($document);
+        });
 
         // Delete Keys
         $this->deleteByGroup('keys', [
@@ -897,7 +890,7 @@ class DeletesV1 extends Worker
      * @param Document $document rule document
      * @param Document $project project document
      */
-    protected function deleteRule(Document $document, Document $project): void
+    protected function deleteRule(Document $document): void
     {
         $consoleDB = $this->getConsoleDB();
 
