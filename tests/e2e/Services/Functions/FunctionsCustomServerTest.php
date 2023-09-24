@@ -1294,6 +1294,9 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(200, $deployment['headers']['status-code']);
 
+        // Wait a little for activation to finish
+        sleep(5);
+
         // Create user to trigger event
         $user = $this->client->call(Client::METHOD_POST, '/users', array_merge([
             'content-type' => 'application/json',
