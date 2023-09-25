@@ -182,7 +182,7 @@ class V20 extends Migration
         }
     }
     /**
-     * Migrate functions usage.
+     * Migrate functions.
      *
      * @return void
      * @throws \Exception

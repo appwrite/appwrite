@@ -270,12 +270,12 @@ $server
                             }
                         }
                     }
-                    if (!empty($project['keys'])) {
-                        $dbForProject->createDocument('statsLogger', new Document([
-                            'time' => DateTime::now(),
-                            'metrics' => $project['keys'],
-                        ]));
-                    }
+//                    if (!empty($project['keys'])) {
+//                        $dbForProject->createDocument('statsLogger', new Document([
+//                            'time' => DateTime::now(),
+//                            'metrics' => $project['keys'],
+//                        ]));
+//                    }
                 } catch (\Exception $e) {
                     $now = DateTime::now();
                     console::error("[Error] " . " Time: {$now} " .  " projectInternalId: {$projectInternalId}" . " File: {$e->getFile()}" . " Line: {$e->getLine()} " . " message: {$e->getMessage()}");
