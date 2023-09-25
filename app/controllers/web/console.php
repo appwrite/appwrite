@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -28,17 +27,9 @@ App::get('/console/*')
     ->groups(['web'])
     ->label('permission', 'public')
     ->label('scope', 'home')
-    ->inject('utopia')
     ->inject('request')
     ->inject('response')
-    ->action(function (App $utopia, Request $request, Response $response) {
-        $host = $request->getHostname() ?? '';
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
-        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled' && $host !== $mainDomain) {
-            $utopia->getRoute()?->label('error', __DIR__ . '/../../views/general/error.phtml');
-            throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite Console over custom domain. Please disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
-        }
-
+    ->action(function (Request $request, Response $response) {
         $fallback = file_get_contents(__DIR__ . '/../../../console/index.html');
 
         // Card SSR

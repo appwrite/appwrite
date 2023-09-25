@@ -84,6 +84,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
+        'resourceInternalId' => $function->getInternalId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
@@ -1495,7 +1496,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(8192, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
