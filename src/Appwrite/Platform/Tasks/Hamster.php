@@ -314,9 +314,6 @@ class Hamster extends Action
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
 
-        $sleep = 1000;
-        $delay = 0;
-
         Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
 
         Console::loop(function () use ($pools, $cache, $dbForConsole, $sleep) {
