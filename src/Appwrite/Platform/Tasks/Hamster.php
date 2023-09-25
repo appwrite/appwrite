@@ -107,7 +107,7 @@ class Hamster extends Action
                 $smtp = $project->getAttribute('smtp', null);
                 if ($smtp) {
                     $statsPerProject['custom_smtp_status'] = $smtp['enabled'] === true ? 'enabled' : 'disabled';
-                    
+
                     /** Get Custom Templates Count */
                     $templates = array_keys($project->getAttribute('templates', []));
                     $statsPerProject['custom_email_templates'] = array_filter($templates, function ($template) {
