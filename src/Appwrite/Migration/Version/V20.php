@@ -139,7 +139,7 @@ class V20 extends Migration
          * inf metric
          */
         if (
-            str_contains($from, 'all')
+            str_contains($from, '$all')
             && str_contains($from, 'total')
         ) {
             $result = $this->projectDB->findOne('stats', [
