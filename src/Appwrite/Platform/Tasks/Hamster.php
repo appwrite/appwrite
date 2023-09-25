@@ -281,7 +281,6 @@ class Hamster extends Action
                 }
             } catch (Exception $e) {
                 Console::error('Failed to send stats for project: ' . $project->getId());
-                // Console::error($e->getTraceAsString());
                 Console::error($e->getMessage());
             } finally {
                 $pools
