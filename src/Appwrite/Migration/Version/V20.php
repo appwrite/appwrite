@@ -55,29 +55,32 @@ class V20 extends Migration
     protected function migrateStatsMetric(string $from, string $to): void
     {
 
-        try {
-            /**
-             * Creating inf metric
-             */
-            $sum = $this->projectDB->sum('stats', 'value', [
-                Query::equal('metric', [$from]),
-                Query::equal('period', ['1d']),
-                Query::greaterThan('value', 0),
-            ]);
+        if (
+            str_contains($from, 'all')
+            && str_contains($from, 'total')
+        ) {
+            try {
+                /**
+                 * Creating inf metric
+                 */
+                $result = $this->projectDB->findOne('stats', [
+                    Query::equal('metric', [$from]),
+                    Query::equal('period', ['1d']),
+                ]);
 
-            $id = \md5("null_inf_{$to}");
-
-            console::log("Creating inf metric  to {$to}");
-            $this->projectDB->createDocument('stats', new Document([
-                '$id' => $id,
-                'metric' => $to,
-                'period' => 'inf',
-                'value' => ($sum + 0),
-                'time' => null,
-                'region' => 'default',
-            ]));
-        } catch (Duplicate $th) {
-            console::log("Error while creating inf metric: duplicate id {$to}  {$id}");
+                console::log("Creating inf metric  to {$to}");
+                $id = \md5("null_inf_{$to}");
+                $this->projectDB->createDocument('stats', new Document([
+                    '$id' => $id,
+                    'metric' => $to,
+                    'period' => 'inf',
+                    'value' => !empty($result) ? $result['value'] : 0,
+                    'time' => null,
+                    'region' => 'default',
+                ]));
+            } catch (Duplicate $th) {
+                console::log("Error while creating inf metric: duplicate id {$to}  {$id}");
+            }
         }
 
         try {
