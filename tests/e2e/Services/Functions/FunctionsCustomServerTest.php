@@ -32,8 +32,8 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'events' => [
-                'users.*.create',
-                'users.*.delete',
+                'buckets.*.create',
+                'buckets.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
@@ -50,8 +50,8 @@ class FunctionsCustomServerTest extends Scope
         $this->assertEquals(true, $dateValidator->isValid($response1['body']['$updatedAt']));
         $this->assertEquals('', $response1['body']['deployment']);
         $this->assertEquals([
-            'users.*.create',
-            'users.*.delete',
+            'buckets.*.create',
+            'buckets.*.delete',
         ], $response1['body']['events']);
         $this->assertEquals('0 0 1 1 *', $response1['body']['schedule']);
         $this->assertEquals(10, $response1['body']['timeout']);
@@ -191,8 +191,8 @@ class FunctionsCustomServerTest extends Scope
             'runtime' => 'php-8.0',
             'entrypoint' => 'index.php',
             'events' => [
-                'users.*.create',
-                'users.*.delete',
+                'buckets.*.create',
+                'buckets.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
             'timeout' => 10,
