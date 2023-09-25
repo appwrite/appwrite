@@ -3,16 +3,21 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use PDOException;
+use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception;
+use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
 
 class V20 extends Migration
 {
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public function execute(): void
     {
@@ -31,56 +36,118 @@ class V20 extends Migration
             );
         }
 
-        $this->migrateStatsMetric('project.$all.network.requests', 'network.requests');
-        $this->migrateStatsMetric('project.$all.network.outbound', 'network.outbound');
-        $this->migrateStatsMetric('project.$all.network.inbound', 'network.inbound');
-        $this->migrateStatsMetric('users.$all.count.total', 'users');
+        $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
+        $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
+        $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
+        $this->migrateUsageMetrics('users.$all.count.total', 'users');
+        $this->migrateSessionsMetric();
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
-        Console::info('Migrating Functions usage');
-        $this->migrateFunctionsMetric();
+        Console::info('Migrating Functions');
+        $this->migrateFunctions();
 
-        Console::info('Migrating Databases usage');
+        Console::info('Migrating Databases');
         $this->migrateDatabases();
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Buckets usage');
+        Console::info('Migrating Buckets');
         $this->migrateBuckets();
     }
 
-    protected function migrateStatsMetric(string $from, string $to): void
+    /**
+     * @return void
+     * @throws Authorization
+     * @throws Exception
+     * @throws Structure
+     */
+    protected function migrateSessionsMetric(): void
+    {
+        /**
+         * Creating inf metric
+         */
+
+        Console::info('Migrating Sessions metric');
+
+        $sessionsCreated = $this->projectDB->sum('stats', 'value', [
+            Query::equal('metric', [
+                'sessions.email-password.requests.create',
+                'sessions.magic-url.requests.create',
+                'sessions.anonymous.requests.create',
+                'sessions.invites.requests.create',
+                'sessions.jwt.requests.create',
+                'sessions.phone.requests.create'
+            ]),
+            Query::equal('period', ['1d']),
+        ]);
+
+        $query = $this->projectDB->findOne('stats', [
+            Query::equal('metric', ['sessions.$all.requests.delete']),
+            Query::equal('period', ['1d']),
+        ]);
+
+        $sessionsDeleted =  $query['value'] ?? 0;
+        $value = $sessionsCreated - $sessionsDeleted;
+        var_dump($sessionsCreated);
+        var_dump($sessionsDeleted);
+
+        $this->createInfMetric('sessions', $value);
+    }
+
+    /**
+     * @param string $metric
+     * @param int $value
+     * @return void
+     * @throws Exception
+     * @throws Authorization
+     * @throws Structure
+     */
+    protected function createInfMetric(string $metric, int $value): void
     {
 
+        try {
+            /**
+             * Creating inf metric
+             */
+            console::log("Creating inf metric  to {$metric}");
+            $id = \md5("null_inf_{$metric}");
+            $this->projectDB->createDocument('stats', new Document([
+                '$id' => $id,
+                'metric' => $metric,
+                'period' => 'inf',
+                'value'  => $value,
+                'time'   => null,
+                'region' => 'default',
+            ]));
+        } catch (Duplicate $th) {
+            console::log("Error while creating inf metric: duplicate id {$metric}  {$id}");
+        }
+    }
+
+    /**
+     * @param string $from
+     * @param string $to
+     * @return void
+     * @throws Exception
+     */
+    protected function migrateUsageMetrics(string $from, string $to): void
+    {
+        /**
+         * inf metric
+         */
         if (
             str_contains($from, 'all')
             && str_contains($from, 'total')
         ) {
-            try {
-                /**
-                 * Creating inf metric
-                 */
-                $result = $this->projectDB->findOne('stats', [
-                    Query::equal('metric', [$from]),
-                    Query::equal('period', ['1d']),
-                ]);
-
-                console::log("Creating inf metric  to {$to}");
-                $id = \md5("null_inf_{$to}");
-                $this->projectDB->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'metric' => $to,
-                    'period' => 'inf',
-                    'value' => !empty($result) ? $result['value'] : 0,
-                    'time' => null,
-                    'region' => 'default',
-                ]));
-            } catch (Duplicate $th) {
-                console::log("Error while creating inf metric: duplicate id {$to}  {$id}");
-            }
+            $result = $this->projectDB->findOne('stats', [
+                Query::equal('metric', [$from]),
+                Query::equal('period', ['1d']),
+            ]);
+            $value = $result['value'] ?? 0;
+            $this->createInfMetric($to, $value);
         }
 
         try {
@@ -110,7 +177,7 @@ class V20 extends Migration
 
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
         }
     }
@@ -120,14 +187,14 @@ class V20 extends Migration
      * @return void
      * @throws \Exception
      */
-    private function migrateFunctionsMetric(): void
+    private function migrateFunctions(): void
     {
 
-        $this->migrateStatsMetric('deployment.$all.storage.size', 'deployments.storage');
-        $this->migrateStatsMetric('builds.$all.compute.total', 'builds');
-        $this->migrateStatsMetric('builds.$all.compute.time', 'builds.compute');
-        $this->migrateStatsMetric('executions.$all.compute.total', 'executions');
-        $this->migrateStatsMetric('executions.$all.compute.time', 'executions.compute');
+        $this->migrateUsageMetrics('deployment.$all.storage.size', 'deployments.storage');
+        $this->migrateUsageMetrics('builds.$all.compute.total', 'builds');
+        $this->migrateUsageMetrics('builds.$all.compute.time', 'builds.compute');
+        $this->migrateUsageMetrics('executions.$all.compute.total', 'executions');
+        $this->migrateUsageMetrics('executions.$all.compute.time', 'executions.compute');
 
         foreach ($this->documentsIterator('functions') as $function) {
             Console::log("Migrating Functions usage stats of {$function->getId()} ({$function->getAttribute('name')})");
@@ -135,16 +202,16 @@ class V20 extends Migration
             $functionId = $function->getId();
             $functionInternalId = $function->getInternalId();
 
-            $this->migrateStatsMetric("deployment.$functionId.storage.size", "function.$functionInternalId.deployments.storage");
-            $this->migrateStatsMetric("builds.$functionId.compute.total", "$functionInternalId.builds");
-            $this->migrateStatsMetric("builds.$functionId.compute.time", "$functionInternalId.builds.compute");
-            $this->migrateStatsMetric("executions.$functionId.compute.total", "$functionInternalId.executions");
-            $this->migrateStatsMetric("executions.$functionId.compute.time", "$functionInternalId.executions.compute");
+            $this->migrateUsageMetrics("deployment.$functionId.storage.size", "function.$functionInternalId.deployments.storage");
+            $this->migrateUsageMetrics("builds.$functionId.compute.total", "$functionInternalId.builds");
+            $this->migrateUsageMetrics("builds.$functionId.compute.time", "$functionInternalId.builds.compute");
+            $this->migrateUsageMetrics("executions.$functionId.compute.total", "$functionInternalId.executions");
+            $this->migrateUsageMetrics("executions.$functionId.compute.time", "$functionInternalId.executions.compute");
         }
     }
 
     /**
-     * Migrate  Databases usage.
+     * Migrate  Databases.
      *
      * @return void
      * @throws \Exception
@@ -152,9 +219,9 @@ class V20 extends Migration
     private function migrateDatabases(): void
     {
         // Project level
-        $this->migrateStatsMetric('databases.$all.count.total', 'databases');
-        $this->migrateStatsMetric('collections.$all.count.total', 'collections');
-        $this->migrateStatsMetric('documents.$all.count.total', 'documents');
+        $this->migrateUsageMetrics('databases.$all.count.total', 'databases');
+        $this->migrateUsageMetrics('collections.$all.count.total', 'collections');
+        $this->migrateUsageMetrics('documents.$all.count.total', 'documents');
 
         foreach ($this->documentsIterator('databases') as $database) {
             Console::log("Migrating Collections of {$database->getId()} ({$database->getAttribute('name')})");
@@ -165,8 +232,8 @@ class V20 extends Migration
             $databaseId = $database->getId();
             $databaseInternalId = $database->getInternalId();
 
-            $this->migrateStatsMetric("collections.$databaseId.count.total", "$databaseInternalId.collections");
-            $this->migrateStatsMetric("documents.$databaseId.count.total", "$databaseInternalId.documents");
+            $this->migrateUsageMetrics("collections.$databaseId.count.total", "$databaseInternalId.collections");
+            $this->migrateUsageMetrics("documents.$databaseId.count.total", "$databaseInternalId.documents");
 
             foreach ($this->documentsIterator($databaseTable) as $collection) {
                 $collectionTable = "{$databaseTable}_collection_{$collection->getInternalId()}";
@@ -176,7 +243,7 @@ class V20 extends Migration
                 $collectionId =  $collection->getId() ;
                 $collectionInternalId =  $collection->getInternalId();
 
-                $this->migrateStatsMetric("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
+                $this->migrateUsageMetrics("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
             }
         }
     }
@@ -216,7 +283,7 @@ class V20 extends Migration
                          */
                         $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
                         $this->projectDB->deleteCachedCollection($id);
-                    } catch (\Throwable $th) {
+                    } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
                     break;
@@ -229,14 +296,14 @@ class V20 extends Migration
      *
      * @return void
      * @throws \Exception
-     * @throws \PDOException
+     * @throws PDOException
      */
     protected function migrateBuckets(): void
     {
         // Project level
-        $this->migrateStatsMetric('buckets.$all.count.total', 'buckets');
-        $this->migrateStatsMetric('files.$all.count.total', 'files');
-        $this->migrateStatsMetric('files.$all.storage.size', 'files.storage');
+        $this->migrateUsageMetrics('buckets.$all.count.total', 'buckets');
+        $this->migrateUsageMetrics('files.$all.count.total', 'files');
+        $this->migrateUsageMetrics('files.$all.storage.size', 'files.storage');
         // There is also project.$all.storage.size which is the same as  files.$all.storage.size
 
         foreach ($this->documentsIterator('buckets') as $bucket) {
@@ -247,8 +314,8 @@ class V20 extends Migration
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
 
-             $this->migrateStatsMetric("files.$bucketId.count.total", "$bucketInternalId.files");
-            $this->migrateStatsMetric("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
+             $this->migrateUsageMetrics("files.$bucketId.count.total", "$bucketInternalId.files");
+            $this->migrateUsageMetrics("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
             // some stats come with $ prefix infront of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
     }
