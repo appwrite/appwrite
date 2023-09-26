@@ -143,10 +143,8 @@ class V20 extends Migration
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
-            var_dump($from);
-            var_dump($to);
-            var_dump($query);
-            $value = $query['value'] ?? 0;
+
+            $value = $query ?? 0;
             $this->createInfMetric($to, $value);
         }
 
