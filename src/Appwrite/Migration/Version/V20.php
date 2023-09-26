@@ -109,7 +109,7 @@ class V20 extends Migration
             /**
              * Creating inf metric
              */
-            console::log("Creating inf metric  to {$metric}");
+            console::log("Creating inf metric to {$metric}");
             $id = \md5("null_inf_{$metric}");
             $this->projectDB->createDocument('stats', new Document([
                 '$id' => $id,
@@ -143,6 +143,9 @@ class V20 extends Migration
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
+            var_dump($from);
+            var_dump($to);
+            var_dump($query);
             $value = $query['value'] ?? 0;
             $this->createInfMetric($to, $value);
         }
@@ -167,22 +170,13 @@ class V20 extends Migration
                 $sum = count($stats);
                 $total = $total + $sum;
                 foreach ($stats as $stat) {
-                    $oldId = $stat->getId();
                     $time = date('Y-m-d 00:00', strtotime($stat['time']));
-                    $id = \md5("{$time}_{$stat['period']}_{$to}");
-                    var_dump("{$time}_{$stat['period']}_{$to}");
-                    var_dump('------------------');
-                    var_dump('old doc');
-                    var_dump($stat);
-                    $stat->setAttribute('$id', $id);
+                    $this->projectDB->deleteDocument('stats', $stat->getId());
+                    $stat->setAttribute('$id', \md5("{$time}_{$stat['period']}_{$to}"));
                     $stat->setAttribute('metric', $to);
+                    $this->projectDB->createDocument('stats', $stat);
                     console::log("deleting metric  {$from} and creating {$to}");
-                    $this->projectDB->deleteDocument('stats', $oldId);
-                    $doc = $this->projectDB->createDocument('stats', $stat);
-                    var_dump('new doc');
-                    var_dump($doc);
                 }
-
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
         } catch (Throwable $th) {
