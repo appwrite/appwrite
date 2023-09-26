@@ -164,9 +164,13 @@ class V20 extends Migration
                 $sum = count($stats);
                 $total = $total + $sum;
                 foreach ($stats as $stat) {
-                    var_dump("{$stat['time']}_{$stat['period']}_{$to}");
-                    $id = \md5("{$stat['time']}_{$stat['period']}_{$to}");
                     $oldId = $stat->getId();
+                    $time = date('Y-m-d 00:00', strtotime($stat['time']));
+                    var_dump("{$time}_{$stat['period']}_{$to}");
+                    $id = \md5("{$time}_{$stat['period']}_{$to}");
+                    var_dump($id);
+                    var_dump($oldId);
+                    var_dump('------------------');
                     $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
                     console::log("updating metric  {$from} to {$to}");
@@ -176,11 +180,7 @@ class V20 extends Migration
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
         } catch (Throwable $th) {
-            //Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
-            //var_dump($th);
-            var_dump($th->getTraceAsString());
-            exit;
-
+            Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
         }
     }
     /**
