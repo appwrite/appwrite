@@ -175,7 +175,8 @@ class V20 extends Migration
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
         } catch (Throwable $th) {
-            Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
+            //Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
+            var_dump($th);
         }
     }
     /**
