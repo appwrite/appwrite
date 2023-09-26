@@ -136,12 +136,12 @@ class V20 extends Migration
          * inf metric
          */
         if (str_contains($from, 'total')) {
-            $result = $this->projectDB->findOne('stats', [
+            $query = $this->projectDB->findOne('stats', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
-            var_dump($result);
-            $value = $result['value'] ?? 0;
+            var_dump($query);
+            $value = $query['value'] ?? 0;
             var_dump($value);
             $this->createInfMetric($to, $value);
         }
