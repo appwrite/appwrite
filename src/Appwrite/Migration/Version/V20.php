@@ -168,14 +168,11 @@ class V20 extends Migration
                 $sum = count($stats);
                 $total = $total + $sum;
                 foreach ($stats as $stat) {
-                    $time = date('Y-m-d 00:00', strtotime($stat['time']));
+                    $format = $stat['period'] === '1d' ? 'Y-m-d 00:00' : 'Y-m-d H:00';
+                    $time = date($format, strtotime($stat['time']));
                     $this->projectDB->deleteDocument('stats', $stat->getId());
-                    var_dump('before');
-                    var_dump($stat);
                     $stat->setAttribute('$id', \md5("{$time}_{$stat['period']}_{$to}"));
                     $stat->setAttribute('metric', $to);
-                    var_dump('new');
-                    var_dump($stat);
                     $this->projectDB->createDocument('stats', $stat);
                     console::log("deleting metric {$from} and creating {$to}");
                 }
