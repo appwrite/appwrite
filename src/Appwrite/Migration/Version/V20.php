@@ -135,7 +135,7 @@ class V20 extends Migration
         /**
          * inf metric
          */
-        if (str_contains($from, 'total')) {
+        if (str_contains($from, '.total')) {
             $query = $this->projectDB->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
@@ -168,8 +168,9 @@ class V20 extends Migration
                     $time = date('Y-m-d 00:00', strtotime($stat['time']));
                     var_dump("{$time}_{$stat['period']}_{$to}");
                     $id = \md5("{$time}_{$stat['period']}_{$to}");
-                    var_dump($id);
+                    var_dump($stat->getInternalId());
                     var_dump($oldId);
+                    var_dump($id);
                     var_dump('------------------');
                     $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
