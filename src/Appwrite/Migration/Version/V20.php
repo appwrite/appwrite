@@ -91,9 +91,6 @@ class V20 extends Migration
 
         $sessionsDeleted =  $query['value'] ?? 0;
         $value = $sessionsCreated - $sessionsDeleted;
-        var_dump($sessionsCreated);
-        var_dump($sessionsDeleted);
-
         $this->createInfMetric('sessions', $value);
     }
 
@@ -138,15 +135,14 @@ class V20 extends Migration
         /**
          * inf metric
          */
-        if (
-            str_contains($from, '$all')
-            && str_contains($from, 'total')
-        ) {
+        if (str_contains($from, 'total')) {
             $result = $this->projectDB->findOne('stats', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
+            var_dump($result);
             $value = $result['value'] ?? 0;
+            var_dump($value);
             $this->createInfMetric($to, $value);
         }
 
