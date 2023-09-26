@@ -136,13 +136,11 @@ class V20 extends Migration
          * inf metric
          */
         if (str_contains($from, 'total')) {
-            $query = $this->projectDB->findOne('stats', [
+            $query = $this->projectDB->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
-            var_dump($query);
             $value = $query['value'] ?? 0;
-            var_dump($value);
             $this->createInfMetric($to, $value);
         }
 
@@ -166,6 +164,9 @@ class V20 extends Migration
                 $sum = count($stats);
                 $total = $total + $sum;
                 foreach ($stats as $stat) {
+                    var_dump("{$stat['time']}_{$stat['period']}_{$to}");
+                    $id = \md5("{$stat['time']}_{$stat['period']}_{$to}");
+                    $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
                     console::log("updating metric  {$from} to {$to}");
                     $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
