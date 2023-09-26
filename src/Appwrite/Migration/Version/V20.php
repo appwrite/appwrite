@@ -116,7 +116,7 @@ class V20 extends Migration
                 'metric' => $metric,
                 'period' => 'inf',
                 'value'  => $value,
-                'time'   => null,
+                'time'   => '0000-00-00 00:00',
                 'region' => 'default',
             ]));
         } catch (Duplicate $th) {
