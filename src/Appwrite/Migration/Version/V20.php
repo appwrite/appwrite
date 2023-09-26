@@ -110,7 +110,7 @@ class V20 extends Migration
              * Creating inf metric
              */
             console::log("Creating inf metric to {$metric}");
-            $id = \md5("null_inf_{$metric}");
+            $id = \md5("inf_{$metric}");
             $this->projectDB->createDocument('stats', new Document([
                 '$id' => $id,
                 'metric' => $metric,
@@ -170,10 +170,14 @@ class V20 extends Migration
                 foreach ($stats as $stat) {
                     $time = date('Y-m-d 00:00', strtotime($stat['time']));
                     $this->projectDB->deleteDocument('stats', $stat->getId());
+                    var_dump('before');
+                    var_dump($stat);
                     $stat->setAttribute('$id', \md5("{$time}_{$stat['period']}_{$to}"));
                     $stat->setAttribute('metric', $to);
+                    var_dump('new');
+                    var_dump($stat);
                     $this->projectDB->createDocument('stats', $stat);
-                    console::log("deleting metric  {$from} and creating {$to}");
+                    console::log("deleting metric {$from} and creating {$to}");
                 }
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
             }
