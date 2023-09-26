@@ -166,10 +166,11 @@ class V20 extends Migration
                 foreach ($stats as $stat) {
                     var_dump("{$stat['time']}_{$stat['period']}_{$to}");
                     $id = \md5("{$stat['time']}_{$stat['period']}_{$to}");
+                    $oldId = $stat->getId();
                     $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
                     console::log("updating metric  {$from} to {$to}");
-                    $this->projectDB->updateDocument('stats', $stat->getId(), $stat);
+                    $this->projectDB->updateDocument('stats', $oldId, $stat);
                 }
 
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
