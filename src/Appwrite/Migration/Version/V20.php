@@ -135,7 +135,10 @@ class V20 extends Migration
         /**
          * inf metric
          */
-        if (str_contains($from, '.total')) {
+        if (
+            str_contains($from, '$all') ||
+            str_contains($from, '.total')
+        ) {
             $query = $this->projectDB->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
@@ -166,8 +169,8 @@ class V20 extends Migration
                 foreach ($stats as $stat) {
                     $oldId = $stat->getId();
                     $time = date('Y-m-d 00:00', strtotime($stat['time']));
-                    var_dump("{$time}_{$stat['period']}_{$to}");
                     $id = \md5("{$time}_{$stat['period']}_{$to}");
+                    var_dump("{$time}_{$stat['period']}_{$to}");
                     var_dump($stat->getInternalId());
                     var_dump($oldId);
                     var_dump($id);
@@ -175,7 +178,8 @@ class V20 extends Migration
                     $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
                     console::log("updating metric  {$from} to {$to}");
-                    $this->projectDB->updateDocument('stats', $oldId, $stat);
+                    $doc = $this->projectDB->updateDocument('stats', $oldId, $stat);
+                    var_dump($doc);
                 }
 
                 $latestDocument = !empty(array_key_last($stats)) ? $stats[array_key_last($stats)] : null;
