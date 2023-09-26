@@ -171,14 +171,15 @@ class V20 extends Migration
                     $time = date('Y-m-d 00:00', strtotime($stat['time']));
                     $id = \md5("{$time}_{$stat['period']}_{$to}");
                     var_dump("{$time}_{$stat['period']}_{$to}");
-                    var_dump($stat->getInternalId());
-                    var_dump($oldId);
-                    var_dump($id);
                     var_dump('------------------');
+                    var_dump('old doc');
+                    var_dump($stat);
                     $stat->setAttribute('$id', $id);
                     $stat->setAttribute('metric', $to);
-                    console::log("updating metric  {$from} to {$to}");
-                    $doc = $this->projectDB->updateDocument('stats', $oldId, $stat);
+                    console::log("deleting metric  {$from} and creating {$to}");
+                    $this->projectDB->deleteDocument('stats', $oldId);
+                    $doc = $this->projectDB->createDocument('stats', $stat);
+                    var_dump('new doc');
                     var_dump($doc);
                 }
 
