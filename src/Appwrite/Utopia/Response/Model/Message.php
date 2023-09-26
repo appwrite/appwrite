@@ -56,6 +56,13 @@ class Message extends Any
                 'description' => 'Status of delivery.',
                 'default' => 'processing',
                 'example' => 'Message status can be one of the following: processing, sent, failed.',
+            ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Message description.',
+                'required' => false,
+                'default' => '',
+                'example' => 'Welcome Email.',
             ]);
     }
 

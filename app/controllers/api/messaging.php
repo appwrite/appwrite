@@ -108,12 +108,13 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as EU region.', true)
+    ->param('from', '', new Text(256), 'Sender Email Address.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $provider = new Document([
@@ -129,6 +130,9 @@ App::post('/v1/messaging/providers/mailgun')
                 'domain' => $domain,
                 'isEuRegion' => $isEuRegion,
             ],
+            'options' => [
+                'from' => $from,
+            ]
         ]);
 
         // Check if a default provider exists, if not, set this one as default
@@ -167,12 +171,13 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->param('id', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('isEuRegion', false, new Boolean(), 'Set as eu region.', true)
+    ->param('isEuRegion', null, new Boolean(), 'Set as eu region.', true)
+    ->param('from', '', new Text(256), 'Sender Email Address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, bool $isEuRegion, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $id, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $id);
 
         if ($provider->isEmpty()) {
@@ -195,6 +200,12 @@ App::patch('/v1/messaging/providers/:id/mailgun')
                 'isEuRegion' => $isEuRegion,
                 'apiKey' => $credentials['apiKey'],
                 'domain' => $credentials['domain'],
+            ]);
+        }
+
+        if (!empty($from)) {
+            $provider->setAttribute('options', [
+                'from' => $from,
             ]);
         }
 
@@ -1232,6 +1243,7 @@ App::post('/v1/messaging/messages/email')
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
     ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(128), 'Email Subject.')
+    ->param('description', '', new Text(256), 'Description for Message.')
     ->param('content', '', new Text(65407), 'Email Content.')
     ->param('from', '', new Text(128), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
@@ -1239,7 +1251,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1257,7 +1269,8 @@ App::post('/v1/messaging/messages/email')
                 'subject' => $subject,
                 'content' => $content,
                 'from' => $from,
-                'html' => $html
+                'html' => $html,
+                'description' => $description,
             ],
             'status' => 'processing',
             'search' => $subject . ' ' . $from,
