@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Tests\E2E\Client;
+use Utopia\App;
 use Utopia\Database\Helpers\ID;
 
 trait MessagingBase
@@ -365,5 +366,100 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
         $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testSendEmail()
+    {
+        
+        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_RECEIVER_EMAIL');
+        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_FROM');
+        $apiKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_API_KEY');
+        $domain = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_DOMAIN');
+        $isEuRegion = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_IS_EU_REGION');
+        if ($to === '' || $from === '' || $apiKey === '' || $domain === '' || $isEuRegion === '') {
+            $this->markTestSkipped('Email provider not configured');
+        }
+
+        // Create provider
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => 'unique()',
+            'name' => 'Mailgun-provider',
+            'apiKey' => $apiKey,
+            'domain' => $domain,
+            'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
+            'from' => $from
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Create Topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => $provider['body']['$id'],
+            'topicId' => 'unique()',
+            'name' => 'topic1',
+            'description' => 'Test Topic'
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        // Create User
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::custom('test-user'),
+            'email' => 'prateekbanga12@gmail.com',
+            'password' => 'password',
+            'name' => 'Messaging User',
+        ], false);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Create Target
+        $target = $this->client->call(Client::METHOD_POST, '/users/test-user/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $to,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        // Create Subscriber
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => 'unique()',
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        // Create Email
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => 'unique()',
+            'providerId' => $provider['body']['$id'],
+            'to' => [$target['body']['$id']],
+            'subject' => 'Khali beats Undertaker',
+            'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
     }
 }
