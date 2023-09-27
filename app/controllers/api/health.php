@@ -166,7 +166,7 @@ App::get('/v1/health/cache')
     });
 
 App::get('/v1/health/queue')
-    ->desc('Get Queue')
+    ->desc('Get queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -223,7 +223,7 @@ App::get('/v1/health/queue')
     });
 
 App::get('/v1/health/pubsub')
-    ->desc('Get PubSub')
+    ->desc('Get pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -354,7 +354,7 @@ App::get('/v1/health/queue/webhooks')
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
-    ->desc('Get Logs Queue')
+    ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -388,7 +388,7 @@ App::get('/v1/health/queue/certificates')
     }, ['response']);
 
 App::get('/v1/health/queue/builds')
-    ->desc('Get Builds Queue')
+    ->desc('Get builds queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -405,7 +405,7 @@ App::get('/v1/health/queue/builds')
     }, ['response']);
 
 App::get('/v1/health/queue/databases')
-    ->desc('Get Databases Queue')
+    ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -422,7 +422,7 @@ App::get('/v1/health/queue/databases')
     }, ['response']);
 
 App::get('/v1/health/queue/deletes')
-    ->desc('Get Deletes Queue')
+    ->desc('Get deletes queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -439,7 +439,7 @@ App::get('/v1/health/queue/deletes')
     }, ['response']);
 
 App::get('/v1/health/queue/mails')
-    ->desc('Get Mails Queue')
+    ->desc('Get mails queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -456,7 +456,7 @@ App::get('/v1/health/queue/mails')
     }, ['response']);
 
 App::get('/v1/health/queue/messaging')
-    ->desc('Get Messaging Queue')
+    ->desc('Get messaging queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -473,7 +473,7 @@ App::get('/v1/health/queue/messaging')
     }, ['response']);
 
 App::get('/v1/health/queue/migrations')
-    ->desc('Get Migrations Queue')
+    ->desc('Get migrations queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
