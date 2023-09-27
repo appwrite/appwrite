@@ -110,7 +110,7 @@ class V20 extends Migration
              * Creating inf metric
              */
             console::log("Creating inf metric to {$metric}");
-            $id = \md5("inf_{$metric}");
+            $id = \md5("_inf_{$metric}");
             $this->projectDB->createDocument('stats', new Document([
                 '$id' => $id,
                 'metric' => $metric,
