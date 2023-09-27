@@ -1,3 +1,27 @@
+# Version 1.4.4
+
+## Features
+* Feat: Function domains force https in [#6269](https://github.com/appwrite/appwrite/pull/6269)
+* Feat: router protection in [#6272](https://github.com/appwrite/appwrite/pull/6272)
+* Feat: Parse event body in [#6317](https://github.com/appwrite/appwrite/pull/6317)
+
+## Fixes
+* Fix: wrong device type in [#6271](https://github.com/appwrite/appwrite/pull/6271)
+* Fix: build race condition in [#6271](https://github.com/appwrite/appwrite/pull/6270)
+* Fix: Large builds in [#6271](https://github.com/appwrite/appwrite/pull/6273)
+* Fix: migrations in [#6271](https://github.com/appwrite/appwrite/pull/6302)
+* Add Description for Download Deployment in [#6271](https://github.com/appwrite/appwrite/pull/6268)
+* Fix deployment delete in [#6271](https://github.com/appwrite/appwrite/pull/6290)
+* Fix project deletion in [#6271](https://github.com/appwrite/appwrite/pull/6260)
+* fix-6212-Issue-With-Linkedin-OAuth in [#6271](https://github.com/appwrite/appwrite/pull/6229)
+* Fix: Execution body limit in [#6271](https://github.com/appwrite/appwrite/pull/6326)
+* Patch: Disable console protection in [#6271](https://github.com/appwrite/appwrite/pull/6329)
+* converted desc to sentence case in [#6271](https://github.com/appwrite/appwrite/pull/5926)
+* Update avatar font and default colors in [#6271](https://github.com/appwrite/appwrite/pull/6277)
+* Bump composer to fix migration bug in [#6271](https://github.com/appwrite/appwrite/pull/6344)
+* Fix execution call timeout in [#6271](https://github.com/appwrite/appwrite/pull/6332)
+* Bump appwrite-assistant to prevent it from crashing w/o open ai key in [#6271](https://github.com/appwrite/appwrite/pull/6342)
+
 # Version 1.4.3
 
 ## Features
