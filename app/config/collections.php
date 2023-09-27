@@ -1456,7 +1456,7 @@ $commonCollections = [
                 'size' => 16384,
                 'signed' => true,
                 'required' => false,
-                'default' => null,
+                'default' => [],
                 'array' => false,
                 'filters' => ['json'],
             ],

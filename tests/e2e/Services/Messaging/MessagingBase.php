@@ -45,6 +45,7 @@ trait MessagingBase
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
+                'from' => '+123456789'
             ],
             'vonage' => [
                 'providerId' => 'unique()',

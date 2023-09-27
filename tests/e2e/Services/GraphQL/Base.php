@@ -1935,6 +1935,7 @@ trait Base
                 return 'mutation createProviderMsg91(
                     $providerId: String!,
                     $name: String!,
+                    $from: String!,
                     $senderId: String!,
                     $authKey: String!
                     $default: Boolean,
@@ -1943,6 +1944,7 @@ trait Base
                     messagingCreateProviderMsg91(
                       providerId: $providerId,
                       name: $name,
+                      from: $from,
                       senderId: $senderId,
                       authKey: $authKey
                       default: $default,

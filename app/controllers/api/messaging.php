@@ -263,6 +263,7 @@ App::post('/v1/messaging/providers/sendgrid')
             'type' => 'email',
             'default' => $default,
             'enabled' => $enabled,
+            'options' => [],
             'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
@@ -362,11 +363,12 @@ App::post('/v1/messaging/providers/msg91')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('default', false, new Boolean(), 'Set as default provider.', true)
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Text(256), 'Sender Number.')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $from, string $senderId, string $authKey, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -380,6 +382,9 @@ App::post('/v1/messaging/providers/msg91')
                 'senderId' => $senderId,
                 'authKey' => $authKey,
             ],
+            'options' => [
+                'from' => $from,
+            ]
         ]);
 
         // Check if a default provider exists, if not, set this one as default
@@ -1584,15 +1589,14 @@ App::post('/v1/messaging/messages/email')
     ->param('providerId', '', new Text(128), 'Email Provider ID.')
     ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(128), 'Email Subject.')
-    ->param('description', '', new Text(256), 'Description for Message.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(65407), 'Email Content.')
-    ->param('from', '', new Text(128), 'Email from.', true)
     ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $from, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1609,16 +1613,15 @@ App::post('/v1/messaging/messages/email')
             'data' => [
                 'subject' => $subject,
                 'content' => $content,
-                'from' => $from,
                 'html' => $html,
                 'description' => $description,
             ],
             'status' => 'processing',
-            'search' => $subject . ' ' . $from,
+            'search' => $messageId . ' ' . $description . ' ' . $subject,
         ]));
 
         $messaging
-        ->setMessage($message)
+        ->setMessageId($message->getId())
         ->setProject($project)
         ->trigger();
 

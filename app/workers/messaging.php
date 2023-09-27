@@ -91,7 +91,7 @@ class MessagingV1 extends Worker
         $project = new Document($this->args['project']);
         $this->dbForProject = $this->getProjectDB($project);
 
-        $messageRecord = new Document($this->args['message']);
+        $messageRecord = $this->dbForProject->getDocument('messages', $this->args['messageId']);
 
         $providerId = $messageRecord->getAttribute('providerId');
         $providerRecord = $this->dbForProject->getDocument('providers', $providerId);
@@ -135,15 +135,14 @@ class MessagingV1 extends Worker
 
         $maxBatchSize = $provider->getMaxMessagesPerRequest();
         $batches = \array_chunk($identifiers, $maxBatchSize);
-        $message = $messageRecord->getArrayCopy();
         $deliveredTo = 0;
 
         foreach ($batches as $batch) {
-            $message['to'] = $batch;
+            $messageRecord->setAttribute('to', $batch);
             $message = match ($providerRecord->getAttribute('type')) {
-                'sms' => $this->buildSMSMessage($message),
-                'push' => $this->buildPushMessage($message),
-                'email' => $this->buildEmailMessage($message),
+                'sms' => $this->buildSMSMessage($messageRecord, $providerRecord),
+                'push' => $this->buildPushMessage($messageRecord),
+                'email' => $this->buildEmailMessage($messageRecord, $providerRecord),
                 default => null
             };
             try {
@@ -163,7 +162,7 @@ class MessagingV1 extends Worker
         } else {
             $messageRecord->setAttribute('status', 'sent');
         }
-
+        $messageRecord->setAttribute('to', $recipientsId);
         $messageRecord->setAttribute('deliveredTo', $deliveredTo);
         $messageRecord->setAttribute('deliveryTime', DateTime::now());
 
@@ -174,37 +173,37 @@ class MessagingV1 extends Worker
     {
     }
 
-    private function buildEmailMessage($data): Email
+    private function buildEmailMessage($message, $provider): Email
     {
-        $from = $data['data']['from'];
-        $to = $data['to'];
-        $subject = $data['data']['subject'];
-        $content = $data['data']['content'];
-        $html = $data['data']['html'];
+        $from = $provider['options']['from'];
+        $to = $message['to'];
+        $subject = $message['data']['subject'];
+        $content = $message['data']['content'];
+        $html = $message['data']['html'];
         return  new Email(to: $to, subject: $subject, content: $content, from: $from, html: $html);
     }
 
-    private function buildSMSMessage($data): SMS
+    private function buildSMSMessage($message, $provider): SMS
     {
-        $to = $data['to'];
-        $content = $data['data']['content'];
-        $from = $data['data']['from'];
+        $to = $message['to'];
+        $content = $message['data']['content'];
+        $from = $provider['options']['from'];
 
         return new SMS($to, $content, $from);
     }
 
-    private function buildPushMessage($data): Push
+    private function buildPushMessage($message): Push
     {
-        $to = $data['to'];
-        $title = $data['data']['title'];
-        $body = $data['data']['body'];
-        $data = $data['data']['data'];
-        $action = $data['data']['action'];
-        $sound = $data['data']['sound'];
-        $icon = $data['data']['icon'];
-        $color = $data['data']['color'];
-        $tag = $data['data']['tag'];
-        $badge = $data['data']['badge'];
+        $to = $message['to'];
+        $title = $message['data']['title'];
+        $body = $message['data']['body'];
+        $data = $message['data']['data'];
+        $action = $message['data']['action'];
+        $sound = $message['data']['sound'];
+        $icon = $message['data']['icon'];
+        $color = $message['data']['color'];
+        $tag = $message['data']['tag'];
+        $badge = $message['data']['badge'];
         return new Push($to, $title, $body, $data, $action, $sound, $icon, $color, $tag, $badge);
     }
 }
