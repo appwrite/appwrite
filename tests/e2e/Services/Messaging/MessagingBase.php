@@ -370,7 +370,7 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-        
+
         $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_RECEIVER_EMAIL');
         $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_FROM');
         $apiKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_API_KEY');
@@ -460,6 +460,5 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $email['headers']['status-code']);
-
     }
 }
