@@ -20,6 +20,7 @@ trait MessagingBase
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
+                'from' => 'sender-email@my-domain',
             ],
             'twilio' => [
                 'providerId' => 'unique()',
