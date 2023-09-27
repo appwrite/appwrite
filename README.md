@@ -75,7 +75,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.3.8
+    appwrite/appwrite:1.4.3
 ```
 
 ### Windows
@@ -87,7 +87,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.3.8
+    appwrite/appwrite:1.4.3
 ```
 
 #### PowerShell
@@ -97,7 +97,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.3.8
+    appwrite/appwrite:1.4.3
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -131,7 +131,7 @@ Choose from one of the providers below:
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
         <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai</b></sub></a>    
+          <br /><sub><b>Akamai Compute</b></sub></a>    
       </a>
     </td>
   </tr>

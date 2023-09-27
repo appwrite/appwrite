@@ -109,7 +109,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
+
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
@@ -238,8 +240,8 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 
 - Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data).
 - MariaDB - for database storage and queries.
-- InfluxDB - for managing stats and time-series based data.
-- Statsd - for sending data over UDP protocol (using Telegraf).
+- InfluxDB - for managing stats and time-series based data
+- Statsd - for sending data over UDP protocol (using Telegraf)
 - ClamAV - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
