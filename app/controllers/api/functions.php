@@ -433,7 +433,7 @@ App::get('/v1/functions/:functionId')
 
 App::get('/v1/functions/:functionId/usage')
     ->desc('Get Function Usage')
-    ->groups(['api', 'functions'])
+    ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'functions')
@@ -466,27 +466,24 @@ App::get('/v1/functions/:functionId/usage')
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
         ];
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
 
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
@@ -1686,7 +1683,6 @@ App::post('/v1/functions/:functionId/executions')
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
             ;
-
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -1704,7 +1700,7 @@ App::post('/v1/functions/:functionId/executions')
         }
 
         // TODO revise this later using route label
-        $usage
+        $queueForUsage
             ->setParam('functionId', $function->getId())
             ->setParam('executions.{scope}.compute', 1)
             ->setParam('executionStatus', $execution->getAttribute('status', ''))

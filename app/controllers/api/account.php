@@ -192,7 +192,7 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $password, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -356,10 +356,10 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
-    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
@@ -389,10 +389,10 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
-    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048,), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
@@ -426,10 +426,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
-    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -893,7 +893,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -1014,7 +1014,7 @@ App::post('/v1/account/sessions/magic-url')
                 $replyTo = $smtp['replyTo'];
             }
 
-        $queueForMails
+            $queueForMails
                 ->setSmtpHost($smtp['host'] ?? '')
                 ->setSmtpPort($smtp['port'] ?? '')
                 ->setSmtpUsername($smtp['username'] ?? '')
@@ -1036,7 +1036,7 @@ App::post('/v1/account/sessions/magic-url')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-        $queueForMails
+            $queueForMails
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
@@ -1230,7 +1230,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Locale $locale) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -1363,9 +1363,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
-    ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -2073,7 +2071,7 @@ App::patch('/v1/account/prefs')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (array $prefs, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('prefs', $prefs);
 
@@ -2104,7 +2102,7 @@ App::patch('/v1/account/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('status', false);
 
@@ -2374,7 +2372,7 @@ App::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $url, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');

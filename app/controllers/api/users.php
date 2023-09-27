@@ -42,7 +42,6 @@ use Appwrite\Auth\Validator\PersonalData;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents): Document
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Database $dbForProject, Event $queueForEvents): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -191,7 +190,7 @@ App::post('/v1/users/md5')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
         $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
 
         $response
@@ -221,7 +220,7 @@ App::post('/v1/users/argon2')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
         $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
 
         $response
@@ -252,7 +251,7 @@ App::post('/v1/users/sha')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
         $options = '{}';
 
         if (!empty($passwordVersion)) {

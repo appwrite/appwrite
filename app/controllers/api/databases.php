@@ -3413,7 +3413,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
         $processDocument($collection, $document);
 
-        $events
         $queueForEvents
             ->setParam('databaseId', $databaseId)
             ->setParam('collectionId', $collection->getId())
