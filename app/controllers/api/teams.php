@@ -666,7 +666,6 @@ App::post('/v1/teams/:teamId/memberships')
                     'to' => [$target->getId()],
                     'data' => [
                         'content' => $message,
-                        'from' => $from,
                     ],
                     'providerId' => $provider->getId(),
                     'providerInternalId' => $provider->getInternalId(),
@@ -674,7 +673,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ]));
 
                 $messaging
-                    ->setMessage($messageDoc)
+                    ->setMessageId($messageDoc->getId())
                     ->setProject($project)
                     ->trigger();
             }

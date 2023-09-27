@@ -7,7 +7,7 @@ use Utopia\Database\Document;
 
 class Messaging extends Event
 {
-    protected ?Document $message = null;
+    protected ?string $messageId = null;
 
     public function __construct()
     {
@@ -17,26 +17,26 @@ class Messaging extends Event
 
 
     /**
-     * Sets message record for the messaging event.
+     * Sets message ID for the messaging event.
      *
-     * @param Document $message
+     * @param string $message
      * @return self
      */
-    public function setMessage(Document $message): self
+    public function setMessageId(string $messageId): self
     {
-        $this->message = $message;
+        $this->messageId = $messageId;
 
         return $this;
     }
 
     /**
-     * Returns set message for the messaging event.
+     * Returns set message ID for the messaging event.
      *
-     * @return Document
+     * @return string
      */
-    public function getMessage(): Document
+    public function getMessageId(): string
     {
-        return $this->message;
+        return $this->messageId;
     }
 
     /**
@@ -50,7 +50,7 @@ class Messaging extends Event
         return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
-            'message' => $this->message,
+            'messageId' => $this->messageId,
         ]);
     }
 }

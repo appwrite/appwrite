@@ -765,6 +765,7 @@ class AccountCustomClientTest extends Scope
             'senderId' => $senderId,
             'authKey' => $authKey,
             'default' => true,
+            'from' => $from,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         /**

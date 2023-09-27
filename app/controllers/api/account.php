@@ -1343,14 +1343,13 @@ App::post('/v1/account/sessions/phone')
             'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
-                'from' => $from,
             ],
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
         ]));
 
         $messaging
-        ->setMessage($messageDoc)
+        ->setMessageId($messageDoc->getId())
         ->setProject($project)
         ->trigger();
 
@@ -2973,14 +2972,13 @@ App::post('/v1/account/verification/phone')
             'to' => [$target->getId()],
             'data' => [
                 'content' => $message,
-                'from' => $from,
             ],
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
         ]));
 
         $messaging
-        ->setMessage($messageDoc)
+        ->setMessageId($messageDoc->getId())
         ->setProject($project)
         ->trigger();
 

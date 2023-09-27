@@ -141,6 +141,7 @@ class AccountTest extends Scope
                 'name' => 'Sms Provider',
                 'provider' => 'msg91',
                 'type' => 'sms',
+                'from' => $from,
                 'senderId' => $senderId,
                 'authKey' => $authKey,
                 'default' => true,
