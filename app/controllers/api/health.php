@@ -39,7 +39,7 @@ App::get('/v1/health')
     });
 
 App::get('/v1/health/version')
-    ->desc('Get Version')
+    ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -109,7 +109,7 @@ App::get('/v1/health/db')
     });
 
 App::get('/v1/health/cache')
-    ->desc('Get Cache')
+    ->desc('Get cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -166,7 +166,7 @@ App::get('/v1/health/cache')
     });
 
 App::get('/v1/health/queue')
-    ->desc('Get Queue')
+    ->desc('Get queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -223,7 +223,7 @@ App::get('/v1/health/queue')
     });
 
 App::get('/v1/health/pubsub')
-    ->desc('Get PubSub')
+    ->desc('Get pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -280,7 +280,7 @@ App::get('/v1/health/pubsub')
     });
 
 App::get('/v1/health/time')
-    ->desc('Get Time')
+    ->desc('Get time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -337,7 +337,7 @@ App::get('/v1/health/time')
     });
 
 App::get('/v1/health/queue/webhooks')
-    ->desc('Get Webhooks Queue')
+    ->desc('Get webhooks queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -354,7 +354,7 @@ App::get('/v1/health/queue/webhooks')
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
-    ->desc('Get Logs Queue')
+    ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -371,7 +371,7 @@ App::get('/v1/health/queue/logs')
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
-    ->desc('Get Certificates Queue')
+    ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -388,7 +388,11 @@ App::get('/v1/health/queue/certificates')
     }, ['response']);
 
 App::get('/v1/health/queue/builds')
+<<<<<<< HEAD
     ->desc('Get Builds Queue')
+=======
+    ->desc('Get builds queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -405,7 +409,11 @@ App::get('/v1/health/queue/builds')
     }, ['response']);
 
 App::get('/v1/health/queue/databases')
+<<<<<<< HEAD
     ->desc('Get Databases Queue')
+=======
+    ->desc('Get databases queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -422,7 +430,11 @@ App::get('/v1/health/queue/databases')
     }, ['response']);
 
 App::get('/v1/health/queue/deletes')
+<<<<<<< HEAD
     ->desc('Get Deletes Queue')
+=======
+    ->desc('Get deletes queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -439,7 +451,11 @@ App::get('/v1/health/queue/deletes')
     }, ['response']);
 
 App::get('/v1/health/queue/mails')
+<<<<<<< HEAD
     ->desc('Get Mails Queue')
+=======
+    ->desc('Get mails queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -456,7 +472,11 @@ App::get('/v1/health/queue/mails')
     }, ['response']);
 
 App::get('/v1/health/queue/messaging')
+<<<<<<< HEAD
     ->desc('Get Messaging Queue')
+=======
+    ->desc('Get messaging queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -473,7 +493,11 @@ App::get('/v1/health/queue/messaging')
     }, ['response']);
 
 App::get('/v1/health/queue/migrations')
+<<<<<<< HEAD
     ->desc('Get Migrations Queue')
+=======
+    ->desc('Get migrations queue')
+>>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -490,7 +514,7 @@ App::get('/v1/health/queue/migrations')
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
-    ->desc('Get Functions Queue')
+    ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -508,7 +532,7 @@ App::get('/v1/health/queue/functions')
     }, ['response']);
 
 App::get('/v1/health/storage/local')
-    ->desc('Get Local Storage')
+    ->desc('Get local storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -551,7 +575,7 @@ App::get('/v1/health/storage/local')
     });
 
 App::get('/v1/health/anti-virus')
-    ->desc('Get Antivirus')
+    ->desc('Get antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -590,7 +614,7 @@ App::get('/v1/health/anti-virus')
     });
 
 App::get('/v1/health/stats') // Currently only used internally
-    ->desc('Get System Stats')
+    ->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')
     // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
