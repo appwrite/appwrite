@@ -455,13 +455,16 @@ class Auth
             }
         }
 
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $roles[] = 'label:' . $label;
+        }
+
         return $roles;
     }
 
     public static function isAnonymousUser(Document $user): bool
     {
-        return (is_null($user->getAttribute('email'))
-            || is_null($user->getAttribute('phone'))
-        ) && is_null($user->getAttribute('password'));
+        return is_null($user->getAttribute('email'))
+            && is_null($user->getAttribute('phone'));
     }
 }

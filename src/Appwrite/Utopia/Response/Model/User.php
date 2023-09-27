@@ -38,12 +38,14 @@ class User extends Model
             ->addRule('password', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Hashed user password.',
+                'required' => false,
                 'default' => '',
                 'example' => '$argon2id$v=19$m=2048,t=4,p=3$aUZjLnliVWRINmFNTWMudg$5S+x+7uA31xFnrHFT47yFwcJeaP0w92L/4LdgrVRXxE',
             ])
             ->addRule('hash', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Password hashing algorithm.',
+                'required' => false,
                 'default' => '',
                 'example' => 'argon2',
             ])
@@ -58,6 +60,7 @@ class User extends Model
                     Response::MODEL_ALGO_MD5, // keep least secure at the bottom. this order will be used in docs
                 ],
                 'description' => 'Password hashing algorithm configuration.',
+                'required' => false,
                 'default' => [],
                 'example' => new \stdClass(),
                 'array' => false,
@@ -73,6 +76,13 @@ class User extends Model
                 'description' => 'User status. Pass `true` for enabled and `false` for disabled.',
                 'default' => true,
                 'example' => true,
+            ])
+            ->addRule('labels', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Labels for the user.',
+                'default' => [],
+                'example' => ['vip'],
+                'array' => true,
             ])
             ->addRule('passwordUpdate', [
                 'type' => self::TYPE_DATETIME,
@@ -109,6 +119,12 @@ class User extends Model
                 'description' => 'User preferences as a key-value object',
                 'default' => new \stdClass(),
                 'example' => ['theme' => 'pink', 'timezone' => 'UTC'],
+            ])
+            ->addRule('accessedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent access date in ISO 8601 format. This attribute is only updated again after ' . APP_USER_ACCCESS / 60 / 60 . ' hours.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
         ;
     }

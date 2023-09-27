@@ -1,5 +1,6 @@
 <?php
 
-return function ($request, $response) {
-    sleep(5);
+return function ($context) {
+    sleep(60);
+    return $context->res->send('OK');
 };

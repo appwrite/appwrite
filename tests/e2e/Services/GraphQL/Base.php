@@ -26,6 +26,19 @@ trait Base
     public static string $CREATE_IP_ATTRIBUTE = 'create_ip_attribute';
     public static string $CREATE_ENUM_ATTRIBUTE = 'create_enum_attribute';
     public static string $CREATE_DATETIME_ATTRIBUTE = 'create_datetime_attribute';
+
+    public static string $CREATE_RELATIONSHIP_ATTRIBUTE = 'create_relationship_attribute';
+    public static string $UPDATE_STRING_ATTRIBUTE = 'update_string_attribute';
+    public static string $UPDATE_INTEGER_ATTRIBUTE = 'update_integer_attribute';
+    public static string $UPDATE_FLOAT_ATTRIBUTE = 'update_float_attribute';
+    public static string $UPDATE_BOOLEAN_ATTRIBUTE = 'update_boolean_attribute';
+    public static string $UPDATE_URL_ATTRIBUTE = 'update_url_attribute';
+    public static string $UPDATE_EMAIL_ATTRIBUTE = 'update_email_attribute';
+    public static string $UPDATE_IP_ATTRIBUTE = 'update_ip_attribute';
+    public static string $UPDATE_ENUM_ATTRIBUTE = 'update_enum_attribute';
+    public static string $UPDATE_DATETIME_ATTRIBUTE = 'update_datetime_attribute';
+
+    public static string $UPDATE_RELATIONSHIP_ATTRIBUTE = 'update_relationship_attribute';
     public static string $GET_ATTRIBUTES = 'get_attributes';
     public static string $GET_ATTRIBUTE = 'get_attribute';
     public static string $DELETE_ATTRIBUTE = 'delete_attribute';
@@ -97,14 +110,17 @@ trait Base
 
     // Teams
     public static string $GET_TEAM = 'get_team';
+    public static string $GET_TEAM_PREFERENCES = 'get_team_preferences';
     public static string $GET_TEAMS = 'list_teams';
     public static string $CREATE_TEAM = 'create_team';
-    public static string $UPDATE_TEAM = 'update_team';
+    public static string $UPDATE_TEAM_NAME = 'update_team_name';
+    public static string $UPDATE_TEAM_PREFERENCES = 'update_team_preferences';
+
     public static string $DELETE_TEAM = 'delete_team';
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+    public static string $UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
     public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
@@ -451,6 +467,96 @@ trait Base
                         array
                     }
                 }';
+            case self::$CREATE_RELATIONSHIP_ATTRIBUTE:
+                return 'mutation createRelationshipAttribute($databaseId: String!, $collectionId: String!, $relatedCollectionId: String!, $type: String!, $twoWay: Boolean, $key: String, $twoWayKey: String, $onDelete: String){
+                    databasesCreateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, relatedCollectionId: $relatedCollectionId, type: $type, twoWay: $twoWay, key: $key, twoWayKey: $twoWayKey, onDelete: $onDelete) {
+                        relatedCollection
+                        relationType
+                        twoWay
+                        key
+                        twoWayKey
+                        onDelete
+                    }
+                }';
+            case self::$UPDATE_STRING_ATTRIBUTE:
+                return 'mutation updateStringAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateStringAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_INTEGER_ATTRIBUTE:
+                return 'mutation updateIntegerAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Int!, $max: Int!, $default: Int){
+                        databasesUpdateIntegerAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, min: $min, max: $max, default: $default) {
+                            required
+                            min
+                            max
+                            default
+                        }
+                    }';
+            case self::$UPDATE_FLOAT_ATTRIBUTE:
+                return 'mutation updateFloatAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $min: Float!, $max: Float!, $default: Float){
+                        databasesUpdateFloatAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, min: $min, max: $max, required: $required, default: $default) {
+                            required
+                            min
+                            max
+                            default
+                        }
+                    }';
+            case self::$UPDATE_BOOLEAN_ATTRIBUTE:
+                return 'mutation updateBooleanAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: Boolean){
+                        databasesUpdateBooleanAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_URL_ATTRIBUTE:
+                return 'mutation updateUrlAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateUrlAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_EMAIL_ATTRIBUTE:
+                return 'mutation updateEmailAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateEmailAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_IP_ATTRIBUTE:
+                return 'mutation updateIpAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateIpAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_ENUM_ATTRIBUTE:
+                return 'mutation updateEnumAttribute($databaseId: String!, $collectionId: String!, $key: String!, $elements: [String!]!, $required: Boolean!, $default: String){
+                        databasesUpdateEnumAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, elements: $elements, required: $required, default: $default) {
+                            elements
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_DATETIME_ATTRIBUTE:
+                return 'mutation updateDatetimeAttribute($databaseId: String!, $collectionId: String!, $key: String!, $required: Boolean!, $default: String){
+                        databasesUpdateDatetimeAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, required: $required, default: $default) {
+                            required
+                            default
+                        }
+                    }';
+            case self::$UPDATE_RELATIONSHIP_ATTRIBUTE:
+                return 'mutation updateRelationshipAttribute($databaseId: String!, $collectionId: String!, $key: String!, $onDelete: String){
+                        databasesUpdateRelationshipAttribute(databaseId: $databaseId, collectionId: $collectionId, key: $key, onDelete: $onDelete) {
+                            relatedCollection
+                            relationType
+                            twoWay
+                            key
+                            twoWayKey
+                            onDelete
+                        }
+                    }';
             case self::$CREATE_INDEX:
                 return 'mutation createIndex($databaseId: String!, $collectionId: String!, $key: String!, $type: String!, $attributes: [String!]!, $orders: [String!]){
                     databasesCreateIndex(databaseId: $databaseId, collectionId: $collectionId, key: $key, type: $type, attributes: $attributes, orders: $orders) {
@@ -1103,10 +1209,16 @@ trait Base
                 }';
             case self::$GET_TEAM:
                 return 'query getTeam($teamId: String!){
-                    teamsGet(teamId: $teamId) {
-                        _id
-                        name
-                        total
+                        teamsGet(teamId: $teamId) {
+                            _id
+                            name
+                            total
+                        }
+                    }';
+            case self::$GET_TEAM_PREFERENCES:
+                return 'query getTeamPreferences($teamId: String!) {
+                    teamsGetPrefs(teamId: $teamId) {
+                        data
                     }
                 }';
             case self::$GET_TEAMS:
@@ -1127,12 +1239,18 @@ trait Base
                         total
                     }
                 }';
-            case self::$UPDATE_TEAM:
-                return 'mutation updateTeam($teamId: String!, $name: String!){
-                    teamsUpdate(teamId: $teamId, name : $name) {
-                        _id
-                        name
-                        total
+            case self::$UPDATE_TEAM_NAME:
+                return 'mutation updateTeamName($teamId: String!, $name: String!){
+                        teamsUpdateName(teamId: $teamId, name : $name) {
+                            _id
+                            name
+                            total
+                        }
+                    }';
+            case self::$UPDATE_TEAM_PREFERENCES:
+                return 'mutation updateTeamPrefs($teamId: String!, $prefs: Assoc!){
+                    teamsUpdatePrefs(teamId: $teamId, prefs: $prefs) {
+                        data
                     }
                 }';
             case self::$DELETE_TEAM:
@@ -1178,9 +1296,9 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
-                return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
-                    teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
+            case self::$UPDATE_TEAM_MEMBERSHIP:
+                return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $roles: [String!]!){
+                    teamsUpdateMembership(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
                         userId
                         teamId
@@ -1250,8 +1368,7 @@ trait Base
                         total
                         deployments {
                             _id
-                            buildStdout
-                            buildStderr
+                            buildLogs
                         }
                     }
                 }';
@@ -1259,14 +1376,15 @@ trait Base
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
+                        resourceId
                         buildId
-                        buildStdout
-                        buildStderr
+                        buildLogs
+                        status
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
-                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $runtime: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int, $entrypoint: String!) {
+                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout, entrypoint: $entrypoint) {
                         _id
                         name
                         runtime
@@ -1274,8 +1392,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String!, $entrypoint: String!, $events: [String], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, entrypoint: $entrypoint, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime
@@ -1339,15 +1457,14 @@ trait Base
                     }
                 }';
             case self::$CREATE_DEPLOYMENT:
-                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
-                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
+                return 'mutation createDeployment($functionId: String!, $code: InputFile!, $activate: Boolean!) {
+                    functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate) {
                         _id
                         buildId
                         entrypoint
                         size
                         status
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$DELETE_DEPLOYMENT:
@@ -1360,8 +1477,10 @@ trait Base
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
+                        functionId
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$GET_EXECUTIONS:
@@ -1370,17 +1489,21 @@ trait Base
                         total
                         executions {
                             _id
+                            functionId
                             status
-                            stderr
+                            logs
+                            errors
                         }
                     }
                 }';
             case self::$CREATE_EXECUTION:
-                return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
-                    functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
+                return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
+                    functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
+                        functionId
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$DELETE_EXECUTION:

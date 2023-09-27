@@ -34,13 +34,15 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Logger\Logger;
+use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
@@ -59,25 +61,24 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\CLI\Console;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
+use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
@@ -93,6 +94,7 @@ const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
 const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
 const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
@@ -105,9 +107,10 @@ const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate 
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
+const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 501;
-const APP_VERSION_STABLE = '1.2.1';
+const APP_CACHE_BUSTER = 510;
+const APP_VERSION_STABLE = '1.4.3';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -134,6 +137,7 @@ const APP_SOCIAL_DISCORD_CHANNEL = '564160730845151244';
 const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
+const APP_HOSTNAME_INTERNAL = 'appwrite';
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
@@ -157,10 +161,11 @@ const DELETE_TYPE_TEAMS = 'teams';
 const DELETE_TYPE_EXECUTIONS = 'executions';
 const DELETE_TYPE_AUDIT = 'audit';
 const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_CERTIFICATES = 'certificates';
 const DELETE_TYPE_USAGE = 'usage';
 const DELETE_TYPE_REALTIME = 'realtime';
 const DELETE_TYPE_BUCKETS = 'buckets';
+const DELETE_TYPE_INSTALLATIONS = 'installations';
+const DELETE_TYPE_RULES = 'rules';
 const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
@@ -182,6 +187,9 @@ const APP_AUTH_TYPE_KEY = 'Key';
 const APP_AUTH_TYPE_ADMIN = 'Admin';
 // Response related
 const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
+// Function headers
+const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
+const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -246,6 +254,7 @@ Config::load('locale-languages', __DIR__ . '/config/locale/languages.php');
 Config::load('locale-phones', __DIR__ . '/config/locale/phones.php');
 Config::load('locale-countries', __DIR__ . '/config/locale/countries.php');
 Config::load('locale-continents', __DIR__ . '/config/locale/continents.php');
+Config::load('locale-templates', __DIR__ . '/config/locale/templates.php');
 Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
@@ -286,7 +295,7 @@ Database::addFilter(
         return $value;
     },
     function (mixed $value, Document $attribute) {
-        $formatOptions = json_decode($attribute->getAttribute('formatOptions', '[]'), true);
+        $formatOptions = \json_decode($attribute->getAttribute('formatOptions', '[]'), true);
         if (isset($formatOptions['elements'])) {
             $attribute->setAttribute('elements', $formatOptions['elements']);
         }
@@ -326,12 +335,23 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('attributes', [
-                Query::equal('collectionInternalId', [$document->getInternalId()]),
-                Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit($database->getLimitForAttributes()),
-            ]);
+        $attributes = $database->find('attributes', [
+            Query::equal('collectionInternalId', [$document->getInternalId()]),
+            Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
+            Query::limit($database->getLimitForAttributes()),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') === Database::VAR_RELATIONSHIP) {
+                $options = $attribute->getAttribute('options');
+                foreach ($options as $key => $value) {
+                    $attribute->setAttribute($key, $value);
+                }
+                $attribute->removeAttribute('options');
+            }
+        }
+
+        return $attributes;
     }
 );
 
@@ -345,7 +365,7 @@ Database::addFilter(
             ->find('indexes', [
                 Query::equal('collectionInternalId', [$document->getInternalId()]),
                 Query::equal('databaseInternalId', [$document->getAttribute('databaseInternalId')]),
-                Query::limit(64),
+                Query::limit($database->getLimitForIndexes()),
             ]);
     }
 );
@@ -358,20 +378,6 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('platforms', [
-                Query::equal('projectInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
-            ]);
-    }
-);
-
-Database::addFilter(
-    'subQueryDomains',
-    function (mixed $value) {
-        return null;
-    },
-    function (mixed $value, Document $document, Database $database) {
-        return $database
-            ->find('domains', [
                 Query::equal('projectInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
@@ -455,7 +461,8 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return $database
             ->find('variables', [
-                Query::equal('functionInternalId', [$document->getInternalId()]),
+                Query::equal('resourceInternalId', [$document->getInternalId()]),
+                Query::equal('resourceType', ['function']),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
     }
@@ -484,6 +491,43 @@ Database::addFilter(
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
 
         return OpenSSL::decrypt($value['data'], $value['method'], $key, 0, hex2bin($value['iv']), hex2bin($value['tag']));
+    }
+);
+
+Database::addFilter(
+    'subQueryProjectVariables',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return $database
+            ->find('variables', [
+                Query::equal('resourceType', ['project']),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]);
+    }
+);
+
+Database::addFilter(
+    'userSearch',
+    function (mixed $value, Document $user) {
+        $searchValues = [
+            $user->getId(),
+            $user->getAttribute('email', ''),
+            $user->getAttribute('name', ''),
+            $user->getAttribute('phone', '')
+        ];
+
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $searchValues[] = 'label:' . $label;
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
     }
 );
 
@@ -546,14 +590,15 @@ $register->set('logger', function () {
 $register->set('pools', function () {
     $group = new Group();
 
-    $fallbackForDB = AppwriteURL::unparse([
+    $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
         'scheme' => 'mariadb',
         'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => App::getEnv('_APP_DB_PORT', '3306'),
         'user' => App::getEnv('_APP_DB_USER', ''),
         'pass' => App::getEnv('_APP_DB_PASS', ''),
+        'path' => App::getEnv('_APP_DB_SCHEMA', ''),
     ]);
-    $fallbackForRedis = AppwriteURL::unparse([
+    $fallbackForRedis = 'redis_main=' . AppwriteURL::unparse([
         'scheme' => 'redis',
         'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
         'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
@@ -614,13 +659,13 @@ $register->set('pools', function () {
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
         $dsns = $connection['dsns'] ?? '';
-        $multiple = $connection['multiple'] ?? false;
+        $multipe = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
@@ -732,16 +777,16 @@ $register->set('smtp', function () {
 
     $mail->isSMTP();
 
-    $username = App::getEnv('_APP_SMTP_USERNAME', null);
-    $password = App::getEnv('_APP_SMTP_PASSWORD', null);
+    $username = App::getEnv('_APP_SMTP_USERNAME');
+    $password = App::getEnv('_APP_SMTP_PASSWORD');
 
     $mail->XMailer = 'Appwrite Mailer';
     $mail->Host = App::getEnv('_APP_SMTP_HOST', 'smtp');
     $mail->Port = App::getEnv('_APP_SMTP_PORT', 25);
-    $mail->SMTPAuth = (!empty($username) && !empty($password));
+    $mail->SMTPAuth = !empty($username) && !empty($password);
     $mail->Username = $username;
     $mail->Password = $password;
-    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', false);
+    $mail->SMTPSecure = App::getEnv('_APP_SMTP_SECURE', '');
     $mail->SMTPAutoTLS = false;
     $mail->CharSet = 'UTF-8';
 
@@ -758,6 +803,12 @@ $register->set('smtp', function () {
 $register->set('geodb', function () {
     return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
 });
+$register->set('passwordsDictionary', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
@@ -765,78 +816,23 @@ $register->set('promiseAdapter', function () {
  * Localization
  */
 Locale::$exceptions = false;
-Locale::setLanguageFromJSON('af', __DIR__ . '/config/locale/translations/af.json');
-Locale::setLanguageFromJSON('ar', __DIR__ . '/config/locale/translations/ar.json');
-Locale::setLanguageFromJSON('as', __DIR__ . '/config/locale/translations/as.json');
-Locale::setLanguageFromJSON('az', __DIR__ . '/config/locale/translations/az.json');
-Locale::setLanguageFromJSON('be', __DIR__ . '/config/locale/translations/be.json');
-Locale::setLanguageFromJSON('bg', __DIR__ . '/config/locale/translations/bg.json');
-Locale::setLanguageFromJSON('bh', __DIR__ . '/config/locale/translations/bh.json');
-Locale::setLanguageFromJSON('bn', __DIR__ . '/config/locale/translations/bn.json');
-Locale::setLanguageFromJSON('bs', __DIR__ . '/config/locale/translations/bs.json');
-Locale::setLanguageFromJSON('ca', __DIR__ . '/config/locale/translations/ca.json');
-Locale::setLanguageFromJSON('cs', __DIR__ . '/config/locale/translations/cs.json');
-Locale::setLanguageFromJSON('da', __DIR__ . '/config/locale/translations/da.json');
-Locale::setLanguageFromJSON('de', __DIR__ . '/config/locale/translations/de.json');
-Locale::setLanguageFromJSON('el', __DIR__ . '/config/locale/translations/el.json');
-Locale::setLanguageFromJSON('en', __DIR__ . '/config/locale/translations/en.json');
-Locale::setLanguageFromJSON('eo', __DIR__ . '/config/locale/translations/eo.json');
-Locale::setLanguageFromJSON('es', __DIR__ . '/config/locale/translations/es.json');
-Locale::setLanguageFromJSON('fa', __DIR__ . '/config/locale/translations/fa.json');
-Locale::setLanguageFromJSON('fi', __DIR__ . '/config/locale/translations/fi.json');
-Locale::setLanguageFromJSON('fo', __DIR__ . '/config/locale/translations/fo.json');
-Locale::setLanguageFromJSON('fr', __DIR__ . '/config/locale/translations/fr.json');
-Locale::setLanguageFromJSON('ga', __DIR__ . '/config/locale/translations/ga.json');
-Locale::setLanguageFromJSON('gu', __DIR__ . '/config/locale/translations/gu.json');
-Locale::setLanguageFromJSON('he', __DIR__ . '/config/locale/translations/he.json');
-Locale::setLanguageFromJSON('hi', __DIR__ . '/config/locale/translations/hi.json');
-Locale::setLanguageFromJSON('hr', __DIR__ . '/config/locale/translations/hr.json');
-Locale::setLanguageFromJSON('hu', __DIR__ . '/config/locale/translations/hu.json');
-Locale::setLanguageFromJSON('hy', __DIR__ . '/config/locale/translations/hy.json');
-Locale::setLanguageFromJSON('id', __DIR__ . '/config/locale/translations/id.json');
-Locale::setLanguageFromJSON('is', __DIR__ . '/config/locale/translations/is.json');
-Locale::setLanguageFromJSON('it', __DIR__ . '/config/locale/translations/it.json');
-Locale::setLanguageFromJSON('ja', __DIR__ . '/config/locale/translations/ja.json');
-Locale::setLanguageFromJSON('jv', __DIR__ . '/config/locale/translations/jv.json');
-Locale::setLanguageFromJSON('kn', __DIR__ . '/config/locale/translations/kn.json');
-Locale::setLanguageFromJSON('km', __DIR__ . '/config/locale/translations/km.json');
-Locale::setLanguageFromJSON('ko', __DIR__ . '/config/locale/translations/ko.json');
-Locale::setLanguageFromJSON('la', __DIR__ . '/config/locale/translations/la.json');
-Locale::setLanguageFromJSON('lb', __DIR__ . '/config/locale/translations/lb.json');
-Locale::setLanguageFromJSON('lt', __DIR__ . '/config/locale/translations/lt.json');
-Locale::setLanguageFromJSON('lv', __DIR__ . '/config/locale/translations/lv.json');
-Locale::setLanguageFromJSON('ml', __DIR__ . '/config/locale/translations/ml.json');
-Locale::setLanguageFromJSON('mr', __DIR__ . '/config/locale/translations/mr.json');
-Locale::setLanguageFromJSON('ms', __DIR__ . '/config/locale/translations/ms.json');
-Locale::setLanguageFromJSON('nb', __DIR__ . '/config/locale/translations/nb.json');
-Locale::setLanguageFromJSON('ne', __DIR__ . '/config/locale/translations/ne.json');
-Locale::setLanguageFromJSON('nl', __DIR__ . '/config/locale/translations/nl.json');
-Locale::setLanguageFromJSON('nn', __DIR__ . '/config/locale/translations/nn.json');
-Locale::setLanguageFromJSON('or', __DIR__ . '/config/locale/translations/or.json');
-Locale::setLanguageFromJSON('pa', __DIR__ . '/config/locale/translations/pa.json');
-Locale::setLanguageFromJSON('pl', __DIR__ . '/config/locale/translations/pl.json');
-Locale::setLanguageFromJSON('pt-br', __DIR__ . '/config/locale/translations/pt-br.json');
-Locale::setLanguageFromJSON('pt-pt', __DIR__ . '/config/locale/translations/pt-pt.json');
-Locale::setLanguageFromJSON('ro', __DIR__ . '/config/locale/translations/ro.json');
-Locale::setLanguageFromJSON('ru', __DIR__ . '/config/locale/translations/ru.json');
-Locale::setLanguageFromJSON('sa', __DIR__ . '/config/locale/translations/sa.json');
-Locale::setLanguageFromJSON('sd', __DIR__ . '/config/locale/translations/sd.json');
-Locale::setLanguageFromJSON('si', __DIR__ . '/config/locale/translations/si.json');
-Locale::setLanguageFromJSON('sk', __DIR__ . '/config/locale/translations/sk.json');
-Locale::setLanguageFromJSON('sl', __DIR__ . '/config/locale/translations/sl.json');
-Locale::setLanguageFromJSON('sn', __DIR__ . '/config/locale/translations/sn.json');
-Locale::setLanguageFromJSON('sq', __DIR__ . '/config/locale/translations/sq.json');
-Locale::setLanguageFromJSON('sv', __DIR__ . '/config/locale/translations/sv.json');
-Locale::setLanguageFromJSON('ta', __DIR__ . '/config/locale/translations/ta.json');
-Locale::setLanguageFromJSON('te', __DIR__ . '/config/locale/translations/te.json');
-Locale::setLanguageFromJSON('th', __DIR__ . '/config/locale/translations/th.json');
-Locale::setLanguageFromJSON('tl', __DIR__ . '/config/locale/translations/tl.json');
-Locale::setLanguageFromJSON('tr', __DIR__ . '/config/locale/translations/tr.json');
-Locale::setLanguageFromJSON('uk', __DIR__ . '/config/locale/translations/uk.json');
-Locale::setLanguageFromJSON('ur', __DIR__ . '/config/locale/translations/ur.json');
-Locale::setLanguageFromJSON('vi', __DIR__ . '/config/locale/translations/vi.json');
-Locale::setLanguageFromJSON('zh-cn', __DIR__ . '/config/locale/translations/zh-cn.json');
-Locale::setLanguageFromJSON('zh-tw', __DIR__ . '/config/locale/translations/zh-tw.json');
+
+$locales = Config::getParam('locale-codes', []);
+
+foreach ($locales as $locale) {
+    $code = $locale['code'];
+
+    $path = __DIR__ . '/config/locale/translations/' . $code . '.json';
+
+    if (!\file_exists($path)) {
+        $path = __DIR__ . '/config/locale/translations/' . \substr($code, 0, 2) . '.json'; // if `ar-ae` doesn't exist, look for `ar`
+        if (!\file_exists($path)) {
+            $path = __DIR__ . '/config/locale/translations/en.json'; // if none translation exists, use default from `en.json`
+        }
+    }
+
+    Locale::setLanguageFromJSON($code, $path);
+}
 
 \stream_context_set_default([ // Set global user agent and http settings
     'http' => [
@@ -861,6 +857,10 @@ App::setResource('loggerBreadcrumbs', function () {
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+
+App::setResource('localeCodes', function () {
+    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+});
 
 // Queues
 App::setResource('queue', function (Group $pools) {
@@ -977,9 +977,13 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (APP_MODE_ADMIN !== $mode) {
         if ($project->isEmpty()) {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         } else {
-            $user = $dbForProject->getDocument('users', Auth::$unique);
+            if ($project->getId() === 'console') {
+                $user = $dbForConsole->getDocument('users', Auth::$unique);
+            } else {
+                $user = $dbForProject->getDocument('users', Auth::$unique);
+            }
         }
     } else {
         $user = $dbForConsole->getDocument('users', Auth::$unique);
@@ -989,14 +993,14 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         $user->isEmpty() // Check a document has been found in the DB
         || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
     ) { // Validate user has valid login token
-        $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+        $user = new Document([]);
     }
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
             Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 
@@ -1019,7 +1023,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
 
         if (empty($user->find('$id', $jwtSessionId, 'sessions'))) { // Match JWT to active token
-            $user = new Document(['$id' => ID::custom(''), '$collection' => 'users']);
+            $user = new Document([]);
         }
     }
 
@@ -1031,9 +1035,9 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
     /** @var Utopia\Database\Database $dbForConsole */
     /** @var Utopia\Database\Document $console */
 
-    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', 'console'));
+    $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
-    if ($projectId === 'console') {
+    if (empty($projectId) || $projectId === 'console') {
         return $console;
     }
 
@@ -1074,6 +1078,11 @@ App::setResource('console', function () {
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
+        'authProviders' => [
+            'githubEnabled' => true,
+            'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
+            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+        ],
     ]);
 }, []);
 
@@ -1103,10 +1112,43 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('console');
+    $database->setNamespace('_console');
 
     return $database;
 }, ['pools', 'cache']);
+
+App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+        if ($project->isEmpty() || $project->getId() === 'console') {
+            return $dbForConsole;
+        }
+
+        $databaseName = $project->getAttribute('database');
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+            $database->setNamespace('_' . $project->getInternalId());
+            return $database;
+        }
+
+        $dbAdapter = $pools
+            ->get($databaseName)
+            ->pop()
+            ->getResource();
+
+        $database = new Database($dbAdapter, $cache);
+
+        $databases[$databaseName] = $database;
+
+        $database->setNamespace('_' . $project->getInternalId());
+
+        return $database;
+    };
+
+    return $getProjectDB;
+}, ['pools', 'dbForConsole', 'cache']);
 
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
@@ -1143,38 +1185,81 @@ function getDevice($root): Device
 {
     $connection = App::getEnv('_APP_CONNECTIONS_STORAGE', '');
 
-    $acl = 'private';
-    $device = Storage::DEVICE_LOCAL;
-    $accessKey = '';
-    $accessSecret = '';
-    $bucket = '';
-    $region = '';
+    if (!empty($connection)) {
+        $acl = 'private';
+        $device = Storage::DEVICE_LOCAL;
+        $accessKey = '';
+        $accessSecret = '';
+        $bucket = '';
+        $region = '';
 
-    try {
-        $dsn = new DSN($connection);
-        $device = $dsn->getScheme();
-        $accessKey = $dsn->getUser();
-        $accessSecret = $dsn->getPassword();
-        $bucket = $dsn->getPath();
-        $region = $dsn->getParam('region');
-    } catch (\Exception $e) {
-        Console::error($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
-    }
+        try {
+            $dsn = new DSN($connection);
+            $device = $dsn->getScheme();
+            $accessKey = $dsn->getUser() ?? '';
+            $accessSecret = $dsn->getPassword() ?? '';
+            $bucket = $dsn->getPath() ?? '';
+            $region = $dsn->getParam('region');
+        } catch (\Exception $e) {
+            Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
+        }
 
-    switch ($device) {
-        case Storage::DEVICE_S3:
-            return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case STORAGE::DEVICE_DO_SPACES:
-            return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_BACKBLAZE:
-            return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_LINODE:
-            return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_WASABI:
-            return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-        case Storage::DEVICE_LOCAL:
-        default:
-            return new Local($root);
+        switch ($device) {
+            case Storage::DEVICE_S3:
+                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case STORAGE::DEVICE_DO_SPACES:
+                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_BACKBLAZE:
+                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LINODE:
+                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_WASABI:
+                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+        }
+    } else {
+        switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
+            case Storage::DEVICE_LOCAL:
+            default:
+                return new Local($root);
+            case Storage::DEVICE_S3:
+                $s3AccessKey = App::getEnv('_APP_STORAGE_S3_ACCESS_KEY', '');
+                $s3SecretKey = App::getEnv('_APP_STORAGE_S3_SECRET', '');
+                $s3Region = App::getEnv('_APP_STORAGE_S3_REGION', '');
+                $s3Bucket = App::getEnv('_APP_STORAGE_S3_BUCKET', '');
+                $s3Acl = 'private';
+                return new S3($root, $s3AccessKey, $s3SecretKey, $s3Bucket, $s3Region, $s3Acl);
+            case Storage::DEVICE_DO_SPACES:
+                $doSpacesAccessKey = App::getEnv('_APP_STORAGE_DO_SPACES_ACCESS_KEY', '');
+                $doSpacesSecretKey = App::getEnv('_APP_STORAGE_DO_SPACES_SECRET', '');
+                $doSpacesRegion = App::getEnv('_APP_STORAGE_DO_SPACES_REGION', '');
+                $doSpacesBucket = App::getEnv('_APP_STORAGE_DO_SPACES_BUCKET', '');
+                $doSpacesAcl = 'private';
+                return new DOSpaces($root, $doSpacesAccessKey, $doSpacesSecretKey, $doSpacesBucket, $doSpacesRegion, $doSpacesAcl);
+            case Storage::DEVICE_BACKBLAZE:
+                $backblazeAccessKey = App::getEnv('_APP_STORAGE_BACKBLAZE_ACCESS_KEY', '');
+                $backblazeSecretKey = App::getEnv('_APP_STORAGE_BACKBLAZE_SECRET', '');
+                $backblazeRegion = App::getEnv('_APP_STORAGE_BACKBLAZE_REGION', '');
+                $backblazeBucket = App::getEnv('_APP_STORAGE_BACKBLAZE_BUCKET', '');
+                $backblazeAcl = 'private';
+                return new Backblaze($root, $backblazeAccessKey, $backblazeSecretKey, $backblazeBucket, $backblazeRegion, $backblazeAcl);
+            case Storage::DEVICE_LINODE:
+                $linodeAccessKey = App::getEnv('_APP_STORAGE_LINODE_ACCESS_KEY', '');
+                $linodeSecretKey = App::getEnv('_APP_STORAGE_LINODE_SECRET', '');
+                $linodeRegion = App::getEnv('_APP_STORAGE_LINODE_REGION', '');
+                $linodeBucket = App::getEnv('_APP_STORAGE_LINODE_BUCKET', '');
+                $linodeAcl = 'private';
+                return new Linode($root, $linodeAccessKey, $linodeSecretKey, $linodeBucket, $linodeRegion, $linodeAcl);
+            case Storage::DEVICE_WASABI:
+                $wasabiAccessKey = App::getEnv('_APP_STORAGE_WASABI_ACCESS_KEY', '');
+                $wasabiSecretKey = App::getEnv('_APP_STORAGE_WASABI_SECRET', '');
+                $wasabiRegion = App::getEnv('_APP_STORAGE_WASABI_REGION', '');
+                $wasabiBucket = App::getEnv('_APP_STORAGE_WASABI_BUCKET', '');
+                $wasabiAcl = 'private';
+                return new Wasabi($root, $wasabiAccessKey, $wasabiSecretKey, $wasabiBucket, $wasabiRegion, $wasabiAcl);
+        }
     }
 }
 
@@ -1192,6 +1277,11 @@ App::setResource('mode', function ($request) {
 App::setResource('geodb', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('geodb');
+}, ['register']);
+
+App::setResource('passwordsDictionary', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary');
 }, ['register']);
 
 App::setResource('sms', function () {
@@ -1229,7 +1319,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
-        $query = Query::getByType($queries, Query::TYPE_LIMIT)[0] ?? null;
+        $query = Query::getByType($queries, [Query::TYPE_LIMIT])[0] ?? null;
         $limit = $query ? $query->getValue() : APP_LIMIT_LIST_DEFAULT;
 
         return $complexity * $limit;
@@ -1310,3 +1400,39 @@ App::setResource('schema', function ($utopia, $dbForProject) {
         $params,
     );
 }, ['utopia', 'dbForProject']);
+
+App::setResource('contributors', function () {
+    $path = 'app/config/contributors.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+});
+
+App::setResource('employees', function () {
+    $path = 'app/config/employees.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+});
+
+App::setResource('heroes', function () {
+    $path = 'app/config/heroes.json';
+    $list = (file_exists($path)) ? json_decode(file_get_contents($path), true) : [];
+    return $list;
+});
+
+App::setResource('gitHub', function (Cache $cache) {
+    return new VcsGitHub($cache);
+}, ['cache']);
+
+App::setResource('requestTimestamp', function ($request) {
+    //TODO: Move this to the Request class itself
+    $timestampHeader = $request->getHeader('x-appwrite-timestamp');
+    $requestTimestamp = null;
+    if (!empty($timestampHeader)) {
+        try {
+            $requestTimestamp = new \DateTime($timestampHeader);
+        } catch (\Throwable $e) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid X-Appwrite-Timestamp header value');
+        }
+    }
+    return $requestTimestamp;
+}, ['request']);

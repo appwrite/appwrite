@@ -17,10 +17,7 @@ abstract class Scope extends TestCase
     protected function setUp(): void
     {
         $this->client = new Client();
-
-        $this->client
-            ->setEndpoint($this->endpoint)
-        ;
+        $this->client->setEndpoint($this->endpoint);
     }
 
     protected function tearDown(): void
@@ -45,10 +42,10 @@ abstract class Scope extends TestCase
     {
         sleep(2);
 
-        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-        $resquest['data'] = json_decode($resquest['data'], true);
+        $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $request['data'] = json_decode($request['data'], true);
 
-        return $resquest;
+        return $request;
     }
 
     /**

@@ -8,12 +8,15 @@ use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Database\Database;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Storage\Validator\File;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\UID;
+use Utopia\Validator\Nullable;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -197,7 +200,6 @@ App::delete('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-/** Endpoint to test if required headers are sent from the SDK */
 App::get('/v1/mock/tests/general/headers')
     ->desc('Get headers')
     ->groups(['mock'])
@@ -266,7 +268,7 @@ App::post('/v1/mock/tests/general/upload')
     ->param('x', '', new Text(100), 'Sample string param')
     ->param('y', '', new Integer(true), 'Sample numeric param')
     ->param('z', null, new ArrayList(new Text(256), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Sample array param')
-    ->param('file', [], new File(), 'Sample file param', false)
+    ->param('file', [], new File(), 'Sample file param', skipValidation: true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $x, int $y, array $z, mixed $file, Request $request, Response $response) {
@@ -284,7 +286,7 @@ App::post('/v1/mock/tests/general/upload')
             $id = $request->getHeader('x-appwrite-id', '');
             $file['size'] = (\is_array($file['size'])) ? $file['size'][0] : $file['size'];
 
-            if (is_null($start) || is_null($end) || is_null($size)) {
+            if (is_null($start) || is_null($end) || is_null($size) || $end >= $size) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Invalid content-range header');
             }
 
@@ -300,11 +302,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'All chunked request must have id header (except first)');
             }
 
-            if ($end !== $size && $end - $start + 1 !== $chunkSize) {
+            if ($end !== $size - 1 && $end - $start + 1 !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB (except last chunk)');
             }
 
-            if ($end !== $size && $file['size'] !== $chunkSize) {
+            if ($end !== $size - 1 && $file['size'] !== $chunkSize) {
                 throw new Exception(Exception::GENERAL_MOCK, 'Wrong chunk size');
             }
 
@@ -312,11 +314,11 @@ App::post('/v1/mock/tests/general/upload')
                 throw new Exception(Exception::GENERAL_MOCK, 'Chunk size must be 5MB or less');
             }
 
-            if ($end !== $size) {
+            if ($end !== $size - 1) {
                 $response->json([
                     '$id' => ID::custom('newfileid'),
-                    'chunksTotal' => $file['size'] / $chunkSize,
-                    'chunksUploaded' => $start / $chunkSize
+                    'chunksTotal' => (int) ceil($size / ($end + 1 - $start)),
+                    'chunksUploaded' => ceil($start / $chunkSize) + 1
                 ]);
             }
         } else {
@@ -427,33 +429,32 @@ App::get('/v1/mock/tests/general/empty')
         $response->noContent();
     });
 
-/** Endpoint to test if required headers are sent from the SDK */
-App::get('/v1/mock/tests/general/headers')
-    ->desc('Get headers')
+App::post('/v1/mock/tests/general/nullable')
+    ->desc('Nullable Test')
     ->groups(['mock'])
     ->label('scope', 'public')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'general')
-    ->label('sdk.method', 'headers')
-    ->label('sdk.description', 'Return headers from the request')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.model', Response::MODEL_MOCK)
+    ->label('sdk.method', 'nullable')
+    ->label('sdk.description', 'Mock a nullable parameter.')
     ->label('sdk.mock', true)
-    ->inject('request')
-    ->inject('response')
-    ->action(function (Request $request, Response $response) {
-        $res = [
-            'x-sdk-name' => $request->getHeader('x-sdk-name'),
-            'x-sdk-platform' => $request->getHeader('x-sdk-platform'),
-            'x-sdk-language' => $request->getHeader('x-sdk-language'),
-            'x-sdk-version' => $request->getHeader('x-sdk-version'),
-        ];
-        $res = array_map(function ($key, $value) {
-            return $key . ': ' . $value;
-        }, array_keys($res), $res);
-        $res = implode("; ", $res);
+    ->param('required', '', new Text(100), 'Sample string param')
+    ->param('nullable', '', new Nullable(new Text(100)), 'Sample string param')
+    ->param('optional', '', new Text(100), 'Sample string param', true)
+    ->action(function (string $required, string $nullable, ?string $optional) {
+    });
 
-        $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
+App::post('/v1/mock/tests/general/enum')
+    ->desc('Enum Test')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'enum')
+    ->label('sdk.description', 'Mock an enum parameter.')
+    ->label('sdk.mock', true)
+    ->param('mockType', '', new WhiteList(['first', 'second', 'third']), 'Sample enum param')
+    ->action(function (string $mockType) {
     });
 
 App::get('/v1/mock/tests/general/400-error')
@@ -619,6 +620,32 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
+App::patch('/v1/mock/functions-v2')
+    ->desc('Update Function Version to V2 (outdated code syntax)')
+    ->groups(['mock', 'api', 'functions'])
+    ->label('scope', 'functions.write')
+    ->label('docs', false)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $functionId, Response $response, Database $dbForProject) {
+        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
+
+        $response->noContent();
+    });
+
 App::shutdown()
     ->groups(['mock'])
     ->inject('utopia')
@@ -627,7 +654,7 @@ App::shutdown()
     ->action(function (App $utopia, Response $response, Request $request) {
 
         $result = [];
-        $route  = $utopia->match($request);
+        $route  = $utopia->getRoute();
         $path   = APP_STORAGE_CACHE . '/tests.json';
         $tests  = (\file_exists($path)) ? \json_decode(\file_get_contents($path), true) : [];
 

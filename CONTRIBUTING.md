@@ -109,7 +109,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
+
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
@@ -238,6 +240,8 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 
 - Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data).
 - MariaDB - for database storage and queries.
+- InfluxDB - for managing stats and time-series based data
+- Statsd - for sending data over UDP protocol (using Telegraf)
 - ClamAV - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
@@ -319,7 +323,7 @@ The Runtimes for all supported cloud functions (multicore builds) can be found a
 
 The following steps are used to generate a new console SDK:
 
-1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs <version-number> normal` command in a running `appwrite/appwrite` container.
+1. Update the console spec file located at `app/config/specs/swagger2-<version-number>.console.json` using Appwrite Tasks. Run the `php app/cli.php specs version=<version-number> mode=normal` command in a running `appwrite/appwrite` container.
 2. Generate a new SDK using the command `php app/cli.php sdks`.
 3. Change your working dir using `cd app/sdks/console-web`.
 4. Build the new SDK `npm run build`.
@@ -344,8 +348,7 @@ If you are in PHP Storm you don't need any plugin. Below are the settings requir
 
 1. Create an init file. 
 2. Duplicate **dev/yasd_init.php.stub** file and name it **dev/yasd_init.php**.
-3. Change the IP address to your development machine's IP. Without the proper IP address, the debugger won't connect. 
-4. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
+3. Set **DEBUG** build arg in **appwrite** service in **docker-compose.yml** file.
 
 ### VS Code Launch Configuration
 

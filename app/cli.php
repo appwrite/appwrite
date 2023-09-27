@@ -61,14 +61,13 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('console');
+            $dbForConsole->setNamespace('_console');
 
             // Ensure tables exist
-            $collections = Config::getParam('collections', []);
+            $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) {
-                /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -78,7 +77,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $pools->get('console')->reclaim();
             sleep($sleep);
         }
-    } while ($attempts < $maxAttempts);
+    } while ($attempts < $maxAttempts && !$ready);
 
     if (!$ready) {
         throw new Exception("Console is not ready yet. Please try again later.");

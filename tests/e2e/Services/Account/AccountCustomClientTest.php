@@ -11,7 +11,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
 
@@ -20,32 +20,6 @@ class AccountCustomClientTest extends Scope
     use AccountBase;
     use ProjectCustom;
     use SideClient;
-
-    public function testCreateAccountWithInvite(): void
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for FAILURE
-         * Make sure the invite endpoint is only accessible through the console project.
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/invite', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-            'code' => 'Invalid Code'
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::GENERAL_ACCESS_FORBIDDEN);
-    }
 
     /**
      * @depends testCreateAccountSession
@@ -252,6 +226,8 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', $response['headers']['set-cookie']);
+        $this->assertEquals('[]', $response['headers']['x-fallback-cookies']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -394,6 +370,21 @@ class AccountCustomClientTest extends Scope
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
+        \usleep(1000 * 30); // wait for 30ms to let the shutdown update accessedAt
+
+        $apiKey = $this->getProject()['apiKey'];
+        $userId = $response['body']['userId'];
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+        ]));
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+
+        $this->assertNotEmpty($response['body']['accessedAt']);
+
         /**
          * Test for FAILURE
          */
@@ -517,6 +508,18 @@ class AccountCustomClientTest extends Scope
             'email' => $email,
             'password' => $password,
         ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost'
+        ]);
+
 
         $this->assertEquals($response['headers']['status-code'], 201);
 

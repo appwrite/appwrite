@@ -61,8 +61,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
-        $pools = $register->get('pools'); /** @var Group $pools */
-        App::setResource('pools', fn() => $pools);
+        $pools = $register->get('pools');
+        /** @var Group $pools */
+        App::setResource('pools', fn () => $pools);
 
         // wait for database to be ready
         $attempts = 0;
@@ -72,7 +73,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $dbForConsole = $app->getResource('dbForConsole'); /** @var Utopia\Database\Database $dbForConsole */
+                $dbForConsole = $app->getResource('dbForConsole');
+                /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -84,9 +86,6 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         } while ($attempts < $max);
 
         Console::success('[Setup] - Server database init started...');
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
 
         try {
             Console::success('[Setup] - Creating database: appwrite...');
@@ -105,18 +104,14 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $adapter->setup();
         }
 
-        foreach ($collections as $key => $collection) {
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
+        $consoleCollections = $collections['console'];
+        foreach ($consoleCollections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
             if (!$dbForConsole->getCollection($key)->isEmpty()) {
-                continue;
-            }
-
-            /**
-             * Skip to prevent 0.16 migration issues.
-             */
-            if (in_array($key, ['cache', 'variables']) && $dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
                 continue;
             }
 
@@ -177,7 +172,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $bucket = $dbForConsole->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
-            $files = $collections['files'] ?? [];
+            $files = $collections['buckets']['files'] ?? [];
             if (empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }
@@ -228,6 +223,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+    App::setResource('swooleRequest', fn () => $swooleRequest);
+    App::setResource('swooleResponse', fn () => $swooleResponse);
+
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
@@ -246,7 +244,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('UTC');
 
     $pools = $register->get('pools');
-    App::setResource('pools', fn() => $pools);
+    App::setResource('pools', fn () => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -266,7 +264,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             }
 
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $route = $app->match($request);
+            $route = $app->getRoute();
 
             $log = new Utopia\Logger\Log();
 
@@ -292,7 +290,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('detailedTrace', $th->getTrace());
-            $log->addExtra('roles', Authorization::$roles);
+            $log->addExtra('roles', Authorization::getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Origin;
 use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
@@ -12,6 +13,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
 
@@ -98,6 +100,12 @@ class Hamster extends Action
                 /** Get Total Functions */
                 $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
 
+                foreach (\array_keys(Config::getParam('runtimes')) as $runtime) {
+                    $statsPerProject['custom_functions_' . $runtime] = $dbForProject->count('functions', [
+                        Query::equal('runtime', [$runtime]),
+                    ], APP_LIMIT_COUNT);
+                }
+
                 /** Get Total Deployments */
                 $statsPerProject['custom_deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
 
@@ -136,7 +144,10 @@ class Hamster extends Action
                 }
 
                 /** Get Domains */
-                $statsPerProject['custom_domains'] = $dbForProject->count('domains', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_domains'] = $dbForConsole->count('domains', [
+                    Query::equal('projectInternalId', [$project->getInternalId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
 
                 /** Get Platforms */
                 $platforms = $dbForConsole->find('platforms', [
@@ -152,13 +163,26 @@ class Hamster extends Action
                     return $platform['type'] === 'android';
                 }));
 
-                $statsPerProject['custom_platforms_iOS'] = sizeof(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_apple'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'apple');
                 }));
 
                 $statsPerProject['custom_platforms_flutter'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'flutter');
                 }));
+
+                $flutterPlatforms = [Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_FLUTTER_LINUX];
+
+                foreach ($flutterPlatforms as $flutterPlatform) {
+                    $statsPerProject['custom_platforms_' . $flutterPlatform] = sizeof(array_filter($platforms, function ($platform) use ($flutterPlatform) {
+                        return $platform['type'] === $flutterPlatform;
+                    }));
+                }
+
+                $statsPerProject['custom_platforms_api_keys'] = $dbForConsole->count('keys', [
+                    Query::equal('projectInternalId', [$project->getInternalId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
 
                 /** Get Usage $statsPerProject */
                 $periods = [

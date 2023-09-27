@@ -17,11 +17,13 @@ use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Queue\Adapter\Swoole;
 use Utopia\Platform\Service;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -47,7 +49,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
         ->getResource();
 
     $adapter = new Database($database, $cache);
-    $adapter->setNamespace('console');
+    $adapter->setNamespace('_console');
 
     return $adapter;
 }, ['cache', 'register']);
@@ -160,6 +162,8 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
+Server::setResource('log', fn() => new Log());
+
 /**
  * Get Functions Storage Device
  * @param string $projectId of the project
@@ -214,6 +218,8 @@ if (isset($args[0])) {
     Console::error('Missing worker name');
 }
 
+if (empty(App::getEnv('QUEUE'))) {
+    throw new Exception('Please configure "QUEUE" environment variable.');
 try {
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
@@ -237,8 +243,8 @@ $worker
     ->error()
     ->inject('error')
     ->inject('logger')
-    ->action(function (Throwable $error, Logger|null $logger) {
-
+    ->inject('log')
+    ->action(function (Throwable $error, Logger|null $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -248,6 +254,7 @@ $worker
         if (($error->getCode() >= 500 || $error->getCode() === 0) && !empty($logger)) {
             $log = new Log();
 
+        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
@@ -260,12 +267,13 @@ $worker
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+            $log->addExtra('roles', Authorization::getRoles());
 
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
-            $logger->addLog($log);
+            $responseCode = $logger->addLog($log);
+            Console::info('Usage stats log pushed with status code: ' . $responseCode);
         }
 
         Console::error('[Error] Type: ' . get_class($error));

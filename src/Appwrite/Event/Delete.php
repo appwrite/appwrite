@@ -136,7 +136,7 @@ class Delete extends Event
             'document' => $this->document,
             'resource' => $this->resource,
             'datetime' => $this->datetime,
-            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime,
+            'hourlyUsageRetentionDatetime' => $this->hourlyUsageRetentionDatetime
         ]);
     }
 }
