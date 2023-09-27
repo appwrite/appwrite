@@ -202,7 +202,9 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
+        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
+        $timeout  = $timeout + 15;
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
