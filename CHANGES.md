@@ -21,6 +21,7 @@
 - Bump composer to fix migration bug in [#6344](https://github.com/appwrite/appwrite/pull/6344)
 - Fix execution call timeout in [#6332](https://github.com/appwrite/appwrite/pull/6332)
 - Bump appwrite-assistant to prevent it from crashing w/o open ai key in [#6342](https://github.com/appwrite/appwrite/pull/6342)
+- Remove Special Chars from Initials [#6164](https://github.com/appwrite/appwrite/pull/6164)
 
 # Version 1.4.3
 
