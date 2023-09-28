@@ -388,11 +388,7 @@ App::get('/v1/health/queue/certificates')
     }, ['response']);
 
 App::get('/v1/health/queue/builds')
-<<<<<<< HEAD
-    ->desc('Get Builds Queue')
-=======
     ->desc('Get builds queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -409,11 +405,7 @@ App::get('/v1/health/queue/builds')
     }, ['response']);
 
 App::get('/v1/health/queue/databases')
-<<<<<<< HEAD
-    ->desc('Get Databases Queue')
-=======
     ->desc('Get databases queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -430,11 +422,7 @@ App::get('/v1/health/queue/databases')
     }, ['response']);
 
 App::get('/v1/health/queue/deletes')
-<<<<<<< HEAD
-    ->desc('Get Deletes Queue')
-=======
     ->desc('Get deletes queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -451,11 +439,7 @@ App::get('/v1/health/queue/deletes')
     }, ['response']);
 
 App::get('/v1/health/queue/mails')
-<<<<<<< HEAD
-    ->desc('Get Mails Queue')
-=======
     ->desc('Get mails queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -472,11 +456,7 @@ App::get('/v1/health/queue/mails')
     }, ['response']);
 
 App::get('/v1/health/queue/messaging')
-<<<<<<< HEAD
-    ->desc('Get Messaging Queue')
-=======
     ->desc('Get messaging queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -493,11 +473,7 @@ App::get('/v1/health/queue/messaging')
     }, ['response']);
 
 App::get('/v1/health/queue/migrations')
-<<<<<<< HEAD
-    ->desc('Get Migrations Queue')
-=======
     ->desc('Get migrations queue')
->>>>>>> 4f88ba8b881555d351430a4be94d071ebbb35b84
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
