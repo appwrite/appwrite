@@ -595,6 +595,18 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => '>',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEmpty($response['body']['users']);
+        $this->assertCount(0, $response['body']['users']);
+
         /**
          * Test for FAILURE
          */
