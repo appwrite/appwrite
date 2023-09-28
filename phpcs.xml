@@ -7,6 +7,8 @@
     <ini name="memory_limit" value="4096M"/>
     <!-- Exclude SDK's for performance reasons -->
     <exclude-pattern>./app/sdks</exclude-pattern>
+    <!-- Exclude functions as they are in different languages -->
+    <exclude-pattern>./tests/resources/functions</exclude-pattern>
     <!-- Exclude console -->
     <exclude-pattern>./app/console</exclude-pattern>
     <!-- Ignore max line width -->
