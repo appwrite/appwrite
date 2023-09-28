@@ -2152,16 +2152,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.43.2",
+            "version": "0.43.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f2626acd42665a9987c94af1c93bf20c28d55c9d"
+                "reference": "58d33c8d1216212edfba5d080e2f698487612aca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f2626acd42665a9987c94af1c93bf20c28d55c9d",
-                "reference": "f2626acd42665a9987c94af1c93bf20c28d55c9d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/58d33c8d1216212edfba5d080e2f698487612aca",
+                "reference": "58d33c8d1216212edfba5d080e2f698487612aca",
                 "shasum": ""
             },
             "require": {
@@ -2202,9 +2202,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.43.2"
+                "source": "https://github.com/utopia-php/database/tree/0.43.3"
             },
-            "time": "2023-09-07T19:04:33+00:00"
+            "time": "2023-09-28T01:51:22+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -6019,5 +6019,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
