@@ -218,8 +218,6 @@ if (isset($args[0])) {
     Console::error('Missing worker name');
 }
 
-if (empty(App::getEnv('QUEUE'))) {
-    throw new Exception('Please configure "QUEUE" environment variable.');
 try {
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
@@ -250,9 +248,6 @@ $worker
         if ($error instanceof PDOException) {
             throw $error;
         }
-
-        if (($error->getCode() >= 500 || $error->getCode() === 0) && !empty($logger)) {
-            $log = new Log();
 
         if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
             $log->setNamespace("appwrite-worker");

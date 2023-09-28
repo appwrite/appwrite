@@ -89,12 +89,6 @@ class UsageHook extends Usage
                             }
                         }
                     }
-                    if (!empty($project['keys'])) {
-                        $dbForProject->createDocument('statsLogger', new Document([
-                            'time' => DateTime::now(),
-                            'metrics' => $project['keys'],
-                        ]));
-                    }
                 } catch (\Exception $e) {
                     console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
                 } finally {

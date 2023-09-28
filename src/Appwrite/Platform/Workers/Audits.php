@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Exception;
-use Utopia\App;
+use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -32,6 +32,7 @@ class Audits extends Action
 
     /**
      * @throws Exception
+     * @throws Throwable
      */
     public function action(Message $message, Database $dbForProject): void
     {
@@ -55,8 +56,7 @@ class Audits extends Action
 
         $audit = new Audit($dbForProject);
         $audit->log(
-            userInternalId: $user->getInternalId(),
-            userId: $user->getId(),
+            userId: $user->getInternalId(),
             // Pass first, most verbose event pattern
             event: $event,
             resource: $resource,
