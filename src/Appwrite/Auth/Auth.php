@@ -52,6 +52,8 @@ class Auth
     public const TOKEN_TYPE_INVITE = 4;
     public const TOKEN_TYPE_MAGIC_URL = 5;
     public const TOKEN_TYPE_PHONE = 6;
+    public const TOKEN_TYPE_OAUTH2 = 7;
+    public const TOKEN_TYPE_UNIVERSAL = 8;
 
     /**
      * Session Providers.
@@ -60,6 +62,8 @@ class Auth
     public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
     public const SESSION_PROVIDER_PHONE = 'phone';
+    public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+    public const SESSION_PROVIDER_UNIVERSAL = 'universal';
 
     /**
      * Token Expiration times.
@@ -308,15 +312,14 @@ class Auth
      *
      * @return bool|string
      */
-    public static function tokenVerify(array $tokens, int $type, string $secret)
+    public static function tokenVerify(array $tokens, int $type = null, string $secret)
     {
         foreach ($tokens as $token) {
             /** @var Document $token */
             if (
-                $token->isSet('type') &&
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
-                $token->getAttribute('type') == $type &&
+                $type === null || $token->getAttribute('type') === $type &&
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {

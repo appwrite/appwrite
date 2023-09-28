@@ -768,17 +768,36 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
-        // Add keys for non-web platforms - TODO - add verification phase to aviod session sniffing
-        if (parse_url($state['success'], PHP_URL_PATH) === $oauthDefaultSuccess) {
-            $state['success'] = URLParser::parse($state['success']);
-            $query = URLParser::parseQuery($state['success']['query']);
-            $query['project'] = $project->getId();
-            $query['domain'] = Config::getParam('cookieDomain');
-            $query['key'] = Auth::$cookieName;
-            $query['secret'] = Auth::encodeSession($user->getId(), $secret);
-            $state['success']['query'] = URLParser::unparseQuery($query);
-            $state['success'] = URLParser::unparse($state['success']);
-        }
+        $loginSecret = Auth::tokenGenerator();
+
+        $token = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'type' => Auth::TOKEN_TYPE_OAUTH2,
+            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        Authorization::setRole(Role::user($user->getId())->toString());
+
+        $token = $dbForProject->createDocument('tokens', $token
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $state['success'] = URLParser::parse($state['success']);
+        $query = URLParser::parseQuery($state['success']['query']);
+        $query['secret'] = $token->getAttribute('secret');
+        $query['userId'] = $user->getId();
+        $state['success']['query'] = URLParser::unparseQuery($query);
+        $state['success'] = URLParser::unparse($state['success']);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1087,6 +1106,117 @@ App::post('/v1/account/sessions/magic-url')
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($token, Response::MODEL_TOKEN)
         ;
+    });
+
+App::put('/v1/account/sessions/token')
+->desc('Exchange token for session')
+->groups(['api', 'account'])
+    ->label('scope', 'public')
+    ->label('auth.type', 'token')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('usage.metric', 'sessions.{scope}.requests.create')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createTokenSession')
+    ->label('sdk.description', '/docs/references/account/create-token-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->param('userId', '', new CustomId(), 'User ID.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('events')
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+        /** @var Utopia\Database\Document $user */
+        $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+
+        if ($userFromRequest->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $token = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
+
+        if (!$token) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $user->setAttributes($userFromRequest->getArrayCopy());
+
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+        $secret = Auth::tokenGenerator();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+        $session = new Document(array_merge(
+            [
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_UNIVERSAL,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        Authorization::setRole(Role::user($user->getId())->toString());
+
+        $session = $dbForProject->createDocument('sessions', $session
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->deleteDocument('tokens', $token);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        try {
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        } catch (\Throwable $th) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
+        }
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId());
+
+
+        if (!Config::getParam('domainVerification')) {
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+        }
+
+        $protocol = $request->getProtocol();
+
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
+
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+        $session
+            ->setAttribute('current', true)
+            ->setAttribute('countryName', $countryName)
+            ->setAttribute('expire', $expire);
+
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::put('/v1/account/sessions/magic-url')

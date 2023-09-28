@@ -1081,6 +1081,55 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
+App::post('/v1/users/:userId/token') 
+    ->desc('Create universal token')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].sessions.create')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('usage.metric', 'sessions.{scope}.requests.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSession')
+    ->label('sdk.description', '/docs/references/users/create-user-token.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
+        $user = $dbForProject->getDocument('users ', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $loginSecret = Auth::tokenGenerator();
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
+
+        $token = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'type' => Auth::TOKEN_TYPE_UNIVERSAL,
+            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => 'UNKNOWN',
+            'ip' => 'UNKNOWN',
+        ]);
+
+        $token = $dbForProject->createDocument('tokens', $token);
+
+        return $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN);
+    });
+
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
