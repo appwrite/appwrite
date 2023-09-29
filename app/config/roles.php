@@ -66,6 +66,7 @@ return [
     Auth::USER_ROLE_GUESTS => [
         'label' => 'Guests',
         'scopes' => [
+            'global',
             'public',
             'home',
             'console',

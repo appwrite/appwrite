@@ -50,35 +50,37 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        foreach ($this->documentsIterator('domains') as $domain) {
-            $status = 'created';
-            if ($domain->getAttribute('verification', false)) {
-                $status = 'verified';
-            }
+        if ($this->consoleDB->exists($this->consoleDB->getDefaultDatabase(), 'domains')) {
+            foreach ($this->documentsIterator('domains') as $domain) {
+                $status = 'created';
+                if ($domain->getAttribute('verification', false)) {
+                    $status = 'verified';
+                }
 
-            $projectId = $domain->getAttribute('projectId');
-            $projectInternalId = $domain->getAttribute('projectInternalId');
+                $projectId = $domain->getAttribute('projectId');
+                $projectInternalId = $domain->getAttribute('projectInternalId');
 
-            if (empty($projectId) || empty($projectInternalId)) {
-                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
-                continue;
-            }
+                if (empty($projectId) || empty($projectInternalId)) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: Missing projectId or projectInternalId");
+                    continue;
+                }
 
-            $ruleDocument = new Document([
-                'projectId' => $domain->getAttribute('projectId'),
-                'projectInternalId' => $domain->getAttribute('projectInternalId'),
-                'domain' => $domain->getAttribute('domain'),
-                'resourceType' => 'api',
-                'resourceInternalId' => '',
-                'resourceId' => '',
-                'status' => $status,
-                'certificateId' => $domain->getAttribute('certificateId'),
-            ]);
+                $ruleDocument = new Document([
+                    'projectId' => $domain->getAttribute('projectId'),
+                    'projectInternalId' => $domain->getAttribute('projectInternalId'),
+                    'domain' => $domain->getAttribute('domain'),
+                    'resourceType' => 'api',
+                    'resourceInternalId' => '',
+                    'resourceId' => '',
+                    'status' => $status,
+                    'certificateId' => $domain->getAttribute('certificateId'),
+                ]);
 
-            try {
-                $this->consoleDB->createDocument('rules', $ruleDocument);
-            } catch (\Throwable $th) {
-                Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+                try {
+                    $this->consoleDB->createDocument('rules', $ruleDocument);
+                } catch (\Throwable $th) {
+                    Console::warning("Error migrating domain {$domain->getAttribute('domain')}: {$th->getMessage()}");
+                }
             }
         }
     }
@@ -408,6 +410,7 @@ class V19 extends Migration
                         'version',
                         'entrypoint',
                         'commands',
+                        'varsProject'
                     ];
                     foreach ($attributesToCreate as $attribute) {
                         try {
@@ -648,9 +651,9 @@ class V19 extends Migration
         switch ($document->getCollection()) {
             case 'attributes':
             case 'indexes':
-                $status = $document->getAttribute('status', '');
+                $status = $document->getAttribute('status');
                 if ($status === 'failed') {
-                    $document->setAttribute('error', 'Unknown problem');
+                    $document->setAttribute('error', $document->getAttribute('error', 'Unknown problem'));
                 }
                 break;
             case 'builds':
@@ -660,10 +663,10 @@ class V19 extends Migration
 
                 $stdout = $document->getAttribute('stdout', '');
                 $stderr = $document->getAttribute('stderr', '');
-                $document->setAttribute('logs', $stdout . PHP_EOL . $stderr);
+                $document->setAttribute('logs', $document->getAttribute('logs', $stdout . PHP_EOL . $stderr));
                 break;
             case 'databases':
-                $document->setAttribute('enabled', true);
+                $document->setAttribute('enabled', $document->getAttribute('enabled', true));
                 break;
             case 'deployments':
                 $resourceId = $document->getAttribute('resourceId');
@@ -677,9 +680,8 @@ class V19 extends Migration
                 }
 
                 $commands = $this->getFunctionCommands($function);
-                $document->setAttribute('commands', $commands);
-
-                $document->setAttribute('type', 'manual');
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
+                $document->setAttribute('type', $document->getAttribute('type', 'manual'));
                 break;
             case 'executions':
                 $functionId = $document->getAttribute('functionId');
@@ -691,9 +693,9 @@ class V19 extends Migration
                 $document->setAttribute('deploymentInternalId', $deployment->getInternalId());
                 break;
             case 'functions':
-                $document->setAttribute('live', true);
-                $document->setAttribute('logging', true);
-                $document->setAttribute('version', 'v2');
+                $document->setAttribute('live', $document->getAttribute('live', true));
+                $document->setAttribute('logging', $document->getAttribute('logging', true));
+                $document->setAttribute('version', $document->getAttribute('version', 'v2'));
                 $deploymentId = $document->getAttribute('deployment');
 
                 if (!empty($deploymentId)) {
@@ -703,21 +705,24 @@ class V19 extends Migration
                 }
 
                 $commands = $this->getFunctionCommands($document);
-                $document->setAttribute('commands', $commands);
+                $document->setAttribute('commands', $document->getAttribute('commands', $commands));
 
-                $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                    'resourceType' => 'function',
-                    'resourceId' => $document->getId(),
-                    'resourceInternalId' => $document->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $this->project->getId(),
-                    'schedule'  => $document->getAttribute('schedule'),
-                    'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
-                ]));
+                if (empty($document->getAttribute('scheduleId', null))) {
+                    $schedule = $this->consoleDB->createDocument('schedules', new Document([
+                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'resourceType' => 'function',
+                        'resourceId' => $document->getId(),
+                        'resourceInternalId' => $document->getInternalId(),
+                        'resourceUpdatedAt' => DateTime::now(),
+                        'projectId' => $this->project->getId(),
+                        'schedule'  => $document->getAttribute('schedule'),
+                        'active' => !empty($document->getAttribute('schedule')) && !empty($document->getAttribute('deployment')),
+                    ]));
 
-                $document->setAttribute('scheduleId', $schedule->getId());
-                $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                    $document->setAttribute('scheduleId', $schedule->getId());
+                    $document->setAttribute('scheduleInternalId', $schedule->getInternalId());
+                }
+
                 break;
             case 'projects':
                 $document->setAttribute('version', '1.4.0');
@@ -725,13 +730,13 @@ class V19 extends Migration
                 $databases = Config::getParam('pools-database', []);
                 $database = $databases[0];
 
-                $document->setAttribute('database', $database);
-                $document->setAttribute('smtp', []);
-                $document->setAttribute('templates', []);
+                $document->setAttribute('database', $document->getAttribute('database', $database));
+                $document->setAttribute('smtp', $document->getAttribute('smtp', []));
+                $document->setAttribute('templates', $document->getAttribute('templates', []));
 
                 break;
             case 'variables':
-                $document->setAttribute('resourceType', 'function');
+                $document->setAttribute('resourceType', $document->getAttribute('resourceType', 'function'));
                 break;
             default:
                 break;

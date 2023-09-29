@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = teams.createMembership('[TEAM_ID]', [], 'https://example.com');
+let promise = teams.createMembership('[TEAM_ID]', []);
 
 promise.then(function (response) {
     console.log(response);
