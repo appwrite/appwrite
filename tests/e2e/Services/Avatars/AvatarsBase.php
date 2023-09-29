@@ -524,4 +524,28 @@ trait AvatarsBase
         $this->assertEquals('PNG', $image->getImageFormat());
         $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/initials.png')), strlen($response['body']));
     }
+
+    public function testSpecialCharsInitalImage()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/avatars/initials', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'name' => 'W (Hello) W',
+            'width' => 200,
+            'height' => 200,
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertNotEmpty($response['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($response['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/initials.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+        $this->assertEquals(strlen(\file_get_contents(__DIR__ . '/../../../resources/initials.png')), strlen($response['body']));
+    }
 }

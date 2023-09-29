@@ -529,10 +529,10 @@ App::get('/v1/avatars/initials')
             if (ctype_alnum($w[0] ?? '')) {
                 $initials .= $w[0];
                 $code += ord($w[0]);
-            }
 
-            if ($key == 1) {
-                break;
+                if ($key == 1) {
+                    break;
+                }
             }
         }
 
