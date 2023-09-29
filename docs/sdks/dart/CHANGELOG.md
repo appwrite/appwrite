@@ -183,7 +183,7 @@
 - BREAKING Renamed users.deleteUser to users.delete
 - BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
 - JWT Support client.setJWT('JWT_GENERATED_IN_CLIENT')
-- [Update membership roles](https://appwrite.io/docs/references/cloud/server-dart/teams?sdk=dart#updateMembershipRoles)
+- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=dart#teamsUpdateMembershipRoles)
 - New awesome image preview features, supports borderRadius, borderColor, borderWidth 
 
 ## 0.5.0-dev.1
