@@ -202,7 +202,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/apple.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.png',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -212,7 +212,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/apple.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.png',
             'width' => 200,
             'height' => 200,
         ]);
@@ -224,7 +224,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/apple.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.png',
             'width' => 300,
             'height' => 300,
             'quality' => 30,
@@ -251,7 +251,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/apple.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.png',
             'width' => 2001,
             'height' => 300,
             'quality' => 30,
@@ -280,11 +280,11 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/favicon', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/',
+            'url' => 'https://github.com/',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('image/png', $response['headers']['content-type']);
+        $this->assertEquals('image/x-icon', $response['headers']['content-type']);
         $this->assertNotEmpty($response['body']);
 
         /**
