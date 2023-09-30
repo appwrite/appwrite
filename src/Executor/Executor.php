@@ -205,7 +205,7 @@ class Executor
 
         // Safety timeout. Executor has timeout, and open runtime has soft timeout.
         // This one shouldn't really happen, but prevents from unexpected networking behaviours.
-        if($requestTimeout == null) {
+        if ($requestTimeout == null) {
             $requestTimeout = $timeout + 15;
         }
 
