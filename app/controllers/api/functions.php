@@ -1708,7 +1708,8 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                requestTimeout: 15
             );
 
             $headersFiltered = [];
