@@ -139,7 +139,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // \curl_setopt($ch, CURLOPT_HEADER, true);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-        \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
         $executionResponse = \curl_exec($ch);
         $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
