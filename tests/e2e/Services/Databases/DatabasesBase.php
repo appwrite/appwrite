@@ -4280,7 +4280,7 @@ trait DatabasesBase
         $this->assertEquals('relationship', $response['body']['type']);
 
         // Delete level 2 collection
-        $deleteLevel2CollectionResponse = $this->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level2['body']['$id'], array_merge([
+        $deleteLevel2CollectionResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -4289,13 +4289,12 @@ trait DatabasesBase
         $this->assertEqual(204, $deleteLevel2CollectionResponse['headers']['status-code']);
 
         // Delete level2 (key) relation attribute from level 1 collection
-        $deleteRelationAttributeFromLevel1 = $this->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level1['body']['$id'] . '/attributes/level2', array_merge([
+        $deleteRelationAttributeFromLevel1 = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level1['body']['$id'] . '/attributes/level2', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
         $this->assertEqual(204, $deleteRelationAttributeFromLevel1['headers']['status-code']);
-
     }
 }
