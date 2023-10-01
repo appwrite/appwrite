@@ -27,10 +27,10 @@ jobs:
 
     # This is a separate action that sets up buildx runner
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
 
     - name: Build Appwrite
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5
       with:
         context: .
         push: false
