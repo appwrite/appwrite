@@ -721,11 +721,6 @@ App::delete('/v1/projects/:projectId')
     ->inject('dbForConsole')
     ->inject('queueForDeletes')
     ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $queueForDeletes) {
-
-        if (!Auth::passwordVerify($password, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
-            throw new Exception(Exception::USER_INVALID_CREDENTIALS);
-        }
-
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
@@ -997,6 +992,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
         $response->noContent();
     });
 
+// Keys
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create Key')
     ->groups(['api', 'projects'])

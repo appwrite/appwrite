@@ -136,6 +136,10 @@ class Deletes extends Action
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
                 break;
+            case DELETE_TYPE_CERTIFICATES:
+                $document = new Document($this->args['document']);
+                $this->deleteCertificates($document);
+                break;
             case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($dbForConsole, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
