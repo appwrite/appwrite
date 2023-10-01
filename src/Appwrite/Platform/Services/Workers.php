@@ -33,7 +33,7 @@ class Workers extends Service
             ->addAction(Deletes::getName(), new Deletes())
             ->addAction(UsageHook::getName(), new UsageHook())
             ->addAction(Usage::getName(), new Usage())
-            ->addAction(Usage::getName(), new Migrations())
+            ->addAction(Migrations::getName(), new Migrations())
 
         ;
     }
