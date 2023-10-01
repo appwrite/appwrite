@@ -10,6 +10,7 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
@@ -76,7 +77,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -154,6 +155,9 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
 }, ['queue']);
+Server::setResource('queueForMigrations', function (Connection $queue) {
+    return new Migration($queue);
+}, ['queue']);
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
@@ -169,7 +173,7 @@ Server::setResource('log', fn() => new Log());
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('deviceFunctions', function () {
+Server::setResource('getFunctionsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     };
@@ -180,7 +184,7 @@ Server::setResource('deviceFunctions', function () {
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('deviceFiles', function () {
+Server::setResource('getFilesDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     };
@@ -191,7 +195,7 @@ Server::setResource('deviceFiles', function () {
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('deviceBuilds', function () {
+Server::setResource('getBuildsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     };
@@ -202,7 +206,7 @@ Server::setResource('deviceBuilds', function () {
  * @param string $projectId of the project
  * @return Device
  */
-Server::setResource('deviceCache', function () {
+Server::setResource('getCacheDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
     };

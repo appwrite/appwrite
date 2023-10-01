@@ -7,10 +7,9 @@ use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Document;
-use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Registry\Registry;
 
 class Mails extends Action
 {
@@ -32,10 +31,13 @@ class Mails extends Action
     }
 
     /**
+     * @param Message $message
+     * @param Registry $register
      * @throws \PHPMailer\PHPMailer\Exception
+     * @return void
      * @throws Exception
      */
-    public function action(Message $message, $register): void
+    public function action(Message $message, Registry $register): void
     {
 
         $payload = $message->getPayload() ?? [];
@@ -44,29 +46,30 @@ class Mails extends Action
             throw new Exception('Missing payload');
         }
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
-            Console::info('Skipped mail processing. No SMTP server hostname has been set.');
+        $smtp = $payload['smtp'];
+
+        if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
+            Console::info('Skipped mail processing. No SMTP configuration has been set.');
             return;
         }
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
+        $variables = $payload['variables'];
         $name = $payload['name'];
-        $body = $payload['body'];
-        $from = $payload['from'];
+
+        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+
+        foreach ($variables as $key => $value) {
+            $body->setParam('{{' . $key . '}}', $value);
+        }
+
+        $body = $body->render();
 
         /** @var PHPMailer $mail */
-        $mail = $register->get('smtp');
-
-        // Set project mail
-        /*$register->get('smtp')
-            ->setFrom(
-                App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM),
-                ($project->getId() === 'console')
-                    ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME.' Server'))
-                    : \sprintf(Locale::getText('account.emails.team'), $project->getAttribute('name')
-                )
-            );*/
+        $mail = empty($smtp)
+            ? $register->get('smtp')
+            : $this->getMailer($smtp);
 
         $mail->clearAddresses();
         $mail->clearAllRecipients();
@@ -74,8 +77,6 @@ class Mails extends Action
         $mail->clearAttachments();
         $mail->clearBCCs();
         $mail->clearCCs();
-
-        $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), (empty($from) ? \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server')) : $from));
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
@@ -86,5 +87,40 @@ class Mails extends Action
         } catch (\Exception $error) {
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
+    }
+
+    /**
+     * @param array $smtp
+     * @return PHPMailer
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
+    protected function getMailer(array $smtp): PHPMailer
+    {
+        $mail = new PHPMailer(true);
+
+        $mail->isSMTP();
+
+        $username = $smtp['username'];
+        $password = $smtp['password'];
+
+        $mail->XMailer = 'Appwrite Mailer';
+        $mail->Host = $smtp['host'];
+        $mail->Port = $smtp['port'];
+        $mail->SMTPAuth = (!empty($username) && !empty($password));
+        $mail->Username = $username;
+        $mail->Password = $password;
+        $mail->SMTPSecure = $smtp['secure'];
+        $mail->SMTPAutoTLS = false;
+        $mail->CharSet = 'UTF-8';
+
+        $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
+
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
+
+        $mail->isHTML();
+
+        return $mail;
     }
 }

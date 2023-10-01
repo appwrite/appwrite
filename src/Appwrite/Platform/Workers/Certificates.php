@@ -16,6 +16,9 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
@@ -46,7 +49,14 @@ class Certificates extends Action
     }
 
     /**
-     * @throws Exception|Throwable
+     * @param Message $message
+     * @param Database $dbForConsole
+     * @param Mail $queueForMails
+     * @param Event $queueForEvents
+     * @param Func $queueForFunctions
+     * @return void
+     * @throws Throwable
+     * @throws \Utopia\Database\Exception
      */
     public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions): void
     {
@@ -64,7 +74,15 @@ class Certificates extends Action
     }
 
     /**
-     * @throws Exception|Throwable
+     * @param Domain $domain
+     * @param Database $dbForConsole
+     * @param Mail $queueForMails
+     * @param Event $queueForEvents
+     * @param Func $queueForFunctions
+     * @param bool $skipRenewCheck
+     * @return void
+     * @throws Throwable
+     * @throws \Utopia\Database\Exception
      */
     private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, bool $skipRenewCheck = false): void
     {
@@ -176,9 +194,15 @@ class Certificates extends Action
      *
      * @param string $domain Domain name that certificate is for
      * @param Document $certificate Certificate document that we need to save
+     * @param bool $success
      * @param Database $dbForConsole Database connection for console
+     * @param Event $queueForEvents
+     * @param Func $queueForFunctions
      * @return void
-     * @throws Exception|Throwable
+     * @throws \Utopia\Database\Exception
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Structure
      */
     private function saveCertificateDocument(string $domain, Document $certificate, bool $success, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions): void
     {

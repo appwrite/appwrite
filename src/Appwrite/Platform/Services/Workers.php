@@ -14,6 +14,7 @@ use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Usage;
 use Appwrite\Platform\Workers\UsageHook;
+use Appwrite\Platform\Workers\Migrations;
 
 class Workers extends Service
 {
@@ -32,6 +33,7 @@ class Workers extends Service
             ->addAction(Deletes::getName(), new Deletes())
             ->addAction(UsageHook::getName(), new UsageHook())
             ->addAction(Usage::getName(), new Usage())
+            ->addAction(Usage::getName(), new Migrations())
 
         ;
     }

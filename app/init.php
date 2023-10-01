@@ -18,6 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
@@ -53,6 +54,7 @@ use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -896,7 +898,9 @@ App::setResource('queueForUsage', function (Connection $queue) {
 App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-
+App::setResource('queueForMigrations', function (Connection $queue) {
+    return new Migration($queue);
+}, ['queue']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),

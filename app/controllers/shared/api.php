@@ -249,8 +249,8 @@ App::init()
         $queueForDatabase->setProject($project);
 
         $dbForProject
-            ->on(Database::EVENT_DOCUMENT_CREATE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
         ;
 
         $useCache = $route->getLabel('cache', false);
@@ -427,7 +427,6 @@ App::shutdown()
         $responsePayload = $response->getPayload();
 
         if (!empty($queueForEvents->getEvent())) {
-
             if (empty($queueForEvents->getPayload())) {
                 $queueForEvents->setPayload($responsePayload);
             }
@@ -497,7 +496,7 @@ App::shutdown()
         }
 
         if (!$user->isEmpty()) {
-            $audits->setUser($user);
+            $queueForAudits->setUser($user);
         }
 
         if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {

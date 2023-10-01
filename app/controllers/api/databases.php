@@ -22,6 +22,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
@@ -57,13 +58,26 @@ use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 
 /**
- * Create attribute of varying type
+ * * Create attribute of varying type
  *
- *
+ * @param string $databaseId
+ * @param string $collectionId
+ * @param Document $attribute
+ * @param Response $response
+ * @param Database $dbForProject
+ * @param EventDatabase $queueForDatabase
+ * @param Event $queueForEvents
  * @return Document Newly created attribute document
+ * @throws AuthorizationException
  * @throws Exception
+ * @throws LimitException
+ * @throws RestrictedException
+ * @throws StructureException
+ * @throws \Utopia\Database\Exception
+ * @throws Conflict
+ * @throws \Utopia\Exception
  */
-function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $events): Document
+function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -1529,7 +1543,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             'default' => $default,
             'array' => $array,
             'filters' => $filters,
-        ]), $response, $dbForProject, $database, $events);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)

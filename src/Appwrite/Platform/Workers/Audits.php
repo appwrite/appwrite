@@ -7,6 +7,8 @@ use Throwable;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Structure;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -31,8 +33,13 @@ class Audits extends Action
 
 
     /**
-     * @throws Exception
+     * @param Message $message
+     * @param Database $dbForProject
+     * @return void
      * @throws Throwable
+     * @throws \Utopia\Database\Exception
+     * @throws Authorization
+     * @throws Structure
      */
     public function action(Message $message, Database $dbForProject): void
     {

@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Utopia\App;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
@@ -32,6 +31,12 @@ class UsageHook extends Usage
         ;
     }
 
+    /**
+     * @param $register
+     * @param $cache
+     * @param $pools
+     * @return void
+     */
     public function action($register, $cache, $pools): void
     {
         Timer::tick(30000, function () use ($register, $cache, $pools) {

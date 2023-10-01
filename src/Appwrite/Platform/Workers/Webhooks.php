@@ -10,7 +10,7 @@ use Utopia\Queue\Message;
 
 class Webhooks extends Action
 {
-    private $errors = [];
+    private array $errors = [];
 
     public static function getName(): string
     {
@@ -29,6 +29,8 @@ class Webhooks extends Action
     }
 
     /**
+     * @param Message $message
+     * @return void
      * @throws Exception
      */
     public function action(Message $message): void
@@ -50,14 +52,19 @@ class Webhooks extends Action
             }
         }
 
-        if (!empty($errors)) {
-            throw new Exception(\implode(" / \n\n", $errors));
+        if (!empty($this->errors)) {
+            throw new Exception(\implode(" / \n\n", $this->errors));
         }
-
-            $this->errors = [];
     }
 
-
+    /**
+     * @param array $events
+     * @param string $payload
+     * @param Document $webhook
+     * @param Document $user
+     * @param Document $project
+     * @return void
+     */
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
     {
 
@@ -67,7 +74,7 @@ class Webhooks extends Action
         $httpUser = $webhook->getAttribute('httpUser');
         $httpPass = $webhook->getAttribute('httpPass');
         $ch = \curl_init($webhook->getAttribute('url'));
-        var_dump($url);
+
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         \curl_setopt($ch, CURLOPT_HEADER, 0);

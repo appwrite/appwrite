@@ -285,7 +285,12 @@ App::post('/v1/functions')
 
             /** Trigger Webhook */
             $ruleModel = new Rule();
-            $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleCreate =
+                $queueForEvents
+                     ->setClass(Event::WEBHOOK_CLASS_NAME)
+                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ;
+
             $ruleCreate
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].create')
@@ -999,7 +1004,9 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceLocal')
     ->inject('dbForConsole')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $entrypoint, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole, Build $queueForBuilds) {
+    ->action(function (string $functionId, string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole, Build $queueForBuilds) {
+
+        $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
 

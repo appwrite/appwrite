@@ -39,6 +39,7 @@ class Databases extends Action
      * @param Message $message
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @return void
      * @throws Exception
      */
     public function action(Message $message, Database $dbForConsole, Database $dbForProject): void
@@ -79,6 +80,7 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Exception
@@ -206,6 +208,7 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Exception
@@ -369,12 +372,13 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
      */
-    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject)
+    private function createIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         $projectId = $project->getId();
 
@@ -439,12 +443,13 @@ class Databases extends Action
      * @param Document $project
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @return void
      * @throws Authorization
      * @throws Conflict
      * @throws Structure
      * @throws DatabaseException
      */
-    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject)
+    private function deleteIndex(Document $database, Document $collection, Document $index, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         $projectId = $project->getId();
 

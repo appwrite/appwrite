@@ -47,6 +47,8 @@ class Messaging extends Action
     }
 
     /**
+     * @param Message $message
+     * @return void
      * @throws Exception
      */
     public function action(Message $message): void
@@ -54,15 +56,18 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            Console::error('Payload arg not found');
+            return;
         }
 
         if (empty($payload['recipient'])) {
-            throw new Exception('Missing recipient');
+            Console::error('Recipient arg not found');
+            return;
         }
 
         if (empty($payload['message'])) {
-            throw new Exception('Missing message');
+            Console::error('Message arg not found');
+            return;
         }
 
         $sms =  match ($this->dsn->getHost()) {
@@ -75,15 +80,15 @@ class Messaging extends Action
             default => null
         };
 
-        $from = App::getEnv('_APP_SMS_FROM');
-
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            Console::info('Skipped sms processing. No Phone provider has been set.');
+            Console::error('Skipped sms processing. No Phone provider has been set.');
             return;
         }
 
+        $from = App::getEnv('_APP_SMS_FROM');
+
         if (empty($from)) {
-            Console::info('Skipped sms processing. No phone number has been set.');
+            Console::error('Skipped sms processing. No phone number has been set.');
             return;
         }
 

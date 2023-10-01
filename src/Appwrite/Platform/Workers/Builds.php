@@ -18,12 +18,13 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
-use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -54,7 +55,17 @@ class Builds extends Action
     }
 
     /**
-     * @throws Exception|\Throwable
+     * @param Message $message
+     * @param Database $dbForConsole
+     * @param Event $queueForEvents
+     * @param Func $queueForFunctions
+     * @param Usage $queueForUsage
+     * @param Cache $cache
+     * @param callable $getProjectDB
+     * @param callable $deviceFunctions
+     * @return void
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
      */
     public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, callable $getProjectDB, callable $deviceFunctions): void
     {
@@ -84,11 +95,21 @@ class Builds extends Action
     }
 
     /**
-     * @throws Authorization
-     * @throws \Throwable
-     * @throws Structure
+     * @param callable $deviceFunctions
+     * @param Func $queueForFunctions
+     * @param Event $queueForEvents
+     * @param Usage $queueForUsage
+     * @param Database $dbForConsole
+     * @param callable $getProjectDB
+     * @param GitHub $github
+     * @param Document $project
+     * @param Document $function
+     * @param Document $deployment
+     * @param Document $template
+     * @return void
+     * @throws \Utopia\Database\Exception
      */
-    protected function buildDeployment(callable $deviceFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, callable $getProjectDB, GitHub $github, Document $project, Document $function, Document $deployment, Document $template)
+    protected function buildDeployment(callable $deviceFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, callable $getProjectDB, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -518,6 +539,24 @@ class Builds extends Action
         }
     }
 
+    /**
+     * @param string $status
+     * @param GitHub $github
+     * @param string $providerCommitHash
+     * @param string $owner
+     * @param string $repositoryName
+     * @param Document $project
+     * @param Document $function
+     * @param string $deploymentId
+     * @param Database $dbForProject
+     * @param Database $dbForConsole
+     * @return void
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Restricted
+     */
     protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
     {
         if ($function->getAttribute('providerSilentMode', false) === true) {

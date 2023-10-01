@@ -137,7 +137,7 @@ class Deletes extends Action
                 $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
                 break;
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteUsageStats($dbForConsole, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource);
@@ -195,6 +195,7 @@ class Deletes extends Action
      * @param Document $project
      * @param callable $getProjectDB
      * @param string $resource
+     * @return void
      * @throws Authorization
      */
     protected function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource): void
@@ -266,6 +267,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param Document $document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteDatabase(callable $getProjectDB, Document $document, Document $project): void
@@ -285,6 +287,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param Document $document teams document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteCollection(callable $getProjectDB, Document $document, Document $project): void
@@ -330,9 +333,10 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $hourlyUsageRetentionDatetime
+     * @return void
      * @throws Exception
      */
-    protected function deleteUsageStats(Database $dbForConsole, callable $getProjectDB, string $hourlyUsageRetentionDatetime)
+    protected function deleteUsageStats(Database $dbForConsole, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
     {
         $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($getProjectDB, $hourlyUsageRetentionDatetime) {
             $dbForProject = $getProjectDB($project);
@@ -348,6 +352,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param Document $document teams document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteMemberships(callable $getProjectDB, Document $document, Document $project): void
@@ -400,8 +405,10 @@ class Deletes extends Action
      * @param callable $getBuildsDevice
      * @param callable $getCacheDevice
      * @param Document $document
-     * @throws Authorization|\Utopia\Database\Exception
+     * @return void
      * @throws Exception
+     * @throws Authorization
+     * @throws \Utopia\Database\Exception
      */
     protected function deleteProject(Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Document $document): void
     {
@@ -475,6 +482,8 @@ class Deletes extends Action
     /**
      * @param Database $dbForConsole
      * @param Document $document certificates document
+     * @return void
+     * @throws Exception
      */
     protected function deleteCertificates(Database $dbForConsole, Document $document): void
     {
@@ -522,6 +531,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param Document $document user document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteUser(callable $getProjectDB, Document $document, Document $project): void
@@ -570,6 +580,7 @@ class Deletes extends Action
      * @param database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @return void
      * @throws Exception
      */
     protected function deleteExecutionLogs(database $dbForConsole, callable $getProjectDB, string $datetime): void
@@ -609,6 +620,7 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @return void
      * @throws Exception
      */
     protected function deleteRealtimeUsage(Database $dbForConsole, callable $getProjectDB, string $datetime): void
@@ -626,6 +638,7 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @return void
      * @throws Exception
      */
     protected function deleteAbuseLogs(Database $dbForConsole, callable $getProjectDB, string $datetime): void
@@ -650,6 +663,7 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @return void
      * @throws Exception
      */
     protected function deleteAuditLogs(Database $dbForConsole, callable $getProjectDB, string $datetime): void
@@ -673,6 +687,7 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param string $resource
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteAuditLogsByResource(callable $getProjectDB, string $resource, Document $project): void
@@ -688,8 +703,9 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param callable $getFunctionsDevice
      * @param callable $getBuildsDevice
-     * @param Document $document
+     * @param Document $document function document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteFunction(Database $dbForConsole, callable $getProjectDB, callable $getFunctionsDevice, callable $getBuildsDevice, Document $document, Document $project): void
@@ -775,6 +791,7 @@ class Deletes extends Action
      * @param callable $getBuildsDevice
      * @param Document $document
      * @param Document $project
+     * @return void
      * @throws Exception
      */
     protected function deleteDeployment(callable $getProjectDB, callable $getFunctionsDevice, callable $getBuildsDevice, Document $document, Document $project): void
@@ -815,7 +832,7 @@ class Deletes extends Action
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
-        $this->deleteRuntimes($document, $project);
+        $this->deleteRuntimes($getProjectDB, $document, $project);
     }
 
 
@@ -825,7 +842,6 @@ class Deletes extends Action
      * @param Database $database to delete it from
      * @param callable|null $callback to perform after document is deleted
      * @return bool
-     * @throws Authorization
      */
     protected function deleteById(Document $document, Database $database, callable $callback = null): bool
     {
@@ -854,9 +870,7 @@ class Deletes extends Action
         $count = 0;
         $chunk = 0;
         $limit = 50;
-        $projects = [];
         $sum = $limit;
-
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
@@ -883,6 +897,7 @@ class Deletes extends Action
      * @param array $queries
      * @param Database $database
      * @param callable|null $callback
+     * @return void
      * @throws Exception
      */
     protected function deleteByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
@@ -920,6 +935,7 @@ class Deletes extends Action
      * @param Query[] $queries
      * @param Database $database
      * @param callable|null $callback
+     * @return void
      * @throws Exception
      */
     protected function listByGroup(string $collection, array $queries, Database $database, callable $callback = null): void
@@ -957,6 +973,7 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param Document $document rule document
      * @param Document $project project document
+     * @return void
      */
     protected function deleteRule(Database $dbForConsole, Document $document, Document $project): void
     {
@@ -1005,8 +1022,9 @@ class Deletes extends Action
      * @param Document $document
      * @param Document $project
      * @return void
+     * @throws Exception
      */
-    protected function deleteInstallation(Database $dbForConsole, callable $getProjectDB, Document $document, Document $project)
+    protected function deleteInstallation(Database $dbForConsole, callable $getProjectDB, Document $document, Document $project): void
     {
         $dbForProject = $getProjectDB($project);
 
@@ -1032,9 +1050,10 @@ class Deletes extends Action
      * @param callable $getProjectDB
      * @param ?Document $function
      * @param Document $project
+     * @return void
      * @throws Exception
      */
-    protected function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project)
+    protected function deleteRuntimes(callable $getProjectDB, ?Document $function, Document $project): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 

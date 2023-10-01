@@ -49,7 +49,15 @@ class Functions extends Action
     }
 
     /**
-     * @throws Exception|Throwable
+     * @param Message $message
+     * @param Database $dbForProject
+     * @param Func $queueForFunctions
+     * @param Event $queueForEvents
+     * @param Usage $queueForUsage
+     * @param Log $log
+     * @return void
+     * @throws Exception
+     * @throws Throwable
      */
     public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
     {
@@ -84,7 +92,6 @@ class Functions extends Action
             $limit = 30;
             $sum = 30;
             $offset = 0;
-            $functions = [];
             /** @var Document[] $functions */
             while ($sum >= $limit) {
                 $functions = $dbForProject->find('functions', [
@@ -184,9 +191,28 @@ class Functions extends Action
     }
 
     /**
+     * @param Log $log
+     * @param Database $dbForProject
+     * @param Func $queueForFunctions
+     * @param Usage $queueForUsage
+     * @param Event $queueForEvents
+     * @param Document $project
+     * @param Document $function
+     * @param string $trigger
+     * @param string $path
+     * @param string $method
+     * @param array $headers
+     * @param string|null $data
+     * @param Document|null $user
+     * @param string|null $jwt
+     * @param string|null $event
+     * @param string|null $eventData
+     * @param string|null $executionId
+     * @return void
      * @throws Authorization
-     * @throws Throwable
      * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws \Utopia\Database\Exception\Conflict
      */
     private function execute(
         Log $log,
@@ -209,7 +235,6 @@ class Functions extends Action
     ): void {
             $user ??= new Document();
             $functionId = $function->getId();
-            $functionInternalId = $function->getInternalId();
             $deploymentId = $function->getAttribute('deployment', '');
 
             $log->addTag('functionId', $functionId);
@@ -217,7 +242,6 @@ class Functions extends Action
 
             /** Check if deployment exists */
             $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-            $deploymentInternalId = $deployment->getInternalId();
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');

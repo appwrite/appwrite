@@ -42,7 +42,11 @@ class Usage extends Action
     }
 
     /**
-     * @throws Exception
+     * @param Message $message
+     * @param $pools
+     * @param $cache
+     * @return void
+     * @throws \Utopia\Database\Exception
      */
     public function action(Message $message, $pools, $cache): void
     {
@@ -81,10 +85,18 @@ class Usage extends Action
     }
 
 
-/**
-* On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
-* When we remove a parent document we need to deduct his children aggregation from the project scope.
-*/
+     /**
+     * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
+     * When we remove a parent document we need to deduct his children aggregation from the project scope.
+
+     * @param $database
+     * @param $projectInternalId
+     * @param Document $document
+     * @param array $metrics
+     * @param $pools
+     * @param $cache
+     * @return void
+     */
     private function reduce($database, $projectInternalId, Document $document, array &$metrics, $pools, $cache)
     {
         try {
