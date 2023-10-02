@@ -1615,7 +1615,48 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         Event $events
     ) {
         $key ??= $relatedCollectionId;
+        $twoWayKeyNull = is_null($twoWayKey);
         $twoWayKey ??= $collectionId;
+
+        $databaseDocument = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($databaseDocument->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collectionDocument = $dbForProject->getDocument('database_' . $databaseDocument->getInternalId(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $databaseDocument->getInternalId() . '_collection_' . $collectionDocument->getInternalId());
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $databaseDocument->getInternalId(), $relatedCollectionId);
+        $relatedCollection = $dbForProject->getCollection('database_' . $databaseDocument->getInternalId() . '_collection_' . $relatedCollectionDocument->getInternalId());
+
+        if ($relatedCollection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $attributes = $collection->getAttribute('attributes', []);
+        /** @var Document[] $attributes */
+        foreach ($attributes as $attribute) {
+            if (\strtolower($attribute->getId()) === \strtolower($key)) {
+                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+            }
+
+            if (
+                $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP &&
+                \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                if ($twoWayKeyNull) {
+                    $twoWayKey .= '_' . uniqid();
+                } else {
+                    throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+                }
+            }
+        }
 
         $attribute = createAttribute(
             $databaseId,
