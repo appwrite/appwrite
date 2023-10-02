@@ -155,6 +155,7 @@ class HealthCustomServerTest extends Scope
         $this->assertIsInt($response['body']['size']);
         $this->assertLessThan(100, $response['body']['size']);
 
+        // 1.x alias test
         $response = $this->client->call(Client::METHOD_GET, '/health/queue/logs', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

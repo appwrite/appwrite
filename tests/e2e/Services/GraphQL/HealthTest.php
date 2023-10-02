@@ -136,6 +136,24 @@ class HealthTest extends Scope
         $logsQueueHealth = $logsQueueHealth['body']['data']['healthGetQueueLogs'];
         $this->assertIsArray($logsQueueHealth);
 
+        // 1.x alias test
+        $graphQLPayload = [
+            'query' => 'query getLogsQueueHealth {
+                healthGetQueueLogs {
+                    size
+                }
+            }'
+        ];
+        $logsQueueHealth = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertIsArray($logsQueueHealth['body']['data']);
+        $this->assertArrayNotHasKey('errors', $logsQueueHealth['body']);
+        $logsQueueHealth = $logsQueueHealth['body']['data']['healthGetQueueLogs'];
+        $this->assertIsArray($logsQueueHealth);
+
         return $logsQueueHealth;
     }
 
