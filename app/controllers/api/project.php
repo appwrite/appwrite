@@ -3,6 +3,7 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -14,7 +15,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\DateTime;
 
 App::get('/v1/project/usage')
     ->desc('Get usage stats for a project')
@@ -72,18 +72,18 @@ App::get('/v1/project/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-        foreach ($metrics as $metric) {
-            $usage[$metric] = [];
-            $leap = time() - ($days['limit'] * $days['factor']);
-            while ($leap < time()) {
-                $leap += $days['factor'];
-                $formatDate = date($format, $leap);
-                $usage[$metric][] = [
-                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                    'date' => $formatDate,
-                ];
-            }
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
+    }
 
 
         $response->dynamic(new Document([

@@ -136,10 +136,6 @@ class Deletes extends Action
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
                 break;
-            case DELETE_TYPE_CERTIFICATES:
-                $document = new Document($this->args['document']);
-                $this->deleteCertificates($document);
-                break;
             case DELETE_TYPE_USAGE:
                 $this->deleteUsageStats($dbForConsole, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
@@ -419,15 +415,6 @@ class Deletes extends Action
         $projectId = $document->getId();
         $projectInternalId = $document->getInternalId();
 
-        // Delete project certificates
-        $domains = $dbForConsole->find('domains', [
-            Query::equal('projectInternalId', [$projectInternalId])
-        ]);
-
-        foreach ($domains as $domain) {
-            $this->deleteCertificates($dbForConsole, $domain);
-        }
-
         // Delete project tables
         $dbForProject = $getProjectDB($document);
 
@@ -481,54 +468,6 @@ class Deletes extends Action
         $functions->delete($functions->getRoot(), true);
         $builds->delete($builds->getRoot(), true);
         $cache->delete($cache->getRoot(), true);
-    }
-
-    /**
-     * @param Database $dbForConsole
-     * @param Document $document certificates document
-     * @return void
-     * @throws Exception
-     */
-    protected function deleteCertificates(Database $dbForConsole, Document $document): void
-    {
-        // If domain has certificate generated
-        if (isset($document['certificateId'])) {
-            $domainUsingCertificate = $dbForConsole->findOne('domains', [
-                Query::equal('certificateId', [$document['certificateId']])
-            ]);
-
-            if (!$domainUsingCertificate) {
-                $mainDomain = App::getEnv('_APP_DOMAIN_TARGET', '');
-                if ($mainDomain === $document->getAttribute('domain')) {
-                    $domainUsingCertificate = $mainDomain;
-                }
-            }
-
-            // If certificate is still used by some domain, mark we can't delete.
-            // Current domain should not be found, because we only have copy. Original domain is already deleted from database.
-            if ($domainUsingCertificate) {
-                Console::warning("Skipping certificate deletion, because a domain is still using it.");
-                return;
-            }
-        }
-
-        $domain = $document->getAttribute('domain');
-        $directory = APP_STORAGE_CERTIFICATES . '/' . $domain;
-        $checkTraversal = realpath($directory) === $directory;
-
-        if ($domain && $checkTraversal && is_dir($directory)) {
-            // Delete certificate document, so Appwrite is aware of change
-            if (isset($document['certificateId'])) {
-                $dbForConsole->deleteDocument('certificates', $document['certificateId']);
-            }
-
-            // Delete files, so Traefik is aware of change
-            array_map('unlink', glob($directory . '/*.*'));
-            rmdir($directory);
-            Console::info("Deleted certificate files for {$domain}");
-        } else {
-            Console::info("No certificate files found for {$domain}");
-        }
     }
 
     /**
@@ -786,7 +725,7 @@ class Deletes extends Action
          * Request executor to delete all deployment containers
          */
         Console::info("Requesting executor to delete all deployment containers for function " . $functionId);
-        $this->deleteRuntimes($document, $project);
+        $this->deleteRuntimes($getProjectDB, $document, $project);
     }
 
     /**
@@ -909,7 +848,6 @@ class Deletes extends Action
         $count = 0;
         $chunk = 0;
         $limit = 50;
-        $results = [];
         $sum = $limit;
 
         $executionStart = \microtime(true);
@@ -947,7 +885,6 @@ class Deletes extends Action
         $count = 0;
         $chunk = 0;
         $limit = 50;
-        $results = [];
         $sum = $limit;
 
         $executionStart = \microtime(true);

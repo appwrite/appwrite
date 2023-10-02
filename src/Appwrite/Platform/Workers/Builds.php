@@ -50,8 +50,8 @@ class Builds extends Action
             ->inject('queueForUsage')
             ->inject('cache')
             ->inject('getProjectDB')
-            ->inject('deviceFunctions')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, callable $getProjectDB, callable $deviceFunctions) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $queueForUsage, $cache, $getProjectDB, $deviceFunctions));
+            ->inject('getFunctionsDevice')
+            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, callable $getProjectDB, callable $getFunctionsDevice) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $queueForUsage, $cache, $getProjectDB, $getFunctionsDevice));
     }
 
     /**
@@ -62,12 +62,11 @@ class Builds extends Action
      * @param Usage $queueForUsage
      * @param Cache $cache
      * @param callable $getProjectDB
-     * @param callable $deviceFunctions
+     * @param callable $getFunctionsDevice
      * @return void
      * @throws \Utopia\Database\Exception
-     * @throws Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, callable $getProjectDB, callable $deviceFunctions): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, callable $getProjectDB, callable $getFunctionsDevice): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -86,7 +85,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($deviceFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $getProjectDB, $github, $project, $resource, $deployment, $template);
+                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $getProjectDB, $github, $project, $resource, $deployment, $template);
                 break;
 
             default:
@@ -95,7 +94,7 @@ class Builds extends Action
     }
 
     /**
-     * @param callable $deviceFunctions
+     * @param callable $getFunctionsDevice
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param Usage $queueForUsage
@@ -108,8 +107,9 @@ class Builds extends Action
      * @param Document $template
      * @return void
      * @throws \Utopia\Database\Exception
+     * @throws Exception
      */
-    protected function buildDeployment(callable $deviceFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, callable $getProjectDB, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
+    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, callable $getProjectDB, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -290,7 +290,7 @@ class Builds extends Action
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
-                $deviceFunctions = $deviceFunctions($project->getId());
+                $deviceFunctions = $getFunctionsDevice($project->getId());
 
                 $localDevice = new Local();
                 $buffer = $localDevice->read($tmpPathFile);
@@ -382,33 +382,30 @@ class Builds extends Action
             $command = \str_replace('"', '\\"', $command);
 
             $response = null;
-
             $err = null;
 
-            // TODO: Remove run() wrapper when switching to new utopia queue. That should be done on Swoole adapter in the libary
-            Co\run(function () use ($executor, $project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents, &$err) {
-                Co::join([
-                    Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
-                        try {
-                            $version = $function->getAttribute('version', 'v2');
-                            $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+            Co::join([
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                    try {
+                        $version = $function->getAttribute('version', 'v2');
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
 
-                            $response = $executor->createRuntime(
-                                deploymentId: $deployment->getId(),
-                                projectId: $project->getId(),
-                                source: $source,
-                                image: $runtime['image'],
-                                version: $version,
-                                remove: true,
-                                entrypoint: $deployment->getAttribute('entrypoint'),
-                                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                                variables: $vars,
-                                command: $command
-                            );
-                        } catch (Exception $error) {
-                            $err = $error;
-                        }
-                    }),
+                        $response = $executor->createRuntime(
+                            deploymentId: $deployment->getId(),
+                            projectId: $project->getId(),
+                            source: $source,
+                            image: $runtime['image'],
+                            version: $version,
+                            remove: true,
+                            entrypoint: $deployment->getAttribute('entrypoint'),
+                            destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                            variables: $vars,
+                            command: $command
+                        );
+                    } catch (Exception $error) {
+                        $err = $error;
+                    }
+                }),
                     Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
                         try {
                             $executor->getLogs(
@@ -451,7 +448,6 @@ class Builds extends Action
                         }
                     }),
                 ]);
-            });
 
             if ($err) {
                 throw $err;

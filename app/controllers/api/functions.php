@@ -13,7 +13,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
 use Utopia\Validator\Assoc;
-use Appwrite\Usage\Stats;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -84,6 +83,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
+        'resourceInternalId' => $function->getInternalId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
@@ -120,7 +120,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
 
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
-    ->desc('Create Function')
+    ->desc('Create function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
     ->label('audits.event', 'function.create')
@@ -339,7 +339,7 @@ App::post('/v1/functions')
 
 App::get('/v1/functions')
     ->groups(['api', 'functions'])
-    ->desc('List Functions')
+    ->desc('List functions')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -414,7 +414,7 @@ App::get('/v1/functions/runtimes')
 
 App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Get Function')
+    ->desc('Get function')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -437,7 +437,7 @@ App::get('/v1/functions/:functionId')
     });
 
 App::get('/v1/functions/:functionId/usage')
-    ->desc('Get Function Usage')
+    ->desc('Get function usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -600,7 +600,7 @@ App::get('/v1/functions/usage')
 
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Update Function')
+    ->desc('Update function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].update')
     ->label('audits.event', 'function.update')
@@ -865,7 +865,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update Function Deployment')
+    ->desc('Update function deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -881,10 +881,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Database $dbForConsole) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -928,7 +927,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Function')
+    ->desc('Delete function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
@@ -944,9 +943,8 @@ App::delete('/v1/functions/:functionId')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Document $project, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -976,7 +974,7 @@ App::delete('/v1/functions/:functionId')
 
 App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('Create Deployment')
+    ->desc('Create deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('audits.event', 'deployment.create')
@@ -1002,9 +1000,8 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->inject('dbForConsole')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Database $dbForConsole, Build $queueForBuilds) {
+    ->action(function (string $functionId, string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
 
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
@@ -1038,7 +1035,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -1197,7 +1194,7 @@ App::post('/v1/functions/:functionId/deployments')
 
 App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('List Deployments')
+    ->desc('List deployments')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -1267,7 +1264,7 @@ App::get('/v1/functions/:functionId/deployments')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Get Deployment')
+    ->desc('Get deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -1309,7 +1306,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Deployment')
+    ->desc('Delete deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
@@ -1373,7 +1370,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Create Build')
+    ->desc('Create build')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -1441,7 +1438,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
-    ->desc('Create Execution')
+    ->desc('Create execution')
     ->label('scope', 'execution.write')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1452,7 +1449,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(8192, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
@@ -1683,13 +1680,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
 
-            /**
-             * Sync execution compute usage from
-             */
-            $queueForUsage
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
-            ;
+
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -1706,13 +1697,10 @@ App::post('/v1/functions/:functionId/executions')
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-        // TODO revise this later using route label
         $queueForUsage
-            ->setParam('functionId', $function->getId())
-            ->setParam('executions.{scope}.compute', 1)
-            ->setParam('executionStatus', $execution->getAttribute('status', ''))
-            ->setParam('executionTime', $execution->getAttribute('duration')); // ms
-
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
+        ;
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1738,7 +1726,7 @@ App::post('/v1/functions/:functionId/executions')
 
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
-    ->desc('List Executions')
+    ->desc('List executions')
     ->label('scope', 'execution.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
@@ -1813,7 +1801,7 @@ App::get('/v1/functions/:functionId/executions')
 
 App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
-    ->desc('Get Execution')
+    ->desc('Get execution')
     ->label('scope', 'execution.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
@@ -1861,7 +1849,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 // Variables
 
 App::post('/v1/functions/:functionId/variables')
-    ->desc('Create Variable')
+    ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.create')
@@ -1925,7 +1913,7 @@ App::post('/v1/functions/:functionId/variables')
     });
 
 App::get('/v1/functions/:functionId/variables')
-    ->desc('List Variables')
+    ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1952,7 +1940,7 @@ App::get('/v1/functions/:functionId/variables')
     });
 
 App::get('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Get Variable')
+    ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1991,7 +1979,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::put('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Update Variable')
+    ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.update')
@@ -2052,7 +2040,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::delete('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Delete Variable')
+    ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.delete')

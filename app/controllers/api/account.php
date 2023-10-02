@@ -283,7 +283,7 @@ App::post('/v1/account/sessions/email')
     });
 
 App::get('/v1/account/sessions/oauth2/:provider')
-    ->desc('Create OAuth2 Session')
+    ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -349,17 +349,17 @@ App::get('/v1/account/sessions/oauth2/:provider')
     });
 
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 Callback')
-    ->groups(['api', 'account'])
+    ->desc('OAuth2 callback')
+    ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
-    ->param('error', '', new Text(2048), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
@@ -381,18 +381,18 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 Callback')
-    ->groups(['api', 'account'])
+    ->desc('OAuth2 callback')
+    ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
     ->label('origin', '*')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
-    ->param('error', '', new Text(2048,), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->action(function (string $projectId, string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response) {
@@ -414,7 +414,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
-    ->desc('OAuth2 Redirect')
+    ->desc('OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -426,10 +426,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
-    ->param('code', '', new Text(2048), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
+    ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
-    ->param('error', '', new Text(2048), 'Error code returned from the OAuth2 provider.', true)
-    ->param('error_description', '', new Text(2048), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
+    ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
+    ->param('error_description', '', new Text(2048, 0), 'Human-readable text providing additional information about the error returned from the OAuth2 provider.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -866,7 +866,7 @@ App::delete('/v1/account/identities/:identityId')
     });
 
 App::post('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session')
+    ->desc('Create magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'magic-url')
@@ -1084,7 +1084,7 @@ App::post('/v1/account/sessions/magic-url')
     });
 
 App::put('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session (confirmation)')
+    ->desc('Create magic URL session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1204,7 +1204,7 @@ App::put('/v1/account/sessions/magic-url')
     });
 
 App::post('/v1/account/sessions/phone')
-    ->desc('Create Phone session')
+    ->desc('Create phone session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'phone')
@@ -1340,7 +1340,7 @@ App::post('/v1/account/sessions/phone')
     });
 
 App::put('/v1/account/sessions/phone')
-    ->desc('Create Phone Session (confirmation)')
+    ->desc('Create phone session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1456,7 +1456,7 @@ App::put('/v1/account/sessions/phone')
     });
 
 App::post('/v1/account/sessions/anonymous')
-    ->desc('Create Anonymous Session')
+    ->desc('Create anonymous session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -1638,7 +1638,7 @@ App::post('/v1/account/jwt')
     });
 
 App::get('/v1/account')
-    ->desc('Get Account')
+    ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1659,7 +1659,7 @@ App::get('/v1/account')
     });
 
 App::get('/v1/account/prefs')
-    ->desc('Get Account Preferences')
+    ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -1681,7 +1681,7 @@ App::get('/v1/account/prefs')
     });
 
 App::get('/v1/account/sessions')
-    ->desc('List Sessions')
+    ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1720,7 +1720,7 @@ App::get('/v1/account/sessions')
     });
 
 App::get('/v1/account/logs')
-    ->desc('List Logs')
+    ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -1780,7 +1780,7 @@ App::get('/v1/account/logs')
     });
 
 App::get('/v1/account/sessions/:sessionId')
-    ->desc('Get Session')
+    ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -1824,7 +1824,7 @@ App::get('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/name')
-    ->desc('Update Name')
+    ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'account')
@@ -1857,7 +1857,7 @@ App::patch('/v1/account/name')
     });
 
 App::patch('/v1/account/password')
-    ->desc('Update Password')
+    ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
@@ -1881,7 +1881,7 @@ App::patch('/v1/account/password')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $password, string $oldPassword, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -1923,7 +1923,7 @@ App::patch('/v1/account/password')
     });
 
 App::patch('/v1/account/email')
-    ->desc('Update Email')
+    ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'account')
@@ -1992,7 +1992,7 @@ App::patch('/v1/account/email')
     });
 
 App::patch('/v1/account/phone')
-    ->desc('Update Phone')
+    ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'account')
@@ -2050,7 +2050,7 @@ App::patch('/v1/account/phone')
     });
 
 App::patch('/v1/account/prefs')
-    ->desc('Update Preferences')
+    ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'account')
@@ -2083,7 +2083,7 @@ App::patch('/v1/account/prefs')
     });
 
 App::patch('/v1/account/status')
-    ->desc('Update Status')
+    ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'account')
@@ -2126,7 +2126,7 @@ App::patch('/v1/account/status')
     });
 
 App::delete('/v1/account/sessions/:sessionId')
-    ->desc('Delete Session')
+    ->desc('Delete session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -2201,7 +2201,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update OAuth Session (Refresh Tokens)')
+    ->desc('Update OAuth session (refresh tokens)')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -2286,7 +2286,7 @@ App::patch('/v1/account/sessions/:sessionId')
     });
 
 App::delete('/v1/account/sessions')
-    ->desc('Delete Sessions')
+    ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -2346,7 +2346,7 @@ App::delete('/v1/account/sessions')
     });
 
 App::post('/v1/account/recovery')
-    ->desc('Create Password Recovery')
+    ->desc('Create password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].recovery.[tokenId].create')
@@ -2528,7 +2528,7 @@ App::post('/v1/account/recovery')
     });
 
 App::put('/v1/account/recovery')
-    ->desc('Create Password Recovery (confirmation)')
+    ->desc('Create password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].recovery.[tokenId].update')
@@ -2615,7 +2615,7 @@ App::put('/v1/account/recovery')
     });
 
 App::post('/v1/account/verification')
-    ->desc('Create Email Verification')
+    ->desc('Create email verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
@@ -2775,7 +2775,7 @@ App::post('/v1/account/verification')
     });
 
 App::put('/v1/account/verification')
-    ->desc('Create Email Verification (confirmation)')
+    ->desc('Create email verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -2835,7 +2835,7 @@ App::put('/v1/account/verification')
     });
 
 App::post('/v1/account/verification/phone')
-    ->desc('Create Phone Verification')
+    ->desc('Create phone verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
@@ -2930,7 +2930,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Create Phone Verification (confirmation)')
+    ->desc('Create phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')

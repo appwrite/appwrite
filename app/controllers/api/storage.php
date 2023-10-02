@@ -192,7 +192,7 @@ App::get('/v1/storage/buckets')
     });
 
 App::get('/v1/storage/buckets/:bucketId')
-    ->desc('Get Bucket')
+    ->desc('Get bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -217,7 +217,7 @@ App::get('/v1/storage/buckets/:bucketId')
     });
 
 App::put('/v1/storage/buckets/:bucketId')
-    ->desc('Update Bucket')
+    ->desc('Update bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('event', 'buckets.[bucketId].update')
@@ -284,7 +284,7 @@ App::put('/v1/storage/buckets/:bucketId')
     });
 
 App::delete('/v1/storage/buckets/:bucketId')
-    ->desc('Delete Bucket')
+    ->desc('Delete bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
     ->label('audits.event', 'bucket.delete')
@@ -326,7 +326,7 @@ App::delete('/v1/storage/buckets/:bucketId')
 
 App::post('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
-    ->desc('Create File')
+    ->desc('Create file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('audits.event', 'file.create')
@@ -678,7 +678,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
 App::get('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
-    ->desc('List Files')
+    ->desc('List files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -757,7 +757,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
-    ->desc('Get File')
+    ->desc('Get file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -804,7 +804,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->alias('/v1/storage/files/:fileId/preview', ['bucketId' => 'default'])
-    ->desc('Get File Preview')
+    ->desc('Get file preview')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('cache', true)
@@ -971,7 +971,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->alias('/v1/storage/files/:fileId/download', ['bucketId' => 'default'])
-    ->desc('Get File for Download')
+    ->desc('Get file for download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1112,7 +1112,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->alias('/v1/storage/files/:fileId/view', ['bucketId' => 'default'])
-    ->desc('Get File for View')
+    ->desc('Get file for view')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1263,7 +1263,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
-    ->desc('Update File')
+    ->desc('Update file')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
@@ -1466,6 +1466,75 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
+App::get('/v1/storage/usage')
+    ->desc('Get usage stats for storage')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $range, Response $response, Database $dbForProject) {
+
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_BUCKETS,
+            METRIC_FILES,
+            METRIC_FILES_STORAGE,
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats', [
+                    Query::equal('period', [$period]),
+                    Query::equal('metric', [$metric]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric] = [];
+                foreach ($results as $result) {
+                    $stats[$metric][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric][] = [
+                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+    }
+
+        $response->dynamic(new Document([
+            'range' => $range,
+            'bucketsTotal' => $usage[$metrics[0]],
+            'filesTotal' => $usage[$metrics[1]],
+            'filesStorage' => $usage[$metrics[2]],
+        ]), Response::MODEL_USAGE_STORAGE);
+    });
+
 App::get('/v1/storage/:bucketId/usage')
     ->desc('Get usage stats for storage bucket')
     ->groups(['api', 'storage'])
@@ -1539,73 +1608,4 @@ App::get('/v1/storage/:bucketId/usage')
             'filesTotal' => $usage[$metrics[0]],
             'filesStorage' => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_BUCKETS);
-    });
-
-App::get('/v1/storage/usage')
-    ->desc('Get usage stats for storage')
-    ->groups(['api', 'storage'])
-    ->label('scope', 'files.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'storage')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-
-        $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
-        $days = $periods[$range];
-        $metrics = [
-            METRIC_BUCKETS,
-            METRIC_FILES,
-            METRIC_FILES_STORAGE,
-        ];
-
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
-                $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
-                    Query::equal('metric', [$metric]),
-                    Query::limit($limit),
-                    Query::orderDesc('time'),
-                ]);
-                $stats[$metric] = [];
-                foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
-                    ];
-                }
-            }
-        });
-
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
-        }
-    }
-
-    $response->dynamic(new Document([
-        'range' => $range,
-        'bucketsTotal' => $usage[$metrics[0]],
-        'filesTotal' => $usage[$metrics[1]],
-        'filesStorage' => $usage[$metrics[2]],
-    ]), Response::MODEL_USAGE_STORAGE);
     });
