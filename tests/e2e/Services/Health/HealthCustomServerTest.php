@@ -141,12 +141,12 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
-    public function testLogsSuccess(): array
+    public function testAuditsSuccess(): array
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/health/queue/logs', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/audits', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
