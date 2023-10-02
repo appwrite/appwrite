@@ -89,7 +89,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 
         try {
             Console::success('[Setup] - Creating database: appwrite...');
-            $dbForConsole->create();
+            // $dbForConsole->create();
         } catch (\Exception $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
