@@ -107,7 +107,7 @@ For advanced production and custom installation, check out our Docker [environme
 
 ### Upgrade from an Older Version
 
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
+If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/advanced/self-hosting/).
 
 ## One-Click Setups
 
