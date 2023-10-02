@@ -121,7 +121,7 @@ App::post('/v1/projects')
             }
         }
 
-        if ($index = array_search('database_db_fra1_v14x_07', $databases)) {
+        if ($index = array_search('database_db_fra1_v14x_06', $databases)) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
