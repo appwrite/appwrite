@@ -121,7 +121,7 @@ class HealthTest extends Scope
     public function testGetLogsQueueHealth()
     {
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$GET_LOGS_QUEUE_HEALTH);
+        $query = $this->getQuery(self::$GET_AUDITS_QUEUE_HEALTH);
         $graphQLPayload = [
             'query' => $query,
         ];
