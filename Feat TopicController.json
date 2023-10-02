@@ -1,0 +1,131 @@
+{
+  "name": "TopicsController",
+  "description": "A controller for managing topics",
+  "functions": [
+    {
+      "name": "CreateTopic",
+      "description": "Creates a new topic",
+      "http": {
+        "method": "POST",
+        "path": "/topics"
+      },
+      "request": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "required": true
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "response": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "GetTopic",
+      "description": "Gets a topic by its ID",
+      "http": {
+        "method": "GET",
+        "path": "/topics/:id"
+      },
+      "response": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "UpdateTopic",
+      "description": "Updates a topic by its ID",
+      "http": {
+        "method": "PUT",
+        "path": "/topics/:id"
+      },
+      "request": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "response": {
+        "body": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "description": {
+              "type": "string"
+            },
+            "createdAt": {
+              "type": "string"
+            },
+            "updatedAt": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "DeleteTopic",
+      "description": "Deletes a topic by its ID",
+      "http": {
+        "method": "DELETE",
+        "path": "/topics/:id"
+      }
+    }
+  ]
+}
