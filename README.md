@@ -2,7 +2,7 @@
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/appwrite.jpg" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
     <br />
     <br />
     <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
