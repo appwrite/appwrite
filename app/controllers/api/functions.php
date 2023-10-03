@@ -521,7 +521,7 @@ App::get('/v1/functions/:functionId/usage')
     });
 
 App::get('/v1/functions/usage')
-    ->desc('Get Functions Usage')
+    ->desc('Get functions usage')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1001,7 +1001,7 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, mixed $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
 
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
