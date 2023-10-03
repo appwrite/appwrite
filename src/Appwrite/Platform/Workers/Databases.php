@@ -213,7 +213,7 @@ class Databases extends Action
      * @throws Conflict
      * @throws Exception
      **/
-    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject)
+    private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
         $projectId = $project->getId();
 

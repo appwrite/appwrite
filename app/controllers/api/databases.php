@@ -20,6 +20,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
@@ -227,7 +228,7 @@ function updateAttribute(
     string $collectionId,
     string $key,
     Database $dbForProject,
-    Event $events,
+    Event $queueForEvents,
     string $type,
     string $filter = null,
     string|bool|int|float $default = null,
@@ -371,7 +372,7 @@ function updateAttribute(
     $attribute = $dbForProject->updateDocument('attributes', $db->getInternalId() . '_' . $collection->getInternalId() . '_' . $key, $attribute);
     $dbForProject->deleteCachedDocument('database_' . $db->getInternalId(), $collection->getId());
 
-    $events
+    $queueForEvents
         ->setContext('collection', $collection)
         ->setContext('database', $db)
         ->setParam('databaseId', $databaseId)
@@ -1803,7 +1804,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $queueForEvents,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             default: $default,
             required: $required
@@ -1836,14 +1837,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->param('default', null, new Nullable(new Email()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_EMAIL,
             default: $default,
@@ -1878,14 +1879,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_ENUM,
             default: $default,
@@ -1920,14 +1921,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->param('default', null, new Nullable(new IP()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_IP,
             default: $default,
@@ -1961,14 +1962,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->param('default', null, new Nullable(new URL()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_STRING,
             filter: APP_DATABASE_ATTRIBUTE_URL,
             default: $default,
@@ -2004,14 +2005,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->param('default', null, new Nullable(new Integer()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_INTEGER,
             default: $default,
             required: $required,
@@ -2055,14 +2056,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->param('default', null, new Nullable(new FloatValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_FLOAT,
             default: $default,
             required: $required,
@@ -2104,14 +2105,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->param('default', null, new Nullable(new Boolean()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_BOOLEAN,
             default: $default,
             required: $required
@@ -2144,14 +2145,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->param('default', null, new Nullable(new DatetimeValidator()), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
         $attribute = updateAttribute(
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
             dbForProject: $dbForProject,
-            events: $events,
+            queueForEvents: $queueForEvents,
             type: Database::VAR_DATETIME,
             default: $default,
             required: $required
@@ -2183,7 +2184,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->param('onDelete', null, new WhiteList([Database::RELATION_MUTATE_CASCADE, Database::RELATION_MUTATE_RESTRICT, Database::RELATION_MUTATE_SET_NULL], true), 'Constraints option', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->action(function (
         string $databaseId,
         string $collectionId,
@@ -2191,14 +2192,14 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
         ?string $onDelete,
         Response $response,
         Database $dbForProject,
-        Event $events
+        Event $queueForEvents
     ) {
         $attribute = updateAttribute(
             $databaseId,
             $collectionId,
             $key,
             $dbForProject,
-            $events,
+            $queueForEvents,
             type: Database::VAR_RELATIONSHIP,
             required: false,
             options: [
@@ -2933,6 +2934,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         });
 
         $cursor = \reset($cursor);
+
 
         if ($cursor) {
             $documentId = $cursor->getValue();
