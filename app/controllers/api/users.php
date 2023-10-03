@@ -108,7 +108,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
 }
 
 App::post('/v1/users')
-    ->desc('Create User')
+    ->desc('Create user')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -140,7 +140,7 @@ App::post('/v1/users')
     });
 
 App::post('/v1/users/bcrypt')
-    ->desc('Create User with Bcrypt Password')
+    ->desc('Create user with bcrypt password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -170,7 +170,7 @@ App::post('/v1/users/bcrypt')
     });
 
 App::post('/v1/users/md5')
-    ->desc('Create User with MD5 Password')
+    ->desc('Create user with MD5 password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -200,7 +200,7 @@ App::post('/v1/users/md5')
     });
 
 App::post('/v1/users/argon2')
-    ->desc('Create User with Argon2 Password')
+    ->desc('Create user with Argon2 password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -230,7 +230,7 @@ App::post('/v1/users/argon2')
     });
 
 App::post('/v1/users/sha')
-    ->desc('Create User with SHA Password')
+    ->desc('Create user with SHA password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -267,7 +267,7 @@ App::post('/v1/users/sha')
     });
 
 App::post('/v1/users/phpass')
-    ->desc('Create User with PHPass Password')
+    ->desc('Create user with PHPass password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -297,7 +297,7 @@ App::post('/v1/users/phpass')
     });
 
 App::post('/v1/users/scrypt')
-    ->desc('Create User with Scrypt Password')
+    ->desc('Create user with Scrypt password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -340,7 +340,7 @@ App::post('/v1/users/scrypt')
     });
 
 App::post('/v1/users/scrypt-modified')
-    ->desc('Create User with Scrypt Modified Password')
+    ->desc('Create user with Scrypt modified password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'users.write')
@@ -373,7 +373,7 @@ App::post('/v1/users/scrypt-modified')
     });
 
 App::get('/v1/users')
-    ->desc('List Users')
+    ->desc('List users')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -421,7 +421,7 @@ App::get('/v1/users')
     });
 
 App::get('/v1/users/:userId')
-    ->desc('Get User')
+    ->desc('Get user')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -446,7 +446,7 @@ App::get('/v1/users/:userId')
     });
 
 App::get('/v1/users/:userId/prefs')
-    ->desc('Get User Preferences')
+    ->desc('Get user preferences')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -473,7 +473,7 @@ App::get('/v1/users/:userId/prefs')
     });
 
 App::get('/v1/users/:userId/sessions')
-    ->desc('List User Sessions')
+    ->desc('List user sessions')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -514,7 +514,7 @@ App::get('/v1/users/:userId/sessions')
     });
 
 App::get('/v1/users/:userId/memberships')
-    ->desc('List User Memberships')
+    ->desc('List user memberships')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -553,7 +553,7 @@ App::get('/v1/users/:userId/memberships')
     });
 
 App::get('/v1/users/:userId/logs')
-    ->desc('List User Logs')
+    ->desc('List user logs')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -682,7 +682,7 @@ App::get('/v1/users/identities')
     });
 
 App::patch('/v1/users/:userId/status')
-    ->desc('Update User Status')
+    ->desc('Update user status')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'users.write')
@@ -718,7 +718,7 @@ App::patch('/v1/users/:userId/status')
     });
 
 App::put('/v1/users/:userId/labels')
-    ->desc('Update User Labels')
+    ->desc('Update user labels')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.labels')
     ->label('scope', 'users.write')
@@ -755,7 +755,7 @@ App::put('/v1/users/:userId/labels')
     });
 
 App::patch('/v1/users/:userId/verification/phone')
-    ->desc('Update Phone Verification')
+    ->desc('Update phone verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
@@ -790,7 +790,7 @@ App::patch('/v1/users/:userId/verification/phone')
     });
 
 App::patch('/v1/users/:userId/name')
-    ->desc('Update Name')
+    ->desc('Update name')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'users.write')
@@ -827,7 +827,7 @@ App::patch('/v1/users/:userId/name')
     });
 
 App::patch('/v1/users/:userId/password')
-    ->desc('Update Password')
+    ->desc('Update password')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'users.write')
@@ -891,7 +891,7 @@ App::patch('/v1/users/:userId/password')
     });
 
 App::patch('/v1/users/:userId/email')
-    ->desc('Update Email')
+    ->desc('Update email')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'users.write')
@@ -947,7 +947,7 @@ App::patch('/v1/users/:userId/email')
     });
 
 App::patch('/v1/users/:userId/phone')
-    ->desc('Update Phone')
+    ->desc('Update phone')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'users.write')
@@ -990,7 +990,7 @@ App::patch('/v1/users/:userId/phone')
     });
 
 App::patch('/v1/users/:userId/verification')
-    ->desc('Update Email Verification')
+    ->desc('Update email verification')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.verification')
     ->label('scope', 'users.write')
@@ -1025,7 +1025,7 @@ App::patch('/v1/users/:userId/verification')
     });
 
 App::patch('/v1/users/:userId/prefs')
-    ->desc('Update User Preferences')
+    ->desc('Update user preferences')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
@@ -1058,7 +1058,7 @@ App::patch('/v1/users/:userId/prefs')
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
-    ->desc('Delete User Session')
+    ->desc('Delete user session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
@@ -1101,7 +1101,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
     });
 
 App::delete('/v1/users/:userId/sessions')
-    ->desc('Delete User Sessions')
+    ->desc('Delete user sessions')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('scope', 'users.write')
@@ -1143,7 +1143,7 @@ App::delete('/v1/users/:userId/sessions')
     });
 
 App::delete('/v1/users/:userId')
-    ->desc('Delete User')
+    ->desc('Delete user')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete')
     ->label('scope', 'users.write')
