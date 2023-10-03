@@ -107,7 +107,7 @@ Please make sure to add appropriate checks to make sure the imported file is a f
 
 ### 2.4 The Error Schema
 
-All errors that occur during the execution of a user's function **MUST** be returned using this JSON Object otherwise Appwrite will be unable to parse them for the user.
+All errors that occur during the execution of a user's function **MUST** be returned using this JSON Object, otherwise Appwrite will be unable to parse them for the user.
 
 ```json
 {

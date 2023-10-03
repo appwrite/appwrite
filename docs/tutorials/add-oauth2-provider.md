@@ -175,7 +175,7 @@ Please mention in your documentation what resources or API docs you used to impl
 
 ## 3. Test your provider
 
-After you finished adding your new provider to Appwrite, you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
+After you have finished adding your new provider to Appwrite, you should be able to see it in your Appwrite console. Navigate to 'Project > Users > Providers' and check your new provider's settings form.
 
 > To start Appwrite console from the source code, you can simply run `docker compose up -d'.
 
