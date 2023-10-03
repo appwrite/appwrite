@@ -88,16 +88,16 @@ class Deletes extends Action
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_TEAMS:
-                        $this->deleteMemberships($document, $project);
+                        $this->deleteMemberships($getProjectDB, $document, $project);
                         if ($project->getId() === 'console') {
-                            $this->deleteProjectsByTeam($dbForConsole, $document);
+                            $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $document);
                         }
                         break;
                     case DELETE_TYPE_BUCKETS:
                         $this->deleteBucket($getProjectDB, $getFilesDevice, $document, $project);
                         break;
                     case DELETE_TYPE_INSTALLATIONS:
-                        $this->deleteInstallation($dbForConsole, $document, $project);
+                        $this->deleteInstallation($dbForConsole, $getProjectDB, $document, $project);
                         break;
                     case DELETE_TYPE_RULES:
                         $this->deleteRule($dbForConsole, $document, $project);
@@ -384,15 +384,14 @@ class Deletes extends Action
      * @throws Restricted
      * @throws Structure
      */
-    protected function deleteProjectsByTeam(Database $dbForConsole, Document $document): void
+    protected function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Document $document): void
     {
 
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
-
         foreach ($projects as $project) {
-            $this->deleteProject($dbForConsole, $project);
+            $this->deleteProject($dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $project);
             $dbForConsole->deleteDocument('projects', $project->getId());
         }
     }
@@ -777,8 +776,6 @@ class Deletes extends Action
         Console::info("Requesting executor to delete deployment container for deployment " . $deploymentId);
         $this->deleteRuntimes($getProjectDB, $document, $project);
     }
-
-
 
     /**
      * @param Document $document to be deleted

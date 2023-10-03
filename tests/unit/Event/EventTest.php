@@ -3,12 +3,9 @@
 namespace Tests\Unit\Event;
 
 use Appwrite\Event\Event;
-use Appwrite\URL\URL;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Utopia\App;
-use Utopia\DSN\DSN;
-use Utopia\Queue;
 
 class EventTest extends TestCase
 {
@@ -17,24 +14,12 @@ class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $fallbackForRedis = URL::unparse([
-            'scheme' => 'redis',
-            'host' => App::getEnv('_APP_REDIS_HOST', 'redis'),
-            'port' => App::getEnv('_APP_REDIS_PORT', '6379'),
-            'user' => App::getEnv('_APP_REDIS_USER', ''),
-            'pass' => App::getEnv('_APP_REDIS_PASS', ''),
-        ]);
-
-        $dsn = App::getEnv('_APP_CONNECTIONS_QUEUE', $fallbackForRedis);
-        $dsn = explode('=', $dsn);
-        $dsn = $dsn[1] ?? '';
-
-        $dsn = new DSN($dsn);
-
-        $connection = new Queue\Connection\Redis($dsn->getHost(), $dsn->getPort());
+        $redisHost = App::getEnv('_APP_REDIS_HOST', '');
+        $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+        \Resque::setBackend($redisHost . ':' . $redisPort);
 
         $this->queue = 'v1-tests' . uniqid();
-        $this->object = new Event($this->queue, 'TestsV1', $connection);
+        $this->object = new Event($this->queue, 'TestsV1');
     }
 
     public function testQueue(): void
@@ -70,7 +55,7 @@ class EventTest extends TestCase
         $this->assertEquals('eventValue1', $this->object->getParam('eventKey1'));
         $this->assertEquals('eventValue2', $this->object->getParam('eventKey2'));
         $this->assertEquals(null, $this->object->getParam('eventKey3'));
-        $this->assertEquals($this->object->getQueueSize(), 1);
+        $this->assertEquals(\Resque::size($this->queue), 1);
     }
 
     public function testPause(): void
