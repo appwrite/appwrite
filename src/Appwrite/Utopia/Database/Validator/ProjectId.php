@@ -27,7 +27,7 @@ class ProjectId extends Validator
      */
     public function getDescription(): string
     {
-        return 'Project IDs must contain at most 36 chars. Valid chars are a-z, 0-9, and non-leading hyphens. Can\'t start with a special char.';
+        return 'Project IDs must contain at most 36 chars. Valid chars are a-z, 0-9, and non-leading hyphens. Can\'t start with a special char';
     }
 
     /**
