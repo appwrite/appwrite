@@ -301,6 +301,6 @@ If all tests pass then congratulations! You can now go ahead and file a PR again
 
 First of all, commit the changes with the message `Added XXX Runtime` and push it. This will publish a new branch to your forked version of Appwrite. If you visit it at `github.com/YOUR_USERNAME/runtimes`, you will see a new alert saying you are ready to submit a pull request. Follow the steps GitHub provides, and at the end, you will have your pull request submitted.
 
-## ![face_with_head_bandage](https://github.githubassets.com/images/icons/emoji/unicode/1f915.png) Stuck ?
+## 🤕 Stuck ?
 
 If you need any help with the contribution, feel free to head over to [our Discord channel](https://appwrite.io/discord) and we'll be happy to help you out.
