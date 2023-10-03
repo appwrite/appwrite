@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
+use Appwrite\Extend\Exception;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
