@@ -5,7 +5,7 @@ We would ❤️ you to contribute to Appwrite and help make it better! We want c
 ## Here for Hacktoberfest?
 If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
 
-You [find issues using this query](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3Ahacktoberfest&type=issues).
+You can [find issues using this query](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3Ahacktoberfest&type=issues).
 
 ## How to Start?
 
