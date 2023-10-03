@@ -84,7 +84,7 @@ $ git push origin [name_of_your_new_branch]
 
 To set up a working **development environment**, just fork the project git repository and install the backend and frontend dependencies using the proper package manager and create run the docker-compose stack.
 
-> If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/getting-started-for-web), or the main [README](README.md) file.
+> If you just want to install Appwrite for day-to-day use and not as a contributor, you can reference the [installation guide](https://github.com/appwrite/appwrite#installation), the [getting started guide](https://appwrite.io/docs/quick-starts), or the main [README](README.md) file.
 
 ```bash
 git clone git@github.com:[YOUR_FORK_HERE]/appwrite.git
@@ -451,7 +451,7 @@ From time to time, our team will add tutorials that will help contributors find 
 
 - [Adding Support for a New OAuth2 Provider](./docs/tutorials/add-oauth2-provider.md)
 - [Appwrite Environment Variables](./docs/tutorials/add-environment-variable.md)
-- [Running in Production](https://appwrite.io/docs/production)
+- [Running in Production](https://appwrite.io/docs/advanced/self-hosting/production)
 - [Adding Storage Adapter](./docs/tutorials/add-storage-adapter.md)
 
 ## Other Ways to Help
