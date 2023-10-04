@@ -23,6 +23,541 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+App::post('/v1/messaging/providers/mailgun')
+    ->desc('Create Mailgun Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createMailgunProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-mailgun-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('isEuRegion', false, new Boolean(), 'Set as EU region.', true)
+    ->param('from', '', new Text(256), 'Sender Email Address.')
+    ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
+    ->param('domain', '', new Text(0), 'Mailgun Domain.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'mailgun',
+            'type' => 'email',
+            'default' => $default,
+            'enabled' => $enabled,
+            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
+            'credentials' => [
+                'apiKey' => $apiKey,
+                'domain' => $domain,
+                'isEuRegion' => $isEuRegion,
+            ],
+            'options' => [
+                'from' => $from,
+            ]
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['email'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/sendgrid')
+    ->desc('Create Sendgrid Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createSendgridProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-sengrid-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'sendgrid',
+            'type' => 'email',
+            'default' => $default,
+            'enabled' => $enabled,
+            'options' => [],
+            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
+            'credentials' => [
+                'apiKey' => $apiKey,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/msg91')
+    ->desc('Create Msg91 Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createMsg91Provider')
+    ->label('sdk.description', '/docs/references/messaging/create-msg91-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Text(256), 'Sender Number.')
+    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
+    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $from, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'msg91',
+            'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'senderId' => $senderId,
+                'authKey' => $authKey,
+            ],
+            'options' => [
+                'from' => $from,
+            ]
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+                Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+App::post('/v1/messaging/providers/telesign')
+    ->desc('Create Telesign Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTelesignProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-telesign-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('username', '', new Text(0), 'Telesign username.')
+    ->param('password', '', new Text(0), 'Telesign password.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'telesign',
+            'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'username' => $username,
+                'password' => $password,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/textmagic')
+    ->desc('Create Textmagic Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTextmagicProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-textmagic-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('username', '', new Text(0), 'Textmagic username.')
+    ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'text-magic',
+            'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'username' => $username,
+                'apiKey' => $apiKey,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/twilio')
+    ->desc('Create Twilio Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTwilioProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-twilio-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
+    ->param('authToken', '', new Text(0), 'Twilio authentication token.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'twilio',
+            'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'accountSid' => $accountSid,
+                'authToken' => $authToken,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/vonage')
+    ->desc('Create Vonage Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createVonageProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-vonage-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('apiKey', '', new Text(0), 'Vonage API key.')
+    ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'vonage',
+            'type' => 'sms',
+            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'apiKey' => $apiKey,
+                'apiSecret' => $apiSecret,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/fcm')
+    ->desc('Create FCM Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createFCMProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-fcm-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('serverKey', '', new Text(0), 'FCM Server Key.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'fcm',
+            'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'serverKey' => $serverKey,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['push'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/apns')
+    ->desc('Create APNS Provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'providers.create')
+    ->label('audits.resource', 'providers/{response.$id}')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createAPNSProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-apns-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('default', false, new Boolean(), 'Set as default provider.', true)
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('authKey', '', new Text(0), 'APNS authentication key.')
+    ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
+    ->param('teamId', '', new Text(0), 'APNS team ID.')
+    ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
+    ->param('endpoint', '', new Text(0), 'APNS endpoint.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'apns',
+            'type' => 'push',
+            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
+            'default' => $default,
+            'enabled' => $enabled,
+            'credentials' => [
+                'authKey' => $authKey,
+                'authKeyId' => $authKeyId,
+                'teamId' => $teamId,
+                'bundleId' => $bundleId,
+                'endpoint' => $endpoint,
+            ],
+        ]);
+
+        // Check if a default provider exists, if not, set this one as default
+        if (
+            empty($dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['push'])
+            ]))
+        ) {
+            $provider->setAttribute('default', true);
+        }
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
 App::get('/v1/messaging/providers')
     ->desc('List Providers')
     ->groups(['api', 'messaging'])
@@ -46,9 +581,8 @@ App::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('providers', [
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('providers', [
                 Query::equal('$id', [$providerId]),
-                Query::limit(1),
             ]));
 
             if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
@@ -89,74 +623,7 @@ App::get('/v1/messaging/providers/:id')
         $response->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-/**
- * Email Providers
- */
-App::post('/v1/messaging/providers/mailgun')
-    ->desc('Create Mailgun Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderMailgun')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-mailgun.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('isEuRegion', false, new Boolean(), 'Set as EU region.', true)
-    ->param('from', '', new Text(256), 'Sender Email Address.')
-    ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
-    ->param('domain', '', new Text(0), 'Mailgun Domain.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'mailgun',
-            'type' => 'email',
-            'default' => $default,
-            'enabled' => $enabled,
-            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
-            'credentials' => [
-                'apiKey' => $apiKey,
-                'domain' => $domain,
-                'isEuRegion' => $isEuRegion,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/mailgun')
+App::patch('/v1/messaging/providers/mailgun/:id')
     ->desc('Update Mailgun Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -164,8 +631,8 @@ App::patch('/v1/messaging/providers/:id/mailgun')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderMailgun')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-mailgun.md')
+    ->label('sdk.method', 'updateMailgunProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-mailgun-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -195,15 +662,6 @@ App::patch('/v1/messaging/providers/:id/mailgun')
             $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email');
         }
 
-        if ($isEuRegion === true || $isEuRegion === false) {
-            $credentials = $provider->getAttribute('credentials');
-            $provider->setAttribute('credentials', [
-                'isEuRegion' => $isEuRegion,
-                'apiKey' => $credentials['apiKey'],
-                'domain' => $credentials['domain'],
-            ]);
-        }
-
         if (!empty($from)) {
             $provider->setAttribute('options', [
                 'from' => $from,
@@ -214,83 +672,29 @@ App::patch('/v1/messaging/providers/:id/mailgun')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($apiKey || $domain) {
-            // Check if all credential variables are present
-            if ($apiKey && $domain) {
-                $provider->setAttribute('credentials', [
-                    'apiKey' => $apiKey,
-                    'domain' => $domain,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if ($isEuRegion === true || $isEuRegion === false) {
+            $credentials['isEuRegion'] = $isEuRegion;
         }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (!empty($domain)) {
+            $credentials['domain'] = $domain;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/sendgrid')
-    ->desc('Create Sendgrid Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderSendgrid')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-sendgrid.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'sendgrid',
-            'type' => 'email',
-            'default' => $default,
-            'enabled' => $enabled,
-            'options' => [],
-            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
-            'credentials' => [
-                'apiKey' => $apiKey,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/sendgrid')
+App::patch('/v1/messaging/providers/sendgrid/:id')
     ->desc('Update Sendgrid Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -298,8 +702,8 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderSendgrid')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-sendgrid.md')
+    ->label('sdk.method', 'updateSendgridProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-sendgrid-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -330,84 +734,19 @@ App::patch('/v1/messaging/providers/:id/sendgrid')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($apiKey) {
+        if (!empty($apiKey)) {
             $provider->setAttribute('credentials', [
                 'apiKey' => $apiKey,
             ]);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-/**
- * SMS Providers
- */
-App::post('/v1/messaging/providers/msg91')
-    ->desc('Create Msg91 Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderMsg91')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-msg91.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('from', '', new Text(256), 'Sender Number.')
-    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
-    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $from, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'msg91',
-            'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'senderId' => $senderId,
-                'authKey' => $authKey,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/msg91')
+App::patch('/v1/messaging/providers/msg91/:id')
     ->desc('Update Msg91 Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -415,8 +754,8 @@ App::patch('/v1/messaging/providers/:id/msg91')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderMsg91')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-msg91.md')
+    ->label('sdk.method', 'updateMsg91Provider')
+    ->label('sdk.description', '/docs/references/messaging/update-msg91-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -448,84 +787,25 @@ App::patch('/v1/messaging/providers/:id/msg91')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($senderId || $authKey) {
-            // Check if all credential variables are present
-            if ($senderId && $authKey) {
-                $provider->setAttribute('credentials', [
-                    'senderId' => $senderId,
-                    'authKey' => $authKey,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($senderId)) {
+            $credentials['senderId'] = $senderId;
         }
+
+        if (!empty($authKey)) {
+            $credentials['authKey'] = $authKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/telesign')
-    ->desc('Create Telesign Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderTelesign')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-telesign.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('username', '', new Text(0), 'Telesign username.')
-    ->param('password', '', new Text(0), 'Telesign password.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'telesign',
-            'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'username' => $username,
-                'password' => $password,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/telesign')
+App::patch('/v1/messaging/providers/telesign/:id')
     ->desc('Update Telesign Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -533,8 +813,8 @@ App::patch('/v1/messaging/providers/:id/telesign')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderTelesign')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-telesign.md')
+    ->label('sdk.method', 'updateTelesignProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-telesign-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -566,84 +846,25 @@ App::patch('/v1/messaging/providers/:id/telesign')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($username || $password) {
-            // Check if all credential variables are present
-            if ($username && $password) {
-                $provider->setAttribute('credentials', [
-                    'username' => $username,
-                    'password' => $password,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($username)) {
+            $credentials['username'] = $username;
         }
+
+        if (!empty($password)) {
+            $credentials['password'] = $password;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/textmagic')
-    ->desc('Create Textmagic Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderTextmagic')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-textmagic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('username', '', new Text(0), 'Textmagic username.')
-    ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'text-magic',
-            'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'username' => $username,
-                'apiKey' => $apiKey,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/textmagic')
+App::patch('/v1/messaging/providers/textmagic/:id')
     ->desc('Update Textmagic Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -651,8 +872,8 @@ App::patch('/v1/messaging/providers/:id/textmagic')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderTextmagic')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-textmagic.md')
+    ->label('sdk.method', 'updateTextmagicProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-textmagic-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -684,84 +905,25 @@ App::patch('/v1/messaging/providers/:id/textmagic')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($username || $apiKey) {
-            // Check if all credential variables are present
-            if ($username && $apiKey) {
-                $provider->setAttribute('credentials', [
-                    'username' => $username,
-                    'apiKey' => $apiKey,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($username)) {
+            $credentials['username'] = $username;
         }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/twilio')
-    ->desc('Create Twilio Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderTwilio')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-twilio.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
-    ->param('authToken', '', new Text(0), 'Twilio authentication token.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'twilio',
-            'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'accountSid' => $accountSid,
-                'authToken' => $authToken,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/twilio')
+App::patch('/v1/messaging/providers/twilio/:id')
     ->desc('Update Twilio Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -769,8 +931,8 @@ App::patch('/v1/messaging/providers/:id/twilio')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderTwilio')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-twilio.md')
+    ->label('sdk.method', 'updateTwilioProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-twilio-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -802,84 +964,25 @@ App::patch('/v1/messaging/providers/:id/twilio')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($accountSid || $authToken) {
-            // Check if all credential variables are present
-            if ($accountSid && $authToken) {
-                $provider->setAttribute('credentials', [
-                    'accountSid' => $accountSid,
-                    'authToken' => $authToken,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($accountSid)) {
+            $credentials['accountSid'] = $accountSid;
         }
+
+        if (!empty($authToken)) {
+            $credentials['authToken'] = $authToken;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/vonage')
-    ->desc('Create Vonage Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderVonage')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-vonage.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('apiKey', '', new Text(0), 'Vonage API key.')
-    ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'vonage',
-            'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'apiKey' => $apiKey,
-                'apiSecret' => $apiSecret,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/vonage')
+App::patch('/v1/messaging/providers/vonage/:id')
     ->desc('Update Vonage Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -887,8 +990,8 @@ App::patch('/v1/messaging/providers/:id/vonage')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderVonage')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-vonage.md')
+    ->label('sdk.method', 'updateVonageProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-vonage-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -920,85 +1023,25 @@ App::patch('/v1/messaging/providers/:id/vonage')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($apiKey || $apiSecret) {
-            // Check if all credential variables are present
-            if ($apiKey && $apiSecret) {
-                $provider->setAttribute('credentials', [
-                    'apiKey' => $apiKey,
-                    'apiSecret' => $apiSecret,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
         }
+
+        if (!empty($apiSecret)) {
+            $credentials['apiSecret'] = $apiSecret;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-/**
- * Push Providers
- */
-App::post('/v1/messaging/providers/fcm')
-    ->desc('Create FCM Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderFCM')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-fcm.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('serverKey', '', new Text(0), 'FCM Server Key.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'fcm',
-            'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'serverKey' => $serverKey,
-            ],
-        ]);
-
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/fcm')
+App::patch('/v1/messaging/providers/fcm/:id')
     ->desc('Update FCM Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -1006,8 +1049,8 @@ App::patch('/v1/messaging/providers/:id/fcm')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderFCM')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-fcm.md')
+    ->label('sdk.method', 'updateFCMProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -1038,81 +1081,18 @@ App::patch('/v1/messaging/providers/:id/fcm')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($serverKey) {
+        if (!empty($serverKey)) {
             $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::post('/v1/messaging/providers/apns')
-    ->desc('Create APNS Provider')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'providers.create')
-    ->label('audits.resource', 'providers/{response.$id}')
-    ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createProviderAPNS')
-    ->label('sdk.description', '/docs/references/messaging/create-provider-apns.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Provider name.')
-    ->param('default', false, new Boolean(), 'Set as default provider.', true)
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
-    ->param('authKey', '', new Text(0), 'APNS authentication key.')
-    ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
-    ->param('teamId', '', new Text(0), 'APNS team ID.')
-    ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
-    ->param('endpoint', '', new Text(0), 'APNS endpoint.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $providerId, string $name, bool $default, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-        $provider = new Document([
-            '$id' => $providerId,
-            'name' => $name,
-            'provider' => 'apns',
-            'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
-            'default' => $default,
-            'enabled' => $enabled,
-            'credentials' => [
-                'authKey' => $authKey,
-                'authKeyId' => $authKeyId,
-                'teamId' => $teamId,
-                'bundleId' => $bundleId,
-                'endpoint' => $endpoint,
-            ],
-        ]);
 
-        // Check if a default provider exists, if not, set this one as default
-        if (
-            empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            ]))
-        ) {
-            $provider->setAttribute('default', true);
-        }
-
-        try {
-            $provider = $dbForProject->createDocument('providers', $provider);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
-        }
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($provider, Response::MODEL_PROVIDER);
-    });
-
-App::patch('/v1/messaging/providers/:id/apns')
+App::patch('/v1/messaging/providers/apns/:id')
     ->desc('Update APNS Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -1120,8 +1100,8 @@ App::patch('/v1/messaging/providers/:id/apns')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateProviderAPNS')
-    ->label('sdk.description', '/docs/references/messaging/update-provider-apns.md')
+    ->label('sdk.method', 'updateAPNSProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -1156,24 +1136,31 @@ App::patch('/v1/messaging/providers/:id/apns')
             $provider->setAttribute('enabled', $enabled);
         }
 
-        if ($authKey || $authKeyId || $teamId || $bundleId || $endpoint) {
-            // Check if all credential variables are present
-            if ($authKey && $authKeyId && $teamId && $bundleId && $endpoint) {
-                $provider->setAttribute('credentials', [
-                    'authKey' => $authKey,
-                    'authKeyId' => $authKeyId,
-                    'teamId' => $teamId,
-                    'bundleId' => $bundleId,
-                    'endpoint' => $endpoint,
-                ]);
-            } else {
-                // Not all credential params are present
-                throw new Exception(Exception::DOCUMENT_MISSING_DATA);
-            }
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($authKey)) {
+            $credentials['authKey'] = $authKey;
         }
 
+        if (!empty($authKeyId)) {
+            $credentials['authKeyId'] = $authKeyId;
+        }
+
+        if (!empty($teamId)) {
+            $credentials['teamId'] = $teamId;
+        }
+
+        if (!empty($bundleId)) {
+            $credentials['bundle'] = $bundleId;
+        }
+
+        if (!empty($endpoint)) {
+            $credentials['endpoint'] = $endpoint;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -1202,10 +1189,57 @@ App::delete('/v1/messaging/providers/:id')
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        $dbForProject->deleteCachedDocument('providers', $provider->getId());
         $dbForProject->deleteDocument('providers', $provider->getId());
 
         $response->noContent();
+    });
+
+App::post('/v1/messaging/topics')
+    ->desc('Create a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.create')
+    ->label('audits.resource', 'topics/{response.$id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTopic')
+    ->label('sdk.description', '/docs/references/messaging/create-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $providerId, string $name, string $description, Database $dbForProject, Response $response) {
+        $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $topic = new Document([
+            '$id' => $topicId,
+            'providerId' => $providerId,
+            'providerInternalId' => $provider->getInternalId(),
+            'name' => $name,
+        ]);
+
+        if ($description) {
+            $topic->setAttribute('description', $description);
+        }
+
+        try {
+            $topic = $dbForProject->createDocument('topics', $topic);
+            $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($topic, Response::MODEL_TOPIC);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
+        }
     });
 
 App::get('/v1/messaging/topics')
@@ -1277,54 +1311,6 @@ App::get('/v1/messaging/topics/:topicId')
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
-App::post('/v1/messaging/topics')
-    ->desc('Create a topic.')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'topics.create')
-    ->label('audits.resource', 'topics/{response.$id}')
-    ->label('scope', 'topics.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createTopic')
-    ->label('sdk.description', '/docs/references/messaging/create-topic.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TOPIC)
-    ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
-    ->param('providerId', '', new UID(), 'Provider ID.')
-    ->param('name', '', new Text(128), 'Topic Name.')
-    ->param('description', '', new Text(2048), 'Topic Description.', true)
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $topicId, string $providerId, string $name, string $description, Database $dbForProject, Response $response) {
-        $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
-        $provider = $dbForProject->getDocument('providers', $providerId);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        $topic = new Document([
-            '$id' => $topicId,
-            'providerId' => $providerId,
-            'providerInternalId' => $provider->getInternalId(),
-            'name' => $name,
-        ]);
-
-        if ($description) {
-            $topic->setAttribute('description', $description);
-        }
-
-        try {
-            $topic = $dbForProject->createDocument('topics', $topic);
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($topic, Response::MODEL_TOPIC);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
-        }
-    });
-
 App::patch('/v1/messaging/topics/:topicId')
     ->desc('Update a topic.')
     ->groups(['api', 'messaging'])
@@ -1391,6 +1377,62 @@ App::delete('/v1/messaging/topics/:topicId')
         $response->noContent();
     });
 
+App::post('/v1/messaging/topics/:topicId/subscribers')
+    ->desc('Adds a Subscriber to a Topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'subscribers.create')
+    ->label('audits.resource', 'subscribers/{response.$id}')
+    ->label('scope', 'subscribers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'addSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/add-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
+        $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
+
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $subscriber = new Document([
+            '$id' => $subscriberId,
+            '$permissions' => [
+                Permission::read(Role::user($target->getAttribute('userId'))),
+                Permission::delete(Role::user($target->getAttribute('userId'))),
+            ],
+            'topicId' => $topicId,
+            'topicInternalId' => $topic->getInternalId(),
+            'targetId' => $targetId,
+            'targetInternalId' => $target->getInternalId(),
+        ]);
+
+        try {
+            $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
+            $dbForProject->deleteCachedDocument('topics', $topicId);
+            $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
+        }
+    });
+
 App::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List topic\'s subscribers.')
     ->groups(['api', 'messaging'])
@@ -1455,62 +1497,6 @@ App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::post('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('Adds a Subscriber to a Topic.')
-    ->groups(['api', 'messaging'])
-    ->label('audits.event', 'subscribers.create')
-    ->label('audits.resource', 'subscribers/{response.$id}')
-    ->label('scope', 'subscribers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'addSubscriber')
-    ->label('sdk.description', '/docs/references/messaging/add-subscriber.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
-    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
-    ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('targetId', '', new UID(), 'Target ID.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
-        $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
-
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
-
-        if ($topic->isEmpty()) {
-            throw new Exception(Exception::TOPIC_NOT_FOUND);
-        }
-
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
-
-        if ($target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-        }
-
-        $subscriber = new Document([
-            '$id' => $subscriberId,
-            '$permissions' => [
-                Permission::read(Role::user($target->getAttribute('userId'))),
-                Permission::delete(Role::user($target->getAttribute('userId'))),
-            ],
-            'topicId' => $topicId,
-            'topicInternalId' => $topic->getInternalId(),
-            'targetId' => $targetId,
-            'targetInternalId' => $target->getInternalId(),
-        ]);
-
-        try {
-            $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
-            $dbForProject->deleteCachedDocument('topics', $topicId);
-            $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
-        }
-    });
-
 App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->desc('Delete a Subscriber from a Topic.')
     ->groups(['api', 'messaging'])
@@ -1548,30 +1534,6 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
             ->noContent();
     });
 
-App::get('/v1/messaging/messages/:id')
-    ->desc('Get Message')
-    ->groups(['api', 'messaging'])
-    ->label('scope', 'messages.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'getMessage')
-    ->label('sdk.description', '/docs/references/messaging/get-message.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MESSAGE)
-    ->param('id', '', new UID(), 'Message ID.')
-    ->inject('dbForProject')
-    ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $message = $dbForProject->getDocument('messages', $id);
-
-        if ($message->isEmpty()) {
-            throw new Exception(Exception::MESSAGE_NOT_FOUND);
-        }
-
-        $response->dynamic($message, Response::MODEL_MESSAGE);
-    });
-
 App::post('/v1/messaging/messages/email')
     ->desc('Send an email.')
     ->groups(['api', 'messaging'])
@@ -1586,12 +1548,12 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerId', '', new Text(128), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(65535)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
-    ->param('subject', '', new Text(128), 'Email Subject.')
+    ->param('providerId', '', new UID(), 'Email Provider ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(65407), 'Email Content.')
-    ->param('html', false, new Boolean(false), 'Is content of type HTML', true)
+    ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
@@ -1621,11 +1583,35 @@ App::post('/v1/messaging/messages/email')
         ]));
 
         $messaging
-        ->setMessageId($message->getId())
-        ->setProject($project)
-        ->trigger();
+            ->setMessageId($message->getId())
+            ->setProject($project)
+            ->trigger();
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::get('/v1/messaging/messages/:id')
+    ->desc('Get Message')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getMessage')
+    ->label('sdk.description', '/docs/references/messaging/get-message.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('id', '', new UID(), 'Message ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $id, Database $dbForProject, Response $response) {
+        $message = $dbForProject->getDocument('messages', $id);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $response->dynamic($message, Response::MODEL_MESSAGE);
     });

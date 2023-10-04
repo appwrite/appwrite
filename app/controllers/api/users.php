@@ -1228,7 +1228,6 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        // Update the target identifier here
         $target->setAttribute('identifier', $identifier);
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);

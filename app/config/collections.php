@@ -1934,6 +1934,13 @@ $commonCollections = [
                 'attributes' => ['providerInternalId'],
                 'lengths' => [],
                 'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_identifier'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['identifier'],
+                'lengths' => [],
+                'orders' => [],
             ]
         ],
     ],

@@ -139,7 +139,7 @@ trait MessagingBase
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[$index]['$id'] . '/' . $key, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -149,7 +149,7 @@ trait MessagingBase
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
         }
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[1]['$id'] . '/mailgun', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[1]['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -376,7 +376,7 @@ trait MessagingBase
         $apiKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_API_KEY');
         $domain = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_DOMAIN');
         $isEuRegion = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_IS_EU_REGION');
-        if ($to === '' || $from === '' || $apiKey === '' || $domain === '' || $isEuRegion === '') {
+        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
 
@@ -386,7 +386,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => 'unique()',
+            'providerId' => ID::unique(),
             'name' => 'Mailgun-provider',
             'apiKey' => $apiKey,
             'domain' => $domain,
@@ -402,7 +402,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'providerId' => $provider['body']['$id'],
-            'topicId' => 'unique()',
+            'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
@@ -440,7 +440,7 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => 'unique()',
+            'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
 
@@ -452,7 +452,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'messageId' => 'unique()',
+            'messageId' => ID::unique(),
             'providerId' => $provider['body']['$id'],
             'to' => [$target['body']['$id']],
             'subject' => 'Khali beats Undertaker',
@@ -460,5 +460,18 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $email['headers']['status-code']);
+
+        \sleep(5);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 }

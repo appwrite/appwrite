@@ -1230,7 +1230,6 @@ App::post('/v1/account/sessions/phone')
     ->label('abuse-key', 'url:{url},phone:{param-phone}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1239,9 +1238,9 @@ App::post('/v1/account/sessions/phone')
     ->inject('events')
     ->inject('messaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, string $from, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, Messaging $messaging, Locale $locale) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, Messaging $messaging, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true, false]),
+            Query::equal('default', [true]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
@@ -1330,13 +1329,20 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->createDocument('targets', new Document([
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
-            'identifier' => $phone,
-        ]));
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+            Query::equal('providerInternalId', [$provider->getInternalId()])
+        ]);
+
+        if (!$target) {
+            $target = $dbForProject->createDocument('targets', new Document([
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerId' => $provider->getId(),
+                'providerInternalId' => $provider->getInternalId(),
+                'identifier' => $phone,
+            ]));
+        }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $token->getId(),
@@ -2899,7 +2905,6 @@ App::post('/v1/account/verification/phone')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{userId}')
-    ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -2908,9 +2913,9 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (string $from, Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Messaging $messaging, Document $project, Locale $locale) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Messaging $messaging, Document $project, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true, false]),
+            Query::equal('default', [true]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
@@ -2959,13 +2964,17 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->createDocument('targets', new Document([
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
-            'identifier' => $user->getAttribute('phone'),
-        ]));
+        $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$user->getAttribute('phone')]), Query::equal('providerInternalId', [$provider->getInternalId()])]);
+
+        if (!$target) {
+            $target = $dbForProject->createDocument('targets', new Document([
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerId' => $provider->getId(),
+                'providerInternalId' => $provider->getInternalId(),
+                'identifier' => $user->getAttribute('phone'),
+            ]));
+        }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $verification->getId(),

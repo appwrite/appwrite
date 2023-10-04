@@ -748,7 +748,7 @@ class AccountCustomClientTest extends Scope
         $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
         $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
 
-        if ($to === '' || $from === '' || $authKey === '' || $senderId === '') {
+        if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
             $this->markTestSkipped('SMS provider not configured');
         }
 
@@ -758,10 +758,8 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
-            'providerId' => 'unique()',
+            'providerId' => ID::unique(),
             'name' => 'Sms provider',
-            'provider' => 'msg91',
-            'type' => 'sms',
             'senderId' => $senderId,
             'authKey' => $authKey,
             'default' => true,
@@ -1032,7 +1030,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(2);
+        \sleep(3);
 
         $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $response['body']['$id'], [
             'origin' => 'http://localhost',
