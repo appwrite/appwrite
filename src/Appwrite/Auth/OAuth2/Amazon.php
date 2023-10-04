@@ -4,13 +4,13 @@ namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
 
-// Reference Material
-// https://developer.amazon.com/docs/login-with-amazon/authorization-code-grant.html
-// https://developer.amazon.com/docs/login-with-amazon/register-web.html
-// https://developer.amazon.com/docs/login-with-amazon/obtain-customer-profile.html
-
 class Amazon extends OAuth2
 {
+    // Constants for URLs
+    const AMAZON_AUTHORIZE_URL = 'https://www.amazon.com/ap/oa';
+    const AMAZON_TOKEN_URL = 'https://api.amazon.com/auth/o2/token';
+    const AMAZON_USER_PROFILE_URL = 'https://api.amazon.com/user/profile';
+
     /**
      * @var array
      */
@@ -25,7 +25,7 @@ class Amazon extends OAuth2
      * @var array
      */
     protected array $scopes = [
-        "profile"
+        'profile'
     ];
 
     /**
@@ -41,24 +41,25 @@ class Amazon extends OAuth2
      *
      * @return array
      */
-    public function parseState(string $state)
+    public function parseState(string $state): array
     {
-        return \json_decode(\html_entity_decode($state), true);
+        return json_decode(html_entity_decode($state), true);
     }
-
 
     /**
      * @return string
      */
     public function getLoginURL(): string
     {
-        return 'https://www.amazon.com/ap/oa?' . \http_build_query([
+        $params = [
             'response_type' => 'code',
             'client_id' => $this->appID,
-            'scope' => \implode(' ', $this->getScopes()),
-            'state' => \json_encode($this->state),
-            'redirect_uri' => $this->callback
-        ]);
+            'scope' => implode(' ', $this->getScopes()),
+            'state' => json_encode($this->state),
+            'redirect_uri' => $this->callback,
+        ];
+
+        return self::AMAZON_AUTHORIZE_URL . '?' . http_build_query($params);
     }
 
     /**
@@ -69,19 +70,16 @@ class Amazon extends OAuth2
     protected function getTokens(string $code): array
     {
         if (empty($this->tokens)) {
+            $params = [
+                'code' => $code,
+                'client_id' => $this->appID,
+                'client_secret' => $this->appSecret,
+                'redirect_uri' => $this->callback,
+                'grant_type' => 'authorization_code',
+            ];
+
             $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-            $this->tokens = \json_decode($this->request(
-                'POST',
-                'https://api.amazon.com/auth/o2/token',
-                $headers,
-                \http_build_query([
-                    'code' => $code,
-                    'client_id' => $this->appID,
-                    'client_secret' => $this->appSecret,
-                    'redirect_uri' => $this->callback,
-                    'grant_type' => 'authorization_code'
-                ])
-            ), true);
+            $this->tokens = json_decode($this->request('POST', self::AMAZON_TOKEN_URL, $headers, http_build_query($params)), true);
         }
 
         return $this->tokens;
@@ -94,18 +92,15 @@ class Amazon extends OAuth2
      */
     public function refreshTokens(string $refreshToken): array
     {
+        $params = [
+            'client_id' => $this->appID,
+            'client_secret' => $this->appSecret,
+            'grant_type' => 'refresh_token',
+            'refresh_token' => $refreshToken,
+        ];
+
         $headers = ['Content-Type: application/x-www-form-urlencoded;charset=UTF-8'];
-        $this->tokens = \json_decode($this->request(
-            'POST',
-            'https://api.amazon.com/auth/o2/token',
-            $headers,
-            \http_build_query([
-                'client_id' => $this->appID,
-                'client_secret' => $this->appSecret,
-                'grant_type' => 'refresh_token',
-                'refresh_token' => $refreshToken
-            ])
-        ), true);
+        $this->tokens = json_decode($this->request('POST', self::AMAZON_TOKEN_URL, $headers, http_build_query($params)), true);
 
         if (empty($this->tokens['refresh_token'])) {
             $this->tokens['refresh_token'] = $refreshToken;
@@ -141,7 +136,7 @@ class Amazon extends OAuth2
     /**
      * Check if the OAuth email is verified
      *
-     * If present, the email is verified. This was verfied through a manual Amazon sign up process
+     * If present, the email is verified. This was verified through a manual Amazon sign-up process.
      *
      * @param string $accessToken
      *
@@ -174,9 +169,10 @@ class Amazon extends OAuth2
     protected function getUser(string $accessToken): array
     {
         if (empty($this->user)) {
-            $user = $this->request('GET', 'https://api.amazon.com/user/profile?access_token=' . \urlencode($accessToken));
-            $this->user = \json_decode($user, true);
+            $user = $this->request('GET', self::AMAZON_USER_PROFILE_URL . '?access_token=' . urlencode($accessToken));
+            $this->user = json_decode($user, true);
         }
+
         return $this->user;
     }
 }
