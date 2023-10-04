@@ -666,6 +666,7 @@ services:
     container_name: openruntimes-executor
     hostname: appwrite-executor
     <<: *x-logging
+    restart: unless-stopped
     stop_signal: SIGINT
     image: openruntimes/executor:0.4.3
     networks:
