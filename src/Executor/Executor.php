@@ -113,7 +113,7 @@ class Executor
     ) {
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $runtimeId = "$projectId-$deploymentId-build";
+        $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
             'timeout' => $timeout

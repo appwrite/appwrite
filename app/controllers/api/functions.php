@@ -1678,6 +1678,8 @@ App::post('/v1/functions/:functionId/executions')
              * Sync execution compute usage from
              */
             $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
                 ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000)) // per project
                 ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000)) // per function
             ;

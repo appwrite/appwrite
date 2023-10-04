@@ -130,13 +130,7 @@ Server::setResource('execute', function () {
                 throw new Exception('Failed to create or read execution');
             }
 
-            /**
-             * Usage
-             */
 
-            $queueForUsage
-                ->addMetric(METRIC_EXECUTIONS, 1) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1); // per function
         }
 
         if ($execution->getAttribute('status') !== 'processing') {
@@ -289,7 +283,9 @@ Server::setResource('execute', function () {
         /** Trigger usage queue */
         $queueForUsage
             ->setProject($project)
-            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(METRIC_EXECUTIONS, 1)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))
             ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
             ->trigger()
         ;
