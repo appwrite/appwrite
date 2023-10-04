@@ -92,7 +92,6 @@ class Messaging extends Action
             return;
         }
 
-
         $message = new SMS(
             to: [$payload['recipient']],
             content: $payload['message'],

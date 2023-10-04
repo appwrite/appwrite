@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "441bddff081659dfec29b0d735a6217a",
+    "content-hash": "748f1a5e4fdf0a73ea26ddf0e7822f19",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1797,16 +1797,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.1.1",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a"
+                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a75d66ddd59b834ab500a4878a2c084e6572604a",
-                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
                 "shasum": ""
             },
             "require": {
@@ -1815,8 +1815,8 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpmailer/phpmailer": "6.6.*",
-                "phpunit/phpunit": "9.5.*"
+                "phpmailer/phpmailer": "6.8.*",
+                "phpunit/phpunit": "9.6.*"
             },
             "type": "library",
             "autoload": {
@@ -1839,9 +1839,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.1.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
             },
-            "time": "2023-02-07T05:42:46+00:00"
+            "time": "2023-09-14T20:48:42+00:00"
         },
         {
             "name": "utopia-php/migration",
