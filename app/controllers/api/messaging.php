@@ -476,7 +476,7 @@ App::post('/v1/messaging/providers/fcm')
         if (
             empty($dbForProject->findOne('providers', [
             Query::equal('default', [true]),
-            Query::equal('type', ['pushq'])
+            Query::equal('type', ['push'])
             ]))
         ) {
             $provider->setAttribute('default', true);
