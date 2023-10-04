@@ -1,6 +1,11 @@
 # Contributing
+## 🚀 Welcome to the Appwrite Community!
 
-We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
+We're thrilled that you're considering contributing to Appwrite, an open-source project that's making waves in the world of web development. Your contributions are not just welcomed; they're the lifeblood of our thriving community.
+
+**Join us in shaping the future of Appwrite**. Whether you're an experienced developer or just dipping your toes into open source for the first time, there's a place for you here. Your unique skills, ideas, and perspectives are invaluable assets to our growing ecosystem.
+
+So, how can you get started? It's easy, and we're here to guide you every step of the way. Let's embark on this exciting journey together! 🌟
 
 ## Here for Hacktoberfest?
 If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
