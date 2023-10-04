@@ -174,6 +174,7 @@ class CertificatesV1 extends Worker
 
             $certificate = $this->dbForConsole->updateDocument('certificates', $certificate->getId(), $certificate);
         } else {
+            $certificate->removeAttribute('$internalId');
             $certificate = $this->dbForConsole->createDocument('certificates', $certificate);
         }
 

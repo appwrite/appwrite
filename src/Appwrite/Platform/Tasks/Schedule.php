@@ -89,7 +89,12 @@ class Schedule extends Action
             $sum = count($results);
             $total = $total + $sum;
             foreach ($results as $document) {
-                $schedules[$document['resourceId']] = $getSchedule($document);
+                try {
+                    $schedules[$document['resourceId']] = $getSchedule($document);
+                } catch (\Throwable $th) {
+                    Console::error("Failed to load schedule for project {$document['projectId']} and function {$document['resourceId']}");
+                    Console::error($th->getMessage());
+                }
             }
 
             $latestDocument = !empty(array_key_last($results)) ? $results[array_key_last($results)] : null;

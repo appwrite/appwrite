@@ -1,6 +1,5 @@
 <?php
 
-use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Http\Http;

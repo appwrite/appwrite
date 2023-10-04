@@ -1,3 +1,56 @@
+# Version 1.4.4
+
+## Features
+- Feat: Function domains force https in [#6269](https://github.com/appwrite/appwrite/pull/6269)
+- Feat: router protection in [#6272](https://github.com/appwrite/appwrite/pull/6272)
+- Feat: Parse event body in [#6317](https://github.com/appwrite/appwrite/pull/6317)
+
+## Fixes
+- Fix: wrong device type in [#6271](https://github.com/appwrite/appwrite/pull/6271)
+- Fix: build race condition in [#6270](https://github.com/appwrite/appwrite/pull/6270)
+- Fix: Large builds in [#6273](https://github.com/appwrite/appwrite/pull/6273)
+- Fix: migrations in [#6302](https://github.com/appwrite/appwrite/pull/6302)
+- Add Description for Download Deployment in [#6268](https://github.com/appwrite/appwrite/pull/6268)
+- Fix deployment delete in [#6290](https://github.com/appwrite/appwrite/pull/6290)
+- Fix project deletion in [#6260](https://github.com/appwrite/appwrite/pull/6260)
+- fix-6212-Issue-With-Linkedin-OAuth in [#6229](https://github.com/appwrite/appwrite/pull/6229)
+- Fix: Execution body limit in [#6326](https://github.com/appwrite/appwrite/pull/6326)
+- Patch: Disable console protection in [#6329](https://github.com/appwrite/appwrite/pull/6329)
+- converted desc to sentence case in [#5926](https://github.com/appwrite/appwrite/pull/5926)
+- Update avatar font and default colors in [#6277](https://github.com/appwrite/appwrite/pull/6277)
+- Bump composer to fix migration bug in [#6344](https://github.com/appwrite/appwrite/pull/6344)
+- Fix execution call timeout in [#6332](https://github.com/appwrite/appwrite/pull/6332)
+- Bump appwrite-assistant to prevent it from crashing w/o open ai key in [#6342](https://github.com/appwrite/appwrite/pull/6342)
+- Remove Special Chars from Initials [#6164](https://github.com/appwrite/appwrite/pull/6164)
+
+# Version 1.4.3
+
+## Features
+- Support for the all new bun runtime [#6230](https://github.com/appwrite/appwrite/pull/6230)
+- Stripe function templates [Console #540](https://github.com/appwrite/console/pull/540)
+
+## Fixes
+- Fix missing _APP_OPENSSL_KEY_V1 in the compose file [#6199](https://github.com/appwrite/appwrite/pull/6199)
+- Fix V2 functions env vars [#6215](https://github.com/appwrite/appwrite/pull/6215)
+- Fix Don't update User Accessed At for Users and Teams APIs [#6222](https://github.com/appwrite/appwrite/pull/6222)
+- Fix Git deploys with S3 [#6227](https://github.com/appwrite/appwrite/pull/6227)
+- Fix manual internal id insertion [#6232](https://github.com/appwrite/appwrite/pull/6232)
+- Fix function timeout [#6235](https://github.com/appwrite/appwrite/pull/6235)
+- Fix collections with datetime attributes migration [#17](https://github.com/utopia-php/migration/pull/17)
+- Fix not all user data being migrated [#17](https://github.com/utopia-php/migration/pull/17)
+- Fix team memberships migration [#16](https://github.com/utopia-php/migration/pull/16)
+- Fix events validation on create/update webhooks [#6219](https://github.com/appwrite/appwrite/pull/6219)
+- Fix schedules task [#6246](https://github.com/appwrite/appwrite/pull/6246)
+- Fix missing keys when updating document via relationship [Database #320](https://github.com/utopia-php/database/pull/320)
+- Fix Discord template [Console #538](https://github.com/appwrite/console/pull/538)
+- Fix form var is url not text [Console #539](https://github.com/appwrite/console/pull/539)
+- Fix incorrect link to migration docs for self-hosted to cloud [Console #543](https://github.com/appwrite/console/pull/543)
+- Fix can't disable smtp [Console #548](https://github.com/appwrite/console/pull/548)
+- Fix create function cover for case where VCS is not enabled [Console #544](https://github.com/appwrite/console/pull/544)
+- Fix users list not re-rendering [Console #537](https://github.com/appwrite/console/pull/537)
+- Fix create attribute modal null when selecting same time twice [Console #549](https://github.com/appwrite/console/pull/549)
+- Fix runtime versions in templates [Console #546](https://github.com/appwrite/console/pull/546)
+
 # Version 1.4.2
 
 ## Fixes

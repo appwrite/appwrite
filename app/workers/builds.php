@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Storage\Storage;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Storage\Device\Local;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 require_once __DIR__ . '/../init.php';
@@ -111,6 +112,8 @@ class BuildsV1 extends Worker
 
         $isNewBuild = empty($buildId);
 
+        $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
         if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -123,7 +126,7 @@ class BuildsV1 extends Worker
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower($deviceFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
@@ -248,22 +251,32 @@ class BuildsV1 extends Worker
                     );
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . \escapeshellcmd($buildId) . '/code.tar.gz -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
+                $tmpPathFile = $tmpPath . '/code.tar.gz';
+                $localDevice = new Local();
+
+                if (substr($tmpDirectory, -1) !== '/') {
+                    $tmpDirectory .= '/';
+                }
+
+                $directorySize = $localDevice->getDirectorySize($tmpDirectory);
+                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                if ($directorySize > $functionsSizeLimit) {
+                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                }
+
+                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
-                $fileName = 'code.tar.gz';
-                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
-
-                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
-
-                $result = $deviceFunctions->move($fileTmpName, $path);
+                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
 
                 $source = $path;
 
@@ -476,7 +489,7 @@ class BuildsV1 extends Worker
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project

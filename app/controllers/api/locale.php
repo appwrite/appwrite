@@ -9,7 +9,7 @@ use Utopia\Database\Document;
 use Utopia\Locale\Locale;
 
 App::get('/v1/locale')
-    ->desc('Get User Locale')
+    ->desc('Get user locale')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -91,7 +91,7 @@ App::get('/v1/locale/codes')
     });
 
 App::get('/v1/locale/countries')
-    ->desc('List Countries')
+    ->desc('List countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -124,7 +124,7 @@ App::get('/v1/locale/countries')
     });
 
 App::get('/v1/locale/countries/eu')
-    ->desc('List EU Countries')
+    ->desc('List EU countries')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -159,7 +159,7 @@ App::get('/v1/locale/countries/eu')
     });
 
 App::get('/v1/locale/countries/phones')
-    ->desc('List Countries Phone Codes')
+    ->desc('List countries phone codes')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -193,7 +193,7 @@ App::get('/v1/locale/countries/phones')
     });
 
 App::get('/v1/locale/continents')
-    ->desc('List Continents')
+    ->desc('List continents')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -225,7 +225,7 @@ App::get('/v1/locale/continents')
     });
 
 App::get('/v1/locale/currencies')
-    ->desc('List Currencies')
+    ->desc('List currencies')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -248,7 +248,7 @@ App::get('/v1/locale/currencies')
 
 
 App::get('/v1/locale/languages')
-    ->desc('List Languages')
+    ->desc('List languages')
     ->groups(['api', 'locale'])
     ->label('scope', 'locale.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
