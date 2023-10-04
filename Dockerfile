@@ -5,29 +5,24 @@ ENV TESTING=$TESTING
 
 WORKDIR /usr/local/src/
 
-COPY composer.lock /usr/local/src/
-COPY composer.json /usr/local/src/
+COPY composer.lock composer.json /usr/local/src/
 
-RUN composer install --ignore-platform-reqs --optimize-autoloader \
-    --no-plugins --no-scripts --prefer-dist \
+RUN composer install --ignore-platform-reqs --optimize-autoloader --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
 FROM --platform=$BUILDPLATFORM node:16.14.2-alpine3.15 as node
-
-COPY app/console /usr/local/src/console
-
-WORKDIR /usr/local/src/console
 
 ARG VITE_GA_PROJECT
 ARG VITE_CONSOLE_MODE
 ARG VITE_APPWRITE_GROWTH_ENDPOINT=https://growth.appwrite.io/v1
 
-ENV VITE_GA_PROJECT=$VITE_GA_PROJECT
-ENV VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE
-ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
+ENV VITE_GA_PROJECT=$VITE_GA_PROJECT \
+    VITE_CONSOLE_MODE=$VITE_CONSOLE_MODE \
+    VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 
-RUN npm ci
-RUN npm run build
+WORKDIR /usr/local/src/console
+COPY app/console ./
+RUN npm ci && npm run build
 
 FROM appwrite/base:0.4.3 as final
 
@@ -35,9 +30,9 @@ LABEL maintainer="team@appwrite.io"
 
 ARG VERSION=dev
 ARG DEBUG=false
-ENV DEBUG=$DEBUG
 
-ENV _APP_VERSION=$VERSION \
+ENV DEBUG=$DEBUG \
+    _APP_VERSION=$VERSION \
     _APP_HOME=https://appwrite.io
 
 RUN \
@@ -58,52 +53,44 @@ COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
 
 # Set Volumes
-RUN mkdir -p /storage/uploads && \
-    mkdir -p /storage/cache && \
-    mkdir -p /storage/config && \
-    mkdir -p /storage/certificates && \
-    mkdir -p /storage/functions && \
-    mkdir -p /storage/debug && \
-    chown -Rf www-data.www-data /storage/uploads && chmod -Rf 0755 /storage/uploads && \
-    chown -Rf www-data.www-data /storage/cache && chmod -Rf 0755 /storage/cache && \
-    chown -Rf www-data.www-data /storage/config && chmod -Rf 0755 /storage/config && \
-    chown -Rf www-data.www-data /storage/certificates && chmod -Rf 0755 /storage/certificates && \
-    chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
-    chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
+RUN mkdir -p /storage/uploads /storage/cache /storage/config /storage/certificates /storage/functions /storage/debug && \
+    chown -Rf www-data:www-data /storage/uploads /storage/cache /storage/config /storage/certificates /storage/functions /storage/debug && \
+    chmod -Rf 0755 /storage/uploads /storage/cache /storage/config /storage/certificates /storage/functions /storage/debug
 
 # Executables
-RUN chmod +x /usr/local/bin/doctor && \
-    chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/usage && \
-    chmod +x /usr/local/bin/install && \
-    chmod +x /usr/local/bin/upgrade && \
-    chmod +x /usr/local/bin/migrate && \
-    chmod +x /usr/local/bin/realtime && \
-    chmod +x /usr/local/bin/schedule && \
-    chmod +x /usr/local/bin/sdks && \
-    chmod +x /usr/local/bin/specs && \
-    chmod +x /usr/local/bin/ssl && \
-    chmod +x /usr/local/bin/test && \
-    chmod +x /usr/local/bin/vars && \
-    chmod +x /usr/local/bin/worker-audits && \
-    chmod +x /usr/local/bin/worker-certificates && \
-    chmod +x /usr/local/bin/worker-databases && \
-    chmod +x /usr/local/bin/worker-deletes && \
-    chmod +x /usr/local/bin/worker-functions && \
-    chmod +x /usr/local/bin/worker-builds && \
-    chmod +x /usr/local/bin/worker-mails && \
-    chmod +x /usr/local/bin/worker-messaging && \
-    chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-migrations
+RUN chmod +x /usr/local/bin/doctor \
+    /usr/local/bin/maintenance \
+    /usr/local/bin/usage \
+    /usr/local/bin/install \
+    /usr/local/bin/upgrade \
+    /usr/local/bin/migrate \
+    /usr/local/bin/realtime \
+    /usr/local/bin/schedule \
+    /usr/local/bin/sdks \
+    /usr/local/bin/specs \
+    /usr/local/bin/ssl \
+    /usr/local/bin/test \
+    /usr/local/bin/vars \
+    /usr/local/bin/worker-audits \
+    /usr/local/bin/worker-certificates \
+    /usr/local/bin/worker-databases \
+    /usr/local/bin/worker-deletes \
+    /usr/local/bin/worker-functions \
+    /usr/local/bin/worker-builds \
+    /usr/local/bin/worker-mails \
+    /usr/local/bin/worker-messaging \
+    /usr/local/bin/worker-webhooks \
+    /usr/local/bin/worker-migrations
 
 # Cloud Executabless
-RUN chmod +x /usr/local/bin/hamster && \
-    chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
-    chmod +x /usr/local/bin/clear-card-cache && \
-    chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats
+RUN chmod +x \
+    /usr/local/bin/hamster \
+    /usr/local/bin/volume-sync \
+    /usr/local/bin/patch-delete-schedule-updated-at-attribute \
+    /usr/local/bin/patch-delete-project-collections \
+    /usr/local/bin/clear-card-cache \
+    /usr/local/bin/calc-users-stats \
+    /usr/local/bin/calc-tier-stats
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
