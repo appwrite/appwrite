@@ -613,9 +613,6 @@ App::post('/v1/teams/:teamId/memberships')
                     'thanks' => $locale->getText("emails.invitation.thanks"),
                     'signature' => $locale->getText("emails.invitation.signature"),
                     'direction' => $locale->getText('settings.direction'),
-                    'bg-body' => '#f7f7f7',
-                    'bg-content' => '#ffffff',
-                    'text-content' => '#000000',
                     /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),

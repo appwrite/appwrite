@@ -441,10 +441,7 @@ class Certificates extends Action
             ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"))
             ->setParam('{{project}}', 'Console')
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
+            ->setParam('{{direction}}', $locale->getText('settings.direction'));
 
         $queueForMails
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))

@@ -1057,9 +1057,6 @@ App::post('/v1/account/sessions/magic-url')
             'thanks' => $locale->getText("emails.magicSession.thanks"),
             'signature' => $locale->getText("emails.magicSession.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => '',
             'team' => '',
@@ -2514,9 +2511,6 @@ App::post('/v1/account/recovery')
             'thanks' => $locale->getText("emails.recovery.thanks"),
             'signature' => $locale->getText("emails.recovery.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => $profile->getAttribute('name'),
             'team' => '',
@@ -2766,9 +2760,6 @@ App::post('/v1/account/verification')
             'thanks' => $locale->getText("emails.verification.thanks"),
             'signature' => $locale->getText("emails.verification.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => $user->getAttribute('name'),
             'team' => '',
