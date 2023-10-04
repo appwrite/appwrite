@@ -105,13 +105,13 @@ Server::setResource('pools', function ($register) {
 
 $pools = $register->get('pools');
 $connection = $pools->get('queue')->pop()->getResource();
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
 
-if (empty(App::getEnv('QUEUE'))) {
+if (empty(Http::getEnv('QUEUE'))) {
     throw new Exception('Please configure "QUEUE" environment variable.');
 }
 
-$adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
+$adapter = new Swoole($connection, $workerNumber, Http::getEnv('QUEUE'));
 $server = new Server($adapter);
 
 $server
@@ -127,7 +127,7 @@ $server
     ->inject('logger')
     ->inject('log')
     ->action(function (Throwable $error, ?Logger $logger, Log $log) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
@@ -139,7 +139,7 @@ $server
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
+            $log->setAction('appwrite-queue-' . Http::getEnv('QUEUE'));
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());
@@ -148,7 +148,7 @@ $server
             $log->addExtra('detailedTrace', $error->getTrace());
             $log->addExtra('roles', Authorization::getRoles());
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

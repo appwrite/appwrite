@@ -21,16 +21,16 @@ use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Firebase;
 use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Host;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Host;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 
 include_once __DIR__ . '/../shared/api.php';
 
-App::post('/v1/migrations/appwrite')
+Http::post('/v1/migrations/appwrite')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Appwrite Data')
     ->label('scope', 'migrations.write')
@@ -84,7 +84,7 @@ App::post('/v1/migrations/appwrite')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase/oauth')
+Http::post('/v1/migrations/firebase/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (OAuth)')
     ->label('scope', 'migrations.write')
@@ -108,8 +108,8 @@ App::post('/v1/migrations/firebase/oauth')
     ->inject('request')
     ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $events, Request $request) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -186,7 +186,7 @@ App::post('/v1/migrations/firebase/oauth')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/firebase')
+Http::post('/v1/migrations/firebase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Firebase Data (Service Account)')
     ->label('scope', 'migrations.write')
@@ -236,7 +236,7 @@ App::post('/v1/migrations/firebase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/supabase')
+Http::post('/v1/migrations/supabase')
     ->groups(['api', 'migrations'])
     ->desc('Migrate Supabase Data')
     ->label('scope', 'migrations.write')
@@ -296,7 +296,7 @@ App::post('/v1/migrations/supabase')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::post('/v1/migrations/nhost')
+Http::post('/v1/migrations/nhost')
     ->groups(['api', 'migrations'])
     ->desc('Migrate NHost Data')
     ->label('scope', 'migrations.write')
@@ -358,7 +358,7 @@ App::post('/v1/migrations/nhost')
             ->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations')
+Http::get('/v1/migrations')
     ->groups(['api', 'migrations'])
     ->desc('List Migrations')
     ->label('scope', 'migrations.read')
@@ -405,7 +405,7 @@ App::get('/v1/migrations')
         ]), Response::MODEL_MIGRATION_LIST);
     });
 
-App::get('/v1/migrations/:migrationId')
+Http::get('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Get Migration')
     ->label('scope', 'migrations.read')
@@ -429,7 +429,7 @@ App::get('/v1/migrations/:migrationId')
         $response->dynamic($migration, Response::MODEL_MIGRATION);
     });
 
-App::get('/v1/migrations/appwrite/report')
+Http::get('/v1/migrations/appwrite/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Appwrite Data')
     ->label('scope', 'migrations.write')
@@ -460,7 +460,7 @@ App::get('/v1/migrations/appwrite/report')
         }
     });
 
-App::get('/v1/migrations/firebase/report')
+Http::get('/v1/migrations/firebase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Firebase Data')
     ->label('scope', 'migrations.write')
@@ -486,7 +486,7 @@ App::get('/v1/migrations/firebase/report')
         }
     });
 
-App::get('/v1/migrations/firebase/report/oauth')
+Http::get('/v1/migrations/firebase/report/oauth')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Firebase Data using OAuth')
     ->label('scope', 'migrations.write')
@@ -505,8 +505,8 @@ App::get('/v1/migrations/firebase/report/oauth')
     ->inject('dbForConsole')
     ->action(function (array $resources, string $projectId, Response $response, Request $request, Document $user, Database $dbForConsole) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -527,7 +527,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+        if (Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -577,7 +577,7 @@ App::get('/v1/migrations/firebase/report/oauth')
             ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
-App::get('/v1/migrations/firebase/connect')
+Http::get('/v1/migrations/firebase/connect')
     ->desc('Authorize with firebase')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
@@ -607,8 +607,8 @@ App::get('/v1/migrations/firebase/connect')
         $dbForConsole->updateDocument('users', $user->getId(), $user);
 
         $oauth2 = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
         $url = $oauth2->getLoginURL();
@@ -619,7 +619,7 @@ App::get('/v1/migrations/firebase/connect')
             ->redirect($url);
     });
 
-App::get('/v1/migrations/firebase/redirect')
+Http::get('/v1/migrations/firebase/redirect')
     ->desc('Capture and receive data on Firebase authorization')
     ->groups(['api', 'migrations'])
     ->label('scope', 'public')
@@ -662,8 +662,8 @@ App::get('/v1/migrations/firebase/redirect')
         // OAuth Authroization
         if (!empty($code)) {
             $oauth2 = new OAuth2Firebase(
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-                App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+                Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+                Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
                 $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
             );
 
@@ -731,7 +731,7 @@ App::get('/v1/migrations/firebase/redirect')
             ->redirect($redirect);
     });
 
-App::get('/v1/migrations/firebase/projects')
+Http::get('/v1/migrations/firebase/projects')
     ->desc('List Firebase Projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.read')
@@ -749,8 +749,8 @@ App::get('/v1/migrations/firebase/projects')
     ->inject('request')
     ->action(function (Document $user, Response $response, Document $project, Database $dbForConsole, Request $request) {
         $firebase = new OAuth2Firebase(
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
-            App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
+            Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
             $request->getProtocol() . '://' . $request->getHostname() . '/v1/migrations/firebase/redirect'
         );
 
@@ -771,7 +771,7 @@ App::get('/v1/migrations/firebase/projects')
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
-        if (App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
+        if (Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', '') === '' || Http::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', '') === '') {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
@@ -820,7 +820,7 @@ App::get('/v1/migrations/firebase/projects')
         ]), Response::MODEL_MIGRATION_FIREBASE_PROJECT_LIST);
     });
 
-App::get('/v1/migrations/firebase/deauthorize')
+Http::get('/v1/migrations/firebase/deauthorize')
     ->desc('Revoke Appwrite\'s authorization to access Firebase Projects')
     ->groups(['api', 'migrations'])
     ->label('scope', 'migrations.write')
@@ -848,7 +848,7 @@ App::get('/v1/migrations/firebase/deauthorize')
         $response->noContent();
     });
 
-App::get('/v1/migrations/supabase/report')
+Http::get('/v1/migrations/supabase/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on Supabase Data')
     ->label('scope', 'migrations.write')
@@ -880,7 +880,7 @@ App::get('/v1/migrations/supabase/report')
         }
     });
 
-App::get('/v1/migrations/nhost/report')
+Http::get('/v1/migrations/nhost/report')
     ->groups(['api', 'migrations'])
     ->desc('Generate a report on NHost Data')
     ->label('scope', 'migrations.write')
@@ -912,7 +912,7 @@ App::get('/v1/migrations/nhost/report')
         }
     });
 
-App::patch('/v1/migrations/:migrationId')
+Http::patch('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Retry Migration')
     ->label('scope', 'migrations.write')
@@ -958,7 +958,7 @@ App::patch('/v1/migrations/:migrationId')
         $response->noContent();
     });
 
-App::delete('/v1/migrations/:migrationId')
+Http::delete('/v1/migrations/:migrationId')
     ->groups(['api', 'migrations'])
     ->desc('Delete Migration')
     ->label('scope', 'migrations.write')

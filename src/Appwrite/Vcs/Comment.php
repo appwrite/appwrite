@@ -73,8 +73,8 @@ class Comment
             $text .= "| Function | ID | Status | Action |\n";
             $text .= "| :- | :-  | :-  | :- |\n";
 
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = App::getEnv('_APP_DOMAIN');
+            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = Http::getEnv('_APP_DOMAIN');
 
             foreach ($project['functions'] as $functionId => $function) {
                 $generateImage = function (string $status) use ($protocol, $hostname) {

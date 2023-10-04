@@ -12,11 +12,11 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Database\DateTime;
 
-App::get('/v1/project/usage')
+Http::get('/v1/project/usage')
     ->desc('Get usage stats for a project')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -31,7 +31,7 @@ App::get('/v1/project/usage')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -120,7 +120,7 @@ App::get('/v1/project/usage')
 
 // Variables
 
-App::post('/v1/project/variables')
+Http::post('/v1/project/variables')
     ->desc('Create Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -175,7 +175,7 @@ App::post('/v1/project/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/project/variables')
+Http::get('/v1/project/variables')
     ->desc('List Variables')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -200,7 +200,7 @@ App::get('/v1/project/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/project/variables/:variableId')
+Http::get('/v1/project/variables/:variableId')
     ->desc('Get Variable')
     ->groups(['api'])
     ->label('scope', 'projects.read')
@@ -224,7 +224,7 @@ App::get('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/project/variables/:variableId')
+Http::put('/v1/project/variables/:variableId')
     ->desc('Update Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')
@@ -270,7 +270,7 @@ App::put('/v1/project/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/project/variables/:variableId')
+Http::delete('/v1/project/variables/:variableId')
     ->desc('Delete Variable')
     ->groups(['api'])
     ->label('scope', 'projects.write')

@@ -40,7 +40,7 @@ class BuildsV1 extends Worker
 
     public function init(): void
     {
-        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $this->executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
     }
 
     public function run(): void
@@ -151,8 +151,8 @@ class BuildsV1 extends Worker
         if ($isVcsEnabled) {
             $installation = $dbForConsole->getDocument('installations', $installationId);
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
 
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
         }
@@ -260,7 +260,7 @@ class BuildsV1 extends Worker
                 }
 
                 $directorySize = $localDevice->getDirectorySize($tmpDirectory);
-                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                $functionsSizeLimit = (int) Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
                 if ($directorySize > $functionsSizeLimit) {
                     throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
                 }
@@ -503,7 +503,7 @@ class BuildsV1 extends Worker
             );
 
             /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+            if (Http::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
                 $statsd = $register->get('statsd');
                 $usage = new Stats($statsd);
                 $usage
@@ -549,8 +549,8 @@ class BuildsV1 extends Worker
 
             $name = "{$functionName} ({$projectName})";
 
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = App::getEnv('_APP_DOMAIN');
+            $protocol = Http::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+            $hostname = Http::getEnv('_APP_DOMAIN');
             $functionId = $function->getId();
             $projectId = $project->getId();
             $providerTargetUrl = $protocol . '://' . $hostname . "/console/project-$projectId/functions/function-$functionId";

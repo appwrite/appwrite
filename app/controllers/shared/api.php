@@ -89,7 +89,7 @@ $databaseListener = function (string $event, Document $document, Stats $usage) {
     }
 };
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -158,7 +158,7 @@ App::init()
                 ;
             }
 
-            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -260,7 +260,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
@@ -320,7 +320,7 @@ App::init()
  * Delete older sessions if the number of sessions have crossed
  * the session limit set for the project
  */
-App::shutdown()
+Http::shutdown()
     ->groups(['session'])
     ->inject('utopia')
     ->inject('request')
@@ -353,7 +353,7 @@ App::shutdown()
         $dbForProject->deleteCachedDocument('users', $userId);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -523,7 +523,7 @@ App::shutdown()
         }
 
         if (
-            App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
+            Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
             && $project->getId()
             && !empty($route->getLabel('sdk.namespace', null))
         ) { // Don't calculate console usage on admin mode

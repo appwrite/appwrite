@@ -709,7 +709,7 @@ class V19 extends Migration
 
                 if (empty($document->getAttribute('scheduleId', null))) {
                     $schedule = $this->consoleDB->createDocument('schedules', new Document([
-                        'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                        'region' => Http::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                         'resourceType' => 'function',
                         'resourceId' => $document->getId(),
                         'resourceInternalId' => $document->getInternalId(),

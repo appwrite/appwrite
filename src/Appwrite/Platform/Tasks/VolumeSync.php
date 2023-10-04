@@ -5,8 +5,8 @@ namespace Appwrite\Platform\Tasks;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Platform\Action;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Text;
 
 class VolumeSync extends Action
 {

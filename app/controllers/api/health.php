@@ -15,7 +15,7 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 
-App::get('/v1/health')
+Http::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -38,7 +38,7 @@ App::get('/v1/health')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-App::get('/v1/health/version')
+Http::get('/v1/health/version')
     ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
@@ -50,7 +50,7 @@ App::get('/v1/health/version')
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
 
-App::get('/v1/health/db')
+Http::get('/v1/health/db')
     ->desc('Get DB')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -108,7 +108,7 @@ App::get('/v1/health/db')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-App::get('/v1/health/cache')
+Http::get('/v1/health/cache')
     ->desc('Get cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -165,7 +165,7 @@ App::get('/v1/health/cache')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-App::get('/v1/health/queue')
+Http::get('/v1/health/queue')
     ->desc('Get queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -222,7 +222,7 @@ App::get('/v1/health/queue')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-App::get('/v1/health/pubsub')
+Http::get('/v1/health/pubsub')
     ->desc('Get pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -279,7 +279,7 @@ App::get('/v1/health/pubsub')
         ]), Response::MODEL_HEALTH_STATUS_LIST);
     });
 
-App::get('/v1/health/time')
+Http::get('/v1/health/time')
     ->desc('Get time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -336,7 +336,7 @@ App::get('/v1/health/time')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_TIME);
     });
 
-App::get('/v1/health/queue/webhooks')
+Http::get('/v1/health/queue/webhooks')
     ->desc('Get webhooks queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -353,7 +353,7 @@ App::get('/v1/health/queue/webhooks')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/logs')
+Http::get('/v1/health/queue/logs')
     ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -370,7 +370,7 @@ App::get('/v1/health/queue/logs')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/certificates')
+Http::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -387,7 +387,7 @@ App::get('/v1/health/queue/certificates')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/builds')
+Http::get('/v1/health/queue/builds')
     ->desc('Get builds queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -404,7 +404,7 @@ App::get('/v1/health/queue/builds')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::BUILDS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/databases')
+Http::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -421,7 +421,7 @@ App::get('/v1/health/queue/databases')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::DATABASE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/deletes')
+Http::get('/v1/health/queue/deletes')
     ->desc('Get deletes queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -438,7 +438,7 @@ App::get('/v1/health/queue/deletes')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::DELETE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/mails')
+Http::get('/v1/health/queue/mails')
     ->desc('Get mails queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -455,7 +455,7 @@ App::get('/v1/health/queue/mails')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::MAILS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/messaging')
+Http::get('/v1/health/queue/messaging')
     ->desc('Get messaging queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -472,7 +472,7 @@ App::get('/v1/health/queue/messaging')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::MESSAGING_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/migrations')
+Http::get('/v1/health/queue/migrations')
     ->desc('Get migrations queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -489,7 +489,7 @@ App::get('/v1/health/queue/migrations')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::MIGRATIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/functions')
+Http::get('/v1/health/queue/functions')
     ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -507,7 +507,7 @@ App::get('/v1/health/queue/functions')
         $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/storage/local')
+Http::get('/v1/health/storage/local')
     ->desc('Get local storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -550,7 +550,7 @@ App::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-App::get('/v1/health/anti-virus')
+Http::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -569,13 +569,13 @@ App::get('/v1/health/anti-virus')
             'version' => ''
         ];
 
-        if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
+        if (Http::getEnv('_APP_STORAGE_ANTIVIRUS') === 'disabled') { // Check if scans are enabled
             $output['status'] = 'disabled';
             $output['version'] = '';
         } else {
             $antivirus = new Network(
-                App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                Http::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                (int) Http::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
             );
 
             try {
@@ -589,7 +589,7 @@ App::get('/v1/health/anti-virus')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
     });
 
-App::get('/v1/health/stats') // Currently only used internally
+Http::get('/v1/health/stats') // Currently only used internally
     ->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')

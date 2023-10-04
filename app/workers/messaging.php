@@ -30,7 +30,7 @@ class MessagingV1 extends Worker
 
     public function init(): void
     {
-        $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $dsn = new DSN(Http::getEnv('_APP_SMS_PROVIDER'));
         $user = $dsn->getUser();
         $secret = $dsn->getPassword();
 
@@ -44,12 +44,12 @@ class MessagingV1 extends Worker
             default => null
         };
 
-        $this->from = App::getEnv('_APP_SMS_FROM');
+        $this->from = Http::getEnv('_APP_SMS_FROM');
     }
 
     public function run(): void
     {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             Console::info('Skipped sms processing. No Phone provider has been set.');
             return;
         }

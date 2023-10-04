@@ -149,7 +149,7 @@ CLI::setResource('logError', function (Registry $register) {
         $logger = $register->get('logger');
 
         if ($logger) {
-            $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+            $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
             $log = new Log();
             $log->setNamespace($namespace);
@@ -168,7 +168,7 @@ CLI::setResource('logError', function (Registry $register) {
 
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);

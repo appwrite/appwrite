@@ -7,7 +7,7 @@ use Appwrite\Event\Certificate;
 use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Validator\Hostname;
+use Utopia\Http\Validator\Hostname;
 
 class SSL extends Action
 {
@@ -20,7 +20,7 @@ class SSL extends Action
     {
         $this
             ->desc('Validate server certificates')
-            ->param('domain', App::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
+            ->param('domain', Http::getEnv('_APP_DOMAIN', ''), new Hostname(), 'Domain to generate certificate for. If empty, main domain will be used.', true)
             ->callback(fn ($domain) => $this->action($domain));
     }
 

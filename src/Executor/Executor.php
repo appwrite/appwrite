@@ -34,11 +34,11 @@ class Executor
         }
 
         $this->endpoint = $endpoint;
-        $this->cpus = \intval(App::getEnv('_APP_FUNCTIONS_CPUS', '1'));
-        $this->memory = \intval(App::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
+        $this->cpus = \intval(Http::getEnv('_APP_FUNCTIONS_CPUS', '1'));
+        $this->memory = \intval(Http::getEnv('_APP_FUNCTIONS_MEMORY', '512'));
         $this->headers = [
             'content-type' => 'application/json',
-            'authorization' => 'Bearer ' . App::getEnv('_APP_EXECUTOR_SECRET', ''),
+            'authorization' => 'Bearer ' . Http::getEnv('_APP_EXECUTOR_SECRET', ''),
             'x-opr-addressing-method' => 'anycast-efficient'
         ];
     }
@@ -86,7 +86,7 @@ class Executor
             'version' => $version,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout  = (int) Http::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
@@ -111,7 +111,7 @@ class Executor
         string $projectId,
         callable $callback
     ) {
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout  = (int) Http::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/{$runtimeId}/logs";
@@ -179,7 +179,7 @@ class Executor
         string $runtimeEntrypoint = null,
     ) {
         if (empty($headers['host'])) {
-            $headers['host'] = App::getEnv('_APP_DOMAIN', '');
+            $headers['host'] = Http::getEnv('_APP_DOMAIN', '');
         }
 
         $runtimeId = "$projectId-$deploymentId";

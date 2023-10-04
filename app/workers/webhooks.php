@@ -56,8 +56,8 @@ class WebhooksV1 extends Worker
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
-            App::getEnv('_APP_VERSION', 'UNKNOWN'),
-            App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
+            Http::getEnv('_APP_VERSION', 'UNKNOWN'),
+            Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS', APP_EMAIL_SECURITY)
         ));
         \curl_setopt(
             $ch,

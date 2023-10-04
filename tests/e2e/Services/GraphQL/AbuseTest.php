@@ -21,7 +21,7 @@ class AbuseTest extends Scope
     {
         parent::setUp();
 
-        if (App::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
+        if (Http::getEnv('_APP_OPTIONS_ABUSE') === 'disabled') {
             $this->markTestSkipped('Abuse is not enabled.');
         }
     }
@@ -90,7 +90,7 @@ class AbuseTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $max = App::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
+        $max = Http::getEnv('_APP_GRAPHQL_MAX_QUERY_COMPLEXITY', 250);
 
         $this->assertEquals('Max query complexity should be ' . $max . ' but got 259.', $response['body']['errors'][0]['message']);
     }
@@ -98,7 +98,7 @@ class AbuseTest extends Scope
     public function testTooManyQueriesBlocked()
     {
         $projectId = $this->getProject()['$id'];
-        $maxQueries = App::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
+        $maxQueries = Http::getEnv('_APP_GRAPHQL_MAX_QUERIES', 10);
 
         $query = [];
         for ($i = 0; $i <= $maxQueries + 1; $i++) {

@@ -7,7 +7,7 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-App::init()
+Http::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')

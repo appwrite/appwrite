@@ -48,7 +48,7 @@ class Hamster extends Action
 
     public function __construct()
     {
-        $this->mixpanel = new Mixpanel(App::getEnv('_APP_MIXPANEL_TOKEN', ''));
+        $this->mixpanel = new Mixpanel(Http::getEnv('_APP_MIXPANEL_TOKEN', ''));
 
         $this
             ->desc('Get stats for projects')
@@ -261,9 +261,9 @@ class Hamster extends Action
         Console::title('Cloud Hamster V1');
         Console::success(APP_NAME . ' cloud hamster process has started');
 
-        $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
+        $sleep = (int) Http::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
-        $jobInitTime = App::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
+        $jobInitTime = Http::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         $next = new \DateTime($now->format("Y-m-d $jobInitTime"));

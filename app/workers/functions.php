@@ -183,7 +183,7 @@ Server::setResource('execute', function () {
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
@@ -278,7 +278,7 @@ Server::setResource('execute', function () {
         );
 
         /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
             $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())

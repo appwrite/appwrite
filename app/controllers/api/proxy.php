@@ -14,11 +14,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Validator\Domain as ValidatorDomain;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Domain as ValidatorDomain;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
-App::post('/v1/proxy/rules')
+Http::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('Create Rule')
     ->label('scope', 'rules.write')
@@ -41,7 +41,7 @@ App::post('/v1/proxy/rules')
     ->inject('dbForConsole')
     ->inject('dbForProject')
     ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = Http::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
         }
@@ -101,13 +101,13 @@ App::post('/v1/proxy/rules')
         ]);
 
         $status = 'created';
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS');
+        $functionsDomain = Http::getEnv('_APP_DOMAIN_FUNCTIONS');
         if (!empty($functionsDomain) && \str_ends_with($domain->get(), $functionsDomain)) {
             $status = 'verified';
         }
 
         if ($status === 'created') {
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
             $validator = new CNAME($target->get()); // Verify Domain with DNS records
 
             if ($validator->isValid($domain->get())) {
@@ -134,7 +134,7 @@ App::post('/v1/proxy/rules')
             ->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-App::get('/v1/proxy/rules')
+Http::get('/v1/proxy/rules')
     ->groups(['api', 'proxy'])
     ->desc('List Rules')
     ->label('scope', 'rules.read')
@@ -189,7 +189,7 @@ App::get('/v1/proxy/rules')
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
 
-App::get('/v1/proxy/rules/:ruleId')
+Http::get('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Get Rule')
     ->label('scope', 'rules.read')
@@ -218,7 +218,7 @@ App::get('/v1/proxy/rules/:ruleId')
         $response->dynamic($rule, Response::MODEL_PROXY_RULE);
     });
 
-App::delete('/v1/proxy/rules/:ruleId')
+Http::delete('/v1/proxy/rules/:ruleId')
     ->groups(['api', 'proxy'])
     ->desc('Delete Rule')
     ->label('scope', 'rules.write')
@@ -255,7 +255,7 @@ App::delete('/v1/proxy/rules/:ruleId')
         $response->noContent();
     });
 
-App::patch('/v1/proxy/rules/:ruleId/verification')
+Http::patch('/v1/proxy/rules/:ruleId/verification')
     ->desc('Update Rule Verification Status')
     ->groups(['api', 'proxy'])
     ->label('scope', 'rules.write')
@@ -280,7 +280,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             throw new Exception(Exception::RULE_NOT_FOUND);
         }
 
-        $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+        $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
 
         if (!$target->isKnown() || $target->isTest()) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Domain target must be configured as environment variable.');

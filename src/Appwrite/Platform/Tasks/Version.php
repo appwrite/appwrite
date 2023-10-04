@@ -18,7 +18,7 @@ class Version extends Action
         $this
             ->desc('Get the server version')
             ->callback(function () {
-                Console::log(App::getEnv('_APP_VERSION', 'UNKNOWN'));
+                Console::log(Http::getEnv('_APP_VERSION', 'UNKNOWN'));
             });
     }
 }

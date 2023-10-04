@@ -33,7 +33,7 @@ class Vars extends Action
         }
 
         foreach ($vars as $key => $value) {
-            Console::log('- ' . $value['name'] . '=' . App::getEnv($value['name'], ''));
+            Console::log('- ' . $value['name'] . '=' . Http::getEnv($value['name'], ''));
         }
     }
 }

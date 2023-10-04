@@ -44,17 +44,17 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\FloatValidator;
-use Utopia\Validator\IP;
-use Utopia\Validator\Integer;
-use Utopia\Validator\JSON;
-use Utopia\Validator\Nullable;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\FloatValidator;
+use Utopia\Http\Validator\IP;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\JSON;
+use Utopia\Http\Validator\Nullable;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 
 /**
  * Create attribute of varying type
@@ -370,7 +370,7 @@ function updateAttribute(
     return $attribute;
 }
 
-App::post('/v1/databases')
+Http::post('/v1/databases')
     ->desc('Create database')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
@@ -447,7 +447,7 @@ App::post('/v1/databases')
             ->dynamic($database, Response::MODEL_DATABASE);
     });
 
-App::get('/v1/databases')
+Http::get('/v1/databases')
     ->desc('List databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
@@ -495,7 +495,7 @@ App::get('/v1/databases')
         ]), Response::MODEL_DATABASE_LIST);
     });
 
-App::get('/v1/databases/:databaseId')
+Http::get('/v1/databases/:databaseId')
     ->desc('Get database')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
@@ -521,7 +521,7 @@ App::get('/v1/databases/:databaseId')
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
 
-App::get('/v1/databases/:databaseId/logs')
+Http::get('/v1/databases/:databaseId/logs')
     ->desc('List database logs')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
@@ -607,7 +607,7 @@ App::get('/v1/databases/:databaseId/logs')
     });
 
 
-App::put('/v1/databases/:databaseId')
+Http::put('/v1/databases/:databaseId')
     ->desc('Update database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
@@ -652,7 +652,7 @@ App::put('/v1/databases/:databaseId')
         $response->dynamic($database, Response::MODEL_DATABASE);
     });
 
-App::delete('/v1/databases/:databaseId')
+Http::delete('/v1/databases/:databaseId')
     ->desc('Delete database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
@@ -697,7 +697,7 @@ App::delete('/v1/databases/:databaseId')
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections')
+Http::post('/v1/databases/:databaseId/collections')
     ->desc('Create collection')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
@@ -766,7 +766,7 @@ App::post('/v1/databases/:databaseId/collections')
             ->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/databases/:databaseId/collections')
+Http::get('/v1/databases/:databaseId/collections')
     ->alias('/v1/database/collections', ['databaseId' => 'default'])
     ->desc('List collections')
     ->groups(['api', 'database'])
@@ -825,7 +825,7 @@ App::get('/v1/databases/:databaseId/collections')
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId')
+Http::get('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
     ->desc('Get collection')
     ->groups(['api', 'database'])
@@ -861,7 +861,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->alias('/v1/database/collections/:collectionId/logs', ['databaseId' => 'default'])
     ->desc('List collection logs')
     ->groups(['api', 'database'])
@@ -957,7 +957,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     });
 
 
-App::put('/v1/databases/:databaseId/collections/:collectionId')
+Http::put('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
     ->desc('Update collection')
     ->groups(['api', 'database', 'schema'])
@@ -1027,7 +1027,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
         $response->dynamic($collection, Response::MODEL_COLLECTION);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId')
+Http::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
     ->desc('Delete collection')
     ->groups(['api', 'database', 'schema'])
@@ -1083,7 +1083,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
     ->alias('/v1/database/collections/:collectionId/attributes/string', ['databaseId' => 'default'])
     ->desc('Create string attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1141,7 +1141,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
     ->alias('/v1/database/collections/:collectionId/attributes/email', ['databaseId' => 'default'])
     ->desc('Create email attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1185,7 +1185,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->alias('/v1/database/collections/:collectionId/attributes/enum', ['databaseId' => 'default'])
     ->desc('Create enum attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1245,7 +1245,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->alias('/v1/database/collections/:collectionId/attributes/ip', ['databaseId' => 'default'])
     ->desc('Create IP address attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1289,7 +1289,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->alias('/v1/database/collections/:collectionId/attributes/url', ['databaseId' => 'default'])
     ->desc('Create URL attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1333,7 +1333,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
     ->alias('/v1/database/collections/:collectionId/attributes/integer', ['databaseId' => 'default'])
     ->desc('Create integer attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1406,7 +1406,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
     ->alias('/v1/database/collections/:collectionId/attributes/float', ['databaseId' => 'default'])
     ->desc('Create float attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1482,7 +1482,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
     ->alias('/v1/database/collections/:collectionId/attributes/boolean', ['databaseId' => 'default'])
     ->desc('Create boolean attribute')
     ->groups(['api', 'database', 'schema'])
@@ -1525,7 +1525,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
     ->desc('Create datetime attribute')
     ->groups(['api', 'database'])
@@ -1571,7 +1571,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
     ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
     ->desc('Create relationship attribute')
     ->groups(['api', 'database'])
@@ -1653,7 +1653,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
     ->desc('List attributes')
     ->groups(['api', 'database'])
@@ -1728,7 +1728,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         ]), Response::MODEL_ATTRIBUTE_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
     ->desc('Get attribute')
     ->groups(['api', 'database'])
@@ -1805,7 +1805,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
         $response->dynamic($attribute, $model);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
     ->desc('Update string attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1846,7 +1846,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_STRING);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
     ->desc('Update email attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1887,7 +1887,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_EMAIL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
     ->desc('Update enum attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1930,7 +1930,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_ENUM);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
     ->desc('Update IP address attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -1971,7 +1971,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_IP);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
     ->desc('Update URL attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2012,7 +2012,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_URL);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
     ->desc('Update integer attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2063,7 +2063,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_INTEGER);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
     ->desc('Update float attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2114,7 +2114,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_FLOAT);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
     ->desc('Update boolean attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2154,7 +2154,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_BOOLEAN);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
     ->desc('Update dateTime attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2194,7 +2194,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_DATETIME);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
     ->desc('Update relationship attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
@@ -2249,7 +2249,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
             ->dynamic($attribute, Response::MODEL_ATTRIBUTE_RELATIONSHIP);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
+Http::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
     ->desc('Delete attribute')
     ->groups(['api', 'database', 'schema'])
@@ -2360,7 +2360,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->alias('/v1/database/collections/:collectionId/indexes', ['databaseId' => 'default'])
     ->desc('Create index')
     ->groups(['api', 'database'])
@@ -2520,7 +2520,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             ->dynamic($index, Response::MODEL_INDEX);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->alias('/v1/database/collections/:collectionId/indexes', ['databaseId' => 'default'])
     ->desc('List indexes')
     ->groups(['api', 'database'])
@@ -2585,7 +2585,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         ]), Response::MODEL_INDEX_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
     ->desc('Get index')
     ->groups(['api', 'database'])
@@ -2626,7 +2626,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     });
 
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
+Http::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
     ->desc('Delete index')
     ->groups(['api', 'database'])
@@ -2692,7 +2692,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
         $response->noContent();
     });
 
-App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
+Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('Create document')
     ->groups(['api', 'database'])
@@ -2932,7 +2932,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             ->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
     ->desc('List documents')
     ->groups(['api', 'database'])
@@ -3059,7 +3059,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         ]), Response::MODEL_DOCUMENT_LIST);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
     ->desc('Get document')
     ->groups(['api', 'database'])
@@ -3154,7 +3154,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId/logs', ['databaseId' => 'default'])
     ->desc('List document logs')
     ->groups(['api', 'database'])
@@ -3255,7 +3255,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
+Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
     ->desc('Update document')
     ->groups(['api', 'database'])
@@ -3484,7 +3484,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
         $response->dynamic($document, Response::MODEL_DOCUMENT);
     });
 
-App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
+Http::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
     ->desc('Delete document')
     ->groups(['api', 'database'])
@@ -3600,7 +3600,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $response->noContent();
     });
 
-App::get('/v1/databases/usage')
+Http::get('/v1/databases/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -3616,7 +3616,7 @@ App::get('/v1/databases/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -3718,7 +3718,7 @@ App::get('/v1/databases/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_DATABASES);
     });
 
-App::get('/v1/databases/:databaseId/usage')
+Http::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
@@ -3735,7 +3735,7 @@ App::get('/v1/databases/:databaseId/usage')
     ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -3827,7 +3827,7 @@ App::get('/v1/databases/:databaseId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
     });
 
-App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
+Http::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for a collection')
     ->groups(['api', 'database'])
@@ -3854,7 +3854,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
