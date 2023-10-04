@@ -12,6 +12,7 @@ void main() { // Init SDK
     databaseId: '[DATABASE_ID]',
     collectionId: '[COLLECTION_ID]',
     documentId: '[DOCUMENT_ID]',
+    data: {},
   );
 
   result
