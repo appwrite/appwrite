@@ -62,12 +62,17 @@ class Mails extends Action
 
         $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
         $bodyTemplate->setParam('{{body}}', $body);
-
         foreach ($variables as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
-
         $body = $bodyTemplate->render();
+
+        $subjectTemplate = Template::fromString($subject);
+        foreach ($variables as $key => $value) {
+            $subjectTemplate->setParam('{{' . $key . '}}', $value);
+        }
+        // render() will return the subject in <p> tags, so use strip_tags() to remove them
+        $subject = \strip_tags($subjectTemplate->render());
 
         /** @var PHPMailer $mail */
         $mail = empty($smtp)
