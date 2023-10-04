@@ -258,7 +258,7 @@ App::post('/v1/users/sha')
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $events);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1199,9 +1199,7 @@ App::delete('/v1/users/identities/:identityId')
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->action(function (string $identityId, Response $response, Database $dbForProject) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 

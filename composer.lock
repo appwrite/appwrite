@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "509d6d460bad65092c5e3b8d6b390ec9",
+    "content-hash": "441bddff081659dfec29b0d735a6217a",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -658,16 +658,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.5",
+            "version": "6.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/5cbea85106e561c7138d03603eb6e05128480409",
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409",
                 "shasum": ""
             },
             "require": {
@@ -723,7 +723,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-17T16:17:41+00:00"
+            "time": "2023-10-02T10:01:54+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -1433,16 +1433,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.43.2",
+            "version": "0.43.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "f2626acd42665a9987c94af1c93bf20c28d55c9d"
+                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/f2626acd42665a9987c94af1c93bf20c28d55c9d",
-                "reference": "f2626acd42665a9987c94af1c93bf20c28d55c9d",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
+                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
                 "shasum": ""
             },
             "require": {
@@ -1483,9 +1483,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.43.2"
+                "source": "https://github.com/utopia-php/database/tree/0.43.4"
             },
-            "time": "2023-09-07T19:04:33+00:00"
+            "time": "2023-09-28T09:00:05+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2270,16 +2270,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.14.0",
+            "version": "0.17.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c"
+                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/eda6651ac16884dc2a79ecb984ea591ba1ed498c",
-                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/efec5376c02d3d8330f1beb1469e6d6e313e21ee",
+                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee",
                 "shasum": ""
             },
             "require": {
@@ -2287,10 +2287,12 @@
                 "ext-fileinfo": "*",
                 "ext-lz4": "*",
                 "ext-snappy": "*",
+                "ext-xz": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.*.*",
+                "utopia-php/system": "0.*.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2317,9 +2319,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.14.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.17.0"
             },
-            "time": "2023-03-15T00:16:34+00:00"
+            "time": "2023-08-21T11:28:36+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -2714,16 +2716,16 @@
         },
         {
             "name": "doctrine/deprecations",
-            "version": "v1.1.1",
+            "version": "1.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "612a3ee5ab0d5dd97b7cf3874a6efe24325efac3"
+                "reference": "4f2d4f2836e7ec4e7a8625e75c6aa916004db931"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/612a3ee5ab0d5dd97b7cf3874a6efe24325efac3",
-                "reference": "612a3ee5ab0d5dd97b7cf3874a6efe24325efac3",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/4f2d4f2836e7ec4e7a8625e75c6aa916004db931",
+                "reference": "4f2d4f2836e7ec4e7a8625e75c6aa916004db931",
                 "shasum": ""
             },
             "require": {
@@ -2755,9 +2757,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/v1.1.1"
+                "source": "https://github.com/doctrine/deprecations/tree/1.1.2"
             },
-            "time": "2023-06-03T09:27:29+00:00"
+            "time": "2023-09-27T20:04:15+00:00"
         },
         {
             "name": "doctrine/instantiator",

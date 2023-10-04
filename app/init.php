@@ -69,6 +69,7 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
+use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
@@ -109,8 +110,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 510;
-const APP_VERSION_STABLE = '1.4.3';
+const APP_CACHE_BUSTER = 511;
+const APP_VERSION_STABLE = '1.4.4';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';

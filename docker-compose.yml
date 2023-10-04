@@ -108,7 +108,9 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -221,6 +223,7 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -267,10 +270,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-webhooks:
     entrypoint: worker-webhooks
@@ -298,10 +297,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      -  _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -360,10 +355,6 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-databases:
     entrypoint: worker-databases
@@ -391,10 +382,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -439,7 +426,9 @@ services:
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -462,10 +451,6 @@ services:
       - _APP_STORAGE_WASABI_SECRET
       - _APP_STORAGE_WASABI_REGION
       - _APP_STORAGE_WASABI_BUCKET
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
 
   appwrite-worker-certificates:
     entrypoint: worker-certificates
@@ -499,10 +484,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -533,10 +514,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CPUS
@@ -573,7 +550,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_QUEUE
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -602,7 +578,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_QUEUE
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
       - _APP_LOGGING_PROVIDER
