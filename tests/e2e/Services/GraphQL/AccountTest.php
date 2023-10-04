@@ -133,7 +133,7 @@ class AccountTest extends Scope
         }
 
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_PROVIDER);
+        $query = $this->getQuery(self::$CREATE_MSG91_PROVIDER);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [

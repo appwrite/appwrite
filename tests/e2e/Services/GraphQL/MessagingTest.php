@@ -1,64 +1,71 @@
 <?php
 
-namespace Tests\E2E\Services\Messaging;
+namespace Tests\E2E\Services\GraphQL;
 
 use Tests\E2E\Client;
+use Tests\E2E\Scopes\ProjectCustom;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideServer;
 use Utopia\Database\Helpers\ID;
 
-trait MessagingBase
+class MessagingTest extends Scope
 {
-    public function testCreateProviders(): array
+    use ProjectCustom;
+    use SideServer;
+    use Base;
+
+    public function testCreateProviders()
     {
         $providersParams = [
-            'sendgrid' => [
+            'Sendgrid' => [
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
             ],
-            'mailgun' => [
+            'Mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
                 'from' => 'sender-email@my-domain',
             ],
-            'twilio' => [
+            'Twilio' => [
                 'providerId' => ID::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
-            'telesign' => [
+            'Telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
-            'textmagic' => [
+            'Textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
-            'msg91' => [
+            'Msg91' => [
                 'providerId' => ID::unique(),
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'from' => '+123456789'
             ],
-            'vonage' => [
+            'Vonage' => [
                 'providerId' => ID::unique(),
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'fcm' => [
+            'Fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
                 'serverKey' => 'my-serverkey',
             ],
-            'apns' => [
+            'Apns' => [
                 'providerId' => ID::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
@@ -68,17 +75,23 @@ trait MessagingBase
                 'endpoint' => 'my-endpoint',
             ],
         ];
+
         $providers = [];
 
         foreach (\array_keys($providersParams) as $key) {
-            $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, \array_merge([
+            $query = $this->getQuery('create_' . \strtolower($key) . '_provider');
+            $graphQLPayload = [
+                'query' => $query,
+                'variables' => $providersParams[$key],
+            ];
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]), $providersParams[$key]);
-            $this->assertEquals(201, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
-            \array_push($providers, $response['body']);
+            ]), $graphQLPayload);
+            \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
         }
 
         return $providers;
@@ -90,45 +103,54 @@ trait MessagingBase
     public function testUpdateProviders(array $providers): array
     {
         $providersParams = [
-            'sendgrid' => [
+            'Sendgrid' => [
+                'id' => $providers[0]['_id'],
                 'name' => 'Sengrid2',
                 'apiKey' => 'my-apikey',
             ],
-            'mailgun' => [
+            'Mailgun' => [
+                'id' => $providers[1]['_id'],
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
             ],
-            'twilio' => [
+            'Twilio' => [
+                'id' => $providers[2]['_id'],
                 'name' => 'Twilio2',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
-            'telesign' => [
+            'Telesign' => [
+                'id' => $providers[3]['_id'],
                 'name' => 'Telesign2',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
-            'textmagic' => [
+            'Textmagic' => [
+                'id' => $providers[4]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
-            'msg91' => [
+            'Msg91' => [
+                'id' => $providers[5]['_id'],
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
             ],
-            'vonage' => [
+            'Vonage' => [
+                'id' => $providers[6]['_id'],
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'fcm' => [
+            'Fcm' => [
+                'id' => $providers[7]['_id'],
                 'name' => 'FCM2',
                 'serverKey' => 'my-serverkey',
             ],
-            'apns' => [
+            'Apns' => [
+                'id' => $providers[8]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -138,31 +160,40 @@ trait MessagingBase
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
+            $query = $this->getQuery('update_' . \strtolower($key) . '_provider');
+            $graphQLPayload = [
+                'query' => $query,
+                'variables' => $providersParams[$key],
+            ];
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], $providersParams[$key]);
+            ], $graphQLPayload);
+            $providers[$index] = $response['body']['data']['messagingUpdate' . $key . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
-            $providers[$index] = $response['body'];
+            $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingUpdate' . $key . 'Provider']['name']);
         }
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[1]['$id'], [
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-          'name' => 'Mailgun2',
-          'apiKey' => 'my-apikey',
-          'domain' => 'my-domain',
-          'isEuRegion' => true,
-          'enabled' => false,
+            'query' => $this->getQuery('update_mailgun_provider'),
+            'variables' => [
+                'id' => $providers[1]['_id'],
+                'name' => 'Mailgun2',
+                'apiKey' => 'my-apikey',
+                'domain' => 'my-domain',
+                'isEuRegion' => true,
+                'enabled' => false,
+            ]
         ]);
+        $providers[1] = $response['body']['data']['messagingUpdateMailgunProvider'];
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('Mailgun2', $response['body']['name']);
-        $this->assertEquals(false, $response['body']['enabled']);
-        $providers[1] = $response['body'];
+        $this->assertEquals('Mailgun2', $response['body']['data']['messagingUpdateMailgunProvider']['name']);
+        $this->assertEquals(false, $response['body']['data']['messagingUpdateMailgunProvider']['enabled']);
         return $providers;
     }
 
@@ -171,13 +202,17 @@ trait MessagingBase
      */
     public function testListProviders(array $providers)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/', [
+        $query = $this->getQuery(self::$LIST_PROVIDERS);
+        $graphQLPayload = [
+            'query' => $query,
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        ], $graphQLPayload);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(\count($providers), \count($response['body']['providers']));
+        $this->assertEquals(\count($providers), \count($response['body']['data']['messagingListProviders']['providers']));
     }
 
     /**
@@ -185,13 +220,20 @@ trait MessagingBase
      */
     public function testGetProvider(array $providers)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'], [
+        $query = $this->getQuery(self::$GET_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'id' => $providers[0]['_id'],
+            ]
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
+        ], $graphQLPayload);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($providers[0]['name'], $response['body']['name']);
+        $this->assertEquals($providers[0]['name'], $response['body']['data']['messagingGetProvider']['name']);
     }
 
     /**
@@ -200,11 +242,18 @@ trait MessagingBase
     public function testDeleteProvider(array $providers)
     {
         foreach ($providers as $provider) {
-            $response = $this->client->call(Client::METHOD_DELETE, '/messaging/providers/' . $provider['$id'], [
+            $query = $this->getQuery(self::$DELETE_PROVIDER);
+            $graphQLPayload = [
+                'query' => $query,
+                'variables' => [
+                    'id' => $provider['_id'],
+                ]
+            ];
+            $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]);
+            ], $graphQLPayload);
             $this->assertEquals(204, $response['headers']['status-code']);
         }
     }
