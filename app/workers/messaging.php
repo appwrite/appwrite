@@ -106,15 +106,15 @@ class MessagingV1 extends Worker
                 $messageData = clone $messageRecord;
                 $messageData->setAttribute('to', $batch);
                 $message = match ($providerRecord->getAttribute('type')) {
-                    'sms' => $this->buildSMSMessage($messageRecord, $providerRecord),
-                    'push' => $this->buildPushMessage($messageRecord),
-                    'email' => $this->buildEmailMessage($messageRecord, $providerRecord),
+                    'sms' => $this->buildSMSMessage($messageData, $providerRecord),
+                    'push' => $this->buildPushMessage($messageData),
+                    'email' => $this->buildEmailMessage($messageData, $providerRecord),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
                 try {
                     $provider->send($message);
                     $deliveredTo += \count($batch);
-                } catch (Exception $e) {
+                } catch (\Exception $e) {
                     foreach ($batch as $identifier) {
                         $deliveryErrors[] = 'Failed to send message to target' . $identifier . ': ' . $e->getMessage();
                     }

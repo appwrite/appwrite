@@ -12,55 +12,55 @@ trait MessagingBase
     {
         $providersParams = [
             'sendgrid' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
             ],
             'mailgun' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
                 'from' => 'sender-email@my-domain',
             ],
             'twilio' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
             'telesign' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
             'textmagic' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
             'msg91' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Ms91-1',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
                 'from' => '+123456789'
             ],
             'vonage' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
             'fcm' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'FCM1',
                 'serverKey' => 'my-serverkey',
             ],
             'apns' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
