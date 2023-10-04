@@ -128,7 +128,7 @@ class AccountTest extends Scope
         $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
         $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
 
-        if ($to === '' || $from === '' || $authKey === '' || $senderId === '') {
+        if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
             $this->markTestSkipped('SMS provider not configured');
         }
 
@@ -137,10 +137,8 @@ class AccountTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => 'unique()',
+                'providerId' => ID::unique(),
                 'name' => 'Sms Provider',
-                'provider' => 'msg91',
-                'type' => 'sms',
                 'from' => $from,
                 'senderId' => $senderId,
                 'authKey' => $authKey,

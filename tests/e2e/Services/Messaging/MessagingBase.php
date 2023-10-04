@@ -137,7 +137,7 @@ trait MessagingBase
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[$index]['$id'] . '/' . $key, [
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -147,7 +147,7 @@ trait MessagingBase
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
         }
 
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $providers[1]['$id'] . '/mailgun', [
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[1]['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],

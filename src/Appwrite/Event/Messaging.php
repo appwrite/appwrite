@@ -15,7 +15,6 @@ class Messaging extends Event
     }
 
 
-
     /**
      * Sets message ID for the messaging event.
      *
