@@ -70,7 +70,7 @@ class Executor
         array $variables = [],
         string $command = null,
     ) {
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
         $params = [
             'runtimeId' => $runtimeId,
@@ -113,7 +113,7 @@ class Executor
     ) {
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $runtimeId = "$projectId-$deploymentId";
+        $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
             'timeout' => $timeout
@@ -202,7 +202,9 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
+        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
+        $timeout  = $timeout + 15;
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 

@@ -112,6 +112,8 @@ class BuildsV1 extends Worker
 
         $isNewBuild = empty($buildId);
 
+        $deviceFunctions = $this->getFunctionsDevice($project->getId());
+
         if ($isNewBuild) {
             $buildId = ID::unique();
             $build = $dbForProject->createDocument('builds', new Document([
@@ -124,7 +126,7 @@ class BuildsV1 extends Worker
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower($deviceFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
@@ -251,17 +253,24 @@ class BuildsV1 extends Worker
 
                 $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
                 $tmpPathFile = $tmpPath . '/code.tar.gz';
+                $localDevice = new Local();
+
+                if (substr($tmpDirectory, -1) !== '/') {
+                    $tmpDirectory .= '/';
+                }
+
+                $directorySize = $localDevice->getDirectorySize($tmpDirectory);
+                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                if ($directorySize > $functionsSizeLimit) {
+                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                }
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
                 $deviceFunctions = $this->getFunctionsDevice($project->getId());
 
-                $localDevice = new Local();
-                $buffer = $localDevice->read($tmpPathFile);
-                $mimeType = $localDevice->getFileMimeType($tmpPathFile);
-
                 $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $deviceFunctions->write($path, $buffer, $mimeType);
+                $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
@@ -480,7 +489,7 @@ class BuildsV1 extends Worker
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
