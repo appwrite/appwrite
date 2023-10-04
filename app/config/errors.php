@@ -549,7 +549,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Attribute with the requested ID already exists.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
