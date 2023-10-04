@@ -58,13 +58,16 @@ class Mails extends Action
         $subject = $payload['subject'];
         $variables = $payload['variables'];
         $name = $payload['name'];
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+        $body = $payload['body'];
+
+        $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+        $bodyTemplate->setParam('{{body}}', $body);
 
         foreach ($variables as $key => $value) {
-            $body->setParam('{{' . $key . '}}', $value);
+            $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
 
-        $body = $body->render();
+        $body = $bodyTemplate->render();
 
         /** @var PHPMailer $mail */
         $mail = empty($smtp)

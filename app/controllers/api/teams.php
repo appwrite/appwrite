@@ -555,7 +555,12 @@ App::post('/v1/teams/:teamId/memberships')
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-                $message->setParam('{{body}}', $body);
+                $message
+                    ->setParam('{{body}}', $body)
+                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
                 $body = $message->render();
 
                 $smtp = $project->getAttribute('smtp', []);
@@ -606,12 +611,6 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
-                    'subject' => $subject,
-                    'hello' => $locale->getText("emails.invitation.hello"),
-                    'body' => $body,
-                    'footer' => $locale->getText("emails.invitation.footer"),
-                    'thanks' => $locale->getText("emails.invitation.thanks"),
-                    'signature' => $locale->getText("emails.invitation.signature"),
                     'direction' => $locale->getText('settings.direction'),
                     /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
                     'user' => $user->getAttribute('name'),
