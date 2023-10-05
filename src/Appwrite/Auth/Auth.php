@@ -122,6 +122,27 @@ class Auth
     }
 
     /**
+     * Token type to session provider mapping.
+     */
+    public static function getSessionProviderByTokenType(int $type): string
+    {
+        switch ($type) {
+            case Auth::TOKEN_TYPE_VERIFICATION:
+            case Auth::TOKEN_TYPE_RECOVERY:
+            case Auth::TOKEN_TYPE_INVITE:
+                return Auth::SESSION_PROVIDER_EMAIL;
+            case Auth::TOKEN_TYPE_MAGIC_URL:
+                return Auth::SESSION_PROVIDER_MAGIC_URL;
+            case Auth::TOKEN_TYPE_PHONE:
+                return Auth::SESSION_PROVIDER_PHONE;
+            case Auth::TOKEN_TYPE_OAUTH2:
+                return Auth::SESSION_PROVIDER_OAUTH2;
+            default:
+                return Auth::SESSION_PROVIDER_UNIVERSAL;
+        }
+    }
+
+    /**
      * Decode Session.
      *
      * @param string $session
@@ -307,10 +328,10 @@ class Auth
      * Verify token and check that its not expired.
      *
      * @param array  $tokens
-     * @param int    $type
+     * @param int    $type   Type of token to verify, if null will verify any type
      * @param string $secret
      *
-     * @return bool|string
+     * @return bool|Document
      */
     public static function tokenVerify(array $tokens, int $type = null, string $secret)
     {
@@ -319,30 +340,11 @@ class Auth
             if (
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
-                $type === null || $token->getAttribute('type') === $type &&
+                ($type === null || $token->isSet('type') && $token->getAttribute('type') === $type) &&
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
-                return (string)$token->getId();
-            }
-        }
-
-        return false;
-    }
-
-    public static function phoneTokenVerify(array $tokens, string $secret)
-    {
-        foreach ($tokens as $token) {
-            /** @var Document $token */
-            if (
-                $token->isSet('type') &&
-                $token->isSet('secret') &&
-                $token->isSet('expire') &&
-                $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
-                $token->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
-            ) {
-                return (string) $token->getId();
+                return $token;
             }
         }
 

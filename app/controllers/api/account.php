@@ -768,6 +768,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
+        // Add token for server platforms
         $loginSecret = Auth::tokenGenerator();
 
         $token = new Document([
@@ -777,7 +778,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'type' => Auth::TOKEN_TYPE_OAUTH2,
             'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'userAgent' => 'UNKNOWN',
             'ip' => $request->getIP(),
         ]);
 
@@ -1139,14 +1140,12 @@ App::put('/v1/account/sessions/token')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
         /** @var Utopia\Database\Document $user */
         $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
-
         if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $token = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
-
-        if (!$token) {
+        $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -1157,6 +1156,8 @@ App::put('/v1/account/sessions/token')
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $provider = Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type'));
+        
 
         $session = new Document(array_merge(
             [
@@ -1258,9 +1259,9 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $token = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
+        $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), Auth::TOKEN_TYPE_MAGIC_URL, $secret);
 
-        if (!$token) {
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -1305,7 +1306,7 @@ App::put('/v1/account/sessions/magic-url')
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $token);
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('emailVerification', true);
@@ -1509,9 +1510,9 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $token = Auth::phoneTokenVerify($userFromRequest->getAttribute('tokens', []), $secret);
+        $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), Auth::TOKEN_TYPE_PHONE, $secret);
 
-        if (!$token) {
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -1554,7 +1555,7 @@ App::put('/v1/account/sessions/phone')
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $token);
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $user->setAttribute('phoneVerification', true);
@@ -2721,9 +2722,9 @@ App::put('/v1/account/recovery')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $recovery = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_RECOVERY, $secret);
 
-        if (!$recovery) {
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -2753,13 +2754,13 @@ App::put('/v1/account/recovery')
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $recoveryDocument = $dbForProject->getDocument('tokens', $recovery);
+        $recoveryDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         /**
          * We act like we're updating and validating
          *  the recovery token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $recovery);
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
@@ -2963,9 +2964,9 @@ App::put('/v1/account/verification')
         }
 
         $tokens = $profile->getAttribute('tokens', []);
-        $verification = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
+        $verifiedToken = Auth::tokenVerify($tokens, Auth::TOKEN_TYPE_VERIFICATION, $secret);
 
-        if (!$verification) {
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -2975,13 +2976,13 @@ App::put('/v1/account/verification')
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $verificationDocument = $dbForProject->getDocument('tokens', $verification);
+        $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         /**
          * We act like we're updating and validating
          *  the verification token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $verification);
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events
@@ -3119,9 +3120,9 @@ App::put('/v1/account/verification/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $verification = Auth::phoneTokenVerify($user->getAttribute('tokens', []), $secret);
+        $verifiedToken = Auth::tokenVerify($user->getAttribute('tokens', []), Auth::TOKEN_TYPE_PHONE, $secret);
 
-        if (!$verification) {
+        if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -3131,12 +3132,12 @@ App::put('/v1/account/verification/phone')
 
         $user->setAttributes($profile->getArrayCopy());
 
-        $verificationDocument = $dbForProject->getDocument('tokens', $verification);
+        $verificationDocument = $dbForProject->getDocument('tokens', $verifiedToken->getId());
 
         /**
          * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
-        $dbForProject->deleteDocument('tokens', $verification);
+        $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
         $events

@@ -1081,25 +1081,23 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::post('/v1/users/:userId/token') 
+App::post('/v1/users/:userId/tokens') 
     ->desc('Create universal token')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.create')
+    ->label('event', 'users.[userId].tokens.create')
     ->label('scope', 'users.write')
-    ->label('audits.event', 'session.create')
+    ->label('audits.event', 'tokens.create')
     ->label('audits.resource', 'user/{request.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
+    ->label('usage.metric', 'tokens.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createSession')
+    ->label('sdk.method', 'createToken')
     ->label('sdk.description', '/docs/references/users/create-user-token.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->param('userId', '', new UID(), 'User ID.')
-    ->inject('request')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
@@ -1124,6 +1122,11 @@ App::post('/v1/users/:userId/token')
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
+
+        $events
+            ->setParam('userId', $user->getId())
+            ->setParam('tokenId', $token->getId())
+            ->setPayload($response->output($token, Response::MODEL_TOKEN));
 
         return $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
