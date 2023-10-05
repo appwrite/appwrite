@@ -599,7 +599,7 @@ App::get('/v1/messaging/providers')
         ]), Response::MODEL_PROVIDER_LIST);
     });
 
-App::get('/v1/messaging/providers/:id')
+App::get('/v1/messaging/providers/:providerId')
     ->desc('Get Provider')
     ->groups(['api', 'messaging'])
     ->label('scope', 'providers.read')
@@ -610,11 +610,11 @@ App::get('/v1/messaging/providers/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -1166,7 +1166,7 @@ App::patch('/v1/messaging/providers/apns/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::delete('/v1/messaging/providers/:id')
+App::delete('/v1/messaging/providers/:providerId')
     ->desc('Delete Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.delete')
@@ -1179,11 +1179,11 @@ App::delete('/v1/messaging/providers/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -1252,7 +1252,7 @@ App::post('/v1/messaging/messages/email')
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::get('/v1/messaging/messages/:id')
+App::get('/v1/messaging/messages/:messageId')
     ->desc('Get Message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
@@ -1263,11 +1263,11 @@ App::get('/v1/messaging/messages/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
-    ->param('id', '', new UID(), 'Message ID.')
+    ->param('messageId', '', new UID(), 'Message ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, Database $dbForProject, Response $response) {
-        $message = $dbForProject->getDocument('messages', $id);
+    ->action(function (string $messageId, Database $dbForProject, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
