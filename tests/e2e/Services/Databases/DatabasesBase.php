@@ -39,6 +39,140 @@ trait DatabasesBase
     /**
      * @depends testCreateDatabase
      */
+    public function testOneToManyInvalidDate(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $c1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'c1',
+            'name' => 'c1',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::delete(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $c1['headers']['status-code']);
+
+        $c2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => 'c2',
+            'name' => 'c2',
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+                Permission::update(Role::user($this->getUser()['$id'])),
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+            'documentSecurity' => true,
+        ]);
+
+        $this->assertEquals(201, $c2['headers']['status-code']);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $c2['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'phone',
+            'size' => 5,
+            'required' => false,
+        ]);
+
+        $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $c2['body']['$id'] . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'age',
+            'size' => 0,
+            'required' => false,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $relation = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $c1['body']['$id'] . '/attributes/relationship', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'relatedCollectionId' => 'c2',
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'key' => 'c2',
+            'twoWay' => true,
+            'onDelete' => Database::RELATION_MUTATE_CASCADE,
+        ]);
+
+        sleep(1); // Wait for worker
+
+        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $c1['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'c2' => [
+                    [
+                        '$id' => '053',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'phone' => '012345678910', // longer than 5
+                    ],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(400, $res['body']['code']);
+        $this->assertEquals('Invalid document structure: Attribute "phone" has invalid type. Value must be a valid string and no longer than 5 chars', $res['body']['message']);
+
+        $res = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $c1['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'c2' => [
+                    [
+                        '$id' => '054',
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::any()),
+                            Permission::delete(Role::any()),
+                        ],
+                        'age' => '12345', // pass age (int) a sting
+                    ],
+                ],
+            ],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ]
+        ]);
+
+        $this->assertEquals(201, $res['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
     public function testCreateCollection(array $data): array
     {
         $databaseId = $data['databaseId'];
