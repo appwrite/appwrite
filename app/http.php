@@ -19,6 +19,8 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
+use function Swoole\Coroutine\run;
+
 $http = new Server("0.0.0.0", Http::getEnv('PORT', 80));
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
@@ -35,15 +37,6 @@ $http
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
-
-
-$server->onBeforeReload(function ($server, $workerId) {
-    Console::success('Starting reload...');
-});
-
-$server->onAfterReload(function ($server, $workerId) {
-    Console::success('Reload completed...');
-});
 
 Http::onWorkerStart()
     ->inject('workerId')
@@ -212,7 +205,6 @@ Http::onStart()
         });
 
         Console::success('Server started successfully (max payload is ' . number_format($payloadSize) . ' bytes)');
-        Console::info("Master pid {$http->master_pid}, manager pid {$http->manager_pid}");
 
         // listen ctrl + c
         Process::signal(2, function () use ($http) {
@@ -316,7 +308,8 @@ Http::onRequest()
         }
     });
 
-$app = new Http($server, 'UTC');
-$app->loadFiles(__DIR__ . '/../console');
-
-$app->start();
+run(function () use ($http) {
+    $app = new Http($http, 'UTC');
+    $app->loadFiles(__DIR__ . '/../console');
+    $app->start();
+});

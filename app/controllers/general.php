@@ -45,7 +45,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
+function router(Http $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -207,7 +207,7 @@ Http::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
         /*
         * Appwrite Router
         */
@@ -567,7 +567,7 @@ Http::options()
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
         /*
         * Appwrite Router
         */
@@ -600,7 +600,7 @@ Http::error()
     ->inject('project')
     ->inject('logger')
     ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
 
         $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
@@ -677,7 +677,7 @@ Http::error()
         }
 
         /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
+        if ($error instanceof Utopia\Http\Exception) {
             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
             switch ($code) {
                 case 400:

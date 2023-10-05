@@ -12,7 +12,7 @@ Http::init()
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->action(function (Http $utopia, Request $request, Document $project) {
 
         $route = $utopia->match($request);
 

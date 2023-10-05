@@ -75,7 +75,7 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $utopia,
         Route $route,
         callable $complexity
     ): iterable {
@@ -205,7 +205,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections
@@ -213,7 +213,7 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections

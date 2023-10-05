@@ -73,7 +73,7 @@ class CalcTierStats extends Action
     }
 
     /**
-     * @throws \Utopia\Exception
+     * @throws \Utopia\Http\Exception
      * @throws CannotInsertRecord
      */
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void

@@ -651,7 +651,7 @@ Http::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
         $route  = $utopia->getRoute();
