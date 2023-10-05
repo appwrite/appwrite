@@ -2,16 +2,16 @@
 
 namespace Tests\Unit\Event\Validator;
 
-use Appwrite\Event\Validator\Event;
+use Appwrite\Event\Validator\FunctionEvent;
 use PHPUnit\Framework\TestCase;
 
-class EventValidatorTest extends TestCase
+class FunctionEventValidatorTest extends TestCase
 {
-    protected ?Event $object = null;
+    protected ?FunctionEvent $object = null;
 
     public function setUp(): void
     {
-        $this->object = new Event();
+        $this->object = new FunctionEvent();
     }
 
     public function tearDown(): void
@@ -50,7 +50,6 @@ class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('databases.books'));
         $this->assertTrue($this->object->isValid('databases.books.collections.chapters'));
         $this->assertTrue($this->object->isValid('databases.books.collections.*'));
-        $this->assertTrue($this->object->isValid('functions.*'));
         $this->assertTrue($this->object->isValid('buckets.*'));
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
@@ -69,5 +68,6 @@ class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
+        $this->assertFalse($this->object->isValid('functions.*'));
     }
 }
