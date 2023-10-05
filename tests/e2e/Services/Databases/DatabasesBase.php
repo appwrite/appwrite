@@ -4286,7 +4286,7 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEqual(204, $deleteLevel2CollectionResponse['headers']['status-code']);
+        $this->assertEquals(204, $deleteLevel2CollectionResponse['headers']['status-code']);
 
         // Delete level2 (key) relation attribute from level 1 collection
         $deleteRelationAttributeFromLevel1 = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level1['body']['$id'] . '/attributes/level2', array_merge([
@@ -4295,6 +4295,6 @@ trait DatabasesBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
 
-        $this->assertEqual(204, $deleteRelationAttributeFromLevel1['headers']['status-code']);
+        $this->assertEquals(204, $deleteRelationAttributeFromLevel1['headers']['status-code']);
     }
 }
