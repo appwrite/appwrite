@@ -444,6 +444,19 @@ App::post('/v1/mock/tests/general/nullable')
     ->action(function (string $required, string $nullable, ?string $optional) {
     });
 
+App::post('/v1/mock/tests/general/enum')
+    ->desc('Enum Test')
+    ->groups(['mock'])
+    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'general')
+    ->label('sdk.method', 'enum')
+    ->label('sdk.description', 'Mock an enum parameter.')
+    ->label('sdk.mock', true)
+    ->param('mockType', '', new WhiteList(['first', 'second', 'third']), 'Sample enum param')
+    ->action(function (string $mockType) {
+    });
+
 App::get('/v1/mock/tests/general/400-error')
     ->desc('400 Error')
     ->groups(['mock'])

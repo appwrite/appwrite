@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
 use Utopia\Detector\Adapter\Deno;
@@ -469,6 +470,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
 
         $detectorFactory
             ->addDetector(new JavaScript())
+            ->addDetector(new Bun())
             ->addDetector(new PHP())
             ->addDetector(new Python())
             ->addDetector(new Dart())
@@ -549,6 +551,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                     $detectorFactory
                         ->addDetector(new JavaScript())
+                        ->addDetector(new Bun())
                         ->addDetector(new PHP())
                         ->addDetector(new Python())
                         ->addDetector(new Dart())
