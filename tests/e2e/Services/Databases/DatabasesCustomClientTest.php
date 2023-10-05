@@ -80,7 +80,6 @@ class DatabasesCustomClientTest extends Scope
                 Permission::write(Role::user($this->getUser()['$id'])),
             ]
         ]);
-
         $this->assertNotContains(Permission::create(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::update(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);
         $this->assertContains(Permission::delete(Role::user($this->getUser()['$id'])), $document1['body']['$permissions']);

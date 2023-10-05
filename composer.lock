@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "748f1a5e4fdf0a73ea26ddf0e7822f19",
+    "content-hash": "1afac6ad40bf9191a18fcbf28de1420c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1433,16 +1433,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.43.4",
+            "version": "dev-index-validation-no-attibute",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c"
+                "reference": "50e716c1522a290c4b2dd45b01aa4a7fcb5481c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/50e716c1522a290c4b2dd45b01aa4a7fcb5481c2",
+                "reference": "50e716c1522a290c4b2dd45b01aa4a7fcb5481c2",
                 "shasum": ""
             },
             "require": {
@@ -1483,9 +1483,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.43.4"
+                "source": "https://github.com/utopia-php/database/tree/index-validation-no-attibute"
             },
-            "time": "2023-09-28T09:00:05+00:00"
+            "time": "2023-10-04T16:53:45+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2007,12 +2007,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "04e6f0f08da7382cd20a5a5791a64c92745efa36"
+                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/04e6f0f08da7382cd20a5a5791a64c92745efa36",
-                "reference": "04e6f0f08da7382cd20a5a5791a64c92745efa36",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f7fe90764f0bcf73eea6f968965b2d786822033b",
+                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b",
                 "shasum": ""
             },
             "require": {
@@ -2020,8 +2020,7 @@
                 "ext-redis": "*",
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.31.*",
-                "utopia-php/queue": "0.5.*"
+                "utopia-php/framework": "0.31.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2039,9 +2038,9 @@
             ],
             "description": "Light and Fast Platform Library",
             "keywords": [
-                "cache",
                 "framework",
                 "php",
+                "platform",
                 "upf",
                 "utopia"
             ],
@@ -2049,7 +2048,7 @@
                 "issues": "https://github.com/utopia-php/platform/issues",
                 "source": "https://github.com/utopia-php/platform/tree/integrate-workers"
             },
-            "time": "2023-09-27T16:50:44+00:00"
+            "time": "2023-10-04T14:44:45+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2161,12 +2160,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "2a2eee58dace58e75142d9e2e26d2f5104d7f3f7"
+                "reference": "5f81095e0ec66b2902037181ba3a20f6f9541af7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/2a2eee58dace58e75142d9e2e26d2f5104d7f3f7",
-                "reference": "2a2eee58dace58e75142d9e2e26d2f5104d7f3f7",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/5f81095e0ec66b2902037181ba3a20f6f9541af7",
+                "reference": "5f81095e0ec66b2902037181ba3a20f6f9541af7",
                 "shasum": ""
             },
             "require": {
@@ -2214,7 +2213,7 @@
                 "issues": "https://github.com/utopia-php/queue/issues",
                 "source": "https://github.com/utopia-php/queue/tree/feat-get-worker-start"
             },
-            "time": "2023-07-12T07:55:31+00:00"
+            "time": "2023-10-04T14:49:13+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5277,6 +5276,12 @@
     ],
     "aliases": [
         {
+            "package": "utopia-php/database",
+            "version": "dev-index-validation-no-attibute",
+            "alias": "0.43.1",
+            "alias_normalized": "0.43.1.0"
+        },
+        {
             "package": "utopia-php/platform",
             "version": "dev-integrate-workers",
             "alias": "0.3.3",
@@ -5291,6 +5296,7 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
+        "utopia-php/database": 20,
         "utopia-php/platform": 20,
         "utopia-php/queue": 20
     },

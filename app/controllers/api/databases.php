@@ -17,11 +17,10 @@ use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
@@ -74,7 +73,7 @@ use Utopia\Validator\WhiteList;
  * @throws StructureException
  * @throws \Utopia\Database\Exception
  * @throws Conflict
- * @throws \Utopia\Exception
+ * @throws Exception
  */
 function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
 {
@@ -1204,7 +1203,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-
+         //var_dump($elements);
         // use length of longest string as attribute size
         $size = 0;
         foreach ($elements as $element) {
@@ -2935,7 +2934,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         });
 
         $cursor = \reset($cursor);
-
 
         if ($cursor) {
             $documentId = $cursor->getValue();

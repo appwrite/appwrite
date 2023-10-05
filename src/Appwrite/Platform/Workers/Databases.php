@@ -348,7 +348,7 @@ class Databases extends Action
                     }
 
                     if ($exists) { // Delete the duplicate if created, else update in db
-                        $this->deleteIndex($database, $collection, $index, $project);
+                        $this->deleteIndex($database, $collection, $index, $project, $dbForConsole, $dbForProject);
                     } else {
                         $dbForProject->updateDocument('indexes', $index->getId(), $index);
                     }
@@ -469,6 +469,7 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
         } catch (\Exception $e) {
             Console::error($e->getMessage());
+
 
             if ($e instanceof DatabaseException) {
                 $index->setAttribute('error', $e->getMessage());

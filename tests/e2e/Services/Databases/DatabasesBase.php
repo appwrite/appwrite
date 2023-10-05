@@ -1057,6 +1057,7 @@ trait DatabasesBase
         $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
         $this->assertEquals($releaseWithDate['body']['key'], $movies['body']['indexes'][2]['key']);
         $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
+        var_dump($movies['body']['indexes']);
         $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
         $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
 
