@@ -121,7 +121,9 @@ App::post('/v1/projects')
             }
         }
 
-        if ($index = array_search('database_db_fra1_v14x_06', $databases)) {
+        $databaseOverride = App::getEnv('APP_DATABASE_OVERRIDE', null);
+        $index = array_search($databaseOverride, $databases);
+        if ($index) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
