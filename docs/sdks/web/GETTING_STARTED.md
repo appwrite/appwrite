@@ -57,7 +57,7 @@ account.create(ID.unique(), 'me@example.com', 'password', 'Jane Doe')
 
 ### Learn more
 You can use the following resources to learn more and get help
-- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-flutter)
+- 🚀 [Getting Started Tutorial](https://appwrite.io/docs/getting-started-for-web)
 - 📜 [Appwrite Docs](https://appwrite.io/docs)
 - 💬 [Discord Community](https://appwrite.io/discord)
-- 🚂 [Appwrite Flutter Playground](https://github.com/appwrite/playground-for-flutter)
+- 🚂 [Appwrite Web Playground](https://github.com/appwrite/playground-for-web)

@@ -1,12 +1,11 @@
-> It's going to get cloudy! 🌩 ☂️
-> The Appwrite Cloud is coming soon! You can learn more about our upcoming hosted solution and signup for free credits at: https://appwrite.io/cloud
+> Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img width="260" height="39" src="https://appwrite.io/images/appwrite.svg" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
     <br />
     <br />
-    <b>A complete backend solution for your [Flutter / Vue / Angular / React / iOS / Android / *ANY OTHER*] app</b>
+    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
     <br />
     <br />
 </p>
@@ -26,7 +25,7 @@
 
 English | [简体中文](README-CN.md)
 
-[**Announcing Appwrite 1.2 with GraphQL support! Learn what's new!**](https://appwrite.io/graphql)
+[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
 
 Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
 
@@ -51,6 +50,7 @@ Table of Contents:
     - [CMD](#cmd)
     - [PowerShell](#powershell)
   - [Upgrade from an Older Version](#upgrade-from-an-older-version)
+- [One-Click Setups](#one-click-setups)
 - [Getting Started](#getting-started)
   - [Services](#services)
   - [SDKs](#sdks)
@@ -76,7 +76,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 ### Windows
@@ -88,7 +88,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 #### PowerShell
@@ -98,7 +98,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
@@ -129,6 +129,12 @@ Choose from one of the providers below:
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
+        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+          <br /><sub><b>Akamai Compute</b></sub></a>    
+      </a>
+    </td>
   </tr>
 </table>
 
@@ -145,15 +151,15 @@ Getting started with Appwrite is as easy as creating a new project, choosing you
 
 ### Services
 
-- [**Account**](https://appwrite.io/docs/client/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
+- [**Account**](https://appwrite.io/docs/references/cloud/client-web/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
 - [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when building backend integrations with Server SDKs.
-- [**Teams**](https://appwrite.io/docs/client/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-- [**Databases**](https://appwrite.io/docs/client/databases) - Manage databases, collections, and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
-- [**Storage**](https://appwrite.io/docs/client/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to perfectly fit your app. All files are scanned by ClamAV and stored in a secure and encrypted way.
+- [**Teams**](https://appwrite.io/docs/references/cloud/client-web/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
+- [**Databases**](https://appwrite.io/docs/references/cloud/client-web/databases) - Manage databases, collections, and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
+- [**Storage**](https://appwrite.io/docs/references/cloud/client-web/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to perfectly fit your app. All files are scanned by ClamAV and stored in a secure and encrypted way.
 - [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event either manually or using a CRON schedule.
 - [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases, and more.
-- [**Locale**](https://appwrite.io/docs/client/locale) - Track your user's location and manage your app locale-based data.
-- [**Avatars**](https://appwrite.io/docs/client/avatars) - Manage your users' avatars, countries' flags, browser icons, and credit card symbols. Generate QR codes from links or plaintext strings.
+- [**Locale**](https://appwrite.io/docs/references/cloud/client-web/locale) - Track your user's location and manage your app locale-based data.
+- [**Avatars**](https://appwrite.io/docs/references/cloud/client-web/avatars) - Manage your users' avatars, countries' flags, browser icons, and credit card symbols. Generate QR codes from links or plaintext strings.
 
 For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
 

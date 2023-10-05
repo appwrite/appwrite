@@ -15,6 +15,12 @@ class Provider extends Model
     public function __construct()
     {
         $this
+            ->addRule('key', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Provider.',
+                'default' => '',
+                'example' => 'github',
+            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Provider name.',

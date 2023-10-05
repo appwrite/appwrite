@@ -18,7 +18,7 @@ use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 
 App::get('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -30,7 +30,7 @@ App::get('/v1/graphql')
     ->label('sdk.response.model', Response::MODEL_ANY)
     ->label('abuse-limit', 60)
     ->label('abuse-time', 60)
-    ->param('query', '', new Text(0), 'The query to execute.')
+    ->param('query', '', new Text(0, 0), 'The query to execute.')
     ->param('operationName', '', new Text(256), 'The name of the operation to execute.', true)
     ->param('variables', '', new Text(0), 'The JSON encoded variables to use in the query.', true)
     ->inject('request')
@@ -58,7 +58,7 @@ App::get('/v1/graphql')
     });
 
 App::post('/v1/graphql/mutation')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -103,7 +103,7 @@ App::post('/v1/graphql/mutation')
     });
 
 App::post('/v1/graphql')
-    ->desc('GraphQL Endpoint')
+    ->desc('GraphQL endpoint')
     ->groups(['graphql'])
     ->label('scope', 'graphql')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])

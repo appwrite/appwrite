@@ -1,5 +1,4 @@
-> 准备好迎接狂风暴'云'了吗? 🌩 ☂️
-> Appwrite Cloud即将到来!你能够通过https://appwrite.io/cloud了解更多的资讯, 注册即可领取试用额度哦
+> 好消息！Appwrite 云现已进入公开测试版！立即访问 cloud.appwrite.io 注册，体验无忧的托管服务。今天就加入我们的云端吧！☁️🎉
 
 <br />
 <p align="center">
@@ -24,7 +23,7 @@
 
 [English](README.md) | 简体中文
 
-[**我们发布了 Appwrite Console 2.0 版本，点击这里了解更多！**](https://medium.com/appwrite-io/announcing-console-2-0-2e0e96891cb0?source=friends_link&sk=7a82b4069778e3adc165dc026e960fe1)
+[**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
 
 Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服务库可应用于网页端，移动端，以及后端。Appwrite 通过视觉化界面简化了从零开始编写 API 的繁琐过程，在保证软件安全的前提下为开发者创造了一个高效的开发环境。
 
@@ -67,7 +66,7 @@ docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
     --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
     --entrypoint="install" \
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 ### Windows
@@ -79,7 +78,7 @@ docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
     --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
     --entrypoint="install" ^
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 #### PowerShell
@@ -89,7 +88,7 @@ docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
     --entrypoint="install" `
-    appwrite/appwrite:1.2.1
+    appwrite/appwrite:1.4.3
 ```
 
 运行后，可以在浏览器上访问 http://localhost 找到 Appwrite 控制台。在非 Linux 的本机主机上完成安装后，服务器可能需要几分钟才能启动。
@@ -114,14 +113,14 @@ docker run -it --rm `
 
 ### 软件服务
 
-* [**帐户**](https://appwrite.io/docs/client/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
+* [**帐户**](https://appwrite.io/docs/references/cloud/client-web/account) -管理当前用户的帐户和登录方式。跟踪和管理用户 Session，登录设备，登录方法和查看相关记录。
 * [**用户**](https://appwrite.io/docs/server/users) - 在以管理员模式登录时管理和列出所有用户。
-* [**团队**](https://appwrite.io/docs/client/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
-* [**数据库**](https://appwrite.io/docs/client/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
-* [**贮存**](https://appwrite.io/docs/client/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
+* [**团队**](https://appwrite.io/docs/references/cloud/client-web/teams) - 管理用户分组。邀请成员，管理团队中的用户权限和用户角色。
+* [**数据库**](https://appwrite.io/docs/references/cloud/client-web/databases) - 管理数据库文档和文档集。用检索界面来对文档和文档集进行读取，创建，更新，和删除。
+* [**贮存**](https://appwrite.io/docs/references/cloud/client-web/storage) - 管理文件的阅读、创建、删除和预览。设置文件的预览来满足程序的个性化需求。所有文件都由 ClamAV 扫描并安全存储和加密。
 * [**云函数**](https://appwrite.io/docs/server/functions) - 在安全，隔离的环境中运行自定义代码。这些代码可以被事件，CRON，或者手动操作触发。
-* [**语言适配**](https://appwrite.io/docs/client/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
-* [**头像**](https://appwrite.io/docs/client/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。 
+* [**语言适配**](https://appwrite.io/docs/references/cloud/client-web/locale) - 根据用户所在的的国家和地区做出合适的语言适配。
+* [**头像**](https://appwrite.io/docs/references/cloud/client-web/avatars) -管理用户头像、国家旗帜、浏览器图标、信用卡符号，和生成二维码。 
 如需完整的 API 界面文档，请访问 [https://appwrite.io/docs](https://appwrite.io/docs)。如需更多教程、新闻和公告，请订阅我们的 [博客](https://medium.com/appwrite-io) 和 加入我们的[Discord 社区](https://discord.gg/GSeTUeA)。
 
 ### 开发套件

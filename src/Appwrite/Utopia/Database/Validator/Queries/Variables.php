@@ -7,7 +7,9 @@ use Appwrite\Utopia\Database\Validator\Queries\Base;
 class Variables extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'key'
+        'key',
+        'resourceType',
+        'resourceId'
     ];
 
     /**

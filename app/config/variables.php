@@ -62,6 +62,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DOMAIN_FUNCTIONS',
+                'description' => 'A domain to use for function preview URLs. Setting to empty turns off function preview URLs.',
+                'introduction' => '',
+                'default' => 'functions.localhost',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_DOMAIN_TARGET',
                 'description' => 'A DNS A record hostname to serve as a CNAME target for your Appwrite custom domains. You can use the same value as used for the Appwrite \'_APP_DOMAIN\' variable. The default value is \'localhost\'.',
                 'introduction' => '',
@@ -143,7 +152,7 @@ return [
             ],
             [
                 'name' => '_APP_USAGE_STATS',
-                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage, Influxdb and Telegraf containers for better resource usage.',
+                'description' => 'This variable allows you to disable the collection and displaying of usage stats. This value is set to \'enabled\' by default, to disable the usage stats set the value to \'disabled\'. When disabled, it\'s recommended to turn off the Worker Usage container to reduce resource usage.',
                 'introduction' => '0.7.0',
                 'default' => 'enabled',
                 'required' => false,
@@ -152,7 +161,7 @@ return [
             ],
             [
                 'name' => '_APP_LOGGING_PROVIDER',
-                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, to enable the logger set the value to one of \'sentry\', \'raygun\', \'appsignal\', \'logowl\'',
+                'description' => 'This variable allows you to enable logging errors to 3rd party providers. This value is empty by default, set the value to one of \'sentry\', \'raygun\', \'appSignal\', \'logOwl\' to enable the logger.',
                 'introduction' => '0.12.0',
                 'default' => '',
                 'required' => false,
@@ -203,7 +212,7 @@ return [
                 'required' => false,
                 'question' => '',
                 'filter' => ''
-            ]
+            ],
         ],
     ],
     [
@@ -413,7 +422,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'. \n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -683,7 +692,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_CONTAINERS',
-                'description' => 'The maximum number of containers Appwrite is allowed to keep alive in the background for function environments. Running containers allow faster execution time as there is no need to recreate each container every time a function gets executed. The default value is 10.',
+                'description' => 'Deprecated since 1.2.0. Runtimes now timeout by inactivity using \'_APP_FUNCTIONS_INACTIVE_THRESHOLD\'.',
                 'introduction' => '0.7.0',
                 'default' => '10',
                 'required' => false,
@@ -710,7 +719,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_MEMORY_SWAP',
-                'description' => 'The maximum amount of swap memory a single cloud function is allowed to use in megabytes. The default value is  empty. When it\'s empty, swap memory limit will be disabled.',
+                'description' => 'Deprecated since 1.2.0. High use of swap memory is not recommended to preserve harddrive health.',
                 'introduction' => '0.7.0',
                 'default' => '0',
                 'required' => false,
@@ -741,6 +750,7 @@ return [
                 'introduction' => '0.13.0',
                 'default' => 'http://appwrite-executor/v1',
                 'required' => false,
+                'overwrite' => true,
                 'question' => '',
                 'filter' => ''
             ],
@@ -764,7 +774,7 @@ return [
             ],
             [
                 'name' => '_APP_FUNCTIONS_INACTIVE_THRESHOLD',
-                'description' => 'The minimum time a function can be inactive before it\'s container is shutdown and put to sleep. The default value is 60 seconds',
+                'description' => 'The minimum time a function must be inactive before it can be shut down and cleaned up. This feature is intended to clean up unused containers. Containers may remain active for longer than the interval before being shut down, as Appwrite only cleans up unused containers every hour. If no value is provided, the default is 60 seconds.',
                 'introduction' => '0.13.0',
                 'default' => '60',
                 'required' => false,
@@ -773,7 +783,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_USERNAME',
-                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_USERNAME\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -782,7 +792,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_PASSWORD',
-                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_DOCKER_HUB_PASSWORD\' instead!',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -791,7 +801,7 @@ return [
             ],
             [
                 'name' => 'DOCKERHUB_PULL_EMAIL',
-                'description' => 'The email for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'description' => 'Deprecated since 1.2.0. Email is no longer needed.',
                 'introduction' => '0.10.0',
                 'default' => '',
                 'required' => false,
@@ -800,9 +810,106 @@ return [
             ],
             [
                 'name' => 'OPEN_RUNTIMES_NETWORK',
-                'description' => 'The docker network used for communication between the executor and runtimes. Change this if you have altered the default network names.',
+                'description' => 'Deprecated with 1.2.0, use \'_APP_FUNCTIONS_RUNTIMES_NETWORK\' instead!',
                 'introduction' => '0.13.0',
                 'default' => 'appwrite_runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_RUNTIMES_NETWORK',
+                'description' => 'The docker network used for communication between the executor and runtimes.',
+                'introduction' => '1.2.0',
+                'default' => 'runtimes',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCKER_HUB_USERNAME',
+                'description' => 'The username for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '1.2.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_DOCKER_HUB_PASSWORD',
+                'description' => 'The password for hub.docker.com. This variable is used to pull images from hub.docker.com.',
+                'introduction' => '1.2.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_FUNCTIONS_MAINTENANCE_INTERVAL',
+                'description' => 'Interval value containing the number of seconds that the executor should wait before checking for inactive runtimes. The default value is 3600 seconds (1 hour).',
+                'introduction' => '1.4.0',
+                'default' => '3600',
+                'required' => false,
+                'overwrite' => true,
+                'question' => '',
+                'filter' => ''
+            ],
+        ],
+    ],
+    [
+        'category' => 'VCS (Version Control System)',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_VCS_GITHUB_APP_NAME',
+                'description' => 'Name of your GitHub app. This value should be set to your GitHub application\'s URL.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_PRIVATE_KEY',
+                'description' => 'GitHub app RSA private key. You can generate private keys from GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_APP_ID',
+                'description' => 'GitHub application ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_ID',
+                'description' => 'GitHub client ID. You can find it in your GitHub application details.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_CLIENT_SECRET',
+                'description' => 'GitHub client secret. You can generate secrets in your GitHub application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_VCS_GITHUB_WEBHOOK_SECRET',
+                'description' => 'GitHub webhook secret. You can configure it in your GitHub application settings under webhook section.',
+                'introduction' => '1.4.0',
+                'default' => '',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -867,6 +974,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_MAINTENANCE_RETENTION_SCHEDULES',
+                'description' => 'Schedules deletion interval ( in seconds ) ',
+                'introduction' => 'TBD',
+                'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
     [
@@ -902,4 +1018,43 @@ return [
             ],
         ],
     ],
+    [
+        'category' => 'Migrations',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_ID',
+                'description' => 'Google OAuth client ID. You can find it in your GCP application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
+                'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ]
+    ],
+    [
+        'category' => 'Assistant',
+        'description' => '',
+        'variables' => [
+            [
+                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
+                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
+                'introduction' => '1.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
+        ]
+    ]
 ];

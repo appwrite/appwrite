@@ -1,0 +1,6 @@
+query {
+    healthGetCache {
+        ping
+        status
+    }
+}

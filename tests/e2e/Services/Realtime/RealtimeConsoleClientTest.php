@@ -438,18 +438,18 @@ class RealtimeConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test',
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
             ],
             'schedule' => '0 0 1 1 *',
-            'timeout' => 10,
+            'timeout' => 10
         ]);
 
         $functionId = $response1['body']['$id'] ?? '';
 
         $this->assertEquals(201, $response1['headers']['status-code']);
-
 
         $projectId = 'console';
 
@@ -482,6 +482,7 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'entrypoint' => 'index.php',
             'code' => new CURLFile($code, 'application/x-gzip', \basename($code)),
+            'activate' => true
         ]);
 
         $deploymentId = $deployment['body']['$id'] ?? '';
@@ -497,7 +498,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']);
+        // $this->assertContains("functions.{$functionId}.deployments.{$deploymentId}.create", $response['data']['events']); TODO @christyjacob4 : enable test once we allow functions.* events
         $this->assertNotEmpty($response['data']['payload']);
 
         $client->close();

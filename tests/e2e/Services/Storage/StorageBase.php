@@ -2,12 +2,14 @@
 
 namespace Tests\E2E\Services\Storage;
 
+use Appwrite\Extend\Exception;
 use CURLFile;
 use Tests\E2E\Client;
+use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\DatetimeValidator;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
@@ -57,8 +59,7 @@ trait StorageBase
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
-
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
         /**
          * Test for Large File above 20MB
          * This should also validate the test for when Bucket encryption
@@ -101,7 +102,7 @@ trait StorageBase
         $id = '';
         while (!feof($handle)) {
             $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+            $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
             if (!empty($id)) {
                 $headers['x-appwrite-id'] = $id;
             }
@@ -145,7 +146,7 @@ trait StorageBase
         ];
         $id = '';
         $curlFile = new \CURLFile('data://' . $mimeType . ';base64,' . base64_encode(@fread($handle, $chunkSize)), $mimeType, 'large-file.mp4');
-        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size) . '/' . $size;
+        $headers['content-range'] = 'bytes ' . ($counter * $chunkSize) . '-' . min(((($counter * $chunkSize) + $chunkSize) - 1), $size - 1) . '/' . $size;
         $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucket2['body']['$id'] . '/files', $this->getHeaders(), [
             'fileId' => $fileId,
             'file' => $curlFile,
@@ -241,6 +242,29 @@ trait StorageBase
 
         $this->assertEquals(400, $failedBucket['headers']['status-code']);
 
+        /**
+         * Test for FAILURE set x-appwrite-id to unique()
+         */
+        $source = realpath(__DIR__ . '/../../../resources/logo.png');
+        $totalSize = \filesize($source);
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'content-range' => 'bytes 0-' . $size . '/' . $size,
+            'x-appwrite-id' => 'unique()',
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => new CURLFile($source, 'image/png', 'logo.png'),
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(400, $res['headers']['status-code']);
+        $this->assertEquals(Exception::STORAGE_INVALID_APPWRITE_ID, $res['body']['type']);
+
         return ['bucketId' => $bucketId, 'fileId' => $file['body']['$id'],  'largeFileId' => $largeFile['body']['$id'], 'largeBucketId' => $bucket2['body']['$id']];
     }
 
@@ -284,14 +308,61 @@ trait StorageBase
         ]);
         $this->assertEquals(201, $file['headers']['status-code']);
         $this->assertNotEmpty($file['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file['body']['$createdAt']));
         $this->assertEquals('logo.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
-        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) != $file['body']['signature']); // should validate that the file is encrypted
+        $this->assertTrue(md5_file(realpath(__DIR__ . '/../../../resources/logo.png')) == $file['body']['signature']);
 
         return ['bucketId' => $bucketId];
+    }
+
+    public function testCreateBucketFileNoCollidingId(): void
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'bucketId' => ID::unique(),
+            'name' => 'Test Bucket',
+            'maximumFileSize' => 2000000, //2MB
+            'allowedFileExtensions' => ["jpg", "png"],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::create(Role::any()),
+                Permission::update(Role::any()),
+                Permission::delete(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $bucket['headers']['status-code']);
+        $this->assertNotEmpty($bucket['body']['$id']);
+
+        $bucketId = $bucket['body']['$id'];
+
+        $fileId = ID::unique();
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+        $this->assertEquals($fileId, $file['body']['$id']);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => $fileId,
+            'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/file.png'), 'image/png', 'file.png'),
+        ]);
+
+        $this->assertEquals(409, $file['headers']['status-code']);
     }
 
     /**
@@ -314,10 +385,10 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(0)' ]
+            'queries' => [ 'limit(1)' ]
         ]);
         $this->assertEquals(200, $files['headers']['status-code']);
-        $this->assertEquals(0, count($files['body']['files']));
+        $this->assertEquals(1, count($files['body']['files']));
 
         $files = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files', array_merge([
             'content-type' => 'application/json',
@@ -375,8 +446,7 @@ trait StorageBase
 
         $this->assertEquals(200, $file1['headers']['status-code']);
         $this->assertNotEmpty($file1['body']['$id']);
-        $dateValidator = new DatetimeValidator();
-        $this->assertEquals(true, $dateValidator->isValid($file1['body']['$createdAt']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($file1['body']['$createdAt']));
         $this->assertEquals('logo.png', $file1['body']['name']);
         $this->assertEquals('image/png', $file1['body']['mimeType']);
         $this->assertEquals(47218, $file1['body']['sizeOriginal']);
@@ -706,6 +776,7 @@ trait StorageBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
+            'name' => 'logo_updated.png',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
                 Permission::update(Role::user($this->getUser()['$id'])),
@@ -717,7 +788,7 @@ trait StorageBase
         $this->assertNotEmpty($file['body']['$id']);
         $dateValidator = new DatetimeValidator();
         $this->assertEquals(true, $dateValidator->isValid($file['body']['$createdAt']));
-        $this->assertEquals('logo.png', $file['body']['name']);
+        $this->assertEquals('logo_updated.png', $file['body']['name']);
         $this->assertEquals('image/png', $file['body']['mimeType']);
         $this->assertEquals(47218, $file['body']['sizeOriginal']);
         //$this->assertEquals(54944, $file['body']['sizeActual']);
@@ -765,7 +836,7 @@ trait StorageBase
         $this->assertEquals(204, $file['headers']['status-code']);
         $this->assertEmpty($file['body']);
 
-        $file = $this->client->call(Client::METHOD_GET, '/storage/files/' . $data['fileId'], array_merge([
+        $file = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $data['bucketId'] . '/files/' . $data['fileId'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));

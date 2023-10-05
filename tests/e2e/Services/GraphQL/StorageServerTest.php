@@ -77,7 +77,7 @@ class StorageServerTest extends Scope
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
         ];
 
-        $file = $this->client->call(Client::METHOD_POST, '/graphql/upload', \array_merge([
+        $file = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'multipart/form-data',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $gqlPayload);

@@ -1,4 +1,4 @@
 <?php
 
 echo 'execute init_file success' . PHP_EOL;
-Yasd\Api\setRemoteHost('127.0.0.1'); //Set your development machine's IP
+Yasd\Api\setRemoteHost('host.docker.internal'); //Set your development machine's IP
