@@ -235,6 +235,7 @@ class Mapper
             case 'Utopia\Validator\Domain':
             case 'Appwrite\Network\Validator\Email':
             case 'Appwrite\Event\Validator\Event':
+            case 'Appwrite\Event\Validator\FunctionEvent':
             case 'Utopia\Validator\HexColor':
             case 'Utopia\Validator\Host':
             case 'Utopia\Validator\IP':
