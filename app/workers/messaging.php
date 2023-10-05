@@ -120,8 +120,8 @@ class MessagingV1 extends Worker
                     }
                 } finally {
                     return [
-                    'deliveredTo' => $deliveredTo,
-                    'deliveryErrors' => $deliveryErrors,
+                        'deliveredTo' => $deliveredTo,
+                        'deliveryErrors' => $deliveryErrors,
                     ];
                 }
             };

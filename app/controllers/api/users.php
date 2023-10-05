@@ -428,9 +428,10 @@ App::post('/v1/users/:userId/targets')
             'identifier' => $identifier,
         ]));
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
         $response
-        ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ->dynamic($target, Response::MODEL_TARGET);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::get('/v1/users')
@@ -1238,7 +1239,7 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
             ->setParam('targetId', $targetId);
 
         $response
-        ->dynamic($target, Response::MODEL_TARGET);
+            ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')

@@ -1355,9 +1355,9 @@ App::post('/v1/account/sessions/phone')
         ]));
 
         $messaging
-        ->setMessageId($messageDoc->getId())
-        ->setProject($project)
-        ->trigger();
+            ->setMessageId($messageDoc->getId())
+            ->setProject($project)
+            ->trigger();
 
         $events->setPayload(
             $response->output(
@@ -2964,7 +2964,10 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$user->getAttribute('phone')]), Query::equal('providerInternalId', [$provider->getInternalId()])]);
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$user->getAttribute('phone')]),
+            Query::equal('providerInternalId', [$provider->getInternalId()])
+        ]);
 
         if (!$target) {
             $target = $dbForProject->createDocument('targets', new Document([
@@ -2987,9 +2990,9 @@ App::post('/v1/account/verification/phone')
         ]));
 
         $messaging
-        ->setMessageId($messageDoc->getId())
-        ->setProject($project)
-        ->trigger();
+            ->setMessageId($messageDoc->getId())
+            ->setProject($project)
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())

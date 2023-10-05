@@ -69,8 +69,8 @@ App::post('/v1/messaging/providers/mailgun')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['email'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['email'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -79,7 +79,7 @@ App::post('/v1/messaging/providers/mailgun')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -126,8 +126,8 @@ App::post('/v1/messaging/providers/sendgrid')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['sms'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -136,7 +136,7 @@ App::post('/v1/messaging/providers/sendgrid')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -198,13 +198,14 @@ App::post('/v1/messaging/providers/msg91')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
+
 App::post('/v1/messaging/providers/telesign')
     ->desc('Create Telesign Provider')
     ->groups(['api', 'messaging'])
@@ -245,8 +246,8 @@ App::post('/v1/messaging/providers/telesign')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['sms'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -255,7 +256,7 @@ App::post('/v1/messaging/providers/telesign')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -303,8 +304,8 @@ App::post('/v1/messaging/providers/textmagic')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['sms'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -313,7 +314,7 @@ App::post('/v1/messaging/providers/textmagic')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -361,8 +362,8 @@ App::post('/v1/messaging/providers/twilio')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['sms'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['sms'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -371,7 +372,7 @@ App::post('/v1/messaging/providers/twilio')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -419,7 +420,7 @@ App::post('/v1/messaging/providers/vonage')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
+                Query::equal('default', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
@@ -429,7 +430,7 @@ App::post('/v1/messaging/providers/vonage')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -475,8 +476,8 @@ App::post('/v1/messaging/providers/fcm')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['push'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['push'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -485,7 +486,7 @@ App::post('/v1/messaging/providers/fcm')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -539,8 +540,8 @@ App::post('/v1/messaging/providers/apns')
         // Check if a default provider exists, if not, set this one as default
         if (
             empty($dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
-            Query::equal('type', ['push'])
+                Query::equal('default', [true]),
+                Query::equal('type', ['push'])
             ]))
         ) {
             $provider->setAttribute('default', true);
@@ -549,7 +550,7 @@ App::post('/v1/messaging/providers/apns')
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
-            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS, 'Provider already exists.');
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
         $response
@@ -584,7 +585,7 @@ App::get('/v1/messaging/providers')
                 Query::equal('$id', [$providerId]),
             ]));
 
-            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
             }
 
@@ -653,7 +654,7 @@ App::patch('/v1/messaging/providers/mailgun/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'mailgun') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -721,7 +722,7 @@ App::patch('/v1/messaging/providers/sendgrid/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'sendgrid') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -774,7 +775,7 @@ App::patch('/v1/messaging/providers/msg91/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'msg91') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -833,7 +834,7 @@ App::patch('/v1/messaging/providers/telesign/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'telesign') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -892,7 +893,7 @@ App::patch('/v1/messaging/providers/textmagic/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'text-magic') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -951,7 +952,7 @@ App::patch('/v1/messaging/providers/twilio/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'twilio') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -1010,7 +1011,7 @@ App::patch('/v1/messaging/providers/vonage/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'vonage') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -1068,7 +1069,7 @@ App::patch('/v1/messaging/providers/fcm/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'fcm') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -1123,7 +1124,7 @@ App::patch('/v1/messaging/providers/apns/:id')
         $providerAttr = $provider->getAttribute('provider');
 
         if ($providerAttr !== 'apns') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE . $providerAttr);
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
@@ -1211,7 +1212,7 @@ App::post('/v1/messaging/messages/email')
     ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('content', '', new Text(65407), 'Email Content.')
+    ->param('content', '', new Text(64230), 'Email Content.')
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
