@@ -728,4 +728,9 @@ return [
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
+    Exception::MIGRATION_PROVIDER_ERROR => [
+        'name' => Exception::MIGRATION_PROVIDER_ERROR,
+        'description' => 'An error occurred on the provider\'s side. Please try again later.',
+        'code' => 424,
+    ],
 ];

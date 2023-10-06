@@ -223,6 +223,7 @@ class Exception extends \Exception
     public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
     public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+    public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     protected $type = '';
     protected $errors = [];
