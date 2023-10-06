@@ -2,6 +2,11 @@
 
 We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
 
+## Here for Hacktoberfest?
+If you're here to contribute during Hacktoberfest, we're so happy to see you here. Appwrite has been a long-time participant of Hacktoberfest and we welcome you, whatever your experience level. This year, we're **only taking contributions for issues tagged** `hacktoberfest`, so we can focus our resources to support your contributions.
+
+You can [find issues using this query](https://github.com/search?q=org%3Aappwrite+is%3Aopen+type%3Aissue+label%3Ahacktoberfest&type=issues).
+
 ## How to Start?
 
 If you are worried or don’t know where to start, check out the next section that explains what kind of help we could use and where you can get involved. You can send your questions to [@appwrite](https://twitter.com/appwrite) on Twitter or to anyone from the [Appwrite team on Discord](https://appwrite.io/discord). You can also submit an issue, and a maintainer can guide you!
@@ -109,7 +114,9 @@ docker run --rm --interactive --tty \
 
 ### User Interface
 
-Appwrite uses an internal micro-framework called Litespeed.js to build simple UI components in vanilla JS and [less](http://lesscss.org/) for compiling CSS code. To apply any of your changes to the UI, use the `gulp build` or `gulp less` commands, and restart the Appwrite main container to load the new static files to memory using `docker compose restart appwrite`.
+Appwrite's UI is built with [Svelte](https://svelte.dev/), [Svelte Kit](https://kit.svelte.dev/), and the [Pink Design](https://github.com/appwrite/pink) component library. You can find the source code in the [Appwrite Console](https://github.com/appwrite/console) repository.
+
+To contribute to the UI, head to the [Contribution Guide](https://github.com/appwrite/console/blob/main/CONTRIBUTING.md) of Appwrite Console.
 
 ### Get Started
 
@@ -238,8 +245,8 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 
 - Redis - for managing cache and in-memory data (currently, we do not use Redis for persistent data).
 - MariaDB - for database storage and queries.
-- InfluxDB - for managing stats and time-series based data.
-- Statsd - for sending data over UDP protocol (using Telegraf).
+- InfluxDB - for managing stats and time-series based data
+- Statsd - for sending data over UDP protocol (using Telegraf)
 - ClamAV - for validating and scanning storage files.
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
