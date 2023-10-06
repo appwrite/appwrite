@@ -104,53 +104,53 @@ class MessagingTest extends Scope
     {
         $providersParams = [
             'Sendgrid' => [
-                'id' => $providers[0]['_id'],
+                'providerId' => $providers[0]['_id'],
                 'name' => 'Sengrid2',
                 'apiKey' => 'my-apikey',
             ],
             'Mailgun' => [
-                'id' => $providers[1]['_id'],
+                'providerId' => $providers[1]['_id'],
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
             ],
             'Twilio' => [
-                'id' => $providers[2]['_id'],
+                'providerId' => $providers[2]['_id'],
                 'name' => 'Twilio2',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
             ],
             'Telesign' => [
-                'id' => $providers[3]['_id'],
+                'providerId' => $providers[3]['_id'],
                 'name' => 'Telesign2',
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
             'Textmagic' => [
-                'id' => $providers[4]['_id'],
+                'providerId' => $providers[4]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
             ],
             'Msg91' => [
-                'id' => $providers[5]['_id'],
+                'providerId' => $providers[5]['_id'],
                 'name' => 'Ms91-2',
                 'senderId' => 'my-senderid',
                 'authKey' => 'my-authkey',
             ],
             'Vonage' => [
-                'id' => $providers[6]['_id'],
+                'providerId' => $providers[6]['_id'],
                 'name' => 'Vonage2',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
             'Fcm' => [
-                'id' => $providers[7]['_id'],
+                'providerId' => $providers[7]['_id'],
                 'name' => 'FCM2',
                 'serverKey' => 'my-serverkey',
             ],
             'Apns' => [
-                'id' => $providers[8]['_id'],
+                'providerId' => $providers[8]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
                 'authKeyId' => 'my-authkeyid',
@@ -182,7 +182,7 @@ class MessagingTest extends Scope
         ], [
             'query' => $this->getQuery('update_mailgun_provider'),
             'variables' => [
-                'id' => $providers[1]['_id'],
+                'providerId' => $providers[1]['_id'],
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
@@ -224,7 +224,7 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'id' => $providers[0]['_id'],
+                'providerId' => $providers[0]['_id'],
             ]
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', [
@@ -246,7 +246,7 @@ class MessagingTest extends Scope
             $graphQLPayload = [
                 'query' => $query,
                 'variables' => [
-                    'id' => $provider['_id'],
+                    'providerId' => $provider['_id'],
                 ]
             ];
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [

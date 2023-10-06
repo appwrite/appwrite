@@ -589,7 +589,7 @@ App::get('/v1/messaging/providers')
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
             }
 
-            $cursor->setValue($cursorDocument[0]);
+            $cursor->setValue($cursorDocument);
         }
 
         $filterQueries = Query::groupByType($queries)['filters'];
@@ -623,7 +623,7 @@ App::get('/v1/messaging/providers/:providerId')
         $response->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/mailgun/:id')
+App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->desc('Update Mailgun Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -636,7 +636,7 @@ App::patch('/v1/messaging/providers/mailgun/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as eu region.', true)
@@ -645,8 +645,8 @@ App::patch('/v1/messaging/providers/mailgun/:id')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -694,7 +694,7 @@ App::patch('/v1/messaging/providers/mailgun/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/sendgrid/:id')
+App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->desc('Update Sendgrid Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -707,14 +707,14 @@ App::patch('/v1/messaging/providers/sendgrid/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -746,7 +746,7 @@ App::patch('/v1/messaging/providers/sendgrid/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/msg91/:id')
+App::patch('/v1/messaging/providers/msg91/:providerId')
     ->desc('Update Msg91 Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -759,15 +759,15 @@ App::patch('/v1/messaging/providers/msg91/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $senderId, string $authKey, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -805,7 +805,7 @@ App::patch('/v1/messaging/providers/msg91/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/telesign/:id')
+App::patch('/v1/messaging/providers/telesign/:providerId')
     ->desc('Update Telesign Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -818,15 +818,15 @@ App::patch('/v1/messaging/providers/telesign/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $password, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -864,7 +864,7 @@ App::patch('/v1/messaging/providers/telesign/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/textmagic/:id')
+App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->desc('Update Textmagic Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -877,15 +877,15 @@ App::patch('/v1/messaging/providers/textmagic/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $apiKey, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -923,7 +923,7 @@ App::patch('/v1/messaging/providers/textmagic/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/twilio/:id')
+App::patch('/v1/messaging/providers/twilio/:providerId')
     ->desc('Update Twilio Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -936,15 +936,15 @@ App::patch('/v1/messaging/providers/twilio/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $accountSid, string $authToken, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -982,7 +982,7 @@ App::patch('/v1/messaging/providers/twilio/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/vonage/:id')
+App::patch('/v1/messaging/providers/vonage/:providerId')
     ->desc('Update Vonage Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -995,15 +995,15 @@ App::patch('/v1/messaging/providers/vonage/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $apiSecret, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -1041,7 +1041,7 @@ App::patch('/v1/messaging/providers/vonage/:id')
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
 
-App::patch('/v1/messaging/providers/fcm/:id')
+App::patch('/v1/messaging/providers/fcm/:providerId')
     ->desc('Update FCM Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -1054,14 +1054,14 @@ App::patch('/v1/messaging/providers/fcm/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -1092,7 +1092,7 @@ App::patch('/v1/messaging/providers/fcm/:id')
     });
 
 
-App::patch('/v1/messaging/providers/apns/:id')
+App::patch('/v1/messaging/providers/apns/:providerId')
     ->desc('Update APNS Provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'providers.update')
@@ -1105,7 +1105,7 @@ App::patch('/v1/messaging/providers/apns/:id')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
-    ->param('id', '', new UID(), 'Provider ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
@@ -1115,8 +1115,8 @@ App::patch('/v1/messaging/providers/apns/:id')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $id, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
-        $provider = $dbForProject->getDocument('providers', $id);
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
@@ -1213,12 +1213,13 @@ App::post('/v1/messaging/messages/email')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.')
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1238,18 +1239,61 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html,
                 'description' => $description,
             ],
-            'status' => 'processing',
+            'status' => $status,
             'search' => $messageId . ' ' . $description . ' ' . $subject,
         ]));
 
-        $messaging
-            ->setMessageId($message->getId())
-            ->setProject($project)
-            ->trigger();
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project)
+                ->trigger();
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::get('/v1/messaging/messages')
+    ->desc('List Messages')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listMessages')
+    ->label('sdk.description', '/docs/references/messaging/list-messages.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE_LIST)
+    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (array $queries, Database $dbForProject, Response $response) {
+        $queries = Query::parseQueries($queries);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $messageId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('messages', [
+                Query::equal('$id', [$messageId]),
+            ]));
+
+            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('messages', $filterQueries, APP_LIMIT_COUNT),
+            'messages' => $dbForProject->find('messages', $queries),
+        ]), Response::MODEL_MESSAGE_LIST);
     });
 
 App::get('/v1/messaging/messages/:messageId')
@@ -1274,4 +1318,78 @@ App::get('/v1/messaging/messages/:messageId')
         }
 
         $response->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::post('/v1/messaging/messages/email/:messageId')
+    ->desc('Update an email.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'messages.update')
+    ->label('audits.resource', 'messages/{response.$id}')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateEmail')
+    ->label('sdk.description', '/docs/references/messaging/update-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('subject', '', new Text(998), 'Email Subject.', true)
+    ->param('description', '', new Text(256), 'Description for Message.', true)
+    ->param('content', '', new Text(64230), 'Email Content.', true)
+    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status.', true)
+    ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('messaging')
+    ->inject('response')
+    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        if (\count($to) > 0) {
+            $message->setAttribute('to', $to);
+        }
+
+        $data = $message->getAttribute('data');
+
+        if (!empty($subject)) {
+            $data['subject'] = $subject;
+        }
+
+        if (!empty($content)) {
+            $data['content'] = $content;
+        }
+
+        if (!empty($description)) {
+            $data['description'] = $description;
+        }
+
+        if (!empty($html)) {
+            $data['html'] = $html;
+        }
+
+        $message->setAttribute('data', $data);
+        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $data['subject']);
+
+        if (!empty($status)) {
+            $message->setAttribute('status', $status);
+        }
+
+        $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
+
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project)
+                ->trigger();
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($message, Response::MODEL_MESSAGE);
     });

@@ -419,14 +419,18 @@ App::post('/v1/users/:userId/targets')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $target = $dbForProject->createDocument('targets', new Document([
-            '$id' => $targetId,
-            'providerId' => $providerId,
-            'providerInternalId' => $provider->getInternalId(),
-            'userId' => $userId,
-            'userInternalId' => $user->getInternalId(),
-            'identifier' => $identifier,
-        ]));
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                'providerId' => $providerId,
+                'providerInternalId' => $provider->getInternalId(),
+                'userId' => $userId,
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $response
@@ -1229,6 +1233,10 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
         $target->setAttribute('identifier', $identifier);
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
@@ -1401,6 +1409,10 @@ App::delete('/v1/users/:userId/targets/:targetId')
         $target = $dbForProject->getDocument('targets', $targetId);
 
         if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 

@@ -1823,8 +1823,8 @@ trait Base
                     }
                 }';
             case self::$GET_PROVIDER:
-                return 'query getProvider($id: String!) {
-                    messagingGetProvider(id: $id) {
+                return 'query getProvider($providerId: String!) {
+                    messagingGetProvider(providerId: $providerId) {
                         _id
                         name
                         provider
@@ -1834,8 +1834,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_MAILGUN_PROVIDER:
-                return 'mutation updateMailgunProvider($id: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean) {
-                    messagingUpdateMailgunProvider(id: $id, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled) {
+                return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean) {
+                    messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled) {
                         _id
                         name
                         provider
@@ -1845,8 +1845,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_SENDGRID_PROVIDER:
-                return 'mutation messagingUpdateSendgridProvider($id: String!, $name: String!, $apiKey: String!) {
-                    messagingUpdateSendgridProvider(id: $id, name: $name, apiKey: $apiKey) {
+                return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1856,8 +1856,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TWILIO_PROVIDER:
-                return 'mutation updateTwilioProvider($id: String!, $name: String!, $accountSid: String!, $authToken: String!) {
-                    messagingUpdateTwilioProvider(id: $id, name: $name, accountSid: $accountSid, authToken: $authToken) {
+                return 'mutation updateTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
+                    messagingUpdateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
                         _id
                         name
                         provider
@@ -1867,8 +1867,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TELESIGN_PROVIDER:
-                return 'mutation updateTelesignProvider($id: String!, $name: String!, $username: String!, $password: String!) {
-                    messagingUpdateTelesignProvider(id: $id, name: $name, username: $username, password: $password) {
+                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
+                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
                         _id
                         name
                         provider
@@ -1878,8 +1878,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TEXTMAGIC_PROVIDER:
-                return 'mutation updateTextmagicProvider($id: String!, $name: String!, $username: String!, $apiKey: String!) {
-                    messagingUpdateTextmagicProvider(id: $id, name: $name, username: $username, apiKey: $apiKey) {
+                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1889,8 +1889,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_MSG91_PROVIDER:
-                return 'mutation updateMsg91Provider($id: String!, $name: String!, $senderId: String!, $authKey: String!) {
-                    messagingUpdateMsg91Provider(id: $id, name: $name, senderId: $senderId, authKey: $authKey) {
+                return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $senderId: String!, $authKey: String!) {
+                    messagingUpdateMsg91Provider(providerId: $providerId, name: $name, senderId: $senderId, authKey: $authKey) {
                         _id
                         name
                         provider
@@ -1900,8 +1900,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_VONAGE_PROVIDER:
-                return 'mutation updateVonageProvider($id: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
-                    messagingUpdateVonageProvider(id: $id, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
                         name
                         provider
@@ -1911,8 +1911,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FCM_PROVIDER:
-                return 'mutation updateFcmProvider($id: String!, $name: String!, $serverKey: String!) {
-                    messagingUpdateFcmProvider(id: $id, name: $name, serverKey: $serverKey) {
+                return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
+                    messagingUpdateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
                         _id
                         name
                         provider
@@ -1922,8 +1922,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_APNS_PROVIDER:
-                return 'mutation updateApnsProvider($id: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingUpdateApnsProvider(id: $id, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
+                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
                         _id
                         name
                         provider
@@ -1933,8 +1933,8 @@ trait Base
                     }
                 }';
             case self::$DELETE_PROVIDER:
-                return 'mutation deleteProvider($id: String!) {
-                    messagingDeleteProvider(id: $id) {
+                return 'mutation deleteProvider($providerId: String!) {
+                    messagingDeleteProvider(providerId: $providerId) {
                         status
                     }
                 }';

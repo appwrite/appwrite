@@ -32,9 +32,16 @@ class Message extends Any
             ])
             ->addRule('deliveryTime', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Time the message is delivered at.',
+                'description' => 'The scheduled time for message.',
                 'required' => false,
                 'default' => DateTime::now(),
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('deliveredAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The time when the message was delivered.',
+                'required' => false,
+                'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('deliveryErrors', [
