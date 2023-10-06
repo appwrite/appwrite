@@ -29,6 +29,13 @@ Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
+<p align="center">
+    <br />
+    <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-appwrite-2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=360315&theme=light&period=daily" alt="Appwrite - 100&#0037;&#0032;open&#0032;source&#0032;alternative&#0032;for&#0032;Firebase | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+    <br />
+    <br />
+</p>
+
 ![Appwrite](public/images/github.png)
 
 更多信息请到 Appwrite 官网查看： [https://appwrite.io](https://appwrite.io)
