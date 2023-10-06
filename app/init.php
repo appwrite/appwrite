@@ -320,8 +320,7 @@ Database::addFilter(
         if (isset($formatOptions['min']) || isset($formatOptions['max'])) {
             $attribute
                 ->setAttribute('min', $formatOptions['min'])
-                ->setAttribute('max', $formatOptions['max'])
-            ;
+                ->setAttribute('max', $formatOptions['max']);
         }
 
         return $value;
@@ -430,7 +429,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -444,7 +443,7 @@ Database::addFilter(
         return null;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -773,7 +772,7 @@ $register->set('pools', function () {
 
 $register->set('influxdb', function () {
 
- // Register DB connection
+    // Register DB connection
     $host = Http::getEnv('_APP_INFLUXDB_HOST', '');
     $port = Http::getEnv('_APP_INFLUXDB_PORT', '');
 
@@ -879,20 +878,20 @@ Http::setResource('loggerBreadcrumbs', function () {
     return [];
 });
 
-Http::setResource('register', fn() => $register);
-Http::setResource('locale', fn() => new Locale(Http::getEnv('_APP_LOCALE', 'en')));
+Http::setResource('register', fn () => $register);
+Http::setResource('locale', fn () => new Locale(Http::getEnv('_APP_LOCALE', 'en')));
 
 Http::setResource('localeCodes', function () {
-    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+    return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
 // Queues
-Http::setResource('events', fn() => new Event('', ''));
-Http::setResource('audits', fn() => new Audit());
-Http::setResource('mails', fn() => new Mail());
-Http::setResource('deletes', fn() => new Delete());
-Http::setResource('database', fn() => new EventDatabase());
-Http::setResource('messaging', fn() => new Phone());
+Http::setResource('events', fn () => new Event('', ''));
+Http::setResource('audits', fn () => new Audit());
+Http::setResource('mails', fn () => new Mail());
+Http::setResource('deletes', fn () => new Delete());
+Http::setResource('database', fn () => new EventDatabase());
+Http::setResource('messaging', fn () => new Phone());
 Http::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -961,7 +960,7 @@ Http::setResource('user', function ($mode, $project, $console, $request, $respon
             Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    ); // Get fallback session from old clients (no SameSite support)
 
     // Get fallback session from clients who block 3rd-party cookies
     if ($response) {
@@ -1046,7 +1045,7 @@ Http::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
@@ -1099,8 +1098,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole
     $dbAdapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
     $database->setNamespace('_' . $project->getInternalId());
@@ -1112,8 +1110,7 @@ Http::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1163,8 +1160,7 @@ Http::setResource('cache', function (Group $pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
@@ -1331,7 +1327,7 @@ Http::setResource('schema', function ($utopia, $dbForProject) {
     };
 
     $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));
@@ -1361,7 +1357,7 @@ Http::setResource('schema', function ($utopia, $dbForProject) {
 
     $params = [
         'list' => function (string $databaseId, string $collectionId, array $args) {
-            return [ 'queries' => $args['queries']];
+            return ['queries' => $args['queries']];
         },
         'create' => function (string $databaseId, string $collectionId, array $args) {
             $id = $args['id'] ?? 'unique()';
@@ -1441,3 +1437,24 @@ Http::setResource('requestTimestamp', function ($request) {
     }
     return $requestTimestamp;
 }, ['request']);
+
+$register->set('c', function () {
+    $group = new Group();
+
+    $pool = new Pool('s', 100, function () {
+        $pdo = new PDOProxy(function () {
+            return new PDO('mysql:host=mariadb;port=3306;dbname=appwrite;charset=utf8mb4', 'user', 'password');
+        });
+        return $pdo;
+    });
+
+    $group->add($pool);
+    return $group;
+});
+
+Http::setResource('c', function ($register) { 
+    $pools = $register->get('c');
+    $s = $pools->get('s')->pop();
+    \var_dump($s->getId());
+    return $s->getResource();
+}, ['register']);

@@ -193,373 +193,373 @@ function router(Http $utopia, Database $dbForConsole, SwooleRequest $swooleReque
     return false;
 }
 
-Http::init()
-    ->groups(['api', 'web'])
-    ->inject('utopia')
-    ->inject('swooleRequest')
-    ->inject('request')
-    ->inject('response')
-    ->inject('console')
-    ->inject('project')
-    ->inject('dbForConsole')
-    ->inject('user')
-    ->inject('locale')
-    ->inject('localeCodes')
-    ->inject('clients')
-    ->inject('servers')
-    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
-        /*
-        * Appwrite Router
-        */
+// Http::init()
+//     ->groups(['api', 'web'])
+//     ->inject('utopia')
+//     ->inject('swooleRequest')
+//     ->inject('request')
+//     ->inject('response')
+//     ->inject('console')
+//     ->inject('project')
+//     ->inject('dbForConsole')
+//     ->inject('user')
+//     ->inject('locale')
+//     ->inject('localeCodes')
+//     ->inject('clients')
+//     ->inject('servers')
+//     ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
+//         /*
+//         * Appwrite Router
+//         */
 
-        $host = $request->getHostname() ?? '';
-        $mainDomain = Http::getEnv('_APP_DOMAIN', '');
-        // Only run Router when external domain
-        if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
-                return;
-            }
-        }
+//         $host = $request->getHostname() ?? '';
+//         $mainDomain = Http::getEnv('_APP_DOMAIN', '');
+//         // Only run Router when external domain
+//         if ($host !== $mainDomain) {
+//             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
+//                 return;
+//             }
+//         }
 
-        /*
-        * Request format
-        */
-        $route = $utopia->getRoute();
-        Request::setRoute($route);
+//         /*
+//         * Request format
+//         */
+//         $route = $utopia->getRoute();
+//         Request::setRoute($route);
 
-        if ($route === null) {
-            return $response->setStatusCode(404)->send('Not Found');
-        }
+//         if ($route === null) {
+//             return $response->setStatusCode(404)->send('Not Found');
+//         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-        if ($requestFormat) {
-            switch ($requestFormat) {
-                case version_compare($requestFormat, '0.12.0', '<'):
-                    Request::setFilter(new RequestV12());
-                    break;
-                case version_compare($requestFormat, '0.13.0', '<'):
-                    Request::setFilter(new RequestV13());
-                    break;
-                case version_compare($requestFormat, '0.14.0', '<'):
-                    Request::setFilter(new RequestV14());
-                    break;
-                case version_compare($requestFormat, '0.15.3', '<'):
-                    Request::setFilter(new RequestV15());
-                    break;
-                case version_compare($requestFormat, '1.4.0', '<'):
-                    Request::setFilter(new RequestV16());
-                    break;
-                default:
-                    Request::setFilter(null);
-            }
-        } else {
-            Request::setFilter(null);
-        }
+//         $requestFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+//         if ($requestFormat) {
+//             switch ($requestFormat) {
+//                 case version_compare($requestFormat, '0.12.0', '<'):
+//                     Request::setFilter(new RequestV12());
+//                     break;
+//                 case version_compare($requestFormat, '0.13.0', '<'):
+//                     Request::setFilter(new RequestV13());
+//                     break;
+//                 case version_compare($requestFormat, '0.14.0', '<'):
+//                     Request::setFilter(new RequestV14());
+//                     break;
+//                 case version_compare($requestFormat, '0.15.3', '<'):
+//                     Request::setFilter(new RequestV15());
+//                     break;
+//                 case version_compare($requestFormat, '1.4.0', '<'):
+//                     Request::setFilter(new RequestV16());
+//                     break;
+//                 default:
+//                     Request::setFilter(null);
+//             }
+//         } else {
+//             Request::setFilter(null);
+//         }
 
-        $domain = $request->getHostname();
-        $domains = Config::getParam('domains', []);
-        if (!array_key_exists($domain, $domains)) {
-            $domain = new Domain(!empty($domain) ? $domain : '');
+//         $domain = $request->getHostname();
+//         $domains = Config::getParam('domains', []);
+//         if (!array_key_exists($domain, $domains)) {
+//             $domain = new Domain(!empty($domain) ? $domain : '');
 
-            if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
-                $domains[$domain->get()] = false;
-                Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
-            } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
-                Console::warning('Skipping SSL certificates generation on ACME challenge.');
-            } else {
-                Authorization::disable();
+//             if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
+//                 $domains[$domain->get()] = false;
+//                 Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
+//             } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
+//                 Console::warning('Skipping SSL certificates generation on ACME challenge.');
+//             } else {
+//                 Authorization::disable();
 
-                $envDomain = Http::getEnv('_APP_DOMAIN', '');
-                $mainDomain = null;
-                if (!empty($envDomain) && $envDomain !== 'localhost') {
-                    $mainDomain = $envDomain;
-                } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
-                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
-                }
+//                 $envDomain = Http::getEnv('_APP_DOMAIN', '');
+//                 $mainDomain = null;
+//                 if (!empty($envDomain) && $envDomain !== 'localhost') {
+//                     $mainDomain = $envDomain;
+//                 } else {
+//                     $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
+//                     $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+//                 }
 
-                if ($mainDomain !== $domain->get()) {
-                    Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
-                } else {
-                    $domainDocument = $dbForConsole->findOne('rules', [
-                        Query::equal('domain', [$domain->get()])
-                    ]);
+//                 if ($mainDomain !== $domain->get()) {
+//                     Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
+//                 } else {
+//                     $domainDocument = $dbForConsole->findOne('rules', [
+//                         Query::equal('domain', [$domain->get()])
+//                     ]);
 
-                    if (!$domainDocument) {
-                        $domainDocument = new Document([
-                            'domain' => $domain->get(),
-                            'resourceType' => 'api',
-                            'status' => 'verifying',
-                            'projectId' => 'console',
-                            'projectInternalId' => 'console'
-                        ]);
+//                     if (!$domainDocument) {
+//                         $domainDocument = new Document([
+//                             'domain' => $domain->get(),
+//                             'resourceType' => 'api',
+//                             'status' => 'verifying',
+//                             'projectId' => 'console',
+//                             'projectInternalId' => 'console'
+//                         ]);
 
-                        $domainDocument = $dbForConsole->createDocument('rules', $domainDocument);
+//                         $domainDocument = $dbForConsole->createDocument('rules', $domainDocument);
 
-                        Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+//                         Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
 
-                        (new Certificate())
-                            ->setDomain($domainDocument)
-                            ->setSkipRenewCheck(true)
-                            ->trigger();
-                    }
-                }
-                $domains[$domain->get()] = true;
+//                         (new Certificate())
+//                             ->setDomain($domainDocument)
+//                             ->setSkipRenewCheck(true)
+//                             ->trigger();
+//                     }
+//                 }
+//                 $domains[$domain->get()] = true;
 
-                Authorization::reset(); // ensure authorization is re-enabled
-            }
-            Config::setParam('domains', $domains);
-        }
+//                 Authorization::reset(); // ensure authorization is re-enabled
+//             }
+//             Config::setParam('domains', $domains);
+//         }
 
-        $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
-        if (\in_array($localeParam, $localeCodes)) {
-            $locale->setDefault($localeParam);
-        }
+//         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
+//         if (\in_array($localeParam, $localeCodes)) {
+//             $locale->setDefault($localeParam);
+//         }
 
-        if ($project->isEmpty()) {
-            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-        }
+//         if ($project->isEmpty()) {
+//             throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+//         }
 
-        if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-            throw new AppwriteException(AppwriteException::PROJECT_UNKNOWN);
-        }
+//         if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
+//             throw new AppwriteException(AppwriteException::PROJECT_UNKNOWN);
+//         }
 
-        $referrer = $request->getReferer();
-        $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
-        $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
-        $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
+//         $referrer = $request->getReferer();
+//         $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
+//         $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
+//         $port = \parse_url($request->getOrigin($referrer), PHP_URL_PORT);
 
-        $refDomainOrigin = 'localhost';
-        $validator = new Hostname($clients);
-        if ($validator->isValid($origin)) {
-            $refDomainOrigin = $origin;
-        }
+//         $refDomainOrigin = 'localhost';
+//         $validator = new Hostname($clients);
+//         if ($validator->isValid($origin)) {
+//             $refDomainOrigin = $origin;
+//         }
 
-        $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
+//         $refDomain = (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $refDomainOrigin . (!empty($port) ? ':' . $port : '');
 
-        $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
-            ? $refDomain
-            : (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
+//         $refDomain = (!$route->getLabel('origin', false))  // This route is publicly accessible
+//             ? $refDomain
+//             : (!empty($protocol) ? $protocol : $request->getProtocol()) . '://' . $origin . (!empty($port) ? ':' . $port : '');
 
-        $selfDomain = new Domain($request->getHostname());
-        $endDomain = new Domain((string)$origin);
+//         $selfDomain = new Domain($request->getHostname());
+//         $endDomain = new Domain((string)$origin);
 
-        Config::setParam(
-            'domainVerification',
-            ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
-                $endDomain->getRegisterable() !== ''
-        );
+//         Config::setParam(
+//             'domainVerification',
+//             ($selfDomain->getRegisterable() === $endDomain->getRegisterable()) &&
+//                 $endDomain->getRegisterable() !== ''
+//         );
 
-        $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
-        $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
+//         $isLocalHost = $request->getHostname() === 'localhost' || $request->getHostname() === 'localhost:' . $request->getPort();
+//         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
 
-        $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = Http::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+//         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
+//         $isConsoleRootSession = Http::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
 
-        Config::setParam(
-            'cookieDomain',
-            $isLocalHost || $isIpAddress
-                ? null
-                : ($isConsoleProject && $isConsoleRootSession
-                    ? '.' . $selfDomain->getRegisterable()
-                    : '.' . $request->getHostname()
-                )
-        );
+//         Config::setParam(
+//             'cookieDomain',
+//             $isLocalHost || $isIpAddress
+//                 ? null
+//                 : ($isConsoleProject && $isConsoleRootSession
+//                     ? '.' . $selfDomain->getRegisterable()
+//                     : '.' . $request->getHostname()
+//                 )
+//         );
 
-        /*
-        * Response format
-        */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
-        if ($responseFormat) {
-            switch ($responseFormat) {
-                case version_compare($responseFormat, '0.11.2', '<='):
-                    Response::setFilter(new ResponseV11());
-                    break;
-                case version_compare($responseFormat, '0.12.4', '<='):
-                    Response::setFilter(new ResponseV12());
-                    break;
-                case version_compare($responseFormat, '0.13.4', '<='):
-                    Response::setFilter(new ResponseV13());
-                    break;
-                case version_compare($responseFormat, '0.14.0', '<='):
-                    Response::setFilter(new ResponseV14());
-                    break;
-                case version_compare($responseFormat, '0.15.3', '<='):
-                    Response::setFilter(new ResponseV15());
-                    break;
-                case version_compare($responseFormat, '1.4.0', '<'):
-                    Response::setFilter(new ResponseV16());
-                    break;
-                default:
-                    Response::setFilter(null);
-            }
-        } else {
-            Response::setFilter(null);
-        }
+//         /*
+//         * Response format
+//         */
+//         $responseFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+//         if ($responseFormat) {
+//             switch ($responseFormat) {
+//                 case version_compare($responseFormat, '0.11.2', '<='):
+//                     Response::setFilter(new ResponseV11());
+//                     break;
+//                 case version_compare($responseFormat, '0.12.4', '<='):
+//                     Response::setFilter(new ResponseV12());
+//                     break;
+//                 case version_compare($responseFormat, '0.13.4', '<='):
+//                     Response::setFilter(new ResponseV13());
+//                     break;
+//                 case version_compare($responseFormat, '0.14.0', '<='):
+//                     Response::setFilter(new ResponseV14());
+//                     break;
+//                 case version_compare($responseFormat, '0.15.3', '<='):
+//                     Response::setFilter(new ResponseV15());
+//                     break;
+//                 case version_compare($responseFormat, '1.4.0', '<'):
+//                     Response::setFilter(new ResponseV16());
+//                     break;
+//                 default:
+//                     Response::setFilter(null);
+//             }
+//         } else {
+//             Response::setFilter(null);
+//         }
 
-        /*
-        * Security Headers
-        *
-        * As recommended at:
-        * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
-        */
-        if (Http::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
-                if ($request->getMethod() !== Request::METHOD_GET) {
-                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
-                }
+//         /*
+//         * Security Headers
+//         *
+//         * As recommended at:
+//         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
+//         */
+//         if (Http::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+//             if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+//                 if ($request->getMethod() !== Request::METHOD_GET) {
+//                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
+//                 }
 
-                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
-            }
-        }
+//                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+//             }
+//         }
 
-        if ($request->getProtocol() === 'https') {
-            $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
-        }
+//         if ($request->getProtocol() === 'https') {
+//             $response->addHeader('Strict-Transport-Security', 'max-age=' . (60 * 60 * 24 * 126)); // 126 days
+//         }
 
-        $response
-            ->addHeader('Server', 'Appwrite')
-            ->addHeader('X-Content-Type-Options', 'nosniff')
-            ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
-            ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
-            ->addHeader('Access-Control-Allow-Origin', $refDomain)
-            ->addHeader('Access-Control-Allow-Credentials', 'true');
+//         $response
+//             ->addHeader('Server', 'Appwrite')
+//             ->addHeader('X-Content-Type-Options', 'nosniff')
+//             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
+//             ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
+//             ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
+//             ->addHeader('Access-Control-Allow-Origin', $refDomain)
+//             ->addHeader('Access-Control-Allow-Credentials', 'true');
 
-        /*
-        * Validate Client Domain - Check to avoid CSRF attack
-        *  Adding Appwrite API domains to allow XDOMAIN communication
-        *  Skip this check for non-web platforms which are not required to send an origin header
-        */
-        $origin = $request->getOrigin($request->getReferer(''));
-        $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
+//         /*
+//         * Validate Client Domain - Check to avoid CSRF attack
+//         *  Adding Appwrite API domains to allow XDOMAIN communication
+//         *  Skip this check for non-web platforms which are not required to send an origin header
+//         */
+//         $origin = $request->getOrigin($request->getReferer(''));
+//         $originValidator = new Origin(\array_merge($project->getAttribute('platforms', []), $console->getAttribute('platforms', [])));
 
-        if (
-            !$originValidator->isValid($origin)
-            && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
-            && $route->getLabel('origin', false) !== '*'
-            && empty($request->getHeader('x-appwrite-key', ''))
-        ) {
-            throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
-        }
+//         if (
+//             !$originValidator->isValid($origin)
+//             && \in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH, Request::METHOD_DELETE])
+//             && $route->getLabel('origin', false) !== '*'
+//             && empty($request->getHeader('x-appwrite-key', ''))
+//         ) {
+//             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
+//         }
 
-        /*
-        * ACL Check
-        */
-        $role = ($user->isEmpty())
-            ? Role::guests()->toString()
-            : Role::users()->toString();
+//         /*
+//         * ACL Check
+//         */
+//         $role = ($user->isEmpty())
+//             ? Role::guests()->toString()
+//             : Role::users()->toString();
 
-        // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+//         // Add user roles
+//         $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
 
-        if ($memberships) {
-            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
-                switch ($memberRole) {
-                    case 'owner':
-                        $role = Auth::USER_ROLE_OWNER;
-                        break;
-                    case 'admin':
-                        $role = Auth::USER_ROLE_ADMIN;
-                        break;
-                    case 'developer':
-                        $role = Auth::USER_ROLE_DEVELOPER;
-                        break;
-                }
-            }
-        }
+//         if ($memberships) {
+//             foreach ($memberships->getAttribute('roles', []) as $memberRole) {
+//                 switch ($memberRole) {
+//                     case 'owner':
+//                         $role = Auth::USER_ROLE_OWNER;
+//                         break;
+//                     case 'admin':
+//                         $role = Auth::USER_ROLE_ADMIN;
+//                         break;
+//                     case 'developer':
+//                         $role = Auth::USER_ROLE_DEVELOPER;
+//                         break;
+//                 }
+//             }
+//         }
 
-        $roles = Config::getParam('roles', []);
-        $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
-        $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+//         $roles = Config::getParam('roles', []);
+//         $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
+//         $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
 
-        $authKey = $request->getHeader('x-appwrite-key', '');
+//         $authKey = $request->getHeader('x-appwrite-key', '');
 
-        if (!empty($authKey)) { // API Key authentication
-            // Check if given key match project API keys
-            $key = $project->find('secret', $authKey, 'keys');
+//         if (!empty($authKey)) { // API Key authentication
+//             // Check if given key match project API keys
+//             $key = $project->find('secret', $authKey, 'keys');
 
-            /*
-            * Try app auth when we have project key and no user
-            *  Mock user to app and grant API key scopes in addition to default app scopes
-            */
-            if ($key && $user->isEmpty()) {
-                $user = new Document([
-                    '$id' => '',
-                    'status' => true,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                    'password' => '',
-                    'name' => $project->getAttribute('name', 'Untitled'),
-                ]);
+//             /*
+//             * Try app auth when we have project key and no user
+//             *  Mock user to app and grant API key scopes in addition to default app scopes
+//             */
+//             if ($key && $user->isEmpty()) {
+//                 $user = new Document([
+//                     '$id' => '',
+//                     'status' => true,
+//                     'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+//                     'password' => '',
+//                     'name' => $project->getAttribute('name', 'Untitled'),
+//                 ]);
 
-                $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+//                 $role = Auth::USER_ROLE_APPS;
+//                 $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
 
-                $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
-                }
+//                 $expire = $key->getAttribute('expire');
+//                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+//                     throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
+//                 }
 
-                Authorization::setRole(Auth::USER_ROLE_APPS);
-                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+//                 Authorization::setRole(Auth::USER_ROLE_APPS);
+//                 Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
 
-                $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
-                    $key->setAttribute('accessedAt', DateTime::now());
-                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
-                }
+//                 $accessedAt = $key->getAttribute('accessedAt', '');
+//                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+//                     $key->setAttribute('accessedAt', DateTime::now());
+//                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
+//                     $dbForConsole->deleteCachedDocument('projects', $project->getId());
+//                 }
 
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $key->getAttribute('sdks', []);
-                    if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk);
-                        $key->setAttribute('sdks', $sdks);
+//                 $sdkValidator = new WhiteList($servers, true);
+//                 $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+//                 if ($sdkValidator->isValid($sdk)) {
+//                     $sdks = $key->getAttribute('sdks', []);
+//                     if (!in_array($sdk, $sdks)) {
+//                         array_push($sdks, $sdk);
+//                         $key->setAttribute('sdks', $sdks);
 
-                        /** Update access time as well */
-                        $key->setAttribute('accessedAt', Datetime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
-                    }
-                }
-            }
-        }
+//                         /** Update access time as well */
+//                         $key->setAttribute('accessedAt', Datetime::now());
+//                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
+//                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
+//                     }
+//                 }
+//             }
+//         }
 
-        Authorization::setRole($role);
+//         Authorization::setRole($role);
 
-        foreach (Auth::getRoles($user) as $authRole) {
-            Authorization::setRole($authRole);
-        }
+//         foreach (Auth::getRoles($user) as $authRole) {
+//             Authorization::setRole($authRole);
+//         }
 
-        $service = $route->getLabel('sdk.namespace', '');
-        if (!empty($service)) {
-            if (
-                array_key_exists($service, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$service]
-                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
-            ) {
-                throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
-            }
-        }
+//         $service = $route->getLabel('sdk.namespace', '');
+//         if (!empty($service)) {
+//             if (
+//                 array_key_exists($service, $project->getAttribute('services', []))
+//                 && !$project->getAttribute('services', [])[$service]
+//                 && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+//             ) {
+//                 throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
+//             }
+//         }
 
-        if (!\in_array($scope, $scopes)) {
-            if ($project->isEmpty()) { // Check if permission is denied because project is missing
-                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-            }
+//         if (!\in_array($scope, $scopes)) {
+//             if ($project->isEmpty()) { // Check if permission is denied because project is missing
+//                 throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
+//             }
 
-            throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
-        }
+//             throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+//         }
 
-        if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new AppwriteException(AppwriteException::USER_BLOCKED);
-        }
+//         if (false === $user->getAttribute('status')) { // Account is blocked
+//             throw new AppwriteException(AppwriteException::USER_BLOCKED);
+//         }
 
-        if ($user->getAttribute('reset')) {
-            throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
-        }
-    });
+//         if ($user->getAttribute('reset')) {
+//             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
+//         }
+//     });
 
 Http::options()
     ->inject('utopia')

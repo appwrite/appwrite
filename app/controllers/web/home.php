@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Utopia\Response;
+use Swoole\Database\PDOProxy;
 use Utopia\Http\Http;
 use Utopia\Config\Config;
 
@@ -9,7 +10,13 @@ Http::get('/versions')
     ->groups(['home', 'web'])
     ->label('scope', 'public')
     ->inject('response')
+    // ->inject('c')
     ->action(function (Response $response) {
+        // $statement = $c->prepare('SELECT 1+1');
+        // $statement->execute();
+        // $res = $statement->fetchAll()[0][0];
+        // \var_dump($res);
+
         $platforms = Config::getParam('platforms');
 
         $versions = [

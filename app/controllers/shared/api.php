@@ -89,230 +89,230 @@ $databaseListener = function (string $event, Document $document, Stats $usage) {
     }
 };
 
-Http::init()
-    ->groups(['api'])
-    ->inject('utopia')
-    ->inject('request')
-    ->inject('response')
-    ->inject('project')
-    ->inject('user')
-    ->inject('events')
-    ->inject('audits')
-    ->inject('deletes')
-    ->inject('database')
-    ->inject('dbForProject')
-    ->inject('mode')
-    ->inject('mails')
-    ->inject('usage')
-    ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails, Stats $usage) use ($databaseListener) {
+// Http::init()
+//     ->groups(['api'])
+//     ->inject('utopia')
+//     ->inject('request')
+//     ->inject('response')
+//     ->inject('project')
+//     ->inject('user')
+//     ->inject('events')
+//     ->inject('audits')
+//     ->inject('deletes')
+//     ->inject('database')
+//     ->inject('dbForProject')
+//     ->inject('mode')
+//     ->inject('mails')
+//     ->inject('usage')
+//     ->action(function (Http $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails, Stats $usage) use ($databaseListener) {
 
-        $route = $utopia->getRoute();
+//         $route = $utopia->getRoute();
 
-        if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-            throw new Exception(Exception::PROJECT_UNKNOWN);
-        }
+//         if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
+//             throw new Exception(Exception::PROJECT_UNKNOWN);
+//         }
 
-        /*
-        * Abuse Check
-        */
-        $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
-        $timeLimitArray = [];
+//         /*
+//         * Abuse Check
+//         */
+//         $abuseKeyLabel = $route->getLabel('abuse-key', 'url:{url},ip:{ip}');
+//         $timeLimitArray = [];
 
-        $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
+//         $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
-        foreach ($abuseKeyLabel as $abuseKey) {
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
-            $timeLimit
-                ->setParam('{userId}', $user->getId())
-                ->setParam('{userAgent}', $request->getUserAgent(''))
-                ->setParam('{ip}', $request->getIP())
-                ->setParam('{url}', $request->getHostname() . $route->getPath())
-                ->setParam('{method}', $request->getMethod());
-            $timeLimitArray[] = $timeLimit;
-        }
+//         foreach ($abuseKeyLabel as $abuseKey) {
+//             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+//             $timeLimit
+//                 ->setParam('{userId}', $user->getId())
+//                 ->setParam('{userAgent}', $request->getUserAgent(''))
+//                 ->setParam('{ip}', $request->getIP())
+//                 ->setParam('{url}', $request->getHostname() . $route->getPath())
+//                 ->setParam('{method}', $request->getMethod());
+//             $timeLimitArray[] = $timeLimit;
+//         }
 
-        $closestLimit = null;
+//         $closestLimit = null;
 
-        $roles = Authorization::getRoles();
-        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
-        $isAppUser = Auth::isAppUser($roles);
+//         $roles = Authorization::getRoles();
+//         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+//         $isAppUser = Auth::isAppUser($roles);
 
-        foreach ($timeLimitArray as $timeLimit) {
-            foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
-                if (!empty($value)) {
-                    $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
-                }
-            }
+//         foreach ($timeLimitArray as $timeLimit) {
+//             foreach ($request->getParams() as $key => $value) { // Set request params as potential abuse keys
+//                 if (!empty($value)) {
+//                     $timeLimit->setParam('{param-' . $key . '}', (\is_array($value)) ? \json_encode($value) : $value);
+//                 }
+//             }
 
-            $abuse = new Abuse($timeLimit);
-            $remaining = $timeLimit->remaining();
-            $limit = $timeLimit->limit();
-            $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
+//             $abuse = new Abuse($timeLimit);
+//             $remaining = $timeLimit->remaining();
+//             $limit = $timeLimit->limit();
+//             $time = (new \DateTime($timeLimit->time()))->getTimestamp() + $route->getLabel('abuse-time', 3600);
 
-            if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
-                $closestLimit = $remaining;
-                $response
-                    ->addHeader('X-RateLimit-Limit', $limit)
-                    ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
-            }
+//             if ($limit && ($remaining < $closestLimit || is_null($closestLimit))) {
+//                 $closestLimit = $remaining;
+//                 $response
+//                     ->addHeader('X-RateLimit-Limit', $limit)
+//                     ->addHeader('X-RateLimit-Remaining', $remaining)
+//                     ->addHeader('X-RateLimit-Reset', $time)
+//                 ;
+//             }
 
-            $enabled = Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+//             $enabled = Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
-            if (
-                $enabled                // Abuse is enabled
-                && !$isAppUser          // User is not API key
-                && !$isPrivilegedUser   // User is not an admin
-                && $abuse->check()      // Route is rate-limited
-            ) {
-                throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
-            }
-        }
+//             if (
+//                 $enabled                // Abuse is enabled
+//                 && !$isAppUser          // User is not API key
+//                 && !$isPrivilegedUser   // User is not an admin
+//                 && $abuse->check()      // Route is rate-limited
+//             ) {
+//                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+//             }
+//         }
 
-        /*
-        * Background Jobs
-        */
-        $events
-            ->setEvent($route->getLabel('event', ''))
-            ->setProject($project)
-            ->setUser($user);
+//         /*
+//         * Background Jobs
+//         */
+//         $events
+//             ->setEvent($route->getLabel('event', ''))
+//             ->setProject($project)
+//             ->setUser($user);
 
-        $audits
-            ->setMode($mode)
-            ->setUserAgent($request->getUserAgent(''))
-            ->setIP($request->getIP())
-            ->setEvent($route->getLabel('audits.event', ''))
-            ->setProject($project)
-            ->setUser($user);
+//         $audits
+//             ->setMode($mode)
+//             ->setUserAgent($request->getUserAgent(''))
+//             ->setIP($request->getIP())
+//             ->setEvent($route->getLabel('audits.event', ''))
+//             ->setProject($project)
+//             ->setUser($user);
 
-        $usage
-            ->setParam('projectInternalId', $project->getInternalId())
-            ->setParam('projectId', $project->getId())
-            ->setParam('project.{scope}.network.requests', 1)
-            ->setParam('httpMethod', $request->getMethod())
-            ->setParam('project.{scope}.network.inbound', 0)
-            ->setParam('project.{scope}.network.outbound', 0);
+//         $usage
+//             ->setParam('projectInternalId', $project->getInternalId())
+//             ->setParam('projectId', $project->getId())
+//             ->setParam('project.{scope}.network.requests', 1)
+//             ->setParam('httpMethod', $request->getMethod())
+//             ->setParam('project.{scope}.network.inbound', 0)
+//             ->setParam('project.{scope}.network.outbound', 0);
 
-        $deletes->setProject($project);
-        $database->setProject($project);
+//         $deletes->setProject($project);
+//         $database->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+//         $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+//         $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
 
-        $useCache = $route->getLabel('cache', false);
+//         $useCache = $route->getLabel('cache', false);
 
-        if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
-            );
-            $timestamp = 60 * 60 * 24 * 30;
-            $data = $cache->load($key, $timestamp);
+//         if ($useCache) {
+//             $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+//             $cache = new Cache(
+//                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
+//             );
+//             $timestamp = 60 * 60 * 24 * 30;
+//             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data)) {
-                $data = json_decode($data, true);
-                $parts = explode('/', $data['resourceType']);
-                $type = $parts[0] ?? null;
+//             if (!empty($data)) {
+//                 $data = json_decode($data, true);
+//                 $parts = explode('/', $data['resourceType']);
+//                 $type = $parts[0] ?? null;
 
-                if ($type === 'bucket') {
-                    $bucketId = $parts[1] ?? null;
+//                 if ($type === 'bucket') {
+//                     $bucketId = $parts[1] ?? null;
 
-                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+//                     $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
-                    $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-                    $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+//                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+//                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
-                    if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
-                        throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-                    }
+//                     if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+//                         throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+//                     }
 
-                    $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $validator = new Authorization(Database::PERMISSION_READ);
-                    $valid = $validator->isValid($bucket->getRead());
-                    if (!$fileSecurity && !$valid) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED);
-                    }
+//                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+//                     $validator = new Authorization(Database::PERMISSION_READ);
+//                     $valid = $validator->isValid($bucket->getRead());
+//                     if (!$fileSecurity && !$valid) {
+//                         throw new Exception(Exception::USER_UNAUTHORIZED);
+//                     }
 
-                    $parts = explode('/', $data['resource']);
-                    $fileId = $parts[1] ?? null;
+//                     $parts = explode('/', $data['resource']);
+//                     $fileId = $parts[1] ?? null;
 
-                    if ($fileSecurity && !$valid) {
-                        $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-                    } else {
-                        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-                    }
+//                     if ($fileSecurity && !$valid) {
+//                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+//                     } else {
+//                         $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+//                     }
 
-                    if ($file->isEmpty()) {
-                        throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
-                    }
-                }
+//                     if ($file->isEmpty()) {
+//                         throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+//                     }
+//                 }
 
-                $response
-                    ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
-                    ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
-                ;
-            } else {
-                $response->addHeader('X-Appwrite-Cache', 'miss');
-            }
-        }
-    });
+//                 $response
+//                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
+//                     ->addHeader('X-Appwrite-Cache', 'hit')
+//                     ->setContentType($data['contentType'])
+//                     ->send(base64_decode($data['payload']))
+//                 ;
+//             } else {
+//                 $response->addHeader('X-Appwrite-Cache', 'miss');
+//             }
+//         }
+//     });
 
-Http::init()
-    ->groups(['auth'])
-    ->inject('utopia')
-    ->inject('request')
-    ->inject('project')
-    ->action(function (Http $utopia, Request $request, Document $project) {
+// Http::init()
+//     ->groups(['auth'])
+//     ->inject('utopia')
+//     ->inject('request')
+//     ->inject('project')
+//     ->action(function (Http $utopia, Request $request, Document $project) {
 
-        $route = $utopia->getRoute();
+//         $route = $utopia->getRoute();
 
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
-        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+//         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+//         $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
-        if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
-            return;
-        }
+//         if ($isAppUser || $isPrivilegedUser) { // Skip limits for app and console devs
+//             return;
+//         }
 
-        $auths = $project->getAttribute('auths', []);
-        switch ($route->getLabel('auth.type', '')) {
-            case 'emailPassword':
-                if (($auths['emailPassword'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');
-                }
-                break;
+//         $auths = $project->getAttribute('auths', []);
+//         switch ($route->getLabel('auth.type', '')) {
+//             case 'emailPassword':
+//                 if (($auths['emailPassword'] ?? true) === false) {
+//                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email / Password authentication is disabled for this project');
+//                 }
+//                 break;
 
-            case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
-                }
-                break;
+//             case 'magic-url':
+//                 if ($project->getAttribute('usersAuthMagicURL', true) === false) {
+//                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
+//                 }
+//                 break;
 
-            case 'anonymous':
-                if (($auths['anonymous'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
-                }
-                break;
+//             case 'anonymous':
+//                 if (($auths['anonymous'] ?? true) === false) {
+//                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
+//                 }
+//                 break;
 
-            case 'invites':
-                if (($auths['invites'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
-                }
-                break;
+//             case 'invites':
+//                 if (($auths['invites'] ?? true) === false) {
+//                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
+//                 }
+//                 break;
 
-            case 'jwt':
-                if (($auths['JWT'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
-                }
-                break;
+//             case 'jwt':
+//                 if (($auths['JWT'] ?? true) === false) {
+//                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
+//                 }
+//                 break;
 
-            default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
-                break;
-        }
-    });
+//             default:
+//                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
+//                 break;
+//         }
+//     });
 
 /**
  * Limit user session

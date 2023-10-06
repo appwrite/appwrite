@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Swoole\Process;
 use Utopia\Http\Adapter\Swoole\Server;
 use Utopia\Http\Http;
@@ -217,12 +219,19 @@ Http::onStart()
 
 Http::onRequest()
     ->inject('register')
-    ->inject('request')
-    ->inject('response')
+    ->inject('swooleRequest')
+    ->inject('swooleResponse')
     ->inject('utopia')
-    ->action(function ($register, $request, $response, $app) {
+    ->inject('context')
+    ->action(function ($register, $request, $response, $app, $context) {
         $pools = $register->get('pools');
         Http::setResource('pools', fn () => $pools);
+
+        $request = new Request($request);
+        $response = new Response($response);
+
+        Http::setResource('request', fn() => $request, [], $context);
+        Http::setResource('response', fn() => $response, [], $context);
 
         try {
             Authorization::cleanRoles();
@@ -304,9 +313,9 @@ Http::onRequest()
 
             $response->end(\json_encode($output));
         } finally {
-            $pools->reclaim();
+            // $pools->reclaim();
         }
-    });
+    }); 
 
 run(function () use ($http) {
     $app = new Http($http, 'UTC');
