@@ -100,6 +100,7 @@ App::post('/v1/projects')
 
         $databases = Config::getParam('pools-database', []);
 
+
         /**
          * Extract db from list while backing
          */
@@ -165,6 +166,15 @@ App::post('/v1/projects')
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+
+        /**
+         * Update database with self-managed db every $mod projects
+         */
+        $mod = 2;
+        if ($index = array_search('db_fra1_sm1_0', $databases) && $project->getInternalId() % $mod === 0) {
+            $project->setAttribute('database', $databases[$index]);
+            $dbForConsole->updateDocument('projects', $project);
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
