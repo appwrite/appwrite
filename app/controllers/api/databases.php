@@ -36,8 +36,6 @@ use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\Queries;
-use Utopia\Database\Validator\Queries\Document as DocumentQueriesValidator;
-use Utopia\Database\Validator\Queries\Documents;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
@@ -2455,7 +2453,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'orders' => $orders,
         ]);
 
-        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
+        $validator = new IndexValidator($attributes, $dbForProject->getAdapter()->getMaxIndexLength());
         if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
         }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1afac6ad40bf9191a18fcbf28de1420c",
+    "content-hash": "15224f89284384114e0eef2ae83f49ea",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1433,16 +1433,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-index-validation-no-attibute",
+            "version": "dev-fix-index-validation",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "50e716c1522a290c4b2dd45b01aa4a7fcb5481c2"
+                "reference": "67adc586318c35b34aaa9f1eed8f3751b6e8c324"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/50e716c1522a290c4b2dd45b01aa4a7fcb5481c2",
-                "reference": "50e716c1522a290c4b2dd45b01aa4a7fcb5481c2",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/67adc586318c35b34aaa9f1eed8f3751b6e8c324",
+                "reference": "67adc586318c35b34aaa9f1eed8f3751b6e8c324",
                 "shasum": ""
             },
             "require": {
@@ -1483,9 +1483,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/index-validation-no-attibute"
+                "source": "https://github.com/utopia-php/database/tree/fix-index-validation"
             },
-            "time": "2023-10-04T16:53:45+00:00"
+            "time": "2023-10-09T02:11:28+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5277,7 +5277,7 @@
     "aliases": [
         {
             "package": "utopia-php/database",
-            "version": "dev-index-validation-no-attibute",
+            "version": "dev-fix-index-validation",
             "alias": "0.43.1",
             "alias_normalized": "0.43.1.0"
         },
