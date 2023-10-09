@@ -1107,7 +1107,7 @@ App::post('/v1/users/:userId/tokens')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $loginSecret = Auth::tokenGenerator();
+        $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -1115,13 +1115,16 @@ App::post('/v1/users/:userId/tokens')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_UNIVERSAL,
-            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => 'UNKNOWN',
             'ip' => 'UNKNOWN',
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $token->setAttribute('secret', $secret);
 
         $events
             ->setParam('userId', $user->getId())

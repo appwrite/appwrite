@@ -1140,11 +1140,13 @@ App::put('/v1/account/sessions/token')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
         /** @var Utopia\Database\Document $user */
         $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
+
         if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $verifiedToken = Auth::tokenVerify($userFromRequest->getAttribute('tokens', []), null, $secret);
+
         if (!$verifiedToken) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
@@ -1156,15 +1158,13 @@ App::put('/v1/account/sessions/token')
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-        $provider = Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type'));
         
-
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_UNIVERSAL,
+                'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
@@ -1185,7 +1185,7 @@ App::put('/v1/account/sessions/token')
             ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-        $dbForProject->deleteDocument('tokens', $token);
+        Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         try {
@@ -3147,3 +3147,6 @@ App::put('/v1/account/verification/phone')
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
+
+
+    

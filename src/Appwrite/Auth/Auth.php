@@ -340,7 +340,8 @@ class Auth
             if (
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
-                ($type === null || $token->isSet('type') && $token->getAttribute('type') === $type) &&
+                $token->isSet('type') &&
+                ($type === null ||  $token->getAttribute('type') === $type) &&
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
