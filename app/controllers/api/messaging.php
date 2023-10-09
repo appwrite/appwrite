@@ -21,6 +21,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
+use Utopia\Database\DateTime;
 
 App::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun Provider')
@@ -1340,11 +1341,12 @@ App::post('/v1/messaging/messages/email/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('deliveryTime', DateTime::now(), new DatetimeValidator(), 'Delivery time for message.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -1385,6 +1387,7 @@ App::post('/v1/messaging/messages/email/:messageId')
         if ($status === 'processing') {
             $messaging
                 ->setMessageId($message->getId())
+                ->setDeliveryTime($deliveryTime)
                 ->setProject($project)
                 ->trigger();
         }

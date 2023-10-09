@@ -2,12 +2,13 @@
 
 namespace Appwrite\Event;
 
-use Resque;
-use Utopia\Database\Document;
+use ResqueScheduler;
+use Utopia\Database\DateTime;
 
 class Messaging extends Event
 {
     protected ?string $messageId = null;
+    private ?string $deliveryTime = null;
 
     public function __construct()
     {
@@ -38,17 +39,38 @@ class Messaging extends Event
     }
 
     /**
-     * Executes the event and sends it to the messaging worker.
+     * Sets Delivery time for the messaging event.
      *
-     * @return string|bool
-     * @throws \InvalidArgumentException
+     * @param string $deliveryTime
+     * @return self
      */
-    public function trigger(): string|bool
+    public function setDeliveryTime(string $deliveryTime): self
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        $this->deliveryTime = $deliveryTime;
+
+        return $this;
+    }
+
+    /**
+     * Returns set Delivery Time for the messaging event.
+     *
+     * @return string
+     */
+    public function getDeliveryTime(): string
+    {
+        return $this->deliveryTime;
+    }
+
+    /**
+     * Executes the event and sends it to the messaging worker.
+     */
+    public function trigger(): string | bool
+    {
+        ResqueScheduler::enqueueAt(!empty($this->deliveryTime) ? $this->deliveryTime : DateTime::now(), $this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,
         ]);
+        return true;
     }
 }
