@@ -37,18 +37,21 @@ To participate in Hacktoberfest with Appwrite, follow these guidelines:
 2. Clone your forked repository to your local machine.
 
    ```bash
-    git clone https://github.com/your-username/repository-name.git
-  ```
-3. Create a new branch for your contribution.
-```bash
- git checkout -b TYPE-ISSUE_ID-DESCRIPTION
-```
-4. Make your changes, commit them, and push to your forked repository.
+      git clone https://github.com/your-username/repository-name.git
+   ```
 
-```bash
- git commit -m "Add your commit message here"
- git push origin feature/your-feature
- ```
+3. Create a new branch for your contribution.
+
+   ```bash
+      git checkout -b TYPE-ISSUE_ID-DESCRIPTION
+   ```
+4. Make your changes, commit them, and push them to your forked repository.
+
+   ```bash
+    git commit -m "Add your commit message here"
+    git push origin TYPE-ISSUE_ID-DESCRIPTION
+   ```
+ 
 5. Create a Pull Request (PR) from your forked repository to the Appwrite repository. Be sure to reference the issue you are addressing in your PR description.
 
 Thank you for contributing to Appwrite, and we look forward to your Hacktoberfest contributions! If you have any questions or need assistance, feel free to ask on our Discord server or in the issue discussion. Happy hacking!
