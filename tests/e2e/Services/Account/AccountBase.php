@@ -153,6 +153,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         /**
@@ -306,6 +307,9 @@ trait AccountBase
         $this->assertCount(2, $response['body']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
+
+        // assert not providing secret 
+        $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
@@ -840,7 +844,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEmpty($response['body']['secret']);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
@@ -1142,7 +1146,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEmpty($response['body']['secret']);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
@@ -1296,7 +1300,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEmpty($response['body']['secret']);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
@@ -1403,6 +1407,7 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertTrue($response['body']['emailVerification']);
@@ -1463,6 +1468,7 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 

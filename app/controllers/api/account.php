@@ -274,6 +274,7 @@ App::post('/v1/account/sessions/email')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
+            ->setAttribute('secret', $secret)
         ;
 
         $events
@@ -769,14 +770,14 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         // Add token for server platforms
-        $loginSecret = Auth::tokenGenerator();
+        $tokenSecret = Auth::tokenGenerator();
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_OAUTH2,
-            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => 'UNKNOWN',
             'ip' => $request->getIP(),
@@ -795,7 +796,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
-        $query['secret'] = $token->getAttribute('secret');
+        $query['secret'] = $tokenSecret;
         $query['userId'] = $user->getId();
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
@@ -981,7 +982,7 @@ App::post('/v1/account/sessions/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $loginSecret = Auth::tokenGenerator();
+        $tokenSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -989,7 +990,7 @@ App::post('/v1/account/sessions/magic-url')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_MAGIC_URL,
-            'secret' => Auth::hash($loginSecret), // One way hash encryption to protect DB leak
+            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
@@ -1095,13 +1096,13 @@ App::post('/v1/account/sessions/magic-url')
 
         $events->setPayload(
             $response->output(
-                $token->setAttribute('secret', $loginSecret),
+                $token->setAttribute('secret', $tokenSecret),
                 Response::MODEL_TOKEN
             )
         );
 
         // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+        $token->setAttribute('secret', $tokenSecret);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1156,7 +1157,7 @@ App::put('/v1/account/sessions/token')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
+        $sessionSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         
         $session = new Document(array_merge(
@@ -1165,7 +1166,7 @@ App::put('/v1/account/sessions/token')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::getSessionProviderByTokenType($verifiedToken->getAttribute('type')),
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -1200,14 +1201,14 @@ App::put('/v1/account/sessions/token')
 
 
         if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($sessionSecret))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($sessionSecret))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1215,7 +1216,9 @@ App::put('/v1/account/sessions/token')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('expire', $expire)
+            ->setAttribute('secret', $sessionSecret)
+        ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1270,7 +1273,7 @@ App::put('/v1/account/sessions/magic-url')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
+        $sessionSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
@@ -1279,7 +1282,7 @@ App::put('/v1/account/sessions/magic-url')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_MAGIC_URL,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -1322,14 +1325,14 @@ App::put('/v1/account/sessions/magic-url')
             ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
         }
 
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1337,7 +1340,9 @@ App::put('/v1/account/sessions/magic-url')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('expire', $expire)
+            ->setAttribute('secret', $sessionSecret)
+        ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1521,7 +1526,7 @@ App::put('/v1/account/sessions/phone')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
+        $sessionSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
@@ -1530,7 +1535,7 @@ App::put('/v1/account/sessions/phone')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'provider' => Auth::SESSION_PROVIDER_PHONE,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
@@ -1578,8 +1583,8 @@ App::put('/v1/account/sessions/phone')
         $protocol = $request->getProtocol();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
@@ -1589,6 +1594,7 @@ App::put('/v1/account/sessions/phone')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
+            ->setAttribute('secret', $sessionSecret)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1726,6 +1732,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
+            ->setAttribute('secret', $secret)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1844,6 +1851,9 @@ App::get('/v1/account/sessions')
         $sessions = $user->getAttribute('sessions', []);
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1851,6 +1861,7 @@ App::get('/v1/account/sessions')
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
             $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
+            $session->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret') : '');
 
             $sessions[$key] = $session;
         }
@@ -1950,6 +1961,10 @@ App::get('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         foreach ($sessions as $session) {/** @var Document $session */
             if ($sessionId == $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1958,6 +1973,7 @@ App::get('/v1/account/sessions/:sessionId')
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
                     ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
+                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret') : '')
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -2676,7 +2692,7 @@ App::post('/v1/account/recovery')
         ;
 
         // Hide secret for clients
-        $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        $recovery->setAttribute('secret', $secret);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2925,7 +2941,7 @@ App::post('/v1/account/verification')
             ));
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $verificationSecret : '');
+        $verification->setAttribute('secret', $verificationSecret);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -3082,7 +3098,7 @@ App::post('/v1/account/verification/phone')
         ;
 
         // Hide secret for clients
-        $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        $verification->setAttribute('secret', $secret);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
