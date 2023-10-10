@@ -92,16 +92,17 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
-        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
-        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
-        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
-        $backups['database_db_fra1_06'] = ['from' => '16:30', 'to' => '17:15'];
+        $backups['database_db_fra1_v14x_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_v14x_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_v14x_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_v14x_05'] = ['from' => '4:30', 'to' => '5:15'];
+        $backups['database_db_fra1_v14x_06'] = ['from' => '16:30', 'to' => '17:15'];
+        $backups['database_db_fra1_v14x_07'] = ['from' => '19:30', 'to' => '20:15'];
 
         $databases = Config::getParam('pools-database', []);
 
         /**
-         * Extract db from list while backing
+         * Remove databases from the list that are currently undergoing an backup
          */
         if (count($databases) > 1) {
             $now = new \DateTime();
@@ -120,7 +121,9 @@ App::post('/v1/projects')
             }
         }
 
-        if ($index = array_search('database_db_fra1_06', $databases)) {
+        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
+        $index = array_search($databaseOverride, $databases);
+        if ($index) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
