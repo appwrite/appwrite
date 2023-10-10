@@ -6,24 +6,35 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
+use Utopia\App;
 
 class VCSConsoleClientTest extends Scope
 {
     use ProjectCustom;
     use SideConsole;
 
-    public function testDetectRuntime(string $installationId = '651c6d27dac46cc3bc99', string $providerRepositoryId = '700022615')
+    public ?string $installationId = null;
+    public ?string $providerRepositoryId = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->installationId = App::getEnv('_APP_VCS_TEST_INSTALLATION_ID');
+        $this->providerRepositoryId = App::getEnv('_APP_VCS_TEST_PROVIDER_REPOSITORY_ID');
+    }
+
+    public function testDetectRuntime()
     {
         /**
          * Test for SUCCESS
          */
 
-        $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $providerRepositoryId . '/detection', array_merge([
+        $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/' . $this->providerRepositoryId . '/detection', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId,
-            'providerRepositoryId' => $providerRepositoryId
+            'installationId' => $this->installationId,
+            'providerRepositoryId' => $this->providerRepositoryId
         ]);
 
         $this->assertEquals(200, $runtime['headers']['status-code']);
@@ -45,27 +56,27 @@ class VCSConsoleClientTest extends Scope
         // $this->assertEquals(404, $runtime['headers']['status-code']);
     }
 
-    public function testListRepositories(string $installationId = '651c6d27dac46cc3bc99')
+    public function testListRepositories()
     {
         /**
          * Test for SUCCESS
          */
 
-        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId
+            'installationId' => $this->installationId
         ]);
 
         $this->assertEquals(200, $repositories['headers']['status-code']);
         $this->assertEquals($repositories['body']['total'], 3);
 
-        $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+        $searchedRepositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId,
+            'installationId' => $this->installationId,
             'search' => 'func'
         ]);
 
@@ -73,28 +84,28 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($searchedRepositories['body']['total'], 1);
     }
 
-    public function testGetRepository(string $installationId = '651c6d27dac46cc3bc99', string $providerRepositoryId = '700022615', string $providerRepositoryId2 = '700020051')
+    public function testGetRepository(string $providerRepositoryId2 = '700020051')
     {
         /**
          * Test for SUCCESS
          */
 
-        $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $providerRepositoryId, array_merge([
+        $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/' . $this->providerRepositoryId, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId,
-            'providerRepositoryId' => $providerRepositoryId
+            'installationId' => $this->installationId,
+            'providerRepositoryId' => $this->providerRepositoryId
         ]);
 
         $this->assertEquals(200, $repository['headers']['status-code']);
         $this->assertEquals($repository['body']['name'], 'ruby-starter');
 
-        $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $providerRepositoryId2, array_merge([
+        $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/' . $providerRepositoryId2, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId,
+            'installationId' => $this->installationId,
             'providerRepositoryId' => $providerRepositoryId2
         ]);
 
@@ -102,18 +113,18 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repository['body']['name'], 'function-1.4');
     }
 
-    public function testListRepositoryBranches(string $installationId = '651c6d27dac46cc3bc99', string $providerRepositoryId = '700020051')
+    public function testListRepositoryBranches()
     {
         /**
          * Test for SUCCESS
          */
 
-        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $providerRepositoryId . '/branches', array_merge([
+        $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/' . $this->providerRepositoryId . '/branches', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => $installationId,
-            'providerRepositoryId' => $providerRepositoryId
+            'installationId' => $this->installationId,
+            'providerRepositoryId' => $this->providerRepositoryId
         ]);
 
         $this->assertEquals(200, $repositoryBranches['headers']['status-code']);
@@ -122,19 +133,19 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositoryBranches['body']['branches'][1]['name'], 'test');
     }
 
-    // public function testGetInstallation(string $installationId = '651c6d27dac46cc3bc99')
-    // {
-    //     /**
-    //      * Test for SUCCESS
-    //      */
+    public function testGetInstallation()
+    {
+        /**
+         * Test for SUCCESS
+         */
 
-    //     $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $installationId, array_merge([
-    //         'content-type' => 'application/json',
-    //         'x-appwrite-project' => $this->getProject()['$id'],
-    //     ], $this->getHeaders()), [
-    //         'installationId' => $installationId
-    //     ]);
+        $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $this->installationId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'installationId' => $this->installationId
+        ]);
 
-    //     $this->assertEquals(200, $installation['headers']['status-code']);
-    // }
+        $this->assertEquals(200, $installation['headers']['status-code']);
+    }
 }
