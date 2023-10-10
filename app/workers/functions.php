@@ -363,7 +363,8 @@ $server->job()
                         path: '/',
                         method: 'POST',
                         headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE
+                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                            'content-type' => 'application/json'
                         ],
                     );
                     Console::success('Triggered function: ' . $events[0]);
