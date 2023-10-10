@@ -50,6 +50,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $functionId = $resource->getAttribute('resourceId');
             $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+            $functionInternalId = $function->getInternalId();
 
             $deploymentId = ID::unique();
             $repositoryId = $resource->getId();
@@ -173,6 +174,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Permission::delete(Role::any()),
                 ],
                 'resourceId' => $functionId,
+                'resourceInternalId' => $functionInternalId,
                 'resourceType' => 'functions',
                 'entrypoint' => $function->getAttribute('entrypoint'),
                 'commands' => $function->getAttribute('commands'),
