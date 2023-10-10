@@ -1012,7 +1012,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $url = Template::parseURL($url);
-        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
+        $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $tokenSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
         $body = $locale->getText("emails.magicSession.body");
@@ -1102,7 +1102,7 @@ App::post('/v1/account/sessions/magic-url')
         );
 
         // Hide secret for clients
-        $token->setAttribute('secret', $tokenSecret);
+        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

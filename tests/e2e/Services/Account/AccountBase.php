@@ -1300,7 +1300,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
@@ -1393,6 +1393,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['secret']);
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -1407,7 +1408,6 @@ trait AccountBase
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
         $this->assertTrue($response['body']['emailVerification']);
@@ -1468,7 +1468,6 @@ trait AccountBase
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
@@ -1482,6 +1481,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertNotEmpty($response['body']['secret']);
 
         /**
          * Test for FAILURE
