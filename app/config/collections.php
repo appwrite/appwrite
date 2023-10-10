@@ -1601,6 +1601,17 @@ $commonCollections = [
                 'filters' => ['datetime'],
             ],
             [
+                '$id' => ID::custom('deliveredAt'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
                 '$id' => ID::custom('deliveryErrors'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1939,6 +1950,13 @@ $commonCollections = [
                 '$id' => ID::custom('_key_identifier'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['identifier'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_identifier_providerId'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['providerId', 'identifier'],
                 'lengths' => [],
                 'orders' => [],
             ]

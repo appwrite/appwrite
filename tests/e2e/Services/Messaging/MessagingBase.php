@@ -77,9 +77,9 @@ trait MessagingBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $providersParams[$key]);
-            \array_push($providers, $response['body']);
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
+            \array_push($providers, $response['body']);
         }
 
         return $providers;
@@ -144,9 +144,9 @@ trait MessagingBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], $providersParams[$key]);
-            $providers[$index] = $response['body'];
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
+            $providers[$index] = $response['body'];
         }
 
         $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $providers[1]['$id'], [
@@ -160,10 +160,10 @@ trait MessagingBase
           'isEuRegion' => true,
           'enabled' => false,
         ]);
-        $providers[1] = $response['body'];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+        $providers[1] = $response['body'];
         return $providers;
     }
 

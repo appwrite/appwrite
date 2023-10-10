@@ -62,16 +62,16 @@ class MessagingV1 extends Worker
         $this->processMessage($message, $provider);
     }
 
-    private function processMessage(Document $messageRecord, Document $providerRecord): void
+    private function processMessage(Document $message, Document $provider): void
     {
-        $provider = match ($providerRecord->getAttribute('type')) {
-            'sms' => $this->sms($providerRecord),
-            'push' => $this->push($providerRecord),
-            'email' => $this->email($providerRecord),
+        $adapter = match ($provider->getAttribute('type')) {
+            'sms' => $this->sms($provider),
+            'push' => $this->push($provider),
+            'email' => $this->email($provider),
             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
         };
 
-        $recipientsId = $messageRecord->getAttribute('to');
+        $recipientsId = $message->getAttribute('to');
 
         /**
         * @var Document[] $recipients
@@ -90,29 +90,31 @@ class MessagingV1 extends Worker
 
         $targets = $this->dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
         $recipients = \array_merge($recipients, $targets);
-        $recipients = \array_filter($recipients, fn (Document $recipient) => $recipient->getAttribute('providerId') === $providerRecord->getId());
+        $recipients = \array_filter($recipients, function (Document $recipient) use ($provider) {
+                return $recipient->getAttribute('providerId') === $provider->getId();
+        });
 
         $identifiers = \array_map(function (Document $recipient) {
             return $recipient->getAttribute('identifier');
         }, $recipients);
 
-        $maxBatchSize = $provider->getMaxMessagesPerRequest();
+        $maxBatchSize = $adapter->getMaxMessagesPerRequest();
         $batches = \array_chunk($identifiers, $maxBatchSize);
 
-        $results = batch(\array_map(function ($batch) use ($messageRecord, $providerRecord, $provider) {
-            return function () use ($batch, $messageRecord, $providerRecord, $provider) {
+        $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter) {
+            return function () use ($batch, $message, $provider, $adapter) {
                 $deliveredTo = 0;
                 $deliveryErrors = [];
-                $messageData = clone $messageRecord;
+                $messageData = clone $message;
                 $messageData->setAttribute('to', $batch);
-                $message = match ($providerRecord->getAttribute('type')) {
-                    'sms' => $this->buildSMSMessage($messageData, $providerRecord),
+                $data = match ($provider->getAttribute('type')) {
+                    'sms' => $this->buildSMSMessage($messageData, $provider),
                     'push' => $this->buildPushMessage($messageData),
-                    'email' => $this->buildEmailMessage($messageData, $providerRecord),
+                    'email' => $this->buildEmailMessage($messageData, $provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
                 try {
-                    $provider->send($message);
+                    $adapter->send($data);
                     $deliveredTo += \count($batch);
                 } catch (\Exception $e) {
                     foreach ($batch as $identifier) {
@@ -120,8 +122,8 @@ class MessagingV1 extends Worker
                     }
                 } finally {
                     return [
-                    'deliveredTo' => $deliveredTo,
-                    'deliveryErrors' => $deliveryErrors,
+                        'deliveredTo' => $deliveredTo,
+                        'deliveryErrors' => $deliveryErrors,
                     ];
                 }
             };
@@ -133,28 +135,28 @@ class MessagingV1 extends Worker
             $deliveredTo += $result['deliveredTo'];
             $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
         }
-        $messageRecord->setAttribute('deliveryErrors', $deliveryErrors);
+        $message->setAttribute('deliveryErrors', $deliveryErrors);
 
-        if (\count($messageRecord->getAttribute('deliveryErrors')) > 0) {
-            $messageRecord->setAttribute('status', 'failed');
+        if (\count($message->getAttribute('deliveryErrors')) > 0) {
+            $message->setAttribute('status', 'failed');
         } else {
-            $messageRecord->setAttribute('status', 'sent');
+            $message->setAttribute('status', 'sent');
         }
-        $messageRecord->setAttribute('to', $recipientsId);
-        $messageRecord->setAttribute('deliveredTo', $deliveredTo);
-        $messageRecord->setAttribute('deliveryTime', DateTime::now());
+        $message->setAttribute('to', $recipientsId);
+        $message->setAttribute('deliveredTo', $deliveredTo);
+        $message->setAttribute('deliveredAt', DateTime::now());
 
-        $this->dbForProject->updateDocument('messages', $messageRecord->getId(), $messageRecord);
+        $this->dbForProject->updateDocument('messages', $message->getId(), $message);
     }
 
     public function shutdown(): void
     {
     }
 
-    private function sms(Document $document): ?SMSAdapter
+    private function sms(Document $provider): ?SMSAdapter
     {
-        $credentials = $document->getAttribute('credentials');
-        return match ($document->getAttribute('provider')) {
+        $credentials = $provider->getAttribute('credentials');
+        return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'text-magic' => new TextMagic($credentials['username'], $credentials['apiKey']),
@@ -165,10 +167,10 @@ class MessagingV1 extends Worker
         };
     }
 
-    private function push(Document $document): ?PushAdapter
+    private function push(Document $provider): ?PushAdapter
     {
-        $credentials = $document->getAttribute('credentials');
-        return match ($document->getAttribute('provider')) {
+        $credentials = $provider->getAttribute('credentials');
+        return match ($provider->getAttribute('provider')) {
             'apns' => new APNS(
                 $credentials['authKey'],
                 $credentials['authKeyId'],
@@ -181,10 +183,10 @@ class MessagingV1 extends Worker
         };
     }
 
-    private function email(Document $document): ?EmailAdapter
+    private function email(Document $provider): ?EmailAdapter
     {
-        $credentials = $document->getAttribute('credentials');
-        return match ($document->getAttribute('provider')) {
+        $credentials = $provider->getAttribute('credentials');
+        return match ($provider->getAttribute('provider')) {
             'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain'], $credentials['isEuRegion']),
             'sendgrid' => new SendGrid($credentials['apiKey']),
             default => null

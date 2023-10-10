@@ -49,7 +49,7 @@ App::init()
     });
 
 App::post('/v1/projects')
-    ->desc('Create Project')
+    ->desc('Create project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -92,16 +92,17 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_02'] = ['from' => '7:30', 'to' => '8:15'];
-        $backups['database_db_fra1_03'] = ['from' => '10:30', 'to' => '11:15'];
-        $backups['database_db_fra1_04'] = ['from' => '13:30', 'to' => '14:15'];
-        $backups['database_db_fra1_05'] = ['from' => '4:30', 'to' => '5:15'];
-        $backups['database_db_fra1_06'] = ['from' => '16:30', 'to' => '17:15'];
+        $backups['database_db_fra1_v14x_02'] = ['from' => '7:30', 'to' => '8:15'];
+        $backups['database_db_fra1_v14x_03'] = ['from' => '10:30', 'to' => '11:15'];
+        $backups['database_db_fra1_v14x_04'] = ['from' => '13:30', 'to' => '14:15'];
+        $backups['database_db_fra1_v14x_05'] = ['from' => '4:30', 'to' => '5:15'];
+        $backups['database_db_fra1_v14x_06'] = ['from' => '16:30', 'to' => '17:15'];
+        $backups['database_db_fra1_v14x_07'] = ['from' => '19:30', 'to' => '20:15'];
 
         $databases = Config::getParam('pools-database', []);
 
         /**
-         * Extract db from list while backing
+         * Remove databases from the list that are currently undergoing an backup
          */
         if (count($databases) > 1) {
             $now = new \DateTime();
@@ -120,7 +121,9 @@ App::post('/v1/projects')
             }
         }
 
-        if ($index = array_search('database_db_fra1_06', $databases)) {
+        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
+        $index = array_search($databaseOverride, $databases);
+        if ($index) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
@@ -220,7 +223,7 @@ App::post('/v1/projects')
     });
 
 App::get('/v1/projects')
-    ->desc('List Projects')
+    ->desc('List projects')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -267,7 +270,7 @@ App::get('/v1/projects')
     });
 
 App::get('/v1/projects/:projectId')
-    ->desc('Get Project')
+    ->desc('Get project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -405,7 +408,7 @@ App::get('/v1/projects/:projectId/usage')
     });
 
 App::patch('/v1/projects/:projectId')
-    ->desc('Update Project')
+    ->desc('Update project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -557,7 +560,7 @@ App::patch('/v1/projects/:projectId/service/all')
     });
 
 App::patch('/v1/projects/:projectId/oauth2')
-    ->desc('Update Project OAuth2')
+    ->desc('Update project OAuth2')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -601,7 +604,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     });
 
 App::patch('/v1/projects/:projectId/auth/limit')
-    ->desc('Update Project users limit')
+    ->desc('Update project users limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -632,7 +635,7 @@ App::patch('/v1/projects/:projectId/auth/limit')
     });
 
 App::patch('/v1/projects/:projectId/auth/duration')
-    ->desc('Update Project Authentication Duration')
+    ->desc('Update project authentication duration')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -663,7 +666,7 @@ App::patch('/v1/projects/:projectId/auth/duration')
     });
 
 App::patch('/v1/projects/:projectId/auth/:method')
-    ->desc('Update Project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
+    ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -790,7 +793,7 @@ App::patch('/v1/projects/:projectId/auth/personal-data')
     });
 
 App::patch('/v1/projects/:projectId/auth/max-sessions')
-    ->desc('Update Project user sessions limit')
+    ->desc('Update project user sessions limit')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -821,7 +824,7 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
     });
 
 App::delete('/v1/projects/:projectId')
-    ->desc('Delete Project')
+    ->desc('Delete project')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -855,7 +858,7 @@ App::delete('/v1/projects/:projectId')
 // Webhooks
 
 App::post('/v1/projects/:projectId/webhooks')
-    ->desc('Create Webhook')
+    ->desc('Create webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -911,7 +914,7 @@ App::post('/v1/projects/:projectId/webhooks')
     });
 
 App::get('/v1/projects/:projectId/webhooks')
-    ->desc('List Webhooks')
+    ->desc('List webhooks')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -943,7 +946,7 @@ App::get('/v1/projects/:projectId/webhooks')
     });
 
 App::get('/v1/projects/:projectId/webhooks/:webhookId')
-    ->desc('Get Webhook')
+    ->desc('Get webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -977,7 +980,7 @@ App::get('/v1/projects/:projectId/webhooks/:webhookId')
     });
 
 App::put('/v1/projects/:projectId/webhooks/:webhookId')
-    ->desc('Update Webhook')
+    ->desc('Update webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1030,7 +1033,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     });
 
 App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
-    ->desc('Update Webhook Signature Key')
+    ->desc('Update webhook signature key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1069,7 +1072,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
     });
 
 App::delete('/v1/projects/:projectId/webhooks/:webhookId')
-    ->desc('Delete Webhook')
+    ->desc('Delete webhook')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1108,7 +1111,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 // Keys
 
 App::post('/v1/projects/:projectId/keys')
-    ->desc('Create Key')
+    ->desc('Create key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1158,7 +1161,7 @@ App::post('/v1/projects/:projectId/keys')
     });
 
 App::get('/v1/projects/:projectId/keys')
-    ->desc('List Keys')
+    ->desc('List keys')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1190,7 +1193,7 @@ App::get('/v1/projects/:projectId/keys')
     });
 
 App::get('/v1/projects/:projectId/keys/:keyId')
-    ->desc('Get Key')
+    ->desc('Get key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1224,7 +1227,7 @@ App::get('/v1/projects/:projectId/keys/:keyId')
     });
 
 App::put('/v1/projects/:projectId/keys/:keyId')
-    ->desc('Update Key')
+    ->desc('Update key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1270,7 +1273,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     });
 
 App::delete('/v1/projects/:projectId/keys/:keyId')
-    ->desc('Delete Key')
+    ->desc('Delete key')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1309,7 +1312,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 // Platforms
 
 App::post('/v1/projects/:projectId/platforms')
-    ->desc('Create Platform')
+    ->desc('Create platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1359,7 +1362,7 @@ App::post('/v1/projects/:projectId/platforms')
     });
 
 App::get('/v1/projects/:projectId/platforms')
-    ->desc('List Platforms')
+    ->desc('List platforms')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1391,7 +1394,7 @@ App::get('/v1/projects/:projectId/platforms')
     });
 
 App::get('/v1/projects/:projectId/platforms/:platformId')
-    ->desc('Get Platform')
+    ->desc('Get platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1425,7 +1428,7 @@ App::get('/v1/projects/:projectId/platforms/:platformId')
     });
 
 App::put('/v1/projects/:projectId/platforms/:platformId')
-    ->desc('Update Platform')
+    ->desc('Update platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1472,7 +1475,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
     });
 
 App::delete('/v1/projects/:projectId/platforms/:platformId')
-    ->desc('Delete Platform')
+    ->desc('Delete platform')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1507,6 +1510,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $response->noContent();
     });
+
 
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
@@ -1638,6 +1642,7 @@ App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
 
         $response->dynamic(new Document($template), Response::MODEL_SMS_TEMPLATE);
     });
+
 
 App::get('/v1/projects/:projectId/templates/email/:type/:locale')
     ->desc('Get custom email template')
