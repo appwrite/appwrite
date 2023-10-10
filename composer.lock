@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15224f89284384114e0eef2ae83f49ea",
+    "content-hash": "748f1a5e4fdf0a73ea26ddf0e7822f19",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1433,16 +1433,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-fix-index-validation",
+            "version": "0.43.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "67adc586318c35b34aaa9f1eed8f3751b6e8c324"
+                "reference": "5f7b05189cfbcc0506090498c580c5765375a00a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/67adc586318c35b34aaa9f1eed8f3751b6e8c324",
-                "reference": "67adc586318c35b34aaa9f1eed8f3751b6e8c324",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5f7b05189cfbcc0506090498c580c5765375a00a",
+                "reference": "5f7b05189cfbcc0506090498c580c5765375a00a",
                 "shasum": ""
             },
             "require": {
@@ -1483,9 +1483,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/fix-index-validation"
+                "source": "https://github.com/utopia-php/database/tree/0.43.5"
             },
-            "time": "2023-10-09T02:11:28+00:00"
+            "time": "2023-10-06T06:49:47+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5276,12 +5276,6 @@
     ],
     "aliases": [
         {
-            "package": "utopia-php/database",
-            "version": "dev-fix-index-validation",
-            "alias": "0.43.1",
-            "alias_normalized": "0.43.1.0"
-        },
-        {
             "package": "utopia-php/platform",
             "version": "dev-integrate-workers",
             "alias": "0.3.3",
@@ -5296,7 +5290,6 @@
     ],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/database": 20,
         "utopia-php/platform": 20,
         "utopia-php/queue": 20
     },

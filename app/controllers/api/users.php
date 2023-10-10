@@ -735,7 +735,7 @@ App::put('/v1/users/:userId/labels')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, bool $emailVerification, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, array $labels, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1222,7 +1222,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')

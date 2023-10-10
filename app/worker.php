@@ -69,7 +69,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         ->pop()
         ->getResource();
 
-    $adapter = new Database($database, $cache);
+        $adapter = new Database($database, $cache);
     $adapter->setNamespace('_' . $project->getInternalId());
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
@@ -224,7 +224,7 @@ if (isset($args[0])) {
 
 try {
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+        'workersNum' => 1,
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
     ]);

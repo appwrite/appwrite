@@ -296,7 +296,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'limit' => 1
+            'queries' => ['offset(1)', 'limit(1)'],
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -308,8 +308,8 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1
-        ]);
+            'queries' => ['offset(1)']
+            ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
         $this->assertIsArray($logs['body']['logs']);
@@ -319,8 +319,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'offset' => 1,
-            'limit' => 1
+            'queries' => ['offset(1)', 'limit(1)'],
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);

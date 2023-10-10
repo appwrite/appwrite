@@ -1201,7 +1201,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-         //var_dump($elements);
         // use length of longest string as attribute size
         $size = 0;
         foreach ($elements as $element) {
@@ -2453,7 +2452,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'orders' => $orders,
         ]);
 
-        $validator = new IndexValidator($attributes, $dbForProject->getAdapter()->getMaxIndexLength());
+        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
         if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
         }
