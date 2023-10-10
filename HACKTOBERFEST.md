@@ -22,7 +22,7 @@ To participate in Hacktoberfest with Appwrite, follow these guidelines:
 
 2. **Wait for issue assignment**: After you have identified an issue to work on, please wait for it to be assigned to you by our team. We assign issues on a first-come, first-serve basis.
 
-3. **Label your pull requests**: Appwrite does not have the `hacktoberfest` label in our repositories, but we use it on specific issues. For your pull request to be valid, our team will review and add the `hacktoberfest-accepted` label once it meets the criteria.
+3. **Knowing about labels**:  We do not have the `hacktoberfest` label in our repositories, but we use it on specific issues. For your pull request to be valid, our team will review and add the `hacktoberfest-accepted` label once it meets the criteria.
 
 4. **Discuss new issues**: If you're interested in finding and adding new issues for Hacktoberfest, please discuss it with the team on our [Discord server](https://appwrite.io/discord) in the `#hacktoberfest` channel.
 
