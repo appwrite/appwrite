@@ -12,7 +12,7 @@ Please ensure that you always follow our [Code of Conduct](https://github.com/ap
 
 ## Contributing guide
 
-Please review our [Contributing Guide](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md) before contributing. We strive to maintain a friendly and inclusive community for everyone.
+Please review our [Contributing Guide](https://github.com/appwrite/appwrite/blob/main/CONTRIBUTING.md) before contributing. It will help you learn about the architecture, instructions on how to update code, run tests, and submit a PR.
 
 ## Hacktoberfest contribution guidelines
 
