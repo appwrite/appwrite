@@ -1,3 +1,14 @@
+# Version 1.4.5
+
+## Changes
+- Bump console to version 3.2.1 in [#6868](https://github.com/appwrite/appwrite/pull/6868)
+
+## Fixes
+- Fix realtime logs in [#6478](https://github.com/appwrite/appwrite/pull/6478)
+- Fix "File not found" error in executor in [#6476](https://github.com/appwrite/appwrite/pull/6476)
+- Fix missing array flag on migration errors response model rule in [#6469](https://github.com/appwrite/appwrite/pull/6469)
+- Ensure openruntimes-executor restarts after a server reboot in [#6490](https://github.com/appwrite/appwrite/pull/6490)
+
 # Version 1.4.4
 
 ## Features
