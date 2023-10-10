@@ -47,6 +47,8 @@ Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
 function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
+    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
+
     $host = $request->getHostname() ?? '';
 
     $route = Authorization::skip(
@@ -57,11 +59,24 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
+        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
+        }
+
+        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
+        }
+
+        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+            if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
+            }
+        }
+
         // Act as API - no Proxy logic
+        $utopia->getRoute()?->label('error', '');
         return false;
     }
-
-    $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
     $projectId = $route->getAttribute('projectId');
     $project = Authorization::skip(
@@ -83,6 +98,16 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
+        if (App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+            if ($request->getProtocol() !== 'https') {
+                if ($request->getMethod() !== Request::METHOD_GET) {
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
+                }
+
+                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+            }
+        }
+
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
@@ -114,6 +139,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // \curl_setopt($ch, CURLOPT_HEADER, true);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
         $executionResponse = \curl_exec($ch);
         $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -164,6 +190,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
     }
 
+    $utopia->getRoute()?->label('error', '');
     return false;
 }
 
@@ -380,7 +407,7 @@ App::init()
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
-                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
