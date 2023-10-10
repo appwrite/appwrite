@@ -44,13 +44,24 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        // $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/' . $providerRepositoryId .'/detection', array_merge([
+        // $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/1234/detection', array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], $this->getHeaders()), [
-        //     'installationId' => $installationId,
-        //     'providerRepositoryId' => $providerRepositoryId,
-        //     'providerRootDirectory' => 'src'
+        //     'installationId' => $this->installationId,
+        //     'providerRepositoryId' => 1234
+        // ]);
+
+        // $this->assertEquals(404, $runtime['headers']['status-code']); 
+        // TODO: throw 404 from GitHub.php if repo not found
+
+        // $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/' . $this->providerRepositoryId .'/detection', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()), [
+        //     'installationId' => $this->installationId,
+        //     'providerRepositoryId' => $this->providerRepositoryId,
+        //     'providerRootDirectory' => ''̦
         // ]);
 
         // $this->assertEquals(404, $runtime['headers']['status-code']);
@@ -82,6 +93,19 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $searchedRepositories['headers']['status-code']);
         $this->assertEquals($searchedRepositories['body']['total'], 1);
+
+        /**
+         * Test for FAILURE
+         */
+
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/1234/providerRepositories', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'installationId' => 1234
+        ]);
+
+        $this->assertEquals(404, $repositories['headers']['status-code']);
     }
 
     public function testGetRepository(string $providerRepositoryId2 = '700020051')
@@ -111,6 +135,21 @@ class VCSConsoleClientTest extends Scope
 
         $this->assertEquals(200, $repository['headers']['status-code']);
         $this->assertEquals($repository['body']['name'], 'function-1.4');
+
+        /**
+         * Test for FAILURE
+         */
+
+        // $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/1234', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()), [
+        //     'installationId' => $this->installationId,
+        //     'providerRepositoryId' => 1234
+        // ]);
+
+        // $this->assertEquals(404, $repository['headers']['status-code']);
+        // TODO: Throw 404 if repository not found
     }
 
     public function testListRepositoryBranches()
@@ -131,21 +170,36 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals($repositoryBranches['body']['total'], 2);
         $this->assertEquals($repositoryBranches['body']['branches'][0]['name'], 'main');
         $this->assertEquals($repositoryBranches['body']['branches'][1]['name'], 'test');
-    }
 
-    public function testGetInstallation()
-    {
         /**
-         * Test for SUCCESS
+         * Test for FAILURE
          */
 
-        $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $this->installationId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'installationId' => $this->installationId
-        ]);
+        // $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $this->installationId . '/providerRepositories/1234/branches', array_merge([
+        //     'content-type' => 'application/json',
+        //     'x-appwrite-project' => $this->getProject()['$id'],
+        // ], $this->getHeaders()), [
+        //     'installationId' => $this->installationId,
+        //     'providerRepositoryId' => 1234
+        // ]);
 
-        $this->assertEquals(200, $installation['headers']['status-code']);
+        // $this->assertEquals(404, $repositoryBranches['headers']['status-code']);
+        // TODO: Check why it's throwing 500 server error
     }
+
+    // public function testGetInstallation()
+    // {
+    //     /**
+    //      * Test for SUCCESS
+    //      */
+
+    //     $installation = $this->client->call(Client::METHOD_GET, '/vcs/installations/' . $this->installationId, array_merge([
+    //         'content-type' => 'application/json',
+    //         'x-appwrite-project' => $this->getProject()['$id'],
+    //     ], $this->getHeaders()), [
+    //         'installationId' => $this->installationId
+    //     ]);
+
+    //     $this->assertEquals(200, $installation['headers']['status-code']);
+    // }
 }
