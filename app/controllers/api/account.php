@@ -1159,7 +1159,7 @@ App::put('/v1/account/sessions/token')
         $record = $geodb->get($request->getIP());
         $sessionSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-        
+
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -3163,6 +3163,3 @@ App::put('/v1/account/verification/phone')
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
-
-
-    

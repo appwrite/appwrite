@@ -308,7 +308,7 @@ trait AccountBase
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
-        // assert not providing secret 
+        // assert not providing secret
         $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);

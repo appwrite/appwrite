@@ -1081,7 +1081,7 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::post('/v1/users/:userId/tokens') 
+App::post('/v1/users/:userId/tokens')
     ->desc('Create universal token')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].tokens.create')
