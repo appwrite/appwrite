@@ -4,7 +4,7 @@ Welcome to the Appwrite Hacktoberfest contribution! We appreciate your interest 
 
 ## Familiarize with the project
 
-- Before you start contributing, it's essential to get familiarized with our project. You can do that by following the [main README](https://github.com/appwrite/appwrite/blob/main/README.md).
+Before you start contributing, familiarize yourself with our project by reading the [main README](https://github.com/appwrite/appwrite/blob/main/README.md).
 
 ## Code of conduct
 
