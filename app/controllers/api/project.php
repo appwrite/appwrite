@@ -161,7 +161,6 @@ App::post('/v1/project/variables')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $functions = $dbForProject->find('functions', [
             Query::limit(APP_LIMIT_SUBQUERY)
@@ -170,8 +169,6 @@ App::post('/v1/project/variables')
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
         }
-
-        $dbForProject->deleteCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -261,7 +258,6 @@ App::put('/v1/project/variables/:variableId')
         } catch (DuplicateException $th) {
             throw new Exception(Exception::VARIABLE_ALREADY_EXISTS);
         }
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         $functions = $dbForProject->find('functions', [
             Query::limit(APP_LIMIT_SUBQUERY)
@@ -270,8 +266,6 @@ App::put('/v1/project/variables/:variableId')
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
         }
-
-        $dbForProject->deleteCachedDocument('projects', $project->getId());
 
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
@@ -296,6 +290,8 @@ App::delete('/v1/project/variables/:variableId')
             throw new Exception(Exception::VARIABLE_NOT_FOUND);
         }
 
+        $dbForProject->deleteDocument('variables', $variable->getId());
+
         $functions = $dbForProject->find('functions', [
             Query::limit(APP_LIMIT_SUBQUERY)
         ]);
@@ -303,9 +299,6 @@ App::delete('/v1/project/variables/:variableId')
         foreach ($functions as $function) {
             $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('live', false));
         }
-
-        $dbForProject->deleteDocument('variables', $variable->getId());
-        $dbForProject->deleteCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });

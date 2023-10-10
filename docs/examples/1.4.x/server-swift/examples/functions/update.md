@@ -9,7 +9,6 @@ let functions = Functions(client)
 
 let function = try await functions.update(
     functionId: "[FUNCTION_ID]",
-    name: "[NAME]",
-    runtime: "node-14.5"
+    name: "[NAME]"
 )
 

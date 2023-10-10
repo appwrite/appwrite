@@ -41,7 +41,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\Text;
 
 App::post('/v1/teams')
-    ->desc('Create Team')
+    ->desc('Create team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
@@ -129,7 +129,7 @@ App::post('/v1/teams')
     });
 
 App::get('/v1/teams')
-    ->desc('List Teams')
+    ->desc('List teams')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -181,7 +181,7 @@ App::get('/v1/teams')
     });
 
 App::get('/v1/teams/:teamId')
-    ->desc('Get Team')
+    ->desc('Get team')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -208,7 +208,7 @@ App::get('/v1/teams/:teamId')
     });
 
 App::get('/v1/teams/:teamId/prefs')
-    ->desc('Get Team Preferences')
+    ->desc('Get team preferences')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -236,7 +236,7 @@ App::get('/v1/teams/:teamId/prefs')
     });
 
 App::put('/v1/teams/:teamId')
-    ->desc('Update Name')
+    ->desc('Update name')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update')
     ->label('scope', 'teams.write')
@@ -279,7 +279,7 @@ App::put('/v1/teams/:teamId')
     });
 
 App::put('/v1/teams/:teamId/prefs')
-    ->desc('Update Preferences')
+    ->desc('Update preferences')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].update.prefs')
     ->label('scope', 'teams.write')
@@ -315,7 +315,7 @@ App::put('/v1/teams/:teamId/prefs')
     });
 
 App::delete('/v1/teams/:teamId')
-    ->desc('Delete Team')
+    ->desc('Delete team')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].delete')
     ->label('scope', 'teams.write')
@@ -357,7 +357,7 @@ App::delete('/v1/teams/:teamId')
     });
 
 App::post('/v1/teams/:teamId/memberships')
-    ->desc('Create Team Membership')
+    ->desc('Create team membership')
     ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
@@ -378,7 +378,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -389,6 +389,14 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('messaging')
     ->inject('events')
     ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if (empty($url)) {
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'URL is required');
+            }
+        }
 
         if (empty($userId) && empty($email) && empty($phone)) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'At least one of userId, email, or phone is required');
@@ -483,7 +491,6 @@ App::post('/v1/teams/:teamId/memberships')
                     'tokens' => null,
                     'memberships' => null,
                     'search' => implode(' ', [$userId, $email, $name]),
-                    'accessedAt' => DateTime::now(),
                 ])));
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -659,7 +666,7 @@ App::post('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships')
-    ->desc('List Team Memberships')
+    ->desc('List team memberships')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -743,7 +750,7 @@ App::get('/v1/teams/:teamId/memberships')
     });
 
 App::get('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Get Team Membership')
+    ->desc('Get team membership')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -785,7 +792,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Update Membership')
+    ->desc('Update membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update')
     ->label('scope', 'teams.write')
@@ -856,7 +863,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
-    ->desc('Update Team Membership Status')
+    ->desc('Update team membership status')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].update.status')
     ->label('scope', 'public')
@@ -991,7 +998,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     });
 
 App::delete('/v1/teams/:teamId/memberships/:membershipId')
-    ->desc('Delete Team Membership')
+    ->desc('Delete team membership')
     ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].delete')
     ->label('scope', 'teams.write')
@@ -1057,7 +1064,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     });
 
 App::get('/v1/teams/:teamId/logs')
-    ->desc('List Team Logs')
+    ->desc('List team logs')
     ->groups(['api', 'teams'])
     ->label('scope', 'teams.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

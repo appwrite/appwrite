@@ -1,3 +1,54 @@
+# Version 1.4.3
+
+## Features
+- Support for the all new bun runtime [#6230](https://github.com/appwrite/appwrite/pull/6230)
+- Stripe function templates [Console #540](https://github.com/appwrite/console/pull/540)
+
+## Fixes
+- Fix missing _APP_OPENSSL_KEY_V1 in the compose file [#6199](https://github.com/appwrite/appwrite/pull/6199)
+- Fix V2 functions env vars [#6215](https://github.com/appwrite/appwrite/pull/6215)
+- Fix Don't update User Accessed At for Users and Teams APIs [#6222](https://github.com/appwrite/appwrite/pull/6222)
+- Fix Git deploys with S3 [#6227](https://github.com/appwrite/appwrite/pull/6227)
+- Fix manual internal id insertion [#6232](https://github.com/appwrite/appwrite/pull/6232)
+- Fix function timeout [#6235](https://github.com/appwrite/appwrite/pull/6235)
+- Fix collections with datetime attributes migration [#17](https://github.com/utopia-php/migration/pull/17)
+- Fix not all user data being migrated [#17](https://github.com/utopia-php/migration/pull/17)
+- Fix team memberships migration [#16](https://github.com/utopia-php/migration/pull/16)
+- Fix events validation on create/update webhooks [#6219](https://github.com/appwrite/appwrite/pull/6219)
+- Fix schedules task [#6246](https://github.com/appwrite/appwrite/pull/6246)
+- Fix missing keys when updating document via relationship [Database #320](https://github.com/utopia-php/database/pull/320)
+- Fix Discord template [Console #538](https://github.com/appwrite/console/pull/538)
+- Fix form var is url not text [Console #539](https://github.com/appwrite/console/pull/539)
+- Fix incorrect link to migration docs for self-hosted to cloud [Console #543](https://github.com/appwrite/console/pull/543)
+- Fix can't disable smtp [Console #548](https://github.com/appwrite/console/pull/548)
+- Fix create function cover for case where VCS is not enabled [Console #544](https://github.com/appwrite/console/pull/544)
+- Fix users list not re-rendering [Console #537](https://github.com/appwrite/console/pull/537)
+- Fix create attribute modal null when selecting same time twice [Console #549](https://github.com/appwrite/console/pull/549)
+- Fix runtime versions in templates [Console #546](https://github.com/appwrite/console/pull/546)
+
+# Version 1.4.2
+
+## Fixes
+
+- Fix create phone session abuse key [#6134](https://github.com/appwrite/appwrite/pull/6134)
+- Fix CLI backwards compatibility [#6125](https://github.com/appwrite/appwrite/pull/6125)
+- Fix Not Found error when deploying function from git [#6133](https://github.com/appwrite/appwrite/pull/6133)
+- Fix _APP_EXECUTOR_HOST for upgrades [#6141](https://github.com/appwrite/appwrite/pull/6141)
+- Fix create execution request filter from previous SDK version [#6146](https://github.com/appwrite/appwrite/pull/6146)
+- Fix migrations worker [#6116](https://github.com/appwrite/appwrite/pull/6116)
+- Fix: Global variables by [#6150](https://github.com/appwrite/appwrite/pull/6150)
+- Fix webhook secret validation and executor path validation [#6162](https://github.com/appwrite/appwrite/pull/6162)
+- Fix: Untrusted custom domains + auto-ssl [#6155](https://github.com/appwrite/appwrite/pull/6155)
+- Fix: AI Assistant [#6153](https://github.com/appwrite/appwrite/pull/6153)
+
+## Changes
+- Add required params for scheduled functions [#6148](https://github.com/appwrite/appwrite/pull/6148)
+- Update the error message for router_domain_not_configured [#6145](https://github.com/appwrite/appwrite/pull/6145)
+- Override forEachDocument() to skip the cache collection [#6144](https://github.com/appwrite/appwrite/pull/6144)
+- Support for v2 functions [#6142](https://github.com/appwrite/appwrite/pull/6142)
+- Change executor hostname back to appwrite-executor [#6160](https://github.com/appwrite/appwrite/pull/6160)
+- Make URL optional for Create Membership API and Serverside Requests [#6157](https://github.com/appwrite/appwrite/pull/6157)
+
 # Version 1.4.1
 
 ## Features
