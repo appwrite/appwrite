@@ -4,7 +4,6 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
-use Utopia\Database\Document;
 
 class AttributeList extends Model
 {
@@ -27,6 +26,7 @@ class AttributeList extends Model
                     Response::MODEL_ATTRIBUTE_URL,
                     Response::MODEL_ATTRIBUTE_IP,
                     Response::MODEL_ATTRIBUTE_DATETIME,
+                    Response::MODEL_ATTRIBUTE_RELATIONSHIP,
                     Response::MODEL_ATTRIBUTE_STRING // needs to be last, since its condition would dominate any other string attribute
                 ],
                 'description' => 'List of attributes.',

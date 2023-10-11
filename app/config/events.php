@@ -183,13 +183,16 @@ return [
             ],
         ],
         'create' => [
-            '$description' => 'This event triggers when a bucket is created.'
+            '$description' => 'This event triggers when a team is created.'
         ],
         'delete' => [
-            '$description' => 'This event triggers when a bucket is deleted.',
+            '$description' => 'This event triggers when a team is deleted.',
         ],
         'update' => [
-            '$description' => 'This event triggers when a bucket is updated.',
+            '$description' => 'This event triggers when a team is updated.',
+            'prefs' => [
+                '$description' => 'This event triggers when a team\'s preferences are updated.',
+            ],
         ]
     ],
     'functions' => [
@@ -232,6 +235,20 @@ return [
         ],
         'update' => [
             '$description' => 'This event triggers when a function is updated.',
+        ]
+    ],
+    'rules' => [
+        '$model' => Response::MODEL_PROXY_RULE,
+        '$resource' => true,
+        '$description' => 'This event triggers on any proxy rule event.',
+        'create' => [
+            '$description' => 'This event triggers when a proxy rule is created.'
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a proxy rule is deleted.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a proxy rule is updated.',
         ]
     ]
 ];

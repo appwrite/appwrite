@@ -9,66 +9,37 @@ use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
-    /**
-     * @var Filter
-     */
-    private static $filter = null;
+    private static ?Filter $filter = null;
+    private static ?Route $route = null;
 
-    /**
-     * @var Route
-     */
-    private static $route = null;
-
-    /**
-     * Request constructor.
-     */
     public function __construct(SwooleRequest $request)
     {
         parent::__construct($request);
     }
 
     /**
-     * Get Params
-     *
-     * Get all params of current method
-     *
-     * @return array
+     * @inheritdoc
      */
     public function getParams(): array
     {
-        $requestParameters = [];
-
-        switch ($this->getMethod()) {
-            case self::METHOD_GET:
-                $requestParameters = (!empty($this->swoole->get)) ? $this->swoole->get : [];
-                break;
-            case self::METHOD_POST:
-            case self::METHOD_PUT:
-            case self::METHOD_PATCH:
-            case self::METHOD_DELETE:
-                $requestParameters = $this->generateInput();
-                break;
-            default:
-                $requestParameters = (!empty($this->swoole->get)) ? $this->swoole->get : [];
-        }
+        $parameters = parent::getParams();
 
         if (self::hasFilter() && self::hasRoute()) {
             $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
-            $requestParameters = self::getFilter()->parse($requestParameters, $endpointIdentifier);
+            $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
         }
 
-        return $requestParameters;
+        return $parameters;
     }
-
 
     /**
      * Function to set a response filter
      *
-     * @param $filter the response filter to set
+     * @param Filter|null $filter Filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter)
+    public static function setFilter(?Filter $filter): void
     {
         self::$filter = $filter;
     }
@@ -76,7 +47,7 @@ class Request extends UtopiaRequest
     /**
      * Return the currently set filter
      *
-     * @return Filter
+     * @return Filter|null
      */
     public static function getFilter(): ?Filter
     {
@@ -96,19 +67,19 @@ class Request extends UtopiaRequest
     /**
      * Function to set a request route
      *
-     * @param Route $route the request route to set
+     * @param Route|null $route the request route to set
      *
      * @return void
      */
-    public static function setRoute(?Route $route)
+    public static function setRoute(?Route $route): void
     {
         self::$route = $route;
     }
 
     /**
-     * Return the currently get route
+     * Return the current route
      *
-     * @return Route
+     * @return Route|null
      */
     public static function getRoute(): ?Route
     {

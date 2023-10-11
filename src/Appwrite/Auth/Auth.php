@@ -9,10 +9,9 @@ use Appwrite\Auth\Hash\Phpass;
 use Appwrite\Auth\Hash\Scrypt;
 use Appwrite\Auth\Hash\Scryptmodified;
 use Appwrite\Auth\Hash\Sha;
-use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Roles;
 
@@ -30,7 +29,7 @@ class Auth
     ];
 
     public const DEFAULT_ALGO = 'argon2';
-    public const DEFAULT_ALGO_OPTIONS = ['memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
+    public const DEFAULT_ALGO_OPTIONS = ['type' => 'argon2', 'memoryCost' => 2048, 'timeCost' => 4, 'threads' => 3];
 
     /**
      * User Roles.
@@ -456,13 +455,16 @@ class Auth
             }
         }
 
+        foreach ($user->getAttribute('labels', []) as $label) {
+            $roles[] = 'label:' . $label;
+        }
+
         return $roles;
     }
 
     public static function isAnonymousUser(Document $user): bool
     {
-        return (is_null($user->getAttribute('email'))
-            || is_null($user->getAttribute('phone'))
-        ) && is_null($user->getAttribute('password'));
+        return is_null($user->getAttribute('email'))
+            && is_null($user->getAttribute('phone'));
     }
 }

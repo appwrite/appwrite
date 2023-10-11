@@ -2,12 +2,13 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Appwrite\Utopia\Database\Validator\Queries;
-use Appwrite\Utopia\Database\Validator\Query\Limit;
-use Appwrite\Utopia\Database\Validator\Query\Offset;
-use Appwrite\Utopia\Database\Validator\Query\Cursor;
-use Appwrite\Utopia\Database\Validator\Query\Filter;
-use Appwrite\Utopia\Database\Validator\Query\Order;
+use Appwrite\Extend\Exception;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Query\Cursor;
+use Utopia\Database\Validator\Query\Filter;
+use Utopia\Database\Validator\Query\Order;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -19,6 +20,7 @@ class Base extends Queries
      *
      * @param string $collection
      * @param string[] $allowedAttributes
+     * @throws \Exception
      */
     public function __construct(string $collection, array $allowedAttributes)
     {
@@ -69,6 +71,6 @@ class Base extends Queries
             new Order($attributes),
         ];
 
-        parent::__construct(...$validators);
+        parent::__construct($validators);
     }
 }

@@ -31,6 +31,8 @@ class Exception extends \Exception
      * - Keys
      * - Platform
      * - Domain
+     * - GraphQL
+     * - Migrations
      */
 
     /** General */
@@ -51,6 +53,8 @@ class Exception extends \Exception
     public const GENERAL_SERVER_ERROR              = 'general_server_error';
     public const GENERAL_PROTOCOL_UNSUPPORTED      = 'general_protocol_unsupported';
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
+    public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
+    public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -66,14 +70,20 @@ class Exception extends \Exception
     public const USER_ANONYMOUS_CONSOLE_PROHIBITED = 'user_anonymous_console_prohibited';
     public const USER_SESSION_ALREADY_EXISTS       = 'user_session_already_exists';
     public const USER_NOT_FOUND                    = 'user_not_found';
+    public const USER_PASSWORD_RECENTLY_USED       = 'password_recently_used';
+    public const USER_PASSWORD_PERSONAL_DATA       = 'password_personal_data';
     public const USER_EMAIL_ALREADY_EXISTS         = 'user_email_already_exists';
     public const USER_PASSWORD_MISMATCH            = 'user_password_mismatch';
     public const USER_SESSION_NOT_FOUND            = 'user_session_not_found';
+    public const USER_IDENTITY_NOT_FOUND           = 'user_identity_not_found';
     public const USER_UNAUTHORIZED                 = 'user_unauthorized';
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
+    public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
+    public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -82,6 +92,7 @@ class Exception extends \Exception
     public const TEAM_INVALID_SECRET               = 'team_invalid_secret';
     public const TEAM_MEMBERSHIP_MISMATCH          = 'team_membership_mismatch';
     public const TEAM_INVITE_MISMATCH              = 'team_invite_mismatch';
+    public const TEAM_ALREADY_EXISTS               = 'team_already_exists';
 
     /** Membership */
     public const MEMBERSHIP_NOT_FOUND              = 'membership_not_found';
@@ -95,6 +106,7 @@ class Exception extends \Exception
     public const AVATAR_ICON_NOT_FOUND             = 'avatar_icon_not_found';
 
     /** Storage */
+    public const STORAGE_FILE_ALREADY_EXISTS       = 'storage_file_already_exists';
     public const STORAGE_FILE_NOT_FOUND            = 'storage_file_not_found';
     public const STORAGE_DEVICE_NOT_FOUND          = 'storage_device_not_found';
     public const STORAGE_FILE_EMPTY                = 'storage_file_empty';
@@ -105,10 +117,19 @@ class Exception extends \Exception
     public const STORAGE_BUCKET_NOT_FOUND          = 'storage_bucket_not_found';
     public const STORAGE_INVALID_CONTENT_RANGE     = 'storage_invalid_content_range';
     public const STORAGE_INVALID_RANGE             = 'storage_invalid_range';
+    public const STORAGE_INVALID_APPWRITE_ID       = 'storage_invalid_appwrite_id';
+
+    /** VCS */
+    public const INSTALLATION_NOT_FOUND              = 'installation_not_found';
+    public const PROVIDER_REPOSITORY_NOT_FOUND       = 'provider_repository_not_found';
+    public const REPOSITORY_NOT_FOUND                = 'repository_not_found';
+    public const PROVIDER_CONTRIBUTION_CONFLICT      = 'provider_contribution_conflict';
+    public const GENERAL_PROVIDER_FAILURE            = 'general_provider_failure';
 
     /** Functions */
     public const FUNCTION_NOT_FOUND                = 'function_not_found';
     public const FUNCTION_RUNTIME_UNSUPPORTED      = 'function_runtime_unsupported';
+    public const FUNCTION_ENTRYPOINT_MISSING      = 'function_entrypoint_missing';
 
     /** Deployments */
     public const DEPLOYMENT_NOT_FOUND              = 'deployment_not_found';
@@ -133,8 +154,11 @@ class Exception extends \Exception
     /** Documents */
     public const DOCUMENT_NOT_FOUND                = 'document_not_found';
     public const DOCUMENT_INVALID_STRUCTURE        = 'document_invalid_structure';
+    public const DOCUMENT_MISSING_DATA             = 'document_missing_data';
     public const DOCUMENT_MISSING_PAYLOAD          = 'document_missing_payload';
     public const DOCUMENT_ALREADY_EXISTS           = 'document_already_exists';
+    public const DOCUMENT_UPDATE_CONFLICT          = 'document_update_conflict';
+    public const DOCUMENT_DELETE_RESTRICTED        = 'document_delete_restricted';
 
     /** Attribute */
     public const ATTRIBUTE_NOT_FOUND               = 'attribute_not_found';
@@ -145,11 +169,13 @@ class Exception extends \Exception
     public const ATTRIBUTE_ALREADY_EXISTS          = 'attribute_already_exists';
     public const ATTRIBUTE_LIMIT_EXCEEDED          = 'attribute_limit_exceeded';
     public const ATTRIBUTE_VALUE_INVALID           = 'attribute_value_invalid';
+    public const ATTRIBUTE_TYPE_INVALID            = 'attribute_type_invalid';
 
     /** Indexes */
     public const INDEX_NOT_FOUND                   = 'index_not_found';
     public const INDEX_LIMIT_EXCEEDED              = 'index_limit_exceeded';
     public const INDEX_ALREADY_EXISTS              = 'index_already_exists';
+    public const INDEX_INVALID                     = 'index_invalid';
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
@@ -162,8 +188,22 @@ class Exception extends \Exception
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 
+    public const PROJECT_SMTP_CONFIG_INVALID       = 'project_smtp_config_invalid';
+
+    public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
+
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
+
+    /** Router */
+    public const ROUTER_HOST_NOT_FOUND             = 'router_host_not_found';
+    public const ROUTER_DOMAIN_NOT_CONFIGURED      = 'router_domain_not_configured';
+
+    /** Proxy */
+    public const RULE_RESOURCE_NOT_FOUND            = 'rule_resource_not_found';
+    public const RULE_NOT_FOUND                     = 'rule_not_found';
+    public const RULE_ALREADY_EXISTS                = 'rule_already_exists';
+    public const RULE_VERIFICATION_FAILED           = 'rule_verification_failed';
 
     /** Keys */
     public const KEY_NOT_FOUND                     = 'key_not_found';
@@ -175,11 +215,14 @@ class Exception extends \Exception
     /** Platform */
     public const PLATFORM_NOT_FOUND                = 'platform_not_found';
 
-    /** Domain */
-    public const DOMAIN_NOT_FOUND                  = 'domain_not_found';
-    public const DOMAIN_ALREADY_EXISTS             = 'domain_already_exists';
-    public const DOMAIN_FORBIDDEN                  = 'domain_forbidden';
-    public const DOMAIN_VERIFICATION_FAILED        = 'domain_verification_failed';
+    /** GraphqQL */
+    public const GRAPHQL_NO_QUERY                  = 'graphql_no_query';
+    public const GRAPHQL_TOO_MANY_QUERIES          = 'graphql_too_many_queries';
+
+    /** Migrations */
+    public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
+    public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
+    public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
 
     protected $type = '';
     protected $errors = [];

@@ -2,26 +2,26 @@
 
 require_once __DIR__ . '/../worker.php';
 
+use Domnikl\Statsd\Client;
 use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
-use Domnikl\Statsd\Client;
 use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\ID;
-use Utopia\Database\Permission;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
-use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Queue\Server;
+use Utopia\Database\Helpers\Role;
 
 Authorization::disable();
 Authorization::setDefaultStatus(false);
@@ -36,15 +36,15 @@ Server::setResource('execute', function () {
         Document $function,
         string $trigger,
         string $data = null,
+        string $path,
+        string $method,
+        array $headers,
         ?Document $user = null,
         string $jwt = null,
         string $event = null,
         string $eventData = null,
         string $executionId = null,
     ) {
-        $error = null; // Used to re-throw at the end to trigger Logger (Sentry)
-        $errorCode = 0;
-
         $user ??= new Document();
         $functionId = $function->getId();
         $deploymentId = $function->getAttribute('deployment', '');
@@ -74,7 +74,8 @@ Server::setResource('execute', function () {
         }
 
         /** Check if  runtime is supported */
-        $runtimes = Config::getParam('runtimes', []);
+        $version = $function->getAttribute('version', 'v2');
+        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
         if (!\array_key_exists($function->getAttribute('runtime'), $runtimes)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
@@ -82,23 +83,45 @@ Server::setResource('execute', function () {
 
         $runtime = $runtimes[$function->getAttribute('runtime')];
 
+        $headers['x-appwrite-trigger'] = $trigger;
+        $headers['x-appwrite-event'] = $event ?? '';
+        $headers['x-appwrite-user-id'] = $user->getId() ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
+            $headersFiltered = [];
+            foreach ($headers as $key => $value) {
+                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
+                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                }
+            }
+
             $executionId = ID::unique();
-            $execution = $dbForProject->createDocument('executions', new Document([
+            $execution = new Document([
                 '$id' => $executionId,
                 '$permissions' => $user->isEmpty() ? [] : [Permission::read(Role::user($user->getId()))],
-                'functionId' => $functionId,
-                'deploymentId' => $deploymentId,
+                'functionInternalId' => $function->getInternalId(),
+                'functionId' => $function->getId(),
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
                 'trigger' => $trigger,
-                'status' => 'waiting',
-                'statusCode' => 0,
-                'response' => '',
-                'stderr' => '',
+                'status' => 'processing',
+                'responseStatusCode' => 0,
+                'responseHeaders' => [],
+                'requestPath' => $path,
+                'requestMethod' => $method,
+                'requestHeaders' => $headersFiltered,
+                'errors' => '',
+                'logs' => '',
                 'duration' => 0.0,
                 'search' => implode(' ', [$functionId, $executionId]),
-            ]));
+            ]);
+
+            if ($function->getAttribute('logging')) {
+                $execution = $dbForProject->createDocument('executions', $execution);
+            }
 
             // TODO: @Meldiron Trigger executions.create event here
 
@@ -107,65 +130,110 @@ Server::setResource('execute', function () {
             }
         }
 
-        $execution->setAttribute('status', 'processing');
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        if ($execution->getAttribute('status') !== 'processing') {
+            $execution->setAttribute('status', 'processing');
 
-        $vars = array_reduce($function->getAttribute('vars', []), function (array $carry, Document $var) {
-            $carry[$var->getAttribute('key')] = $var->getAttribute('value');
-            return $carry;
-        }, []);
+            if ($function->getAttribute('logging')) {
+                $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+            }
+        }
 
-        /** Collect environment variables */
+        $durationStart = \microtime(true);
+
+        $body = $eventData ?? '';
+        if (empty($body)) {
+            $body = $data ?? '';
+        }
+
+        $vars = [];
+
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
+
+        // Shared vars
+        foreach ($function->getAttribute('varsProject', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
+
+        // Function vars
+        foreach ($function->getAttribute('vars', []) as $var) {
+            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        }
+
+        // Appwrite vars
         $vars = \array_merge($vars, [
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deploymentId,
-            'APPWRITE_FUNCTION_TRIGGER' => $trigger,
             'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-            'APPWRITE_FUNCTION_EVENT' => $event ?? '',
-            'APPWRITE_FUNCTION_EVENT_DATA' => $eventData ?? '',
-            'APPWRITE_FUNCTION_DATA' => $data ?? '',
-            'APPWRITE_FUNCTION_USER_ID' => $user->getId() ?? '',
-            'APPWRITE_FUNCTION_JWT' => $jwt ?? '',
         ]);
 
         /** Execute function */
         try {
-            $client = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-            $executionResponse = $client->createExecution(
+            $version = $function->getAttribute('version', 'v2');
+            $command = $runtime['startCommand'];
+            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
+            $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),
                 deploymentId: $deploymentId,
-                payload: $vars['APPWRITE_FUNCTION_DATA'] ?? '',
+                body: \strlen($body) > 0 ? $body : null,
                 variables: $vars,
                 timeout: $function->getAttribute('timeout', 0),
                 image: $runtime['image'],
-                source: $build->getAttribute('outputPath', ''),
+                source: $build->getAttribute('path', ''),
                 entrypoint: $deployment->getAttribute('entrypoint', ''),
+                version: $version,
+                path: $path,
+                method: $method,
+                headers: $headers,
+                runtimeEntrypoint: $command
             );
+
+            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
+
+            $headersFiltered = [];
+            foreach ($executionResponse['headers'] as $key => $value) {
+                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
+                    $headersFiltered[] = [ 'name' => $key, 'value' => $value ];
+                }
+            }
 
             /** Update execution status */
             $execution
-                ->setAttribute('status', $executionResponse['status'])
-                ->setAttribute('statusCode', $executionResponse['statusCode'])
-                ->setAttribute('response', $executionResponse['response'])
-                ->setAttribute('stdout', $executionResponse['stdout'])
-                ->setAttribute('stderr', $executionResponse['stderr'])
+                ->setAttribute('status', $status)
+                ->setAttribute('responseStatusCode', $executionResponse['statusCode'])
+                ->setAttribute('responseHeaders', $headersFiltered)
+                ->setAttribute('logs', $executionResponse['logs'])
+                ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
-            $interval = (new \DateTime())->diff(new \DateTime($execution->getCreatedAt()));
+            $durationEnd = \microtime(true);
+
             $execution
-                ->setAttribute('duration', (float)$interval->format('%s.%f'))
+                ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
-                ->setAttribute('statusCode', $th->getCode())
-                ->setAttribute('stderr', $th->getMessage());
+                ->setAttribute('responseStatusCode', 500)
+                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
 
             $error = $th->getMessage();
             $errorCode = $th->getCode();
         }
 
-        $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        if ($function->getAttribute('logging')) {
+            $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
+        }
 
         /** Trigger Webhook */
         $executionModel = new Execution();
@@ -246,7 +314,7 @@ $server->job()
 
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
-        $data = $payload['data'] ?? '';
+        $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
@@ -277,15 +345,7 @@ $server->job()
                     if (!array_intersect($events, $function->getAttribute('events', []))) {
                         continue;
                     }
-
-                    /** Skip if a function has been triggered by its own execution */
-                    $event = "functions.{$function->getId()}.executions.*";
-                    if (in_array($event, $events)) {
-                        Console::warning("Skipping function: {$function->getAttribute('name')} from project: {$project->getId()} triggered by self");
-                        continue;
-                    }
-
-                    Console::success("Iterating function: {$function->getAttribute('name')} from project: {$project->getId()}");
+                    Console::success('Iterating function: ' . $function->getAttribute('name'));
                     $execute(
                         log: $log,
                         statsd: $statsd,
@@ -299,7 +359,13 @@ $server->job()
                         user: $user,
                         data: null,
                         executionId: null,
-                        jwt: null
+                        jwt: null,
+                        path: '/',
+                        method: 'POST',
+                        headers: [
+                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                            'content-type' => 'application/json'
+                        ],
                     );
                     Console::success('Triggered function: ' . $events[0]);
                 }
@@ -328,6 +394,9 @@ $server->job()
                     data: $data,
                     user: $user,
                     jwt: $jwt,
+                    path: $payload['path'] ?? '',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     statsd: $statsd,
                 );
                 break;
@@ -345,6 +414,9 @@ $server->job()
                     data: null,
                     user: null,
                     jwt: null,
+                    path: $payload['path'] ?? '/',
+                    method: $payload['method'] ?? 'POST',
+                    headers: $payload['headers'] ?? [],
                     statsd: $statsd,
                 );
                 break;

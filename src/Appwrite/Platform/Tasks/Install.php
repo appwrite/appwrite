@@ -6,6 +6,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
+use Utopia\Analytics\Adapter;
 use Utopia\Analytics\Adapter\GoogleAnalytics;
 use Utopia\Analytics\Event;
 use Utopia\CLI\Console;
@@ -36,25 +37,10 @@ class Install extends Action
 
     public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
     {
-        /**
-         * 1. Start - DONE
-         * 2. Check for older setup and get older version - DONE
-         *  2.1 If older version is equal or bigger(?) than current version, **stop setup**
-         *  2.2. Get ENV vars - DONE
-         *   2.2.1 Fetch from older docker-compose.yml file
-         *   2.2.2 Fetch from older .env file (manually parse)
-         *  2.3 Use old ENV vars as default values
-         *  2.4 Ask for all required vars not given as CLI args and if in interactive mode
-         *      Otherwise, just use default vars. - DONE
-         * 3. Ask user to backup important volumes, env vars, and SQL tables
-         *      In th future we can try and automate this for smaller/medium size setups
-         * 4. Drop new docker-compose.yml setup (located inside the container, no network dependencies with appwrite.io) - DONE
-         * 5. Run docker compose up -d - DONE
-         * 6. Run data migration
-         */
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
+        /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
 
         /**
@@ -65,14 +51,14 @@ class Install extends Action
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
-                $vars[] = $var;
+                $vars[$var['name']] = $var;
             }
         }
 
         Console::success('Starting Appwrite installation...');
 
         // Create directory with write permissions
-        if (null !== $this->path && !\file_exists(\dirname($this->path))) {
+        if (!\file_exists(\dirname($this->path))) {
             if (!@\mkdir(\dirname($this->path), 0755, true)) {
                 Console::error('Can\'t create directory ' . \dirname($this->path));
                 Console::exit(1);
@@ -83,9 +69,9 @@ class Install extends Action
 
         if ($data !== false) {
             if ($interactive == 'Y' && Console::isInteractive()) {
-                $answer = Console::confirm('Previous installation found, do you want to overwrite it? (Y/n)');
+                $answer = Console::confirm('Previous installation found, do you want to overwrite it (a backup will be created before overwriting)? (Y/n)');
 
-                if ($answer !== 'Y') {
+                if (\strtolower($answer) !== 'y') {
                     Console::info('No action taken.');
                     return;
                 }
@@ -119,10 +105,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as &$var) {
-                            if ($var['name'] === $key) {
-                                $var['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }
@@ -138,10 +124,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as &$var) {
-                            if ($var['name'] === $key) {
-                                $var['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }
@@ -170,7 +156,7 @@ class Install extends Action
 
         $input = [];
 
-        foreach ($vars as $key => $var) {
+        foreach ($vars as $var) {
             if (!empty($var['filter']) && ($interactive !== 'Y' || !Console::isInteractive())) {
                 if ($data && $var['default'] !== null) {
                     $input[$var['name']] = $var['default'];
@@ -217,31 +203,20 @@ class Install extends Action
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
             ->setParam('organization', $organization)
-            ->setParam('image', $image)
-        ;
+            ->setParam('image', $image);
 
-        $templateForEnv
-            ->setParam('vars', $input)
-        ;
+        $templateForEnv->setParam('vars', $input);
 
         if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $event = new Event();
-            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
-                ->addProp('category', 'install/server')
-                ->addProp('action', 'install');
-            $analytics->createEvent($event);
+            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::exit(1);
         }
 
         if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $event = new Event();
-            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
-                ->addProp('category', 'install/server')
-                ->addProp('action', 'install');
-            $analytics->createEvent($event);
+            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::exit(1);
         }
@@ -256,28 +231,35 @@ class Install extends Action
             }
         }
 
-        Console::log("Running \"docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes\"");
+        Console::log("Running \"docker compose up -d --remove-orphans --renew-anon-volumes\"");
 
-        $exit = Console::execute("${env} docker compose -f {$this->path}/docker-compose.yml up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
+        $exit = Console::execute("$env docker compose --project-directory $this->path up -d --remove-orphans --renew-anon-volumes", '', $stdout, $stderr);
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $event = new Event();
-            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
-                ->addProp('category', 'install/server')
-                ->addProp('action', 'install');
-            $analytics->createEvent($event);
+            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $event = new Event();
-            $event->setName(APP_VERSION_STABLE . ' - ' . $message)
-                ->addProp('category', 'install/server')
-                ->addProp('action', 'install');
-            $analytics->createEvent($event);
+            $this->sendEvent($analytics, $message);
             Console::success($message);
         }
+    }
+
+    private function sendEvent(Adapter $analytics, string $message): void
+    {
+        $event = new Event();
+        $event->setName(APP_VERSION_STABLE);
+        $event->setValue($message);
+        $event->setUrl('http://localhost/');
+        $event->setProps([
+            'category' => 'install/server',
+            'action' => 'install',
+        ]);
+        $event->setType('install/server');
+
+        $analytics->createEvent($event);
     }
 }

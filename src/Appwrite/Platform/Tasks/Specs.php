@@ -40,8 +40,6 @@ class Specs extends Action
 
     public function action(string $version, string $mode, Registry $register): void
     {
-        $db = $register->get('db');
-        $redis = $register->get('cache');
         $appRoutes = App::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
@@ -255,7 +253,7 @@ class Specs extends Action
                     ->setParam('docs.url', $endpoint . '/docs');
 
                 if ($mocks) {
-                    $path = __DIR__ . '/../config/specs/' . $format . '-mocks-' . $platform . '.json';
+                    $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
 
                     if (!file_put_contents($path, json_encode($specs->parse()))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
@@ -266,7 +264,7 @@ class Specs extends Action
                     continue;
                 }
 
-                $path = __DIR__ . '/../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
+                $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-' . $version . '-' . $platform . '.json';
 
                 if (!file_put_contents($path, json_encode($specs->parse()))) {
                     throw new Exception('Failed to save spec file: ' . $path);

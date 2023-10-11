@@ -4,12 +4,14 @@ namespace Tests\E2E\Services\Account;
 
 use Appwrite\Extend\Exception;
 use Appwrite\SMS\Adapter\Mock;
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
 
@@ -18,32 +20,6 @@ class AccountCustomClientTest extends Scope
     use AccountBase;
     use ProjectCustom;
     use SideClient;
-
-    public function testCreateAccountWithInvite(): void
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for FAILURE
-         * Make sure the invite endpoint is only accessible through the console project.
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/invite', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-            'code' => 'Invalid Code'
-        ]);
-
-        $this->assertEquals($response['headers']['status-code'], 401);
-        $this->assertEquals($response['body']['type'], Exception::GENERAL_ACCESS_FORBIDDEN);
-    }
 
     /**
      * @depends testCreateAccountSession
@@ -66,6 +42,7 @@ class AccountCustomClientTest extends Scope
             'provider' => $provider,
             'appId' => $appId,
             'secret' => $secret,
+            'enabled' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -81,6 +58,34 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
+
+        /**
+         * Test for Failure when disabled
+         */
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $this->getProject()['$id'] . '/oauth2', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => 'console',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+        ]), [
+            'provider' => $provider,
+            'appId' => $appId,
+            'secret' => $secret,
+            'enabled' => false,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'success' => 'http://localhost/v1/mock/tests/general/oauth2/success',
+            'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
+        ]);
+
+        $this->assertEquals(412, $response['headers']['status-code']);
 
         return [];
     }
@@ -365,6 +370,21 @@ class AccountCustomClientTest extends Scope
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
+        \usleep(1000 * 30); // wait for 30ms to let the shutdown update accessedAt
+
+        $apiKey = $this->getProject()['apiKey'];
+        $userId = $response['body']['userId'];
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $apiKey,
+        ]));
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertArrayHasKey('accessedAt', $response['body']);
+
+        $this->assertNotEmpty($response['body']['accessedAt']);
+
         /**
          * Test for FAILURE
          */
@@ -477,7 +497,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -488,6 +508,18 @@ class AccountCustomClientTest extends Scope
             'email' => $email,
             'password' => $password,
         ]);
+
+        $this->assertEquals($response['headers']['status-code'], 201);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost'
+        ]);
+
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -524,6 +556,7 @@ class AccountCustomClientTest extends Scope
             'provider' => $provider,
             'appId' => $appId,
             'secret' => $secret,
+            'enabled' => true,
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 200);
@@ -728,7 +761,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -828,7 +861,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $number);
         $this->assertTrue($response['body']['phoneVerification']);
 
@@ -879,7 +912,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['email'], $email);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
@@ -921,7 +954,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['registration']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
         $this->assertEquals($response['body']['phone'], $newPhone);
 
         /**
@@ -952,6 +985,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
+    #[Retry(count: 1)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -970,7 +1004,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertEquals(true, DateTime::isValid($response['body']['expire']));
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         \sleep(2);
 

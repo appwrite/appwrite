@@ -6,8 +6,8 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SideConsole;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class FunctionsConsoleClientTest extends Scope
 {
@@ -24,6 +24,7 @@ class FunctionsConsoleClientTest extends Scope
             'name' => 'Test',
             'execute' => [Role::user($this->getUser()['$id'])->toString()],
             'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
             'events' => [
                 'users.*.create',
                 'users.*.delete',
@@ -41,7 +42,8 @@ class FunctionsConsoleClientTest extends Scope
             'functionId' => ID::unique(),
             'name' => 'Test Failure',
             'execute' => ['some-random-string'],
-            'runtime' => 'php-8.0'
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);

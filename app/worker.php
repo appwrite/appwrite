@@ -3,14 +3,18 @@
 require_once __DIR__ . '/init.php';
 
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
+use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Queue\Adapter\Swoole;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -34,7 +38,7 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     ;
 
     $adapter = new Database($database, $cache);
-    $adapter->setNamespace('console');
+    $adapter->setNamespace('_console');
 
     return $adapter;
 }, ['cache', 'register']);
@@ -104,7 +108,7 @@ $connection = $pools->get('queue')->pop()->getResource();
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
 
 if (empty(App::getEnv('QUEUE'))) {
-    throw new Exception('Please configure "QUEUE" environemnt variable.');
+    throw new Exception('Please configure "QUEUE" environment variable.');
 }
 
 $adapter = new Swoole($connection, $workerNumber, App::getEnv('QUEUE'));
@@ -122,7 +126,7 @@ $server
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, Logger $logger, Log $log) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -142,7 +146,7 @@ $server
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', \Utopia\Database\Validator\Authorization::$roles);
+            $log->addExtra('roles', Authorization::getRoles());
 
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);

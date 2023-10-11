@@ -704,10 +704,6 @@ use Utopia\Database\Role;
 //             'async' => true,
 //         ]);
 
-//         $this->assertEquals(202, $execution['headers']['status-code']);
-//         $this->assertNotEmpty($execution['body']['$id']);
-//         $this->assertEquals($functionId, $execution['body']['functionId']);
-
 //         sleep(10);
 
 //         $execution = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/executions/' . $execution['body']['$id'], $headers);

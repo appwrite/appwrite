@@ -19,7 +19,7 @@ class Env
         $data = explode("\n", $data);
 
         foreach ($data as &$row) {
-            $row = explode('=', $row);
+            $row = explode('=', $row, 2);
             $key = (isset($row[0])) ? trim($row[0]) : null;
             $value = (isset($row[1])) ? trim($row[1]) : null;
 

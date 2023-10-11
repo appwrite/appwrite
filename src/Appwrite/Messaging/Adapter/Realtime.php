@@ -6,8 +6,8 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
 use Utopia\App;
-use Utopia\Database\ID;
-use Utopia\Database\Role;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class Realtime extends Adapter
 {
@@ -149,7 +149,7 @@ class Realtime extends Adapter
             'data' => [
                 'events' => $events,
                 'channels' => $channels,
-                'timestamp' => DateTime::now(),
+                'timestamp' => DateTime::formatTz(DateTime::now()),
                 'payload' => $payload
             ]
         ]));
@@ -260,6 +260,11 @@ class Realtime extends Adapter
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'rules':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
+                break;
             case 'teams':
                 if ($parts[2] === 'memberships') {
                     $permissionsChanged = $parts[4] ?? false;
@@ -325,6 +330,11 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
+                break;
+            case 'migrations':
+                $channels[] = 'console';
+                $projectId = 'console';
+                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

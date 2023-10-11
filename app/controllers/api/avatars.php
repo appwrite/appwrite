@@ -1,11 +1,8 @@
 <?php
 
 use Appwrite\Extend\Exception;
-use Appwrite\Network\Validator\URL;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -14,6 +11,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
 use Utopia\Image\Image;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -21,7 +19,10 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -42,7 +43,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     }
 
     $output = 'png';
-    $path = $set[$code];
+    $path = $set[$code]['path'];
     $type = 'png';
 
     if (!\is_readable($path)) {
@@ -190,7 +191,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 };
 
 App::get('/v1/avatars/credit-cards/:code')
-    ->desc('Get Credit Card Icon')
+    ->desc('Get credit card icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -210,7 +211,7 @@ App::get('/v1/avatars/credit-cards/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) =>  $avatarCallback('credit-cards', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/browsers/:code')
-    ->desc('Get Browser Icon')
+    ->desc('Get browser icon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -230,7 +231,7 @@ App::get('/v1/avatars/browsers/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('browsers', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/flags/:code')
-    ->desc('Get Country Flag')
+    ->desc('Get country flag')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -250,7 +251,7 @@ App::get('/v1/avatars/flags/:code')
     ->action(fn (string $code, int $width, int $height, int $quality, Response $response) => $avatarCallback('flags', $code, $width, $height, $quality, $response));
 
 App::get('/v1/avatars/image')
-    ->desc('Get Image from URL')
+    ->desc('Get image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -276,7 +277,13 @@ App::get('/v1/avatars/image')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
         }
 
-        $fetch = @\file_get_contents($url, false);
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
+        }
+
+        $fetch = @\file_get_contents($url);
 
         if (!$fetch) {
             throw new Exception(Exception::AVATAR_IMAGE_NOT_FOUND);
@@ -300,7 +307,7 @@ App::get('/v1/avatars/image')
     });
 
 App::get('/v1/avatars/favicon')
-    ->desc('Get Favicon')
+    ->desc('Get favicon')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache', true)
@@ -324,6 +331,12 @@ App::get('/v1/avatars/favicon')
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
+        }
+
+        $domain = new Domain(\parse_url($url, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         $curl = \curl_init();
@@ -376,8 +389,8 @@ App::get('/v1/avatars/favicon')
                         case 'jpeg':
                             $size = \explode('x', \strtolower($sizes));
 
-                            $sizeWidth = (int) $size[0] ?? 0;
-                            $sizeHeight = (int) $size[1] ?? 0;
+                            $sizeWidth = (int) ($size[0] ?? 0);
+                            $sizeHeight = (int) ($size[1] ?? 0);
 
                             if (($sizeWidth * $sizeHeight) >= $space) {
                                 $space = $sizeWidth * $sizeHeight;
@@ -397,6 +410,12 @@ App::get('/v1/avatars/favicon')
 
             $outputHref = $default['scheme'] . '://' . $default['host'] . '/favicon.ico';
             $outputExt = 'ico';
+        }
+
+        $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
+
+        if (!$domain->isKnown()) {
+            throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
         if ('ico' == $outputExt) { // Skip crop, Imagick isn\'t supporting icon files
@@ -430,7 +449,7 @@ App::get('/v1/avatars/favicon')
     });
 
 App::get('/v1/avatars/qr')
-    ->desc('Get QR Code')
+    ->desc('Get QR code')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -470,7 +489,7 @@ App::get('/v1/avatars/qr')
     });
 
 App::get('/v1/avatars/initials')
-    ->desc('Get User Initials')
+    ->desc('Get user initials')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
     ->label('cache.resource', 'avatar/initials')
@@ -490,12 +509,11 @@ App::get('/v1/avatars/initials')
     ->action(function (string $name, int $width, int $height, string $background, Response $response, Document $user) {
 
         $themes = [
-            ['background' => '#FFA1CE'], // Default (Pink)
-            ['background' => '#FDC584'], // Orange
-            ['background' => '#94DBD1'], // Green
-            ['background' => '#A1C4FF'], // Blue
-            ['background' => '#FFA1CE'], // Pink
-            ['background' => '#CBB1FC'] // Purple
+            ['background' => '#FD366E'], // Default (Pink)
+            ['background' => '#FE9567'], // Orange
+            ['background' => '#7C67FE'], // Purple
+            ['background' => '#68A3FE'], // Blue
+            ['background' => '#85DBD8'], // Mint
         ];
 
         $name = (!empty($name)) ? $name : $user->getAttribute('name', $user->getAttribute('email', ''));
@@ -507,11 +525,13 @@ App::get('/v1/avatars/initials')
         $code = 0;
 
         foreach ($words as $key => $w) {
-            $initials .= $w[0] ?? '';
-            $code += (isset($w[0])) ? \ord($w[0]) : 0;
+            if (ctype_alnum($w[0] ?? '')) {
+                $initials .= $w[0];
+                $code += ord($w[0]);
 
-            if ($key == 1) {
-                break;
+                if ($key == 1) {
+                    break;
+                }
             }
         }
 
@@ -529,8 +549,8 @@ App::get('/v1/avatars/initials')
 
         $punch->newImage($width, $height, 'transparent');
 
-        $draw->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
-        $image->setFont(__DIR__ . "/../../assets/fonts/poppins-v9-latin-500.ttf");
+        $draw->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
+        $image->setFont(__DIR__ . "/../../assets/fonts/inter-v8-latin-regular.woff2");
 
         $draw->setFillColor(new ImagickPixel('black'));
         $draw->setFontSize($fontSize);
@@ -544,8 +564,6 @@ App::get('/v1/avatars/initials')
         $image->newImage($width, $height, $background);
         $image->setImageFormat("png");
         $image->compositeImage($punch, Imagick::COMPOSITE_COPYOPACITY, 0, 0);
-
-        //$image->setImageCompressionQuality(9 - round(($quality / 100) * 9));
 
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
@@ -707,7 +725,7 @@ App::get('/v1/cards/cloud')
 
         $text = new \ImagickDraw();
         $text->setTextAlignment(Imagick::ALIGN_CENTER);
-        $text->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $text->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $text->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
@@ -1091,7 +1109,7 @@ App::get('/v1/cards/cloud-og')
 
         $textName = new \ImagickDraw();
         $textName->setTextAlignment(Imagick::ALIGN_CENTER);
-        $textName->setFont(__DIR__ . '/../../../public/fonts/Poppins-Bold.ttf');
+        $textName->setFont(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
         $textName->setFillColor(new \ImagickPixel('#FFFFFF'));
 
         if (\strlen($name) > 32) {
