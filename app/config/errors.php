@@ -10,61 +10,64 @@ return [
     /** General Errors */
     Exception::GENERAL_UNKNOWN => [
         'name' => Exception::GENERAL_UNKNOWN,
-        'description' => 'An unknown error has occured. Please check the logs for more information.',
+        'description' => 'An unknown error has occured. Please submit a support ticket at [TODO: Where do people get help?]() with reproduction steps for further assistance.',
         'code' => 500,
     ],
     Exception::GENERAL_MOCK => [
         'name' => Exception::GENERAL_MOCK,
-        'description' => 'General errors thrown by the mock controller used for testing.',
+        'description' => 'General errors thrown by the mock controller used for testing. If you\'re not building Appwrite from source, please raise an issue at [TODO: Where do people get help?]()',
         'code' => 400,
     ],
     Exception::GENERAL_ACCESS_FORBIDDEN => [
         'name' => Exception::GENERAL_ACCESS_FORBIDDEN,
-        'description' => 'Access to this API is forbidden.',
+        'description' => 'Access to this API is forbidden. Please [action to get access]',
         'code' => 401,
     ],
     Exception::GENERAL_UNKNOWN_ORIGIN => [
         'name' => Exception::GENERAL_UNKNOWN_ORIGIN,
-        'description' => 'The request originated from an unknown origin. If you trust this domain, please list it as a trusted platform in the Appwrite console.',
+        'description' => 'The request originated from an unknown origin. If you trust this domain, please add it as a platform in the Overview page of your Appwrite Console.',
         'code' => 403,
     ],
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
-        'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
+        'description' => 'The requested service is disabled. You can enable the service in the settings of your Appwrite project, under the Services section.',
         'code' => 503,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
-        'description' => 'The current user or API key does not have the required scopes to access the requested resource.',
+        'description' => 'The current user or API key does not have the required scopes to access the requested resource. Update the permissions of the requested resource or add appropriate scopes to your API key.',
         'code' => 401,
     ],
     Exception::GENERAL_RATE_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_RATE_LIMIT_EXCEEDED,
-        'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time.',
+        'description' => 'Rate limit for the current endpoint has been exceeded. Please try again after some time. Learn more about rate-limits here https://appwrite.io/docs/rate-limits.',
         'code' => 429,
     ],
     Exception::GENERAL_SMTP_DISABLED => [
         'name' => Exception::GENERAL_SMTP_DISABLED,
-        'description' => 'SMTP is disabled on your Appwrite instance. You can <a href="/docs/email-delivery">learn more about setting up SMTP</a> in our docs.',
+        'description' => 'Email delivery is not possible because SMTP is disabled on your Appwrite instance. You can learn more about setting up SMTP here: https://appwrite.io/docs/email-delivery.',
         'code' => 503,
     ],
     Exception::GENERAL_PHONE_DISABLED => [
         'name' => Exception::GENERAL_PHONE_DISABLED,
-        'description' => 'Phone provider is not configured. Please check the _APP_SMS_PROVIDER environment variable of your Appwrite server.',
+        'description' => 'SMS delivery is not possible because a phone provider is not configured. You can learn more about setting up SMS delivery here: https://appwrite.io/docs/sms-delivery.',
         'code' => 503,
     ],
     Exception::GENERAL_ARGUMENT_INVALID => [
         'name' => Exception::GENERAL_ARGUMENT_INVALID,
-        'description' => 'The request contains one or more invalid arguments. Please refer to the endpoint documentation.',
+        // TODO: This is used by the DB, can we make this more specific instead of a generic error or add some kind of templating into the message?
+        'description' => 'The argument {argument} is invalid. Please refer to the endpoint documentation {docs}.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_LIMIT_EXCEEDED => [
         'name' => Exception::GENERAL_QUERY_LIMIT_EXCEEDED,
+        // TODO: Would it be possible to indicate which attribute? It is really hard to debug when it just says "current attribute"
         'description' => 'Query limit exceeded for the current attribute. Usage of more than 100 query values on a single attribute is prohibited.',
         'code' => 400,
     ],
     Exception::GENERAL_QUERY_INVALID => [
         'name' => Exception::GENERAL_QUERY_INVALID,
+        // TODO: Can we provide more detailed feedback about which part of the query is invalid? 
         'description' => 'The query\'s syntax is invalid. Please check the query and try again.',
         'code' => 400,
     ],
@@ -75,17 +78,19 @@ return [
     ],
     Exception::GENERAL_CURSOR_NOT_FOUND => [
         'name' => Exception::GENERAL_CURSOR_NOT_FOUND,
-        'description' => 'The cursor is invalid. This can happen if the item represented by the cursor has been deleted.',
+        'description' => 'The cursor used in pagination is invalid. This can happen if the item represented by the cursor has been deleted. Retry this request using another item from the previous as the cursor.',
         'code' => 400,
     ],
     Exception::GENERAL_SERVER_ERROR => [
+        // TODO: This is used often. Can we take a look at the usage here and make sure it's not abused?
         'name' => Exception::GENERAL_SERVER_ERROR,
         'description' => 'An internal server error occurred.',
         'code' => 500,
     ],
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
+        // 
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
-        'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
+        'description' => 'The request cannot be fulfilled with the current protocol. This could happen because you have enabled the force HTTPS option and are using HTTP. Please use HTTPS or check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
         'code' => 500,
     ],
     Exception::GENERAL_CODES_DISABLED => [
