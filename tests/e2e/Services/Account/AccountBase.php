@@ -308,9 +308,6 @@ trait AccountBase
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
-        // assert not providing secret
-        $this->assertEmpty($response['body']['sessions'][0]['secret']);
-
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
         $this->assertEquals('10', $response['body']['sessions'][0]['osVersion']);
@@ -329,6 +326,7 @@ trait AccountBase
         $this->assertEquals('Unknown', $response['body']['sessions'][0]['countryName']);
 
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
+        $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['sessions'][0]['expire']));
         /**
