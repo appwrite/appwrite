@@ -893,12 +893,6 @@ App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
 App::setResource('messaging', fn() => new Phone());
-App::setResource('queue', function (Group $pools) {
-    return $pools->get('queue')->pop()->getResource();
-}, ['pools']);
-App::setResource('queueForFunctions', function (Connection $queue) {
-    return new Func($queue);
-}, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
@@ -1091,17 +1085,25 @@ App::setResource('console', function () {
     ]);
 }, []);
 
+App::setResource('connectionForProject', function () { return null; }, []);
+App::setResource('connectionForConsole', function () { return null; }, []);
+App::setResource('connectionForQueue', function () { return null; }, []);
+App::setResource('connectionsForCache', function () { return []; }, []);
+
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
 
-    $dbAdapter = $pools
+    $connection = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
     ;
 
+    App::setResource('connectionForProject', function () use ($connection) { return $connection; }, []);
+    
+    $dbAdapter = $connection->getResource();
+        
     $database = new Database($dbAdapter, $cache);
     $database->setNamespace('_' . $project->getInternalId());
 
@@ -1109,11 +1111,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
-    $dbAdapter = $pools
+    $connection = $pools
         ->get('console')
-        ->pop()
-        ->getResource()
-    ;
+        ->pop();
+    
+    App::setResource('connectionForConsole', function () use ($connection) { return $connection; }, []);
+    
+    $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1123,29 +1127,21 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 }, ['pools', 'cache']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
-
     $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
-
-        $databaseName = $project->getAttribute('database');
-
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
-            return $database;
-        }
-
-        $dbAdapter = $pools
-            ->get($databaseName)
+        
+        $connection = $pools
+            ->get($project->getAttribute('database'))
             ->pop()
-            ->getResource();
+        ;
+
+        $dbAdapter = $connection->getResource();
+
+        App::setResource('connectionForProject', function () use ($connection) { return $connection; }, []);
 
         $database = new Database($dbAdapter, $cache);
-
-        $databases[$databaseName] = $database;
 
         $database->setNamespace('_' . $project->getInternalId());
 
@@ -1155,17 +1151,33 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
+App::setResource('queue', function (Group $pools) {
+    $connection = $pools->get('queue')->pop();
+    
+    App::setResource('connectionForQueue', function () use ($connection) { return $connection; }, []);
+
+    return $connection->getResource();
+}, ['pools']);
+
+App::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
+
 App::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
+    $connections = [];
 
     foreach ($list as $value) {
-        $adapters[] = $pools
+        $connection = $pools
             ->get($value)
-            ->pop()
-            ->getResource()
-        ;
+            ->pop();
+
+        $connections[] = $connection;
+        $adapters[] = $connection->getResource();
     }
+
+    App::setResource('connectionsForCache', function () use ($connections) { return $connections; }, []);
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
