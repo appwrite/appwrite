@@ -1101,7 +1101,7 @@ App::post('/v1/users/:userId/tokens')
     ->inject('dbForProject')
     ->inject('events')
     ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
-        $user = $dbForProject->getDocument('users ', $userId);
+        $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
