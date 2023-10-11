@@ -549,7 +549,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists. Attribute IDs must be unique, try again with a different ID.',
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -581,7 +581,7 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
