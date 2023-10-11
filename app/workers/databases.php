@@ -15,33 +15,10 @@ require_once __DIR__ . '/../init.php';
 Console::title('Database V1 Worker');
 Console::success(APP_NAME . ' database worker v1 has started' . "\n");
 
-$table = new Swoole\Table(1);
-$table->column('workerCount', Swoole\Table::TYPE_INT);
-$table->create();
-$table->set('databases', ['workerCount' => 0]);
-
-$lock = new Swoole\Lock(SWOOLE_MUTEX);
-
 class DatabaseV1 extends Worker
 {
     public function init(): void
     {
-        global $table, $lock;
-
-        $dbQueues = App::getEnv('_APP_CONNECTIONS_QUEUE_PER_WORKER', 'disabled');
-
-        if ($dbQueues !== 'enabled') {
-            $queue = 'v1-database';
-        } else {
-            $project = new Document($this->args['project']);
-            $queue = $project->getAttribute('database');
-        }
-
-        \putenv('QUEUE=' . $queue);
-
-        $lock->lock();
-        $table->incr('databases', 'workerCount');
-        $lock->unlock();
     }
 
     public function run(): void
@@ -82,11 +59,6 @@ class DatabaseV1 extends Worker
 
     public function shutdown(): void
     {
-        global $table, $lock;
-
-        $lock->lock();
-        $table->decr('databases', 'workerCount');
-        $lock->unlock();
     }
 
     /**

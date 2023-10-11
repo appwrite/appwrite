@@ -3,6 +3,7 @@
 namespace Appwrite\Event;
 
 use Resque;
+use Utopia\App;
 use Utopia\Database\Document;
 
 class Database extends Event
@@ -14,7 +15,15 @@ class Database extends Event
 
     public function __construct()
     {
-        parent::__construct(Event::DATABASE_QUEUE_NAME, Event::DATABASE_CLASS_NAME);
+        $dbQueues = App::getEnv('_APP_CONNECTIONS_DB_QUEUES');
+
+        if (empty($dbQueues)) {
+            $queue = Event::DATABASE_QUEUE_NAME;
+        } else {
+            $queue = $this->getProject()->getAttribute('database');
+        }
+
+        parent::__construct($queue, Event::DATABASE_CLASS_NAME);
     }
 
     /**

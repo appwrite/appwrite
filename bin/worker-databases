@@ -7,4 +7,18 @@ else
     REDIS_BACKEND="redis://${_APP_REDIS_USER}:${_APP_REDIS_PASS}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
 fi
 
-INTERVAL=0.1 APP_INCLUDE='/usr/src/code/app/workers/databases.php' php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
+queues="${_APP_CONNECTIONS_DB_QUEUES}"
+if [ -z "${queues}" ]; then
+    queues="v1-databases"
+fi
+
+count=1
+if [ "${_APP_CONNECTIONS_QUEUE_PER_WORKER}" = "enabled" ]; then
+    count=$(echo "${queues}" | tr ',' '\n' | wc -l)
+fi
+
+INTERVAL=0.1 \
+  QUEUE="${queues}" \
+  COUNT=${count} \
+  APP_INCLUDE='/usr/src/code/app/workers/databases.php' \
+  php /usr/src/code/vendor/bin/resque -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php

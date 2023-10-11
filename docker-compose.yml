@@ -366,6 +366,7 @@ services:
       - mariadb
     environment:
       - _APP_ENV
+      - _APP_CONNECTIONS_QUEUE_PER_WORKER
       - _APP_CONNECTIONS_DB_QUEUES
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
