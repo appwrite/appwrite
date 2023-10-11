@@ -1,16 +1,7 @@
 <?php
 
 use Appwrite\ClamAV\Network;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
-use Appwrite\Event\Database;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
-use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Migration;
-use Appwrite\Event\Phone;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -356,12 +347,11 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::WEBHOOK_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize()]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::WEBHOOK_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/logs')
     ->desc('Get logs queue')
@@ -374,12 +364,11 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::AUDITS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::AUDITS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
@@ -392,12 +381,11 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::CERTIFICATES_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/builds')
     ->desc('Get builds queue')
@@ -410,12 +398,11 @@ App::get('/v1/health/queue/builds')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::BUILDS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::BUILDS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
@@ -428,12 +415,11 @@ App::get('/v1/health/queue/databases')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::CERTIFICATES_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::DATABASE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/deletes')
     ->desc('Get deletes queue')
@@ -446,12 +432,11 @@ App::get('/v1/health/queue/deletes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::DELETE_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-        });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::DELETE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/mails')
     ->desc('Get mails queue')
@@ -464,12 +449,10 @@ App::get('/v1/health/queue/mails')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::MAILS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
+    ->action(function (Response $response) {
 
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MAILS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/messaging')
@@ -483,12 +466,11 @@ App::get('/v1/health/queue/messaging')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::MESSAGING_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MESSAGING_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/migrations')
     ->desc('Get migrations queue')
@@ -501,12 +483,11 @@ App::get('/v1/health/queue/migrations')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->inject('queue')
     ->inject('response')
-    ->action(function (Connection $queue, Response $response) {
-        $client = new Client(Event::MIGRATIONS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MIGRATIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/queue/functions')
     ->desc('Get functions queue')
@@ -523,8 +504,8 @@ App::get('/v1/health/queue/functions')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
-    });
+        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
 
 App::get('/v1/health/storage/local')
     ->desc('Get local storage')
