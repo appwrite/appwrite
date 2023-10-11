@@ -28,23 +28,13 @@ class DatabaseV1 extends Worker
     {
         global $table, $lock;
 
-        $dbQueues = App::getEnv('_APP_CONNECTIONS_DB_QUEUES');
+        $dbQueues = App::getEnv('_APP_CONNECTIONS_QUEUE_PER_WORKER', 'disabled');
 
-        if (empty($dbQueues)) {
+        if ($dbQueues !== 'enabled') {
             $queue = 'v1-database';
-        } elseif (\str_contains($dbQueues, ',')) {
-            $dbQueues = \explode(',', $dbQueues);
-            $dbQueues = \array_map('trim', $dbQueues);
-            $dbQueues = \array_filter($dbQueues);
-            $dbQueues = \array_values($dbQueues);
-
-            $count = $table->get('databases', 'workerCount');
-
-            Console::log('Database worker count: ' . $count);
-
-            $queue = $dbQueues[$count];
         } else {
-            $queue = \trim($dbQueues);
+            $project = new Document($this->args['project']);
+            $queue = $project->getAttribute('database');
         }
 
         \putenv('QUEUE=' . $queue);
