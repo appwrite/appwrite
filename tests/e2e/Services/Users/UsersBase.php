@@ -230,7 +230,7 @@ trait UsersBase
     }
 
     /**
-     * @depends testCreateAccount
+     * @depends testCreateUser
      */
     public function testCreateUniversalToken(array $data): void
     {
