@@ -986,7 +986,7 @@ class AccountCustomClientTest extends Scope
      * @depends testGetAccountSessions
      * @depends testGetAccountLogs
      */
-    public function testExchangeUniversalToken(array $data): array 
+    public function testExchangeUniversalToken(array $data): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
             'content-type' => 'application/json',
@@ -1038,7 +1038,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-         
+
         return $data;
     }
 
