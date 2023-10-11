@@ -1,0 +1,1 @@
+Use this endpoint to generate a 'universal' token which can be sent to a user by a secure method, and then exchanged for a session.
