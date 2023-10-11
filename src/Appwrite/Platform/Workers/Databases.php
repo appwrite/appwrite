@@ -481,7 +481,7 @@ class Databases extends Action
             );
         } finally {
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $events[0],
                 payload: $index,
                 project: $project

@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -16,10 +17,15 @@ class Database extends Event
     public function __construct(protected Connection $connection)
     {
         parent::__construct($connection);
+        $dbQueues = App::getEnv('_APP_CONNECTIONS_DB_QUEUES');
 
-        $this
-            ->setQueue(Event::DATABASE_QUEUE_NAME)
-            ->setClass(Event::DATABASE_CLASS_NAME);
+        if (empty($dbQueues)) {
+            $queue = Event::DATABASE_QUEUE_NAME;
+        } else {
+            $queue = $this->getProject()->getAttribute('database');
+        }
+
+        parent::__construct($queue, Event::DATABASE_CLASS_NAME);
     }
 
     /**
