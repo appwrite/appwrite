@@ -70,7 +70,7 @@ class Executor
         array $variables = [],
         string $command = null,
     ) {
-        $runtimeId = "$projectId-$deploymentId-build";
+        $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes";
         $params = [
             'runtimeId' => $runtimeId,
@@ -113,7 +113,7 @@ class Executor
     ) {
         $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $runtimeId = "$projectId-$deploymentId-build";
+        $runtimeId = "$projectId-$deploymentId";
         $route = "/runtimes/{$runtimeId}/logs";
         $params = [
             'timeout' => $timeout
@@ -177,7 +177,6 @@ class Executor
         string $method,
         array $headers,
         string $runtimeEntrypoint = null,
-        int $requestTimeout = null
     ) {
         if (empty($headers['host'])) {
             $headers['host'] = App::getEnv('_APP_DOMAIN', '');
@@ -203,13 +202,9 @@ class Executor
             'runtimeEntrypoint' => $runtimeEntrypoint,
         ];
 
-        // Safety timeout. Executor has timeout, and open runtime has soft timeout.
-        // This one shouldn't really happen, but prevents from unexpected networking behaviours.
-        if ($requestTimeout == null) {
-            $requestTimeout = $timeout + 15;
-        }
+        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
-        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $requestTimeout);
+        $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
         $status = $response['headers']['status-code'];
         if ($status >= 400) {

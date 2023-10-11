@@ -224,7 +224,7 @@ if (isset($args[0])) {
 
 try {
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => 1,
+        'workersNum' => strtolower($workerName) === 'databases'? 1 :swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
     ]);
