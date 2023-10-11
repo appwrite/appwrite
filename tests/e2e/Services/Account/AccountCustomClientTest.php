@@ -983,6 +983,66 @@ class AccountCustomClientTest extends Scope
     }
 
     /**
+     * @depends testGetAccountSessions
+     * @depends testGetAccountLogs
+     */
+    public function testExchangeUniversalToken(array $data): array 
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $userId = $response['body']['userId'];
+        $secret = $response['body']['secret'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $userId,
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['userId']);
+        $this->assertNotEmpty($response['body']['expire']);
+        $this->assertNotEmpty($response['body']['secret']);
+
+        /**
+         * Test for FAILURE
+         */
+        // Invalid userId
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => ID::custom('ewewe'),
+            'secret' => $secret,
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        // Invalid secret
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'userId' => $userId,
+            'secret' => '123456',
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+         
+        return $data;
+    }
+
+    /**
      * @depends testUpdatePhone
      */
     #[Retry(count: 1)]

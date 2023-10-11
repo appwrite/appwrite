@@ -230,6 +230,34 @@ trait UsersBase
     }
 
     /**
+     * @depends testCreateAccount
+     */
+    public function testCreateUniversalToken(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($token['headers']['status-code'], 201);
+        $this->assertEquals($token['body']['userId'], $data['userId']);
+        $this->assertNotEmpty($token['body']['secret']);
+        $this->assertNotEmpty($token['body']['expire']);
+
+        /**
+         * Test for FAILURE
+         */
+        $token = $this->client->call(Client::METHOD_POST, '/users/invalid/tokens', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($token['headers']['status-code'], 404);
+        $this->assertEmpty($token['body']['secret']);
+    }
+
+    /**
      * Tests all optional parameters of createUser (email, phone, anonymous..)
      *
      * @depends testCreateUser
