@@ -4219,9 +4219,6 @@ trait DatabasesBase
 
     /**
      * @depends testCreateDatabase
-     * @param array $data
-     * @return void
-     * @throws \Exception
      */
     public function testDeleteRelationAttributeIfRelatedCollectionDeleted(array $data): void
     {
