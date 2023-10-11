@@ -302,6 +302,7 @@ class Backup extends Action
         $processors = empty($processors) ? 1 : intval($processors);
 
         //$this->processors = \max(1, $processors - 2);
+        // todo: Using all processors was with no errors
         $this->processors = $processors;
     }
 
