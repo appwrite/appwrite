@@ -472,6 +472,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STORAGE_ABUSE_LIMIT',
+                'description' => 'Maximum number of requests allowed for file upload per minute. The default value is 60. You should increase this if you allow big files.',
+                'introduction' => '1.4.5',
+                'default' => '60',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_PREVIEW_LIMIT',
                 'description' => 'Maximum file size allowed for file image preview. The default value is 20MB. You should pass your size limit value in bytes.',
                 'introduction' => '0.13.4',
