@@ -123,10 +123,6 @@ services:
       - _APP_DB_PASS
       - _APP_CONNECTIONS_MAX
       - _APP_POOL_CLIENTS
-      - _APP_REDIS_HOST
-      - _APP_REDIS_PORT
-      - _APP_REDIS_USER
-      - _APP_REDIS_PASS
       - _APP_CONNECTIONS_DB_PROJECT
       - _APP_CONNECTIONS_DB_REPLICAS
       - _APP_CONNECTIONS_DB_CONSOLE
@@ -843,12 +839,12 @@ services:
     user: 'root:root'
 
   appwrite-backup:
+    image: appwrite-dev
+    <<: *x-logging
     entrypoint: db-backup
     command:
       - --database=db_fra1_03
-    <<: *x-logging
     container_name: appwrite-backup
-    image: appwrite-dev
     networks:
       - appwrite
     volumes:
@@ -882,8 +878,8 @@ services:
 
   redis:
     image: redis:7.0.4-alpine
-    <<: *x-logging
     container_name: appwrite-redis
+    <<: *x-logging
     command: >
       redis-server
       --maxmemory            512mb
