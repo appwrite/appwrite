@@ -238,6 +238,7 @@ $worker
     ->shutdown()
     ->inject('pools')
     ->action(function (Group $pools) {
+        var_dump('reclaiming connection');
         $pools->reclaim();
     });
 

@@ -23,9 +23,7 @@ use Utopia\Registry\Registry;
 
 Authorization::disable();
 
-global $register;
-
-CLI::setResource('register', fn () => $register);
+CLI::setResource('register', fn()=>$register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
@@ -35,7 +33,8 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));

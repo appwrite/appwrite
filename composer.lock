@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "748f1a5e4fdf0a73ea26ddf0e7822f19",
+    "content-hash": "509d6d460bad65092c5e3b8d6b390ec9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1797,16 +1797,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a75d66ddd59b834ab500a4878a2c084e6572604a",
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a",
                 "shasum": ""
             },
             "require": {
@@ -1815,8 +1815,8 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpmailer/phpmailer": "6.8.*",
-                "phpunit/phpunit": "9.6.*"
+                "phpmailer/phpmailer": "6.6.*",
+                "phpunit/phpunit": "9.5.*"
             },
             "type": "library",
             "autoload": {
@@ -1839,9 +1839,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.1.1"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-02-07T05:42:46+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2007,12 +2007,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b"
+                "reference": "056a60bb65eb12005f451714da0fe35a22f424c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f7fe90764f0bcf73eea6f968965b2d786822033b",
-                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/056a60bb65eb12005f451714da0fe35a22f424c2",
+                "reference": "056a60bb65eb12005f451714da0fe35a22f424c2",
                 "shasum": ""
             },
             "require": {
@@ -2046,9 +2046,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/integrate-workers"
+                "source": "https://github.com/utopia-php/platform/tree/feat-custom-queue-names"
             },
-            "time": "2023-10-04T14:44:45+00:00"
+            "time": "2023-10-12T04:31:27+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -2269,16 +2269,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.17.0",
+            "version": "0.14.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee"
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/efec5376c02d3d8330f1beb1469e6d6e313e21ee",
-                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/eda6651ac16884dc2a79ecb984ea591ba1ed498c",
+                "reference": "eda6651ac16884dc2a79ecb984ea591ba1ed498c",
                 "shasum": ""
             },
             "require": {
@@ -2286,12 +2286,10 @@
                 "ext-fileinfo": "*",
                 "ext-lz4": "*",
                 "ext-snappy": "*",
-                "ext-xz": "*",
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*",
-                "utopia-php/system": "0.*.*"
+                "utopia-php/framework": "0.*.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2318,9 +2316,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.17.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.14.0"
             },
-            "time": "2023-08-21T11:28:36+00:00"
+            "time": "2023-03-15T00:16:34+00:00"
         },
         {
             "name": "utopia-php/swoole",
