@@ -254,7 +254,6 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals($token['headers']['status-code'], 404);
-        $this->assertEmpty($token['body']['secret']);
     }
 
     /**

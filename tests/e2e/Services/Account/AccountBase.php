@@ -153,7 +153,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         /**
@@ -1391,7 +1391,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -1422,7 +1422,7 @@ trait AccountBase
             'secret' => $token,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge([
             'origin' => 'http://localhost',
@@ -1479,7 +1479,7 @@ trait AccountBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
 
         /**
          * Test for FAILURE

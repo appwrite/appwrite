@@ -818,7 +818,7 @@ class AccountCustomClientTest extends Scope
             'secret' => $token,
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/phone', array_merge([
             'origin' => 'http://localhost',
@@ -1012,7 +1012,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['expire']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
 
         /**
          * Test for FAILURE
