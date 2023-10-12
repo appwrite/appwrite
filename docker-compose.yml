@@ -356,7 +356,7 @@ services:
       - _APP_EXECUTOR_SECRET
       - _APP_EXECUTOR_HOST
 
-  appwrite-worker-databases-:
+  appwrite-worker-databases:
     entrypoint: worker-databases
     <<: *x-logging
     container_name: appwrite-worker-databases
