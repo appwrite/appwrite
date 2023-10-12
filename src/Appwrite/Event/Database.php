@@ -17,15 +17,10 @@ class Database extends Event
     public function __construct(protected Connection $connection)
     {
         parent::__construct($connection);
-        $dbQueues = App::getEnv('_APP_CONNECTIONS_DB_QUEUES');
 
-        if (empty($dbQueues)) {
-            $queue = Event::DATABASE_QUEUE_NAME;
-        } else {
-            $queue = $this->getProject()->getAttribute('database');
-        }
-
-        parent::__construct($queue, Event::DATABASE_CLASS_NAME);
+        $this
+            ->setQueue($this->getProject()->getAttribute('database'))
+            ->setClass(Event::DATABASE_CLASS_NAME);
     }
 
     /**
