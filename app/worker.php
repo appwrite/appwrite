@@ -18,13 +18,11 @@ use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
-use Utopia\CLI\CLI;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Queue\Adapter\Swoole;
 use Utopia\Platform\Service;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
@@ -134,9 +132,6 @@ Server::setResource('queueForMails', function (Connection $queue) {
 Server::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
-Server::setResource('queueForDatabase', function (Connection $queue) {
-    return new EventDatabase($queue);
-}, ['queue']);
 Server::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
@@ -216,17 +211,25 @@ $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $_SERVER['argv'];
 
-if (isset($args[0])) {
-    $workerName = end($args);
-} else {
+if (!isset($args[1])) {
     Console::error('Missing worker name');
+    Console::exit(1);
+}
+
+\array_shift($args);
+$workerName = $args[0];
+$workerIndex = $args[1] ?? '';
+
+if (!empty($workerNum)) {
+    $workerName .= '_' . $workerIndex;
 }
 
 try {
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => strtolower($workerName) === 'databases'? 1 :swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+        'workersNum' => str_starts_with(strtolower($workerName), 'databases') ? 1 : swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
+        'queueName' => App::getEnv('_APP_CONNECTIONS_DB_QUEUE', 'database_db_main')
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
