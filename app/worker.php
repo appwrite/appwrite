@@ -226,10 +226,10 @@ if (!empty($workerNum)) {
 
 try {
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => str_starts_with(strtolower($workerName), 'databases') ? 1 : swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6)),
+        'workersNum' => App::getEnv('_APP_WORKERS_NUM', swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6))),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
-        'queueName' => App::getEnv('_APP_CONNECTIONS_DB_QUEUE', 'database_db_main')
+        'queueName' => App::getEnv('_APP_CONNECTIONS_DB_QUEUE', strtolower($workerName))
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
