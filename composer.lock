@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "13a3bdc7c1dec5756bf58ec73a49753d",
+    "content-hash": "34cb0b1c81424d1858df197aed030793",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1050,16 +1050,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.5",
+            "version": "6.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/5cbea85106e561c7138d03603eb6e05128480409",
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409",
                 "shasum": ""
             },
             "require": {
@@ -1115,7 +1115,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-17T16:17:41+00:00"
+            "time": "2023-10-02T10:01:54+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2152,16 +2152,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.43.4",
+            "version": "0.43.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c"
+                "reference": "5f7b05189cfbcc0506090498c580c5765375a00a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/5f7b05189cfbcc0506090498c580c5765375a00a",
+                "reference": "5f7b05189cfbcc0506090498c580c5765375a00a",
                 "shasum": ""
             },
             "require": {
@@ -2202,9 +2202,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.43.4"
+                "source": "https://github.com/utopia-php/database/tree/0.43.5"
             },
-            "time": "2023-09-28T09:00:05+00:00"
+            "time": "2023-10-06T06:49:47+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2516,16 +2516,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.1.1",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a"
+                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a75d66ddd59b834ab500a4878a2c084e6572604a",
-                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
                 "shasum": ""
             },
             "require": {
@@ -2534,8 +2534,8 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpmailer/phpmailer": "6.6.*",
-                "phpunit/phpunit": "9.5.*"
+                "phpmailer/phpmailer": "6.8.*",
+                "phpunit/phpunit": "9.6.*"
             },
             "type": "library",
             "autoload": {
@@ -2558,9 +2558,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.1.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
             },
-            "time": "2023-02-07T05:42:46+00:00"
+            "time": "2023-09-14T20:48:42+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -6019,5 +6019,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

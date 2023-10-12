@@ -258,6 +258,9 @@ return [
         'create' => [
             '$description' => 'This event triggers when a message is created.',
         ],
+        'update' => [
+            '$description' => 'This event triggers when a message is updated.',
+        ],
         'topics' => [
             '$model' => Response::MODEL_TOPIC,
             '$resource' => true,

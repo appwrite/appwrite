@@ -25,7 +25,7 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Delete;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
@@ -539,7 +539,6 @@ Database::addFilter(
         return Authorization::skip(fn() => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
             ]));
     }
 );
@@ -555,7 +554,6 @@ Database::addFilter(
             $database
             ->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
-                Query::limit(APP_LIMIT_SUBQUERY),
             ])
         ));
         if (\count($targetIds) > 0) {
@@ -926,7 +924,7 @@ App::setResource('audits', fn() => new Audit());
 App::setResource('mails', fn() => new Mail());
 App::setResource('deletes', fn() => new Delete());
 App::setResource('database', fn() => new EventDatabase());
-App::setResource('messaging', fn() => new Phone());
+App::setResource('messaging', fn() => new Messaging());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);

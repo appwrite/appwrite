@@ -6,6 +6,7 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\App;
 use Utopia\Database\Helpers\ID;
 
 class AccountTest extends Scope
@@ -122,7 +123,35 @@ class AccountTest extends Scope
      */
     public function testCreatePhoneVerification(): array
     {
+        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
+        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
+        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
+
+        if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
+            $this->markTestSkipped('SMS provider not configured');
+        }
+
         $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$CREATE_MSG91_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'providerId' => ID::unique(),
+                'name' => 'Sms Provider',
+                'from' => $from,
+                'senderId' => $senderId,
+                'authKey' => $authKey,
+                'default' => true,
+            ],
+        ];
+
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], $graphQLPayload);
+
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,

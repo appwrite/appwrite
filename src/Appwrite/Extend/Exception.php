@@ -84,7 +84,8 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
-
+    public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
+    public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
     public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
@@ -223,6 +224,14 @@ class Exception extends \Exception
     public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
     public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+
+    /** Provider */
+    public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
+    public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
+    public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
+
+    /** Message */
+    public const MESSAGE_NOT_FOUND                  = 'message_not_found';
 
     protected $type = '';
     protected $errors = [];

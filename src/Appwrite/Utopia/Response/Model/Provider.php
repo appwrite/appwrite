@@ -45,6 +45,23 @@ class Provider extends Model
                 'description' => 'Type of provider.',
                 'default' => '',
                 'example' => 'sms',
+            ])
+            ->addRule('credentials', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Provider credentials.',
+                'default' => [],
+                'example' => [
+                    'key' => '123456789'
+                ],
+            ])
+            ->addRule('options', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Provider options.',
+                'default' => [],
+                'required' => false,
+                'example' => [
+                    'from' => 'sender-email@mydomain'
+                ],
             ]);
     }
 

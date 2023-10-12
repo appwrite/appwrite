@@ -32,9 +32,16 @@ class Message extends Any
             ])
             ->addRule('deliveryTime', [
                 'type' => self::TYPE_DATETIME,
-                'description' => 'Time the message is delivered at.',
+                'description' => 'The scheduled time for message.',
                 'required' => false,
                 'default' => DateTime::now(),
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('deliveredAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'The time when the message was delivered.',
+                'required' => false,
+                'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
             ->addRule('deliveryErrors', [
@@ -51,11 +58,18 @@ class Message extends Any
                 'default' => 0,
                 'example' => 1,
             ])
-            ->addRule('delivered', [
-                'type' => self::TYPE_BOOLEAN,
+            ->addRule('status', [
+                'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
-                'default' => false,
-                'example' => true,
+                'default' => 'processing',
+                'example' => 'Message status can be one of the following: processing, sent, failed.',
+            ])
+            ->addRule('description', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Message description.',
+                'required' => false,
+                'default' => '',
+                'example' => 'Welcome Email.',
             ]);
     }
 

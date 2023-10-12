@@ -197,6 +197,29 @@ trait Base
     public static string $GET_QRCODE = 'get_qrcode';
     public static string $GET_USER_INITIALS = 'get_user_initials';
 
+    // Providers
+    public static string $CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
+    public static string $CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+    public static string $CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
+    public static string $CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
+    public static string $CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
+    public static string $CREATE_MSG91_PROVIDER = 'create_msg91_provider';
+    public static string $CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
+    public static string $CREATE_FCM_PROVIDER = 'create_fcm_provider';
+    public static string $CREATE_APNS_PROVIDER = 'create_apns_provider';
+    public static string $LIST_PROVIDERS = 'list_providers';
+    public static string $GET_PROVIDER = 'get_provider';
+    public static string $UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
+    public static string $UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+    public static string $UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
+    public static string $UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
+    public static string $UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
+    public static string $UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
+    public static string $UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
+    public static string $UPDATE_FCM_PROVIDER = 'update_fcm_provider';
+    public static string $UPDATE_APNS_PROVIDER = 'update_apns_provider';
+    public static string $DELETE_PROVIDER = 'delete_provider';
+
     // Complex queries
     public static string $COMPLEX_QUERY = 'complex_query';
 
@@ -1683,6 +1706,235 @@ trait Base
                 return 'query getAntivirusHealth {
                     healthGetAntivirus {
                         version
+                        status
+                    }
+                }';
+            case self::$CREATE_MAILGUN_PROVIDER:
+                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!) {
+                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_SENDGRID_PROVIDER:
+                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TWILIO_PROVIDER:
+                return 'mutation createTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
+                    messagingCreateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TELESIGN_PROVIDER:
+                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
+                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TEXTMAGIC_PROVIDER:
+                return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingCreateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_MSG91_PROVIDER:
+                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $default: Boolean, $enabled: Boolean) {
+                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, default: $default, enabled: $enabled) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_VONAGE_PROVIDER:
+                return 'mutation createVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingCreateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_FCM_PROVIDER:
+                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
+                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$CREATE_APNS_PROVIDER:
+                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
+                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$LIST_PROVIDERS:
+                return 'query listProviders {
+                    messagingListProviders {
+                        total
+                        providers {
+                            _id
+                            name
+                            provider
+                            type
+                            default
+                            enabled
+                        }
+                    }
+                }';
+            case self::$GET_PROVIDER:
+                return 'query getProvider($providerId: String!) {
+                    messagingGetProvider(providerId: $providerId) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_MAILGUN_PROVIDER:
+                return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean) {
+                    messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_SENDGRID_PROVIDER:
+                return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TWILIO_PROVIDER:
+                return 'mutation updateTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
+                    messagingUpdateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TELESIGN_PROVIDER:
+                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
+                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TEXTMAGIC_PROVIDER:
+                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_MSG91_PROVIDER:
+                return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $senderId: String!, $authKey: String!) {
+                    messagingUpdateMsg91Provider(providerId: $providerId, name: $name, senderId: $senderId, authKey: $authKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_VONAGE_PROVIDER:
+                return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_FCM_PROVIDER:
+                return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
+                    messagingUpdateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_APNS_PROVIDER:
+                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
+                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                        _id
+                        name
+                        provider
+                        type
+                        default
+                        enabled
+                    }
+                }';
+            case self::$DELETE_PROVIDER:
+                return 'mutation deleteProvider($providerId: String!) {
+                    messagingDeleteProvider(providerId: $providerId) {
                         status
                     }
                 }';

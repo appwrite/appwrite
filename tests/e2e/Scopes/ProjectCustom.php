@@ -81,6 +81,12 @@ trait ProjectCustom
                 'locale.read',
                 'avatars.read',
                 'health.read',
+                'targets.read',
+                'targets.write',
+                'providers.read',
+                'providers.write',
+                'messages.read',
+                'messages.write',
             ],
         ]);
 

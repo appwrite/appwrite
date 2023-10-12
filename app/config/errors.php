@@ -240,6 +240,16 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_TARGET_NOT_FOUND => [
+        'name' => Exception::USER_TARGET_NOT_FOUND,
+        'description' => 'The target could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::USER_TARGET_ALREADY_EXISTS,
+        'description' => 'A target with the same ID already exists.',
+        'code' => 409,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -728,4 +738,28 @@ return [
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
+
+    /** Provider Errors */
+    Exception::PROVIDER_NOT_FOUND => [
+        'name' => Exception::PROVIDER_NOT_FOUND,
+        'description' => 'Provider with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_ALREADY_EXISTS => [
+        'name' => Exception::PROVIDER_ALREADY_EXISTS,
+        'description' => 'Provider with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::PROVIDER_INCORRECT_TYPE => [
+        'name' => Exception::PROVIDER_INCORRECT_TYPE,
+        'description' => 'Provider with the requested ID is of incorrect type: ',
+        'code' => 400,
+    ],
+
+    /** Message Errors */
+    Exception::MESSAGE_NOT_FOUND => [
+        'name' => Exception::MESSAGE_NOT_FOUND,
+        'description' => 'Message with the requested ID could not be found.',
+        'code' => 404,
+    ]
 ];

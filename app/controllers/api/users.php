@@ -380,6 +380,64 @@ App::post('/v1/users/scrypt-modified')
             ->dynamic($user, Response::MODEL_USER);
     });
 
+App::post('/v1/users/:userId/targets')
+    ->desc('Create User Target')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'users.targets.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createTarget')
+    ->label('sdk.description', '/docs/references/users/create-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                'providerId' => $providerId,
+                'providerInternalId' => $provider->getInternalId(),
+                'userId' => $userId,
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::get('/v1/users')
     ->desc('List users')
     ->groups(['api', 'users'])
@@ -481,6 +539,38 @@ App::get('/v1/users/:userId/prefs')
         $prefs = $user->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
+App::get('/v1/users/:userId/targets/:targetId')
+    ->desc('Get User Target')
+    ->groups(['api', 'users'])
+    ->label('scope', 'targets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getTarget')
+    ->label('sdk.description', '/docs/references/users/get-user-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $user->find('$id', $targetId, 'targets');
+
+        if (empty($target)) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $response->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::get('/v1/users/:userId/sessions')
@@ -645,6 +735,35 @@ App::get('/v1/users/:userId/logs')
             'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/users/:userId/targets')
+    ->desc('List User Targets')
+    ->groups(['api', 'users'])
+    ->label('scope', 'targets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/users/list-user-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $targets = $user->getAttribute('targets', []);
+        $response->dynamic(new Document([
+            'targets' => $targets,
+            'total' => \count($targets),
+        ]), Response::MODEL_TARGET_LIST);
     });
 
 App::get('/v1/users/identities')
@@ -1081,6 +1200,56 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
+App::patch('/v1/users/:userId/targets/:targetId/identifier')
+    ->desc('Update user target\'s identifier')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'users.targets.update')
+    ->label('audits.resource', 'target/{response.$id}')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateTargetIdentifier')
+    ->label('sdk.description', '/docs/references/users/update-target-identifier.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, string $targetId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $target->setAttribute('identifier', $identifier);
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $events
+            ->setParam('userId', $userId)
+            ->setParam('targetId', $targetId);
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::delete('/v1/users/:userId/sessions/:sessionId')
     ->desc('Delete user session')
     ->groups(['api', 'users'])
@@ -1207,6 +1376,48 @@ App::delete('/v1/users/:userId')
         $events
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($clone, Response::MODEL_USER));
+
+        $response->noContent();
+    });
+
+App::delete('/v1/users/:userId/targets/:targetId')
+    ->desc('Delete user target')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'users.targets.delete')
+    ->label('audits.resource', 'target/{request.$targetId}')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteTarget')
+    ->label('sdk.description', '/docs/references/users/delete-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('events')
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject, Event $events) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $target = $dbForProject->deleteDocument('targets', $target->getId());
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $response->noContent();
     });

@@ -6,7 +6,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -380,6 +380,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
+    ->param('from', '', new Text(128), 'Sender of the message. It can be alphanumeric (Ex: MyCompany20). Restrictions may apply depending of the destination.', true)
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -388,7 +389,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('mails')
     ->inject('messaging')
     ->inject('events')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, string $from, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, Messaging $messaging, Event $events) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -632,6 +633,15 @@ App::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
+                $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
+                    Query::equal('default', [true, false]),
+                    Query::equal('type', ['sms'])
+                ]));
+
+                if ($provider === false || $provider->isEmpty()) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
@@ -642,9 +652,29 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
+                $target = $dbForProject->createDocument('targets', new Document([
+                    'userId' => $invitee->getId(),
+                    'userInternalId' => $invitee->getInternalId(),
+                    'providerId' => $provider->getId(),
+                    'providerInternalId' => $provider->getInternalId(),
+                    'identifier' => $phone,
+                ]));
+
+                $messageDoc = $dbForProject->createDocument('messages', new Document([
+                    // Here membership ID is used as message ID so that it can be used in test cases to verify the message
+                    '$id' => $membership->getId(),
+                    'to' => [$target->getId()],
+                    'data' => [
+                        'content' => $message,
+                    ],
+                    'providerId' => $provider->getId(),
+                    'providerInternalId' => $provider->getInternalId(),
+                    'deliveryTime' => Datetime::now(),
+                ]));
+
                 $messaging
-                    ->setRecipient($phone)
-                    ->setMessage($message)
+                    ->setMessageId($messageDoc->getId())
+                    ->setProject($project)
                     ->trigger();
             }
         }

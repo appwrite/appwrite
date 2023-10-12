@@ -8,7 +8,6 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -45,6 +44,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Event\Messaging;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -1238,9 +1238,12 @@ App::post('/v1/account/sessions/phone')
     ->inject('events')
     ->inject('messaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, Messaging $messaging, Locale $locale) {
+        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+        ]));
+        if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1326,9 +1329,34 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+            Query::equal('providerInternalId', [$provider->getInternalId()])
+        ]);
+
+        if (!$target) {
+            $target = $dbForProject->createDocument('targets', new Document([
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerId' => $provider->getId(),
+                'providerInternalId' => $provider->getInternalId(),
+                'identifier' => $phone,
+            ]));
+        }
+
+        $messageDoc = $dbForProject->createDocument('messages', new Document([
+            '$id' => $token->getId(),
+            'to' => [$target->getId()],
+            'data' => [
+                'content' => $message,
+            ],
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+        ]));
+
         $messaging
-            ->setRecipient($phone)
-            ->setMessage($message)
+            ->setMessageId($messageDoc->getId())
+            ->setProject($project)
             ->trigger();
 
         $events->setPayload(
@@ -2885,10 +2913,13 @@ App::post('/v1/account/verification/phone')
     ->inject('messaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging, Document $project, Locale $locale) {
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, Messaging $messaging, Document $project, Locale $locale) {
+        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
+            Query::equal('default', [true]),
+            Query::equal('type', ['sms'])
+        ]));
+        if ($provider === false || $provider->isEmpty()) {
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         if (empty($user->getAttribute('phone'))) {
@@ -2933,11 +2964,35 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$user->getAttribute('phone')]),
+            Query::equal('providerInternalId', [$provider->getInternalId()])
+        ]);
+
+        if (!$target) {
+            $target = $dbForProject->createDocument('targets', new Document([
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerId' => $provider->getId(),
+                'providerInternalId' => $provider->getInternalId(),
+                'identifier' => $user->getAttribute('phone'),
+            ]));
+        }
+
+        $messageDoc = $dbForProject->createDocument('messages', new Document([
+            '$id' => $verification->getId(),
+            'to' => [$target->getId()],
+            'data' => [
+                'content' => $message,
+            ],
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+        ]));
+
         $messaging
-            ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($message)
-            ->trigger()
-        ;
+            ->setMessageId($messageDoc->getId())
+            ->setProject($project)
+            ->trigger();
 
         $events
             ->setParam('userId', $user->getId())

@@ -1226,6 +1226,94 @@ trait UsersBase
     /**
      * @depends testGetUser
      */
+    public function testCreateUserTarget(array $data): array
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'providerId' => 'unique()',
+            'name' => 'Sengrid1',
+            'apiKey' => 'my-apikey'
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'identifier' => 'my-token',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
+        $this->assertEquals('my-token', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testUpdateUserTarget(array $data): array
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'] . '/identifier', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'my-updated-token',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('my-updated-token', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testListUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, \count($response['body']['targets']));
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testGetUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['$id'], $response['body']['$id']);
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testDeleteUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+    }
+
+    /**
+     * @depends testGetUser
+     */
     public function testDeleteUser(array $data): array
     {
         /**
