@@ -22,7 +22,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
@@ -274,7 +273,7 @@ App::get('/v1/vcs/github/callback')
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
-    ->param('setup_action', '', new Text(256, 0), 'GitHub setup actuon type', true)
+    ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->inject('gitHub')
