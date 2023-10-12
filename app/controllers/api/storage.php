@@ -5,6 +5,7 @@ use Appwrite\Auth\Hash\Sha;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Event\Func;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
@@ -24,6 +25,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
+use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
@@ -357,13 +359,15 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](/docs/permissions).', true)
     ->inject('request')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('events')
+    ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Func $queueForFunctions, string $mode, Device $deviceFiles, Device $deviceLocal) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -623,6 +627,50 @@ App::post('/v1/storage/buckets/:bucketId/files')
 
                     $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
                 }
+
+                /** Trigger Webhook */
+                $ev = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+                $ev
+                    ->setProject($project)
+                    ->setEvent('buckets.[bucketId].files.[fileId].uploaded')
+                    ->setParam('bucketId', $bucket->getId())
+                    ->setParam('fileId', $file->getId())
+                    ->setContext('bucket', $bucket)
+                    ->setUser($user)
+                    ->setPayload($file->getArrayCopy())
+                    ->trigger();
+
+                /** Trigger Functions */
+                $queueForFunctions
+                    ->from($ev)
+                    ->trigger();
+
+                /** Trigger realtime event */
+                $allEvents = Event::generateEvents('buckets.[bucketId].files.[fileId].uploaded', [
+                    'bucketId' => $bucket->getId(),
+                    'fileId' => $file->getId()
+                ]);
+
+                $target = Realtime::fromPayload(
+                    // Pass first, most verbose event pattern
+                    event: $allEvents[0],
+                    payload: $file,
+                    bucket: $bucket
+                );
+                Realtime::send(
+                    projectId: 'console',
+                    payload: $file->getArrayCopy(),
+                    events: $allEvents,
+                    channels: $target['channels'],
+                    roles: $target['roles']
+                );
+                Realtime::send(
+                    projectId: $project->getId(),
+                    payload: $file->getArrayCopy(),
+                    events: $allEvents,
+                    channels: $target['channels'],
+                    roles: $target['roles']
+                );
             } catch (AuthorizationException) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             } catch (StructureException $exception) {
