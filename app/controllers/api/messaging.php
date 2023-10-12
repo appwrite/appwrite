@@ -1321,7 +1321,7 @@ App::get('/v1/messaging/messages/:messageId')
         $response->dynamic($message, Response::MODEL_MESSAGE);
     });
 
-App::post('/v1/messaging/messages/email/:messageId')
+App::patch('/v1/messaging/messages/email/:messageId')
     ->desc('Update an email.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'messages.update')
@@ -1393,6 +1393,5 @@ App::post('/v1/messaging/messages/email/:messageId')
         }
 
         $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
