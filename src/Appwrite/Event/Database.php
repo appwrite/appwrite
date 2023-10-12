@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -17,9 +18,7 @@ class Database extends Event
     {
         parent::__construct($connection);
 
-        $this
-            ->setQueue(Event::DATABASE_QUEUE_NAME)
-            ->setClass(Event::DATABASE_CLASS_NAME);
+        $this->setClass(Event::DATABASE_CLASS_NAME);
     }
 
     /**
@@ -109,6 +108,8 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
+        $this->setQueue($this->getProject()->getAttribute('database'));
+
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
