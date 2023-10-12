@@ -878,8 +878,8 @@ services:
 
   redis:
     image: redis:7.0.4-alpine
-    container_name: appwrite-redis
     <<: *x-logging
+    container_name: appwrite-redis
     command: >
       redis-server
       --maxmemory            512mb
@@ -1041,5 +1041,5 @@ volumes:
   appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
-  # appwrite-chronograf:
   backup-data:
+  # appwrite-chronograf:
