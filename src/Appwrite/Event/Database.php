@@ -15,15 +15,10 @@ class Database extends Event
 
     public function __construct()
     {
-        $dbQueues = App::getEnv('_APP_CONNECTIONS_DB_QUEUES');
-
-        if (empty($dbQueues)) {
-            $queue = Event::DATABASE_QUEUE_NAME;
-        } else {
-            $queue = $this->getProject()->getAttribute('database');
-        }
-
-        parent::__construct($queue, Event::DATABASE_CLASS_NAME);
+        parent::__construct(
+            $this->getProject()->getAttribute('database'),
+            Event::DATABASE_CLASS_NAME
+        );
     }
 
     /**
