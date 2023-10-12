@@ -225,6 +225,12 @@ if (!empty($workerNum)) {
 }
 
 try {
+    /**
+     * Any worker can be configured with the following env vars:
+     * - _APP_WORKERS_NUM           The total number of worker processes
+     * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
+     * - _APP_CONNECTIONS_DB_QUEUE  The name of the queue to read for database events
+     */
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => App::getEnv('_APP_WORKERS_NUM', swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6))),
         'connection' => $pools->get('queue')->pop()->getResource(),
