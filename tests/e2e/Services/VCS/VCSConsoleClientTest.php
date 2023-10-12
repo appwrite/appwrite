@@ -7,6 +7,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\App;
+use Utopia\Database\Helpers\ID;
+use Utopia\Database\Helpers\Role;
 
 class VCSConsoleClientTest extends Scope
 {
@@ -82,12 +84,12 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        // $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/1234/detection', array_merge([
+        // $runtime = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId/detection', array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], $this->getHeaders()), [
         //     'installationId' => $installationId,
-        //     'providerRepositoryId' => 1234
+        //     'providerRepositoryId' => 'randomRepositoryId'
         // ]);
 
         // $this->assertEquals(404, $runtime['headers']['status-code']); 
@@ -139,11 +141,11 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/1234/providerRepositories', array_merge([
+        $repositories = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/randomInstallationId/providerRepositories', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'installationId' => 1234
+            'installationId' => 'randomInstallationId'
         ]);
 
         $this->assertEquals(404, $repositories['headers']['status-code']);
@@ -184,12 +186,12 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        // $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/1234', array_merge([
+        // $repository = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId', array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], $this->getHeaders()), [
         //     'installationId' => $installationId,
-        //     'providerRepositoryId' => 1234
+        //     'providerRepositoryId' => 'randomRepositoryId'
         // ]);
 
         // $this->assertEquals(404, $repository['headers']['status-code']);
@@ -222,15 +224,78 @@ class VCSConsoleClientTest extends Scope
          * Test for FAILURE
          */
 
-        // $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/1234/branches', array_merge([
+        // $repositoryBranches = $this->client->call(Client::METHOD_GET, '/vcs/github/installations/' . $installationId . '/providerRepositories/randomRepositoryId/branches', array_merge([
         //     'content-type' => 'application/json',
         //     'x-appwrite-project' => $this->getProject()['$id'],
         // ], $this->getHeaders()), [
         //     'installationId' => $installationId,
-        //     'providerRepositoryId' => 1234
+        //     'providerRepositoryId' => 'randomRepositoryId'
         // ]);
 
         // $this->assertEquals(404, $repositoryBranches['headers']['status-code']);
-        // TODO: Check why it's throwing 500 server error
+        // TODO: Throw error from listBranches 
+    }
+
+    /**
+     * @depends testGitHubAuthorize
+     */
+    public function testCreateFunctionUsingVCS(string $installationId)
+    {
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+            'installationId' => $installationId,
+            'providerRepositoryId' => $this->providerRepositoryId,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        return [
+            'installationId' => $installationId,
+            'functionId' => $function['body']['$id']
+        ];
+    }
+
+    /**
+     * @depends testCreateFunctionUsingVCS
+     */
+    public function testUpdateFunctionUsingVCS(array $data, string $providerRepositoryId2 = '700020051')
+    {
+        $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test',
+            'execute' => [Role::user($this->getUser()['$id'])->toString()],
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'events' => [
+                'users.*.create',
+                'users.*.delete',
+            ],
+            'schedule' => '0 0 1 1 *',
+            'timeout' => 10,
+            'installationId' => $data['installationId'],
+            'providerRepositoryId' => $providerRepositoryId2,
+            'providerBranch' => 'main',
+        ]);
+
+        $this->assertEquals(200, $function['headers']['status-code']);
+
+        return $function['body']['$id'];
     }
 }
