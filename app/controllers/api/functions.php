@@ -1680,8 +1680,6 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
-
-
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
