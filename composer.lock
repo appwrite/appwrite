@@ -2007,12 +2007,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b"
+                "reference": "056a60bb65eb12005f451714da0fe35a22f424c2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/f7fe90764f0bcf73eea6f968965b2d786822033b",
-                "reference": "f7fe90764f0bcf73eea6f968965b2d786822033b",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/056a60bb65eb12005f451714da0fe35a22f424c2",
+                "reference": "056a60bb65eb12005f451714da0fe35a22f424c2",
                 "shasum": ""
             },
             "require": {
@@ -2046,9 +2046,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/integrate-workers"
+                "source": "https://github.com/utopia-php/platform/tree/feat-custom-queue-names"
             },
-            "time": "2023-10-04T14:44:45+00:00"
+            "time": "2023-10-12T04:31:27+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -5316,5 +5316,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
