@@ -13,4 +13,3 @@ debug/
 app/sdks
 dev/yasd_init.php
 .phpunit.result.cache
-/backup-data/
