@@ -832,7 +832,7 @@ services:
     container_name: xtrabackup
     command: sleep infinity
     volumes:
-      - ./backup-data:/backups:rw
+      - backup-data:/backups:rw
       - appwrite-mariadb:/var/lib/mysql:r
     networks:
       - appwrite
@@ -851,7 +851,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./backup-data:/backups:rw
+      - backup-data:/backups:rw
     depends_on:
       - redis
     environment:
@@ -868,7 +868,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./backup-data:/backups:rw
+      - backup-data:/backups:rw
       - appwrite-mariadb:/var/lib/mysql:rw
     depends_on:
       - redis
@@ -1042,4 +1042,4 @@ volumes:
   appwrite-influxdb:
   appwrite-config:
   # appwrite-chronograf:
-  #backup-data:
+  backup-data:
