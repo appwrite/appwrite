@@ -200,8 +200,9 @@ class CalcTierStats extends Action
 
                     try {
                         /** Get Domains */
-                        $stats['Domains'] = $dbForConsole->count('domains', [
+                        $stats['Domains'] = $dbForConsole->count('rules', [
                             Query::equal('projectInternalId', [$project->getInternalId()]),
+                            Query::limit(APP_LIMIT_COUNT)
                         ]);
                     } catch (\Throwable) {
                         $stats['Domains'] = 0;
