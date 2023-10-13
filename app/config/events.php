@@ -144,6 +144,9 @@ return [
             'create' => [
                 '$description' => 'This event triggers when a file is created.',
             ],
+            'uploaded' => [
+                '$description' => 'This event triggers when a file is created and all chunks are uploaded.',
+            ],
             'delete' => [
                 '$description' => 'This event triggers when a file is deleted.'
             ],
