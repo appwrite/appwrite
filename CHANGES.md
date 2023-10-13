@@ -1,3 +1,39 @@
+# Version 1.4.5
+
+## Changes
+- Bump console to version 3.2.1 in [#6868](https://github.com/appwrite/appwrite/pull/6868)
+
+## Fixes
+- Fix realtime logs in [#6478](https://github.com/appwrite/appwrite/pull/6478)
+- Fix "File not found" error in executor in [#6476](https://github.com/appwrite/appwrite/pull/6476)
+- Fix missing array flag on migration errors response model rule in [#6469](https://github.com/appwrite/appwrite/pull/6469)
+- Ensure openruntimes-executor restarts after a server reboot in [#6490](https://github.com/appwrite/appwrite/pull/6490)
+
+# Version 1.4.4
+
+## Features
+- Feat: Function domains force https in [#6269](https://github.com/appwrite/appwrite/pull/6269)
+- Feat: router protection in [#6272](https://github.com/appwrite/appwrite/pull/6272)
+- Feat: Parse event body in [#6317](https://github.com/appwrite/appwrite/pull/6317)
+
+## Fixes
+- Fix: wrong device type in [#6271](https://github.com/appwrite/appwrite/pull/6271)
+- Fix: build race condition in [#6270](https://github.com/appwrite/appwrite/pull/6270)
+- Fix: Large builds in [#6273](https://github.com/appwrite/appwrite/pull/6273)
+- Fix: migrations in [#6302](https://github.com/appwrite/appwrite/pull/6302)
+- Add Description for Download Deployment in [#6268](https://github.com/appwrite/appwrite/pull/6268)
+- Fix deployment delete in [#6290](https://github.com/appwrite/appwrite/pull/6290)
+- Fix project deletion in [#6260](https://github.com/appwrite/appwrite/pull/6260)
+- fix-6212-Issue-With-Linkedin-OAuth in [#6229](https://github.com/appwrite/appwrite/pull/6229)
+- Fix: Execution body limit in [#6326](https://github.com/appwrite/appwrite/pull/6326)
+- Patch: Disable console protection in [#6329](https://github.com/appwrite/appwrite/pull/6329)
+- converted desc to sentence case in [#5926](https://github.com/appwrite/appwrite/pull/5926)
+- Update avatar font and default colors in [#6277](https://github.com/appwrite/appwrite/pull/6277)
+- Bump composer to fix migration bug in [#6344](https://github.com/appwrite/appwrite/pull/6344)
+- Fix execution call timeout in [#6332](https://github.com/appwrite/appwrite/pull/6332)
+- Bump appwrite-assistant to prevent it from crashing w/o open ai key in [#6342](https://github.com/appwrite/appwrite/pull/6342)
+- Remove Special Chars from Initials [#6164](https://github.com/appwrite/appwrite/pull/6164)
+
 # Version 1.4.3
 
 ## Features
