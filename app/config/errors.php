@@ -785,5 +785,10 @@ return [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MESSAGE_ALREADY_SENT => [
+        'name' => Exception::MESSAGE_ALREADY_SENT,
+        'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
     ]
 ];

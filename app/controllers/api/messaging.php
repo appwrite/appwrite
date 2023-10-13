@@ -1703,6 +1703,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        if ($message->getAttribute('status') === 'sent') {
+            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        }
+
         if (\count($to) > 0) {
             $message->setAttribute('to', $to);
         }
