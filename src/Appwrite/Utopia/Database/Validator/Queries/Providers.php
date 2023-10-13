@@ -9,7 +9,9 @@ class Providers extends Base
         'provider',
         'type',
         'default',
-        'enabled'
+        'enabled',
+        'credentials',
+        'options'
     ];
 
     /**

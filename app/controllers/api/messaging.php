@@ -5,6 +5,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
@@ -19,10 +20,8 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\DateTime;
 
 App::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun Provider')
@@ -1236,12 +1235,13 @@ App::post('/v1/messaging/topics')
 
         try {
             $topic = $dbForProject->createDocument('topics', $topic);
-            $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($topic, Response::MODEL_TOPIC);
         } catch (DuplicateException) {
             throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
         }
+
+        $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
 App::get('/v1/messaging/topics')
@@ -1328,7 +1328,7 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.', true)
-    ->param('description', null, new Text(128), 'Topic Description.', true)
+    ->param('description', null, new Text(2048), 'Topic Description.', true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
@@ -1387,8 +1387,8 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->label('scope', 'subscribers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'addSubscriber')
-    ->label('sdk.description', '/docs/references/messaging/add-subscriber.md')
+    ->label('sdk.method', 'createSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/create-subscriber.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
@@ -1427,19 +1427,20 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
         try {
             $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
             $dbForProject->deleteCachedDocument('topics', $topicId);
-            $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
+
+        $response
+                ->setStatusCode(Response::STATUS_CODE_CREATED)
+                ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
     ->desc('List topic\'s subscribers.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listSubscribers')
     ->label('sdk.description', '/docs/references/messaging/list-subscribers.md')
@@ -1471,7 +1472,7 @@ App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->desc('Get a topic\'s subscriber.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'getSubscriber')
     ->label('sdk.description', '/docs/references/messaging/get-subscriber.md')
@@ -1537,15 +1538,15 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     });
 
 App::post('/v1/messaging/messages/email')
-    ->desc('Send an email.')
+    ->desc('Create an email.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'messages.create')
     ->label('audits.resource', 'messages/{response.$id}')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'sendEmail')
-    ->label('sdk.description', '/docs/references/messaging/send-email.md')
+    ->label('sdk.method', 'createEmail')
+    ->label('sdk.description', '/docs/references/messaging/create-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
@@ -1557,11 +1558,12 @@ App::post('/v1/messaging/messages/email')
     ->param('content', '', new Text(64230), 'Email Content.')
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('deliveryTime', null, new DatetimeValidator(), 'Delivery time for message.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1588,8 +1590,15 @@ App::post('/v1/messaging/messages/email')
         if ($status === 'processing') {
             $messaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
-                ->trigger();
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                    ->setDeliveryTime($deliveryTime)
+                    ->schedule();
+            } else {
+                $messaging->trigger();
+            }
         }
 
         $response
@@ -1608,7 +1617,7 @@ App::get('/v1/messaging/messages')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE_LIST)
-    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, Database $dbForProject, Response $response) {
@@ -1682,12 +1691,12 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', DateTime::now(), new DatetimeValidator(), 'Delivery time for message.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(), 'Delivery time for message in ISO 8601 format.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -1728,9 +1737,15 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if ($status === 'processing') {
             $messaging
                 ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
                 ->setDeliveryTime($deliveryTime)
-                ->setProject($project)
-                ->trigger();
+                ->schedule();
+            } else {
+                $messaging->trigger();
+            }
         }
 
         $response
