@@ -483,6 +483,7 @@ App::patch('/v1/projects/:projectId/team')
 
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('teamId', $teamId)
+            ->setAttribute('teamInternalId', $team->getInternalId())
             ->setAttribute('$permissions', [
                 Permission::read(Role::team(ID::custom($teamId))),
                 Permission::update(Role::team(ID::custom($teamId), 'owner')),
