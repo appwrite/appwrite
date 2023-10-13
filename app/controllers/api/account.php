@@ -1148,7 +1148,7 @@ App::put('/v1/account/sessions/token')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        
+
         /** @var Utopia\Database\Document $user */
         $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
@@ -1202,7 +1202,7 @@ App::put('/v1/account/sessions/token')
         if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL) {
             $user->setAttribute('emailVerification', true);
         }
-        
+
         if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_PHONE) {
             $user->setAttribute('phoneVerification', true);
         }
@@ -1217,7 +1217,7 @@ App::put('/v1/account/sessions/token')
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId());
 
-        
+
         $encodedSession = Auth::encodeSession($user->getId(), $sessionSecret);
 
         if (!Config::getParam('domainVerification')) {
@@ -1225,7 +1225,7 @@ App::put('/v1/account/sessions/token')
         }
 
         $protocol = $request->getProtocol();
-        
+
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', $encodedSession, (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
