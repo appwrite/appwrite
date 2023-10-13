@@ -139,7 +139,7 @@ As the name implies, `param()` is used to define a request parameter.
 
 - A key (name)
 - A default value
-- An instance of a validator class,This can also accept a callback that returns a validator instance. Dependency injection is supported for the callback.
+- An instance of a validator class, This can also accept a callback that returns a validator instance. Dependency injection is supported for the callback.
 - Description of the parameter
 - Is the route optional
 - An array of injections
