@@ -59,13 +59,23 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     )[0] ?? null;
 
     if ($route === null) {
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
-
-        if ($mainDomain === 'localhost') {
-            throw new AppwriteException(AppwriteException::ROUTER_DOMAIN_NOT_CONFIGURED);
-        } else {
-            throw new AppwriteException(AppwriteException::ROUTER_HOST_NOT_FOUND);
+        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
+
+        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+            throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
+        }
+
+        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+            if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+                throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
+            }
+        }
+
+        // Act as API - no Proxy logic
+        $utopia->getRoute()?->label('error', '');
+        return false;
     }
 
     $projectId = $route->getAttribute('projectId');
@@ -88,6 +98,16 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
+        if (App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+            if ($request->getProtocol() !== 'https') {
+                if ($request->getMethod() !== Request::METHOD_GET) {
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
+                }
+
+                return $response->redirect('https://' . $request->getHostname() . $request->getURI());
+            }
+        }
+
         $functionId = $route->getAttribute('resourceId');
         $projectId = $route->getAttribute('projectId');
 
@@ -119,6 +139,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         // \curl_setopt($ch, CURLOPT_HEADER, true);
         \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
         $executionResponse = \curl_exec($ch);
         $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -163,11 +184,13 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
 
         return true;
     } elseif ($type === 'api') {
+        $utopia->getRoute()?->label('error', '');
         return false;
     } else {
         throw new AppwriteException(AppwriteException::GENERAL_SERVER_ERROR, 'Unknown resource type ' . $type);
     }
 
+    $utopia->getRoute()?->label('error', '');
     return false;
 }
 
@@ -193,7 +216,7 @@ App::init()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
+        if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
@@ -232,6 +255,61 @@ App::init()
             }
         } else {
             Request::setFilter(null);
+        }
+
+        $domain = $request->getHostname();
+        $domains = Config::getParam('domains', []);
+        if (!array_key_exists($domain, $domains)) {
+            $domain = new Domain(!empty($domain) ? $domain : '');
+
+            if (empty($domain->get()) || !$domain->isKnown() || $domain->isTest()) {
+                $domains[$domain->get()] = false;
+                Console::warning($domain->get() . ' is not a publicly accessible domain. Skipping SSL certificate generation.');
+            } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
+                Console::warning('Skipping SSL certificates generation on ACME challenge.');
+            } else {
+                Authorization::disable();
+
+                $envDomain = App::getEnv('_APP_DOMAIN', '');
+                $mainDomain = null;
+                if (!empty($envDomain) && $envDomain !== 'localhost') {
+                    $mainDomain = $envDomain;
+                } else {
+                    $domainDocument = $dbForConsole->findOne('rules', [Query::orderAsc('$id')]);
+                    $mainDomain = $domainDocument ? $domainDocument->getAttribute('domain') : $domain->get();
+                }
+
+                if ($mainDomain !== $domain->get()) {
+                    Console::warning($domain->get() . ' is not a main domain. Skipping SSL certificate generation.');
+                } else {
+                    $domainDocument = $dbForConsole->findOne('rules', [
+                        Query::equal('domain', [$domain->get()])
+                    ]);
+
+                    if (!$domainDocument) {
+                        $domainDocument = new Document([
+                            'domain' => $domain->get(),
+                            'resourceType' => 'api',
+                            'status' => 'verifying',
+                            'projectId' => 'console',
+                            'projectInternalId' => 'console'
+                        ]);
+
+                        $domainDocument = $dbForConsole->createDocument('rules', $domainDocument);
+
+                        Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
+
+                        (new Certificate())
+                            ->setDomain($domainDocument)
+                            ->setSkipRenewCheck(true)
+                            ->trigger();
+                    }
+                }
+                $domains[$domain->get()] = true;
+
+                Authorization::reset(); // ensure authorization is re-enabled
+            }
+            Config::setParam('domains', $domains);
         }
 
         $localeParam = (string) $request->getParam('locale', $request->getHeader('x-appwrite-locale', ''));
@@ -327,9 +405,9 @@ App::init()
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
         if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
-            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // Localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
+            if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
-                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP.');
+                    throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
                 }
 
                 return $response->redirect('https://' . $request->getHostname() . $request->getURI());
@@ -497,7 +575,7 @@ App::options()
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
-        if ($host !== $mainDomain && $host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) {
+        if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }

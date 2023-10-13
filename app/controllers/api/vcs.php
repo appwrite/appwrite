@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
 use Utopia\Detector\Adapter\Deno;
@@ -49,6 +50,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $functionId = $resource->getAttribute('resourceId');
             $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+            $functionInternalId = $function->getInternalId();
 
             $deploymentId = ID::unique();
             $repositoryId = $resource->getId();
@@ -172,6 +174,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Permission::delete(Role::any()),
                 ],
                 'resourceId' => $functionId,
+                'resourceInternalId' => $functionInternalId,
                 'resourceType' => 'functions',
                 'entrypoint' => $function->getAttribute('entrypoint'),
                 'commands' => $function->getAttribute('commands'),
@@ -228,6 +231,7 @@ App::get('/v1/vcs/github/authorize')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
     ->label('sdk.namespace', 'vcs')
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.method', 'createGitHubInstallation')
     ->label('sdk.description', '')
@@ -248,6 +252,11 @@ App::get('/v1/vcs/github/authorize')
         ]);
 
         $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
+
+        if (empty($appName)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
+        }
+
         $url = "https://github.com/apps/$appName/installations/new?" . \http_build_query([
             'state' => $state,
             'redirect_uri' => $request->getProtocol() . '://' . $request->getHostname() . "/v1/vcs/github/callback"
@@ -463,6 +472,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
 
         $detectorFactory
             ->addDetector(new JavaScript())
+            ->addDetector(new Bun())
             ->addDetector(new PHP())
             ->addDetector(new Python())
             ->addDetector(new Dart())
@@ -543,6 +553,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                     $detectorFactory
                         ->addDetector(new JavaScript())
+                        ->addDetector(new Bun())
                         ->addDetector(new PHP())
                         ->addDetector(new Python())
                         ->addDetector(new Dart())
@@ -783,14 +794,14 @@ App::post('/v1/vcs/github/events')
     ->inject('getProjectDB')
     ->action(
         function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
-            $signature = $request->getHeader('x-hub-signature-256', '');
             $payload = $request->getRawPayload();
+            $signatureRemote = $request->getHeader('x-hub-signature-256', '');
+            $signatureLocal = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
-            $signatureKey = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+            $valid = empty($signatureRemote) ? true : $github->validateWebhookEvent($payload, $signatureRemote, $signatureLocal);
 
-            $valid = $github->validateWebhookEvent($payload, $signature, $signatureKey);
             if (!$valid) {
-                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook signature.");
+                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Invalid webhook payload signature. Please make sure the webhook secret has same value in your GitHub app and in the _APP_VCS_GITHUB_WEBHOOK_SECRET environment variable");
             }
 
             $event = $request->getHeader('x-github-event', '');

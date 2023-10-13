@@ -253,7 +253,7 @@ class Specs extends Action
                     ->setParam('docs.url', $endpoint . '/docs');
 
                 if ($mocks) {
-                    $path = __DIR__ . '/../config/specs/' . $format . '-mocks-' . $platform . '.json';
+                    $path = __DIR__ . '/../../../../app/config/specs/' . $format . '-mocks-' . $platform . '.json';
 
                     if (!file_put_contents($path, json_encode($specs->parse()))) {
                         throw new Exception('Failed to save mocks spec file: ' . $path);
