@@ -653,7 +653,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-assistant:
-    image: appwrite/assistant:0.2.1
+    image: appwrite/assistant:0.2.2
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -666,8 +666,9 @@ services:
     container_name: openruntimes-executor
     hostname: appwrite-executor
     <<: *x-logging
+    restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.2
+    image: openruntimes/executor:0.4.3
     networks:
       - appwrite
       - runtimes

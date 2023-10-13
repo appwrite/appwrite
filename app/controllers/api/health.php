@@ -39,7 +39,7 @@ App::get('/v1/health')
     });
 
 App::get('/v1/health/version')
-    ->desc('Get Version')
+    ->desc('Get version')
     ->groups(['api', 'health'])
     ->label('scope', 'public')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
@@ -109,7 +109,7 @@ App::get('/v1/health/db')
     });
 
 App::get('/v1/health/cache')
-    ->desc('Get Cache')
+    ->desc('Get cache')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -166,7 +166,7 @@ App::get('/v1/health/cache')
     });
 
 App::get('/v1/health/queue')
-    ->desc('Get Queue')
+    ->desc('Get queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -223,7 +223,7 @@ App::get('/v1/health/queue')
     });
 
 App::get('/v1/health/pubsub')
-    ->desc('Get PubSub')
+    ->desc('Get pubsub')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -280,7 +280,7 @@ App::get('/v1/health/pubsub')
     });
 
 App::get('/v1/health/time')
-    ->desc('Get Time')
+    ->desc('Get time')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -337,7 +337,7 @@ App::get('/v1/health/time')
     });
 
 App::get('/v1/health/queue/webhooks')
-    ->desc('Get Webhooks Queue')
+    ->desc('Get webhooks queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -354,7 +354,7 @@ App::get('/v1/health/queue/webhooks')
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
-    ->desc('Get Logs Queue')
+    ->desc('Get logs queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -371,7 +371,7 @@ App::get('/v1/health/queue/logs')
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
-    ->desc('Get Certificates Queue')
+    ->desc('Get certificates queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -387,8 +387,110 @@ App::get('/v1/health/queue/certificates')
         $response->dynamic(new Document([ 'size' => Resque::size(Event::CERTIFICATES_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
+App::get('/v1/health/queue/builds')
+    ->desc('Get builds queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueBuilds')
+    ->label('sdk.description', '/docs/references/health/get-queue-builds.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::BUILDS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/queue/databases')
+    ->desc('Get databases queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueDatabases')
+    ->label('sdk.description', '/docs/references/health/get-queue-databases.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::DATABASE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/queue/deletes')
+    ->desc('Get deletes queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueDeletes')
+    ->label('sdk.description', '/docs/references/health/get-queue-deletes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::DELETE_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/queue/mails')
+    ->desc('Get mails queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueMails')
+    ->label('sdk.description', '/docs/references/health/get-queue-mails.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MAILS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/queue/messaging')
+    ->desc('Get messaging queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueMessaging')
+    ->label('sdk.description', '/docs/references/health/get-queue-messaging.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MESSAGING_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/queue/migrations')
+    ->desc('Get migrations queue')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getQueueMigrations')
+    ->label('sdk.description', '/docs/references/health/get-queue-migrations.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->action(function (Response $response) {
+
+        $response->dynamic(new Document([ 'size' => Resque::size(Event::MIGRATIONS_QUEUE_NAME) ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
 App::get('/v1/health/queue/functions')
-    ->desc('Get Functions Queue')
+    ->desc('Get functions queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -406,7 +508,7 @@ App::get('/v1/health/queue/functions')
     }, ['response']);
 
 App::get('/v1/health/storage/local')
-    ->desc('Get Local Storage')
+    ->desc('Get local storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -449,7 +551,7 @@ App::get('/v1/health/storage/local')
     });
 
 App::get('/v1/health/anti-virus')
-    ->desc('Get Antivirus')
+    ->desc('Get antivirus')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -488,7 +590,7 @@ App::get('/v1/health/anti-virus')
     });
 
 App::get('/v1/health/stats') // Currently only used internally
-    ->desc('Get System Stats')
+    ->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')
     // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
