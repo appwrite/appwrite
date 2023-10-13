@@ -246,7 +246,7 @@ class CalcTierStats extends Action
                             if (empty($file)) {
                                 continue;
                             }
-                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
+                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', []);
                             $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
                             if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
                                 $maxFileSize = $file->getAttribute('sizeOriginal');
