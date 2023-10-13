@@ -326,7 +326,6 @@ trait AccountBase
         $this->assertEquals('Unknown', $response['body']['sessions'][0]['countryName']);
 
         $this->assertEquals(true, $response['body']['sessions'][0]['current']);
-        $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['sessions'][0]['expire']));
         /**
@@ -842,7 +841,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
@@ -1144,7 +1143,7 @@ trait AccountBase
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $lastEmail = $this->getLastEmail();
