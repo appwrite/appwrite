@@ -100,9 +100,10 @@ class MessagingV1 extends Worker
 
         $maxBatchSize = $adapter->getMaxMessagesPerRequest();
         $batches = \array_chunk($identifiers, $maxBatchSize);
+        $batchIndex = 0;
 
-        $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter) {
-            return function () use ($batch, $message, $provider, $adapter) {
+        $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
+            return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
                 $deliveredTo = 0;
                 $deliveryErrors = [];
                 $messageData = clone $message;
@@ -117,10 +118,9 @@ class MessagingV1 extends Worker
                     $adapter->send($data);
                     $deliveredTo += \count($batch);
                 } catch (\Exception $e) {
-                    foreach ($batch as $identifier) {
-                        $deliveryErrors[] = 'Failed to send message to target' . $identifier . ': ' . $e->getMessage();
-                    }
+                    $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                 } finally {
+                    $batchIndex++;
                     return [
                         'deliveredTo' => $deliveredTo,
                         'deliveryErrors' => $deliveryErrors,
