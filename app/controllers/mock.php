@@ -649,7 +649,7 @@ App::patch('/v1/mock/functions-v2')
         $response->noContent();
     });
 
-    App::get('/v1/mock/github/callback')
+App::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')

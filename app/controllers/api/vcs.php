@@ -35,6 +35,7 @@ use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\Validator\Boolean;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
 
@@ -458,9 +459,9 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repositoryName = $github->getRepositoryName($providerRepositoryId);
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
@@ -720,9 +721,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
-        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
@@ -766,9 +767,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
-        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
