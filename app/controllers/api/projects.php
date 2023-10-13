@@ -481,16 +481,43 @@ App::patch('/v1/projects/:projectId/team')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
+        $permissions = [
+            Permission::read(Role::team(ID::custom($teamId))),
+            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+        ];
+
+        $project
             ->setAttribute('teamId', $teamId)
             ->setAttribute('teamInternalId', $team->getInternalId())
-            ->setAttribute('$permissions', [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ]));
+            ->setAttribute('$permissions', $permissions);
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project);
+
+        $installations = $dbForConsole->find('installations', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($installations as $installation) {
+            $installation->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('installations', $installation->getId(), $installation);
+        }
+
+        $repositories = $dbForConsole->find('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($repositories as $repository) {
+            $repository->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('repositories', $repository->getId(), $repository);
+        }
+
+        $vcsComments = $dbForConsole->find('vcsComments', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($vcsComments as $vcsComment) {
+            $vcsComment->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
