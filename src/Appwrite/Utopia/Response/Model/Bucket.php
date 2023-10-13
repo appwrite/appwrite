@@ -30,14 +30,14 @@ class Bucket extends Model
             ])
             ->addRule('$permissions', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Bucket permissions. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Bucket permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => [],
                 'example' => ['read("any")'],
                 'array' => true,
             ])
             ->addRule('fileSecurity', [
                 'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether file-level security is enabled. [Learn more about permissions](/docs/permissions).',
+                'description' => 'Whether file-level security is enabled. [Learn more about permissions](https://appwrite.io/docs/permissions).',
                 'default' => false,
                 'example' => true,
             ])
