@@ -8,7 +8,7 @@ return [
     APP_PLATFORM_CLIENT => [
         'key' => APP_PLATFORM_CLIENT,
         'name' => 'Client',
-        'description' => 'Client libraries for integrating with Appwrite to build client-based applications and websites. Read the [getting started for web](/docs/getting-started-for-web) or [getting started for Flutter](/docs/getting-started-for-flutter) tutorials to start building your first application.',
+        'description' => 'Client libraries for integrating with Appwrite to build client-based applications and websites. Read the [getting started for web](https://appwrite.io/docs/getting-started-for-web) or [getting started for Flutter](https://appwrite.io/docs/getting-started-for-flutter) tutorials to start building your first application.',
         'enabled' => true,
         'beta' => false,
         'sdks' => [
@@ -224,7 +224,7 @@ return [
     APP_PLATFORM_SERVER => [
         'key' => APP_PLATFORM_SERVER,
         'name' => 'Server',
-        'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](/docs/getting-started-for-server) tutorial to start building your first server integration.',
+        'description' => 'Libraries for integrating with Appwrite to build server side integrations. Read the [getting started for server](https://appwrite.io/docs/getting-started-for-server) tutorial to start building your first server integration.',
         'enabled' => true,
         'beta' => false,
         'sdks' => [
