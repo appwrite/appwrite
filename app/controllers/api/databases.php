@@ -371,7 +371,7 @@ function updateAttribute(
 }
 
 App::post('/v1/databases')
-    ->desc('Create Database')
+    ->desc('Create database')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].create')
     ->label('scope', 'databases.write')
@@ -448,7 +448,7 @@ App::post('/v1/databases')
     });
 
 App::get('/v1/databases')
-    ->desc('List Databases')
+    ->desc('List databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('usage.metric', 'databases.{scope}.requests.read')
@@ -496,7 +496,7 @@ App::get('/v1/databases')
     });
 
 App::get('/v1/databases/:databaseId')
-    ->desc('Get Database')
+    ->desc('Get database')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('usage.metric', 'databases.{scope}.requests.read')
@@ -522,7 +522,7 @@ App::get('/v1/databases/:databaseId')
     });
 
 App::get('/v1/databases/:databaseId/logs')
-    ->desc('List Database Logs')
+    ->desc('List database logs')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -608,7 +608,7 @@ App::get('/v1/databases/:databaseId/logs')
 
 
 App::put('/v1/databases/:databaseId')
-    ->desc('Update Database')
+    ->desc('Update database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].update')
@@ -653,7 +653,7 @@ App::put('/v1/databases/:databaseId')
     });
 
 App::delete('/v1/databases/:databaseId')
-    ->desc('Delete Database')
+    ->desc('Delete database')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'databases.write')
     ->label('event', 'databases.[databaseId].delete')
@@ -698,7 +698,7 @@ App::delete('/v1/databases/:databaseId')
     });
 
 App::post('/v1/databases/:databaseId/collections')
-    ->desc('Create Collection')
+    ->desc('Create collection')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].create')
     ->label('scope', 'collections.write')
@@ -768,7 +768,7 @@ App::post('/v1/databases/:databaseId/collections')
 
 App::get('/v1/databases/:databaseId/collections')
     ->alias('/v1/database/collections', ['databaseId' => 'default'])
-    ->desc('List Collections')
+    ->desc('List collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -827,7 +827,7 @@ App::get('/v1/databases/:databaseId/collections')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
-    ->desc('Get Collection')
+    ->desc('Get collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -863,7 +863,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->alias('/v1/database/collections/:collectionId/logs', ['databaseId' => 'default'])
-    ->desc('List Collection Logs')
+    ->desc('List collection logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -959,7 +959,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
 
 App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
-    ->desc('Update Collection')
+    ->desc('Update collection')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
@@ -1029,7 +1029,7 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->alias('/v1/database/collections/:collectionId', ['databaseId' => 'default'])
-    ->desc('Delete Collection')
+    ->desc('Delete collection')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
@@ -1085,7 +1085,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string')
     ->alias('/v1/database/collections/:collectionId/attributes/string', ['databaseId' => 'default'])
-    ->desc('Create String Attribute')
+    ->desc('Create string attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1143,7 +1143,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email')
     ->alias('/v1/database/collections/:collectionId/attributes/email', ['databaseId' => 'default'])
-    ->desc('Create Email Attribute')
+    ->desc('Create email attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1187,7 +1187,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->alias('/v1/database/collections/:collectionId/attributes/enum', ['databaseId' => 'default'])
-    ->desc('Create Enum Attribute')
+    ->desc('Create enum attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1247,7 +1247,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->alias('/v1/database/collections/:collectionId/attributes/ip', ['databaseId' => 'default'])
-    ->desc('Create IP Address Attribute')
+    ->desc('Create IP address attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1291,7 +1291,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->alias('/v1/database/collections/:collectionId/attributes/url', ['databaseId' => 'default'])
-    ->desc('Create URL Attribute')
+    ->desc('Create URL attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1335,7 +1335,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integer')
     ->alias('/v1/database/collections/:collectionId/attributes/integer', ['databaseId' => 'default'])
-    ->desc('Create Integer Attribute')
+    ->desc('Create integer attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1408,7 +1408,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float')
     ->alias('/v1/database/collections/:collectionId/attributes/float', ['databaseId' => 'default'])
-    ->desc('Create Float Attribute')
+    ->desc('Create float attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1484,7 +1484,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean')
     ->alias('/v1/database/collections/:collectionId/attributes/boolean', ['databaseId' => 'default'])
-    ->desc('Create Boolean Attribute')
+    ->desc('Create boolean attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1527,7 +1527,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime')
     ->alias('/v1/database/collections/:collectionId/attributes/datetime', ['databaseId' => 'default'])
-    ->desc('Create DateTime Attribute')
+    ->desc('Create datetime attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1573,7 +1573,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relationship')
     ->alias('/v1/database/collections/:collectionId/attributes/relationship', ['databaseId' => 'default'])
-    ->desc('Create Relationship Attribute')
+    ->desc('Create relationship attribute')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].create')
     ->label('scope', 'collections.write')
@@ -1655,7 +1655,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->alias('/v1/database/collections/:collectionId/attributes', ['databaseId' => 'default'])
-    ->desc('List Attributes')
+    ->desc('List attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -1730,7 +1730,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
-    ->desc('Get Attribute')
+    ->desc('Get attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -1806,7 +1806,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/string/:key')
-    ->desc('Update String Attribute')
+    ->desc('Update string attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -1847,7 +1847,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email/:key')
-    ->desc('Update Email Attribute')
+    ->desc('Update email attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -1888,7 +1888,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/:key')
-    ->desc('Update Enum Attribute')
+    ->desc('Update enum attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -1931,7 +1931,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:key')
-    ->desc('Update IP Address Attribute')
+    ->desc('Update IP address attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -1972,7 +1972,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:key')
-    ->desc('Update URL Attribute')
+    ->desc('Update URL attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2013,7 +2013,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integer/:key')
-    ->desc('Update Integer Attribute')
+    ->desc('Update integer attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2064,7 +2064,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float/:key')
-    ->desc('Update Float Attribute')
+    ->desc('Update float attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2115,7 +2115,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boolean/:key')
-    ->desc('Update Boolean Attribute')
+    ->desc('Update boolean attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2155,7 +2155,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datetime/:key')
-    ->desc('Update DateTime Attribute')
+    ->desc('Update dateTime attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2195,7 +2195,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     });
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/relationship')
-    ->desc('Update Relationship Attribute')
+    ->desc('Update relationship attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
@@ -2251,7 +2251,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->alias('/v1/database/collections/:collectionId/attributes/:key', ['databaseId' => 'default'])
-    ->desc('Delete Attribute')
+    ->desc('Delete attribute')
     ->groups(['api', 'database', 'schema'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].delete')
@@ -2362,7 +2362,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->alias('/v1/database/collections/:collectionId/indexes', ['databaseId' => 'default'])
-    ->desc('Create Index')
+    ->desc('Create index')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].create')
     ->label('scope', 'collections.write')
@@ -2522,7 +2522,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->alias('/v1/database/collections/:collectionId/indexes', ['databaseId' => 'default'])
-    ->desc('List Indexes')
+    ->desc('List indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -2587,7 +2587,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
-    ->desc('Get Index')
+    ->desc('Get index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
     ->label('usage.metric', 'collections.{scope}.requests.read')
@@ -2628,7 +2628,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->alias('/v1/database/collections/:collectionId/indexes/:key', ['databaseId' => 'default'])
-    ->desc('Delete Index')
+    ->desc('Delete index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].delete')
@@ -2694,7 +2694,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
 
 App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
-    ->desc('Create Document')
+    ->desc('Create document')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].create')
     ->label('scope', 'documents.write')
@@ -2934,7 +2934,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->alias('/v1/database/collections/:collectionId/documents', ['databaseId' => 'default'])
-    ->desc('List Documents')
+    ->desc('List documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
@@ -3061,7 +3061,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
-    ->desc('Get Document')
+    ->desc('Get document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
@@ -3156,7 +3156,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId/logs')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId/logs', ['databaseId' => 'default'])
-    ->desc('List Document Logs')
+    ->desc('List document logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
     ->label('usage.metric', 'documents.{scope}.requests.read')
@@ -3257,7 +3257,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
 App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
-    ->desc('Update Document')
+    ->desc('Update document')
     ->groups(['api', 'database'])
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].update')
     ->label('scope', 'documents.write')
@@ -3486,7 +3486,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
 
 App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:documentId')
     ->alias('/v1/database/collections/:collectionId/documents/:documentId', ['databaseId' => 'default'])
-    ->desc('Delete Document')
+    ->desc('Delete document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.write')
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
