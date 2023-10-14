@@ -239,6 +239,7 @@ return [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
+    ],
     Exception::USER_EMAIL_ALREADY_VERIFIED => [
         'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
         'description' => 'User email is already verified',

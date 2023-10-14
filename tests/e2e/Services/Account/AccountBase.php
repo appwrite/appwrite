@@ -891,7 +891,6 @@ trait AccountBase
         return $data;
     }
 
-
     /**
      * @depends testCreateAccountVerification
      */
@@ -963,7 +962,6 @@ trait AccountBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-
         ]), [
             'url' => 'http://localhost/verification',
         ]);
