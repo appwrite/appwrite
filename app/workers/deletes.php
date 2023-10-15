@@ -2,7 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Executor\Executor;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
@@ -145,7 +145,7 @@ class DeletesV1 extends Worker
         $this->listByGroup(
             'schedules',
             [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [Http::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', ['function']),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
@@ -947,7 +947,7 @@ class DeletesV1 extends Worker
 
     protected function deleteRuntimes(?Document $function, Document $project)
     {
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
 
         $deleteByFunction = function (Document $function) use ($project, $executor) {
             $this->listByGroup(

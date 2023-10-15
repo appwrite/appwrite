@@ -2,17 +2,17 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Utopia\Request;
-use Utopia\App;
+use Utopia\Http\Http;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-App::init()
+Http::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->action(function (Http $utopia, Request $request, Document $project) {
 
         $route = $utopia->match($request);
 

@@ -2,14 +2,14 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Pools\Group;
-use Utopia\Validator\Numeric;
+use Utopia\Http\Validator\Numeric;
 
 class PatchDeleteProjectCollections extends Action
 {
@@ -51,7 +51,7 @@ class PatchDeleteProjectCollections extends Action
         Console::success(APP_NAME . ' delete project collections has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $console = $app->getResource('console');
 
         /** Database connections */
@@ -83,14 +83,14 @@ class PatchDeleteProjectCollections extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase(App::getEnv('_APP_DB_SCHEMA', 'appwrite'));
+                    $dbForProject->setDefaultDatabase(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'));
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     foreach ($this->names as $name) {
                         if (empty($name)) {
                             continue;
                         }
-                        if ($dbForProject->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+                        if ($dbForProject->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
                             if ($dbForProject->deleteCollection($name)) {
                                 Console::log('Deleted ' . $name);
                             } else {

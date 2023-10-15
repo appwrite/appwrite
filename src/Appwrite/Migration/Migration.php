@@ -9,7 +9,7 @@ use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 
@@ -232,7 +232,7 @@ abstract class Migration
             default => 'projects',
         };
 
-        if (!$this->projectDB->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
+        if (!$this->projectDB->exists(Http::getEnv('_APP_DB_SCHEMA', 'appwrite'), $name)) {
             $attributes = [];
             $indexes = [];
             $collection = $this->collections[$collectionType][$id];

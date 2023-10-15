@@ -2,7 +2,7 @@
 
 namespace Appwrite\Usage\Calculators;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Appwrite\Usage\Calculator;
 use Utopia\Database\Database;
 use Utopia\Database\Document;

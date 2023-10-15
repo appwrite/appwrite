@@ -11,7 +11,7 @@ use Utopia\Analytics\Adapter\GoogleAnalytics;
 use Utopia\Analytics\Event;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 
 class Install extends Action

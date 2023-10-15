@@ -5,7 +5,7 @@ namespace Appwrite\Messaging\Adapter;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Appwrite\Messaging\Adapter;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 
@@ -140,7 +140,7 @@ class Realtime extends Adapter
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
         $redis = new \Redis(); //TODO: make this part of the constructor
-        $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
+        $redis->connect(Http::getEnv('_APP_REDIS_HOST', ''), Http::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
             'project' => $projectId,
             'roles' => $roles,

@@ -3,14 +3,14 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\Platform\Action;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Exception;
 use Swoole\Http\Response as HttpResponse;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -19,7 +19,7 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Registry\Registry;
 use Utopia\Request;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
 
 class Specs extends Action
 {
@@ -40,15 +40,15 @@ class Specs extends Action
 
     public function action(string $version, string $mode, Registry $register): void
     {
-        $appRoutes = App::getRoutes();
+        $appRoutes = Http::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => new Request());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('request', fn () => new Request());
+        Http::setResource('response', fn () => $response);
+        Http::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -150,7 +150,7 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
-                    /** @var \Utopia\Route $route */
+                    /** @var \Utopia\Http\Route $route */
                     $routeSecurity = $route->getLabel('sdk.auth', []);
                     $sdkPlaforms = [];
 
@@ -224,7 +224,7 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
@@ -233,8 +233,8 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = Http::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)

@@ -2,14 +2,14 @@
 
 namespace Appwrite\Specification;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
-use Utopia\Route;
+use Utopia\Http\Route;
 use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {
-    protected App $app;
+    protected Http $http;
 
     /**
      * @var Route[]
@@ -50,9 +50,9 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(Http $http, array $services, array $routes, array $models, array $keys, int $authCount)
     {
-        $this->app = $app;
+        $this->http = $http;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;
@@ -72,7 +72,7 @@ abstract class Format
     /**
      * Parse
      *
-     * Parses Appwrite App to given format
+     * Parses Appwrite Http to given format
      *
      * @return array
      */

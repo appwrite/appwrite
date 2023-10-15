@@ -6,26 +6,26 @@ use Appwrite\GraphQL\Exception as GQLException;
 use Appwrite\Promises\Swoole;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
-use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Http;
+use Utopia\Http\Exception;
+use Utopia\Http\Route;
 
 class Resolvers
 {
     /**
      * Create a resolver for a given API {@see Route}.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param ?Route $route
      * @return callable
      */
     public static function api(
-        App $utopia,
+        Http $utopia,
         ?Route $route,
     ): callable {
         return static fn($type, $args, $context, $info) => new Swoole(
             function (callable $resolve, callable $reject) use ($utopia, $route, $args, $context, $info) {
-                /** @var App $utopia */
+                /** @var Http $utopia */
                 /** @var Response $response */
                 /** @var Request $request */
 
@@ -60,14 +60,14 @@ class Resolvers
     /**
      * Create a resolver for a document in a specified database and collection with a specific method type.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param string $methodType
      * @return callable
      */
     public static function document(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         string $methodType,
@@ -82,14 +82,14 @@ class Resolvers
     /**
      * Create a resolver for getting a document in a specified database and collection.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @return callable
      */
     public static function documentGet(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -111,7 +111,7 @@ class Resolvers
     /**
      * Create a resolver for listing documents in a specified database and collection.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
@@ -119,7 +119,7 @@ class Resolvers
      * @return callable
      */
     public static function documentList(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -147,7 +147,7 @@ class Resolvers
     /**
      * Create a resolver for creating a document in a specified database and collection.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
@@ -155,7 +155,7 @@ class Resolvers
      * @return callable
      */
     public static function documentCreate(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -179,7 +179,7 @@ class Resolvers
     /**
      * Create a resolver for updating a document in a specified database and collection.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
@@ -187,7 +187,7 @@ class Resolvers
      * @return callable
      */
     public static function documentUpdate(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -211,14 +211,14 @@ class Resolvers
     /**
      * Create a resolver for deleting a document in a specified database and collection.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param string $databaseId
      * @param string $collectionId
      * @param callable $url
      * @return callable
      */
     public static function documentDelete(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -238,7 +238,7 @@ class Resolvers
     }
 
     /**
-     * @param App $utopia
+     * @param Http $utopia
      * @param Request $request
      * @param Response $response
      * @param callable $resolve
@@ -249,7 +249,7 @@ class Resolvers
      * @throws Exception
      */
     private static function resolve(
-        App $utopia,
+        Http $utopia,
         Request $request,
         Response $response,
         callable $resolve,
@@ -302,7 +302,7 @@ class Resolvers
 
     private static function escapePayload(array $payload, int $depth)
     {
-        if ($depth > App::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
+        if ($depth > Http::getEnv('_APP_GRAPHQL_MAX_DEPTH', 3)) {
             return;
         }
 

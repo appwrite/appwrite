@@ -4,21 +4,21 @@ global $utopia, $request, $response;
 
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
-use Utopia\Validator\Host;
+use Utopia\Http\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Database;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Text;
 use Utopia\Storage\Validator\File;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
-use Utopia\Validator\Nullable;
+use Utopia\Http\Validator\Nullable;
 
-App::get('/v1/mock/tests/foo')
+Http::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -36,7 +36,7 @@ App::get('/v1/mock/tests/foo')
     ->action(function ($x, $y, $z) {
     });
 
-App::post('/v1/mock/tests/foo')
+Http::post('/v1/mock/tests/foo')
     ->desc('Post Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -54,7 +54,7 @@ App::post('/v1/mock/tests/foo')
     ->action(function ($x, $y, $z) {
     });
 
-App::patch('/v1/mock/tests/foo')
+Http::patch('/v1/mock/tests/foo')
     ->desc('Patch Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -72,7 +72,7 @@ App::patch('/v1/mock/tests/foo')
     ->action(function ($x, $y, $z) {
     });
 
-App::put('/v1/mock/tests/foo')
+Http::put('/v1/mock/tests/foo')
     ->desc('Put Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -90,7 +90,7 @@ App::put('/v1/mock/tests/foo')
     ->action(function ($x, $y, $z) {
     });
 
-App::delete('/v1/mock/tests/foo')
+Http::delete('/v1/mock/tests/foo')
     ->desc('Delete Foo')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -108,7 +108,7 @@ App::delete('/v1/mock/tests/foo')
     ->action(function ($x, $y, $z) {
     });
 
-App::get('/v1/mock/tests/bar')
+Http::get('/v1/mock/tests/bar')
     ->desc('Get Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -126,7 +126,7 @@ App::get('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-App::post('/v1/mock/tests/bar')
+Http::post('/v1/mock/tests/bar')
     ->desc('Post Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -146,7 +146,7 @@ App::post('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-App::patch('/v1/mock/tests/bar')
+Http::patch('/v1/mock/tests/bar')
     ->desc('Patch Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -164,7 +164,7 @@ App::patch('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-App::put('/v1/mock/tests/bar')
+Http::put('/v1/mock/tests/bar')
     ->desc('Put Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -182,7 +182,7 @@ App::put('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-App::delete('/v1/mock/tests/bar')
+Http::delete('/v1/mock/tests/bar')
     ->desc('Delete Bar')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -200,7 +200,7 @@ App::delete('/v1/mock/tests/bar')
     ->action(function ($required, $default, $z) {
     });
 
-App::get('/v1/mock/tests/general/headers')
+Http::get('/v1/mock/tests/general/headers')
     ->desc('Get headers')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -228,7 +228,7 @@ App::get('/v1/mock/tests/general/headers')
         $response->dynamic(new Document(['result' => $res]), Response::MODEL_MOCK);
     });
 
-App::get('/v1/mock/tests/general/download')
+Http::get('/v1/mock/tests/general/download')
     ->desc('Download File')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -252,7 +252,7 @@ App::get('/v1/mock/tests/general/download')
         ;
     });
 
-App::post('/v1/mock/tests/general/upload')
+Http::post('/v1/mock/tests/general/upload')
     ->desc('Upload File')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -340,7 +340,7 @@ App::post('/v1/mock/tests/general/upload')
         }
     });
 
-App::get('/v1/mock/tests/general/redirect')
+Http::get('/v1/mock/tests/general/redirect')
     ->desc('Redirect')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -358,7 +358,7 @@ App::get('/v1/mock/tests/general/redirect')
         $response->redirect('/v1/mock/tests/general/redirect/done');
     });
 
-App::get('/v1/mock/tests/general/redirect/done')
+Http::get('/v1/mock/tests/general/redirect/done')
     ->desc('Redirected')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -373,7 +373,7 @@ App::get('/v1/mock/tests/general/redirect/done')
     ->action(function () {
     });
 
-App::get('/v1/mock/tests/general/set-cookie')
+Http::get('/v1/mock/tests/general/set-cookie')
     ->desc('Set Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -392,7 +392,7 @@ App::get('/v1/mock/tests/general/set-cookie')
         $response->addCookie('cookieName', 'cookieValue', \time() + 31536000, '/', $request->getHostname(), true, true);
     });
 
-App::get('/v1/mock/tests/general/get-cookie')
+Http::get('/v1/mock/tests/general/get-cookie')
     ->desc('Get Cookie')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -412,7 +412,7 @@ App::get('/v1/mock/tests/general/get-cookie')
         }
     });
 
-App::get('/v1/mock/tests/general/empty')
+Http::get('/v1/mock/tests/general/empty')
     ->desc('Empty Response')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -429,7 +429,7 @@ App::get('/v1/mock/tests/general/empty')
         $response->noContent();
     });
 
-App::post('/v1/mock/tests/general/nullable')
+Http::post('/v1/mock/tests/general/nullable')
     ->desc('Nullable Test')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -444,7 +444,7 @@ App::post('/v1/mock/tests/general/nullable')
     ->action(function (string $required, string $nullable, ?string $optional) {
     });
 
-App::post('/v1/mock/tests/general/enum')
+Http::post('/v1/mock/tests/general/enum')
     ->desc('Enum Test')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -457,7 +457,7 @@ App::post('/v1/mock/tests/general/enum')
     ->action(function (string $mockType) {
     });
 
-App::get('/v1/mock/tests/general/400-error')
+Http::get('/v1/mock/tests/general/400-error')
     ->desc('400 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -473,7 +473,7 @@ App::get('/v1/mock/tests/general/400-error')
         throw new Exception(Exception::GENERAL_MOCK, 'Mock 400 error');
     });
 
-App::get('/v1/mock/tests/general/500-error')
+Http::get('/v1/mock/tests/general/500-error')
     ->desc('500 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -489,7 +489,7 @@ App::get('/v1/mock/tests/general/500-error')
         throw new Exception(Exception::GENERAL_MOCK, 'Mock 500 error', 500);
     });
 
-App::get('/v1/mock/tests/general/502-error')
+Http::get('/v1/mock/tests/general/502-error')
     ->desc('502 Error')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -510,7 +510,7 @@ App::get('/v1/mock/tests/general/502-error')
         ;
     });
 
-App::get('/v1/mock/tests/general/oauth2')
+Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -526,7 +526,7 @@ App::get('/v1/mock/tests/general/oauth2')
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-App::get('/v1/mock/tests/general/oauth2/token')
+Http::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -572,7 +572,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-App::get('/v1/mock/tests/general/oauth2/user')
+Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -592,7 +592,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/success')
+Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -605,7 +605,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/failure')
+Http::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -620,7 +620,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::patch('/v1/mock/functions-v2')
+Http::patch('/v1/mock/functions-v2')
     ->desc('Update Function Version to V2 (outdated code syntax)')
     ->groups(['mock', 'api', 'functions'])
     ->label('scope', 'functions.write')
@@ -629,7 +629,7 @@ App::patch('/v1/mock/functions-v2')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = Http::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -646,12 +646,12 @@ App::patch('/v1/mock/functions-v2')
         $response->noContent();
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['mock'])
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
         $route  = $utopia->getRoute();

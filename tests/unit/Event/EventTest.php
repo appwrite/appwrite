@@ -5,7 +5,7 @@ namespace Tests\Unit\Event;
 use Appwrite\Event\Event;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\App;
+use Utopia\Http\Http;
 
 class EventTest extends TestCase
 {
@@ -14,8 +14,8 @@ class EventTest extends TestCase
 
     public function setUp(): void
     {
-        $redisHost = App::getEnv('_APP_REDIS_HOST', '');
-        $redisPort = App::getEnv('_APP_REDIS_PORT', '');
+        $redisHost = Http::getEnv('_APP_REDIS_HOST', '');
+        $redisPort = Http::getEnv('_APP_REDIS_PORT', '');
         \Resque::setBackend($redisHost . ':' . $redisPort);
 
         $this->queue = 'v1-tests' . uniqid();

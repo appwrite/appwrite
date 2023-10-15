@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -123,14 +123,14 @@ class Maintenance extends Action
         }
 
         // # of days in seconds (1 day = 86400s)
-        $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
-        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
-        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
-        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
+        $interval = (int) Http::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
+        $executionLogsRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
+        $auditLogRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
+        $abuseLogsRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
+        $usageStatsRetentionHourly = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
 
-        $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
-        $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $cacheRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $schedulesDeletionRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
         Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole) {
             $time = DateTime::now();

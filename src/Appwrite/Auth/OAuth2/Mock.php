@@ -3,7 +3,7 @@
 namespace Appwrite\Auth\OAuth2;
 
 use Appwrite\Auth\OAuth2;
-use Utopia\Exception;
+use Utopia\Http\Exception;
 
 class Mock extends OAuth2
 {

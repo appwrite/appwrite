@@ -5,13 +5,13 @@ namespace Appwrite\Platform\Tasks;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Appwrite\Migration\Migration;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 class Migrate extends Action
 {
@@ -50,7 +50,7 @@ class Migrate extends Action
             return;
         }
 
-        $app = new App('UTC');
+        $app = new Http('UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 

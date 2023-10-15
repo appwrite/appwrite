@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Exception;
 use League\Csv\CannotInsertRecord;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
@@ -73,7 +73,7 @@ class CalcTierStats extends Action
     }
 
     /**
-     * @throws \Utopia\Exception
+     * @throws \Utopia\Http\Exception
      * @throws CannotInsertRecord
      */
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
@@ -84,7 +84,7 @@ class CalcTierStats extends Action
         Console::success(APP_NAME . ' cloud free tier  stats calculation has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http('UTC');
         $console = $app->getResource('console');
 
         /** CSV stuff */
@@ -329,8 +329,8 @@ class CalcTierStats extends Action
 
         try {
             /** Addresses */
-            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+            $mail->setFrom(Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', Http::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
 
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);

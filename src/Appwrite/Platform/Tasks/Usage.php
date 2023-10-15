@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Usage\Calculators\TimeSeries;
 use InfluxDB\Database as InfluxDatabase;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database as UtopiaDatabase;
 use Throwable;
@@ -41,8 +41,8 @@ class Usage extends Action
 
         $errorLogger = fn(Throwable $error, string $action = 'syncUsageStats') => $logError($error, "usage", $action);
 
-        $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
-        $region = App::getEnv('region', 'default');
+        $interval = (int) Http::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '30'); // 30 seconds (by default)
+        $region = Http::getEnv('region', 'default');
         $usage = new TimeSeries($region, $dbForConsole, $influxDB, $getProjectDB, $register, $errorLogger);
 
         Console::loop(function () use ($interval, $usage) {

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "13a3bdc7c1dec5756bf58ec73a49753d",
+    "content-hash": "1c2d5e7151314e8a13424d187178a92c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1050,16 +1050,16 @@
         },
         {
             "name": "matomo/device-detector",
-            "version": "6.1.5",
+            "version": "6.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/matomo-org/device-detector.git",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4"
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/40ca2990dba2c1719e5c62168e822e0b86c167d4",
-                "reference": "40ca2990dba2c1719e5c62168e822e0b86c167d4",
+                "url": "https://api.github.com/repos/matomo-org/device-detector/zipball/5cbea85106e561c7138d03603eb6e05128480409",
+                "reference": "5cbea85106e561c7138d03603eb6e05128480409",
                 "shasum": ""
             },
             "require": {
@@ -1115,7 +1115,7 @@
                 "source": "https://github.com/matomo-org/matomo",
                 "wiki": "https://dev.matomo.org/"
             },
-            "time": "2023-08-17T16:17:41+00:00"
+            "time": "2023-10-02T10:01:54+00:00"
         },
         {
             "name": "mongodb/mongodb",
@@ -2052,21 +2052,21 @@
         },
         {
             "name": "utopia-php/cli",
-            "version": "0.15.0",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/cli.git",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea"
+                "reference": "18cc19b1b1d22004b924f0541f03582ca732e64e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/cli/zipball/ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
-                "reference": "ccb7c8125ffe0254fef8f25744bfa376eb7bd0ea",
+                "url": "https://api.github.com/repos/utopia-php/cli/zipball/18cc19b1b1d22004b924f0541f03582ca732e64e",
+                "reference": "18cc19b1b1d22004b924f0541f03582ca732e64e",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.4",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "dev-fix-v2-swoole-coroutines as 0.31.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -2095,9 +2095,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/cli/issues",
-                "source": "https://github.com/utopia-php/cli/tree/0.15.0"
+                "source": "https://github.com/utopia-php/cli/tree/feat-framework-v2"
             },
-            "time": "2023-03-01T05:55:14+00:00"
+            "time": "2023-10-04T12:49:42+00:00"
         },
         {
             "name": "utopia-php/config",
@@ -2152,16 +2152,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.43.4",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c"
+                "reference": "1d4ab3dfafbe7a3adfd167e5e288c19634c223ce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
-                "reference": "cabdd02e8dc1732eb0b22007c511e7bb3caa5c8c",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/1d4ab3dfafbe7a3adfd167e5e288c19634c223ce",
+                "reference": "1d4ab3dfafbe7a3adfd167e5e288c19634c223ce",
                 "shasum": ""
             },
             "require": {
@@ -2169,7 +2169,7 @@
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.8.*",
-                "utopia-php/framework": "0.*.*",
+                "utopia-php/framework": "dev-fix-v2-swoole-coroutines as 0.31.0",
                 "utopia-php/mongo": "0.3.*"
             },
             "require-dev": {
@@ -2202,9 +2202,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.43.4"
+                "source": "https://github.com/utopia-php/database/tree/feat-framework-v2"
             },
-            "time": "2023-09-28T09:00:05+00:00"
+            "time": "2023-10-05T09:43:50+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2315,31 +2315,33 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.31.0",
+            "version": "dev-fix-v2-swoole-coroutines",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/framework.git",
-                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0"
+                "reference": "e34ed9c34d50b64e997ab53fd4f486b6179ae6ef"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/framework/zipball/207f77378965fca9a9bc3783ea379d3549f86bc0",
-                "reference": "207f77378965fca9a9bc3783ea379d3549f86bc0",
+                "url": "https://api.github.com/repos/utopia-php/framework/zipball/e34ed9c34d50b64e997ab53fd4f486b6179ae6ef",
+                "reference": "e34ed9c34d50b64e997ab53fd4f486b6179ae6ef",
                 "shasum": ""
             },
             "require": {
+                "ext-swoole": "*",
                 "php": ">=8.0"
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
                 "phpbench/phpbench": "^1.2",
                 "phpstan/phpstan": "^1.10",
-                "phpunit/phpunit": "^9.5.25"
+                "phpunit/phpunit": "^9.5.25",
+                "swoole/ide-helper": "4.8.3"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Utopia\\": "src/"
+                    "Utopia\\Http\\": "src/Http"
                 }
             },
             "notification-url": "https://packagist.org/downloads/",
@@ -2354,9 +2356,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/framework/issues",
-                "source": "https://github.com/utopia-php/framework/tree/0.31.0"
+                "source": "https://github.com/utopia-php/framework/tree/fix-v2-swoole-coroutines"
             },
-            "time": "2023-08-30T16:10:04+00:00"
+            "time": "2023-10-04T11:53:40+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -2875,22 +2877,22 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "0.5.3",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "8e8b6cb27172713fe5d8b7b092ce68516caf129a"
+                "reference": "a6ff7bdc9f02497cce18dadb6919f65cca77f236"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/8e8b6cb27172713fe5d8b7b092ce68516caf129a",
-                "reference": "8e8b6cb27172713fe5d8b7b092ce68516caf129a",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/a6ff7bdc9f02497cce18dadb6919f65cca77f236",
+                "reference": "a6ff7bdc9f02497cce18dadb6919f65cca77f236",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
                 "utopia-php/cli": "0.15.*",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "dev-fix-v2-swoole-coroutines as 0.31.0"
             },
             "require-dev": {
                 "laravel/pint": "^0.2.3",
@@ -2930,9 +2932,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/0.5.3"
+                "source": "https://github.com/utopia-php/queue/tree/feat-framework-v2"
             },
-            "time": "2023-05-24T19:06:04+00:00"
+            "time": "2023-10-04T12:38:34+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -2988,16 +2990,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.17.0",
+            "version": "dev-feat-framework-v2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee"
+                "reference": "5794b3a7351ed89abab16981990e9c13b1653f33"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/efec5376c02d3d8330f1beb1469e6d6e313e21ee",
-                "reference": "efec5376c02d3d8330f1beb1469e6d6e313e21ee",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/5794b3a7351ed89abab16981990e9c13b1653f33",
+                "reference": "5794b3a7351ed89abab16981990e9c13b1653f33",
                 "shasum": ""
             },
             "require": {
@@ -3009,8 +3011,7 @@
                 "ext-zlib": "*",
                 "ext-zstd": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*",
-                "utopia-php/system": "0.*.*"
+                "utopia-php/framework": "dev-fix-v2-swoole-coroutines as 0.31.0"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
@@ -3037,60 +3038,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.17.0"
+                "source": "https://github.com/utopia-php/storage/tree/feat-framework-v2"
             },
-            "time": "2023-08-21T11:28:36+00:00"
-        },
-        {
-            "name": "utopia-php/swoole",
-            "version": "0.5.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
-                "shasum": ""
-            },
-            "require": {
-                "ext-swoole": "*",
-                "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
-            },
-            "require-dev": {
-                "laravel/pint": "1.2.*",
-                "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "4.8.3",
-                "vimeo/psalm": "4.15.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Swoole\\": "src/Swoole"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "An extension for Utopia Framework to work with PHP Swoole as a PHP FPM alternative",
-            "keywords": [
-                "framework",
-                "http",
-                "php",
-                "server",
-                "swoole",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.5.0"
-            },
-            "time": "2022-10-19T22:19:07+00:00"
+            "time": "2023-10-04T11:42:54+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -3197,6 +3147,53 @@
                 "source": "https://github.com/utopia-php/vcs/tree/0.5.0"
             },
             "time": "2023-09-13T19:05:52+00:00"
+        },
+        {
+            "name": "utopia-php/view",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/utopia-php/view",
+                "reference": "013a495af4e625df172d9bd534011014cb32bbab"
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "laravel/pint": "^1.2",
+                "phpstan/phpstan": "^1.10",
+                "phpunit/phpunit": "^9.5.25"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Utopia\\View\\": "src/View"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "vendor/bin/pint --test"
+                ],
+                "format": [
+                    "vendor/bin/pint"
+                ],
+                "check": [
+                    "vendor/bin/phpstan analyse -c phpstan.neon"
+                ],
+                "test": [
+                    "vendor/bin/phpunit --configuration phpunit.xml"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "A simple, light and advanced PHP rendering engine",
+            "keywords": [
+                "php",
+                "view"
+            ],
+            "time": "2023-09-10T12:07:26+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5993,9 +5990,47 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/cli",
+            "version": "dev-feat-framework-v2",
+            "alias": "0.15.99",
+            "alias_normalized": "0.15.99.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-framework-v2",
+            "alias": "0.43.99",
+            "alias_normalized": "0.43.99.0"
+        },
+        {
+            "package": "utopia-php/framework",
+            "version": "dev-fix-v2-swoole-coroutines",
+            "alias": "0.31.0",
+            "alias_normalized": "0.31.0.0"
+        },
+        {
+            "package": "utopia-php/queue",
+            "version": "dev-feat-framework-v2",
+            "alias": "0.5.99",
+            "alias_normalized": "0.5.99.0"
+        },
+        {
+            "package": "utopia-php/storage",
+            "version": "dev-feat-framework-v2",
+            "alias": "0.17.99",
+            "alias_normalized": "0.17.99.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/cli": 20,
+        "utopia-php/database": 20,
+        "utopia-php/framework": 20,
+        "utopia-php/view": 20,
+        "utopia-php/queue": 20,
+        "utopia-php/storage": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

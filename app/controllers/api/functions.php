@@ -12,7 +12,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
-use Utopia\Validator\Assoc;
+use Utopia\Http\Validator\Assoc;
 use Appwrite\Usage\Stats;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -29,21 +29,21 @@ use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Config\Config;
 use Executor\Executor;
 use Utopia\CLI\Console;
 use Utopia\Database\Validator\Roles;
-use Utopia\Validator\Boolean;
+use Utopia\Http\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use MaxMind\Db\Reader;
 use Utopia\VCS\Adapter\Git\GitHub;
@@ -54,8 +54,8 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
-    $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-    $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+    $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+    $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
     $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
     $owner = $github->getOwnerName($providerInstallationId);
     $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
@@ -119,7 +119,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->trigger();
 };
 
-App::post('/v1/functions')
+Http::post('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('Create function')
     ->label('scope', 'functions.write')
@@ -139,7 +139,7 @@ App::post('/v1/functions')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -219,7 +219,7 @@ App::post('/v1/functions')
 
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'region' => Http::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
@@ -264,7 +264,7 @@ App::post('/v1/functions')
             $redeployVcs($request, $function, $project, $installation, $dbForProject, $template, $github);
         }
 
-        $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
+        $functionsDomain = Http::getEnv('_APP_DOMAIN_FUNCTIONS', '');
         if (!empty($functionsDomain)) {
             $ruleId = ID::unique();
             $routeSubdomain = ID::unique();
@@ -333,7 +333,7 @@ App::post('/v1/functions')
             ->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/functions')
+Http::get('/v1/functions')
     ->groups(['api', 'functions'])
     ->desc('List functions')
     ->label('scope', 'functions.read')
@@ -381,7 +381,7 @@ App::get('/v1/functions')
         ]), Response::MODEL_FUNCTION_LIST);
     });
 
-App::get('/v1/functions/runtimes')
+Http::get('/v1/functions/runtimes')
     ->groups(['api', 'functions'])
     ->desc('List runtimes')
     ->label('scope', 'functions.read')
@@ -408,7 +408,7 @@ App::get('/v1/functions/runtimes')
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
-App::get('/v1/functions/:functionId')
+Http::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Get function')
     ->label('scope', 'functions.read')
@@ -432,7 +432,7 @@ App::get('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/functions/:functionId/usage')
+Http::get('/v1/functions/:functionId/usage')
     ->desc('Get function usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
@@ -455,7 +455,7 @@ App::get('/v1/functions/:functionId/usage')
         }
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -542,7 +542,7 @@ App::get('/v1/functions/:functionId/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_FUNCTION);
     });
 
-App::get('/v1/functions/usage')
+Http::get('/v1/functions/usage')
     ->desc('Get functions usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
@@ -558,7 +558,7 @@ App::get('/v1/functions/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
             $periods = [
                 '24h' => [
                     'period' => '1h',
@@ -645,7 +645,7 @@ App::get('/v1/functions/usage')
         $response->dynamic($usage, Response::MODEL_USAGE_FUNCTIONS);
     });
 
-App::put('/v1/functions/:functionId')
+Http::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Update function')
     ->label('scope', 'functions.write')
@@ -665,7 +665,7 @@ App::put('/v1/functions/:functionId')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
+    ->param('timeout', 15, new Range(1, (int) Http::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
@@ -823,7 +823,7 @@ App::put('/v1/functions/:functionId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
+Http::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->groups(['api', 'functions'])
     ->desc('Download Deployment')
     ->label('scope', 'functions.read')
@@ -910,7 +910,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
     });
 
-App::patch('/v1/functions/:functionId/deployments/:deploymentId')
+Http::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Update function deployment')
     ->label('scope', 'functions.write')
@@ -972,7 +972,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
 
-App::delete('/v1/functions/:functionId')
+Http::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
     ->desc('Delete function')
     ->label('scope', 'functions.write')
@@ -1019,7 +1019,7 @@ App::delete('/v1/functions/:functionId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments')
+Http::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('Create deployment')
     ->label('scope', 'functions.write')
@@ -1080,7 +1080,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
+        $fileSizeValidator = new FileSize(Http::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -1238,7 +1238,7 @@ App::post('/v1/functions/:functionId/deployments')
             ->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::get('/v1/functions/:functionId/deployments')
+Http::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
     ->desc('List deployments')
     ->label('scope', 'functions.read')
@@ -1308,7 +1308,7 @@ App::get('/v1/functions/:functionId/deployments')
         ]), Response::MODEL_DEPLOYMENT_LIST);
     });
 
-App::get('/v1/functions/:functionId/deployments/:deploymentId')
+Http::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Get deployment')
     ->label('scope', 'functions.read')
@@ -1350,7 +1350,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
         $response->dynamic($deployment, Response::MODEL_DEPLOYMENT);
     });
 
-App::delete('/v1/functions/:functionId/deployments/:deploymentId')
+Http::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
     ->desc('Delete deployment')
     ->label('scope', 'functions.write')
@@ -1414,7 +1414,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+Http::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
     ->desc('Create build')
     ->label('scope', 'functions.write')
@@ -1483,7 +1483,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
-App::post('/v1/functions/:functionId/executions')
+Http::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create execution')
     ->label('scope', 'execution.write')
@@ -1569,7 +1569,7 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtObj = new JWT(Http::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
@@ -1690,7 +1690,7 @@ App::post('/v1/functions/:functionId/executions')
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -1773,7 +1773,7 @@ App::post('/v1/functions/:functionId/executions')
             ->dynamic($execution, Response::MODEL_EXECUTION);
     });
 
-App::get('/v1/functions/:functionId/executions')
+Http::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('List executions')
     ->label('scope', 'execution.read')
@@ -1848,7 +1848,7 @@ App::get('/v1/functions/:functionId/executions')
         ]), Response::MODEL_EXECUTION_LIST);
     });
 
-App::get('/v1/functions/:functionId/executions/:executionId')
+Http::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
     ->desc('Get execution')
     ->label('scope', 'execution.read')
@@ -1897,7 +1897,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 
 // Variables
 
-App::post('/v1/functions/:functionId/variables')
+Http::post('/v1/functions/:functionId/variables')
     ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -1961,7 +1961,7 @@ App::post('/v1/functions/:functionId/variables')
             ->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::get('/v1/functions/:functionId/variables')
+Http::get('/v1/functions/:functionId/variables')
     ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -1988,7 +1988,7 @@ App::get('/v1/functions/:functionId/variables')
         ]), Response::MODEL_VARIABLE_LIST);
     });
 
-App::get('/v1/functions/:functionId/variables/:variableId')
+Http::get('/v1/functions/:functionId/variables/:variableId')
     ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
@@ -2027,7 +2027,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::put('/v1/functions/:functionId/variables/:variableId')
+Http::put('/v1/functions/:functionId/variables/:variableId')
     ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
@@ -2088,7 +2088,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
         $response->dynamic($variable, Response::MODEL_VARIABLE);
     });
 
-App::delete('/v1/functions/:functionId/variables/:variableId')
+Http::delete('/v1/functions/:functionId/variables/:variableId')
     ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
