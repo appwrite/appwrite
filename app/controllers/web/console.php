@@ -10,10 +10,9 @@ App::init()
     ->inject('response')
     ->action(function (Request $request, Response $response) {
         $response
-            ->addHeader('X-Frame-Options', 'SAMEORIGIN') // Avoid console and homepage from showing in iframes
-            ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . \urlencode($request->getURI()))
-            ->addHeader('X-UA-Compatible', 'IE=Edge') // Deny IE browsers from going into quirks mode
-        ;
+            ->addHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->addHeader('X-XSS-Protection', '1; mode=block; report=/v1/xss?url=' . urlencode($request->getURI()))
+            ->addHeader('X-UA-Compatible', 'IE=Edge');
     });
 
 App::get('/console/*')
@@ -33,17 +32,13 @@ App::get('/console/*')
         $fallback = file_get_contents(__DIR__ . '/../../../console/index.html');
 
         // Card SSR
-        if (\str_starts_with($request->getURI(), '/card')) {
-            $urlCunks = \explode('/', $request->getURI());
-            $userId = $urlCunks[\count($urlCunks) - 1] ?? '';
-
+        if (str_starts_with($request->getURI(), '/card')) {
+            $urlChunks = explode('/', $request->getURI());
+            $userId = end($urlChunks) ?? '';
             $domain = $request->getProtocol() . '://' . $request->getHostname();
-
-            if (!empty($userId)) {
-                $ogImageUrl = $domain . '/v1/cards/cloud-og?userId=' . $userId;
-            } else {
-                $ogImageUrl = $domain . '/v1/cards/cloud-og?mock=normal';
-            }
+            $ogImageUrl = !empty($userId) 
+                ? $domain . '/v1/cards/cloud-og?userId=' . $userId
+                : $domain . '/v1/cards/cloud-og?mock=normal';
 
             $ogTags = [
                 '<title>Appwrite Cloud Card</title>',
@@ -67,7 +62,7 @@ App::get('/console/*')
                 '<meta name="twitter:image" content="' . $ogImageUrl . '">',
             ];
 
-            $fallback = \str_replace('<!-- {{CLOUD_OG}} -->', \implode('', $ogTags), $fallback);
+            $fallback = str_replace('<!-- {{CLOUD_OG}} -->', implode('', $ogTags), $fallback);
         }
 
         $response->html($fallback);
