@@ -257,7 +257,7 @@ App::put('/v1/teams/:teamId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp , Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -388,7 +388,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 

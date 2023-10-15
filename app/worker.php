@@ -10,10 +10,11 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
-use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -147,9 +148,9 @@ Server::setResource('queueForFunctions', function (Connection $queue) {
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-Server::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
+Server::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
+}, ['register']);
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
@@ -247,7 +248,6 @@ $worker
     ->shutdown()
     ->inject('pools')
     ->action(function (Group $pools) {
-        var_dump('reclaiming connection');
         $pools->reclaim();
     });
 

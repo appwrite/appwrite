@@ -5,6 +5,7 @@ require_once __DIR__ . '/controllers/general.php';
 
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
+use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -22,6 +23,8 @@ use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
+
+global $register;
 
 CLI::setResource('register', fn()=>$register);
 
@@ -116,10 +119,36 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     };
 }, ['pools', 'dbForConsole', 'cache']);
 
+CLI::setResource('influxdb', function (Registry $register) {
+    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
+    $attempts = 0;
+    $max = 10;
+    $sleep = 1;
+
+    do { // check if telegraf database is ready
+        try {
+            $attempts++;
+            $database = $client->selectDB('telegraf');
+            if (in_array('telegraf', $client->listDatabases())) {
+                break; // leave the do-while if successful
+            }
+        } catch (\Throwable $th) {
+            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
+            if ($attempts >= $max) {
+                throw new \Exception('InfluxDB database not ready yet');
+            }
+            sleep($sleep);
+        }
+    } while ($attempts < $max);
+    return $database;
+}, ['register']);
+
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-
+CLI::setResource('queueForFunctions', function (Group $pools) {
+    return new Func($pools->get('queue')->pop()->getResource());
+}, ['pools']);
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
