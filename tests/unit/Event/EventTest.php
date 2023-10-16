@@ -15,7 +15,6 @@ require_once __DIR__ . '/../../../app/init.php';
 
 class EventTest extends TestCase
 {
-
     protected ?Event $object = null;
     protected string $queue = '';
 

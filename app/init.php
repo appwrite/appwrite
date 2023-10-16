@@ -147,6 +147,9 @@ const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
+const DATABASE_TYPE_DELETE_DOCUMENT = 'deleteDocument';
+const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';

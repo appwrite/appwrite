@@ -130,7 +130,7 @@ App::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response,Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents);
 
         $response
