@@ -731,6 +731,6 @@ return [
     Exception::MIGRATION_PROVIDER_ERROR => [
         'name' => Exception::MIGRATION_PROVIDER_ERROR,
         'description' => 'An error occurred on the provider\'s side. Please try again later.',
-        'code' => 424,
+        'code' => 400,
     ],
 ];
