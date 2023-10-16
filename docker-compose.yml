@@ -843,7 +843,7 @@ services:
     <<: *x-logging
     entrypoint: db-backup
     command:
-      - --database=db_fra1_03
+      - --database=db_fra1_03 #todo remove this!
     container_name: appwrite-backup
     networks:
       - appwrite

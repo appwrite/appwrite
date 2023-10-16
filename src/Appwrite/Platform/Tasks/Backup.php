@@ -3,7 +3,10 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -39,8 +42,9 @@ class Backup extends Action
         $this
             ->desc('Backup a database')
             ->param('database', null, new Text(20), 'Database name, for example db_fra1_01')
-            ->inject('pools')
-            ->callback(fn(string $database, Group $pools) => $this->action($database, $pools));
+            ->inject('logger')
+            ->inject('log')
+            ->callback(fn(string $database, Group $pools, ?Logger $logger, Log $log) => $this->action($database, $pools, $logger, $log));
     }
 
     public static function getName(): string
@@ -51,7 +55,7 @@ class Backup extends Action
     /**
      * @throws Exception
      */
-    public function action(string $database, Group $pools): void
+    public function action(string $database, Group $pools, ?Logger $logger, Log $log): void
     {
         $this->checkEnvVariables();
 
@@ -75,19 +79,38 @@ class Backup extends Action
                 ->pop()
                 ->getResource();
             }, 10, 5);
-        } catch (Exception $e) {
-            throw new Exception('Failed to connect to database: ' . $e->getMessage());
+        } catch (Exception $error) {
+            throw new Exception('Failed to connect to database: ' . $error->getMessage());
         }
 
         $this->setContainerId();
         $this->setProcessors();
 
-        Console::loop(function () {
+        Console::loop(function () use ($logger, $log) {
             try {
                 $this->start();
-            } catch (Exception $e) {
-                //todo: send alerts sentry?
-                Console::error(date('Y-m-d H:i:s') . ' Error: ' . $e->getMessage());
+            } catch (Exception $error) {
+                if ($logger) {
+                    $log->setNamespace("appwrite-backup");
+                    $log->setType(Log::TYPE_ERROR);
+                    $log->setMessage($error->getMessage());
+                    $log->setAction('appwrite-backup');
+                    $log->addExtra('file', $error->getFile());
+                    $log->addExtra('line', $error->getLine());
+                    $log->addExtra('trace', $error->getTraceAsString());
+                    $log->addExtra('detailedTrace', $error->getTrace());
+
+                    $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+                    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+                    $responseCode = $logger->addLog($log);
+                    Console::info('Usage stats log pushed with status code: ' . $responseCode);
+                }
+
+                Console::error('[Error] Time: ' . date('Y-m-d H:i:s'));
+                Console::error('[Error] Message: ' . $error->getMessage());
+                Console::error('[Error] File: ' . $error->getFile());
+                Console::error('[Error] Line: ' . $error->getLine());
             }
         }, self::BACKUP_INTERVAL_SECONDS);
     }

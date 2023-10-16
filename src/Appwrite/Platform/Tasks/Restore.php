@@ -31,7 +31,7 @@ class Restore extends Action
     {
         $this
             ->desc('Restore a DB')
-            ->param('id', '', new Text(19), 'The backup identification')
+            ->param('id', '', new Text(19), 'The backup identification, We can take it from backups directory (Y_m_d_H_i_s)')
             ->param('cloud', null, new Boolean(true), 'Download backup from cloud or use local directory')
             ->param('database', null, new Text(15), 'The Database name for example db_fra1_01')
             ->callback(fn ($id, $cloud, $project) => $this->action($id, $cloud, $project));
