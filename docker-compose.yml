@@ -321,6 +321,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
+      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -371,6 +372,7 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
+      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
     depends_on:
       - redis
       - mariadb
@@ -388,8 +390,7 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
-      - _APP_LOGGING_CONFIG
-      - _APP_SERVER_MULTIPROCESS=disabled
+      - _APP_WORKERS_NUM=1
       - _APP_QUEUE_NAME=database_db_main
 
   appwrite-worker-builds:
