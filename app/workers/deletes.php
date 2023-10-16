@@ -512,13 +512,11 @@ class DeletesV1 extends Worker
      */
     protected function deleteRealtimeUsage(string $datetime): void
     {
-        $this->deleteForProjectIds(function (Document $project) use ($datetime) {
-            $dbForProject = $this->getProjectDB($project);
-            // Delete Dead Realtime Logs
-            $this->deleteByGroup('realtime', [
-                Query::lessThan('timestamp', $datetime)
-            ], $dbForProject);
-        });
+        $dbForConsole = $this->getConsoleDB();
+        // Delete Dead Realtime Logs
+        $this->deleteByGroup('realtime', [
+            Query::lessThan('timestamp', $datetime)
+        ], $dbForConsole);
     }
 
     /**
