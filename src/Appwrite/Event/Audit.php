@@ -18,7 +18,7 @@ class Audit extends Event
 
         $this
             ->setQueue(Event::AUDITS_QUEUE_NAME)
-            ->setClass(Event::BUILDS_CLASS_NAME);
+            ->setClass(Event::AUDITS_CLASS_NAME);
 
     }
 
