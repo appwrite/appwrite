@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -11,6 +10,7 @@ use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Pools\Group;
+use Utopia\Queue\Server;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
