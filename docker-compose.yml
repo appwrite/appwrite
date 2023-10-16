@@ -389,8 +389,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_WORKERS_NUM
-      - _APP_QUEUE_NAME
+      - _APP_SERVER_MULTIPROCESS=disabled
+      - _APP_QUEUE_NAME=database_db_main
 
   appwrite-worker-builds:
     entrypoint: worker-builds

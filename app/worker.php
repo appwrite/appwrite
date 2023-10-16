@@ -221,8 +221,15 @@ if (!isset($args[1])) {
 $workerName = $args[0];
 $workerIndex = $args[1] ?? '';
 
-if (!empty($workerNum)) {
+if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
+}
+
+$multiprocessing = App::getEnv('_APP_SERVER_MULTIPROCESS', 'disabled') === 'enabled';
+if ($multiprocessing) {
+    $workerCount = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+} else {
+    $workerCount = 1;
 }
 
 try {
@@ -233,7 +240,7 @@ try {
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => App::getEnv('_APP_WORKERS_NUM', swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6))),
+        'workerCount' => $workerCount,
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName))
