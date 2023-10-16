@@ -18,9 +18,11 @@ Create a new user:
 Users users = Users(client);
 
 User result = await users.create(
-    userId: '[USER_ID]',
-    email: 'email@example.com',
-    password: 'password',
+    ID.unique(),
+    email = 'email@example.com',
+    phone = '+123456789',
+    password = 'password',
+    name = "Walter O'Brien"
 );
 ```
 
