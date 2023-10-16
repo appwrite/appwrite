@@ -156,11 +156,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.0",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "5ab496b3908992b39275994a23783701c4b3de84"
+                "reference": "b584d19cdcd82737d0ee5c34d23de791f5ed3610"
             },
             "require": {
                 "php": ">=8.0",
@@ -195,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2023-09-12T19:38:43+00:00"
+            "time": "2023-10-16T15:39:53+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",

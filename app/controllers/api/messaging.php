@@ -1192,7 +1192,9 @@ App::delete('/v1/messaging/providers/:providerId')
 
         $dbForProject->deleteDocument('providers', $provider->getId());
 
-        $response->noContent();
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
     });
 
 App::post('/v1/messaging/topics')
@@ -1376,7 +1378,10 @@ App::delete('/v1/messaging/topics/:topicId')
         }
 
         $topic = $dbForProject->deleteDocument('topics', $topicId);
-        $response->noContent();
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
     });
 
 App::post('/v1/messaging/topics/:topicId/subscribers')

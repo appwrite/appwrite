@@ -323,7 +323,8 @@ trait MessagingBase
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscriber/' . $data['subscriberId'], \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($data['topicId'], $response['body']['topicId']);
         $this->assertEquals($data['targetId'], $response['body']['targetId']);
@@ -337,7 +338,8 @@ trait MessagingBase
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
@@ -371,11 +373,11 @@ trait MessagingBase
     public function testSendEmail()
     {
 
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_RECEIVER_EMAIL');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_FROM');
-        $apiKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_API_KEY');
-        $domain = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_DOMAIN');
-        $isEuRegion = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MAILGUN_IS_EU_REGION');
+        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
+        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
+        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
+        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
+        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
         if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
@@ -415,7 +417,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'userId' => ID::custom('test-user'),
-            'email' => 'prateekbanga12@gmail.com',
+            'email' => $to,
             'password' => 'password',
             'name' => 'Messaging User',
         ], false);
@@ -454,7 +456,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'providerId' => $provider['body']['$id'],
-            'to' => [$target['body']['$id']],
+            'to' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
