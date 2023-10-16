@@ -155,12 +155,12 @@ class CalcTierStats extends Action
                     }
 
                     /** Get Usage stats */
-                    $range = '90d';
+                    $range = '30d';
                     $periods = [
-                        '90d' => [
+                        '30d' => [
                             'period' => '1d',
-                            'limit' => 90,
-                        ],
+                            'limit' => 30,
+                        ]
                     ];
 
                     $tmp = [];
@@ -200,8 +200,9 @@ class CalcTierStats extends Action
 
                     try {
                         /** Get Domains */
-                        $stats['Domains'] = $dbForConsole->count('domains', [
+                        $stats['Domains'] = $dbForConsole->count('rules', [
                             Query::equal('projectInternalId', [$project->getInternalId()]),
+                            Query::limit(APP_LIMIT_COUNT)
                         ]);
                     } catch (\Throwable) {
                         $stats['Domains'] = 0;
@@ -246,7 +247,7 @@ class CalcTierStats extends Action
                             if (empty($file)) {
                                 continue;
                             }
-                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', [], 0);
+                            $filesSum   += $dbForProject->sum('bucket_' . $bucket->getInternalId(), 'sizeOriginal', []);
                             $filesCount += $dbForProject->count('bucket_' . $bucket->getInternalId(), []);
                             if ($file->getAttribute('sizeOriginal') > $maxFileSize) {
                                 $maxFileSize = $file->getAttribute('sizeOriginal');
