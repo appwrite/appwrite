@@ -125,7 +125,8 @@ class Functions extends Action
                         path: '/',
                         method: 'POST',
                         headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE
+                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                            'content-type' => 'application/json'
                         ],
                         data: null,
                         user: $user,
