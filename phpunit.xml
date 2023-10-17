@@ -6,7 +6,7 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false"
+         stopOnFailure="true"
 >
     <extensions>
         <extension class="Appwrite\Tests\TestHook" />
@@ -21,6 +21,7 @@
             <directory>./tests/e2e/Scopes</directory>
             <directory>./tests/e2e/Services/Teams</directory>
             <directory>./tests/e2e/Services/Realtime</directory>
+            <directory>./tests/e2e/Services/Webhooks</directory>
             <directory>./tests/e2e/Services/Account</directory>
             <directory>./tests/e2e/Services/Users</directory>
             <directory>./tests/e2e/Services/Console</directory>
@@ -31,7 +32,6 @@
             <directory>./tests/e2e/Services/Locale</directory>
             <directory>./tests/e2e/Services/Projects</directory>
             <directory>./tests/e2e/Services/Storage</directory>
-            <directory>./tests/e2e/Services/Webhooks</directory>
             <file>./tests/e2e/Services/Functions/FunctionsBase.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomServerTest.php</file>
             <file>./tests/e2e/Services/Functions/FunctionsCustomClientTest.php</file>
