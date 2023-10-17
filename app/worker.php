@@ -204,15 +204,22 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
+    if ($workerName === 'databases') {
+        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    } else {
+        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+    }
+
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => App::getEnv('_APP_WORKERS_NUM', swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6))),
+        'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
-        'queueName' => App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName))
+        'queueName' => $queueName
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
+
 
 $worker = $platform->getWorker();
 

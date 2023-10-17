@@ -345,8 +345,6 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
-      - _APP_WORKERS_NUM=1
-      - _APP_QUEUE_NAME=database_db_main
 
   appwrite-worker-builds:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
