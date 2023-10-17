@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Extend\Exception;
 use Cron\CronExpression;
 use Swoole\Timer;
 use Utopia\App;
@@ -26,6 +27,9 @@ class Schedule extends Action
         return 'schedule';
     }
 
+    /**
+     * @throws Exception
+     */
     public function __construct()
     {
         $this
@@ -34,6 +38,8 @@ class Schedule extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->callback(fn (Group $pools, Database $dbForConsole, callable $getProjectDB) => $this->action($pools, $dbForConsole, $getProjectDB));
+
+        throw new Exception('error on Schedule cli');
     }
 
     /**

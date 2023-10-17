@@ -32,12 +32,10 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
-use Utopia\Storage\Device;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-global $register;
 
 Server::setResource('register', fn () => $register);
 
@@ -118,6 +116,10 @@ Server::setResource('cache', function (Registry $register) {
 
     return new Cache(new Sharding($adapters));
 }, ['register']);
+Server::setResource('log', fn() => new Log());
+Server::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
+}, ['register']);
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -148,60 +150,30 @@ Server::setResource('queueForFunctions', function (Connection $queue) {
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-Server::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
-
 Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
-
-Server::setResource('log', fn() => new Log());
-
-/**
- * Get Functions Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getFunctionsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get Files Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getFilesDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get Builds Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getBuildsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get cache  Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getCacheDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
@@ -221,7 +193,7 @@ if (!isset($args[1])) {
 $workerName = $args[0];
 $workerIndex = $args[1] ?? '';
 
-if (!empty($workerNum)) {
+if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
 }
 
@@ -291,13 +263,9 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-try {
-    $workerStart = $worker->getWorkerStart();
-} catch (\Throwable $error) {
      $worker->workerStart()
          ->action(function () use ($workerName) {
              Console::info("Worker $workerName  started");
          });
-}
 
-$worker->start();
+     $worker->start();

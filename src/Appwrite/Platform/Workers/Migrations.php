@@ -44,19 +44,19 @@ class Migrations extends Action
         $this
             ->desc('Migrations worker')
             ->inject('message')
-            ->inject('getProjectDB')
+            ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->callback(fn(Message $message, callable $getProjectDB, Database $dbForConsole) => $this->action($message, $getProjectDB, $dbForConsole));
+            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole) => $this->action($message, $dbForProject, $dbForConsole));
     }
 
     /**
      * @param Message $message
-     * @param callable $getProjectDB
+     * @param Database $dbForProject
      * @param Database $dbForConsole
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, callable $getProjectDB, Database $dbForConsole): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -72,7 +72,7 @@ class Migrations extends Action
             return;
         }
 
-        $this->dbForProject = $getProjectDB($project);
+        $this->dbForProject = $dbForProject;
         $this->dbForConsole = $dbForConsole;
 
         /**

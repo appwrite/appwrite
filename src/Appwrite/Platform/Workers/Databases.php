@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -23,7 +22,7 @@ class Databases extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function __construct()
     {
@@ -40,14 +39,14 @@ class Databases extends Action
      * @param Database $dbForConsole
      * @param Database $dbForProject
      * @return void
-     * @throws Exception
+     * @throws \Exception
      */
     public function action(Message $message, Database $dbForConsole, Database $dbForProject): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new \Exception('Missing payload');
         }
 
         $type = $payload['type'];
@@ -57,11 +56,11 @@ class Databases extends Action
         $database = new Document($payload['database'] ?? []);
 
         if ($collection->isEmpty()) {
-            throw new Exception('Missing collection');
+            throw new \Exception('Missing collection');
         }
 
         if ($document->isEmpty()) {
-            throw new Exception('Missing document');
+            throw new \Exception('Missing document');
         }
 
         match (strval($type)) {
@@ -83,7 +82,7 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws Exception
+     * @throws \Exception
      */
     private function createAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {
@@ -144,7 +143,7 @@ class Databases extends Action
                     break;
                 default:
                     if (!$dbForProject->createAttribute('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $key, $type, $size, $required, $default, $signed, $array, $format, $formatOptions, $filters)) {
-                        throw new Exception('Failed to create Attribute');
+                        throw new \Exception('Failed to create Attribute');
                     }
             }
 
@@ -211,7 +210,7 @@ class Databases extends Action
      * @return void
      * @throws Authorization
      * @throws Conflict
-     * @throws Exception
+     * @throws \Exception
      **/
     private function deleteAttribute(Document $database, Document $collection, Document $attribute, Document $project, Database $dbForConsole, Database $dbForProject): void
     {

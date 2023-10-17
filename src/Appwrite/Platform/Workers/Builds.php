@@ -50,9 +50,9 @@ class Builds extends Action
             ->inject('queueForFunctions')
             ->inject('usage')
             ->inject('cache')
-            ->inject('getProjectDB')
+            ->inject('dbForProject')
             ->inject('getFunctionsDevice')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, callable $getProjectDB, callable $getFunctionsDevice) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $getProjectDB, $getFunctionsDevice));
+            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $getFunctionsDevice));
     }
 
     /**
@@ -62,12 +62,12 @@ class Builds extends Action
      * @param Func $queueForFunctions
      * @param Stats $usage
      * @param Cache $cache
-     * @param callable $getProjectDB
+     * @param Database $dbForProject
      * @param callable $getFunctionsDevice
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, callable $getProjectDB, callable $getFunctionsDevice): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -86,7 +86,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $usage, $dbForConsole, $getProjectDB, $github, $project, $resource, $deployment, $template);
+                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $usage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template);
                 break;
 
             default:
@@ -100,7 +100,7 @@ class Builds extends Action
      * @param Event $queueForEvents
      * @param Stats $usage
      * @param Database $dbForConsole
-     * @param callable $getProjectDB
+     * @param Database $dbForProject
      * @param GitHub $github
      * @param Document $project
      * @param Document $function
@@ -110,11 +110,9 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Database $dbForConsole, callable $getProjectDB, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
+    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-
-        $dbForProject = $getProjectDB($project);
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {

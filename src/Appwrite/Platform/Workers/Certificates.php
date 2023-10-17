@@ -136,7 +136,7 @@ class Certificates extends Action
 
             // Validate domain and DNS records. Skip if job is forced
             if (!$skipRenewCheck) {
-                $mainDomain = $this->getMainDomain($dbForConsole);
+                $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
                 $this->validateDomain($domain, $isMainDomain);
             }
@@ -225,7 +225,7 @@ class Certificates extends Action
      *
      * @return null|string Returns main domain. If null, there is no main domain yet.
      */
-    private function getMainDomain(Database $dbForConsole): ?string
+    private function getMainDomain(): ?string
     {
         $envDomain = App::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
@@ -498,6 +498,10 @@ class Certificates extends Action
 
             /** Trigger Functions */
             $queueForFunctions
+                ->setProject($project)
+                ->setEvent('rules.[ruleId].update')
+                ->setParam('ruleId', $rule->getId())
+                ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())))
                 ->trigger();
 
             /** Trigger realtime event */

@@ -18,6 +18,7 @@ class Database extends Event
     {
         parent::__construct($connection);
 
+        $this->setQueue($this->getProject()->getAttribute('database'));
         $this->setClass(Event::DATABASE_CLASS_NAME);
     }
 
@@ -108,7 +109,6 @@ class Database extends Event
      */
     public function trigger(): string|bool
     {
-        $this->setQueue($this->getProject()->getAttribute('database'));
 
         $client = new Client($this->queue, $this->connection);
 

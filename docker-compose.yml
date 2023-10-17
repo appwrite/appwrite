@@ -84,9 +84,6 @@ services:
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
       - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
-
     depends_on:
       - mariadb
       - redis
@@ -252,10 +249,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
-      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
-
     depends_on:
       - redis
       - mariadb
@@ -285,7 +278,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
     depends_on:
       - redis
       - mariadb
@@ -320,8 +312,6 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -370,9 +360,7 @@ services:
       - appwrite
     volumes: 
       - ./app:/usr/src/code/app
-      - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
+      - ./src:/usr/src/code/srcrm
     depends_on:
       - redis
       - mariadb
@@ -406,8 +394,6 @@ services:
       - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
     depends_on:
       - redis
       - mariadb
@@ -637,8 +623,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
-
     depends_on:
       - redis
     environment:

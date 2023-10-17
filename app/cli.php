@@ -24,8 +24,6 @@ use Utopia\Registry\Registry;
 
 Authorization::disable();
 
-global $register;
-
 CLI::setResource('register', fn()=>$register);
 
 CLI::setResource('cache', function ($pools) {
@@ -146,8 +144,8 @@ CLI::setResource('influxdb', function (Registry $register) {
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-CLI::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+CLI::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
 }, ['pools']);
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
