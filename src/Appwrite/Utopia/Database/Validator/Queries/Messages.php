@@ -11,7 +11,8 @@ class Messages extends Base
         'deliveredTo',
         'deliveryErrors',
         'status',
-        'description'
+        'description',
+        'data'
     ];
 
     /**

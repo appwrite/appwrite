@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Event\Delete;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Permission;
@@ -582,11 +583,9 @@ App::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-                Query::equal('$id', [$providerId]),
-            ]));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
-            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
             }
 
@@ -1242,8 +1241,8 @@ App::post('/v1/messaging/topics')
         }
 
         $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($topic, Response::MODEL_TOPIC);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($topic, Response::MODEL_TOPIC);
     });
 
 App::get('/v1/messaging/topics')
@@ -1269,12 +1268,9 @@ App::get('/v1/messaging/topics')
 
         if ($cursor) {
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('topics', [
-                Query::equal('$id', [$topicId]),
-                Query::limit(1),
-            ]));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
-            if (empty($cursorDocument) || $cursorDocument[0]->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
             }
 
@@ -1330,7 +1326,7 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.', true)
-    ->param('description', null, new Text(2048), 'Topic Description.', true)
+    ->param('description', '', new Text(2048), 'Topic Description.', true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
@@ -1340,11 +1336,11 @@ App::patch('/v1/messaging/topics/:topicId')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if ($name) {
+        if (!empty($name)) {
             $topic->setAttribute('name', $name);
         }
 
-        if ($description) {
+        if (!empty($description)) {
             $topic->setAttribute('description', $description);
         }
 
@@ -1369,15 +1365,20 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
+    ->inject('deletes')
     ->inject('response')
-    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, Database $dbForProject, Delete $deletes, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $topic = $dbForProject->deleteDocument('topics', $topicId);
+        $dbForProject->deleteDocument('topics', $topicId);
+
+        $deletes
+            ->setType(DELETE_TYPE_SUBSCRIBERS)
+            ->setDocument($topic);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
@@ -1437,8 +1438,8 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
         }
 
         $response
-                ->setStatusCode(Response::STATUS_CODE_CREATED)
-                ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
@@ -1563,7 +1564,7 @@ App::post('/v1/messaging/messages/email')
     ->param('content', '', new Text(64230), 'Email Content.')
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(), 'Delivery time for message.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(false), 'Delivery time for message.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
@@ -1634,11 +1635,9 @@ App::get('/v1/messaging/messages')
 
         if ($cursor) {
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('messages', [
-                Query::equal('$id', [$messageId]),
-            ]));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
-            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
             }
 

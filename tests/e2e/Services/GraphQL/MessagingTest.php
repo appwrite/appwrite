@@ -270,8 +270,8 @@ class MessagingTest extends Scope
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => $providerParam['sendgrid'],
+            'query' => $query,
+            'variables' => $providerParam['sendgrid'],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -283,13 +283,13 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'providerId' => $providerId,
-                    'topicId' => ID::unique(),
-                    'name' => 'topic1',
-                    'description' => 'Active users',
-                ],
+            'query' => $query,
+            'variables' => [
+                'providerId' => $providerId,
+                'topicId' => ID::unique(),
+                'name' => 'topic1',
+                'description' => 'Active users',
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -312,12 +312,12 @@ class MessagingTest extends Scope
         $topicId = $topic['_id'];
         $query = $this->getQuery(self::$UPDATE_TOPIC);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                    'name' => 'topic2',
-                    'description' => 'Inactive users',
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+                'name' => 'topic2',
+                'description' => 'Inactive users',
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -339,7 +339,7 @@ class MessagingTest extends Scope
     {
         $query = $this->getQuery(self::$LIST_TOPICS);
         $graphQLPayload = [
-                'query' => $query,
+            'query' => $query,
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -358,10 +358,10 @@ class MessagingTest extends Scope
     {
         $query = $this->getQuery(self::$GET_TOPIC);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -385,13 +385,13 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_USER_TARGET);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'targetId' => ID::unique(),
-                    'userId' => $userId,
-                    'providerId' => $topic['providerId'],
-                    'identifier' => 'token',
-                ],
+            'query' => $query,
+            'variables' => [
+                'targetId' => ID::unique(),
+                'userId' => $userId,
+                'providerId' => $topic['providerId'],
+                'identifier' => 'token',
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -407,12 +407,12 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'subscriberId' => ID::unique(),
-                    'topicId' => $topicId,
-                    'targetId' => $targetId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'subscriberId' => ID::unique(),
+                'topicId' => $topicId,
+                'targetId' => $targetId,
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -431,10 +431,10 @@ class MessagingTest extends Scope
     {
         $query = $this->getQuery(self::$LIST_SUBSCRIBERS);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -456,11 +456,11 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$GET_SUBSCRIBER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                    'subscriberId' => $subscriberId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+                'subscriberId' => $subscriberId,
+            ],
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -483,11 +483,11 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$DELETE_SUBSCRIBER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                    'subscriberId' => $subscriberId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+                'subscriberId' => $subscriberId,
+            ],
         ];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -504,10 +504,10 @@ class MessagingTest extends Scope
     {
         $query = $this->getQuery(self::$DELETE_TOPIC);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'topicId' => $topicId,
-                ],
+            'query' => $query,
+            'variables' => [
+                'topicId' => $topicId,
+            ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -531,15 +531,15 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_MAILGUN_PROVIDER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'providerId' => ID::unique(),
-                    'name' => 'Mailgun1',
-                    'apiKey' => $apiKey,
-                    'domain' => $domain,
-                    'from' => $from,
-                    'isEuRegion' => $isEuRegion,
-                ],
+            'query' => $query,
+            'variables' => [
+                'providerId' => ID::unique(),
+                'name' => 'Mailgun1',
+                'apiKey' => $apiKey,
+                'domain' => $domain,
+                'from' => $from,
+                'isEuRegion' => $isEuRegion,
+            ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -553,13 +553,13 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'providerId' => $providerId,
-                    'topicId' => ID::unique(),
-                    'name' => 'topic1',
-                    'description' => 'Active users',
-                ],
+            'query' => $query,
+            'variables' => [
+                'providerId' => $providerId,
+                'topicId' => ID::unique(),
+                'name' => 'topic1',
+                'description' => 'Active users',
+            ],
         ];
         $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -571,13 +571,13 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_USER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'userId' => ID::custom('test-user'),
-                    'email' => $to,
-                    'password' => 'password',
-                    'name' => 'Messaging User',
-                ]
+            'query' => $query,
+            'variables' => [
+                'userId' => ID::custom('test-user'),
+                'email' => $to,
+                'password' => 'password',
+                'name' => 'Messaging User',
+            ]
         ];
         $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -589,13 +589,13 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_USER_TARGET);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'targetId' => ID::unique(),
-                    'userId' => $user['body']['data']['usersCreate']['_id'],
-                    'providerId' => $providerId,
-                    'identifier' => $to,
-                ],
+            'query' => $query,
+            'variables' => [
+                'targetId' => ID::unique(),
+                'userId' => $user['body']['data']['usersCreate']['_id'],
+                'providerId' => $providerId,
+                'identifier' => $to,
+            ],
         ];
         $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -607,12 +607,12 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'subscriberId' => ID::unique(),
-                    'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
-                    'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
-                ],
+            'query' => $query,
+            'variables' => [
+                'subscriberId' => ID::unique(),
+                'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
+                'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
+            ],
         ];
         $subscriber = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -623,14 +623,14 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$CREATE_EMAIL);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'messageId' => ID::unique(),
-                    'providerId' => $providerId,
-                    'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
-                    'subject' => 'Khali beats Undertaker',
-                    'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-                ],
+            'query' => $query,
+            'variables' => [
+                'messageId' => ID::unique(),
+                'providerId' => $providerId,
+                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'subject' => 'Khali beats Undertaker',
+                'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            ],
         ];
         $email = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
@@ -644,10 +644,10 @@ class MessagingTest extends Scope
 
         $query = $this->getQuery(self::$GET_MESSAGE);
         $graphQLPayload = [
-                'query' => $query,
-                'variables' => [
-                    'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
-                ],
+            'query' => $query,
+            'variables' => [
+                'messageId' => $email['body']['data']['messagingCreateEmail']['_id'],
+            ],
         ];
         $message = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
