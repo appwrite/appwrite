@@ -128,8 +128,6 @@ class Delete extends Event
     {
         $client = new Client($this->queue, $this->connection);
 
-        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
-
         return $client->enqueue([
             'project' => $this->project,
             'type' => $this->type,
