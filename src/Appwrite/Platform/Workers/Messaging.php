@@ -33,9 +33,6 @@ class Messaging extends Action
      */
     public function __construct()
     {
-
-        throw new Exception('Exception from the Messaging Worker');
-
         $this->provider  = App::getEnv('_APP_SMS_PROVIDER', '');
         if (!empty($this->provider)) {
             $this->dsn = new DSN($this->provider);
