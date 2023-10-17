@@ -16,11 +16,11 @@ var client = new Client()
 var users = new Users(client);
 
 var user = await users.Create(
-    ID.unique(),
-    email = 'email@example.com',
-    phone = '+123456789',
-    password = 'password',
-    name = "Walter O'Brien");
+    userId: ID.unique(),
+    email: 'email@example.com',
+    phone: '+123456789',
+    password: 'password',
+    name: "Walter O'Brien");
 
 Console.WriteLine(user.ToMap());
 ```
@@ -34,11 +34,11 @@ var users = new Users(client);
 try
 {
     var user = await users.Create(
-        ID.unique(),
-        email = 'email@example.com',
-        phone = '+123456789',
-        password = 'password',
-        name = "Walter O'Brien");
+        userId: ID.unique(),
+        email: 'email@example.com',
+        phone: '+123456789',
+        password: 'password',
+        name: "Walter O'Brien");
 } 
 catch (AppwriteException e)
 {
