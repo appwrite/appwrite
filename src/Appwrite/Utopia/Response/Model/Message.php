@@ -58,6 +58,15 @@ class Message extends Any
                 'default' => 0,
                 'example' => 1,
             ])
+            ->addRule('data', [
+                'type' => self::TYPE_JSON,
+                'description' => 'Data of the message.',
+                'default' => [],
+                'example' => [
+                    'subject' => 'Welcome to Appwrite',
+                    'content' => 'Hi there, welcome to Appwrite family.',
+                ],
+            ])
             ->addRule('status', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
