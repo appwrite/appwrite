@@ -45,6 +45,55 @@ class UsersTest extends Scope
         return $user;
     }
 
+    /**
+     * @depends testCreateUser
+     */
+    public function testCreateUserTarget(array $user)
+    {
+        $projectId = $this->getProject()['$id'];
+
+        $query = $this->getQuery(self::$CREATE_MAILGUN_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'providerId' => ID::unique(),
+                'name' => 'Mailgun1',
+                'apiKey' => 'api-key',
+                'domain' => 'domain',
+                'from' => 'from@domain',
+                'isEuRegion' => false,
+            ],
+        ];
+        $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+        $providerId = $provider['body']['data']['messagingCreateMailgunProvider']['_id'];
+
+        $this->assertEquals(200, $provider['headers']['status-code']);
+
+        $query = $this->getQuery(self::$CREATE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'targetId' => ID::unique(),
+                'userId' => $user['_id'],
+                'providerId' => $providerId,
+                'identifier' => 'identifier',
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('identifier', $target['body']['data']['usersCreateTarget']['identifier']);
+
+        return $target['body']['data']['usersCreateTarget'];
+    }
+
     public function testGetUsers()
     {
         $projectId = $this->getProject()['$id'];
@@ -174,6 +223,54 @@ class UsersTest extends Scope
         $this->assertIsArray($user['body']['data']);
         $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersListLogs']);
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testListUserTargets(array $target)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$LIST_USER_TARGETS);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+            ]
+        ];
+
+        $targets = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $targets['headers']['status-code']);
+        $this->assertIsArray($targets['body']['data']['usersListTargets']);
+        $this->assertCount(1, $targets['body']['data']['usersListTargets']['targets']);
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testGetUserTarget(array $target)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$GET_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('identifier', $target['body']['data']['usersGetTarget']['identifier']);
     }
 
     public function testUpdateUserStatus()
@@ -360,6 +457,31 @@ class UsersTest extends Scope
         $this->assertEquals('{"key":"value"}', $user['body']['data']['usersUpdatePrefs']['data']);
     }
 
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testUpdateUserTarget(array $target)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$UPDATE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+                'identifier' => 'newidentifier',
+            ],
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(200, $target['headers']['status-code']);
+        $this->assertEquals('newidentifier', $target['body']['data']['usersUpdateTargetIdentifier']['identifier']);
+    }
+
     public function testDeleteUserSessions()
     {
         $projectId = $this->getProject()['$id'];
@@ -405,6 +527,29 @@ class UsersTest extends Scope
 
         unset(self::$user[$this->getProject()['$id']]);
         $this->getUser();
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testDeleteUserTarget(array $target)
+    {
+        $projectId = $this->getProject()['$id'];
+        $query = $this->getQuery(self::$DELETE_USER_TARGET);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => [
+                'userId' => $target['userId'],
+                'targetId' => $target['_id'],
+            ]
+        ];
+
+        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ], $this->getHeaders()), $graphQLPayload);
+
+        $this->assertEquals(204, $target['headers']['status-code']);
     }
 
     public function testDeleteUser()
