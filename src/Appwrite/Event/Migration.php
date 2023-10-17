@@ -2,9 +2,6 @@
 
 namespace Appwrite\Event;
 
-use DateTime;
-use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;

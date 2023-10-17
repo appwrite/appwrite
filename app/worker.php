@@ -44,7 +44,8 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('_console');
@@ -64,9 +65,10 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     $database = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
-        $adapter = new Database($database, $cache);
+    $adapter = new Database($database, $cache);
     $adapter->setNamespace('_' . $project->getInternalId());
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
@@ -111,7 +113,8 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));

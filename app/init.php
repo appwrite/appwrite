@@ -18,7 +18,6 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Event\Usage;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
@@ -70,7 +69,6 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\OAuth2\Github;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;

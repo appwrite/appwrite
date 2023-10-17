@@ -2,7 +2,6 @@
 
 namespace Appwrite\Event;
 
-use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
