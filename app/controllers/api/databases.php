@@ -2489,8 +2489,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'orders' => $orders,
         ]);
 
-        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
-        if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
+        $validator = new IndexValidator(
+            $collection->getAttribute('attributes'),
+            $dbForProject->getAdapter()->getMaxIndexLength()
+        );
+        if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
         }
 
