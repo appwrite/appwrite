@@ -17,7 +17,7 @@ Create a new user and session:
 ```dart
 Account account = Account(client);
 
-final user = await account.create(ID.unique(), email = 'email@example.com', phone = '+123456789', password = 'password', name = "Walter O'Brien");
+final user = await account.create(userId: '[USER_ID]', email: 'email@example.com', phone: '+123456789', password: 'password', name: "Walter O'Brien");
  
 final session = await account.createEmailSession(email: 'me@appwrite.io', password: 'password');
 
