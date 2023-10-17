@@ -97,6 +97,32 @@ class Hamster extends Action
                 /** Get Project Name */
                 $statsPerProject['project_name'] = $project->getAttribute('name');
 
+                /** Total Project Variables */
+                $statsPerProject['custom_variables'] = $dbForProject->count('variables', [], APP_LIMIT_COUNT);
+
+                /** Total Migrations */
+                $statsPerProject['custom_migrations'] = $dbForProject->count('migrations', [], APP_LIMIT_COUNT);
+
+                /** Get Custom SMTP */
+                $smtp = $project->getAttribute('smtp', null);
+                if ($smtp) {
+                    $statsPerProject['custom_smtp_status'] = $smtp['enabled'] === true ? 'enabled' : 'disabled';
+
+                    /** Get Custom Templates Count */
+                    $templates = array_keys($project->getAttribute('templates', []));
+                    $statsPerProject['custom_email_templates'] = array_filter($templates, function ($template) {
+                        return str_contains($template, 'email');
+                    });
+                    $statsPerProject['custom_sms_templates'] = array_filter($templates, function ($template) {
+                        return str_contains($template, 'sms');
+                    });
+                }
+
+                /** Get total relationship attributes */
+                $statsPerProject['custom_relationship_attributes'] = $dbForProject->count('attributes', [
+                    Query::equal('type', ['relationship'])
+                ], APP_LIMIT_COUNT);
+
                 /** Get Total Functions */
                 $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
 
@@ -108,6 +134,17 @@ class Hamster extends Action
 
                 /** Get Total Deployments */
                 $statsPerProject['custom_deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_deployments_manual'] = $dbForProject->count('deployments', [
+                    Query::equal('type', ['manual'])
+                ], APP_LIMIT_COUNT);
+                $statsPerProject['custom_deployments_git'] = $dbForProject->count('deployments', [
+                    Query::equal('type', ['vcs'])
+                ], APP_LIMIT_COUNT);
+
+                /** Get VCS repos connected */
+                $statsPerProject['custom_vcs_repositories'] = $dbForConsole->count('repositories', [
+                    Query::equal('projectInternalId', [$project->getInternalId()])
+                ], APP_LIMIT_COUNT);
 
                 /** Get Total Teams */
                 $statsPerProject['custom_teams'] = $dbForProject->count('teams', [], APP_LIMIT_COUNT);
@@ -132,19 +169,16 @@ class Hamster extends Action
                         throw new Exception('Membership not found. Skipping project : ' . $project->getId());
                     }
 
-                    $userInternalId = $membership->getAttribute('userInternalId', null);
-                    if ($userInternalId) {
-                        $user = $dbForConsole->findOne('users', [
-                            Query::equal('_id', [$userInternalId]),
-                        ]);
-
+                    $userId = $membership->getAttribute('userId', null);
+                    if ($userId) {
+                        $user = $dbForConsole->getDocument('users', $userId);
                         $statsPerProject['email'] = $user->getAttribute('email', null);
                         $statsPerProject['name'] = $user->getAttribute('name', null);
                     }
                 }
 
                 /** Get Domains */
-                $statsPerProject['custom_domains'] = $dbForConsole->count('domains', [
+                $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
                     Query::limit(APP_LIMIT_COUNT)
                 ]);
@@ -234,15 +268,16 @@ class Hamster extends Action
                     if (!$res) {
                         Console::error('Failed to create user profile for project: ' . $project->getId());
                     }
+                }
 
-                    $event = new Event();
-                    $event
-                        ->setName('Project Daily Usage')
-                        ->setProps($statsPerProject);
-                    $res = $this->mixpanel->createEvent($event);
-                    if (!$res) {
-                        Console::error('Failed to create event for project: ' . $project->getId());
-                    }
+                $event = new Event();
+                $event
+                    ->setName('Project Daily Usage')
+                    ->setProps($statsPerProject);
+                $res = $this->mixpanel->createEvent($event);
+
+                if (!$res) {
+                    Console::error('Failed to create event for project: ' . $project->getId());
                 }
             } catch (Exception $e) {
                 Console::error('Failed to send stats for project: ' . $project->getId());
@@ -362,12 +397,9 @@ class Hamster extends Action
                     throw new Exception('Membership not found. Skipping organization : ' . $document->getId());
                 }
 
-                $userInternalId = $membership->getAttribute('userInternalId', null);
-                if ($userInternalId) {
-                    $user = $dbForConsole->findOne('users', [
-                        Query::equal('_id', [$userInternalId]),
-                    ]);
-
+                $userId = $membership->getAttribute('userId', null);
+                if ($userId) {
+                    $user = $dbForConsole->getDocument('users', $userId);
                     $statsPerOrganization['email'] = $user->getAttribute('email', null);
                 }
 
