@@ -806,7 +806,7 @@ class Deletes extends Action
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $storageBuilds = $$getBuildsDevice($projectId);
+        $storageBuilds = $getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
             Query::equal('deploymentInternalId', [$deploymentInternalId])
         ], $dbForProject, function (Document $document) use ($storageBuilds) {

@@ -271,6 +271,7 @@ $worker
         Console::error('[Error] Message: ' . $error->getMessage());
         Console::error('[Error] File: ' . $error->getFile());
         Console::error('[Error] Line: ' . $error->getLine());
+        Console::error('[Error] Trace: ' . $error->getTraceAsString());
     });
 
      $worker->workerStart()
