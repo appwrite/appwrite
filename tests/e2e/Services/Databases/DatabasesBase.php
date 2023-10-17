@@ -4224,7 +4224,6 @@ trait DatabasesBase
     {
         $databaseId = $data['databaseId'];
 
-        // Create level 1 collection
         $level1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4238,7 +4237,7 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
             ],
         ]);
-        // Create level 2 collection
+
         $level2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -4276,7 +4275,7 @@ trait DatabasesBase
         $this->assertEquals(false, $response['body']['twoWay']);
         $this->assertEquals('relationship', $response['body']['type']);
 
-        // Delete level 2 collection
+
         $deleteLevel2CollectionResponse = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $level2['body']['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
