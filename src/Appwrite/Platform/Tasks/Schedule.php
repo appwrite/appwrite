@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Extend\Exception;
 use Cron\CronExpression;
 use Swoole\Timer;
 use Utopia\App;
@@ -27,9 +26,6 @@ class Schedule extends Action
         return 'schedule';
     }
 
-    /**
-     * @throws Exception
-     */
     public function __construct()
     {
         $this
