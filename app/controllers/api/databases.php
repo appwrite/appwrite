@@ -3458,10 +3458,10 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('queueForDatabase')
+    ->inject('deletes')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $deletes, Event $queueForEvents, string $mode) {
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -3532,10 +3532,8 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         $processDocument($collection, $document);
 
-        $queueForDatabase
-            ->setType(DATABASE_TYPE_DELETE_DOCUMENT)
-            ->setDatabase($database)
-            ->setCollection($collection)
+        $deletes
+            ->setType(DELETE_TYPE_AUDIT)
             ->setDocument($document);
 
         $queueForEvents

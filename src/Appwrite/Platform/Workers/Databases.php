@@ -71,7 +71,6 @@ class Databases extends Action
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            DATABASE_TYPE_DELETE_DOCUMENT => $this->deleteDocument($database, $collection, $document, $project, $dbForProject),
             default => Console::error('No database operation for type: ' . $type),
         };
     }
@@ -530,18 +529,6 @@ class Databases extends Action
         ], $dbForProject);
 
         $this->deleteAuditLogsByResource('database/' . $databaseId . '/collection/' . $collectionId, $project, $dbForProject);
-    }
-
-    private function deleteDocument(Document $database, Document $collection, Document $document, Document $project, Database $dbForProject)
-    {
-        if ($collection->isEmpty()) {
-            throw new Exception('Missing collection');
-        }
-        if ($document->isEmpty()) {
-            throw new Exception('Missing document');
-        }
-
-        $this->deleteAuditLogsByResource('document/' . $document->getId(), $project, $dbForProject);
     }
 
     /**
