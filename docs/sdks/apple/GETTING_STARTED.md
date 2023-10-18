@@ -76,9 +76,9 @@ let account = Account(client)
 do {
     let user = try await account.create(
         userId: ID.unique(),
-        email: 'email@example.com',
-        phone: '+123456789',
-        password: 'password',
+        email: "email@example.com",
+        phone: "+123456789",
+        password: "password",
         name: "Walter O'Brien"
     )
     print(String(describing: user.toMap()))
@@ -103,9 +103,9 @@ func main() {
     do {
         let user = try await account.create(
             userId: ID.unique(),
-            email: 'email@example.com',
-            phone: '+123456789',
-            password: 'password',
+            email: "email@example.com",
+            phone: "+123456789",
+            password: "password",
             name: "Walter O'Brien"
         )
         print(String(describing: account.toMap()))
