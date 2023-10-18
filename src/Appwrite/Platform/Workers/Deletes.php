@@ -205,7 +205,6 @@ class Deletes extends Action
         $dbForProject = $getProjectDB($project);
         $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
-
         if ($document) {
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
@@ -387,7 +386,6 @@ class Deletes extends Action
      */
     private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Document $document): void
     {
-
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
@@ -681,25 +679,25 @@ class Deletes extends Action
          * Delete Deployments
          */
         Console::info("Deleting deployments for function " . $functionId);
-        $storageFunctions = $getFunctionsDevice($projectId);
+        $functionsStorage = $getFunctionsDevice($projectId);
         $deploymentInternalIds = [];
         $this->deleteByGroup('deployments', [
             Query::equal('resourceInternalId', [$functionInternalId])
-        ], $dbForProject, function (Document $document) use ($storageFunctions, &$deploymentInternalIds) {
+        ], $dbForProject, function (Document $document) use ($functionsStorage, &$deploymentInternalIds) {
             $deploymentInternalIds[] = $document->getInternalId();
-            $this->deleteDeploymentFiles($storageFunctions, $document);
+            $this->deleteDeploymentFiles($functionsStorage, $document);
         });
 
          /**
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
-        $storageBuilds = $getBuildsDevice($projectId);
+        $buildsStorage = $getBuildsDevice($projectId);
         foreach ($deploymentInternalIds as $deploymentInternalId) {
             $this->deleteByGroup('builds', [
                 Query::equal('deploymentInternalId', [$deploymentInternalId])
-            ], $dbForProject, function (Document $document) use ($storageBuilds) {
-                $this->deleteBuildFiles($storageBuilds, $document);
+            ], $dbForProject, function (Document $document) use ($buildsStorage) {
+                $this->deleteBuildFiles($buildsStorage, $document);
             });
         }
 
@@ -799,18 +797,18 @@ class Deletes extends Action
         /**
          * Delete deployment files
          */
-        $storageFunctions = $getFunctionsDevice($projectId);
-        $this->deleteDeploymentFiles($storageFunctions, $document);
+        $functionsStorage = $getFunctionsDevice($projectId);
+        $this->deleteDeploymentFiles($functionsStorage, $document);
 
         /**
          * Delete builds
          */
         Console::info("Deleting builds for deployment " . $deploymentId);
-        $storageBuilds = $$getBuildsDevice($projectId);
+        $buildsStorage = $getBuildsDevice($projectId);
         $this->deleteByGroup('builds', [
             Query::equal('deploymentInternalId', [$deploymentInternalId])
-        ], $dbForProject, function (Document $document) use ($storageBuilds) {
-            $this->deleteBuildFiles($storageBuilds, $document);
+        ], $dbForProject, function (Document $document) use ($buildsStorage) {
+            $this->deleteBuildFiles($buildsStorage, $document);
         });
 
         /**
