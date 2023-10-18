@@ -25,9 +25,9 @@ Once your SDK object is set, create any of the Appwrite service objects and choo
 val users = Users(client)
 val user = users.create(
     user = ID.unique(),
-    email = 'email@example.com',
-    phone = '+123456789',
-    password = 'password',
+    email = "email@example.com",
+    phone = "+123456789",
+    password = "password",
     name = "Walter O'Brien"
 )
 ```
@@ -49,9 +49,9 @@ suspend fun main() {
     val users = Users(client)
     val user = users.create(
         user = ID.unique(),
-        email = 'email@example.com',
-        phone = '+123456789',
-        password = 'password',
+        email = "email@example.com",
+        phone = "+123456789",
+        password = "password",
         name = "Walter O'Brien"
     )
 }
@@ -71,9 +71,9 @@ suspend fun main() {
     try {
         val user = users.create(
             user = ID.unique(),
-            email = 'email@example.com',
-            phone = '+123456789',
-            password = 'password',
+            email = "email@example.com",
+            phone = "+123456789",
+            password = "password",
             name = "Walter O'Brien"
         )
     } catch (e: AppwriteException) {
