@@ -362,10 +362,10 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertArrayHasKey('timestamp', $response['data']);
         $this->assertCount(1, $response['data']['channels']);
         $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.indexes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
-        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*.delete", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.indexes.*.update", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*.indexes.*", $response['data']['events']);
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
@@ -426,6 +426,23 @@ class RealtimeConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals($attribute['headers']['status-code'], 204);
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertArrayHasKey('timestamp', $response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('console', $response['data']['channels']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.{$actorsId}", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*.update", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*.attributes.*", $response['data']['events']);
+        $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+
         $response = json_decode($client->receive(), true);
 
         $this->assertArrayHasKey('type', $response);
