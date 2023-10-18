@@ -1,3 +1,21 @@
+# Version 1.4.6
+
+## Changes
+- Bump console to version 3.2.3 in [#6947](https://github.com/appwrite/appwrite/pull/6947)
+- New health endpoints in [#6319](https://github.com/appwrite/appwrite/pull/6319)
+- 30 second sync executions timeout in [#6370](https://github.com/appwrite/appwrite/pull/6370)
+- Feat db per worker in [#6888](https://github.com/appwrite/appwrite/pull/6888)
+- Feat: Dart 3.1 support in [#6936](https://github.com/appwrite/appwrite/pull/6936)
+- chore: remove resque library and update health check endpoints in [#6946](https://github.com/appwrite/appwrite/pull/6946)
+- Refactor workers in [#6928](https://github.com/appwrite/appwrite/pull/6928)
+
+## Fixes
+- Fix realtime deletes in [#6897](https://github.com/appwrite/appwrite/pull/6897)
+- Update teamInternalId when updating project team in [#6898](https://github.com/appwrite/appwrite/pull/6898)
+- Fix: spanish translations (emails) in [#5290](https://github.com/appwrite/appwrite/pull/5290)
+- chore: fix spec links in [#6434](https://github.com/appwrite/appwrite/pull/6434)
+- Delegate custom deletes in [#6934](https://github.com/appwrite/appwrite/pull/6934)
+
 # Version 1.4.5
 
 ## Changes
