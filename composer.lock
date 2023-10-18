@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f97d60b77dae0ce5fd9b57903cdebe55",
+    "content-hash": "a1c4b35f6946fc2541e920519a5b1b8d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -156,11 +156,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.0",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "5ab496b3908992b39275994a23783701c4b3de84"
+                "reference": "b584d19cdcd82737d0ee5c34d23de791f5ed3610"
             },
             "require": {
                 "php": ">=8.0",
@@ -195,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2023-09-12T19:38:43+00:00"
+            "time": "2023-10-16T15:39:53+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2988,16 +2988,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "dev-s3-getfiles",
+            "version": "0.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "0bd69e11152029e1a3bdb83264d174304d78fde7"
+                "reference": "e1d4f22aba2898a33368d1e1ce89f805db85f842"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/0bd69e11152029e1a3bdb83264d174304d78fde7",
-                "reference": "0bd69e11152029e1a3bdb83264d174304d78fde7",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e1d4f22aba2898a33368d1e1ce89f805db85f842",
+                "reference": "e1d4f22aba2898a33368d1e1ce89f805db85f842",
                 "shasum": ""
             },
             "require": {
@@ -3037,9 +3037,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/s3-getfiles"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.0"
             },
-            "time": "2023-10-12T09:14:45+00:00"
+            "time": "2023-10-18T08:42:15+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5993,18 +5993,9 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/storage",
-            "version": "dev-s3-getfiles",
-            "alias": "0.16.0",
-            "alias_normalized": "0.16.0.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/storage": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
