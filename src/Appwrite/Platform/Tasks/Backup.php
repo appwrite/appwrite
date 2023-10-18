@@ -42,9 +42,9 @@ class Backup extends Action
         $this
             ->desc('Backup a database')
             ->param('database', null, new Text(20), 'Database name, for example db_fra1_01')
-            ->inject('logger')
-            ->inject('log')
-            ->callback(fn(string $database, Group $pools, ?Logger $logger, Log $log) => $this->action($database, $pools, $logger, $log));
+            ->inject('pools')
+            ->inject('logError')
+            ->callback(fn(string $database, Group $pools, callable $logError) => $this->action($database, $pools, $logError));
     }
 
     public static function getName(): string
@@ -55,7 +55,7 @@ class Backup extends Action
     /**
      * @throws Exception
      */
-    public function action(string $database, Group $pools, ?Logger $logger, Log $log): void
+    public function action(string $database, Group $pools, callable $logError): void
     {
         $this->checkEnvVariables();
 
@@ -86,31 +86,16 @@ class Backup extends Action
         $this->setContainerId();
         $this->setProcessors();
 
-        Console::loop(function () use ($logger, $log) {
+        Console::loop(function () use ($logError) {
             try {
                 $this->start();
             } catch (Exception $error) {
-                if ($logger) {
-                    $log->setNamespace("appwrite-backup");
-                    $log->setType(Log::TYPE_ERROR);
-                    $log->setMessage($error->getMessage());
-                    $log->setAction('appwrite-backup');
-                    $log->addExtra('file', $error->getFile());
-                    $log->addExtra('line', $error->getLine());
-                    $log->addExtra('trace', $error->getTraceAsString());
-                    $log->addExtra('detailedTrace', $error->getTrace());
-
-                    $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-                    $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                    $responseCode = $logger->addLog($log);
-                    Console::info('Usage stats log pushed with status code: ' . $responseCode);
-                }
-
                 Console::error('[Error] Time: ' . date('Y-m-d H:i:s'));
                 Console::error('[Error] Message: ' . $error->getMessage());
                 Console::error('[Error] File: ' . $error->getFile());
                 Console::error('[Error] Line: ' . $error->getLine());
+
+                $logError($error, 'backup', 'action');
             }
         }, self::BACKUP_INTERVAL_SECONDS);
     }
@@ -324,9 +309,6 @@ class Backup extends Action
 
         $processors = str_replace(PHP_EOL, '', $stdout);
         $processors = empty($processors) ? 1 : intval($processors);
-
-        //$this->processors = \max(1, $processors - 2);
-        // todo: Using all processors was with no errors
         $this->processors = $processors;
     }
 
