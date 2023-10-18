@@ -6,8 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
-use Appwrite\Event\Validator\Event as ValidatorEvent;
+use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -50,7 +49,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template, GitHub $github) {
+$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -84,6 +83,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
             Permission::delete(Role::any()),
         ],
         'resourceId' => $function->getId(),
+        'resourceInternalId' => $function->getInternalId(),
         'resourceType' => 'functions',
         'entrypoint' => $entrypoint,
         'commands' => $function->getAttribute('commands', ''),
@@ -108,8 +108,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $buildEvent = new Build();
-    $buildEvent
+    $queueForBuilds
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
@@ -120,7 +119,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
 
 App::post('/v1/functions')
     ->groups(['api', 'functions'])
-    ->desc('Create Function')
+    ->desc('Create function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].create')
     ->label('audits.event', 'function.create')
@@ -136,7 +135,7 @@ App::post('/v1/functions')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.')
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-    ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
+    ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Function maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
@@ -157,10 +156,11 @@ App::post('/v1/functions')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
@@ -260,7 +260,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template, $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -285,7 +285,12 @@ App::post('/v1/functions')
 
             /** Trigger Webhook */
             $ruleModel = new Rule();
-            $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleCreate =
+                $queueForEvents
+                     ->setClass(Event::WEBHOOK_CLASS_NAME)
+                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ;
+
             $ruleCreate
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].create')
@@ -325,7 +330,7 @@ App::post('/v1/functions')
             );
         }
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -334,7 +339,7 @@ App::post('/v1/functions')
 
 App::get('/v1/functions')
     ->groups(['api', 'functions'])
-    ->desc('List Functions')
+    ->desc('List functions')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -409,7 +414,7 @@ App::get('/v1/functions/runtimes')
 
 App::get('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Get Function')
+    ->desc('Get function')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -432,7 +437,7 @@ App::get('/v1/functions/:functionId')
     });
 
 App::get('/v1/functions/:functionId/usage')
-    ->desc('Get Function Usage')
+    ->desc('Get function usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -529,7 +534,7 @@ App::get('/v1/functions/:functionId/usage')
                 'range' => $range,
                 'executionsTotal' => $stats["executions.$functionId.compute.total"] ?? [],
                 'executionsFailure' => $stats["executions.$functionId.compute.failure"] ?? [],
-                'executionsSuccesse' => $stats["executions.$functionId.compute.success"] ?? [],
+                'executionsSuccess' => $stats["executions.$functionId.compute.success"] ?? [],
                 'executionsTime' => $stats["executions.$functionId.compute.time"] ?? [],
                 'buildsTotal' => $stats["builds.$functionId.compute.total"] ?? [],
                 'buildsFailure' => $stats["builds.$functionId.compute.failure"] ?? [],
@@ -542,7 +547,7 @@ App::get('/v1/functions/:functionId/usage')
     });
 
 App::get('/v1/functions/usage')
-    ->desc('Get Functions Usage')
+    ->desc('Get functions usage')
     ->groups(['api', 'functions', 'usage'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -646,7 +651,7 @@ App::get('/v1/functions/usage')
 
 App::put('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Update Function')
+    ->desc('Update function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].update')
     ->label('audits.event', 'function.update')
@@ -662,7 +667,7 @@ App::put('/v1/functions/:functionId')
     ->param('name', '', new Text(128), 'Function name. Max length: 128 chars.')
     ->param('runtime', '', new WhiteList(array_keys(Config::getParam('runtimes')), true), 'Execution runtime.', true)
     ->param('execute', [], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with execution permissions. By default no user is granted with any execute permissions. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
-    ->param('events', [], new ArrayList(new ValidatorEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
+    ->param('events', [], new ArrayList(new FunctionEvent(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', true)
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
     ->param('timeout', 15, new Range(1, (int) App::getEnv('_APP_FUNCTIONS_TIMEOUT', 900)), 'Maximum execution time in seconds.', true)
     ->param('enabled', true, new Boolean(), 'Is function enabled? When set to \'disabled\', users cannot access the function but Server SDKs with and API key can still access the function. No data is lost when this is toggled.', true)
@@ -678,10 +683,11 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -806,7 +812,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document(), $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
         }
 
         // Inform scheduler if function is still active
@@ -817,7 +823,7 @@ App::put('/v1/functions/:functionId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
@@ -911,7 +917,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Update Function Deployment')
+    ->desc('Update function deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -927,9 +933,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -964,7 +970,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -973,7 +979,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::delete('/v1/functions/:functionId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Function')
+    ->desc('Delete function')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].delete')
     ->label('audits.event', 'function.delete')
@@ -987,10 +993,10 @@ App::delete('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1009,18 +1015,18 @@ App::delete('/v1/functions/:functionId')
             ->setAttribute('active', false);
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($function);
 
-        $events->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->noContent();
     });
 
 App::post('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('Create Deployment')
+    ->desc('Create deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].create')
     ->label('audits.event', 'deployment.create')
@@ -1042,11 +1048,13 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
+
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1079,7 +1087,7 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         $fileExt = new FileExt([FileExt::TYPE_GZIP]);
-        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', 0));
+        $fileSizeValidator = new FileSize(App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000'));
         $upload = new Upload();
 
         // Make sure we handle a single file and multiple files the same way
@@ -1190,8 +1198,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
 
             // Start the build
-            $buildEvent = new Build();
-            $buildEvent
+            $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
                 ->setDeployment($deployment)
@@ -1228,7 +1235,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $metadata = null;
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1239,7 +1246,7 @@ App::post('/v1/functions/:functionId/deployments')
 
 App::get('/v1/functions/:functionId/deployments')
     ->groups(['api', 'functions'])
-    ->desc('List Deployments')
+    ->desc('List deployments')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -1309,7 +1316,7 @@ App::get('/v1/functions/:functionId/deployments')
 
 App::get('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Get Deployment')
+    ->desc('Get deployment')
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
@@ -1351,7 +1358,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->groups(['api', 'functions'])
-    ->desc('Delete Deployment')
+    ->desc('Delete deployment')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].delete')
     ->label('audits.event', 'deployment.delete')
@@ -1366,10 +1373,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
     ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -1402,11 +1409,11 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ])));
         }
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($deployment);
 
@@ -1415,7 +1422,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
 
 App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Create Build')
+    ->desc('Create build')
     ->label('scope', 'functions.write')
     ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
     ->label('audits.event', 'deployment.update')
@@ -1433,8 +1440,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $events) use ($redeployVcs) {
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1456,9 +1464,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
         $deploymentId = ID::unique();
 
+        $deployment->removeAttribute('$internalId');
         $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
             '$id' => $deploymentId,
-            '$internalId' => '',
             'buildId' => '',
             'buildInternalId' => '',
             'entrypoint' => $function->getAttribute('entrypoint'),
@@ -1466,16 +1474,14 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
         ]));
 
-        $buildEvent = new Build();
-
-        $buildEvent
+        $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
             ->setDeployment($deployment)
             ->setProject($project)
             ->trigger();
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1484,7 +1490,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
-    ->desc('Create Execution')
+    ->desc('Create execution')
     ->label('scope', 'execution.write')
     ->label('event', 'functions.[functionId].executions.[executionId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1495,7 +1501,7 @@ App::post('/v1/functions/:functionId/executions')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_EXECUTION)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('body', '', new Text(8192, 0), 'HTTP body of execution. Default value is empty string.', true)
+    ->param('body', '', new Text(0, 0), 'HTTP body of execution. Default value is empty string.', true)
     ->param('async', false, new Boolean(), 'Execute code in the background. Default value is false.', true)
     ->param('path', '/', new Text(2048), 'HTTP path of execution. Path can include query params. Default value is /', true)
     ->param('method', 'POST', new Whitelist(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'], true), 'HTTP method of execution. Default value is GET.', true)
@@ -1504,12 +1510,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('usage')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1625,7 +1631,7 @@ App::post('/v1/functions/:functionId/executions')
             'search' => implode(' ', [$functionId, $executionId]),
         ]);
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
             ->setContext('function', $function);
@@ -1657,6 +1663,16 @@ App::post('/v1/functions/:functionId/executions')
         $durationStart = \microtime(true);
 
         $vars = [];
+
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
 
         // Shared vars
         foreach ($function->getAttribute('varsProject', []) as $var) {
@@ -1697,7 +1713,8 @@ App::post('/v1/functions/:functionId/executions')
                 path: $path,
                 method: $method,
                 headers: $headers,
-                runtimeEntrypoint: $command
+                runtimeEntrypoint: $command,
+                requestTimeout: 30
             );
 
             $headersFiltered = [];
@@ -1763,7 +1780,7 @@ App::post('/v1/functions/:functionId/executions')
 
 App::get('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
-    ->desc('List Executions')
+    ->desc('List executions')
     ->label('scope', 'execution.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
@@ -1838,7 +1855,7 @@ App::get('/v1/functions/:functionId/executions')
 
 App::get('/v1/functions/:functionId/executions/:executionId')
     ->groups(['api', 'functions'])
-    ->desc('Get Execution')
+    ->desc('Get execution')
     ->label('scope', 'execution.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'functions')
@@ -1886,7 +1903,7 @@ App::get('/v1/functions/:functionId/executions/:executionId')
 // Variables
 
 App::post('/v1/functions/:functionId/variables')
-    ->desc('Create Variable')
+    ->desc('Create variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.create')
@@ -1950,7 +1967,7 @@ App::post('/v1/functions/:functionId/variables')
     });
 
 App::get('/v1/functions/:functionId/variables')
-    ->desc('List Variables')
+    ->desc('List variables')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -1977,7 +1994,7 @@ App::get('/v1/functions/:functionId/variables')
     });
 
 App::get('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Get Variable')
+    ->desc('Get variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -2016,7 +2033,7 @@ App::get('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::put('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Update Variable')
+    ->desc('Update variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.update')
@@ -2077,7 +2094,7 @@ App::put('/v1/functions/:functionId/variables/:variableId')
     });
 
 App::delete('/v1/functions/:functionId/variables/:variableId')
-    ->desc('Delete Variable')
+    ->desc('Delete variable')
     ->groups(['api', 'functions'])
     ->label('scope', 'functions.write')
     ->label('audits.event', 'variable.delete')

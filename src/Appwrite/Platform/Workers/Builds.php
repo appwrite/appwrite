@@ -1,80 +1,118 @@
 <?php
 
-use Swoole\Coroutine as Co;
+namespace Appwrite\Platform\Workers;
+
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Resque\Worker;
-use Appwrite\Utopia\Response\Model\Deployment;
-use Executor\Executor;
 use Appwrite\Usage\Stats;
+use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Utopia\Database\DateTime;
+use Exception;
+use Swoole\Coroutine as Co;
+use Executor\Executor;
 use Utopia\App;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Helpers\ID;
-use Utopia\DSN\DSN;
-use Utopia\Database\Document;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
-use Utopia\Storage\Storage;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Exception\Structure;
+use Utopia\Database\Helpers\ID;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
+use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-require_once __DIR__ . '/../init.php';
-
-Console::title('Builds V1 Worker');
-Console::success(APP_NAME . ' build worker v1 has started');
-
-// TODO: Executor should return appropriate response codes.
-class BuildsV1 extends Worker
+class Builds extends Action
 {
-    private ?Executor $executor = null;
-
-    public function getName(): string
+    public static function getName(): string
     {
-        return "builds";
+        return 'builds';
     }
 
-    public function init(): void
+    /**
+     * @throws Exception
+     */
+    public function __construct()
     {
-        $this->executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $this
+            ->desc('Builds worker')
+            ->inject('message')
+            ->inject('dbForConsole')
+            ->inject('queueForEvents')
+            ->inject('queueForFunctions')
+            ->inject('usage')
+            ->inject('cache')
+            ->inject('dbForProject')
+            ->inject('getFunctionsDevice')
+            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $getFunctionsDevice));
     }
 
-    public function run(): void
+    /**
+     * @param Message $message
+     * @param Database $dbForConsole
+     * @param Event $queueForEvents
+     * @param Func $queueForFunctions
+     * @param Stats $usage
+     * @param Cache $cache
+     * @param Database $dbForProject
+     * @param callable $getFunctionsDevice
+     * @return void
+     * @throws \Utopia\Database\Exception
+     */
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice): void
     {
-        $type = $this->args['type'] ?? '';
-        $project = new Document($this->args['project'] ?? []);
-        $resource = new Document($this->args['resource'] ?? []);
-        $deployment = new Document($this->args['deployment'] ?? []);
-        $template = new Document($this->args['template'] ?? []);
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $type = $payload['type'] ?? '';
+        $project = new Document($payload['project'] ?? []);
+        $resource = new Document($payload['resource'] ?? []);
+        $deployment = new Document($payload['deployment'] ?? []);
+        $template = new Document($payload['template'] ?? []);
 
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
-                $github = new GitHub($this->getCache());
-                $this->buildDeployment($github, $project, $resource, $deployment, $template);
+                $github = new GitHub($cache);
+                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $usage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template);
                 break;
 
             default:
                 throw new \Exception('Invalid build type');
-                break;
         }
     }
 
     /**
-     * @throws \Utopia\Database\Exception\Authorization
-     * @throws \Utopia\Database\Exception\Structure
-     * @throws Throwable
+     * @param callable $getFunctionsDevice
+     * @param Func $queueForFunctions
+     * @param Event $queueForEvents
+     * @param Stats $usage
+     * @param Database $dbForConsole
+     * @param Database $dbForProject
+     * @param GitHub $github
+     * @param Document $project
+     * @param Document $function
+     * @param Document $deployment
+     * @param Document $template
+     * @return void
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
      */
-    protected function buildDeployment(GitHub $github, Document $project, Document $function, Document $deployment, Document $template)
+    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
-        global $register;
-
-        $dbForProject = $this->getProjectDB($project);
-        $dbForConsole = $this->getConsoleDB();
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
         $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
@@ -93,7 +131,7 @@ class BuildsV1 extends Worker
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
         $key = $function->getAttribute('runtime');
-        $runtime = isset($runtimes[$key]) ? $runtimes[$key] : null;
+        $runtime = $runtimes[$key] ?? null;
         if (\is_null($runtime)) {
             throw new Exception('Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
@@ -106,10 +144,9 @@ class BuildsV1 extends Worker
 
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
-
         $buildId = $deployment->getAttribute('buildId', '');
-
         $isNewBuild = empty($buildId);
+        $deviceFunctions = $getFunctionsDevice($project->getId());
 
         if ($isNewBuild) {
             $buildId = ID::unique();
@@ -123,7 +160,7 @@ class BuildsV1 extends Worker
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL)),
+                'sourceType' => strtolower($deviceFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
@@ -185,7 +222,7 @@ class BuildsV1 extends Worker
                 $templateOwnerName = $template->getAttribute('ownerName', '');
                 $templateBranch = $template->getAttribute('branch', '');
 
-                $templateRootDirectory =  $template->getAttribute('rootDirectory', '');
+                $templateRootDirectory = $template->getAttribute('rootDirectory', '');
                 $templateRootDirectory = \rtrim($templateRootDirectory, '/');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '.');
                 $templateRootDirectory = \ltrim($templateRootDirectory, '/');
@@ -208,7 +245,7 @@ class BuildsV1 extends Worker
                     Console::execute('cp -rfn ' . $tmpTemplateDirectory . '/' . $templateRootDirectory . '/* ' . $tmpDirectory . '/' . $rootDirectory, '', $stdout, $stderr);
 
                     // Commit and push
-                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) .  '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
+                    $exit = Console::execute('git config --global user.email "team@appwrite.io" && git config --global user.name "Appwrite" && cd ' . $tmpDirectory . ' && git add . && git commit -m "Create \'' . \escapeshellcmd($function->getAttribute('name', '')) . '\' function" && git push origin ' . \escapeshellcmd($branchName), '', $stdout, $stderr);
 
                     if ($exit !== 0) {
                         throw new \Exception('Unable to push code repository: ' . $stderr);
@@ -226,7 +263,7 @@ class BuildsV1 extends Worker
                     $deployment->setAttribute('providerCommitHash', $providerCommitHash ?? '');
                     $deployment->setAttribute('providerCommitAuthorUrl', $authorUrl);
                     $deployment->setAttribute('providerCommitAuthor', 'Appwrite');
-                    $deployment->setAttribute('providerCommitMessage', "Create '" .  $function->getAttribute('name', '') . "' function");
+                    $deployment->setAttribute('providerCommitMessage', "Create '" . $function->getAttribute('name', '') . "' function");
                     $deployment->setAttribute('providerCommitUrl', "https://github.com/$cloneOwner/$cloneRepository/commit/$providerCommitHash");
                     $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
 
@@ -234,7 +271,7 @@ class BuildsV1 extends Worker
                      * Send realtime Event
                      */
                     $target = Realtime::fromPayload(
-                        // Pass first, most verbose event pattern
+                    // Pass first, most verbose event pattern
                         event: $allEvents[0],
                         payload: $build,
                         project: $project
@@ -248,22 +285,32 @@ class BuildsV1 extends Worker
                     );
                 }
 
-                Console::execute('tar --exclude code.tar.gz -czf /tmp/builds/' . \escapeshellcmd($buildId) . '/code.tar.gz -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
+                $tmpPath = '/tmp/builds/' . \escapeshellcmd($buildId);
+                $tmpPathFile = $tmpPath . '/code.tar.gz';
+                $localDevice = new Local();
 
-                $deviceFunctions = $this->getFunctionsDevice($project->getId());
+                if (substr($tmpDirectory, -1) !== '/') {
+                    $tmpDirectory .= '/';
+                }
 
-                $fileName = 'code.tar.gz';
-                $fileTmpName = '/tmp/builds/' . $buildId . '/code.tar.gz';
+                $directorySize = $localDevice->getDirectorySize($tmpDirectory);
+                $functionsSizeLimit = (int) App::getEnv('_APP_FUNCTIONS_SIZE_LIMIT', '30000000');
+                if ($directorySize > $functionsSizeLimit) {
+                    throw new Exception('Repository directory size should be less than ' . number_format($functionsSizeLimit / 1048576, 2) . ' MBs.');
+                }
 
-                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+                Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
-                $result = $deviceFunctions->move($fileTmpName, $path);
+                $deviceFunctions = $getFunctionsDevice($project->getId());
+
+                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
                 }
 
-                Console::execute('rm -rf /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+                Console::execute('rm -rf ' . $tmpPath, '', $stdout, $stderr);
 
                 $source = $path;
 
@@ -282,30 +329,27 @@ class BuildsV1 extends Worker
 
             /** Trigger Webhook */
             $deploymentModel = new Deployment();
+            $deploymentUpdate =
+                $queueForEvents
+                    ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                    ->setClass(Event::WEBHOOK_CLASS_NAME)
+                    ->setProject($project)
+                    ->setEvent('functions.[functionId].deployments.[deploymentId].update')
+                    ->setParam('functionId', $function->getId())
+                    ->setParam('deploymentId', $deployment->getId())
+                    ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
+            ;
 
-            $deploymentUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
-            $deploymentUpdate
-                ->setProject($project)
-                ->setEvent('functions.[functionId].deployments.[deploymentId].update')
-                ->setParam('functionId', $function->getId())
-                ->setParam('deploymentId', $deployment->getId())
-                ->setPayload($deployment->getArrayCopy(array_keys($deploymentModel->getRules())))
-                ->trigger();
+            $deploymentUpdate->trigger();
 
             /** Trigger Functions */
-            $pools = $register->get('pools');
-            $connection = $pools->get('queue')->pop();
-
-            $functions = new Func($connection->getResource());
-            $functions
+            $queueForFunctions
                 ->from($deploymentUpdate)
                 ->trigger();
 
-            $connection->reclaim();
-
             /** Trigger Realtime */
             $target = Realtime::fromPayload(
-                // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -345,36 +389,33 @@ class BuildsV1 extends Worker
             $command = \str_replace('"', '\\"', $command);
 
             $response = null;
-
             $err = null;
 
-            // TODO: Remove run() wrapper when switching to new utopia queue. That should be done on Swoole adapter in the libary
-            Co\run(function () use ($project, $deployment, &$response, $source, $function, $runtime, $vars, $command, &$build, $dbForProject, $allEvents, &$err) {
-                Co::join([
-                    Co\go(function () use (&$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
-                        try {
-                            $version = $function->getAttribute('version', 'v2');
-                            $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
+            Co::join([
+                Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
+                    try {
+                        $version = $function->getAttribute('version', 'v2');
+                        $command = $version === 'v2' ? 'tar -zxf /tmp/code.tar.gz -C /usr/code && cd /usr/local/src/ && ./build.sh' : 'tar -zxf /tmp/code.tar.gz -C /mnt/code && helpers/build.sh "' . $command . '"';
 
-                            $response = $this->executor->createRuntime(
-                                deploymentId: $deployment->getId(),
-                                projectId: $project->getId(),
-                                source: $source,
-                                image: $runtime['image'],
-                                version: $version,
-                                remove: true,
-                                entrypoint: $deployment->getAttribute('entrypoint'),
-                                destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
-                                variables: $vars,
-                                command: $command
-                            );
-                        } catch (Exception $error) {
-                            $err = $error;
-                        }
-                    }),
-                    Co\go(function () use ($project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                        $response = $executor->createRuntime(
+                            deploymentId: $deployment->getId(),
+                            projectId: $project->getId(),
+                            source: $source,
+                            image: $runtime['image'],
+                            version: $version,
+                            remove: true,
+                            entrypoint: $deployment->getAttribute('entrypoint'),
+                            destination: APP_STORAGE_BUILDS . "/app-{$project->getId()}",
+                            variables: $vars,
+                            command: $command
+                        );
+                    } catch (Exception $error) {
+                        $err = $error;
+                    }
+                }),
+                    Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
                         try {
-                            $this->executor->getLogs(
+                            $executor->getLogs(
                                 deploymentId: $deployment->getId(),
                                 projectId: $project->getId(),
                                 callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
@@ -392,7 +433,7 @@ class BuildsV1 extends Worker
                                          * Send realtime Event
                                          */
                                         $target = Realtime::fromPayload(
-                                            // Pass first, most verbose event pattern
+                                        // Pass first, most verbose event pattern
                                             event: $allEvents[0],
                                             payload: $build,
                                             project: $project
@@ -414,7 +455,6 @@ class BuildsV1 extends Worker
                         }
                     }),
                 ]);
-            });
 
             if ($err) {
                 throw $err;
@@ -447,14 +487,14 @@ class BuildsV1 extends Worker
             }
 
             /** Update function schedule */
-            $dbForConsole = $this->getConsoleDB();
+
             // Inform scheduler if function is still active
             $schedule = $dbForConsole->getDocument('schedules', $function->getAttribute('scheduleId'));
             $schedule
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            Authorization::skip(fn() => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
@@ -491,8 +531,6 @@ class BuildsV1 extends Worker
 
             /** Update usage stats */
             if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $statsd = $register->get('statsd');
-                $usage = new Stats($statsd);
                 $usage
                     ->setParam('projectInternalId', $project->getInternalId())
                     ->setParam('projectId', $project->getId())
@@ -507,6 +545,24 @@ class BuildsV1 extends Worker
         }
     }
 
+    /**
+     * @param string $status
+     * @param GitHub $github
+     * @param string $providerCommitHash
+     * @param string $owner
+     * @param string $repositoryName
+     * @param Document $project
+     * @param Document $function
+     * @param string $deploymentId
+     * @param Database $dbForProject
+     * @param Database $dbForConsole
+     * @return void
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Restricted
+     */
     protected function runGitAction(string $status, GitHub $github, string $providerCommitHash, string $owner, string $repositoryName, Document $project, Document $function, string $deploymentId, Database $dbForProject, Database $dbForConsole): void
     {
         if ($function->getAttribute('providerSilentMode', false) === true) {
@@ -575,9 +631,5 @@ class BuildsV1 extends Worker
                 $dbForConsole->deleteDocument('vcsCommentLocks', $commentId);
             }
         }
-    }
-
-    public function shutdown(): void
-    {
     }
 }

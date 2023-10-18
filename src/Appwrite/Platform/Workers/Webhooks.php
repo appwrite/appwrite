@@ -1,38 +1,54 @@
 <?php
 
-use Appwrite\Resque\Worker;
+namespace Appwrite\Platform\Workers;
+
+use Exception;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
-require_once __DIR__ . '/../init.php';
-
-Console::title('Webhooks V1 Worker');
-Console::success(APP_NAME . ' webhooks worker v1 has started');
-
-class WebhooksV1 extends Worker
+class Webhooks extends Action
 {
-    protected array $errors = [];
+    private array $errors = [];
 
-    public function getName(): string
+    public static function getName(): string
     {
-        return "webhooks";
+        return 'webhooks';
     }
 
-    public function init(): void
+    /**
+     * @throws Exception
+     */
+    public function __construct()
     {
+        $this
+            ->desc('Webhooks worker')
+            ->inject('message')
+            ->callback(fn($message) => $this->action($message));
     }
 
-    public function run(): void
+    /**
+     * @param Message $message
+     * @return void
+     * @throws Exception
+     */
+    public function action(Message $message): void
     {
-        $events = $this->args['events'];
-        $payload = json_encode($this->args['payload']);
-        $project = new Document($this->args['project']);
-        $user = new Document($this->args['user'] ?? []);
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $events = $payload['events'];
+        $webhookPayload = json_encode($payload['payload']);
+        $project = new Document($payload['project']);
+        $user = new Document($payload['user'] ?? []);
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $payload, $webhook, $user, $project);
+                    $this->execute($events, $webhookPayload, $webhook, $user, $project);
             }
         }
 
@@ -41,8 +57,17 @@ class WebhooksV1 extends Worker
         }
     }
 
-    protected function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
+    /**
+     * @param array $events
+     * @param string $payload
+     * @param Document $webhook
+     * @param Document $user
+     * @param Document $project
+     * @return void
+     */
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
     {
+
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
         $signature = base64_encode(hash_hmac('sha1', $url . $payload, $signatureKey, true));
@@ -63,14 +88,14 @@ class WebhooksV1 extends Worker
             $ch,
             CURLOPT_HTTPHEADER,
             [
-                'Content-Type: application/json',
-                'Content-Length: ' . \strlen($payload),
-                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($payload),
+            'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+            'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+            'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+            'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+            'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+            'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
             ]
         );
 
@@ -89,10 +114,5 @@ class WebhooksV1 extends Worker
         }
 
         \curl_close($ch);
-    }
-
-    public function shutdown(): void
-    {
-        $this->errors = [];
     }
 }

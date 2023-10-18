@@ -93,6 +93,12 @@ class Doctor extends Action
             Console::log('🟢 HTTPS force option is enabled');
         }
 
+        if ('enabled' !== App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled')) {
+            Console::log('🔴 HTTPS force option is disabled for function domains');
+        } else {
+            Console::log('🟢 HTTPS force option is enabled for function domains');
+        }
+
         $providerName = App::getEnv('_APP_LOGGING_PROVIDER', '');
         $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
@@ -245,7 +251,7 @@ class Doctor extends Action
         try {
             if (App::isProduction()) {
                 Console::log('');
-                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/v1/health/version'), true);
+                $version = \json_decode(@\file_get_contents(App::getEnv('_APP_HOME', 'http://localhost') . '/version'), true);
 
                 if ($version && isset($version['version'])) {
                     if (\version_compare($version['version'], App::getEnv('_APP_VERSION', 'UNKNOWN')) === 0) {

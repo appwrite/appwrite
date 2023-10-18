@@ -50,7 +50,7 @@ $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
 App::post('/v1/account')
-    ->desc('Create Account')
+    ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
     ->label('scope', 'public')
@@ -76,8 +76,9 @@ App::post('/v1/account')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
             $whitelistEmails = $project->getAttribute('authWhitelistEmails');
@@ -146,6 +147,7 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
@@ -155,7 +157,7 @@ App::post('/v1/account')
         Authorization::setRole(Role::user($user->getId())->toString());
         Authorization::setRole(Role::users()->toString());
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -164,7 +166,7 @@ App::post('/v1/account')
 
 App::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
-    ->desc('Create Email Session')
+    ->desc('Create email session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -192,8 +194,8 @@ App::post('/v1/account/sessions/email')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -275,7 +277,7 @@ App::post('/v1/account/sessions/email')
             ->setAttribute('expire', $expire)
         ;
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
@@ -284,7 +286,7 @@ App::post('/v1/account/sessions/email')
     });
 
 App::get('/v1/account/sessions/oauth2/:provider')
-    ->desc('Create OAuth2 Session')
+    ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -350,7 +352,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     });
 
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 Callback')
+    ->desc('OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -382,7 +384,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
-    ->desc('OAuth2 Callback')
+    ->desc('OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'public')
@@ -415,7 +417,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     });
 
 App::get('/v1/account/sessions/oauth2/:provider/redirect')
-    ->desc('OAuth2 Redirect')
+    ->desc('OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -439,8 +441,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $events) use ($oauthDefaultSuccess) {
+    ->inject('queueForEvents')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -653,6 +655,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
+                    $user->removeAttribute('$internalId');
                     Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
@@ -756,7 +759,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $session->setAttribute('expire', $expire);
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
             ->setPayload($response->output($session, Response::MODEL_SESSION))
@@ -870,7 +873,7 @@ App::delete('/v1/account/identities/:identityId')
     });
 
 App::post('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session')
+    ->desc('Create magic URL session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'magic-url')
@@ -895,9 +898,9 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('events')
-    ->inject('mails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
+    ->inject('queueForEvents')
+    ->inject('queueForMails')
+    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -955,6 +958,7 @@ App::post('/v1/account/sessions/magic-url')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1017,7 +1021,7 @@ App::post('/v1/account/sessions/magic-url')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpHost($smtp['host'] ?? '')
                 ->setSmtpPort($smtp['port'] ?? '')
                 ->setSmtpUsername($smtp['username'] ?? '')
@@ -1039,7 +1043,7 @@ App::post('/v1/account/sessions/magic-url')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
@@ -1063,14 +1067,14 @@ App::post('/v1/account/sessions/magic-url')
             'redirect' => $url
         ];
 
-        $mails
+        $queueForMails
             ->setSubject($subject)
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setRecipient($email)
             ->trigger();
 
-        $events->setPayload(
+        $queueForEvents->setPayload(
             $response->output(
                 $token->setAttribute('secret', $loginSecret),
                 Response::MODEL_TOKEN
@@ -1087,7 +1091,7 @@ App::post('/v1/account/sessions/magic-url')
     });
 
 App::put('/v1/account/sessions/magic-url')
-    ->desc('Create Magic URL session (confirmation)')
+    ->desc('Create magic URL session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1114,8 +1118,8 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         /** @var Utopia\Database\Document $user */
 
@@ -1183,7 +1187,7 @@ App::put('/v1/account/sessions/magic-url')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
         }
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId());
 
@@ -1209,7 +1213,7 @@ App::put('/v1/account/sessions/magic-url')
     });
 
 App::post('/v1/account/sessions/phone')
-    ->desc('Create Phone session')
+    ->desc('Create phone session')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('auth.type', 'phone')
@@ -1232,10 +1236,10 @@ App::post('/v1/account/sessions/phone')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('messaging')
+    ->inject('queueForEvents')
+    ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $events, EventPhone $messaging, Locale $locale) {
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -1284,6 +1288,7 @@ App::post('/v1/account/sessions/phone')
                 'accessedAt' => DateTime::now(),
             ]);
 
+            $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
@@ -1322,12 +1327,12 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $messaging
+        $queueForMessaging
             ->setRecipient($phone)
             ->setMessage($message)
             ->trigger();
 
-        $events->setPayload(
+        $queueForEvents->setPayload(
             $response->output(
                 $token->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
@@ -1344,7 +1349,7 @@ App::post('/v1/account/sessions/phone')
     });
 
 App::put('/v1/account/sessions/phone')
-    ->desc('Create Phone Session (confirmation)')
+    ->desc('Create phone session (confirmation)')
     ->groups(['api', 'account', 'session'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -1366,8 +1371,8 @@ App::put('/v1/account/sessions/phone')
     ->inject('project')
     ->inject('locale')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -1431,7 +1436,7 @@ App::put('/v1/account/sessions/phone')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed saving user to DB');
         }
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
@@ -1460,7 +1465,7 @@ App::put('/v1/account/sessions/phone')
     });
 
 App::post('/v1/account/sessions/anonymous')
-    ->desc('Create Anonymous Session')
+    ->desc('Create anonymous session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('scope', 'public')
@@ -1486,8 +1491,8 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
 
         $protocol = $request->getProtocol();
 
@@ -1534,6 +1539,7 @@ App::post('/v1/account/sessions/anonymous')
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
+        $user->removeAttribute('$internalId');
         Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
@@ -1569,7 +1575,7 @@ App::post('/v1/account/sessions/anonymous')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
         ;
@@ -1643,7 +1649,7 @@ App::post('/v1/account/jwt')
     });
 
 App::get('/v1/account')
-    ->desc('Get Account')
+    ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1664,7 +1670,7 @@ App::get('/v1/account')
     });
 
 App::get('/v1/account/prefs')
-    ->desc('Get Account Preferences')
+    ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1687,7 +1693,7 @@ App::get('/v1/account/prefs')
     });
 
 App::get('/v1/account/sessions')
-    ->desc('List Sessions')
+    ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1726,7 +1732,7 @@ App::get('/v1/account/sessions')
     });
 
 App::get('/v1/account/logs')
-    ->desc('List Logs')
+    ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1787,7 +1793,7 @@ App::get('/v1/account/logs')
     });
 
 App::get('/v1/account/sessions/:sessionId')
-    ->desc('Get Session')
+    ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('usage.metric', 'users.{scope}.requests.read')
@@ -1832,7 +1838,7 @@ App::get('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/name')
-    ->desc('Update Name')
+    ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
     ->label('scope', 'account')
@@ -1853,20 +1859,20 @@ App::patch('/v1/account/name')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $name, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('name', $name);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/password')
-    ->desc('Update Password')
+    ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
     ->label('scope', 'account')
@@ -1890,8 +1896,8 @@ App::patch('/v1/account/password')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -1927,13 +1933,13 @@ App::patch('/v1/account/password')
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/email')
-    ->desc('Update Email')
+    ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
     ->label('scope', 'account')
@@ -1955,8 +1961,8 @@ App::patch('/v1/account/email')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -1997,13 +2003,13 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/phone')
-    ->desc('Update Phone')
+    ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
     ->label('scope', 'account')
@@ -2025,8 +2031,8 @@ App::patch('/v1/account/phone')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2056,13 +2062,13 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/prefs')
-    ->desc('Update Preferences')
+    ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'account')
@@ -2083,20 +2089,20 @@ App::patch('/v1/account/prefs')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (array $prefs, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('prefs', $prefs);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::patch('/v1/account/status')
-    ->desc('Update Status')
+    ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
     ->label('scope', 'account')
@@ -2115,14 +2121,14 @@ App::patch('/v1/account/status')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('status', false);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
@@ -2140,7 +2146,7 @@ App::patch('/v1/account/status')
     });
 
 App::delete('/v1/account/sessions/:sessionId')
-    ->desc('Delete Session')
+    ->desc('Delete session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -2161,9 +2167,9 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('project')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events, Document $project) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Document $project) {
 
         $protocol = $request->getProtocol();
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -2203,7 +2209,7 @@ App::delete('/v1/account/sessions/:sessionId')
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
 
-                $events
+                $queueForEvents
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
                     ->setPayload($response->output($session, Response::MODEL_SESSION))
@@ -2216,7 +2222,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update OAuth Session (Refresh Tokens)')
+    ->desc('Update OAuth session (refresh tokens)')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -2239,8 +2245,8 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('events')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $queueForEvents) {
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
@@ -2288,7 +2294,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
-                $events
+                $queueForEvents
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
                     ->setPayload($response->output($session, Response::MODEL_SESSION))
@@ -2302,7 +2308,7 @@ App::patch('/v1/account/sessions/:sessionId')
     });
 
 App::delete('/v1/account/sessions')
-    ->desc('Delete Sessions')
+    ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
@@ -2321,8 +2327,8 @@ App::delete('/v1/account/sessions')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('events')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -2349,13 +2355,13 @@ App::delete('/v1/account/sessions')
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
-                $events->setPayload($response->output($session, Response::MODEL_SESSION));
+                $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION));
             }
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId());
 
@@ -2363,7 +2369,7 @@ App::delete('/v1/account/sessions')
     });
 
 App::post('/v1/account/recovery')
-    ->desc('Create Password Recovery')
+    ->desc('Create password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].recovery.[tokenId].create')
@@ -2388,9 +2394,9 @@ App::post('/v1/account/recovery')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('locale')
-    ->inject('mails')
-    ->inject('events')
-    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $mails, Event $events) {
+    ->inject('queueForMails')
+    ->inject('queueForEvents')
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2472,7 +2478,7 @@ App::post('/v1/account/recovery')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpHost($smtp['host'] ?? '')
                 ->setSmtpPort($smtp['port'] ?? '')
                 ->setSmtpUsername($smtp['username'] ?? '')
@@ -2494,7 +2500,7 @@ App::post('/v1/account/recovery')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
@@ -2519,7 +2525,7 @@ App::post('/v1/account/recovery')
         ];
 
 
-        $mails
+        $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
             ->setName($profile->getAttribute('name'))
             ->setBody($body)
@@ -2527,7 +2533,7 @@ App::post('/v1/account/recovery')
             ->setSubject($subject)
             ->trigger();
 
-        $events
+        $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recovery->getId())
             ->setUser($profile)
@@ -2546,7 +2552,7 @@ App::post('/v1/account/recovery')
     });
 
 App::put('/v1/account/recovery')
-    ->desc('Create Password Recovery (confirmation)')
+    ->desc('Create password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].recovery.[tokenId].update')
@@ -2571,8 +2577,8 @@ App::put('/v1/account/recovery')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
@@ -2625,7 +2631,7 @@ App::put('/v1/account/recovery')
         $dbForProject->deleteDocument('tokens', $recovery);
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $profile->getId())
             ->setParam('tokenId', $recoveryDocument->getId())
         ;
@@ -2634,7 +2640,7 @@ App::put('/v1/account/recovery')
     });
 
 App::post('/v1/account/verification')
-    ->desc('Create Email Verification')
+    ->desc('Create email verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
@@ -2657,9 +2663,9 @@ App::post('/v1/account/verification')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('events')
-    ->inject('mails')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $events, Mail $mails) {
+    ->inject('queueForEvents')
+    ->inject('queueForMails')
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -2724,7 +2730,7 @@ App::post('/v1/account/verification')
                 $replyTo = $smtp['replyTo'];
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpHost($smtp['host'] ?? '')
                 ->setSmtpPort($smtp['port'] ?? '')
                 ->setSmtpUsername($smtp['username'] ?? '')
@@ -2746,7 +2752,7 @@ App::post('/v1/account/verification')
                 $subject = $customTemplate['subject'] ?? $subject;
             }
 
-            $mails
+            $queueForMails
                 ->setSmtpReplyTo($replyTo)
                 ->setSmtpSenderEmail($senderEmail)
                 ->setSmtpSenderName($senderName);
@@ -2770,7 +2776,7 @@ App::post('/v1/account/verification')
             'redirect' => $url
         ];
 
-        $mails
+        $queueForMails
             ->setSubject($subject)
             ->setBody($body)
             ->setVariables($emailVariables)
@@ -2778,7 +2784,7 @@ App::post('/v1/account/verification')
             ->setName($user->getAttribute('name') ?? '')
             ->trigger();
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output(
@@ -2795,7 +2801,7 @@ App::post('/v1/account/verification')
     });
 
 App::put('/v1/account/verification')
-    ->desc('Create Email Verification (confirmation)')
+    ->desc('Create email verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -2816,8 +2822,8 @@ App::put('/v1/account/verification')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -2847,7 +2853,7 @@ App::put('/v1/account/verification')
         $dbForProject->deleteDocument('tokens', $verification);
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $userId)
             ->setParam('tokenId', $verificationDocument->getId())
         ;
@@ -2856,7 +2862,7 @@ App::put('/v1/account/verification')
     });
 
 App::post('/v1/account/verification/phone')
-    ->desc('Create Phone Verification')
+    ->desc('Create phone verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
@@ -2876,11 +2882,11 @@ App::post('/v1/account/verification/phone')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('messaging')
+    ->inject('queueForEvents')
+    ->inject('queueForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $events, EventPhone $messaging, Document $project, Locale $locale) {
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Document $project, Locale $locale) {
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
@@ -2928,13 +2934,13 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $messaging
+        $queueForMessaging
             ->setRecipient($user->getAttribute('phone'))
             ->setMessage($message)
             ->trigger()
         ;
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verification->getId())
             ->setPayload($response->output(
@@ -2952,7 +2958,7 @@ App::post('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/verification/phone')
-    ->desc('Create Phone Verification (confirmation)')
+    ->desc('Create phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
     ->label('event', 'users.[userId].verification.[tokenId].update')
@@ -2973,8 +2979,8 @@ App::put('/v1/account/verification/phone')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
@@ -3002,7 +3008,7 @@ App::put('/v1/account/verification/phone')
         $dbForProject->deleteDocument('tokens', $verification);
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $verificationDocument->getId())
         ;

@@ -96,15 +96,15 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->inject('audits')
-    ->inject('deletes')
-    ->inject('database')
+    ->inject('queueForEvents')
+    ->inject('queueForAudits')
+    ->inject('queueForDeletes')
+    ->inject('queueForDatabase')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('mails')
+    ->inject('queueForMails')
     ->inject('usage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails, Stats $usage) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Stats $usage) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -173,12 +173,12 @@ App::init()
         /*
         * Background Jobs
         */
-        $events
+        $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
             ->setUser($user);
 
-        $audits
+        $queueForAudits
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
@@ -194,8 +194,8 @@ App::init()
             ->setParam('project.{scope}.network.inbound', 0)
             ->setParam('project.{scope}.network.outbound', 0);
 
-        $deletes->setProject($project);
-        $database->setProject($project);
+        $queueForDeletes->setProject($project);
+        $queueForDatabase->setProject($project);
 
         $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
         $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
@@ -203,7 +203,7 @@ App::init()
         $useCache = $route->getLabel('cache', false);
 
         if ($useCache) {
-            $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+            $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
@@ -360,35 +360,35 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->inject('audits')
+    ->inject('queueForEvents')
+    ->inject('queueForAudits')
     ->inject('usage')
-    ->inject('deletes')
-    ->inject('database')
+    ->inject('queueForDeletes')
+    ->inject('queueForDatabase')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Stats $usage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
-        if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())) {
-                $events->setPayload($responsePayload);
+        if (!empty($queueForEvents->getEvent())) {
+            if (empty($queueForEvents->getPayload())) {
+                $queueForEvents->setPayload($responsePayload);
             }
 
             /**
              * Trigger functions.
              */
             $queueForFunctions
-                ->from($events)
+                ->from($queueForEvents)
                 ->trigger();
 
             /**
              * Trigger webhooks.
              */
-            $events
+            $queueForEvents
                 ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                 ->trigger();
@@ -397,12 +397,12 @@ App::shutdown()
              * Trigger realtime.
              */
             if ($project->getId() !== 'console') {
-                $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
-                $payload = new Document($events->getPayload());
+                $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
+                $payload = new Document($queueForEvents->getPayload());
 
-                $db = $events->getContext('database');
-                $collection = $events->getContext('collection');
-                $bucket = $events->getContext('bucket');
+                $db = $queueForEvents->getContext('database');
+                $collection = $queueForEvents->getContext('collection');
+                $bucket = $queueForEvents->getContext('bucket');
 
                 $target = Realtime::fromPayload(
                     // Pass first, most verbose event pattern
@@ -416,13 +416,13 @@ App::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $events->getPayload(),
+                    payload: $queueForEvents->getPayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $events->getParam('userId')
+                        'userId' => $queueForEvents->getParam('userId')
                     ]
                 );
             }
@@ -438,36 +438,36 @@ App::shutdown()
         if (!empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
             if (!empty($resource) && $resource !== $pattern) {
-                $audits->setResource($resource);
+                $queueForAudits->setResource($resource);
             }
         }
 
         if (!$user->isEmpty()) {
-            $audits->setUser($user);
+            $queueForAudits->setUser($user);
         }
 
-        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
             $pattern = $route->getLabel('audits.payload', true);
             if (!empty($pattern)) {
-                $audits->setPayload($responsePayload);
+                $queueForAudits->setPayload($responsePayload);
             }
 
-            foreach ($events->getParams() as $key => $value) {
-                $audits->setParam($key, $value);
+            foreach ($queueForEvents->getParams() as $key => $value) {
+                $queueForAudits->setParam($key, $value);
             }
-            $audits->trigger();
+            $queueForAudits->trigger();
         }
 
-        if (!empty($deletes->getType())) {
-            $deletes->trigger();
+        if (!empty($queueForDeletes->getType())) {
+            $queueForDeletes->trigger();
         }
 
-        if (!empty($database->getType())) {
-            $database->trigger();
+        if (!empty($queueForDatabase->getType())) {
+            $queueForDatabase->trigger();
         }
 
         /**
@@ -489,7 +489,7 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
                 $data = json_encode([
                     'resourceType' => $resourceType,
                     'resource' => $resource,

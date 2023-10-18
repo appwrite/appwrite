@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
+use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
 use Utopia\Detector\Adapter\Deno;
@@ -38,7 +39,7 @@ use Utopia\Validator\Boolean;
 
 use function Swoole\Coroutine\batch;
 
-$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, callable $getProjectDB, Request $request) {
+$createGitDeployments = function (GitHub $github, string $providerInstallationId, array $repositories, string $providerBranch, string $providerBranchUrl, string $providerRepositoryName, string $providerRepositoryUrl, string $providerRepositoryOwner, string $providerCommitHash, string $providerCommitAuthor, string $providerCommitAuthorUrl, string $providerCommitMessage, string $providerCommitUrl, string $providerPullRequestId, bool $external, Database $dbForConsole, Build $queueForBuilds, callable $getProjectDB, Request $request) {
     foreach ($repositories as $resource) {
         $resourceType = $resource->getAttribute('resourceType');
 
@@ -49,6 +50,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
 
             $functionId = $resource->getAttribute('resourceId');
             $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+            $functionInternalId = $function->getInternalId();
 
             $deploymentId = ID::unique();
             $repositoryId = $resource->getId();
@@ -172,6 +174,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                     Permission::delete(Role::any()),
                 ],
                 'resourceId' => $functionId,
+                'resourceInternalId' => $functionInternalId,
                 'resourceType' => 'functions',
                 'entrypoint' => $function->getAttribute('entrypoint'),
                 'commands' => $function->getAttribute('commands'),
@@ -210,8 +213,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'pending', $message, $providerTargetUrl, $name);
             }
 
-            $buildEvent = new Build();
-            $buildEvent
+            $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
                 ->setDeployment($deployment)
@@ -469,6 +471,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
 
         $detectorFactory
             ->addDetector(new JavaScript())
+            ->addDetector(new Bun())
             ->addDetector(new PHP())
             ->addDetector(new Python())
             ->addDetector(new Dart())
@@ -549,6 +552,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
 
                     $detectorFactory
                         ->addDetector(new JavaScript())
+                        ->addDetector(new Bun())
                         ->addDetector(new PHP())
                         ->addDetector(new Python())
                         ->addDetector(new Dart())
@@ -787,8 +791,9 @@ App::post('/v1/vcs/github/events')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('getProjectDB')
+    ->inject('queueForBuilds')
     ->action(
-        function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
+        function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
             $payload = $request->getRawPayload();
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
             $signatureLocal = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
@@ -829,7 +834,7 @@ App::post('/v1/vcs/github/events')
 
                 // create new deployment only on push and not when branch is created
                 if (!$providerBranchCreated) {
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, '', false, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
                 }
             } elseif ($event == $github::EVENT_INSTALLATION) {
                 if ($parsedPayload["action"] == "deleted") {
@@ -885,7 +890,7 @@ App::post('/v1/vcs/github/events')
                         Query::orderDesc('$createdAt')
                     ]);
 
-                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $getProjectDB, $request);
+                    $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
                     // Allowed external contributions cleanup
 
@@ -1049,7 +1054,8 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
     ->inject('project')
     ->inject('dbForConsole')
     ->inject('getProjectDB')
-    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForConsole, callable $getProjectDB) use ($createGitDeployments) {
+    ->inject('queueForBuilds')
+    ->action(function (string $installationId, string $repositoryId, string $providerPullRequestId, GitHub $github, Request $request, Response $response, Document $project, Database $dbForConsole, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
         $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -1090,7 +1096,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';
         $providerCommitHash = $pullRequestResponse['head']['sha'] ?? '';
 
-        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForConsole, $getProjectDB, $request);
+        $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerCommitHash, $providerPullRequestId, true, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
 
         $response->noContent();
     });

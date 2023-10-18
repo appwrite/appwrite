@@ -1,59 +1,250 @@
 <?php
 
-require_once __DIR__ . '/../worker.php';
+namespace Appwrite\Platform\Workers;
 
-use Domnikl\Statsd\Client;
-use Utopia\Queue\Message;
+use Appwrite\Usage\Stats;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Execution;
+use Exception;
 use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Logger\Log;
-use Utopia\Queue\Server;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Logger\Log;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
-Authorization::disable();
-Authorization::setDefaultStatus(false);
+class Functions extends Action
+{
+    public static function getName(): string
+    {
+        return 'functions';
+    }
 
-Server::setResource('execute', function () {
-    return function (
+    /**
+     * @throws Exception
+     */
+    public function __construct()
+    {
+        $this
+            ->desc('Functions worker')
+            ->inject('message')
+            ->inject('dbForProject')
+            ->inject('queueForFunctions')
+            ->inject('queueForEvents')
+            ->inject('usage')
+            ->inject('log')
+            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $usage, $log));
+    }
+
+    /**
+     * @param Message $message
+     * @param Database $dbForProject
+     * @param Func $queueForFunctions
+     * @param Event $queueForEvents
+     * @param Stats $usage
+     * @param Log $log
+     * @return void
+     * @throws Authorization
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Conflict
+     */
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log): void
+    {
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $type = $payload['type'] ?? '';
+        $events = $payload['events'] ?? [];
+        $data = $payload['data'] ?? '';
+        $eventData = $payload['payload'] ?? '';
+        $project = new Document($payload['project'] ?? []);
+        $function = new Document($payload['function'] ?? []);
+        $user = new Document($payload['user'] ?? []);
+        $method = $payload['method'] ?? 'POST';
+        $headers = $payload['headers'] ?? [];
+        $path = $payload['path'] ?? '/';
+
+        if ($project->getId() === 'console') {
+            return;
+        }
+
+        if (!empty($events)) {
+            $limit = 30;
+            $sum = 30;
+            $offset = 0;
+            /** @var Document[] $functions */
+            while ($sum >= $limit) {
+                $functions = $dbForProject->find('functions', [
+                    Query::limit($limit),
+                    Query::offset($offset),
+                    Query::orderAsc('name'),
+                ]);
+
+                $sum = \count($functions);
+                $offset = $offset + $limit;
+
+                Console::log('Fetched ' . $sum . ' functions...');
+
+                foreach ($functions as $function) {
+                    if (!array_intersect($events, $function->getAttribute('events', []))) {
+                        continue;
+                    }
+                    Console::success('Iterating function: ' . $function->getAttribute('name'));
+
+                    $this->execute(
+                        log: $log,
+                        dbForProject: $dbForProject,
+                        queueForFunctions: $queueForFunctions,
+                        usage: $usage,
+                        queueForEvents: $queueForEvents,
+                        project: $project,
+                        function: $function,
+                        trigger: 'event',
+                        path: '/',
+                        method: 'POST',
+                        headers: [
+                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE,
+                            'content-type' => 'application/json'
+                        ],
+                        data: null,
+                        user: $user,
+                        jwt: null,
+                        event: $events[0],
+                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
+                        executionId: null,
+                    );
+                    Console::success('Triggered function: ' . $events[0]);
+                }
+            }
+            return;
+        }
+
+        /**
+         * Handle Schedule and HTTP execution.
+         */
+        switch ($type) {
+            case 'http':
+                $jwt = $payload['jwt'] ?? '';
+                $execution = new Document($payload['execution'] ?? []);
+                $user = new Document($payload['user'] ?? []);
+                $this->execute(
+                    log: $log,
+                    dbForProject: $dbForProject,
+                    queueForFunctions: $queueForFunctions,
+                    usage: $usage,
+                    queueForEvents: $queueForEvents,
+                    project: $project,
+                    function: $function,
+                    trigger: 'http',
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    data: $data,
+                    user: $user,
+                    jwt: $jwt,
+                    event: null,
+                    eventData: null,
+                    executionId: $execution->getId()
+                );
+                break;
+            case 'schedule':
+                $this->execute(
+                    log: $log,
+                    dbForProject: $dbForProject,
+                    queueForFunctions: $queueForFunctions,
+                    usage: $usage,
+                    queueForEvents: $queueForEvents,
+                    project: $project,
+                    function: $function,
+                    trigger: 'schedule',
+                    path: $path,
+                    method: $method,
+                    headers: $headers,
+                    data: null,
+                    user: null,
+                    jwt: null,
+                    event: null,
+                    eventData: null,
+                    executionId: null,
+                );
+                break;
+        }
+    }
+
+    /**
+     * @param Log $log
+     * @param Database $dbForProject
+     * @param Func $queueForFunctions
+     * @param Stats $usage
+     * @param Event $queueForEvents
+     * @param Document $project
+     * @param Document $function
+     * @param string $trigger
+     * @param string $path
+     * @param string $method
+     * @param array $headers
+     * @param string|null $data
+     * @param Document|null $user
+     * @param string|null $jwt
+     * @param string|null $event
+     * @param string|null $eventData
+     * @param string|null $executionId
+     * @return void
+     * @throws Authorization
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Conflict
+     */
+    private function execute(
         Log $log,
-        Func $queueForFunctions,
         Database $dbForProject,
-        Client $statsd,
+        Func $queueForFunctions,
+        stats $usage,
+        Event $queueForEvents,
         Document $project,
         Document $function,
         string $trigger,
-        string $data = null,
         string $path,
         string $method,
         array $headers,
+        string $data = null,
         ?Document $user = null,
         string $jwt = null,
         string $event = null,
         string $eventData = null,
         string $executionId = null,
-    ) {
-        $user ??= new Document();
-        $functionId = $function->getId();
-        $deploymentId = $function->getAttribute('deployment', '');
+    ): void {
+            $user ??= new Document();
+            $functionId = $function->getId();
+            $deploymentId = $function->getAttribute('deployment', '');
 
-        $log->addTag('functionId', $functionId);
-        $log->addTag('projectId', $project->getId());
+            $log->addTag('functionId', $functionId);
+            $log->addTag('projectId', $project->getId());
 
-        /** Check if deployment exists */
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+            /** Check if deployment exists */
+            $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
         if ($deployment->getAttribute('resourceId') !== $functionId) {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
@@ -63,8 +254,8 @@ Server::setResource('execute', function () {
             throw new Exception('Deployment not found. Create deployment before trying to execute a function');
         }
 
-        /** Check if build has exists */
-        $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
+            /** Check if build has exists */
+            $build = $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', ''));
         if ($build->isEmpty()) {
             throw new Exception('Build not found');
         }
@@ -73,7 +264,7 @@ Server::setResource('execute', function () {
             throw new Exception('Build not ready');
         }
 
-        /** Check if  runtime is supported */
+            /** Check if  runtime is supported */
         $version = $function->getAttribute('version', 'v2');
         $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
 
@@ -88,6 +279,7 @@ Server::setResource('execute', function () {
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
         $headers['x-appwrite-user-jwt'] = $jwt ?? '';
 
+        /** Create execution or update execution status */
         /** Create execution or update execution status */
         $execution = $dbForProject->getDocument('executions', $executionId ?? '');
         if ($execution->isEmpty()) {
@@ -140,7 +332,24 @@ Server::setResource('execute', function () {
 
         $durationStart = \microtime(true);
 
+        $body = $eventData ?? '';
+        if (empty($body)) {
+            $body = $data ?? '';
+        }
+
         $vars = [];
+
+        // V2 vars
+        if ($version === 'v2') {
+            $vars = \array_merge($vars, [
+                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
+                'APPWRITE_FUNCTION_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT_DATA' => $body ?? '',
+                'APPWRITE_FUNCTION_EVENT' => $headers['x-appwrite-event'] ?? '',
+                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
+                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
+            ]);
+        }
 
         // Shared vars
         foreach ($function->getAttribute('varsProject', []) as $var) {
@@ -161,11 +370,6 @@ Server::setResource('execute', function () {
             'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
             'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
         ]);
-
-        $body = $eventData ?? '';
-        if (empty($body)) {
-            $body = $data ?? '';
-        }
 
         /** Execute function */
         try {
@@ -208,7 +412,6 @@ Server::setResource('execute', function () {
                 ->setAttribute('duration', $executionResponse['duration']);
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
-
             $execution
                 ->setAttribute('duration', $durationEnd - $durationStart)
                 ->setAttribute('status', 'failed')
@@ -222,11 +425,11 @@ Server::setResource('execute', function () {
         if ($function->getAttribute('logging')) {
             $execution = $dbForProject->updateDocument('executions', $executionId, $execution);
         }
-
         /** Trigger Webhook */
         $executionModel = new Execution();
-        $executionUpdate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
-        $executionUpdate
+        $queueForEvents
+            ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+            ->setClass(Event::WEBHOOK_CLASS_NAME)
             ->setProject($project)
             ->setUser($user)
             ->setEvent('functions.[functionId].executions.[executionId].update')
@@ -237,7 +440,7 @@ Server::setResource('execute', function () {
 
         /** Trigger Functions */
         $queueForFunctions
-            ->from($executionUpdate)
+            ->from($queueForEvents)
             ->trigger();
 
         /** Trigger realtime event */
@@ -246,7 +449,7 @@ Server::setResource('execute', function () {
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+        // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $execution
         );
@@ -265,9 +468,12 @@ Server::setResource('execute', function () {
             roles: $target['roles']
         );
 
+        if (!empty($error)) {
+            throw new Exception($error, $errorCode);
+        }
+
         /** Update usage stats */
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage = new Stats($statsd);
             $usage
                 ->setParam('projectId', $project->getId())
                 ->setParam('projectInternalId', $project->getInternalId())
@@ -279,136 +485,5 @@ Server::setResource('execute', function () {
                 ->setParam('networkResponseSize', 0)
                 ->submit();
         }
-
-        if (!empty($error)) {
-            throw new Exception($error, $errorCode);
-        }
-    };
-});
-
-$server->job()
-    ->inject('message')
-    ->inject('dbForProject')
-    ->inject('queueForFunctions')
-    ->inject('statsd')
-    ->inject('execute')
-    ->inject('log')
-    ->action(function (Message $message, Database $dbForProject, Func $queueForFunctions, Client $statsd, callable $execute, Log $log) {
-        $payload = $message->getPayload() ?? [];
-
-        if (empty($payload)) {
-            throw new Exception('Missing payload');
-        }
-
-        $type = $payload['type'] ?? '';
-        $events = $payload['events'] ?? [];
-        $data = $payload['body'] ?? '';
-        $eventData = $payload['payload'] ?? '';
-        $project = new Document($payload['project'] ?? []);
-        $function = new Document($payload['function'] ?? []);
-        $user = new Document($payload['user'] ?? []);
-
-        if ($project->getId() === 'console') {
-            return;
-        }
-
-        if (!empty($events)) {
-            $limit = 30;
-            $sum = 30;
-            $offset = 0;
-            $functions = [];
-            /** @var Document[] $functions */
-            while ($sum >= $limit) {
-                $functions = $dbForProject->find('functions', [
-                    Query::limit($limit),
-                    Query::offset($offset)
-                ]);
-
-                $sum = \count($functions);
-                $offset = $offset + $limit;
-
-                Console::log('Fetched ' . $sum . ' functions...');
-
-                foreach ($functions as $function) {
-                    if (!array_intersect($events, $function->getAttribute('events', []))) {
-                        continue;
-                    }
-                    Console::success('Iterating function: ' . $function->getAttribute('name'));
-                    $execute(
-                        log: $log,
-                        statsd: $statsd,
-                        dbForProject: $dbForProject,
-                        project: $project,
-                        function: $function,
-                        queueForFunctions: $queueForFunctions,
-                        trigger: 'event',
-                        event: $events[0],
-                        eventData: \is_string($eventData) ? $eventData : \json_encode($eventData),
-                        user: $user,
-                        data: null,
-                        executionId: null,
-                        jwt: null,
-                        path: '/',
-                        method: 'POST',
-                        headers: [
-                            'user-agent' => 'Appwrite/' . APP_VERSION_STABLE
-                        ],
-                    );
-                    Console::success('Triggered function: ' . $events[0]);
-                }
-            }
-            return;
-        }
-
-        /**
-         * Handle Schedule and HTTP execution.
-         */
-        switch ($type) {
-            case 'http':
-                $jwt = $payload['jwt'] ?? '';
-                $execution = new Document($payload['execution'] ?? []);
-                $user = new Document($payload['user'] ?? []);
-                $execute(
-                    log: $log,
-                    project: $project,
-                    function: $function,
-                    dbForProject: $dbForProject,
-                    queueForFunctions: $queueForFunctions,
-                    trigger: 'http',
-                    executionId: $execution->getId(),
-                    event: null,
-                    eventData: null,
-                    data: $data,
-                    user: $user,
-                    jwt: $jwt,
-                    path: $payload['path'] ?? '',
-                    method: $payload['method'] ?? 'POST',
-                    headers: $payload['headers'] ?? [],
-                    statsd: $statsd,
-                );
-                break;
-            case 'schedule':
-                $execute(
-                    log: $log,
-                    project: $project,
-                    function: $function,
-                    dbForProject: $dbForProject,
-                    queueForFunctions: $queueForFunctions,
-                    trigger: 'schedule',
-                    executionId: null,
-                    event: null,
-                    eventData: null,
-                    data: null,
-                    user: null,
-                    jwt: null,
-                    path: $payload['path'] ?? '/',
-                    method: $payload['method'] ?? 'POST',
-                    headers: $payload['headers'] ?? [],
-                    statsd: $statsd,
-                );
-                break;
-        }
-    });
-
-$server->workerStart();
-$server->start();
+    }
+}
