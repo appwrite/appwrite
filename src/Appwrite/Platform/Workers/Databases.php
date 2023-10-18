@@ -442,6 +442,7 @@ class Databases extends Action
                 throw new DatabaseException('Failed to delete index');
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
+            $index->setAttribute('status', 'deleted');
         } catch (\Exception $e) {
             Console::error($e->getMessage());
 
