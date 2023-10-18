@@ -421,7 +421,6 @@ App::get('/v1/health/queue/databases/:databaseId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->param('databaseId', 'database_db_main', new Text(256), 'Database for which to check the queue size', true)
-    ->inject('databaseId')
     ->inject('queue')
     ->inject('response')
     ->action(function (string $databaseId, Connection $queue, Response $response) {
