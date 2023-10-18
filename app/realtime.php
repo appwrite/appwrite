@@ -47,7 +47,10 @@ function getConsoleDB(): Database
 
     $database = new Database($dbAdapter, getCache());
 
-    $database->setNamespace('_console');
+    $database
+        ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId());
 
     return $database;
 }
@@ -70,7 +73,11 @@ function getProjectDB(Document $project): Database
     ;
 
     $database = new Database($dbAdapter, getCache());
-    $database->setNamespace('_' . $project->getInternalId());
+
+    $database
+        ->setNamespace('_' . $project->getInternalId())
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId());
 
     return $database;
 }

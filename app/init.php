@@ -1032,6 +1032,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
     }
 
+    $dbForProject->setMetadata('user', $user->getId());
+    $dbForConsole->setMetadata('user', $user->getId());
+
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
@@ -1103,7 +1106,11 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     ;
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+
+    $database
+        ->setNamespace('_' . $project->getInternalId())
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId());
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1117,7 +1124,10 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('_console');
+    $database
+        ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', 'console');
 
     return $database;
 }, ['pools', 'cache']);
@@ -1147,7 +1157,10 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
 
         return $database;
     };
