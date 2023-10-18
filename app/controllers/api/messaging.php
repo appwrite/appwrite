@@ -8,6 +8,7 @@ use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
+use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -1454,23 +1455,41 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
     ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, Database $dbForProject, Response $response) {
+        $queries = Query::parseQueries($queries);
+
         $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $subscribers = $dbForProject->find('subscribers', [
-            Query::equal('topicInternalId', [$topic->getInternalId()])
-        ]);
+        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $subscriberId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
 
         $response
             ->dynamic(new Document([
-                'subscribers' => $subscribers,
-                'total' => \count($subscribers),
+                'subscribers' => $dbForProject->find('subscribers', $queries),
+                'total' => $dbForProject->count('subscribers', $filterQueries, APP_LIMIT_COUNT),
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
@@ -1562,9 +1581,9 @@ App::post('/v1/messaging/messages/email')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(false), 'Delivery time for message.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
@@ -1693,9 +1712,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status.', true)
+    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(), 'Delivery time for message in ISO 8601 format.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
