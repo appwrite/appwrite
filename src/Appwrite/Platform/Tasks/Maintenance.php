@@ -22,7 +22,7 @@ class Maintenance extends Action
     public function __construct()
     {
         $this
-            ->desc('Schedules maintenance tasks and publishes them to resque')
+            ->desc('Schedules maintenance tasks and publishes them to our queues')
             ->inject('dbForConsole')
             ->inject('queueForCertificates')
             ->inject('queueForDeletes')
