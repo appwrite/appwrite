@@ -18,7 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Event\Usage;
+use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
@@ -69,7 +69,8 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\OAuth2\Github;
+use Appwrite\Event\Build;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -145,6 +146,8 @@ const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
+const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
@@ -258,14 +261,6 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-
-$user = App::getEnv('_APP_REDIS_USER', '');
-$pass = App::getEnv('_APP_REDIS_PASS', '');
-if (!empty($user) || !empty($pass)) {
-    Resque::setBackend('redis://' . $user . ':' . $pass . '@' . App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
-} else {
-    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
-}
 
 /**
  * New DB Filters
@@ -887,17 +882,38 @@ App::setResource('localeCodes', function () {
 });
 
 // Queues
-App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Audit());
-App::setResource('mails', fn() => new Mail());
-App::setResource('deletes', fn() => new Delete());
-App::setResource('database', fn() => new EventDatabase());
-App::setResource('messaging', fn() => new Phone());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('queueForMessaging', function (Connection $queue) {
+    return new Phone($queue);
+}, ['queue']);
+App::setResource('queueForMails', function (Connection $queue) {
+    return new Mail($queue);
+}, ['queue']);
+App::setResource('queueForBuilds', function (Connection $queue) {
+    return new Build($queue);
+}, ['queue']);
+App::setResource('queueForDatabase', function (Connection $queue) {
+    return new EventDatabase($queue);
+}, ['queue']);
+App::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+App::setResource('queueForEvents', function (Connection $queue) {
+    return new Event($queue);
+}, ['queue']);
+App::setResource('queueForAudits', function (Connection $queue) {
+    return new Audit($queue);
+}, ['queue']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+App::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
+App::setResource('queueForMigrations', function (Connection $queue) {
+    return new Migration($queue);
 }, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));

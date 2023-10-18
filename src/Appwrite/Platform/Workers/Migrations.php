@@ -1,13 +1,21 @@
 <?php
 
+namespace Appwrite\Platform\Workers;
+
+use Exception;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
+use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Restricted;
+use Utopia\Database\Exception\Structure;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Permission;
-use Appwrite\Resque\Worker;
 use Appwrite\Role;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Resource;
@@ -18,40 +26,54 @@ use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Migration\Transfer;
 
-require_once __DIR__ . '/../init.php';
-
-Console::title('Migrations V1 Worker');
-Console::success(APP_NAME . ' Migrations worker v1 has started');
-
-class MigrationsV1 extends Worker
+class Migrations extends Action
 {
-    /**
-     * Database connection shared across all methods of this file
-     *
-     * @var Database
-     */
-    private Database $dbForProject;
+    private ?Database $dbForProject = null;
+    private ?Database $dbForConsole = null;
 
-    public function getName(): string
+    public static function getName(): string
     {
         return 'migrations';
     }
 
-    public function init(): void
+    /**
+     * @throws Exception
+     */
+    public function __construct()
     {
+        $this
+            ->desc('Migrations worker')
+            ->inject('message')
+            ->inject('dbForProject')
+            ->inject('dbForConsole')
+            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole) => $this->action($message, $dbForProject, $dbForConsole));
     }
 
-    public function run(): void
+    /**
+     * @param Message $message
+     * @param Database $dbForProject
+     * @param Database $dbForConsole
+     * @return void
+     * @throws Exception
+     */
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole): void
     {
-        $type = $this->args['type'] ?? '';
-        $events = $this->args['events'] ?? [];
-        $project = new Document($this->args['project'] ?? []);
-        $user = new Document($this->args['user'] ?? []);
-        $payload = json_encode($this->args['payload'] ?? []);
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $events    = $payload['events'] ?? [];
+        $project   = new Document($payload['project'] ?? []);
+        $migration = new Document($payload['migration'] ?? []);
 
         if ($project->getId() === 'console') {
             return;
         }
+
+        $this->dbForProject = $dbForProject;
+        $this->dbForConsole = $dbForConsole;
 
         /**
          * Handle Event execution.
@@ -60,57 +82,51 @@ class MigrationsV1 extends Worker
             return;
         }
 
-        $this->dbForProject = $this->getProjectDB($project);
-
-        $this->processMigration();
+        $this->processMigration($project, $migration);
     }
 
     /**
-     * Process Source
-     *
+     * @param string $source
+     * @param array $credentials
      * @return Source
-     *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function processSource(string $source, array $credentials): Source
     {
-        switch ($source) {
-            case Firebase::getName():
-                return new Firebase(
-                    json_decode($credentials['serviceAccount'], true),
-                );
-                break;
-            case Supabase::getName():
-                return new Supabase(
-                    $credentials['endpoint'],
-                    $credentials['apiKey'],
-                    $credentials['databaseHost'],
-                    'postgres',
-                    $credentials['username'],
-                    $credentials['password'],
-                    $credentials['port'],
-                );
-                break;
-            case NHost::getName():
-                return new NHost(
-                    $credentials['subdomain'],
-                    $credentials['region'],
-                    $credentials['adminSecret'],
-                    $credentials['database'],
-                    $credentials['username'],
-                    $credentials['password'],
-                    $credentials['port'],
-                );
-                break;
-            case Appwrite::getName():
-                return new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']);
-                break;
-            default:
-                throw new \Exception('Invalid source type');
-                break;
-        }
+        return match ($source) {
+            Firebase::getName() => new Firebase(
+                json_decode($credentials['serviceAccount'], true),
+            ),
+            Supabase::getName() => new Supabase(
+                $credentials['endpoint'],
+                $credentials['apiKey'],
+                $credentials['databaseHost'],
+                'postgres',
+                $credentials['username'],
+                $credentials['password'],
+                $credentials['port'],
+            ),
+            NHost::getName() => new NHost(
+                $credentials['subdomain'],
+                $credentials['region'],
+                $credentials['adminSecret'],
+                $credentials['database'],
+                $credentials['username'],
+                $credentials['password'],
+                $credentials['port'],
+            ),
+            Appwrite::getName() => new Appwrite($credentials['projectId'], str_starts_with($credentials['endpoint'], 'http://localhost/v1') ? 'http://appwrite/v1' : $credentials['endpoint'], $credentials['apiKey']),
+            default => throw new \Exception('Invalid source type'),
+        };
     }
 
+    /**
+     * @throws Authorization
+     * @throws Structure
+     * @throws Conflict
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
+     */
     protected function updateMigrationDocument(Document $migration, Document $project): Document
     {
         /** Trigger Realtime */
@@ -143,16 +159,30 @@ class MigrationsV1 extends Worker
         return $this->dbForProject->updateDocument('migrations', $migration->getId(), $migration);
     }
 
-    protected function removeAPIKey(Document $apiKey)
+    /**
+     * @param Document $apiKey
+     * @return void
+     * @throws \Utopia\Database\Exception
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     */
+    protected function removeAPIKey(Document $apiKey): void
     {
-        $consoleDB = $this->getConsoleDB();
-
-        $consoleDB->deleteDocument('keys', $apiKey->getId());
+        $this->dbForConsole->deleteDocument('keys', $apiKey->getId());
     }
 
+    /**
+     * @param Document $project
+     * @return Document
+     * @throws Authorization
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
+     * @throws Exception
+     */
     protected function generateAPIKey(Document $project): Document
     {
-        $consoleDB = $this->getConsoleDB();
         $generatedSecret = bin2hex(\random_bytes(128));
 
         $key = new Document([
@@ -189,18 +219,23 @@ class MigrationsV1 extends Worker
             'secret' => $generatedSecret,
         ]);
 
-        $consoleDB->createDocument('keys', $key);
-        $consoleDB->deleteCachedDocument('projects', $project->getId());
+        $this->dbForConsole->createDocument('keys', $key);
+        $this->dbForConsole->deleteCachedDocument('projects', $project->getId());
 
         return $key;
     }
 
     /**
-     * Process Migration
-     *
+     * @param Document $project
+     * @param Document $migration
      * @return void
+     * @throws Authorization
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws \Utopia\Database\Exception
      */
-    protected function processMigration(): void
+    protected function processMigration(Document $project, Document $migration): void
     {
         /**
          * @var Document $migrationDocument
@@ -208,11 +243,11 @@ class MigrationsV1 extends Worker
          */
         $migrationDocument = null;
         $transfer = null;
-        $projectDocument = $this->getConsoleDB()->getDocument('projects', $this->args['project']['$id']);
+        $projectDocument = $this->dbForConsole->getDocument('projects', $project->getId());
         $tempAPIKey = $this->generateAPIKey($projectDocument);
 
         try {
-            $migrationDocument = $this->dbForProject->getDocument('migrations', $this->args['migration']['$id']);
+            $migrationDocument = $this->dbForProject->getDocument('migrations', $migration->getId());
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
@@ -291,18 +326,5 @@ class MigrationsV1 extends Worker
                 $this->removeAPIKey($tempAPIKey);
             }
         }
-    }
-
-    /**
-     * Process Verification
-     *
-     * @return void
-     */
-    protected function processVerification(): void
-    {
-    }
-
-    public function shutdown(): void
-    {
     }
 }

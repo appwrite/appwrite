@@ -864,15 +864,15 @@ App::delete('/v1/projects/:projectId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $queueForDeletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 

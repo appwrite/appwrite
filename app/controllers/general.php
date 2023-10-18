@@ -208,7 +208,8 @@ App::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers) {
+    ->inject('queueForCertificates')
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
@@ -299,7 +300,7 @@ App::init()
 
                         Console::info('Issuing a TLS certificate for the main domain (' . $domain->get() . ') in a few seconds...');
 
-                        (new Certificate())
+                        $queueForCertificates
                             ->setDomain($domainDocument)
                             ->setSkipRenewCheck(true)
                             ->trigger();

@@ -1,45 +1,63 @@
 <?php
 
-use Appwrite\Resque\Worker;
+namespace Appwrite\Platform\Workers;
+
 use Appwrite\Template\Template;
+use Exception;
+use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\App;
 use Utopia\CLI\Console;
-use PHPMailer\PHPMailer\PHPMailer;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
+use Utopia\Registry\Registry;
 
-require_once __DIR__ . '/../init.php';
-
-Console::title('Mails V1 Worker');
-Console::success(APP_NAME . ' mails worker v1 has started' . "\n");
-
-class MailsV1 extends Worker
+class Mails extends Action
 {
-    public function getName(): string
+    public static function getName(): string
     {
-        return "mails";
+        return 'mails';
     }
 
-    public function init(): void
+    /**
+     * @throws Exception
+     */
+    public function __construct()
     {
+        $this
+            ->desc('Mails worker')
+            ->inject('message')
+            ->inject('register')
+            ->callback(fn($message, $register) => $this->action($message, $register));
     }
 
-    public function run(): void
+    /**
+     * @param Message $message
+     * @param Registry $register
+     * @throws \PHPMailer\PHPMailer\Exception
+     * @return void
+     * @throws Exception
+     */
+    public function action(Message $message, Registry $register): void
     {
-        global $register;
 
-        $smtp = $this->args['smtp'];
+        $payload = $message->getPayload() ?? [];
+
+        if (empty($payload)) {
+            throw new Exception('Missing payload');
+        }
+
+        $smtp = $payload['smtp'];
 
         if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
             Console::info('Skipped mail processing. No SMTP configuration has been set.');
             return;
         }
 
-        $recipient = $this->args['recipient'];
-        $subject = $this->args['subject'];
-        $body = $this->args['body'];
-        $variables = $this->args['variables'];
-        $name = $this->args['name'];
-
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $recipient = $payload['recipient'];
+        $subject = $payload['subject'];
+        $variables = $payload['variables'];
+        $name = $payload['name'];
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
 
         foreach ($variables as $key => $value) {
             $body->setParam('{{' . $key . '}}', $value);
@@ -70,6 +88,11 @@ class MailsV1 extends Worker
         }
     }
 
+    /**
+     * @param array $smtp
+     * @return PHPMailer
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
     protected function getMailer(array $smtp): PHPMailer
     {
         $mail = new PHPMailer(true);
@@ -98,9 +121,5 @@ class MailsV1 extends Worker
         $mail->isHTML();
 
         return $mail;
-    }
-
-    public function shutdown(): void
-    {
     }
 }
