@@ -107,6 +107,11 @@ trait Base
     public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
     public static string $DELETE_USER_SESSION = 'delete_user_session';
     public static string $DELETE_USER = 'delete_user';
+    public static string $CREATE_USER_TARGET = 'create_user_target';
+    public static string $LIST_USER_TARGETS = 'list_user_targets';
+    public static string $GET_USER_TARGET = 'get_user_target';
+    public static string $UPDATE_USER_TARGET = 'update_user_target';
+    public static string $DELETE_USER_TARGET = 'delete_user_target';
 
     // Teams
     public static string $GET_TEAM = 'get_team';
@@ -219,6 +224,24 @@ trait Base
     public static string $UPDATE_FCM_PROVIDER = 'update_fcm_provider';
     public static string $UPDATE_APNS_PROVIDER = 'update_apns_provider';
     public static string $DELETE_PROVIDER = 'delete_provider';
+
+    // Topics
+    public static string $CREATE_TOPIC = 'create_topic';
+    public static string $LIST_TOPICS = 'list_topics';
+    public static string $GET_TOPIC = 'get_topic';
+    public static string $UPDATE_TOPIC = 'update_topic';
+    public static string $DELETE_TOPIC = 'delete_topic';
+
+    // Subscriptions
+    public static string $CREATE_SUBSCRIBER = 'create_subscriber';
+    public static string $LIST_SUBSCRIBERS = 'list_subscribers';
+    public static string $GET_SUBSCRIBER = 'get_subscriber';
+    public static string $DELETE_SUBSCRIBER = 'delete_subscriber';
+
+    // Messages
+    public static string $CREATE_EMAIL = 'create_email';
+    public static string $LIST_MESSAGES = 'list_messages';
+    public static string $GET_MESSAGE = 'get_message';
 
     // Complex queries
     public static string $COMPLEX_QUERY = 'complex_query';
@@ -899,6 +922,51 @@ trait Base
             case self::$DELETE_USER:
                 return 'mutation deleteUser($userId: String!) {
                     usersDelete(userId: $userId) {
+                        status
+                    }
+                }';
+            case self::$CREATE_USER_TARGET:
+                return 'mutation createUserTarget($userId: String!, $targetId: String!, $providerId: String!, $identifier: String!){
+                    usersCreateTarget(userId: $userId, targetId: $targetId, providerId: $providerId, identifier: $identifier) {
+                        _id
+                        userId
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$LIST_USER_TARGETS:
+                return 'query listUserTargets($userId: String!) {
+                    usersListTargets(userId: $userId) {
+                        total
+                        targets {
+                            _id
+                            userId
+                            providerId
+                            identifier
+                        }
+                    }
+                }';
+            case self::$GET_USER_TARGET:
+                return 'query getUserTarget($userId: String!, $targetId: String!) {
+                    usersGetTarget(userId: $userId, targetId: $targetId) {
+                        _id
+                        userId
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$UPDATE_USER_TARGET:
+                return 'mutation updateUserTarget($userId: String!, $targetId: String!, $identifier: String!){
+                    usersUpdateTargetIdentifier(userId: $userId, targetId: $targetId, identifier: $identifier) {
+                        _id
+                        userId
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$DELETE_USER_TARGET:
+                return 'mutation deleteUserTarget($userId: String!, $targetId: String!){
+                    usersDeleteTarget(userId: $userId, targetId: $targetId) {
                         status
                     }
                 }';
@@ -1936,6 +2004,129 @@ trait Base
                 return 'mutation deleteProvider($providerId: String!) {
                     messagingDeleteProvider(providerId: $providerId) {
                         status
+                    }
+                }';
+            case self::$CREATE_TOPIC:
+                return 'mutation createTopic($providerId: String!, $topicId: String!, $name: String!, $description: String!) {
+                    messagingCreateTopic(providerId: $providerId, topicId: $topicId, name: $name, description: $description) {
+                        _id
+                        name
+                        providerId
+                        description
+                    }
+                }';
+            case self::$LIST_TOPICS:
+                return 'query listTopics {
+                    messagingListTopics {
+                        total
+                        topics {
+                            _id
+                            name
+                            providerId
+                            description
+                        }
+                    }
+                }';
+            case self::$GET_TOPIC:
+                return 'query getTopic($topicId: String!) {
+                    messagingGetTopic(topicId: $topicId) {
+                        _id
+                        name
+                        providerId
+                        description
+                    }
+                }';
+            case self::$UPDATE_TOPIC:
+                return 'mutation updateTopic($topicId: String!, $name: String!, $description: String!) {
+                    messagingUpdateTopic(topicId: $topicId, name: $name, description: $description) {
+                        _id
+                        name
+                        providerId
+                        description
+                    }
+                }';
+            case self::$DELETE_TOPIC:
+                return 'mutation deleteTopic($topicId: String!) {
+                    messagingDeleteTopic(topicId: $topicId) {
+                        status
+                    }
+                }';
+            case self::$CREATE_SUBSCRIBER:
+                return 'mutation createSubscriber($subscriberId: String!, $targetId: String!, $topicId: String!) {
+                    messagingCreateSubscriber(subscriberId: $subscriberId, targetId: $targetId, topicId: $topicId) {
+                        _id
+                        targetId
+                        topicId
+                    }
+                }';
+            case self::$LIST_SUBSCRIBERS:
+                return 'query listSubscribers($topicId: String!) {
+                    messagingListSubscribers(topicId: $topicId) {
+                        total
+                        subscribers {
+                            _id
+                            targetId
+                            topicId
+                        }
+                    }
+                }';
+            case self::$GET_SUBSCRIBER:
+                return 'query getSubscriber($topicId: String!, $subscriberId: String!) {
+                    messagingGetSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
+                        _id
+                        targetId
+                        topicId
+                    }
+                }';
+            case self::$DELETE_SUBSCRIBER:
+                return 'mutation deleteSubscriber($topicId: String!, $subscriberId: String!) {
+                    messagingDeleteSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
+                        status
+                    }
+            }';
+            case self::$CREATE_EMAIL:
+                return 'mutation createEmail($messageId: String!, $providerId: String!, $to: [String!]!, $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
+                    messagingCreateEmail(messageId: $messageId, providerId: $providerId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
+                        _id
+                        providerId
+                        to
+                        deliveryTime
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTo
+                        status
+                        description
+                    }
+                }';
+            case self::$LIST_MESSAGES:
+                return 'query listMessages {
+                    messagingListMessages {
+                        total
+                        messages {
+                            _id
+                            providerId
+                            to
+                            deliveryTime
+                            deliveredAt
+                            deliveryErrors
+                            deliveredTo
+                            status
+                            description
+                        }
+                    }
+                }';
+            case self::$GET_MESSAGE:
+                return 'query getMessage($messageId: String!) {
+                    messagingGetMessage(messageId: $messageId) {
+                        _id
+                        providerId
+                        to
+                        deliveryTime
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTo
+                        status
+                        description
                     }
                 }';
             case self::$COMPLEX_QUERY:

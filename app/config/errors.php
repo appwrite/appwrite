@@ -756,10 +756,39 @@ return [
         'code' => 400,
     ],
 
+    /** Topic Errors */
+    Exception::TOPIC_NOT_FOUND => [
+        'name' => Exception::TOPIC_NOT_FOUND,
+        'description' => 'Topic with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOPIC_ALREADY_EXISTS => [
+        'name' => Exception::TOPIC_ALREADY_EXISTS,
+        'description' => 'Topic with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Subscriber Errors */
+    Exception::SUBSCRIBER_NOT_FOUND => [
+        'name' => Exception::SUBSCRIBER_NOT_FOUND,
+        'description' => 'Subscriber with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SUBSCRIBER_ALREADY_EXISTS => [
+        'name' => Exception::SUBSCRIBER_ALREADY_EXISTS,
+        'description' => 'Subscriber with the request ID already exists.',
+        'code' => 409,
+    ],
+
     /** Message Errors */
     Exception::MESSAGE_NOT_FOUND => [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
         'code' => 404,
+    ],
+    Exception::MESSAGE_ALREADY_SENT => [
+        'name' => Exception::MESSAGE_ALREADY_SENT,
+        'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
     ]
 ];

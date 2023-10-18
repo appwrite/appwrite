@@ -2,8 +2,9 @@
 
 namespace Appwrite\Event;
 
+use Resque;
 use ResqueScheduler;
-use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 
 class Messaging extends Event
 {
@@ -62,15 +63,45 @@ class Messaging extends Event
     }
 
     /**
+     * Set project for this event.
+     *
+     * @param Document $project
+     * @return self
+     */
+    public function setProject(Document $project): self
+    {
+        $this->project = $project;
+
+        return $this;
+    }
+
+    /**
      * Executes the event and sends it to the messaging worker.
+     * @return string|bool
+     * @throws \InvalidArgumentException
      */
     public function trigger(): string | bool
     {
-        ResqueScheduler::enqueueAt(!empty($this->deliveryTime) ? $this->deliveryTime : DateTime::now(), $this->queue, $this->class, [
+        return Resque::enqueue($this->queue, $this->class, [
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,
         ]);
-        return true;
+    }
+
+    /**
+     * Schedules the messaging event and schedules it in the messaging worker queue.
+     *
+     * @return void
+     * @throws \Resque_Exception
+     * @throws \ResqueScheduler_InvalidTimestampException
+     */
+    public function schedule(): void
+    {
+        ResqueScheduler::enqueueAt(new \DateTime($this->deliveryTime, new \DateTimeZone('UTC')), $this->queue, $this->class, [
+            'project' => $this->project,
+            'user' => $this->user,
+            'messageId' => $this->messageId,
+        ]);
     }
 }

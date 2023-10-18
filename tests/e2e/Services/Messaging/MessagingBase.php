@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Messaging;
 
 use Tests\E2E\Client;
+use Utopia\App;
 use Utopia\Database\Helpers\ID;
 
 trait MessagingBase
@@ -207,5 +208,272 @@ trait MessagingBase
             ]);
             $this->assertEquals(204, $response['headers']['status-code']);
         }
+    }
+
+    public function testCreateTopic(): array
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => 'unique()',
+            'name' => 'Sendgrid1',
+            'apiKey' => 'my-apikey',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => $provider['body']['$id'],
+            'topicId' => 'unique()',
+            'name' => 'my-app',
+            'description' => 'web app'
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('my-app', $response['body']['name']);
+
+        return $response['body'];
+    }
+
+    /**
+     * @depends testCreateTopic
+     */
+    public function testUpdateTopic(array $topic): string
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topic['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'android-app',
+            'description' => 'updated-description'
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('android-app', $response['body']['name']);
+        $this->assertEquals('updated-description', $response['body']['description']);
+        return $response['body']['$id'];
+    }
+
+    public function testListTopic()
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, \count($response['body']['topics']));
+    }
+
+    /**
+     * @depends testUpdateTopic
+     */
+    public function testGetTopic(string $topicId)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('android-app', $response['body']['name']);
+        $this->assertEquals('updated-description', $response['body']['description']);
+    }
+
+    /**
+     * @depends testCreateTopic
+     */
+    public function testCreateSubscriber(array $topic)
+    {
+        $userId = $this->getUser()['$id'];
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'targetId' => ID::unique(),
+            'providerId' => $topic['providerId'],
+            'identifier' => 'my-token',
+        ]);
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => 'unique()',
+            'targetId' => $target['body']['$id'],
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        return [
+            'topicId' => $topic['$id'],
+            'targetId' => $target['body']['$id'],
+            'subscriberId' => $response['body']['$id']
+        ];
+    }
+
+    /**
+     * @depends testCreateSubscriber
+     */
+    public function testGetSubscriber(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscriber/' . $data['subscriberId'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['topicId'], $response['body']['topicId']);
+        $this->assertEquals($data['targetId'], $response['body']['targetId']);
+    }
+
+    /**
+     * @depends testCreateSubscriber
+     */
+    public function testListSubscribers(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
+    }
+
+    /**
+     * @depends testCreateSubscriber
+     */
+    public function testDeleteSubscriber(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $data['topicId'] . '/subscriber/' . $data['subscriberId'], \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    /**
+     * @depends testUpdateTopic
+     */
+    public function testDeleteTopic(string $topicId)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testSendEmail()
+    {
+
+        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
+        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
+        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
+        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
+        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
+        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
+            $this->markTestSkipped('Email provider not configured');
+        }
+
+        // Create provider
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => ID::unique(),
+            'name' => 'Mailgun-provider',
+            'apiKey' => $apiKey,
+            'domain' => $domain,
+            'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
+            'from' => $from
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
+        // Create Topic
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => $provider['body']['$id'],
+            'topicId' => ID::unique(),
+            'name' => 'topic1',
+            'description' => 'Test Topic'
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+
+        // Create User
+        $user = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::custom('test-user'),
+            'email' => $to,
+            'password' => 'password',
+            'name' => 'Messaging User',
+        ], false);
+
+        $this->assertEquals(201, $user['headers']['status-code']);
+
+        // Create Target
+        $target = $this->client->call(Client::METHOD_POST, '/users/test-user/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'targetId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'identifier' => $to,
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        // Create Subscriber
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+
+        // Create Email
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'to' => [$topic['body']['$id']],
+            'subject' => 'Khali beats Undertaker',
+            'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        \sleep(5);
+
+        $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $message['headers']['status-code']);
+        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 }

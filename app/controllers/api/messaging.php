@@ -1,11 +1,15 @@
 <?php
 
+use Appwrite\Event\Delete;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Permission;
 use Appwrite\Role;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
+use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
+use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -18,10 +22,8 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\DateTime;
 
 App::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun Provider')
@@ -582,11 +584,9 @@ App::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-                Query::equal('$id', [$providerId]),
-            ]));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
-            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
             }
 
@@ -1192,19 +1192,386 @@ App::delete('/v1/messaging/providers/:providerId')
 
         $dbForProject->deleteDocument('providers', $provider->getId());
 
-        $response->noContent();
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
+    });
+
+App::post('/v1/messaging/topics')
+    ->desc('Create a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.create')
+    ->label('audits.resource', 'topics/{response.$id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createTopic')
+    ->label('sdk.description', '/docs/references/messaging/create-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $providerId, string $name, string $description, Database $dbForProject, Response $response) {
+        $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $topic = new Document([
+            '$id' => $topicId,
+            'providerId' => $providerId,
+            'providerInternalId' => $provider->getInternalId(),
+            'name' => $name,
+        ]);
+
+        if ($description) {
+            $topic->setAttribute('description', $description);
+        }
+
+        try {
+            $topic = $dbForProject->createDocument('topics', $topic);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::get('/v1/messaging/topics')
+    ->desc('List topics.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'topics.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listTopics')
+    ->label('sdk.description', '/docs/references/messaging/list-topics.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC_LIST)
+    ->param('queries', [], new Topics(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Topics::ALLOWED_ATTRIBUTES), true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (array $queries, Database $dbForProject, Response $response) {
+        $queries = Query::parseQueries($queries);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $topicId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument[0]);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+        $response->dynamic(new Document([
+            'total' => $dbForProject->count('topics', $filterQueries, APP_LIMIT_COUNT),
+            'topics' => $dbForProject->find('topics', $queries),
+        ]), Response::MODEL_TOPIC_LIST);
+    });
+
+App::get('/v1/messaging/topics/:topicId')
+    ->desc('Get a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'topics.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getTopic')
+    ->label('sdk.description', '/docs/references/messaging/get-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $topic = $dbForProject->getDocument('topics', $topicId);
+
+        $response
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::patch('/v1/messaging/topics/:topicId')
+    ->desc('Update a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.update')
+    ->label('audits.resource', 'topics/{response.$id}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateTopic')
+    ->label('sdk.description', '/docs/references/messaging/update-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOPIC)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        if (!empty($name)) {
+            $topic->setAttribute('name', $name);
+        }
+
+        if (!empty($description)) {
+            $topic->setAttribute('description', $description);
+        }
+
+        $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
+
+        $response
+            ->dynamic($topic, Response::MODEL_TOPIC);
+    });
+
+App::delete('/v1/messaging/topics/:topicId')
+    ->desc('Delete a topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'topics.delete')
+    ->label('audits.resource', 'topics/{request.topicId}')
+    ->label('scope', 'topics.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'deleteTopic')
+    ->label('sdk.description', '/docs/references/messaging/delete-topic.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->inject('dbForProject')
+    ->inject('deletes')
+    ->inject('response')
+    ->action(function (string $topicId, Database $dbForProject, Delete $deletes, Response $response) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('topics', $topicId);
+
+        $deletes
+            ->setType(DELETE_TYPE_SUBSCRIBERS)
+            ->setDocument($topic);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
+    });
+
+App::post('/v1/messaging/topics/:topicId/subscribers')
+    ->desc('Adds a Subscriber to a Topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'subscribers.create')
+    ->label('audits.resource', 'subscribers/{response.$id}')
+    ->label('scope', 'subscribers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/create-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
+        $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
+
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $subscriber = new Document([
+            '$id' => $subscriberId,
+            '$permissions' => [
+                Permission::read(Role::user($target->getAttribute('userId'))),
+                Permission::delete(Role::user($target->getAttribute('userId'))),
+            ],
+            'topicId' => $topicId,
+            'topicInternalId' => $topic->getInternalId(),
+            'targetId' => $targetId,
+            'targetInternalId' => $target->getInternalId(),
+        ]);
+
+        try {
+            $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
+            $dbForProject->deleteCachedDocument('topics', $topicId);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+    });
+
+App::get('/v1/messaging/topics/:topicId/subscribers')
+    ->desc('List topic\'s subscribers.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'subscribers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listSubscribers')
+    ->label('sdk.description', '/docs/references/messaging/list-subscribers.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, array $queries, Database $dbForProject, Response $response) {
+        $queries = Query::parseQueries($queries);
+
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $subscriberId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $filterQueries = Query::groupByType($queries)['filters'];
+
+        $response
+            ->dynamic(new Document([
+                'subscribers' => $dbForProject->find('subscribers', $queries),
+                'total' => $dbForProject->count('subscribers', $filterQueries, APP_LIMIT_COUNT),
+            ]), Response::MODEL_SUBSCRIBER_LIST);
+    });
+
+App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
+    ->desc('Get a topic\'s subscriber.')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'subscribers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'getSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/get-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
+
+        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
+            throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
+        }
+
+        $response
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
+    });
+
+App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
+    ->desc('Delete a Subscriber from a Topic.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'subscribers.delete')
+    ->label('audits.resource', 'subscribers/{request.subscriberId}')
+    ->label('scope', 'subscribers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'deleteSubscriber')
+    ->label('sdk.description', '/docs/references/messaging/delete-subscriber.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
+
+        if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
+            throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
+        }
+        $subscriber = $dbForProject->deleteDocument('subscribers', $subscriberId);
+        $dbForProject->deleteCachedDocument('topics', $topicId);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
+            ->noContent();
     });
 
 App::post('/v1/messaging/messages/email')
-    ->desc('Send an email.')
+    ->desc('Create an email.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'messages.create')
     ->label('audits.resource', 'messages/{response.$id}')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'sendEmail')
-    ->label('sdk.description', '/docs/references/messaging/send-email.md')
+    ->label('sdk.method', 'createEmail')
+    ->label('sdk.description', '/docs/references/messaging/create-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
@@ -1214,13 +1581,14 @@ App::post('/v1/messaging/messages/email')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1247,8 +1615,15 @@ App::post('/v1/messaging/messages/email')
         if ($status === 'processing') {
             $messaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
-                ->trigger();
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                    ->setDeliveryTime($deliveryTime)
+                    ->schedule();
+            } else {
+                $messaging->trigger();
+            }
         }
 
         $response
@@ -1267,7 +1642,7 @@ App::get('/v1/messaging/messages')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE_LIST)
-    ->param('queries', [], new Providers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, Database $dbForProject, Response $response) {
@@ -1279,11 +1654,9 @@ App::get('/v1/messaging/messages')
 
         if ($cursor) {
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->findOne('messages', [
-                Query::equal('$id', [$messageId]),
-            ]));
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
-            if ($cursorDocument === false || $cursorDocument->isEmpty()) {
+            if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");
             }
 
@@ -1339,18 +1712,22 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status.', true)
+    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', DateTime::now(), new DatetimeValidator(), 'Delivery time for message.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        if ($message->getAttribute('status') === 'sent') {
+            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
         if (\count($to) > 0) {
@@ -1387,9 +1764,15 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if ($status === 'processing') {
             $messaging
                 ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
                 ->setDeliveryTime($deliveryTime)
-                ->setProject($project)
-                ->trigger();
+                ->schedule();
+            } else {
+                $messaging->trigger();
+            }
         }
 
         $response
