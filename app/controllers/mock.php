@@ -697,7 +697,7 @@ App::get('/v1/mock/github/callback')
                 'projectInternalId' => $projectInternalId,
                 'provider' => 'github',
                 'organization' => $owner,
-                'personal' => true
+                'personal' => false
             ]);
 
             $installation = $dbForConsole->createDocument('installations', $installation);

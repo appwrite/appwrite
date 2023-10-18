@@ -9,6 +9,9 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 
 class VCSConsoleClientTest extends Scope
 {
@@ -20,7 +23,7 @@ class VCSConsoleClientTest extends Scope
     protected function setUp(): void
     {
         parent::setUp();
-        $this->providerRepositoryId = App::getEnv('_APP_VCS_TEST_PROVIDER_REPOSITORY_ID');
+        $this->providerRepositoryId = '705764267';
     }
 
     public function testGitHubAuthorize()
@@ -142,7 +145,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testGetRepository(string $installationId, string $providerRepositoryId2 = '700020051')
+    public function testGetRepository(string $installationId, string $providerRepositoryId2 = '705764449')
     {
         /**
          * Test for SUCCESS
@@ -258,7 +261,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testCreateFunctionUsingVCS
      */
-    public function testUpdateFunctionUsingVCS(array $data, string $providerRepositoryId2 = '700020051')
+    public function testUpdateFunctionUsingVCS(array $data, string $providerRepositoryId2 = '705764449')
     {
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
@@ -283,5 +286,31 @@ class VCSConsoleClientTest extends Scope
         $this->assertEquals(200, $function['headers']['status-code']);
 
         return $function['body']['$id'];
+    }
+
+    /**
+     * @depends testGitHubAuthorize
+     */
+    public function testCreateRepository(string $installationId)
+    {
+        $github = new GitHub(new Cache(new None()));
+        $githubInstallationId = App::getEnv('_APP_VCS_TEST_GITHUB_INSTALLATION_ID');
+        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $github->initializeVariables($githubInstallationId, $privateKey, $githubAppId);
+
+        $repository = $this->client->call(Client::METHOD_POST, '/vcs/github/installations/' . $installationId . '/providerRepositories', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'installationId' => $installationId,
+            'name' => 'test-repo-1',
+            'private' => true
+        ]);
+
+        $this->assertEquals('test-repo-1', $repository['body']['name']);
+
+        $result = $github->deleteRepository('appwrite-test', 'test-repo-1');
+        // $this->assertEquals($result, true);
     }
 }
