@@ -104,6 +104,7 @@ class Databases extends Action
             'attributeId' => $attribute->getId()
         ]);
         /**
+         * TODO @christyjacob4 verify if this is still the case
          * Fetch attribute from the database, since with Resque float values are loosing informations.
          */
         $attribute = $dbForProject->getDocument('attributes', $attribute->getId());
