@@ -2463,22 +2463,23 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc"
+                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
-                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
+                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
@@ -2510,22 +2511,22 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.1"
+                "source": "https://github.com/utopia-php/logger/tree/0.3.2"
             },
-            "time": "2023-02-10T15:52:50+00:00"
+            "time": "2023-10-16T08:16:19+00:00"
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/a75d66ddd59b834ab500a4878a2c084e6572604a",
+                "reference": "a75d66ddd59b834ab500a4878a2c084e6572604a",
                 "shasum": ""
             },
             "require": {
@@ -2534,8 +2535,8 @@
             },
             "require-dev": {
                 "laravel/pint": "^1.2",
-                "phpmailer/phpmailer": "6.8.*",
-                "phpunit/phpunit": "9.6.*"
+                "phpmailer/phpmailer": "6.6.*",
+                "phpunit/phpunit": "9.5.*"
             },
             "type": "library",
             "autoload": {
@@ -2558,9 +2559,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.1.1"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-02-07T05:42:46+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -6019,5 +6020,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
