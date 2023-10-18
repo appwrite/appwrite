@@ -347,7 +347,7 @@ class RealtimeConsoleClientTest extends Scope
          * Test Delete Index
          */
         $indexKey = 'key_name';
-        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/' . $indexKey , array_merge([
+        $attribute = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId . '/collections/' . $actorsId . '/indexes/' . $indexKey, array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -370,7 +370,7 @@ class RealtimeConsoleClientTest extends Scope
         $this->assertContains("databases.{$databaseId}.collections.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-        /** Delete index generates two events 1 from the API and one from the Worker */
+        /** Delete index generates two events. One from the API and one from the database worker */
         $response = json_decode($client->receive(), true);
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
