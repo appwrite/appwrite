@@ -10,10 +10,11 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
-use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
+use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -31,12 +32,10 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
-use Utopia\Storage\Device;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-global $register;
 
 Server::setResource('register', fn () => $register);
 
@@ -45,7 +44,8 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('_console');
@@ -65,9 +65,10 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     $database = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource();
+        ->getResource()
+    ;
 
-        $adapter = new Database($database, $cache);
+    $adapter = new Database($database, $cache);
     $adapter->setNamespace('_' . $project->getInternalId());
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
@@ -112,10 +113,15 @@ Server::setResource('cache', function (Registry $register) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource();
+            ->getResource()
+        ;
     }
 
     return new Cache(new Sharding($adapters));
+}, ['register']);
+Server::setResource('log', fn() => new Log());
+Server::setResource('usage', function ($register) {
+    return new Stats($register->get('statsd'));
 }, ['register']);
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
@@ -147,60 +153,30 @@ Server::setResource('queueForFunctions', function (Connection $queue) {
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
-Server::setResource('queueForUsage', function (Connection $queue) {
-    return new Usage($queue);
-}, ['queue']);
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
-
 Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
-
-Server::setResource('log', fn() => new Log());
-
-/**
- * Get Functions Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getFunctionsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get Files Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getFilesDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get Builds Storage Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getBuildsDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
     };
 });
-
-/**
- * Get cache  Device
- * @param string $projectId of the project
- * @return Device
- */
 Server::setResource('getCacheDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
@@ -220,7 +196,7 @@ if (!isset($args[1])) {
 $workerName = $args[0];
 $workerIndex = $args[1] ?? '';
 
-if (!empty($workerNum)) {
+if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
 }
 
@@ -231,15 +207,22 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
+    if ($workerName === 'databases') {
+        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+    } else {
+        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+    }
+
     $platform->init(Service::TYPE_WORKER, [
-        'workersNum' => App::getEnv('_APP_WORKERS_NUM', swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6))),
+        'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
-        'queueName' => App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName))
+        'queueName' => $queueName
     ]);
 } catch (\Exception $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
+
 
 $worker = $platform->getWorker();
 
@@ -247,7 +230,6 @@ $worker
     ->shutdown()
     ->inject('pools')
     ->action(function (Group $pools) {
-        var_dump('reclaiming connection');
         $pools->reclaim();
     });
 
@@ -256,7 +238,7 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, Logger|null $logger, Log $log) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -291,13 +273,9 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-try {
-    $workerStart = $worker->getWorkerStart();
-} catch (\Throwable $error) {
      $worker->workerStart()
          ->action(function () use ($workerName) {
              Console::info("Worker $workerName  started");
          });
-}
 
-$worker->start();
+     $worker->start();

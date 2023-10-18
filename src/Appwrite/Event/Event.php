@@ -9,7 +9,7 @@ use Utopia\Queue\Connection;
 
 class Event
 {
-    public const DATABASE_QUEUE_NAME = 'v1-databases';
+    public const DATABASE_QUEUE_NAME = 'v1-database';
     public const DATABASE_CLASS_NAME = 'DatabaseV1';
 
     public const DELETE_QUEUE_NAME = 'v1-deletes';
@@ -50,6 +50,7 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected bool $paused = false;
 
     /**
      * @param Connection $connection
@@ -264,6 +265,9 @@ class Event
      */
     public function trigger(): string|bool
     {
+        if ($this->paused) {
+            return false;
+        }
 
         $client = new Client($this->queue, $this->connection);
 
@@ -471,5 +475,23 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
+    }
+
+    /**
+     * Get the value of paused
+     */
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
+     * Set the value of paused
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
     }
 }

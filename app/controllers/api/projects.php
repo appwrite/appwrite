@@ -293,6 +293,120 @@ App::get('/v1/projects/:projectId')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::get('/v1/projects/:projectId/usage')
+    ->desc('Get usage stats for a project')
+    ->groups(['api', 'projects', 'usage'])
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'getUsage')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('dbForProject')
+    ->inject('register')
+    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $usage = [];
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
+            $periods = [
+                '24h' => [
+                    'period' => '1h',
+                    'limit' => 24,
+                ],
+                '7d' => [
+                    'period' => '1d',
+                    'limit' => 7,
+                ],
+                '30d' => [
+                    'period' => '1d',
+                    'limit' => 30,
+                ],
+                '90d' => [
+                    'period' => '1d',
+                    'limit' => 90,
+                ],
+            ];
+
+            $dbForProject->setNamespace("_{$project->getInternalId()}");
+
+            $metrics = [
+                'project.$all.network.requests',
+                'project.$all.network.bandwidth',
+                'project.$all.storage.size',
+                'users.$all.count.total',
+                'databases.$all.count.total',
+                'documents.$all.count.total',
+                'executions.$all.compute.total',
+                'buckets.$all.count.total'
+            ];
+
+            $stats = [];
+
+            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
+                foreach ($metrics as $metric) {
+                    $limit = $periods[$range]['limit'];
+                    $period = $periods[$range]['period'];
+
+                    $requestDocs = $dbForProject->find('stats', [
+                        Query::equal('period', [$period]),
+                        Query::equal('metric', [$metric]),
+                        Query::limit($limit),
+                        Query::orderDesc('time'),
+                    ]);
+
+                    $stats[$metric] = [];
+                    foreach ($requestDocs as $requestDoc) {
+                        $stats[$metric][] = [
+                            'value' => $requestDoc->getAttribute('value'),
+                            'date' => $requestDoc->getAttribute('time'),
+                        ];
+                    }
+
+                    // backfill metrics with empty values for graphs
+                    $backfill = $limit - \count($requestDocs);
+                    while ($backfill > 0) {
+                        $last = $limit - $backfill - 1; // array index of last added metric
+                        $diff = match ($period) { // convert period to seconds for unix timestamp math
+                            '1h' => 3600,
+                            '1d' => 86400,
+                        };
+                        $stats[$metric][] = [
+                            'value' => 0,
+                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
+                        ];
+                        $backfill--;
+                    }
+                    $stats[$metric] = array_reverse($stats[$metric]);
+                }
+            });
+
+            $usage = new Document([
+                'range' => $range,
+                'requests' => $stats[$metrics[0]] ?? [],
+                'network' => $stats[$metrics[1]] ?? [],
+                'storage' => $stats[$metrics[2]] ?? [],
+                'users' => $stats[$metrics[3]] ?? [],
+                'databases' => $stats[$metrics[4]] ?? [],
+                'documents' => $stats[$metrics[5]] ?? [],
+                'executions' => $stats[$metrics[6]] ?? [],
+                'buckets' => $stats[$metrics[7]] ?? [],
+            ]);
+        }
+
+        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId')
     ->desc('Update project')
     ->groups(['api', 'projects'])
@@ -341,7 +455,7 @@ App::patch('/v1/projects/:projectId')
     });
 
 App::patch('/v1/projects/:projectId/team')
-    ->desc('Update project team')
+    ->desc('Update Project Team')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -367,15 +481,43 @@ App::patch('/v1/projects/:projectId/team')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
+        $permissions = [
+            Permission::read(Role::team(ID::custom($teamId))),
+            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+        ];
+
+        $project
             ->setAttribute('teamId', $teamId)
-            ->setAttribute('$permissions', [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ]));
+            ->setAttribute('teamInternalId', $team->getInternalId())
+            ->setAttribute('$permissions', $permissions);
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project);
+
+        $installations = $dbForConsole->find('installations', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($installations as $installation) {
+            $installation->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('installations', $installation->getId(), $installation);
+        }
+
+        $repositories = $dbForConsole->find('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($repositories as $repository) {
+            $repository->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('repositories', $repository->getId(), $repository);
+        }
+
+        $vcsComments = $dbForConsole->find('vcsComments', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($vcsComments as $vcsComment) {
+            $vcsComment->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -732,8 +874,7 @@ App::delete('/v1/projects/:projectId')
 
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($project)
-        ;
+            ->setDocument($project);
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove project from DB');
@@ -996,6 +1137,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
     });
 
 // Keys
+
 App::post('/v1/projects/:projectId/keys')
     ->desc('Create key')
     ->groups(['api', 'projects'])

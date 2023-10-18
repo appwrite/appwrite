@@ -445,7 +445,7 @@ class ProjectsConsoleClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
+        $response = $this->client->call(Client::METHOD_GET, '/projects/' . $id . '/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -454,14 +454,14 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(count($response['body']), 9);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
-        $this->assertIsArray($response['body']['requestsTotal']);
+        $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
-        $this->assertIsArray($response['body']['executionsTotal']);
-        $this->assertIsArray($response['body']['documentsTotal']);
-        $this->assertIsArray($response['body']['databasesTotal']);
-        $this->assertIsArray($response['body']['bucketsTotal']);
-        $this->assertIsArray($response['body']['usersTotal']);
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertIsArray($response['body']['executions']);
+        $this->assertIsArray($response['body']['documents']);
+        $this->assertIsArray($response['body']['databases']);
+        $this->assertIsArray($response['body']['buckets']);
+        $this->assertIsArray($response['body']['users']);
+        $this->assertIsArray($response['body']['storage']);
 
         /**
          * Test for FAILURE

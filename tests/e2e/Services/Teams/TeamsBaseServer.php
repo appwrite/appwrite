@@ -234,7 +234,7 @@ trait TeamsBaseServer
     /**
      * @depends testUpdateMembershipRoles
      */
-    public function testDeleteUserUpdatesTeamMembershipCount($data): void
+    public function testDeleteUserUpdatesTeamMembershipCount($data)
     {
         $teamUid = $data['teamUid'] ?? '';
         $userUid = $data['userUid'] ?? '';

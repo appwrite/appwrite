@@ -202,7 +202,7 @@ trait AvatarsBase
         $response = $this->client->call(Client::METHOD_GET, '/avatars/image', [
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
-            'url' => 'https://appwrite.io/images/apple.png',
+            'url' => 'https://appwrite.io/images/open-graph/website.png',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

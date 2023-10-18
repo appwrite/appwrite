@@ -2,9 +2,6 @@
 
 namespace Appwrite\Event;
 
-use DateTime;
-use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -86,23 +83,5 @@ class Migration extends Event
             'user' => $this->user,
             'migration' => $this->migration
         ]);
-    }
-
-    /**
-     * Schedules the migration event and schedules it in the migrations worker queue.
-     *
-     * @param \DateTime|int $at
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
-     */
-    public function schedule(DateTime|int $at): void
-    {
-        return;
-//        ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
-//            'project' => $this->project,
-//            'user' => $this->user,
-//            'migration' => $this->migration
-//        ]);
     }
 }
