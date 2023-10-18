@@ -15,6 +15,6 @@ class Subscribers extends Base
      */
     public function __construct()
     {
-        parent::__construct('messages', self::ALLOWED_ATTRIBUTES);
+        parent::__construct('subscribers', self::ALLOWED_ATTRIBUTES);
     }
 }
