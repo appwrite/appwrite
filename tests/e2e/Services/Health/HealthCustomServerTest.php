@@ -218,7 +218,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'databaseId' => 'database_db_main',
+            'name' => 'database_db_main',
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

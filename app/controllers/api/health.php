@@ -420,11 +420,11 @@ App::get('/v1/health/queue/databases')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('databaseId', 'database_db_main', new Text(256), 'Database for which to check the queue size', true)
+    ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (string $databaseId, Connection $queue, Response $response) {
-        $client = new Client($databaseId, $queue);
+    ->action(function (string $name, Connection $queue, Response $response) {
+        $client = new Client($name, $queue);
         $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
