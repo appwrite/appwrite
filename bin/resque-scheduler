@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ -z "$_APP_REDIS_USER" ] && [ -z "$_APP_REDIS_PASS" ]
+then
+    export REDIS_BACKEND="${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+else
+    export REDIS_BACKEND="redis://${_APP_REDIS_USER}:${_APP_REDIS_PASS}@${_APP_REDIS_HOST}:${_APP_REDIS_PORT}"
+fi
+
+INTERVAL=1  php /usr/src/code/vendor/bin/resque-scheduler -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
