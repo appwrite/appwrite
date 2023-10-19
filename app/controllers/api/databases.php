@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -380,6 +381,18 @@ function updateAttribute(
 
     return $attribute;
 }
+
+App::init()
+    ->groups(['api', 'database'])
+    ->inject('request')
+    ->inject('dbForProject')
+    ->action(function (Request $request, Database $dbForProject) {
+        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+
+        if (!empty($timeout) && App::isDevelopment()) {
+            $dbForProject->setTimeout($timeout);
+        }
+    });
 
 App::post('/v1/databases')
     ->desc('Create database')
