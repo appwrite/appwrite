@@ -95,6 +95,9 @@ class Mails extends Action
      */
     protected function getMailer(array $smtp): PHPMailer
     {
+
+        var_dump($smtp);
+
         $mail = new PHPMailer(true);
 
         $mail->isSMTP();
