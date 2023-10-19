@@ -460,7 +460,6 @@ return [
         'description' => 'Database not found',
         'code' => 404
     ],
-
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',

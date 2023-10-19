@@ -710,6 +710,7 @@ App::error()
             case 402: // Error allowed publicly
             case 403: // Error allowed publicly
             case 404: // Error allowed publicly
+            case 408: // Error allowed publicly
             case 409: // Error allowed publicly
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
