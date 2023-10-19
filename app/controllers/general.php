@@ -690,7 +690,11 @@ App::error()
                     break;
             }
         } elseif ($error instanceof Utopia\Database\Exception\Conflict) {
-            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, null, null, $error);
+            $error = new AppwriteException(AppwriteException::DOCUMENT_UPDATE_CONFLICT, previous: $error);
+            $code = $error->getCode();
+            $message = $error->getMessage();
+        } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
+            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, $message, previous: $error);
             $code = $error->getCode();
             $message = $error->getMessage();
         }

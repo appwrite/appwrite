@@ -1115,11 +1115,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $dbAdapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+
+    $database
+        ->setNamespace('_' . $project->getInternalId())
+        ->setTimeout(milliseconds: 15000);
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1133,7 +1135,9 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('_console');
+    $database
+        ->setNamespace('_console')
+        ->setTimeout(milliseconds: 15000);
 
     return $database;
 }, ['pools', 'cache']);

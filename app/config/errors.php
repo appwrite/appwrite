@@ -466,6 +466,11 @@ return [
         'description' => 'Database already exists',
         'code' => 409
     ],
+    Exception::DATABASE_TIMEOUT => [
+        'name' => Exception::DATABASE_TIMEOUT,
+        'description' => 'Database timed out.',
+        'code' => 408
+    ],
 
     /** Collections */
     Exception::COLLECTION_NOT_FOUND => [
