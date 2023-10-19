@@ -12,6 +12,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
 use Appwrite\Utopia\Database\Validator\Queries\Databases;
 use Appwrite\Utopia\Database\Validator\Queries\Indexes;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
@@ -21,12 +22,13 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
-use Utopia\Database\Exception\Conflict;
+use Utopia\Database\Exception\Conflict as ConflictException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Limit as LimitException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
-use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -71,7 +73,7 @@ use Utopia\Validator\WhiteList;
  * @throws RestrictedException
  * @throws StructureException
  * @throws \Utopia\Database\Exception
- * @throws Conflict
+ * @throws ConflictException
  * @throws Exception
  */
 function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
@@ -380,6 +382,18 @@ function updateAttribute(
 
     return $attribute;
 }
+
+App::init()
+    ->groups(['api', 'database'])
+    ->inject('request')
+    ->inject('dbForProject')
+    ->action(function (Request $request, Database $dbForProject) {
+        $timeout = \intval($request->getHeader('x-appwrite-timeout'));
+
+        if (!empty($timeout) && App::isDevelopment()) {
+            $dbForProject->setTimeout($timeout);
+        }
+    });
 
 App::post('/v1/databases')
     ->desc('Create database')
@@ -2500,8 +2514,11 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'orders' => $orders,
         ]);
 
-        $validator = new IndexValidator($dbForProject->getAdapter()->getMaxIndexLength());
-        if (!$validator->isValid($collection->setAttribute('indexes', $index, Document::SET_TYPE_APPEND))) {
+        $validator = new IndexValidator(
+            $collection->getAttribute('attributes'),
+            $dbForProject->getAdapter()->getMaxIndexLength()
+        );
+        if (!$validator->isValid($index)) {
             throw new Exception(Exception::INDEX_INVALID, $validator->getDescription());
         }
 
