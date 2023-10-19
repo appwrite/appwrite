@@ -16,7 +16,7 @@ var client = new Client()
 var users = new Users(client);
 
 var user = await users.Create(
-    userId: ID.unique(),
+    userId: ID.Unique(),
     email: "email@example.com",
     phone: "+123456789",
     password: "password",
@@ -34,7 +34,7 @@ var users = new Users(client);
 try
 {
     var user = await users.Create(
-        userId: ID.unique(),
+        userId: ID.Unique(),
         email: "email@example.com",
         phone: "+123456789",
         password: "password",
