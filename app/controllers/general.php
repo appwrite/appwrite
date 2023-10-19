@@ -694,7 +694,7 @@ App::error()
             $code = $error->getCode();
             $message = $error->getMessage();
         } elseif ($error instanceof Utopia\Database\Exception\Timeout) {
-            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, $message, previous: $error);
+            $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
             $code = $error->getCode();
             $message = $error->getMessage();
         }

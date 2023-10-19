@@ -467,7 +467,7 @@ return [
     ],
     Exception::DATABASE_TIMEOUT => [
         'name' => Exception::DATABASE_TIMEOUT,
-        'description' => 'Database timed out.',
+        'description' => 'Database timed out. Try adjusting your queries or adding an index.',
         'code' => 408
     ],
 
