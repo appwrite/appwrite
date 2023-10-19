@@ -1155,7 +1155,11 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+
+            $database
+                ->setNamespace('_' . $project->getInternalId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
             return $database;
         }
 
@@ -1168,7 +1172,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
