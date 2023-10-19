@@ -119,6 +119,7 @@ const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_TIMEOUT_MILLISECONDS = 15000;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -1121,7 +1122,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     $database
         ->setNamespace('_' . $project->getInternalId())
-        ->setTimeout(milliseconds: 15000);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1137,7 +1138,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database
         ->setNamespace('_console')
-        ->setTimeout(milliseconds: 15000);
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'cache']);
