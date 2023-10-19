@@ -64,7 +64,7 @@ class Mails extends Action
         }
 
         $body = $body->render();
-
+         var_dump($smtp);
         /** @var PHPMailer $mail */
         $mail = empty($smtp)
             ? $register->get('smtp')
