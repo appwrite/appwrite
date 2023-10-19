@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "72caaa81d73965a0375e3765b378ba4a",
+    "content-hash": "6ff937a260c3e0c09de9eb5e073d830d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1972,16 +1972,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "dev-feat-global-timeouts",
+            "version": "0.44.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "1ceaf65ecc6e6a982cd12266d1fd08435994b563"
+                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/1ceaf65ecc6e6a982cd12266d1fd08435994b563",
-                "reference": "1ceaf65ecc6e6a982cd12266d1fd08435994b563",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
+                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
                 "shasum": ""
             },
             "require": {
@@ -2022,9 +2022,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/feat-global-timeouts"
+                "source": "https://github.com/utopia-php/database/tree/0.44.2"
             },
-            "time": "2023-10-19T01:10:04+00:00"
+            "time": "2023-10-19T07:39:00+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5864,18 +5864,9 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/database",
-            "version": "dev-feat-global-timeouts",
-            "alias": "0.44.1",
-            "alias_normalized": "0.44.1.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/database": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
