@@ -64,12 +64,13 @@ class Mails extends Action
         }
 
         $body = $body->render();
-         var_dump($smtp);
+
         /** @var PHPMailer $mail */
         $mail = empty($smtp)
             ? $register->get('smtp')
             : $this->getMailer($smtp);
-
+        var_dump("mail=");
+        var_dump($mail);
         $mail->clearAddresses();
         $mail->clearAllRecipients();
         $mail->clearReplyTos();
@@ -95,7 +96,7 @@ class Mails extends Action
      */
     protected function getMailer(array $smtp): PHPMailer
     {
-
+        var_dump("smtp=");
         var_dump($smtp);
 
         $mail = new PHPMailer(true);
