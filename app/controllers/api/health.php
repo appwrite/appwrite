@@ -409,7 +409,7 @@ App::get('/v1/health/queue/builds')
         $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
-App::get('/v1/health/queue/databases/:databaseId')
+App::get('/v1/health/queue/databases')
     ->desc('Get databases queue')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
