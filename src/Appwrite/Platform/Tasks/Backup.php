@@ -18,8 +18,8 @@ class Backup extends Action
     public const BACKUPS_PATH = '/backups';
     public const BACKUP_INTERVAL_SECONDS = 60 * 60 * 4; // 4 hours;
     public const COMPRESS_ALGORITHM = 'zstd'; // https://www.percona.com/blog/get-your-backup-to-half-of-its-size-introducing-zstd-support-in-percona-xtrabackup/
-    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 30; // 2 days?
-    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 30; // 14 days?;
+    public const CLEANUP_LOCAL_FILES_SECONDS = 60 * 60 * 24 * 7;
+    public const CLEANUP_CLOUD_FILES_SECONDS = 60 * 60 * 24 * 7;
     public const UPLOAD_CHUNK_SIZE = 5 * 1024 * 1024; // Must be greater than 5MB;
     public const RETRY_BACKUP = 1;
     public const RETRY_TAR = 1;
