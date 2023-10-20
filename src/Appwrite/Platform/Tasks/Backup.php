@@ -374,8 +374,7 @@ class Backup extends Action
         self::log('Clean cloud start');
         $start = microtime(true);
         $files = $this->s3->getFiles($this->s3->getRoot());
-
-        if ($files['KeyCount'] > 0) {
+        if ($files['KeyCount'] > 1) { // Bug when is one returned it returns an object not an array!
             foreach ($files['Contents'] as $file) {
                 $date = basename(basename($file['Key']), '.tar.gz');
                 if ($this->isDelete($date, self::CLEANUP_CLOUD_FILES_SECONDS)) {

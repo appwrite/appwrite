@@ -843,6 +843,8 @@ services:
     image: appwrite-dev
     <<: *x-logging
     entrypoint: db-backup
+    command:
+      - --database=db_fra1_03
     container_name: appwrite-backup
     networks:
       - appwrite
@@ -856,6 +858,8 @@ services:
     environment:
       - _APP_CONNECTIONS_DB_REPLICAS
       - _APP_CONNECTIONS_BACKUPS_STORAGE
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-restore:
     command: sleep infinity
