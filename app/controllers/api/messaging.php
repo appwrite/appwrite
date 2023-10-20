@@ -1972,7 +1972,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     });
 
 App::patch('/v1/messaging/messages/sms/:messageId')
-    ->desc('Update an sms.')
+    ->desc('Update an SMS.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'messages.update')
     ->label('audits.resource', 'messages/{response.$id}')
