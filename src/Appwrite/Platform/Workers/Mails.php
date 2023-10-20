@@ -24,7 +24,6 @@ class Mails extends Action
      */
     public function __construct()
     {
-        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $this
             ->desc('Mails worker')
             ->inject('message')
@@ -41,7 +40,7 @@ class Mails extends Action
      */
     public function action(Message $message, Registry $register): void
     {
-
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
