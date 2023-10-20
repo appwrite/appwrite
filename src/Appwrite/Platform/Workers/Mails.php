@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
@@ -23,11 +24,12 @@ class Mails extends Action
      */
     public function __construct()
     {
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $this
             ->desc('Mails worker')
             ->inject('message')
             ->inject('register')
-            ->callback(fn($message, $register) => $this->action($message, $register));
+            ->callback(fn ($message, $register) => $this->action($message, $register));
     }
 
     /**
