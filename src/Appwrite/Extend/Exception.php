@@ -242,6 +242,7 @@ class Exception extends \Exception
     /** Message */
     public const MESSAGE_NOT_FOUND                  = 'message_not_found';
     public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
+    public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
 
     protected $type = '';
     protected $errors = [];
