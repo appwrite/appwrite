@@ -4,13 +4,10 @@ namespace Appwrite\Platform\Tasks;
 
 use Exception;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Pools\Group;
-use Utopia\Queue\Server;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
@@ -65,9 +62,8 @@ class Backup extends Action
             throw new Exception('No DSN match');
         }
 
-        //todo: remove this:
-        $info = str_replace($this->dsn->getPassword(), "*", 'Trying to connect to ' . $this->dsn->getHost() . ' : ' . $this->dsn->getPort() . ' user: ' . $this->dsn->getUser() . ' password: ' . $this->dsn->getPassword());
-        console::info($info);
+
+        console::info('Trying to connect to ' . $this->dsn->getHost());
 
         $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
         $this->s3 = new DOSpaces('/' . $database . '/' . self::VERSION, $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
