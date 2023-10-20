@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ee4518740e581a9a4889936fb584a5a4",
+    "content-hash": "2faed5529f24984975ab6a85194c966e",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -338,53 +338,6 @@
                 }
             ],
             "time": "2022-07-05T22:32:14+00:00"
-        },
-        {
-            "name": "colinmollenhour/credis",
-            "version": "v1.15.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/colinmollenhour/credis.git",
-                "reference": "28810439de1d9597b7ba11794ed9479fb6f3de7c"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/colinmollenhour/credis/zipball/28810439de1d9597b7ba11794ed9479fb6f3de7c",
-                "reference": "28810439de1d9597b7ba11794ed9479fb6f3de7c",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.6.0"
-            },
-            "suggest": {
-                "ext-redis": "Improved performance for communicating with redis"
-            },
-            "type": "library",
-            "autoload": {
-                "classmap": [
-                    "Client.php",
-                    "Cluster.php",
-                    "Sentinel.php",
-                    "Module.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Colin Mollenhour",
-                    "email": "colin@mollenhour.com"
-                }
-            ],
-            "description": "Credis is a lightweight interface to the Redis key-value store which wraps the phpredis library when available for better performance.",
-            "homepage": "https://github.com/colinmollenhour/credis",
-            "support": {
-                "issues": "https://github.com/colinmollenhour/credis/issues",
-                "source": "https://github.com/colinmollenhour/credis/tree/v1.15.0"
-            },
-            "time": "2023-04-18T15:34:23+00:00"
         },
         {
             "name": "dragonmantank/cron-expression",
@@ -899,72 +852,6 @@
             "time": "2021-10-08T21:21:46+00:00"
         },
         {
-            "name": "laravel/pint",
-            "version": "v1.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/pint.git",
-                "reference": "e60e2112ee779ce60f253695b273d1646a17d6f1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/e60e2112ee779ce60f253695b273d1646a17d6f1",
-                "reference": "e60e2112ee779ce60f253695b273d1646a17d6f1",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "ext-tokenizer": "*",
-                "ext-xml": "*",
-                "php": "^8.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.11.0",
-                "illuminate/view": "^9.32.0",
-                "laravel-zero/framework": "^9.2.0",
-                "mockery/mockery": "^1.5.1",
-                "nunomaduro/larastan": "^2.2.0",
-                "nunomaduro/termwind": "^1.14.0",
-                "pestphp/pest": "^1.22.1"
-            },
-            "bin": [
-                "builds/pint"
-            ],
-            "type": "project",
-            "autoload": {
-                "psr-4": {
-                    "App\\": "app/",
-                    "Database\\Seeders\\": "database/seeders/",
-                    "Database\\Factories\\": "database/factories/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nuno Maduro",
-                    "email": "enunomaduro@gmail.com"
-                }
-            ],
-            "description": "An opinionated code formatter for PHP.",
-            "homepage": "https://laravel.com",
-            "keywords": [
-                "format",
-                "formatter",
-                "lint",
-                "linter",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/pint/issues",
-                "source": "https://github.com/laravel/pint"
-            },
-            "time": "2022-11-29T16:25:20+00:00"
-        },
-        {
             "name": "league/csv",
             "version": "9.7.1",
             "source": {
@@ -1477,56 +1364,6 @@
             "time": "2023-04-04T09:54:51+00:00"
         },
         {
-            "name": "psr/log",
-            "version": "1.1.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/php-fig/log.git",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/php-fig/log/zipball/d49695b909c3b7628b6289db5479a1c204601f11",
-                "reference": "d49695b909c3b7628b6289db5479a1c204601f11",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.0"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Psr\\Log\\": "Psr/Log/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "PHP-FIG",
-                    "homepage": "https://www.php-fig.org/"
-                }
-            ],
-            "description": "Common interface for logging libraries",
-            "homepage": "https://github.com/php-fig/log",
-            "keywords": [
-                "log",
-                "psr",
-                "psr-3"
-            ],
-            "support": {
-                "source": "https://github.com/php-fig/log/tree/1.1.4"
-            },
-            "time": "2021-05-03T11:20:27+00:00"
-        },
-        {
             "name": "ralouphie/getallheaders",
             "version": "3.0.3",
             "source": {
@@ -1569,89 +1406,6 @@
                 "source": "https://github.com/ralouphie/getallheaders/tree/develop"
             },
             "time": "2019-03-08T08:55:37+00:00"
-        },
-        {
-            "name": "resque/php-resque",
-            "version": "v1.3.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/resque/php-resque.git",
-                "reference": "fe41c04763699b1318d97ed14cc78583e9380161"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/resque/php-resque/zipball/fe41c04763699b1318d97ed14cc78583e9380161",
-                "reference": "fe41c04763699b1318d97ed14cc78583e9380161",
-                "shasum": ""
-            },
-            "require": {
-                "colinmollenhour/credis": "~1.7",
-                "php": ">=5.6.0",
-                "psr/log": "~1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^5.7"
-            },
-            "suggest": {
-                "ext-pcntl": "REQUIRED for forking processes on platforms that support it (so anything but Windows).",
-                "ext-proctitle": "Allows php-resque to rename the title of UNIX processes to show the status of a worker.",
-                "ext-redis": "Native PHP extension for Redis connectivity. Credis will automatically utilize when available."
-            },
-            "bin": [
-                "bin/resque",
-                "bin/resque-scheduler"
-            ],
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-0": {
-                    "Resque": "lib",
-                    "ResqueScheduler": "lib"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Dan Hunsaker",
-                    "email": "danhunsaker+resque@gmail.com",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Rajib Ahmed",
-                    "homepage": "https://github.com/rajibahmed",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Steve Klabnik",
-                    "email": "steve@steveklabnik.com",
-                    "role": "Maintainer"
-                },
-                {
-                    "name": "Chris Boulton",
-                    "email": "chris@bigcommerce.com",
-                    "role": "Creator"
-                }
-            ],
-            "description": "Redis backed library for creating background jobs and processing them later. Based on resque for Ruby.",
-            "homepage": "http://www.github.com/resque/php-resque/",
-            "keywords": [
-                "background",
-                "job",
-                "redis",
-                "resque"
-            ],
-            "support": {
-                "issues": "https://github.com/resque/php-resque/issues",
-                "source": "https://github.com/resque/php-resque/tree/v1.3.6"
-            },
-            "time": "2020-04-16T16:39:50+00:00"
         },
         {
             "name": "slickdeals/statsd",
@@ -2152,16 +1906,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.44.1",
+            "version": "0.44.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e0b832d217e4d429c96ade671e85ece942446543"
+                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e0b832d217e4d429c96ade671e85ece942446543",
-                "reference": "e0b832d217e4d429c96ade671e85ece942446543",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
+                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
                 "shasum": ""
             },
             "require": {
@@ -2202,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.44.1"
+                "source": "https://github.com/utopia-php/database/tree/0.44.2"
             },
-            "time": "2023-10-18T07:05:41+00:00"
+            "time": "2023-10-19T07:39:00+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2722,16 +2476,16 @@
         },
         {
             "name": "utopia-php/platform",
-            "version": "0.4.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/platform.git",
-                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9"
+                "reference": "229a7b1fa1f39afd1532f7a515326a6afc222a26"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/platform/zipball/6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
-                "reference": "6e3d6db9ee8f99e36c2df331b58de2e6e3e37eb9",
+                "url": "https://api.github.com/repos/utopia-php/platform/zipball/229a7b1fa1f39afd1532f7a515326a6afc222a26",
+                "reference": "229a7b1fa1f39afd1532f7a515326a6afc222a26",
                 "shasum": ""
             },
             "require": {
@@ -2765,9 +2519,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/platform/issues",
-                "source": "https://github.com/utopia-php/platform/tree/0.4.2"
+                "source": "https://github.com/utopia-php/platform/tree/0.5.0"
             },
-            "time": "2023-08-30T16:28:31+00:00"
+            "time": "2023-10-16T20:28:49+00:00"
         },
         {
             "name": "utopia-php/pools",
@@ -3094,26 +2848,25 @@
         },
         {
             "name": "utopia-php/system",
-            "version": "0.7.1",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27"
+                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
-                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/4593d4d334b0c15879c4744a826e0362924c5d66",
+                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66",
                 "shasum": ""
             },
             "require": {
-                "laravel/pint": "1.2.*",
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "1.13.*",
+                "phpstan/phpstan": "1.10.*",
+                "phpunit/phpunit": "9.6.*"
             },
             "type": "library",
             "autoload": {
@@ -3145,9 +2898,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.7.1"
+                "source": "https://github.com/utopia-php/system/tree/0.7.2"
             },
-            "time": "2023-08-30T09:14:37+00:00"
+            "time": "2023-10-20T01:39:17+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -4605,6 +4358,56 @@
             "time": "2022-04-01T12:37:26+00:00"
         },
         {
+            "name": "psr/log",
+            "version": "3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/log.git",
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/log/zipball/fe5ea303b0887d5caefd3d431c3e61ad47037001",
+                "reference": "fe5ea303b0887d5caefd3d431c3e61ad47037001",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Log\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "https://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for logging libraries",
+            "homepage": "https://github.com/php-fig/log",
+            "keywords": [
+                "log",
+                "psr",
+                "psr-3"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/log/tree/3.0.0"
+            },
+            "time": "2021-07-14T16:46:02+00:00"
+        },
+        {
             "name": "sebastian/cli-parser",
             "version": "1.0.1",
             "source": {
@@ -6019,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }

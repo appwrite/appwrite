@@ -5,12 +5,10 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
@@ -4215,5 +4213,71 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testTimeout(array $data): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Slow Queries',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $data = [
+            '$id' => $collection['body']['$id'],
+            'databaseId' => $collection['body']['databaseId']
+        ];
+
+        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'longtext',
+            'size' => 100000000,
+            'required' => false,
+            'default' => null,
+        ]);
+
+        $this->assertEquals($longtext['headers']['status-code'], 202);
+
+        for ($i = 0; $i < 1; $i++) {
+            $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'longtext' => file_get_contents('tests/resources/longtext.txt'),
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-timeout' => 1,
+        ], $this->getHeaders()), [
+            'queries' => ['notEqual("longtext", "appwrite")'],
+        ]);
+
+        $this->assertEquals(408, $response['headers']['status-code']);
     }
 }

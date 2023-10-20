@@ -2,18 +2,22 @@
 
 namespace Appwrite\Event;
 
-use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
+use Utopia\Queue\Connection;
+use Utopia\Queue\Client;
 
 class Messaging extends Event
 {
     protected ?string $messageId = null;
     private ?string $deliveryTime = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::MESSAGING_QUEUE_NAME, Event::MESSAGING_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::MESSAGING_QUEUE_NAME)
+            ->setClass(Event::MESSAGING_CLASS_NAME);
     }
 
     /**
@@ -82,23 +86,9 @@ class Messaging extends Event
      */
     public function trigger(): string | bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'messageId' => $this->messageId,
-        ]);
-    }
+        $client = new Client($this->queue, $this->connection);
 
-    /**
-     * Schedules the messaging event and schedules it in the messaging worker queue.
-     *
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
-     */
-    public function schedule(): void
-    {
-        ResqueScheduler::enqueueAt(new \DateTime($this->deliveryTime, new \DateTimeZone('UTC')), $this->queue, $this->class, [
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,

@@ -1586,9 +1586,9 @@ App::post('/v1/messaging/messages/email')
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('messaging')
+    ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1613,17 +1613,10 @@ App::post('/v1/messaging/messages/email')
         ]));
 
         if ($status === 'processing') {
-            $messaging
+            $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project);
-
-            if (!empty($deliveryTime)) {
-                $messaging
-                    ->setDeliveryTime($deliveryTime)
-                    ->schedule();
-            } else {
-                $messaging->trigger();
-            }
+                ->setProject($project)
+                ->trigger();
         }
 
         $response
@@ -1717,9 +1710,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('messaging')
+    ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -1762,17 +1755,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === 'processing') {
-            $messaging
+            $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project);
-
-            if (!empty($deliveryTime)) {
-                $messaging
-                ->setDeliveryTime($deliveryTime)
-                ->schedule();
-            } else {
-                $messaging->trigger();
-            }
+                ->setProject($project)
+                ->trigger();
         }
 
         $response
