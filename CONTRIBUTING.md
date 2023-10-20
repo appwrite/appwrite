@@ -206,7 +206,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Network
 │       ├── OpenSSL
 │       ├── Promises
-│       ├── Resque
 │       ├── Specification
 │       ├── Task
 │       ├── Template
@@ -251,7 +250,6 @@ Appwrite stack is a combination of a variety of open-source technologies and too
 - Imagemagick - for manipulating and managing image media files.
 - Webp - for better compression of images on supporting clients.
 - SMTP - for sending email messages and alerts.
-- Resque - for managing data queues and scheduled tasks over a Redis server.
 
 ## Package Managers
 
