@@ -1,7 +1,5 @@
 <?php
 
-use Utopia\CLI\Console;
-
 /**
  * Init
  *
@@ -79,6 +77,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\CLI\Console;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
