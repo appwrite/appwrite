@@ -1580,8 +1580,8 @@ App::post('/v1/messaging/messages/email')
     ->param('providerId', '', new UID(), 'Email Provider ID.')
     ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(998), 'Email Subject.')
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
@@ -1589,13 +1589,17 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
 
-        if ($provider->isEmpty() || $provider->getAttribute('type') !== 'email') {
+        if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('type') !== 'email') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
@@ -1633,7 +1637,7 @@ App::post('/v1/messaging/messages/email')
     });
 
 App::post('/v1/messaging/messages/sms')
-    ->desc('Create an sms.')
+    ->desc('Create an SMS.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'messages.create')
     ->label('audits.resource', 'messages/{response.$id}')
@@ -1648,21 +1652,25 @@ App::post('/v1/messaging/messages/sms')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('providerId', '', new UID(), 'SMS Provider ID.')
     ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'SMS Content.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $description, string $content, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $content, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
 
-        if ($provider->isEmpty() || $provider->getAttribute('type') !== 'sms') {
+        if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('type') !== 'sms') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
@@ -1713,29 +1721,33 @@ App::post('/v1/messaging/messages/push')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('providerId', '', new UID(), 'Push Provider ID.')
     ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('title', '', new Text(256), 'Title for push notification.')
     ->param('body', '', new Text(64230), 'Body for push notification.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
-    ->param('icon', '', new Text(256), 'Icon for push notification.', true)
-    ->param('sound', '', new Text(256), 'Sound for push notification.', true)
-    ->param('color', '', new Text(256), 'Color for push notification.', true)
-    ->param('tag', '', new Text(256), 'Tag for push notification.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification.', true)
+    ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
+    ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $title, string $body, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
 
-        if ($provider->isEmpty() || $provider->getAttribute('type') !== 'push') {
+        if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('type') !== 'push') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         $pushData = [
@@ -1900,6 +1912,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
+        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
         if (\count($to) > 0) {
             $message->setAttribute('to', $to);
         }
@@ -1983,6 +1999,10 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
+        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
         if (\count($to) > 0) {
             $message->setAttribute('to', $to);
         }
@@ -2044,12 +2064,11 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('body', '', new Text(64230), 'Body for push notification.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
-    ->param('icon', '', new Text(256), 'Icon for push notification.', true)
-    ->param('sound', '', new Text(256), 'Sound for push notification.', true)
-    ->param('color', '', new Text(256), 'Color for push notification.', true)
-    ->param('tag', '', new Text(256), 'Tag for push notification.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
+    ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
     ->inject('dbForProject')
     ->inject('project')
@@ -2064,6 +2083,10 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if ($message->getAttribute('status') === 'sent') {
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        }
+
+        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
         if (\count($to) > 0) {
