@@ -1367,9 +1367,9 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->inject('dbForProject')
-    ->inject('deletes')
+    ->inject('queueForDeletes')
     ->inject('response')
-    ->action(function (string $topicId, Database $dbForProject, Delete $deletes, Response $response) {
+    ->action(function (string $topicId, Database $dbForProject, Delete $queueForDeletes, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -1378,7 +1378,7 @@ App::delete('/v1/messaging/topics/:topicId')
 
         $dbForProject->deleteDocument('topics', $topicId);
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_SUBSCRIBERS)
             ->setDocument($topic);
 
@@ -1589,7 +1589,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1916,11 +1916,12 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         $message->setAttribute('data', $data);
-        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $data['subject'] . ' ' . $message->getAttribute('providerId'));
 
         if (!empty($description)) {
             $message->setAttribute('description', $description);
         }
+
+        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $data['subject'] . ' ' . $message->getAttribute('providerId'));
 
         if (!empty($status)) {
             $message->setAttribute('status', $status);
@@ -1992,7 +1993,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         $message->setAttribute('data', $data);
-        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $message->getAttribute('providerId'));
 
         if (!empty($status)) {
             $message->setAttribute('status', $status);
@@ -2005,6 +2005,8 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         if (!is_null($deliveryTime)) {
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
+
+        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $message->getAttribute('providerId'));
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
@@ -2107,7 +2109,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         $message->setAttribute('data', $pushData);
-        $message->setAttribute('search', $message->getId() . ' ' . $pushData['description'] . ' ' . $pushData['title'] . ' ' . $message->getAttribute('providerId'));
 
         if (!empty($status)) {
             $message->setAttribute('status', $status);
@@ -2120,6 +2121,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (!is_null($deliveryTime)) {
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
+
+        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $pushData['title'] . ' ' . $message->getAttribute('providerId'));
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 

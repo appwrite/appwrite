@@ -29,8 +29,6 @@ use Utopia\Messaging\Messages\SMS;
 
 use function Swoole\Coroutine\batch;
 
-require_once __DIR__ . '/../init.php';
-
 class Messaging extends Action
 {
     protected ?SMSAdapter $sms = null;
@@ -78,10 +76,10 @@ class Messaging extends Action
 
         $provider = $dbForProject->getDocument('providers', $message->getAttribute('providerId'));
 
-        $this->processMessage($message, $provider);
+        $this->processMessage($dbForProject, $message, $provider);
     }
 
-    private function processMessage(Document $message, Document $provider): void
+    private function processMessage(Database $dbForProject, Document $message, Document $provider): void
     {
         $adapter = match ($provider->getAttribute('type')) {
             'sms' => $this->sms($provider),
@@ -97,17 +95,17 @@ class Messaging extends Action
         */
         $recipients = [];
 
-        $topics = $this->dbForProject->find('topics', [Query::equal('$id', $recipientsId)]);
+        $topics = $dbForProject->find('topics', [Query::equal('$id', $recipientsId)]);
         foreach ($topics as $topic) {
             $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
         }
 
-        $users = $this->dbForProject->find('users', [Query::equal('$id', $recipientsId)]);
+        $users = $dbForProject->find('users', [Query::equal('$id', $recipientsId)]);
         foreach ($users as $user) {
             $recipients = \array_merge($recipients, $user->getAttribute('targets'));
         }
 
-        $targets = $this->dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
+        $targets = $dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
         $recipients = \array_merge($recipients, $targets);
         $recipients = \array_filter($recipients, function (Document $recipient) use ($provider) {
                 return $recipient->getAttribute('providerId') === $provider->getId();
@@ -165,7 +163,7 @@ class Messaging extends Action
         $message->setAttribute('deliveredTo', $deliveredTo);
         $message->setAttribute('deliveredAt', DateTime::now());
 
-        $this->dbForProject->updateDocument('messages', $message->getId(), $message);
+        $dbForProject->updateDocument('messages', $message->getId(), $message);
     }
 
     public function shutdown(): void

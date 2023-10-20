@@ -398,8 +398,7 @@ App::post('/v1/users/:userId/targets')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Response $response, Database $dbForProject) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1217,8 +1216,7 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $targetId, string $identifier, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, string $identifier, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1240,10 +1238,6 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
         $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $events
-            ->setParam('userId', $userId)
-            ->setParam('targetId', $targetId);
 
         $response
             ->dynamic($target, Response::MODEL_TARGET);
@@ -1396,8 +1390,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject, Event $events) {
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 

@@ -12,7 +12,6 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
-use Appwrite\Event\Phone;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Usage\Stats;
 use Swoole\Runtime;
