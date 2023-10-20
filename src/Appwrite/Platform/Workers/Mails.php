@@ -28,7 +28,7 @@ class Mails extends Action
             ->desc('Mails worker')
             ->inject('message')
             ->inject('register')
-            ->callback(fn ($message, $register) => $this->action($message, $register));
+            ->callback(fn($message, $register) => $this->action($message, $register));
     }
 
     /**
