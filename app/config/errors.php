@@ -790,5 +790,10 @@ return [
         'name' => Exception::MESSAGE_ALREADY_SENT,
         'description' => 'Message with the requested ID has already been sent.',
         'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SCHEDULED => [
+        'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
+        'description' => 'Message with the requested ID has already been scheduled for delivery.',
+        'code' => 400,
     ]
 ];

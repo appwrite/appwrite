@@ -22,6 +22,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -1579,8 +1580,8 @@ App::post('/v1/messaging/messages/email')
     ->param('providerId', '', new UID(), 'Email Provider ID.')
     ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(998), 'Email Subject.')
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
@@ -1588,7 +1589,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('messaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         $provider = $dbForProject->getDocument('providers', $providerId);
@@ -1597,19 +1598,202 @@ App::post('/v1/messaging/messages/email')
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
+        if ($provider->getAttribute('type') !== 'email') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
             'providerId' => $provider->getId(),
             'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
+            'description' => $description,
             'data' => [
                 'subject' => $subject,
                 'content' => $content,
                 'html' => $html,
-                'description' => $description,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $subject,
+            'search' => $messageId . ' ' . $description . ' ' . $subject . ' ' . $providerId,
+        ]));
+
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                    ->setDeliveryTime($deliveryTime)
+                    ->schedule();
+            } else {
+                $messaging->trigger();
+            }
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::post('/v1/messaging/messages/sms')
+    ->desc('Create an SMS.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'messages.create')
+    ->label('audits.resource', 'messages/{response.$id}')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createSMS')
+    ->label('sdk.description', '/docs/references/messaging/create-sms.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new UID(), 'SMS Provider ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('content', '', new Text(64230), 'SMS Content.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('messaging')
+    ->inject('response')
+    ->action(function (string $messageId, string $providerId, array $to, string $content, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('type') !== 'sms') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        $message = $dbForProject->createDocument('messages', new Document([
+            '$id' => $messageId,
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'to' => $to,
+            'description' => $description,
+            'deliveryTime' => $deliveryTime,
+            'data' => [
+                'content' => $content,
+            ],
+            'status' => $status,
+            'search' => $messageId . ' ' . $description . ' ' . $providerId,
+        ]));
+
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                    ->setDeliveryTime($deliveryTime)
+                    ->schedule();
+            } else {
+                $messaging->trigger();
+            }
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::post('/v1/messaging/messages/push')
+    ->desc('Create a push notification.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'messages.create')
+    ->label('audits.resource', 'messages/{response.$id}')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createPushNotification')
+    ->label('sdk.description', '/docs/references/messaging/create-push-notification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new UID(), 'Push Provider ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('title', '', new Text(256), 'Title for push notification.')
+    ->param('body', '', new Text(64230), 'Body for push notification.')
+    ->param('description', '', new Text(256), 'Description for Message.', true)
+    ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
+    ->param('action', '', new Text(256), 'Action for push notification.', true)
+    ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
+    ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('messaging')
+    ->inject('response')
+    ->action(function (string $messageId, string $providerId, array $to, string $title, string $body, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($provider->getAttribute('type') !== 'push') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        $pushData = [
+            'title' => $title,
+            'body' => $body,
+        ];
+
+        if (!is_null($data)) {
+            $pushData['data'] = $data;
+        }
+
+        if ($action) {
+            $pushData['action'] = $action;
+        }
+
+        if ($icon) {
+            $pushData['icon'] = $icon;
+        }
+
+        if ($sound) {
+            $pushData['sound'] = $sound;
+        }
+
+        if ($color) {
+            $pushData['color'] = $color;
+        }
+
+        if ($tag) {
+            $pushData['tag'] = $tag;
+        }
+
+        if ($badge) {
+            $pushData['badge'] = $badge;
+        }
+
+        $message = $dbForProject->createDocument('messages', new Document([
+            '$id' => $messageId,
+            'providerId' => $provider->getId(),
+            'providerInternalId' => $provider->getInternalId(),
+            'to' => $to,
+            'description' => $description,
+            'deliveryTime' => $deliveryTime,
+            'data' => $pushData,
+            'status' => $status,
+            'search' => $messageId . ' ' . $description . ' ' . $title . ' ' . $providerId,
         ]));
 
         if ($status === 'processing') {
@@ -1704,7 +1888,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateEmail')
     ->label('sdk.description', '/docs/references/messaging/update-email.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
@@ -1730,6 +1914,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
         if (\count($to) > 0) {
             $message->setAttribute('to', $to);
         }
@@ -1744,19 +1932,228 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $data['content'] = $content;
         }
 
-        if (!empty($description)) {
-            $data['description'] = $description;
-        }
-
         if (!empty($html)) {
             $data['html'] = $html;
         }
 
         $message->setAttribute('data', $data);
-        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $data['subject']);
+        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $data['subject'] . ' ' . $message->getAttribute('providerId'));
+
+        if (!empty($description)) {
+            $message->setAttribute('description', $description);
+        }
 
         if (!empty($status)) {
             $message->setAttribute('status', $status);
+        }
+
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
+        }
+
+        $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
+
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                ->setDeliveryTime($deliveryTime)
+                ->schedule();
+            } else {
+                $messaging->trigger();
+            }
+        }
+
+        $response
+            ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::patch('/v1/messaging/messages/sms/:messageId')
+    ->desc('Update an SMS.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'messages.update')
+    ->label('audits.resource', 'messages/{response.$id}')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateSMS')
+    ->label('sdk.description', '/docs/references/messaging/update-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('description', '', new Text(256), 'Description for Message.', true)
+    ->param('content', '', new Text(64230), 'Email Content.', true)
+    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('messaging')
+    ->inject('response')
+    ->action(function (string $messageId, array $to, string $description, string $content, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        if ($message->getAttribute('status') === 'sent') {
+            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        }
+
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        if (\count($to) > 0) {
+            $message->setAttribute('to', $to);
+        }
+
+        $data = $message->getAttribute('data');
+
+        if (!empty($content)) {
+            $data['content'] = $content;
+        }
+
+        $message->setAttribute('data', $data);
+        $message->setAttribute('search', $message->getId() . ' ' . $data['description'] . ' ' . $message->getAttribute('providerId'));
+
+        if (!empty($status)) {
+            $message->setAttribute('status', $status);
+        }
+
+        if (!empty($description)) {
+            $message->setAttribute('description', $description);
+        }
+
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
+        }
+
+        $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
+
+        if ($status === 'processing') {
+            $messaging
+                ->setMessageId($message->getId())
+                ->setProject($project);
+
+            if (!empty($deliveryTime)) {
+                $messaging
+                ->setDeliveryTime($deliveryTime)
+                ->schedule();
+            } else {
+                $messaging->trigger();
+            }
+        }
+
+        $response
+            ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::patch('/v1/messaging/messages/push/:messageId')
+    ->desc('Update a push notification.')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'messages.update')
+    ->label('audits.resource', 'messages/{response.$id}')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updatePushNotification')
+    ->label('sdk.description', '/docs/references/messaging/update-push-notification.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MESSAGE)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('description', '', new Text(256), 'Description for Message.', true)
+    ->param('title', '', new Text(256), 'Title for push notification.', true)
+    ->param('body', '', new Text(64230), 'Body for push notification.', true)
+    ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
+    ->param('action', '', new Text(256), 'Action for push notification.', true)
+    ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
+    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
+    ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
+    ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('messaging')
+    ->inject('response')
+    ->action(function (string $messageId, array $to, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $messaging, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        if ($message->getAttribute('status') === 'sent') {
+            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        }
+
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+            throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        if (\count($to) > 0) {
+            $message->setAttribute('to', $to);
+        }
+
+        $pushData = $message->getAttribute('data');
+
+        if ($title) {
+            $pushData['title'] = $title;
+        }
+
+        if ($body) {
+            $pushData['body'] = $body;
+        }
+
+        if (!is_null($data)) {
+            $pushData['data'] = $data;
+        }
+
+        if ($action) {
+            $pushData['action'] = $action;
+        }
+
+        if ($icon) {
+            $pushData['icon'] = $icon;
+        }
+
+        if ($sound) {
+            $pushData['sound'] = $sound;
+        }
+
+        if ($color) {
+            $pushData['color'] = $color;
+        }
+
+        if ($tag) {
+            $pushData['tag'] = $tag;
+        }
+
+        if ($badge) {
+            $pushData['badge'] = $badge;
+        }
+
+        $message->setAttribute('data', $pushData);
+        $message->setAttribute('search', $message->getId() . ' ' . $pushData['description'] . ' ' . $pushData['title'] . ' ' . $message->getAttribute('providerId'));
+
+        if (!empty($status)) {
+            $message->setAttribute('status', $status);
+        }
+
+        if (!empty($description)) {
+            $message->setAttribute('description', $description);
+        }
+
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
