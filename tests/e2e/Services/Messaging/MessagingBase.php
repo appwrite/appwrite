@@ -372,7 +372,6 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-
         $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
         $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
         $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
@@ -484,7 +483,6 @@ trait MessagingBase
      */
     public function testUpdateEmail(array $email)
     {
-
         $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
         $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
         $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
@@ -611,7 +609,6 @@ trait MessagingBase
 
     public function testSendSMS()
     {
-
         $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
         $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
         $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
@@ -720,7 +717,6 @@ trait MessagingBase
      */
     public function testUpdateSMS(array $sms)
     {
-
         $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
         $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
         $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
@@ -844,7 +840,6 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
-
         $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
         $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
         if (empty($to) || empty($serverKey)) {
@@ -950,7 +945,6 @@ trait MessagingBase
      */
     public function testUpdatePushNotification(array $push)
     {
-
         $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
         $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
         if (empty($to) || empty($serverKey)) {

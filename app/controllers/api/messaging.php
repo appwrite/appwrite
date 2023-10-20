@@ -1679,6 +1679,7 @@ App::post('/v1/messaging/messages/sms')
             'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
             'description' => $description,
+            'deliveryTime' => $deliveryTime,
             'data' => [
                 'content' => $content,
             ],
@@ -1789,6 +1790,7 @@ App::post('/v1/messaging/messages/push')
             'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
             'description' => $description,
+            'deliveryTime' => $deliveryTime,
             'data' => $pushData,
             'status' => $status,
             'search' => $messageId . ' ' . $description . ' ' . $title . ' ' . $providerId,
@@ -1945,6 +1947,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('status', $status);
         }
 
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
+        }
+
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === 'processing') {
@@ -2022,6 +2028,10 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (!empty($description)) {
             $message->setAttribute('description', $description);
+        }
+
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
@@ -2142,6 +2152,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $message->setAttribute('description', $description);
         }
 
+        if (!is_null($deliveryTime)) {
+            $message->setAttribute('deliveryTime', $deliveryTime);
+        }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
