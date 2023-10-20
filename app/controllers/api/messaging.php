@@ -1914,7 +1914,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2005,7 +2005,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2095,7 +2095,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && is_null($deliveryTime) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
