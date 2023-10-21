@@ -84,7 +84,9 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_SYSTEM_RESPONSE_FORMAT
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
       - _APP_OPENSSL_KEY_V1
       - _APP_DOMAIN
       - _APP_DOMAIN_TARGET
@@ -186,7 +188,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
-      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
     depends_on:
@@ -196,6 +197,7 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPTIONS_ABUSE
+      - _APP_OPTIONS_ROUTER_PROTECTION
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
@@ -381,7 +383,9 @@ services:
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CPUS
       - _APP_FUNCTIONS_MEMORY
+      - _APP_FUNCTIONS_SIZE_LIMIT
       - _APP_OPTIONS_FORCE_HTTPS
+      - _APP_OPTIONS_FUNCTIONS_FORCE_HTTPS
       - _APP_DOMAIN
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
@@ -648,7 +652,7 @@ services:
       - _APP_DB_PASS
 
   appwrite-assistant:
-    image: appwrite/assistant:0.2.1
+    image: appwrite/assistant:0.2.2
     container_name: appwrite-assistant
     <<: *x-logging
     restart: unless-stopped
@@ -661,8 +665,9 @@ services:
     container_name: openruntimes-executor
     hostname: appwrite-executor
     <<: *x-logging
+    restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.1
+    image: openruntimes/executor:0.4.5
     networks:
       - appwrite
       - runtimes
