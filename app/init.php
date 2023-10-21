@@ -885,8 +885,10 @@ App::setResource('localeCodes', function () {
 // Queues
 App::setResource('queue', function (Group $pools) {
     $connection = $pools->get('queue')->pop();
-    
-    App::setResource('connectionForQueue', function () use ($connection) { return $connection; }, []);
+
+    App::setResource('connectionForQueue', function () use ($connection) {
+        return $connection;
+    }, []);
 
     return $connection->getResource();
 }, ['pools']);
@@ -1112,10 +1114,18 @@ App::setResource('console', function () {
     ]);
 }, []);
 
-App::setResource('connectionForProject', function () { return null; }, []);
-App::setResource('connectionForConsole', function () { return null; }, []);
-App::setResource('connectionForQueue', function () { return null; }, []);
-App::setResource('connectionsForCache', function () { return []; }, []);
+App::setResource('connectionForProject', function () {
+    return null;
+}, []);
+App::setResource('connectionForConsole', function () {
+    return null;
+}, []);
+App::setResource('connectionForQueue', function () {
+    return null;
+}, []);
+App::setResource('connectionsForCache', function () {
+    return [];
+}, []);
 
 App::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
     if ($project->isEmpty() || $project->getId() === 'console') {
@@ -1127,10 +1137,12 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->pop()
     ;
 
-    App::setResource('connectionForProject', function () use ($connection) { return $connection; }, []);
-    
+    App::setResource('connectionForProject', function () use ($connection) {
+        return $connection;
+    }, []);
+
     $dbAdapter = $connection->getResource();
-        
+
     $database = new Database($dbAdapter, $cache);
 
     $database
@@ -1144,9 +1156,11 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $connection = $pools
         ->get('console')
         ->pop();
-    
-    App::setResource('connectionForConsole', function () use ($connection) { return $connection; }, []);
-    
+
+    App::setResource('connectionForConsole', function () use ($connection) {
+        return $connection;
+    }, []);
+
     $dbAdapter = $connection->getResource();
 
     $database = new Database($dbAdapter, $cache);
@@ -1163,7 +1177,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
-        
+
         $connection = $pools
             ->get($project->getAttribute('database'))
             ->pop()
@@ -1171,7 +1185,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $dbAdapter = $connection->getResource();
 
-        App::setResource('connectionForProject', function () use ($connection) { return $connection; }, []);
+        App::setResource('connectionForProject', function () use ($connection) {
+            return $connection;
+        }, []);
 
         $database = new Database($dbAdapter, $cache);
 
@@ -1200,7 +1216,9 @@ App::setResource('cache', function (Group $pools) {
         $adapters[] = $connection->getResource();
     }
 
-    App::setResource('connectionsForCache', function () use ($connections) { return $connections; }, []);
+    App::setResource('connectionsForCache', function () use ($connections) {
+        return $connections;
+    }, []);
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);

@@ -333,19 +333,19 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
         $connectionForQueue = $app->getResource('connectionForQueue');
         $connectionsForCache = $app->getResource('connectionsForCache');
 
-        if(!is_null($connectionForConsole)) {
+        if (!is_null($connectionForConsole)) {
             $connectionForConsole->reclaim();
         }
-        
-        if(!is_null($connectionForProject)) {
+
+        if (!is_null($connectionForProject)) {
             $connectionForProject->reclaim();
         }
-        
-        if(!is_null($connectionForQueue)) {
+
+        if (!is_null($connectionForQueue)) {
             $connectionForQueue->reclaim();
         }
 
-        if(!empty($connectionsForCache)) {
+        if (!empty($connectionsForCache)) {
             foreach ($connectionsForCache as $connection) {
                 $connection->reclaim();
             }
