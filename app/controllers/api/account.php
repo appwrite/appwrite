@@ -561,6 +561,17 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $sessions = $user->getAttribute('sessions', []);
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+
+        // // Check if the user selected "Never Expire" (You may use a constant for "Never Expire")
+        // if ($authDuration === 'never_expire') {
+        //     $authDuration = INF; // Set it to INF to make the session never expire   //frontend has to be given an button for selecting Never Expire
+        // } else {
+        // // Ensure it's a valid integer value (in seconds) or set a default value
+        //     $authDuration = is_numeric($authDuration) ? (int) $authDuration : Auth::TOKEN_EXPIRATION_LOGIN_LONG;  
+        // }
+        
+
+
         $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
 
         if ($current) { // Delete current session of new one.
