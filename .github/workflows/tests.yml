@@ -13,7 +13,6 @@ jobs:
   setup:
     name: Setup & Build Appwrite Image
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
