@@ -175,7 +175,8 @@ App::post('/v1/projects')
          * Update database with self-managed db every $mod projects
          */
         $mod = 20;
-        if ($index = array_search('database_db_fra1_self_hosted_0_0', $databases) && $project->getInternalId() % $mod === 0) {
+        $index = array_search('database_db_fra1_self_hosted_0_0', $databases);
+        if ($index !== false && ($project->getInternalId() % $mod === 0)) {
             $project->setAttribute('database', $databases[$index]);
             $dbForConsole->updateDocument('projects', $project);
         }
