@@ -13,7 +13,11 @@ class Usage extends Event
 
     public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::USAGE_QUEUE_NAME, Event::USAGE_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::USAGE_QUEUE_NAME)
+            ->setClass(Event::USAGE_CLASS_NAME);
     }
 
     /**

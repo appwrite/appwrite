@@ -145,6 +145,7 @@ class Exception extends \Exception
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
+    public const DATABASE_TIMEOUT                  = 'database_timeout';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
