@@ -123,7 +123,7 @@ App::post('/v1/projects')
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
-        if ($index) {
+        if ($index !== false) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
