@@ -124,7 +124,7 @@ App::post('/v1/projects')
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
-        if ($index) {
+        if ($index !== false) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
@@ -177,7 +177,8 @@ App::post('/v1/projects')
         $mod = 20;
         $index = array_search('database_db_fra1_self_hosted_0_0', $databases);
         if ($index !== false && ($project->getInternalId() % $mod === 0)) {
-            $project->setAttribute('database', $databases[$index]);
+            $database = $databases[$index];
+            $project->setAttribute('database', $database);
             $dbForConsole->updateDocument('projects', $project);
         }
 
