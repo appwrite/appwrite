@@ -426,7 +426,7 @@ class Certificates extends Action
             $locale->setDefault('en');
         }
 
-        $body = Template::fromFile(__DIR__ . '/../config/locale/templates/email-base.tpl');
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
         $body
