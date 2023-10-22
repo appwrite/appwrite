@@ -100,7 +100,11 @@ App::post('/v1/projects')
         $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
 
         $databases = Config::getParam('pools-database', []);
-
+        $databaseSelfHosted = 'database_db_fra1_self_hosted_0_0';
+        $index = array_search($databaseSelfHosted, $databases);
+        if ($index !== false) {
+            unset($databases[$index]);
+        }
 
         /**
          * Remove databases from the list that are currently undergoing an backup
@@ -124,7 +128,7 @@ App::post('/v1/projects')
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
-        if ($index) {
+        if ($index !== false) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
@@ -175,9 +179,9 @@ App::post('/v1/projects')
          * Update database with self-managed db every $mod projects
          */
         $mod = 20;
-        $index = array_search('database_db_fra1_self_hosted_0_0', $databases);
-        if ($index !== false && ($project->getInternalId() % $mod === 0)) {
-            $project->setAttribute('database', $databases[$index]);
+        $index = in_array($databaseSelfHosted, $databases);
+        if ($project->getInternalId() % $mod === 0 && $index !== false) {
+            $project->setAttribute('database', $databaseSelfHosted);
             $dbForConsole->updateDocument('projects', $project);
         }
 
