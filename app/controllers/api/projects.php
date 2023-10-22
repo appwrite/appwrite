@@ -92,14 +92,15 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '04:00'];
-        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '01:00'];
-        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '01:00'];
-        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '01:00'];
-        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '01:00'];
-        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '01:00'];
+        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
+        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
 
         $databases = Config::getParam('pools-database', []);
+
 
         /**
          * Remove databases from the list that are currently undergoing an backup
@@ -168,6 +169,16 @@ App::post('/v1/projects')
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
+        }
+
+        /**
+         * Update database with self-managed db every $mod projects
+         */
+        $mod = 20;
+        $index = array_search('database_db_fra1_self_hosted_0_0', $databases);
+        if ($index !== false && ($project->getInternalId() % $mod === 0)) {
+            $project->setAttribute('database', $databases[$index]);
+            $dbForConsole->updateDocument('projects', $project);
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
