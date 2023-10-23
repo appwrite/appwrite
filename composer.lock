@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6ff937a260c3e0c09de9eb5e073d830d",
+    "content-hash": "e1face7cebc5b79288c93a04e1f98521",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -850,72 +850,6 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.5"
             },
             "time": "2021-10-08T21:21:46+00:00"
-        },
-        {
-            "name": "laravel/pint",
-            "version": "v1.2.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/pint.git",
-                "reference": "e60e2112ee779ce60f253695b273d1646a17d6f1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/e60e2112ee779ce60f253695b273d1646a17d6f1",
-                "reference": "e60e2112ee779ce60f253695b273d1646a17d6f1",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "ext-mbstring": "*",
-                "ext-tokenizer": "*",
-                "ext-xml": "*",
-                "php": "^8.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.11.0",
-                "illuminate/view": "^9.32.0",
-                "laravel-zero/framework": "^9.2.0",
-                "mockery/mockery": "^1.5.1",
-                "nunomaduro/larastan": "^2.2.0",
-                "nunomaduro/termwind": "^1.14.0",
-                "pestphp/pest": "^1.22.1"
-            },
-            "bin": [
-                "builds/pint"
-            ],
-            "type": "project",
-            "autoload": {
-                "psr-4": {
-                    "App\\": "app/",
-                    "Database\\Seeders\\": "database/seeders/",
-                    "Database\\Factories\\": "database/factories/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Nuno Maduro",
-                    "email": "enunomaduro@gmail.com"
-                }
-            ],
-            "description": "An opinionated code formatter for PHP.",
-            "homepage": "https://laravel.com",
-            "keywords": [
-                "format",
-                "formatter",
-                "lint",
-                "linter",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/pint/issues",
-                "source": "https://github.com/laravel/pint"
-            },
-            "time": "2022-11-29T16:25:20+00:00"
         },
         {
             "name": "league/csv",
@@ -2283,23 +2217,22 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.2",
+            "version": "0.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c"
+                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
-                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
+                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
-                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
@@ -2331,9 +2264,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.2"
+                "source": "https://github.com/utopia-php/logger/tree/0.3.1"
             },
-            "time": "2023-10-16T08:16:19+00:00"
+            "time": "2023-02-10T15:52:50+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -2915,26 +2848,25 @@
         },
         {
             "name": "utopia-php/system",
-            "version": "0.7.1",
+            "version": "0.7.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/system.git",
-                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27"
+                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/system/zipball/01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
-                "reference": "01bf0d283aded0ee0a7a6e5ff540acf64270ab27",
+                "url": "https://api.github.com/repos/utopia-php/system/zipball/4593d4d334b0c15879c4744a826e0362924c5d66",
+                "reference": "4593d4d334b0c15879c4744a826e0362924c5d66",
                 "shasum": ""
             },
             "require": {
-                "laravel/pint": "1.2.*",
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "squizlabs/php_codesniffer": "^3.6",
-                "vimeo/psalm": "4.0.1"
+                "laravel/pint": "1.13.*",
+                "phpstan/phpstan": "1.10.*",
+                "phpunit/phpunit": "9.6.*"
             },
             "type": "library",
             "autoload": {
@@ -2966,9 +2898,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/system/issues",
-                "source": "https://github.com/utopia-php/system/tree/0.7.1"
+                "source": "https://github.com/utopia-php/system/tree/0.7.2"
             },
-            "time": "2023-08-30T09:14:37+00:00"
+            "time": "2023-10-20T01:39:17+00:00"
         },
         {
             "name": "utopia-php/vcs",
@@ -5890,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.3.0"
 }
