@@ -180,6 +180,7 @@ App::post('/v1/projects')
          */
         $mod = 20;
         if ($project->getInternalId() % $mod === 0 && $selfHostedIndex !== false) {
+             $database = $databaseSelfHosted;
             $project->setAttribute('database', $databaseSelfHosted);
             $dbForConsole->updateDocument('projects', $project);
         }
