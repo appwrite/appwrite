@@ -15,6 +15,7 @@ trait MessagingBase
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
+                'from' => 'sender-email@my-domain',
             ],
             'mailgun' => [
                 'providerId' => ID::unique(),
@@ -28,18 +29,21 @@ trait MessagingBase
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
+                'from' => '+123456789',
             ],
             'telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
+                'from' => '+123456789',
             ],
             'textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
+                'from' => '+123456789',
             ],
             'msg91' => [
                 'providerId' => ID::unique(),
@@ -53,6 +57,7 @@ trait MessagingBase
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
             ],
             'fcm' => [
                 'providerId' => ID::unique(),

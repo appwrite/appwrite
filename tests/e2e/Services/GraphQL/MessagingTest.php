@@ -22,6 +22,7 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
+                'from' => 'sender-email@my-domain',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
@@ -35,18 +36,21 @@ class MessagingTest extends Scope
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
+                'from' => '+123456789',
             ],
             'Telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
+                'from' => '+123456789',
             ],
             'Textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
+                'from' => '+123456789',
             ],
             'Msg91' => [
                 'providerId' => ID::unique(),
@@ -60,6 +64,7 @@ class MessagingTest extends Scope
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
             ],
             'Fcm' => [
                 'providerId' => ID::unique(),
