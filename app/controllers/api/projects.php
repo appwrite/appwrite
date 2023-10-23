@@ -180,9 +180,9 @@ App::post('/v1/projects')
          */
         $mod = 20;
         if ($project->getInternalId() % $mod === 0 && $selfHostedIndex !== false) {
-             $database = $databaseSelfHosted;
-            $project->setAttribute('database', $databaseSelfHosted);
-            $dbForConsole->updateDocument('projects', $project);
+            $database = $databaseSelfHosted;
+            $project->setAttribute('database', $database);
+            $dbForConsole->updateDocument('projects', $project->getId(), $project);
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
