@@ -156,11 +156,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.0",
+            "version": "0.13.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "5ab496b3908992b39275994a23783701c4b3de84"
+                "reference": "b584d19cdcd82737d0ee5c34d23de791f5ed3610"
             },
             "require": {
                 "php": ">=8.0",
@@ -195,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2023-09-12T19:38:43+00:00"
+            "time": "2023-10-16T15:39:53+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -2463,22 +2463,23 @@
         },
         {
             "name": "utopia-php/logger",
-            "version": "0.3.1",
+            "version": "0.3.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/logger.git",
-                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc"
+                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/logger/zipball/de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
-                "reference": "de623f1ec1c672c795d113dd25c5bf212f7ef4fc",
+                "url": "https://api.github.com/repos/utopia-php/logger/zipball/9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
+                "reference": "9151b7d16eab18d4c37c34643041cc0f33ca4a6c",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
                 "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.0.1"
@@ -2510,9 +2511,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/logger/issues",
-                "source": "https://github.com/utopia-php/logger/tree/0.3.1"
+                "source": "https://github.com/utopia-php/logger/tree/0.3.2"
             },
-            "time": "2023-02-10T15:52:50+00:00"
+            "time": "2023-10-16T08:16:19+00:00"
         },
         {
             "name": "utopia-php/messaging",
@@ -3151,16 +3152,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "be866170c42912f0d371421346a69f4f575eb116"
+                "reference": "d161d1156ef336d197a8d45384b531e5ec31243d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/be866170c42912f0d371421346a69f4f575eb116",
-                "reference": "be866170c42912f0d371421346a69f4f575eb116",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/d161d1156ef336d197a8d45384b531e5ec31243d",
+                "reference": "d161d1156ef336d197a8d45384b531e5ec31243d",
                 "shasum": ""
             },
             "require": {
@@ -3194,9 +3195,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.0"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.1"
             },
-            "time": "2023-10-13T13:07:13+00:00"
+            "time": "2023-10-19T07:43:31+00:00"
         },
         {
             "name": "utopia-php/websocket",

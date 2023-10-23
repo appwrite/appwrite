@@ -251,8 +251,7 @@ App::get('/v1/mock/tests/general/download')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("GET:/v1/mock/tests/general/download:passed")
-        ;
+            ->send("GET:/v1/mock/tests/general/download:passed");
     });
 
 App::post('/v1/mock/tests/general/upload')
@@ -334,7 +333,7 @@ App::post('/v1/mock/tests/general/upload')
             }
 
             if ($file['size'] !== 38756) {
-                    throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
+                throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
             }
 
             if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
@@ -509,8 +508,7 @@ App::get('/v1/mock/tests/general/502-error')
 
         $response
             ->setStatusCode(502)
-            ->text('This is a text error')
-        ;
+            ->text('This is a text error');
     });
 
 App::get('/v1/mock/tests/general/oauth2')
@@ -653,16 +651,18 @@ App::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
-    ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
-    ->param('projectId', '', new Text(2048), 'Project ID of the project where app is to be installed', true)
+    ->label('docs', false)
+    ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
+    ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
     ->inject('gitHub')
     ->inject('project')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForConsole) {
-        if (empty($projectId)) {
-            $error = 'Installation requests from organisation members for the Appwrite GitHub App are currently unsupported. To proceed with the installation, login to the Appwrite Console and install the GitHub App.';
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
+        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
         }
 
         $project = $dbForConsole->getDocument('projects', $projectId);
@@ -672,7 +672,6 @@ App::get('/v1/mock/github/callback')
             throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
         }
 
-        // Create / Update installation
         if (!empty($providerInstallationId)) {
             $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
             $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
@@ -701,10 +700,6 @@ App::get('/v1/mock/github/callback')
             ]);
 
             $installation = $dbForConsole->createDocument('installations', $installation);
-        } else {
-            $error = 'Installation of the Appwrite GitHub App on organization accounts is restricted to organization owners. As a member of the organization, you do not have the necessary permissions to install this GitHub App. Please contact the organization owner to create the installation from the Appwrite console.';
-
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $error);
         }
 
         $response->json([
