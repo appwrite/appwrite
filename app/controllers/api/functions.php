@@ -6,7 +6,6 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
@@ -50,7 +49,7 @@ use Utopia\VCS\Adapter\Git\GitHub;
 
 include_once __DIR__ . '/../shared/api.php';
 
-$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Document $template, GitHub $github) {
+$redeployVcs = function (Request $request, Document $function, Document $project, Document $installation, Database $dbForProject, Build $queueForBuilds, Document $template, GitHub $github) {
     $deploymentId = ID::unique();
     $entrypoint = $function->getAttribute('entrypoint', '');
     $providerInstallationId = $installation->getAttribute('providerInstallationId', '');
@@ -109,8 +108,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
-    $buildEvent = new Build();
-    $buildEvent
+    $queueForBuilds
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
@@ -158,10 +156,11 @@ App::post('/v1/functions')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
@@ -261,7 +260,7 @@ App::post('/v1/functions')
 
         // Redeploy vcs logic
         if (!empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, $template, $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, $template, $github);
         }
 
         $functionsDomain = App::getEnv('_APP_DOMAIN_FUNCTIONS', '');
@@ -286,7 +285,12 @@ App::post('/v1/functions')
 
             /** Trigger Webhook */
             $ruleModel = new Rule();
-            $ruleCreate = new Event(Event::WEBHOOK_QUEUE_NAME, Event::WEBHOOK_CLASS_NAME);
+            $ruleCreate =
+                $queueForEvents
+                     ->setClass(Event::WEBHOOK_CLASS_NAME)
+                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
+                ;
+
             $ruleCreate
                 ->setProject($project)
                 ->setEvent('rules.[ruleId].create')
@@ -326,7 +330,7 @@ App::post('/v1/functions')
             );
         }
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -530,7 +534,7 @@ App::get('/v1/functions/:functionId/usage')
                 'range' => $range,
                 'executionsTotal' => $stats["executions.$functionId.compute.total"] ?? [],
                 'executionsFailure' => $stats["executions.$functionId.compute.failure"] ?? [],
-                'executionsSuccesse' => $stats["executions.$functionId.compute.success"] ?? [],
+                'executionsSuccess' => $stats["executions.$functionId.compute.success"] ?? [],
                 'executionsTime' => $stats["executions.$functionId.compute.time"] ?? [],
                 'buildsTotal' => $stats["builds.$functionId.compute.total"] ?? [],
                 'buildsFailure' => $stats["builds.$functionId.compute.failure"] ?? [],
@@ -679,10 +683,11 @@ App::put('/v1/functions/:functionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $eventsInstance, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -807,7 +812,7 @@ App::put('/v1/functions/:functionId')
 
         // Redeploy logic
         if (!$isConnected && !empty($providerRepositoryId)) {
-            $redeployVcs($request, $function, $project, $installation, $dbForProject, new Document(), $github);
+            $redeployVcs($request, $function, $project, $installation, $dbForProject, $queueForBuilds, new Document(), $github);
         }
 
         // Inform scheduler if function is still active
@@ -818,7 +823,7 @@ App::put('/v1/functions/:functionId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $eventsInstance->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->dynamic($function, Response::MODEL_FUNCTION);
     });
@@ -928,9 +933,9 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -965,7 +970,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId')
             ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -988,10 +993,10 @@ App::delete('/v1/functions/:functionId')
     ->param('functionId', '', new UID(), 'Function ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Database $dbForConsole) {
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1010,11 +1015,11 @@ App::delete('/v1/functions/:functionId')
             ->setAttribute('active', false);
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($function);
 
-        $events->setParam('functionId', $function->getId());
+        $queueForEvents->setParam('functionId', $function->getId());
 
         $response->noContent();
     });
@@ -1043,11 +1048,13 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('project')
     ->inject('deviceFunctions')
     ->inject('deviceLocal')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, mixed $activate, Request $request, Response $response, Database $dbForProject, Event $events, Document $project, Device $deviceFunctions, Device $deviceLocal) {
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
+
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -1191,8 +1198,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
 
             // Start the build
-            $buildEvent = new Build();
-            $buildEvent
+            $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
                 ->setDeployment($deployment)
@@ -1229,7 +1235,7 @@ App::post('/v1/functions/:functionId/deployments')
 
         $metadata = null;
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1367,10 +1373,10 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
     ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $deletes, Event $events, Device $deviceFunctions) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -1403,11 +1409,11 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ])));
         }
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($deployment);
 
@@ -1434,8 +1440,9 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('events')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $events) use ($redeployVcs) {
+    ->inject('queueForEvents')
+    ->inject('queueForBuilds')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1467,16 +1474,14 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
         ]));
 
-        $buildEvent = new Build();
-
-        $buildEvent
+        $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
             ->setDeployment($deployment)
             ->setProject($project)
             ->trigger();
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
@@ -1505,12 +1510,12 @@ App::post('/v1/functions/:functionId/executions')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('usage')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $events, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Stats $usage, string $mode, Func $queueForFunctions, Reader $geodb) {
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1626,7 +1631,7 @@ App::post('/v1/functions/:functionId/executions')
             'search' => implode(' ', [$functionId, $executionId]),
         ]);
 
-        $events
+        $queueForEvents
             ->setParam('functionId', $function->getId())
             ->setParam('executionId', $execution->getId())
             ->setContext('function', $function);
