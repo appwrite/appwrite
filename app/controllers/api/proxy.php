@@ -37,10 +37,11 @@ App::post('/v1/proxy/rules')
     ->param('resourceId', '', new UID(), 'ID of resource for the action type. If resourceType is "api", leave empty. If resourceType is "function", provide ID of the function.', true)
     ->inject('response')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForCertificates')
+    ->inject('queueForEvents')
     ->inject('dbForConsole')
     ->inject('dbForProject')
-    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Event $events, Database $dbForConsole, Database $dbForProject) {
+    ->action(function (string $domain, string $resourceType, string $resourceId, Response $response, Document $project, Certificate $queueForCertificates, Event $queueForEvents, Database $dbForConsole, Database $dbForProject) {
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         if ($domain === $mainDomain) {
             throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'You cannot assign your main domain to specific resource. Please use subdomain or a different domain.');
@@ -113,8 +114,7 @@ App::post('/v1/proxy/rules')
             if ($validator->isValid($domain->get())) {
                 $status = 'verifying';
 
-                $event = new Certificate();
-                $event
+                $queueForCertificates
                     ->setDomain(new Document([
                         'domain' => $rule->getAttribute('domain')
                     ]))
@@ -125,7 +125,7 @@ App::post('/v1/proxy/rules')
         $rule->setAttribute('status', $status);
         $rule = $dbForConsole->createDocument('rules', $rule);
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $rule->setAttribute('logs', '');
 
@@ -235,9 +235,9 @@ App::delete('/v1/proxy/rules/:ruleId')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->inject('events')
-    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole, Delete $deletes, Event $events) {
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
+    ->action(function (string $ruleId, Response $response, Document $project, Database $dbForConsole, Delete $queueForDeletes, Event $queueForEvents) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
@@ -246,11 +246,11 @@ App::delete('/v1/proxy/rules/:ruleId')
 
         $dbForConsole->deleteDocument('rules', $rule->getId());
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($rule);
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $response->noContent();
     });
@@ -270,10 +270,11 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
     ->label('sdk.response.model', Response::MODEL_PROXY_RULE)
     ->param('ruleId', '', new UID(), 'Rule ID.')
     ->inject('response')
-    ->inject('events')
+    ->inject('queueForCertificates')
+    ->inject('queueForEvents')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $ruleId, Response $response, Event $events, Document $project, Database $dbForConsole) {
+    ->action(function (string $ruleId, Response $response, Certificate $queueForCertificates, Event $queueForEvents, Document $project, Database $dbForConsole) {
         $rule = $dbForConsole->getDocument('rules', $ruleId);
 
         if ($rule->isEmpty() || $rule->getAttribute('projectInternalId') !== $project->getInternalId()) {
@@ -300,14 +301,13 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
         $dbForConsole->updateDocument('rules', $rule->getId(), $rule->setAttribute('status', 'verifying'));
 
         // Issue a TLS certificate when domain is verified
-        $event = new Certificate();
-        $event
+        $queueForCertificates
             ->setDomain(new Document([
                 'domain' => $rule->getAttribute('domain')
             ]))
             ->trigger();
 
-        $events->setParam('ruleId', $rule->getId());
+        $queueForEvents->setParam('ruleId', $rule->getId());
 
         $certificate = $dbForConsole->getDocument('certificates', $rule->getAttribute('certificateId', ''));
         $rule->setAttribute('logs', $certificate->getAttribute('logs', ''));
