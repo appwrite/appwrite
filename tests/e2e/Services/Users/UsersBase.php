@@ -241,8 +241,8 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
-        $this->assertEquals($token['headers']['status-code'], 201);
-        $this->assertEquals($token['body']['userId'], $data['userId']);
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertEquals($data['userId'], $token['body']['userId']);
         $this->assertNotEmpty($token['body']['secret']);
         $this->assertNotEmpty($token['body']['expire']);
 

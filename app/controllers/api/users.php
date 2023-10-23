@@ -1098,8 +1098,8 @@ App::post('/v1/users/:userId/tokens')
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1125,7 +1125,7 @@ App::post('/v1/users/:userId/tokens')
 
         $token->setAttribute('secret', $secret);
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('tokenId', $token->getId())
             ->setPayload($response->output($token, Response::MODEL_TOKEN));
