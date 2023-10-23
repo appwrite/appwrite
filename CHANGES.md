@@ -1,3 +1,8 @@
+# Version 1.4.7
+
+## Fixes
+- Fix missing body in async function execution in [#6988](https://github.com/appwrite/appwrite/pull/6988)
+
 # Version 1.4.6
 
 ## Changes
