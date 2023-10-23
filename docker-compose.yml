@@ -856,6 +856,8 @@ services:
     environment:
       - _APP_CONNECTIONS_DB_REPLICAS
       - _APP_CONNECTIONS_BACKUPS_STORAGE
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-restore:
     command: sleep infinity
