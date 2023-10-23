@@ -101,9 +101,9 @@ App::post('/v1/projects')
 
         $databases = Config::getParam('pools-database', []);
         $databaseSelfHosted = 'database_db_fra1_self_hosted_0_0';
-        $index = array_search($databaseSelfHosted, $databases);
-        if ($index !== false) {
-            unset($databases[$index]);
+        $SelfHostedIndex = array_search($databaseSelfHosted, $databases);
+        if ($SelfHostedIndex !== false) {
+            unset($databases[$SelfHostedIndex]);
         }
 
         /**
@@ -179,8 +179,7 @@ App::post('/v1/projects')
          * Update database with self-managed db every $mod projects
          */
         $mod = 20;
-        $index = in_array($databaseSelfHosted, $databases);
-        if ($project->getInternalId() % $mod === 0 && $index !== false) {
+        if ($project->getInternalId() % $mod === 0 && $SelfHostedIndex !== false) {
             $project->setAttribute('database', $databaseSelfHosted);
             $dbForConsole->updateDocument('projects', $project);
         }
