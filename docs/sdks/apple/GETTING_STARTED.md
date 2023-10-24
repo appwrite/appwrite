@@ -77,7 +77,6 @@ do {
     let user = try await account.create(
         userId: ID.unique(),
         email: "email@example.com",
-        phone: "+123456789",
         password: "password",
         name: "Walter O'Brien"
     )
@@ -104,7 +103,6 @@ func main() {
         let user = try await account.create(
             userId: ID.unique(),
             email: "email@example.com",
-            phone: "+123456789",
             password: "password",
             name: "Walter O'Brien"
         )
