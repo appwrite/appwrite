@@ -283,10 +283,12 @@ class Backup extends Action
      */
     public function checkEnvVariables(): void
     {
-        foreach ([
+        foreach (
+            [
             '_APP_CONNECTIONS_BACKUPS_STORAGE',
             '_APP_CONNECTIONS_DB_REPLICAS',
-        ] as $env) {
+            ] as $env
+        ) {
             if (empty(App::getEnv($env))) {
                 throw new Exception('Can\'t read ' . $env);
             }
