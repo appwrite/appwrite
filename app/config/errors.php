@@ -732,4 +732,21 @@ return [
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
     ],
+
+    /** Realtime */
+    Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
+        'name' => Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+        'description' => 'Message format is not valid.',
+        'code' => 1003,
+    ],
+    Exception::REALTIME_POLICY_VIOLATION => [
+        'name' => Exception::REALTIME_POLICY_VIOLATION,
+        'description' => 'Policy violation.',
+        'code' => 1008,
+    ],
+    Exception::REALTIME_TOO_MANY_MESSAGES => [
+        'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
+        'description' => 'Too many messages.',
+        'code' => 1013,
+    ],
 ];
