@@ -2,7 +2,7 @@
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img src="https://ipfs.io/ipfs/bafybeihsb6oxzouskiennltqlnkgrhspppu4uqhcrj2kpv7rw7nb2pa3ri/banner.png" alt="Appwrite Logo"></a>
     <br />
     <br />
     <b>适用于[Flutter/Vue/Angular/React/iOS/Android/* 等等平台 *]的完整后端服务</b>
@@ -29,7 +29,14 @@ Appwrite是一个基于Docker的端到端开发者平台，其容器化的微服
 
 Appwrite 可以提供给开发者用户验证，外部授权，用户数据读写检索，文件储存，图像处理，云函数计算，[等多种服务](https://appwrite.io/docs).
 
-![Appwrite](public/images/github.png)
+<p align="center">
+    <br />
+    <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-appwrite-2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=360315&theme=light&period=daily" alt="Appwrite - 100&#0037;&#0032;open&#0032;source&#0032;alternative&#0032;for&#0032;Firebase | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+    <br />
+    <br />
+</p>
+
+![Appwrite](https://ipfs.io/ipfs/bafybeicfrjeacfkl7wuos25dvn5fruf4xezcq7ee64c4k4iqhxknazgthe/github.png)
 
 更多信息请到 Appwrite 官网查看： [https://appwrite.io](https://appwrite.io)
 
@@ -153,7 +160,7 @@ docker run -it --rm `
 
 ## 软件架构
 
-![Appwrite 软件架构](docs/specs/overview.drawio.svg)
+![Appwrite 软件架构](https://ipfs.io/ipfs/bafybeickjqc4i4eil6thlzsx4dujvdjtctucz52n4pkptbgufo2jesmrla/overview.drawio.svg)
 
 Appwrite 使用高拓展性的微服务架构。此外，Appwrite 支持多种 API（REST、WebSocket 和 即将推出的 GraphQL），来迎合您的个性化开发习惯。
 
@@ -171,7 +178,7 @@ Appwrite API 界面层利用后台缓存和任务委派来提供极速的响应�
 
 ## 订阅我们
 
-加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [Twitter](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook.com/appwrite.io/groups/)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
+加入我们在世界各地不断发展的社区！请参阅我们的官方 [博客](https://medium.com/appwrite-io)。在 [X](https://twitter.com/appwrite)、[Facebook 页面](https://www.facebook.com/appwrite.io)、[Facebook 群组](https://www.facebook.com/appwrite.io/groups/)、[开发者社区](https://dev.to/appwrite) 等平台订阅我们或加入我们的 [Discord 社区](https://discord.gg/GSeTUeA) 以获得更多帮助，想法和讨论。
 
 ## 版权说明
 
