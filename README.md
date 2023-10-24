@@ -2,7 +2,7 @@
 
 <br />
 <p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
+    <a href="https://appwrite.io" target="_blank"><img src="https://ipfs.io/ipfs/bafybeihsb6oxzouskiennltqlnkgrhspppu4uqhcrj2kpv7rw7nb2pa3ri/banner.png" alt="Appwrite Logo"></a>
     <br />
     <br />
     <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
@@ -34,7 +34,6 @@ Using Appwrite, you can easily integrate your app with user authentication and m
 <p align="center">
     <br />
     <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-appwrite-2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=360315&theme=light&period=daily" alt="Appwrite - 100&#0037;&#0032;open&#0032;source&#0032;alternative&#0032;for&#0032;Firebase | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-    <br />
     <br />
 </p>
 
@@ -119,19 +118,19 @@ Choose from one of the providers below:
   <tr>
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src="https://ipfs.io/ipfs/bafybeihvfqbxzovytxgwgi2lftew4sgcij6mb7272x2qe4oix63x5t6bo4/digitalocean-logo.svg" alt="DigitalOcean Logo" />
           <br /><sub><b>DigitalOcean</b></sub></a>
         </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <img width="50" height="39" src="https://ipfs.io/ipfs/bafybeihg7vede7mij3dfa5ptnv7woqzunnwmeindhol3vatwa5jzlsq5ei/gitpod-logo.svg" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
-        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
+        <img width="50" height="39" src="https://ipfs.io/ipfs/bafybeig6btok4xffvkaigd3hybb4kbpcoje2oio47cveosaqcf6tuzmxli/akamai-logo.svg" alt="Akamai Logo" />
           <br /><sub><b>Akamai Compute</b></sub></a>    
       </a>
     </td>
@@ -195,7 +194,7 @@ Looking for more SDKs? - Help us by contributing a pull request to our [SDK Gene
 
 ## Architecture
 
-![Appwrite Architecture](docs/specs/overview.drawio.svg)
+![Appwrite Architecture](https://ipfs.io/ipfs/bafybeickjqc4i4eil6thlzsx4dujvdjtctucz52n4pkptbgufo2jesmrla/overview.drawio.svg)
 
 Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
 
