@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Template\Template;
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
@@ -39,7 +40,7 @@ class Mails extends Action
      */
     public function action(Message $message, Registry $register): void
     {
-
+        Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
