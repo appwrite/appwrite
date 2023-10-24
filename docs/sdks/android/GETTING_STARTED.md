@@ -53,7 +53,6 @@ val account = Account(client)
 val response = account.create(
     ID.unique(),
     "email@example.com",
-    "+123456789",
     "password",
     "Walter O'Brien"
 )
@@ -75,7 +74,6 @@ val account = Account(client)
 val user = account.create(
     ID.unique(),
     "email@example.com",
-    "+123456789",
     "password",
     "Walter O'Brien"
 )
@@ -86,7 +84,7 @@ The Appwrite Android SDK raises an `AppwriteException` object with `message`, `c
 
 ```kotlin
 try {
-    var user = account.create(ID.unique(),"email@example.com","+123456789","password","Walter O'Brien")
+    var user = account.create(ID.unique(),"email@example.com","password","Walter O'Brien")
     Log.d("Appwrite user", user.toMap())
 } catch(e : AppwriteException) {
     e.printStackTrace()
