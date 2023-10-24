@@ -142,6 +142,16 @@ return [
         'beta' => false,
         'mock' => false,
     ],
+    'fusionauth' => [
+        'name' => 'FusionAuth',
+        'developers' => 'https://fusionauth.io/docs',
+        'icon' => 'icon-fusionauth',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'github' => [
         'name' => 'GitHub',
         'developers' => 'https://developer.github.com/',
