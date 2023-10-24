@@ -1,3 +1,37 @@
+## Table of Contents
+- [Contributing](#contributing)
+  - [Here for Hacktoberfest?](#here-for-hacktoberfest)
+  - [How to Start?](#how-to-start)
+- [Code of Conduct](#code-of-conduct)
+- [Submit a Pull Request 🚀](#submit-a-pull-request-)
+- [Setup From Source](#setup-from-source)
+  - [Code Autocompletion](#code-autocompletion)
+  - [User Interface](#user-interface)
+  - [Get Started](#get-started)
+- [Advanced Topics](#advanced-topics)
+  - [Tools and Libs](#tools-and-libs)
+  - [Network and Protocols](#network-and-protocols)
+  - [Architecture](#architecture)
+  - [Security](#security)
+- [Dependencies](#dependencies)
+- [Introducing New Features](#introducing-new-features)
+- [Code Maintenance](#code-maintenance)
+- [Build](#build)
+- [Generate SDK](#generate-sdk)
+- [Debug](#debug)
+- [Tests](#tests)
+- [Benchmarking](#benchmarking)
+- [Clearing the Cache](#clearing-the-cache)
+- [Tutorials](#tutorials)
+- [Other Ways to Help](#other-ways-to-help)
+  - [Blogging & Speaking](#blogging-speaking)
+  - [Presenting at Meetups](#presenting-at-meetups)
+  - [Sending Feedbacks and Reporting Bugs](#sending-feedbacks-and-reporting-bugs)
+  - [Submitting New Ideas](#submitting-new-ideas)
+  - [Improving Documentation](#improving-documentation)
+  - [Helping Someone](#helping-someone)
+  - [FAQs](#faqs)
+
 # Contributing
 
 We would ❤️ you to contribute to Appwrite and help make it better! We want contributing to Appwrite to be fun, enjoyable, and educational for anyone and everyone. All contributions are welcome, including issues, and new docs, as well as updates and tweaks, blog posts, workshops, and more.
@@ -484,3 +518,45 @@ Submitting documentation updates, enhancements, designs, or bug fixes, as well a
 ### Helping Someone
 
 Consider searching for Appwrite on Discord, GitHub, or StackOverflow to help someone who needs help. You can also help by teaching others how to contribute to Appwrite's repo!
+
+# FAQs
+
+### 1. What is Appwrite?
+
+Appwrite is an open-source backend-as-a-service (BaaS) platform that simplifies the development of web and mobile applications. It offers a range of features and tools to accelerate app development and reduce the need for backend infrastructure management.
+
+### 2. How can I contribute to Appwrite?
+
+Contributing to Appwrite is easy and highly encouraged. You can start by checking out the [Contributing](#contributing) section in this README for details on how to contribute. Whether you're a developer, writer, or designer, there are many ways to get involved.
+
+### 3. Can I participate in Hacktoberfest with Appwrite?
+
+Yes, Appwrite actively participates in Hacktoberfest. You can find Hacktoberfest-specific issues tagged `hacktoberfest` and contribute to them. Check out the [Here for Hacktoberfest?](#here-for-hacktoberfest) section for more details.
+
+### 4. How do I run tests in Appwrite?
+
+To run tests in Appwrite, you can use the provided Docker CLI commands. Refer to the [Tests](#tests) section for details on running unit tests and end-to-end tests.
+
+### 5. How do I clear the cache in Appwrite?
+
+If you need to clear the cache in Appwrite, you can use the command provided in the [Clearing the Cache](#clearing-the-cache) section. This command clears the cache using Redis.
+
+### 6. How can I get help and support for Appwrite?
+
+If you need help or support with Appwrite, you can reach out on [Discord](https://appwrite.io/discord) or via Twitter [@appwrite](https://twitter.com/appwrite). You can also submit issues on GitHub for specific problems or questions.
+
+### 7. What are the technologies used in Appwrite?
+
+Appwrite is built using various technologies, including PHP, Docker, Redis, MariaDB, InfluxDB, Statsd, ClamAV, Imagemagick, Webp, SMTP, and more. It follows PHP-FIG coding standards and uses package managers like Composer and NPM. You can find more details in the [Technology Stack](#technology-stack) section.
+
+### 8. Can I blog or speak about my experiences with Appwrite?
+
+Yes, you're encouraged to blog or speak about your experiences with Appwrite. Sharing your challenges, successes, and tutorials can help others in the community. Mention [@appwrite](https://twitter.com/appwrite) on Twitter, and you can add your content to the [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repository on GitHub.
+
+### 9. How do I debug Appwrite code?
+
+You can debug Appwrite code using the provided YASD debugger. Refer to the [Debug](#debug) section for instructions on setting up and connecting to the debugger using VS Code and PHPStorm.
+
+### 10. What should I do before introducing a new feature in Appwrite?
+
+Before introducing a new feature, open an issue to explain your ideas and gather feedback from the community. This allows for discussions, feedback, and ensures alignment with Appwrite's vision. Larger features might need to go through the [RFC process](https://github.com/appwrite/rfc).
