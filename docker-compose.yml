@@ -221,7 +221,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
-      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
     volumes:
@@ -389,6 +388,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WORKERS_NUM
+      - _APP_QUEUE_NAME
 
   appwrite-worker-builds:
     entrypoint: worker-builds
@@ -734,7 +735,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.3
+    image: openruntimes/executor:0.4.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -884,7 +885,6 @@ services:
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
   # RedisCommander - A nice UI for exploring Redis data
-  # Resque - A nice UI for exploring Redis pub/sub, view the different queues workloads, pending and failed tasks
   # Chronograf - A nice UI for exploring InfluxDB data
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
@@ -925,19 +925,6 @@ services:
   #   - REDIS_HOSTS=redis
   #   ports:
   #   - "8081:8081"
-
-  # resque:
-  #   image: appwrite/resque-web:1.1.0
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   ports:
-  #     - "5678:5678"
-  #   environment:
-  #     - RESQUE_WEB_HOST=redis
-  #     - RESQUE_WEB_PORT=6379
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
 
   # chronograf:
   #   image: chronograf:1.6

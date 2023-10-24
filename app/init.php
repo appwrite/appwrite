@@ -18,7 +18,7 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
-use Appwrite\Event\Usage;
+use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
@@ -47,13 +47,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Adapters\SMS\Mock;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -69,7 +63,8 @@ use Utopia\Pools\Group;
 use Utopia\Pools\Pool;
 use Ahc\Jwt\JWT;
 use Ahc\Jwt\JWTException;
-use Appwrite\Auth\OAuth2\Github;
+use Appwrite\Event\Build;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -82,6 +77,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\CLI\Console;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -108,8 +104,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 512;
-const APP_VERSION_STABLE = '1.4.5';
+const APP_CACHE_BUSTER = 514;
+const APP_VERSION_STABLE = '1.4.7';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -118,6 +114,7 @@ const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
 const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_TIMEOUT_MILLISECONDS = 15000;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -145,6 +142,8 @@ const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
 const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
+const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
+const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
@@ -259,14 +258,6 @@ Config::load('storage-logos', __DIR__ . '/config/storage/logos.php');
 Config::load('storage-mimes', __DIR__ . '/config/storage/mimes.php');
 Config::load('storage-inputs', __DIR__ . '/config/storage/inputs.php');
 Config::load('storage-outputs', __DIR__ . '/config/storage/outputs.php');
-
-$user = App::getEnv('_APP_REDIS_USER', '');
-$pass = App::getEnv('_APP_REDIS_PASS', '');
-if (!empty($user) || !empty($pass)) {
-    Resque::setBackend('redis://' . $user . ':' . $pass . '@' . App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
-} else {
-    Resque::setBackend(App::getEnv('_APP_REDIS_HOST', '') . ':' . App::getEnv('_APP_REDIS_PORT', ''));
-}
 
 /**
  * New DB Filters
@@ -920,17 +911,38 @@ App::setResource('localeCodes', function () {
 });
 
 // Queues
-App::setResource('events', fn() => new Event('', ''));
-App::setResource('audits', fn() => new Audit());
-App::setResource('mails', fn() => new Mail());
-App::setResource('deletes', fn() => new Delete());
-App::setResource('database', fn() => new EventDatabase());
-App::setResource('messaging', fn() => new Messaging());
 App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+App::setResource('queueForMessaging', function (Connection $queue) {
+    return new Messaging($queue);
+}, ['queue']);
+App::setResource('queueForMails', function (Connection $queue) {
+    return new Mail($queue);
+}, ['queue']);
+App::setResource('queueForBuilds', function (Connection $queue) {
+    return new Build($queue);
+}, ['queue']);
+App::setResource('queueForDatabase', function (Connection $queue) {
+    return new EventDatabase($queue);
+}, ['queue']);
+App::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+App::setResource('queueForEvents', function (Connection $queue) {
+    return new Event($queue);
+}, ['queue']);
+App::setResource('queueForAudits', function (Connection $queue) {
+    return new Audit($queue);
+}, ['queue']);
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+App::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
+App::setResource('queueForMigrations', function (Connection $queue) {
+    return new Migration($queue);
 }, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
@@ -1132,11 +1144,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $dbAdapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
-    $database->setNamespace('_' . $project->getInternalId());
+
+    $database
+        ->setNamespace('_' . $project->getInternalId())
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1150,7 +1164,9 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database = new Database($dbAdapter, $cache);
 
-    $database->setNamespace('_console');
+    $database
+        ->setNamespace('_console')
+        ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
 }, ['pools', 'cache']);
@@ -1167,7 +1183,11 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+
+            $database
+                ->setNamespace('_' . $project->getInternalId())
+                ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
+
             return $database;
         }
 
@@ -1180,7 +1200,9 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
     };
@@ -1322,21 +1344,6 @@ App::setResource('passwordsDictionary', function ($register) {
     return $register->get('passwordsDictionary');
 }, ['register']);
 
-App::setResource('sms', function () {
-    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    $user = $dsn->getUser();
-    $secret = $dsn->getPassword();
-
-    return match ($dsn->getHost()) {
-        'mock' => new Mock($user, $secret), // used for tests
-        'twilio' => new Twilio($user, $secret),
-        'text-magic' => new TextMagic($user, $secret),
-        'telesign' => new Telesign($user, $secret),
-        'msg91' => new Msg91($user, $secret),
-        'vonage' => new Vonage($user, $secret),
-        default => null
-    };
-});
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
