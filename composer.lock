@@ -1906,16 +1906,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.44.2",
+            "version": "0.44.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06"
+                "reference": "b2d403c25a77506e03db5736335b0cae52bcc18a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
-                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b2d403c25a77506e03db5736335b0cae52bcc18a",
+                "reference": "b2d403c25a77506e03db5736335b0cae52bcc18a",
                 "shasum": ""
             },
             "require": {
@@ -1928,7 +1928,7 @@
             },
             "require-dev": {
                 "fakerphp/faker": "^1.14",
-                "laravel/pint": "1.4.*",
+                "laravel/pint": "1.13.*",
                 "pcov/clobber": "^2.0",
                 "phpstan/phpstan": "1.10.*",
                 "phpunit/phpunit": "^9.4",
@@ -1956,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.44.2"
+                "source": "https://github.com/utopia-php/database/tree/0.44.3"
             },
-            "time": "2023-10-19T07:39:00+00:00"
+            "time": "2023-10-24T10:13:48+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2742,16 +2742,16 @@
         },
         {
             "name": "utopia-php/storage",
-            "version": "0.18.0",
+            "version": "0.18.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/storage.git",
-                "reference": "e1d4f22aba2898a33368d1e1ce89f805db85f842"
+                "reference": "983e6dee137012f9f57f126d3c79aab54e4e8824"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/storage/zipball/e1d4f22aba2898a33368d1e1ce89f805db85f842",
-                "reference": "e1d4f22aba2898a33368d1e1ce89f805db85f842",
+                "url": "https://api.github.com/repos/utopia-php/storage/zipball/983e6dee137012f9f57f126d3c79aab54e4e8824",
+                "reference": "983e6dee137012f9f57f126d3c79aab54e4e8824",
                 "shasum": ""
             },
             "require": {
@@ -2791,9 +2791,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/storage/issues",
-                "source": "https://github.com/utopia-php/storage/tree/0.18.0"
+                "source": "https://github.com/utopia-php/storage/tree/0.18.1"
             },
-            "time": "2023-10-18T08:42:15+00:00"
+            "time": "2023-10-24T14:44:19+00:00"
         },
         {
             "name": "utopia-php/swoole",
@@ -5822,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
