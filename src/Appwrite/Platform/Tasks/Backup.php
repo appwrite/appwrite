@@ -44,7 +44,7 @@ class Backup extends Action
     {
         $this
             ->desc('Backup a database')
-            ->param('database', null, new Text(20), 'Database name, for example: db_fra1_03')
+            ->param('database', null, new Text(100), 'Database name, for example: db_fra1_03')
             ->inject('logError')
             ->callback(fn (string $database, callable $logError) => $this->action($database, $logError));
     }

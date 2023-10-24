@@ -833,7 +833,9 @@ services:
   appwrite-backup:
     image: appwrite-dev
     <<: *x-logging
-    command: database-backup --database=db_fra1_03
+    entrypoint: database-backup
+    command: 
+      - --database=db_fra1_03
     networks:
       - appwrite
     volumes:
@@ -1019,4 +1021,5 @@ volumes:
   appwrite-builds:
   appwrite-influxdb:
   appwrite-config:
+  backup-data:
   # appwrite-chronograf:
