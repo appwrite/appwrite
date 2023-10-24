@@ -161,7 +161,7 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 
 ---
 
-## ![Appwrite](docs/specs/overview.drawio.svg)
+## ![Appwrite](https://ipfs.io/ipfs/bafybeickjqc4i4eil6thlzsx4dujvdjtctucz52n4pkptbgufo2jesmrla/overview.drawio.svg)
 
 ### File Structure
 
@@ -463,7 +463,7 @@ Pull requests are great, but there are many other ways you can help Appwrite.
 
 ### Blogging & Speaking
 
-Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite](https://twitter.com/appwrite) on Twitter and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
+Blogging, speaking about, or creating tutorials about one of Appwrite’s many features are great ways to get the word out about Appwrite. Mention [@appwrite](https://twitter.com/appwrite) on X and/or [email team@appwrite.io](mailto:team@appwrite.io) so we can give pointers and tips and help you spread the word by promoting your content on the different Appwrite communication channels. Please add your blog posts and videos of talks to our [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) repo on GitHub.
 
 ### Presenting at Meetups
 
