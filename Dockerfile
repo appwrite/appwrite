@@ -74,9 +74,8 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/db-backup &&  \
-    chmod +x /usr/local/bin/db-restore &&  \
-    chmod +x /usr/local/bin/volume-sync && \
+    chmod +x /usr/local/bin/database-backup &&  \
+    chmod +x /usr/local/bin/database-restore &&  \
     chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/upgrade && \

@@ -3,11 +3,16 @@
 namespace Appwrite\Platform\Tasks;
 
 use Exception;
+use PDO;
 use Utopia\DSN\DSN;
 use Utopia\Platform\Action;
 use Utopia\App;
+use Utopia\Cache\Adapter\None;
+use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Pools\Group;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Database;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\DOSpaces;
 use Utopia\Storage\Device\Local;
@@ -25,6 +30,7 @@ class Backup extends Action
     public const RETRY_TAR = 1;
     public const RETRY_UPLOAD = 2;
     public const VERSION = 'v1';
+
     protected ?DSN $dsn = null;
     protected ?string $database = null;
     protected ?DOSpaces $s3 = null;
@@ -39,48 +45,77 @@ class Backup extends Action
         $this
             ->desc('Backup a database')
             ->param('database', null, new Text(20), 'Database name, for example: db_fra1_03')
-            ->inject('pools')
             ->inject('logError')
-            ->callback(fn(string $database, Group $pools, callable $logError) => $this->action($database, $pools, $logError));
-    }
-
-    public static function getName(): string
-    {
-        return 'backup';
+            ->callback(fn (string $database, callable $logError) => $this->action($database, $logError));
     }
 
     /**
      * @throws Exception
      */
-    public function action(string $database, Group $pools, callable $logError): void
+    public function action(string $database, callable $logError): void
     {
-        $this->checkEnvVariables();
+        Console::title('Backups V1');
+        Console::success(APP_NAME . ' Database Backup Process has started..');
 
         $this->database = $database;
+
+        $this->checkEnvVariables();
         $this->dsn = $this->getDsn($database);
         if (is_null($this->dsn)) {
-            throw new Exception('No DSN match');
+            throw new Exception('No DSN found for database ' . $database . '. Check the value of _APP_CONNECTIONS_DB_REPLICAS');
         }
 
-
-        console::info('Trying to connect to ' . $this->dsn->getHost());
-
-        $dsn = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
-        $this->s3 = new DOSpaces('/' . $database . '/' . self::VERSION, $dsn->getUser(), $dsn->getPassword(), $dsn->getPath(), $dsn->getParam('region'));
-
+        Console::info('Trying to connect to ' . $this->dsn->getHost());
         try {
-            $this->retry(function () use ($pools, $database) {
-                $pools
-                ->get('replica_' . $database)
-                ->pop()
-                ->getResource();
+            $this->retry(function () {
+                $dsnHost = $this->dsn->getHost();
+                $dsnPort = $this->dsn->getPort();
+                $dsnUser = $this->dsn->getUser();
+                $dsnPass = $this->dsn->getPassword();
+                $dsnScheme = $this->dsn->getScheme();
+                $dsnDatabase = $this->dsn->getPath();
+                $pdo = new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass);
+
+                $adapter = match ($dsnScheme) {
+                    'mysql' => new MySQL($pdo),
+                    'mariadb' => new MariaDB($pdo)
+                };
+                $database = new Database($adapter, new Cache(new None()));
+                $database->ping();
+                Console::success('Connected to ' . $dsnHost);
             }, 10, 5);
         } catch (Exception $error) {
             throw new Exception('Failed to connect to database: ' . $error->getMessage());
         }
 
+        $storageDSN = new DSN(App::getEnv('_APP_CONNECTIONS_BACKUPS_STORAGE', ''));
+        $this->s3 = new DOSpaces('/' . $database . '/' . self::VERSION, $storageDSN->getUser(), $storageDSN->getPassword(), $storageDSN->getPath(), $storageDSN->getParam('region'));
+
         $this->setContainerId();
         $this->setProcessors();
+
+        $sleep = (int) App::getEnv('_APP_BACKUPS_INTERVAL', 0); // 120 seconds (by default)
+        $jobInitTime = App::getEnv('_APP_BACKUPS_START_TIME'); // (hour:minutes)
+
+        if (!$sleep || !$jobInitTime) {
+            throw new Exception('Invalid backup interval or start time');
+        }
+
+        $now = new \DateTime();
+        $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
+        $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+        $delay = $next->getTimestamp() - $now->getTimestamp();
+
+        /**
+         * If time passed for the target day.
+         */
+        if ($delay <= 0) {
+            $next->add(\DateInterval::createFromDateString('1 days'));
+            $delay = $next->getTimestamp() - $now->getTimestamp();
+        }
+
+        self::log('Setting loop start time to ' . $next->format("Y-m-d H:i:s.v") . '. Delaying for ' . $delay . ' seconds.');
 
         Console::loop(function () use ($logError) {
             try {
@@ -93,7 +128,7 @@ class Backup extends Action
 
                 $logError($error, 'backup', 'action');
             }
-        }, self::BACKUP_INTERVAL_SECONDS);
+        }, $sleep, $delay);
     }
 
     /**
@@ -248,12 +283,10 @@ class Backup extends Action
      */
     public function checkEnvVariables(): void
     {
-        foreach (
-            [
-                '_APP_CONNECTIONS_BACKUPS_STORAGE',
-                '_APP_CONNECTIONS_DB_REPLICAS',
-            ] as $env
-        ) {
+        foreach ([
+            '_APP_CONNECTIONS_BACKUPS_STORAGE',
+            '_APP_CONNECTIONS_DB_REPLICAS',
+        ] as $env) {
             if (empty(App::getEnv($env))) {
                 throw new Exception('Can\'t read ' . $env);
             }
@@ -412,5 +445,10 @@ class Backup extends Action
         }
 
         return false;
+    }
+
+    public static function getName(): string
+    {
+        return 'backup';
     }
 }

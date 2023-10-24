@@ -834,8 +834,8 @@ services:
   appwrite-backup:
     image: appwrite-dev
     <<: *x-logging
-    entrypoint: db-backup
     container_name: appwrite-backup
+    command: database-backup --database=db_fra1_03
     networks:
       - appwrite
     volumes:
@@ -846,6 +846,8 @@ services:
     depends_on:
       - redis
     environment:
+      - _APP_BACKUPS_INTERVAL=120
+      - _APP_BACKUPS_START_TIME=21:08
       - _APP_CONNECTIONS_DB_REPLICAS
       - _APP_CONNECTIONS_BACKUPS_STORAGE
       - _APP_LOGGING_PROVIDER
@@ -853,7 +855,7 @@ services:
 
   appwrite-restore:
     command: sleep infinity
-    container_name: appwrite-backup-restore
+    container_name: appwrite-restore
     image: appwrite-dev
     networks:
       - appwrite
