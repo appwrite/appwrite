@@ -271,6 +271,7 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
+                'from' => 'sender-email@my-domain',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);

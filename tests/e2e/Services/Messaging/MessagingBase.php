@@ -225,6 +225,7 @@ trait MessagingBase
             'providerId' => 'unique()',
             'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain',
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
