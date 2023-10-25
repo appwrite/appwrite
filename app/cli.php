@@ -3,6 +3,8 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Delete;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
@@ -17,6 +19,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
@@ -90,7 +93,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -119,8 +122,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
 CLI::setResource('influxdb', function (Registry $register) {
@@ -147,10 +148,18 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
-CLI::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+CLI::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-
+CLI::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
+CLI::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+CLI::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');

@@ -155,12 +155,12 @@ class CalcTierStats extends Action
                     }
 
                     /** Get Usage stats */
-                    $range = '90d';
+                    $range = '30d';
                     $periods = [
-                        '90d' => [
+                        '30d' => [
                             'period' => '1d',
-                            'limit' => 90,
-                        ],
+                            'limit' => 30,
+                        ]
                     ];
 
                     $tmp = [];

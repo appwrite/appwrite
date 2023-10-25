@@ -460,11 +460,15 @@ return [
         'description' => 'Database not found',
         'code' => 404
     ],
-
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',
         'code' => 409
+    ],
+    Exception::DATABASE_TIMEOUT => [
+        'name' => Exception::DATABASE_TIMEOUT,
+        'description' => 'Database timed out. Try adjusting your queries or adding an index.',
+        'code' => 408
     ],
 
     /** Collections */
