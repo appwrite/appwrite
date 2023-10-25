@@ -275,10 +275,9 @@ $worker
 try {
     $workerStart = $worker->getWorkerStart();
 } catch (\Throwable $error) {
-    $worker->workerStart()
-        ->action(function () use ($workerName) {
-            Console::info("Worker $workerName  started");
-        });
+    $worker->workerStart();
+} finally {
+    Console::info("Worker $workerName  started");
 }
 
 $worker->start();
