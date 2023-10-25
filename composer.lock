@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "65346becb6411191fbb9ef96078b1857",
+    "content-hash": "afd1d7f8a4402315eba9f8f38888efa1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2629,16 +2629,16 @@
         },
         {
             "name": "utopia-php/queue",
-            "version": "dev-feat-get-worker-start",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/queue.git",
-                "reference": "c6fc4a267ab643500442e0cffcdf952ed80161f4"
+                "reference": "0120bd21904cb2bee34e4571b1737589ffff0eb1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/queue/zipball/c6fc4a267ab643500442e0cffcdf952ed80161f4",
-                "reference": "c6fc4a267ab643500442e0cffcdf952ed80161f4",
+                "url": "https://api.github.com/repos/utopia-php/queue/zipball/0120bd21904cb2bee34e4571b1737589ffff0eb1",
+                "reference": "0120bd21904cb2bee34e4571b1737589ffff0eb1",
                 "shasum": ""
             },
             "require": {
@@ -2684,9 +2684,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/queue/issues",
-                "source": "https://github.com/utopia-php/queue/tree/feat-get-worker-start"
+                "source": "https://github.com/utopia-php/queue/tree/0.6.0"
             },
-            "time": "2023-10-16T16:02:43+00:00"
+            "time": "2023-10-16T16:59:45+00:00"
         },
         {
             "name": "utopia-php/registry",
@@ -5796,18 +5796,9 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/queue",
-            "version": "dev-feat-get-worker-start",
-            "alias": "0.5.3",
-            "alias_normalized": "0.5.3.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {
-        "utopia-php/queue": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5831,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
