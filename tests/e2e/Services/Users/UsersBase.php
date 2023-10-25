@@ -1234,7 +1234,8 @@ trait UsersBase
         ], $this->getHeaders()), [
             'providerId' => 'unique()',
             'name' => 'Sengrid1',
-            'apiKey' => 'my-apikey'
+            'apiKey' => 'my-apikey',
+            'from' => 'from@domain.com',
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
