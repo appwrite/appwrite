@@ -18,7 +18,7 @@ class Usage extends Action
         'inf' => '0000-00-00 00:00'
     ];
 
-    const INFINITY_PERIOD = '_inf_';
+    protected const INFINITY_PERIOD = '_inf_';
 
     public static function getName(): string
     {
