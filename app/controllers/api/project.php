@@ -52,8 +52,8 @@ App::get('/v1/project/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);

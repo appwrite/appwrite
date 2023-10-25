@@ -1495,8 +1495,8 @@ App::get('/v1/storage/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
@@ -1570,8 +1570,8 @@ App::get('/v1/storage/:bucketId/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);

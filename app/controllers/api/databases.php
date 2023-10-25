@@ -1835,8 +1835,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateEmailAttribute')
@@ -1876,8 +1874,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateEnumAttribute')
@@ -1919,8 +1915,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateIpAttribute')
@@ -1960,8 +1954,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateUrlAttribute')
@@ -2001,8 +1993,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateIntegerAttribute')
@@ -2052,8 +2042,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateFloatAttribute')
@@ -2103,8 +2091,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateBooleanAttribute')
@@ -2143,8 +2129,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'documents.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDatetimeAttribute')
@@ -2183,8 +2167,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'documents.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateRelationshipAttribute')
@@ -3594,8 +3576,8 @@ App::get('/v1/databases/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
@@ -3668,8 +3650,8 @@ App::get('/v1/databases/:databaseId/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
@@ -3745,8 +3727,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
-                    Query::equal('period', [$period]),
                     Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
