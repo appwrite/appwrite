@@ -55,6 +55,18 @@ App::init()
                 }
                 break;
 
+            case 'token':
+                if (($auths['token'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Token authentication is disabled for this project');
+                }
+                break;
+
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
