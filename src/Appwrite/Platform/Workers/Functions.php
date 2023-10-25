@@ -77,7 +77,7 @@ class Functions extends Action
 
         $type = $payload['type'] ?? '';
         $events = $payload['events'] ?? [];
-        $data = $payload['data'] ?? '';
+        $data = $payload['body'] ?? '';
         $eventData = $payload['payload'] ?? '';
         $project = new Document($payload['project'] ?? []);
         $function = new Document($payload['function'] ?? []);
