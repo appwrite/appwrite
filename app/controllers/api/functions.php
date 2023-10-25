@@ -6,6 +6,7 @@ use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
