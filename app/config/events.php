@@ -261,29 +261,28 @@ return [
         'update' => [
             '$description' => 'This event triggers when a message is updated.',
         ],
-        'topics' => [
-            '$model' => Response::MODEL_TOPIC,
+    ],
+    'topics' => [
+        '$model' => Response::MODEL_TOPIC,
+        '$resource' => true,
+        '$description' => 'This event triggers on any topic event.',
+        'create' => [
+            '$description' => 'This event triggers when a provider is created.',
+        ],
+        'delete' => [
+            '$description' => 'This event triggers when a provider is deleted.'
+        ],
+        'subscribers' => [
+            '$model' => Response::MODEL_SUBSCRIBER,
             '$resource' => true,
-            '$description' => 'This event triggers on any topic event.',
+            '$description' => 'This event triggers on any subscriber event.',
             'create' => [
-                '$description' => 'This event triggers when a provider is created.',
+                '$description' => 'This event triggers when a subscriber is created.',
             ],
             'delete' => [
-                '$description' => 'This event triggers when a provider is deleted.'
-            ],
-            'subscribers' => [
-                '$model' => Response::MODEL_SUBSCRIBER,
-                '$resource' => true,
-                '$description' => 'This event triggers on any subscriber event.',
-                'create' => [
-                    '$description' => 'This event triggers when a subscriber is created.',
-                ],
-                'delete' => [
-                    '$description' => 'This event triggers when a subscriber is deleted.'
-                ],
+                '$description' => 'This event triggers when a subscriber is deleted.'
             ],
         ],
-
     ],
     'providers' => [
         '$model' => Response::MODEL_PROVIDER,

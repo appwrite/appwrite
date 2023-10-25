@@ -168,7 +168,8 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
-const DELETE_TYPE_SUBSCRIBERS = 'subscribers';
+const DELETE_TYPE_PROVIDER = 'provider';
+const DELETE_TYPE_TOPIC = 'topic';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -233,7 +234,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('authProviders', __DIR__ . '/config/authProviders.php');
+Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
@@ -531,6 +532,7 @@ Database::addFilter(
         return Authorization::skip(fn() => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY)
             ]));
     }
 );
@@ -546,6 +548,7 @@ Database::addFilter(
             $database
             ->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
+                Query::limit(1000000)
             ])
         ));
         if (\count($targetIds) > 0) {
@@ -1128,7 +1131,7 @@ App::setResource('console', function () {
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authProviders' => [
+        'oAuthProviders' => [
             'githubEnabled' => true,
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')

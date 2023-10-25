@@ -299,7 +299,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('authProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('authProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -311,14 +311,14 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $protocol = $request->getProtocol();
 
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
         }
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -358,7 +358,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('authProviders')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -391,7 +391,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('origin', '*')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('authProviders')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -430,7 +430,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('docs', false)
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('usage.params', ['provider:{request.provider}'])
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('authProviders')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -448,9 +448,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -458,7 +458,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('authProviders');
+        $providers = Config::getParam('oAuthProviders');
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
@@ -2296,8 +2296,8 @@ App::patch('/v1/account/sessions/:sessionId')
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
-                $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-                $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+                $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+                $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
                 $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 

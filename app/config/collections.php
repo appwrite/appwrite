@@ -5,7 +5,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 
-$providers = Config::getParam('authProviders', []);
+$providers = Config::getParam('oAuthProviders', []);
 $auth = Config::getParam('auth', []);
 
 /**
@@ -4008,7 +4008,7 @@ $consoleCollections = array_merge([
                 'filters' => ['json'],
             ],
             [
-                '$id' => ID::custom('authProviders'),
+                '$id' => ID::custom('oAuthProviders'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => 16384,
