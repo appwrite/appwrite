@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Usage\Stats;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
@@ -43,9 +43,9 @@ class Functions extends Action
             ->inject('dbForProject')
             ->inject('queueForFunctions')
             ->inject('queueForEvents')
-            ->inject('usage')
+            ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $usage, $log));
+            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
     }
 
     /**
@@ -53,7 +53,7 @@ class Functions extends Action
      * @param Database $dbForProject
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Log $log
      * @return void
      * @throws Authorization
@@ -61,7 +61,7 @@ class Functions extends Action
      * @throws \Utopia\Database\Exception
      * @throws Conflict
      */
-    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Log $log): void
+    public function action(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -117,7 +117,7 @@ class Functions extends Action
                         log: $log,
                         dbForProject: $dbForProject,
                         queueForFunctions: $queueForFunctions,
-                        usage: $usage,
+                        queueForUsage: $queueForUsage,
                         queueForEvents: $queueForEvents,
                         project: $project,
                         function: $function,
@@ -153,7 +153,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    usage: $usage,
+                    queueForUsage: $queueForUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -174,7 +174,7 @@ class Functions extends Action
                     log: $log,
                     dbForProject: $dbForProject,
                     queueForFunctions: $queueForFunctions,
-                    usage: $usage,
+                    queueForUsage: $queueForUsage,
                     queueForEvents: $queueForEvents,
                     project: $project,
                     function: $function,
@@ -197,7 +197,7 @@ class Functions extends Action
      * @param Log $log
      * @param Database $dbForProject
      * @param Func $queueForFunctions
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Event $queueForEvents
      * @param Document $project
      * @param Document $function
@@ -221,7 +221,7 @@ class Functions extends Action
         Log $log,
         Database $dbForProject,
         Func $queueForFunctions,
-        stats $usage,
+        Usage $queueForUsage,
         Event $queueForEvents,
         Document $project,
         Document $function,
@@ -472,18 +472,14 @@ class Functions extends Action
             throw new Exception($error, $errorCode);
         }
 
-        /** Update usage stats */
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $usage
-                ->setParam('projectId', $project->getId())
-                ->setParam('projectInternalId', $project->getInternalId())
-                ->setParam('functionId', $function->getId()) // TODO: We should use functionInternalId in usage stats
-                ->setParam('executions.{scope}.compute', 1)
-                ->setParam('executionStatus', $execution->getAttribute('status', ''))
-                ->setParam('executionTime', $execution->getAttribute('duration'))
-                ->setParam('networkRequestSize', 0)
-                ->setParam('networkResponseSize', 0)
-                ->submit();
-        }
+        /** Trigger usage queue */
+        $queueForUsage
+            ->setProject($project)
+            ->addMetric(METRIC_EXECUTIONS, 1)
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+            ->trigger()
+        ;
     }
 }

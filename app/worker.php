@@ -10,11 +10,10 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
+use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -120,9 +119,9 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 Server::setResource('log', fn() => new Log());
-Server::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
+Server::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -273,9 +272,13 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-     $worker->workerStart()
-         ->action(function () use ($workerName) {
-             Console::info("Worker $workerName  started");
-         });
+try {
+    $workerStart = $worker->getWorkerStart();
+} catch (\Throwable $error) {
+    $worker->workerStart()
+        ->action(function () use ($workerName) {
+            Console::info("Worker $workerName  started");
+        });
+}
 
-     $worker->start();
+$worker->start();

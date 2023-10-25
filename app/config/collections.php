@@ -1302,7 +1302,7 @@ $commonCollections = [
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
-                'signed' => false,
+                'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
@@ -1330,17 +1330,6 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('type'),
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 1,
-                'signed' => false,
-                'required' => true,
-                'default' => 0, // 0 -> count, 1 -> sum
-                'array' => false,
-                'filters' => [],
-            ],
         ],
         'indexes' => [
             [
@@ -1359,7 +1348,7 @@ $commonCollections = [
             ],
             [
                 '$id' => ID::custom('_key_metric_period_time'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],

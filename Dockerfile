@@ -74,7 +74,6 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/migrate && \
@@ -94,6 +93,7 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-usage && \
     chmod +x /usr/local/bin/worker-migrations
 
 # Cloud Executabless

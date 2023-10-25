@@ -386,6 +386,7 @@ class Deletes extends Action
      */
     private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Document $document): void
     {
+
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
