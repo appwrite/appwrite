@@ -64,7 +64,7 @@
         "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.5.*",
         "utopia-php/registry": "0.5.*",
-        "utopia-php/storage": "0.17.*",
+        "utopia-php/storage": "0.18.*",
         "utopia-php/swoole": "0.5.*",
         "utopia-php/vcs": "0.5.*",
         "utopia-php/websocket": "0.1.*",
