@@ -15,31 +15,36 @@ trait MessagingBase
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
+                'from' => 'sender-email@my-domain.com',
             ],
             'mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
+                'isEuRegion' => false,
             ],
             'twilio' => [
                 'providerId' => ID::unique(),
                 'name' => 'Twilio1',
                 'accountSid' => 'my-accountSid',
                 'authToken' => 'my-authToken',
+                'from' => '+123456789',
             ],
             'telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
                 'username' => 'my-username',
                 'password' => 'my-password',
+                'from' => '+123456789',
             ],
             'textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
                 'apiKey' => 'my-apikey',
+                'from' => '+123456789',
             ],
             'msg91' => [
                 'providerId' => ID::unique(),
@@ -53,6 +58,7 @@ trait MessagingBase
                 'name' => 'Vonage1',
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
+                'from' => '+123456789',
             ],
             'fcm' => [
                 'providerId' => ID::unique(),
@@ -220,6 +226,7 @@ trait MessagingBase
             'providerId' => 'unique()',
             'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain.com',
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [

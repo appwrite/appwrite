@@ -1784,8 +1784,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MAILGUN_PROVIDER:
-                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!) {
-                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from) {
+                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!, $isEuRegion: Boolean!) {
+                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from, isEuRegion: $isEuRegion) {
                         _id
                         name
                         provider
@@ -1795,8 +1795,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_SENDGRID_PROVIDER:
-                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
-                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
+                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!) {
+                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1806,8 +1806,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TWILIO_PROVIDER:
-                return 'mutation createTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
-                    messagingCreateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
+                return 'mutation createTwilioProvider($providerId: String!, $name: String!, $from: String!, $accountSid: String!, $authToken: String!) {
+                    messagingCreateTwilioProvider(providerId: $providerId, name: $name, from: $from, accountSid: $accountSid, authToken: $authToken) {
                         _id
                         name
                         provider
@@ -1817,8 +1817,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TELESIGN_PROVIDER:
-                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
-                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $password: String!) {
+                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, username: $username, password: $password) {
                         _id
                         name
                         provider
@@ -1828,8 +1828,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TEXTMAGIC_PROVIDER:
-                return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
-                    messagingCreateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                return 'mutation createTextMagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
+                    messagingCreateTextMagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1839,8 +1839,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MSG91_PROVIDER:
-                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $default: Boolean, $enabled: Boolean) {
-                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, default: $default, enabled: $enabled) {
+                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
+                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
                         _id
                         name
                         provider
@@ -1850,8 +1850,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_VONAGE_PROVIDER:
-                return 'mutation createVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
-                    messagingCreateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                return 'mutation createVonageProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingCreateVonageProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey, apiSecret: $apiSecret) {
                         _id
                         name
                         provider
@@ -1952,8 +1952,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TEXTMAGIC_PROVIDER:
-                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
-                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                return 'mutation updateTextMagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextMagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider

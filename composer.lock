@@ -1906,16 +1906,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.44.2",
+            "version": "0.44.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06"
+                "reference": "b2d403c25a77506e03db5736335b0cae52bcc18a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
-                "reference": "591cadbc2c622a3304aae9a16ebfdbe75ef33a06",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b2d403c25a77506e03db5736335b0cae52bcc18a",
+                "reference": "b2d403c25a77506e03db5736335b0cae52bcc18a",
                 "shasum": ""
             },
             "require": {
@@ -1928,7 +1928,7 @@
             },
             "require-dev": {
                 "fakerphp/faker": "^1.14",
-                "laravel/pint": "1.4.*",
+                "laravel/pint": "1.13.*",
                 "pcov/clobber": "^2.0",
                 "phpstan/phpstan": "1.10.*",
                 "phpunit/phpunit": "^9.4",
@@ -1956,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.44.2"
+                "source": "https://github.com/utopia-php/database/tree/0.44.3"
             },
-            "time": "2023-10-19T07:39:00+00:00"
+            "time": "2023-10-24T10:13:48+00:00"
         },
         {
             "name": "utopia-php/domains",
