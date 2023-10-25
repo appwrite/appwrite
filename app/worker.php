@@ -33,7 +33,7 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 
-Authorization::disable();
+Authorization::setDefaultStatus(false);
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 
