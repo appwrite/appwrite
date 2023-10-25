@@ -1111,7 +1111,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Request $request, Response $response,Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         /** @var Utopia\Database\Document $user */
 
