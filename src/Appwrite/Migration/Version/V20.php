@@ -317,7 +317,7 @@ class V20 extends Migration
 
              $this->migrateUsageMetrics("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateUsageMetrics("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
-            // some stats come with $ prefix infront of the id -> files.$650c3fda307b7fec4934.storage.size;
+            // some stats come with $ prefix in front of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
     }
 }
