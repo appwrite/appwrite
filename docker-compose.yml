@@ -83,10 +83,7 @@ services:
       - ./docs:/usr/src/code/docs
       - ./public:/usr/src/code/public
       - ./src:/usr/src/code/src
-      - ./dev:/usr/local/dev
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
-
+      - ./dev:/usr/src/code/dev
     depends_on:
       - mariadb
       - redis
@@ -210,7 +207,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
-      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
     volumes:
@@ -248,10 +244,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
-      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
-
     depends_on:
       - redis
       - mariadb
@@ -281,7 +273,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
     depends_on:
       - redis
       - mariadb
@@ -316,7 +307,6 @@ services:
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/storage:/usr/src/code/vendor/utopia-php/storage
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
@@ -366,14 +356,11 @@ services:
     volumes: 
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/database:/usr/src/code/vendor/utopia-php/database
     depends_on:
       - redis
       - mariadb
     environment:
       - _APP_ENV
-      - _APP_WORKERS_NUM=1
-      - _APP_QUEUE_NAME=database_db_main
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_REDIS_HOST
@@ -387,6 +374,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WORKERS_NUM
+      - _APP_QUEUE_NAME
 
   appwrite-worker-builds:
     entrypoint: worker-builds
@@ -400,8 +389,6 @@ services:
       - appwrite-builds:/storage/builds:rw
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
-      - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
     depends_on:
       - redis
       - mariadb
@@ -631,8 +618,6 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
-      - ./vendor/utopia-php/pools:/usr/src/code/vendor/utopia-php/pools
-
     depends_on:
       - redis
     environment:
@@ -651,10 +636,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -674,15 +655,14 @@ services:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
       - ./vendor/utopia-php/platform:/usr/src/code/vendor/utopia-php/platform
+      - ./vendor/utopia-php/framework:/usr/src/code/vendor/utopia-php/framework
       - ./vendor/utopia-php/queue:/usr/src/code/vendor/utopia-php/queue
-
     depends_on:
       - redis
       - mariadb
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
-      - _APP_CONNECTIONS_MAX
       - _APP_POOL_CLIENTS
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_HOST
@@ -693,14 +673,10 @@ services:
       - _APP_REDIS_HOST
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
-      - _APP_REDIS_PASS
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
+      - _APP_REDIS_PASST
       - _APP_USAGE_STATS
-      - DOCKERHUB_PULL_USERNAME
-      - DOCKERHUB_PULL_PASSWORD
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
 
   appwrite-schedule:
     entrypoint: schedule
@@ -728,11 +704,6 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
-      - _APP_CONNECTIONS_DB_PROJECT
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_CACHE
-      - _APP_CONNECTIONS_QUEUE
-      - _APP_REGION
 
   appwrite-assistant:
     container_name: appwrite-assistant
@@ -747,7 +718,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.3
+    image: openruntimes/executor:0.4.5
     restart: unless-stopped
     networks:
       - appwrite
@@ -877,7 +848,6 @@ services:
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
   # RedisCommander - A nice UI for exploring Redis data
-  # Resque - A nice UI for exploring Redis pub/sub, view the different queues workloads, pending and failed tasks
   # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
@@ -917,20 +887,6 @@ services:
   #   - REDIS_HOSTS=redis
   #   ports:
   #   - "8081:8081"
-
-  # resque:
-  #   image: appwrite/resque-web:1.1.0
-  #   restart: unless-stopped
-  #   networks:
-  #     - appwrite
-  #   ports:
-  #     - "5678:5678"
-  #   environment:
-  #     - RESQUE_WEB_HOST=redis
-  #     - RESQUE_WEB_PORT=6379
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_USER=user
-  #     - RESQUE_WEB_HTTP_BASIC_AUTH_PASSWORD=password
-
   # webgrind:
   #   image: 'jokkedk/webgrind:latest'
   #   volumes:
