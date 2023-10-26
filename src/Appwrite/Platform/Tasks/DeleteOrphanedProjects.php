@@ -55,6 +55,7 @@ class DeleteOrphanedProjects extends Action
         $totalProjects = $dbForConsole->count('projects');
         Console::success("Found a total of: {$totalProjects} projects");
 
+        $orphans = 0;
         $count = 0;
         $limit = 30;
         $sum = 30;
@@ -69,8 +70,6 @@ class DeleteOrphanedProjects extends Action
                     continue;
                 }
 
-                Console::info("Getting stats for {$project->getId()}");
-
                 try {
                     $db = $project->getAttribute('database');
                     $adapter = $pools
@@ -82,9 +81,18 @@ class DeleteOrphanedProjects extends Action
                     $dbForProject->setDefaultDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
                     $collectionsCreated = $dbForProject->count(Database::METADATA);
+                    $message = ' (' . $collectionsCreated . ') collections where found on project (' . $project->getId() . '))';
+                    if ($collectionsCreated < ($totalProjects + 2)) {
+                        Console::error($message);
+                        $orphans++;
+                    } else {
+                        Console::log($message);
+                    }
                 } catch (\Throwable $th) {
-                    $dbForConsole->deleteDocument('projects', $project->getId());
-                    Console::success('Deleting  project (' . $project->getId() . ')');
+                    //$dbForConsole->deleteDocument('projects', $project->getId());
+                    //Console::success('Deleting  project (' . $project->getId() . ')');
+                    Console::error(' (0) collections where found for project (' . $project->getId() . ')');
+                    $orphans++;
                 } finally {
                     $pools
                         ->get($db)
@@ -103,6 +111,6 @@ class DeleteOrphanedProjects extends Action
             $count = $count + $sum;
         }
 
-        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects...');
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects found ' . $orphans . ' orphans');
     }
 }
