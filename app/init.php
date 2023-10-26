@@ -1049,6 +1049,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
         }
     }
 
+    $dbForProject->setMetadata('user', $user->getId());
+    $dbForConsole->setMetadata('user', $user->getId());
+
     return $user;
 }, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
 
@@ -1122,6 +1125,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     $database
         ->setNamespace('_' . $project->getInternalId())
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
@@ -1138,6 +1143,8 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
 
     $database
         ->setNamespace('_console')
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
@@ -1158,6 +1165,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
             $database
                 ->setNamespace('_' . $project->getInternalId())
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             return $database;
@@ -1174,6 +1183,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $database
             ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId())
             ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
         return $database;
