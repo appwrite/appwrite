@@ -33,9 +33,8 @@ use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 
-Authorization::setDefaultStatus(false);
+Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
-
 
 Server::setResource('register', fn () => $register);
 
