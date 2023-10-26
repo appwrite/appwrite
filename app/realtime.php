@@ -50,7 +50,7 @@ function getConsoleDB(): Database
     $database
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
+        ->setMetadata('project', '_console');
 
     return $database;
 }
