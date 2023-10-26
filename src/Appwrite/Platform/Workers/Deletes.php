@@ -150,9 +150,6 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
                 break;
-            case DELETE_TYPE_PROVIDER:
-                $this->deleteProvider($project, $getProjectDB, $document);
-                break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
@@ -197,37 +194,6 @@ class Deletes extends Action
                 }
             }
         );
-    }
-
-    /**
-     * @param Document $project
-     * @param callable $getProjectDB
-     * @param Document $provider
-     * @throws Exception
-     */
-    protected function deleteProvider(Document $project, callable $getProjectDB, Document $provider)
-    {
-        if ($provider->isEmpty()) {
-            Console::error('Failed to delete topics, subscribers and messages. Provider not found');
-            return;
-        }
-
-        $dbForProject = $getProjectDB($project);
-        $topics = $dbForProject->find('topics', [Query::equal('providerInternalId', [$provider->getInternalId()]), Query::limit(APP_LIMIT_SUBQUERY)]);
-
-        $this->deleteByGroup('topics', [
-            Query::equal('providerInternalId', [$provider->getInternalId()])
-        ], $dbForProject);
-
-        foreach ($topics as $topic) {
-            $this->deleteByGroup('subscribers', [
-                Query::equal('topicInternalId', [$topic->getInternalId()])
-            ], $dbForProject);
-        }
-
-        $this->deleteByGroup('messages', [
-            Query::equal('providerInternalId', [$provider->getInternalId()])
-        ], $dbForProject);
     }
 
     /**

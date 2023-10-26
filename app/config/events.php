@@ -267,10 +267,13 @@ return [
         '$resource' => true,
         '$description' => 'This event triggers on any topic event.',
         'create' => [
-            '$description' => 'This event triggers when a provider is created.',
+            '$description' => 'This event triggers when a topic is created.',
+        ],
+        'update' => [
+            '$description' => 'This event triggers when a topic is updated.',
         ],
         'delete' => [
-            '$description' => 'This event triggers when a provider is deleted.'
+            '$description' => 'This event triggers when a topic is deleted.'
         ],
         'subscribers' => [
             '$model' => Response::MODEL_SUBSCRIBER,
