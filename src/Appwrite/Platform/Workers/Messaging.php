@@ -31,13 +31,6 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
-    protected ?SMSAdapter $sms = null;
-    protected ?PushAdapter $push = null;
-    protected ?EmailAdapter $email = null;
-
-    protected ?Database $dbForProject = null;
-
-
     public static function getName(): string
     {
         return "messaging";

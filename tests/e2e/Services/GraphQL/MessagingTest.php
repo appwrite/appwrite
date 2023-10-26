@@ -22,14 +22,15 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
+                'isEuRegion' => false,
             ],
             'Twilio' => [
                 'providerId' => ID::unique(),
@@ -45,7 +46,7 @@ class MessagingTest extends Scope
                 'password' => 'my-password',
                 'from' => '+123456789',
             ],
-            'Textmagic' => [
+            'TextMagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
@@ -95,6 +96,7 @@ class MessagingTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
+            var_dump($response['body']);
             \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
@@ -132,7 +134,7 @@ class MessagingTest extends Scope
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
-            'Textmagic' => [
+            'TextMagic' => [
                 'providerId' => $providers[4]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
@@ -271,7 +273,7 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);

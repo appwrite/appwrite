@@ -1784,8 +1784,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MAILGUN_PROVIDER:
-                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!) {
-                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from) {
+                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!, $isEuRegion: Boolean!) {
+                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from, isEuRegion: $isEuRegion) {
                         _id
                         name
                         provider
@@ -1828,8 +1828,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TEXTMAGIC_PROVIDER:
-                return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
-                    messagingCreateTextmagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
+                return 'mutation createTextMagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
+                    messagingCreateTextMagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1839,8 +1839,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MSG91_PROVIDER:
-                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $default: Boolean, $enabled: Boolean) {
-                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, default: $default, enabled: $enabled) {
+                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
+                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
                         _id
                         name
                         provider
@@ -1952,8 +1952,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TEXTMAGIC_PROVIDER:
-                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
-                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                return 'mutation updateTextMagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextMagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider

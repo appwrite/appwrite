@@ -28,6 +28,12 @@ class Topic extends Model
                 'default' => '',
                 'example' => 'events',
             ])
+            ->addRule('total', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total count of subscribers subscribed to topic.',
+                'default' => 0,
+                'example' => 100,
+            ])
             ->addRule('description', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Description of the topic.',

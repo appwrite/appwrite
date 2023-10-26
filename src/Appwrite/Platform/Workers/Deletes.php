@@ -150,8 +150,8 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
                 break;
-            case DELETE_TYPE_SUBSCRIBERS:
-                $this->deleteSubscribers($project, $getProjectDB, $document);
+            case DELETE_TYPE_TOPIC:
+                $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             default:
                 Console::error('No delete operation for type: ' . $type);
@@ -202,7 +202,7 @@ class Deletes extends Action
      * @param Document $topic
      * @throws Exception
      */
-    protected function deleteSubscribers(Document $project, callable $getProjectDB, Document $topic)
+    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');

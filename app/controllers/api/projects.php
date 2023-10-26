@@ -164,7 +164,7 @@ App::post('/v1/projects')
                 'legalTaxId' => ID::custom($legalTaxId),
                 'services' => new stdClass(),
                 'platforms' => null,
-                'authProviders' => [],
+                'oAuthProviders' => [],
                 'webhooks' => null,
                 'keys' => null,
                 'auths' => $auths,
@@ -613,7 +613,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('authProviders')), true), 'Provider Name')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
     ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', null, new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
@@ -627,7 +627,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $providers = $project->getAttribute('authProviders', []);
+        $providers = $project->getAttribute('oAuthProviders', []);
 
         if ($appId !== null) {
             $providers[$provider . 'Appid'] = $appId;
@@ -641,7 +641,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             $providers[$provider . 'Enabled'] = $enabled;
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

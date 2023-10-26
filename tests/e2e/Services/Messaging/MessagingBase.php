@@ -15,14 +15,15 @@ trait MessagingBase
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
             ],
             'mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain',
+                'from' => 'sender-email@my-domain.com',
+                'isEuRegion' => false,
             ],
             'twilio' => [
                 'providerId' => ID::unique(),
@@ -225,7 +226,7 @@ trait MessagingBase
             'providerId' => 'unique()',
             'name' => 'Sendgrid1',
             'apiKey' => 'my-apikey',
-            'from' => 'sender-email@my-domain',
+            'from' => 'sender-email@my-domain.com',
         ]);
         $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
@@ -287,6 +288,7 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
         $this->assertEquals('updated-description', $response['body']['description']);
+        $this->assertEquals(0, $response['body']['total']);
     }
 
     /**
@@ -310,12 +312,23 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => 'unique()',
+            'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertEquals('android-app', $topic['body']['name']);
+        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals(1, $topic['body']['total']);
+
         return [
-            'topicId' => $topic['$id'],
+            'topicId' => $topic['body']['$id'],
             'targetId' => $target['body']['$id'],
             'subscriberId' => $response['body']['$id']
         ];
@@ -360,7 +373,19 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertEquals('android-app', $topic['body']['name']);
+        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals(0, $topic['body']['total']);
     }
 
     /**
