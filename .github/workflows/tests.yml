@@ -6,7 +6,7 @@ concurrency:
 
 env:
   IMAGE: appwrite-dev
-  CACHE_KEY: appwrite-dev-${{ github.sha }}
+  CACHE_KEY: appwrite-dev-${{ github.event.pull_request.head.sha }}
 
 on: [pull_request]
 
@@ -15,8 +15,6 @@ jobs:
     name: Setup & Build Appwrite Image
     runs-on: ubuntu-latest
     steps:
-      - name: Log
-        run: echo ${{ github.sha }}
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
