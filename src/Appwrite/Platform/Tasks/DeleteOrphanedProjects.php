@@ -91,6 +91,7 @@ class DeleteOrphanedProjects extends Action
                 } catch (\Throwable $th) {
                     //$dbForConsole->deleteDocument('projects', $project->getId());
                     //Console::success('Deleting  project (' . $project->getId() . ')');
+
                     Console::error(' (0) collections where found for project (' . $project->getId() . ')');
                     $orphans++;
                 } finally {
