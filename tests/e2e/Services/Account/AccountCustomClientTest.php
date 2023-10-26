@@ -39,7 +39,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $sessionId = $response['body']['$id'];
@@ -55,7 +55,7 @@ class AccountCustomClientTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $apiKey,
             ]));
-            $this->assertEquals($response['headers']['status-code'], 200);
+            $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertArrayHasKey('accessedAt', $response['body']);
             $this->assertNotEmpty($response['body']['accessedAt']);
         }
@@ -69,7 +69,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
@@ -85,7 +85,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -96,7 +96,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password . 'x',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -107,7 +107,7 @@ class AccountCustomClientTest extends Scope
             'password' => '',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return array_merge($data, [
             'sessionId' => $sessionId,
@@ -134,7 +134,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
@@ -151,7 +151,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'content-type' => 'application/json',
@@ -159,7 +159,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -181,7 +181,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertEmpty($response['body']);
         $this->assertCount(0, $response['body']);
@@ -195,7 +195,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -218,7 +218,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
@@ -254,7 +254,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -278,7 +278,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(3, $response['body']['logs']);
@@ -386,7 +386,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -414,7 +414,7 @@ class AccountCustomClientTest extends Scope
             'name' => $newName
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -431,7 +431,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
@@ -440,7 +440,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/name', array_merge([
             'origin' => 'http://localhost',
@@ -451,7 +451,7 @@ class AccountCustomClientTest extends Scope
             'name' => 'ocSRq1d3QphHivJyUmYY7WMnrxyjdk5YvVwcDqx2zS0coxESN8RmsQwLWw5Whnf0WbVohuFWTRAaoKgCOO0Y0M7LwgFnZmi8881Y72222222222222222222222222222'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $data['name'] = $newName;
 
@@ -481,7 +481,7 @@ class AccountCustomClientTest extends Scope
             'oldPassword' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -497,7 +497,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -508,7 +508,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -516,7 +516,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Existing user tries to update password by passing wrong old password -> SHOULD FAIL
@@ -530,7 +530,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password',
             'oldPassword' => $password,
         ]);
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
          * Existing user tries to update password without passing old password -> SHOULD FAIL
@@ -543,7 +543,7 @@ class AccountCustomClientTest extends Scope
         ]), [
             'password' => 'new-password'
         ]);
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $data['password'] = 'new-password';
 
@@ -571,7 +571,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -587,7 +587,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/email', array_merge([
             'origin' => 'http://localhost',
@@ -596,7 +596,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         // Test if we can create a new account with the old email
 
@@ -614,7 +614,7 @@ class AccountCustomClientTest extends Scope
             'name' =>  $data['name'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
@@ -650,7 +650,7 @@ class AccountCustomClientTest extends Scope
             ]
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('prefValue1', $response['body']['prefs']['prefKey1']);
@@ -665,7 +665,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
@@ -676,7 +676,7 @@ class AccountCustomClientTest extends Scope
             'prefs' => '{}'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
@@ -688,7 +688,7 @@ class AccountCustomClientTest extends Scope
             'prefs' => '[]'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/prefs', array_merge([
             'origin' => 'http://localhost',
@@ -699,7 +699,7 @@ class AccountCustomClientTest extends Scope
             'prefs' => '{"test": "value"}'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Prefs size exceeded
@@ -887,7 +887,7 @@ class AccountCustomClientTest extends Scope
         $sessionNewId = $response['body']['$id'];
         $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
@@ -896,7 +896,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionNew,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionNewId, array_merge([
             'origin' => 'http://localhost',
@@ -905,7 +905,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionNew,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -914,7 +914,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -926,7 +926,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $sessionNew,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -953,7 +953,7 @@ class AccountCustomClientTest extends Scope
 
         $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'origin' => 'http://localhost',
@@ -962,7 +962,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/current', [
             'origin' => 'http://localhost',
@@ -971,7 +971,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -983,7 +983,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1005,7 +1005,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         /**
          * Test for FAILURE
@@ -1016,7 +1016,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
          * Create new fallback session
@@ -1219,7 +1219,7 @@ class AccountCustomClientTest extends Scope
             'enabled' => true,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
@@ -1248,7 +1248,7 @@ class AccountCustomClientTest extends Scope
             'enabled' => false,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
@@ -1286,7 +1286,7 @@ class AccountCustomClientTest extends Scope
 
         $id = $response['body']['$id'];
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1297,7 +1297,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -1309,7 +1309,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $id . '/status', [
             'content-type' => 'application/json',
@@ -1319,7 +1319,7 @@ class AccountCustomClientTest extends Scope
             'status' => false,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -1328,7 +1328,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1339,7 +1339,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return [];
     }
@@ -1367,7 +1367,7 @@ class AccountCustomClientTest extends Scope
 
         $id = $response['body']['$id'];
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1378,7 +1378,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
@@ -1389,7 +1389,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/status', [
             'content-type' => 'application/json',
@@ -1399,7 +1399,7 @@ class AccountCustomClientTest extends Scope
             'status' => false,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('a_session_' . $this->getProject()['$id'] . '=deleted', $response['headers']['set-cookie']);
         $this->assertEquals('[]', $response['headers']['x-fallback-cookies']);
 
@@ -1410,7 +1410,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1421,7 +1421,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return [];
     }
@@ -1448,7 +1448,7 @@ class AccountCustomClientTest extends Scope
 
         $id = $response['body']['$id'];
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
@@ -1459,7 +1459,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
@@ -1471,7 +1471,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/jwt', array_merge([
             'origin' => 'http://localhost',
@@ -1480,8 +1480,8 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertEquals($response['headers']['x-ratelimit-remaining'], 99);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(99, $response['headers']['x-ratelimit-remaining']);
         $this->assertNotEmpty($response['body']['jwt']);
         $this->assertIsString($response['body']['jwt']);
 
@@ -1494,7 +1494,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-jwt' => 'wrong-token',
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -1503,7 +1503,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-jwt' => $jwt,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_DELETE, '/account/sessions/' . $sessionId, array_merge([
             'origin' => 'http://localhost',
@@ -1512,7 +1512,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 204);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -1521,7 +1521,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-jwt' => $jwt,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return [];
     }
@@ -1555,7 +1555,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $apiKey,
         ]));
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('accessedAt', $response['body']);
 
         $this->assertNotEmpty($response['body']['accessedAt']);
@@ -1668,7 +1668,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -1684,7 +1684,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
             'origin' => 'http://localhost',
@@ -1696,7 +1696,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         return [];
     }
@@ -1718,7 +1718,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $userId = $response['body']['$id'] ?? '';
 
@@ -1734,7 +1734,7 @@ class AccountCustomClientTest extends Scope
             'enabled' => true,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/oauth2/' . $provider, array_merge([
             'origin' => 'http://localhost',
@@ -1758,14 +1758,14 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($response['body']['$id'], $userId);
         $this->assertEquals($response['body']['name'], 'User Name');
         $this->assertEquals($response['body']['email'], 'useroauth@localhost.test');
 
         // Since we only support one oauth user, let's also check updateSession here
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/current', array_merge([
             'origin' => 'http://localhost',
@@ -1809,7 +1809,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($response['body']['provider'], 'anonymous');
 
         $sessionID = $response['body']['$id'];
@@ -1821,7 +1821,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($response['body']['provider'], 'anonymous');
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/97823askjdkasd80921371980', array_merge([
@@ -1831,7 +1831,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 404);
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 
     /**
@@ -1840,7 +1840,6 @@ class AccountCustomClientTest extends Scope
     public function testUpdateAccountNameSearch($data): void
     {
         $id = $data['id'] ?? '';
-        $email = $data['email'] ?? '';
         $newName = 'Lorem';
 
         /**
@@ -1854,11 +1853,11 @@ class AccountCustomClientTest extends Scope
             'search' => $newName,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
-        $this->assertCount(1, $response['body']['users']);
-        $this->assertEquals($response['body']['users'][0]['email'], $email);
+        $this->assertCount(2, $response['body']['users']);
+        $this->assertEquals($newName, $response['body']['users'][1]['name']);
 
         $response = $this->client->call(Client::METHOD_GET, '/users', [
             'content-type' => 'application/json',
@@ -1868,11 +1867,11 @@ class AccountCustomClientTest extends Scope
             'search' => $id,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
-        $this->assertEquals($response['body']['users'][0]['email'], $email);
+        $this->assertEquals($newName, $response['body']['users'][0]['name']);
     }
 
     /**
@@ -1895,7 +1894,7 @@ class AccountCustomClientTest extends Scope
 
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
@@ -1909,7 +1908,7 @@ class AccountCustomClientTest extends Scope
             'search' => $id,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['users']);
         $this->assertCount(1, $response['body']['users']);
@@ -2033,7 +2032,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
@@ -2083,7 +2082,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -2099,7 +2098,7 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
 
         return $data;
     }
@@ -2125,7 +2124,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -2141,7 +2140,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/phone', array_merge([
             'origin' => 'http://localhost',
@@ -2150,7 +2149,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         $data['phone'] = $newPhone;
 
@@ -2428,7 +2427,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['registration']));
@@ -2487,7 +2486,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -2503,7 +2502,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password',
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 201);
+        $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEmpty($response['body']['secret']);
 
         /**
@@ -2515,7 +2514,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ]));
 
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
@@ -2524,7 +2523,7 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), []);
 
-        $this->assertEquals($response['headers']['status-code'], 400);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         /**
          * Existing user tries to update password by passing wrong old password -> SHOULD FAIL
@@ -2538,7 +2537,7 @@ class AccountCustomClientTest extends Scope
             'password' => 'new-password',
             'oldPassword' => 'wrong-password',
         ]);
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         /**
          * Existing user tries to update password without passing old password -> SHOULD FAIL
@@ -2551,7 +2550,7 @@ class AccountCustomClientTest extends Scope
         ]), [
             'password' => 'new-password'
         ]);
-        $this->assertEquals($response['headers']['status-code'], 401);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         $data['password'] = 'new-password';
 

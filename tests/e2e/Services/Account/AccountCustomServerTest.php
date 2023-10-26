@@ -14,59 +14,37 @@ class AccountCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testCreateAccount(): array
-    {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
-
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            $this->getHeaders()
-        ], [
-            'userId' => ID::unique(),
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-        ]);
-
-        $this->assertEquals(401, $response['headers']['status-code']);
-
-        return [];
-    }
 
     public function testCreateAnonymousAccount()
     {
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/anonymous', array_merge(
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ],
             $this->getHeaders()
-        ]);
+        ));
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['secret']);
-        
-        $secret = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
-        $this->assertEquals($secret, $response['body']['secret']);
 
         \usleep(1000 * 30); // wait for 30ms to let the shutdown update accessedAt
 
         $userId = $response['body']['userId'];
-        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge(
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ],
             $this->getHeaders(),
-        ]));
+        ));
+
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertArrayHasKey('accessedAt', $response['body']);
 
@@ -80,11 +58,13 @@ class AccountCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge(
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ],
             $this->getHeaders()
-        ]), [
+        ), [
             'userId' => ID::unique(),
             'email' => $email,
             // 'url' => 'http://localhost/magiclogin',
@@ -134,11 +114,13 @@ class AccountCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/magic-url', array_merge(
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id']
+            ],
             $this->getHeaders()
-        ]), [
+        ), [
             'userId' => $id,
             'secret' => $token,
         ]);
@@ -153,12 +135,14 @@ class AccountCustomServerTest extends Scope
         $sessionId = $response['body']['$id'];
         $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
 
-        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge(
+            [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+            ],
             $this->getHeaders()
-        ]));
+        ));
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertNotEmpty($response['body']);

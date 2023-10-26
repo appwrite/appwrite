@@ -1,0 +1,1 @@
+Use this endpoint to exchange a previously generated token for a session. The returned session will be a regular session object with all its own credentials and metadata.
