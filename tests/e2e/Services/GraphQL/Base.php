@@ -2013,11 +2013,10 @@ trait Base
                     }
                 }';
             case self::$CREATE_TOPIC:
-                return 'mutation createTopic($providerId: String!, $topicId: String!, $name: String!, $description: String!) {
-                    messagingCreateTopic(providerId: $providerId, topicId: $topicId, name: $name, description: $description) {
+                return 'mutation createTopic($topicId: String!, $name: String!, $description: String!) {
+                    messagingCreateTopic(topicId: $topicId, name: $name, description: $description) {
                         _id
                         name
-                        providerId
                         description
                     }
                 }';
@@ -2028,7 +2027,6 @@ trait Base
                         topics {
                             _id
                             name
-                            providerId
                             description
                         }
                     }
@@ -2038,7 +2036,6 @@ trait Base
                     messagingGetTopic(topicId: $topicId) {
                         _id
                         name
-                        providerId
                         description
                     }
                 }';
@@ -2047,7 +2044,6 @@ trait Base
                     messagingUpdateTopic(topicId: $topicId, name: $name, description: $description) {
                         _id
                         name
-                        providerId
                         description
                     }
                 }';
@@ -2091,10 +2087,9 @@ trait Base
                     }
             }';
             case self::$CREATE_EMAIL:
-                return 'mutation createEmail($messageId: String!, $providerId: String!, $to: [String!]!, $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
-                    messagingCreateEmail(messageId: $messageId, providerId: $providerId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
+                return 'mutation createEmail($messageId: String!, $to: [String!]!, $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
+                    messagingCreateEmail(messageId: $messageId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2105,10 +2100,9 @@ trait Base
                     }
                 }';
             case self::$CREATE_SMS:
-                return 'mutation createSMS($messageId: String!, $providerId: String!, $to: [String!]!, $content: String!, $status: String, $description: String, $deliveryTime: String) {
-                    messagingCreateSMS(messageId: $messageId, providerId: $providerId, to: $to, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation createSMS($messageId: String!, $to: [String!]!, $content: String!, $status: String, $description: String, $deliveryTime: String) {
+                    messagingCreateSMS(messageId: $messageId, to: $to, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2119,10 +2113,9 @@ trait Base
                     }
                 }';
             case self::$CREATE_PUSH_NOTIFICATION:
-                return 'mutation createPushNotification($messageId: String!, $providerId: String!, $to: [String!]!, $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
-                    messagingCreatePushNotification(messageId: $messageId, providerId: $providerId, to: $to, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation createPushNotification($messageId: String!, $to: [String!]!, $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
+                    messagingCreatePushNotification(messageId: $messageId, to: $to, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2138,7 +2131,6 @@ trait Base
                         total
                         messages {
                             _id
-                            providerId
                             to
                             deliveryTime
                             deliveredAt
@@ -2153,7 +2145,6 @@ trait Base
                 return 'query getMessage($messageId: String!) {
                     messagingGetMessage(messageId: $messageId) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2167,7 +2158,6 @@ trait Base
                 return 'mutation updateEmail($messageId: String!, $to: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
                     messagingUpdateEmail(messageId: $messageId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2181,7 +2171,6 @@ trait Base
                 return 'mutation updateSMS($messageId: String!, $to: [String!], $content: String, $status: String, $description: String, $deliveryTime: String) {
                     messagingUpdateSMS(messageId: $messageId, to: $to, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt
@@ -2195,7 +2184,6 @@ trait Base
                 return 'mutation updatePushNotification($messageId: String!, $to: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
                     messagingUpdatePushNotification(messageId: $messageId, to: $to, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        providerId
                         to
                         deliveryTime
                         deliveredAt

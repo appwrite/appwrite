@@ -17,12 +17,6 @@ class Message extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('providerId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Provider ID for the message.',
-                'default' => '',
-                'example' => '5e5ea5c16897e',
-            ])
             ->addRule('to', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Message recipients.',

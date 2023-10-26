@@ -96,7 +96,6 @@ class MessagingTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
-            var_dump($response['body']);
             \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
@@ -268,32 +267,10 @@ class MessagingTest extends Scope
 
     public function testCreateTopic()
     {
-        $providerParam = [
-            'sendgrid' => [
-                'providerId' => ID::unique(),
-                'name' => 'Sengrid1',
-                'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
-            ]
-        ];
-        $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => $providerParam['sendgrid'],
-        ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $providerId = $response['body']['data']['messagingCreateSendgridProvider']['_id'];
-
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -391,13 +368,34 @@ class MessagingTest extends Scope
 
         $userId = $this->getUser()['$id'];
 
+        $providerParam = [
+            'sendgrid' => [
+                'providerId' => ID::unique(),
+                'name' => 'Sengrid1',
+                'apiKey' => 'my-apikey',
+                'from' => 'sender-email@my-domain.com',
+            ]
+        ];
+        $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
+        $graphQLPayload = [
+            'query' => $query,
+            'variables' => $providerParam['sendgrid'],
+        ];
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), $graphQLPayload);
+
+        $providerId = $response['body']['data']['messagingCreateSendgridProvider']['_id'];
+
         $query = $this->getQuery(self::$CREATE_USER_TARGET);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
                 'userId' => $userId,
-                'providerId' => $topic['providerId'],
+                'providerId' => $providerId,
                 'identifier' => 'token',
             ],
         ];
@@ -546,7 +544,7 @@ class MessagingTest extends Scope
                 'apiKey' => $apiKey,
                 'domain' => $domain,
                 'from' => $from,
-                'isEuRegion' => $isEuRegion,
+                'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -563,7 +561,6 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -634,7 +631,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -693,7 +689,7 @@ class MessagingTest extends Scope
                 'apiKey' => $apiKey,
                 'domain' => $domain,
                 'from' => $from,
-                'isEuRegion' => $isEuRegion,
+                'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -710,7 +706,6 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -781,7 +776,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'status' => 'draft',
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'subject' => 'Khali beats Undertaker',
@@ -867,7 +861,6 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -938,7 +931,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'content' => '454665',
             ],
@@ -1010,7 +1002,6 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -1081,7 +1072,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'status' => 'draft',
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'content' => '345463',
@@ -1162,7 +1152,6 @@ class MessagingTest extends Scope
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -1233,7 +1222,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
@@ -1296,14 +1284,12 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $provider['headers']['status-code']);
-        var_dump($provider['body']);
         $providerId = $provider['body']['data']['messagingCreateFcmProvider']['_id'];
 
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
-                'providerId' => $providerId,
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
                 'description' => 'Active users',
@@ -1374,7 +1360,6 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'providerId' => $providerId,
                 'status' => 'draft',
                 'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
