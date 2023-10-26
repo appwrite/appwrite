@@ -6,7 +6,7 @@ concurrency:
 
 env:
   IMAGE: appwrite-dev
-  CACHE_KEY: ${{ env.IMAGE }}-${{ github.sha }}
+  CACHE_KEY: appwrite-dev-${{ github.sha }}
 
 on: [pull_request]
 
@@ -82,7 +82,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        services:
+        service:
           [
             Account,
             Avatars,
@@ -117,5 +117,5 @@ jobs:
           docker compose up -d
           sleep 10
 
-      - name: Run ${{matrix.services}} Tests
-        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
+      - name: Run ${{matrix.service}} Tests
+        run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.service}} --debug
