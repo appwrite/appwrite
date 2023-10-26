@@ -495,7 +495,7 @@ App::init()
                 ]);
 
                 $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []), ['public']);
 
                 $expire = $key->getAttribute('expire');
                 if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
