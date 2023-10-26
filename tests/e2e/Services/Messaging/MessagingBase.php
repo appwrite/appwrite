@@ -288,6 +288,7 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
         $this->assertEquals('updated-description', $response['body']['description']);
+        $this->assertEquals(0, $response['body']['total']);
     }
 
     /**
@@ -311,12 +312,23 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'subscriberId' => 'unique()',
+            'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertEquals('android-app', $topic['body']['name']);
+        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals(1, $topic['body']['total']);
+
         return [
-            'topicId' => $topic['$id'],
+            'topicId' => $topic['body']['$id'],
             'targetId' => $target['body']['$id'],
             'subscriberId' => $response['body']['$id']
         ];
@@ -361,7 +373,19 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(204, $response['headers']['status-code']);
+
+        $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $topic['headers']['status-code']);
+        $this->assertEquals('android-app', $topic['body']['name']);
+        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals(0, $topic['body']['total']);
     }
 
     /**

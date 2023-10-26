@@ -1491,7 +1491,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         try {
             $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
-            $dbForProject->deleteCachedDocument('topics', $topicId);
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('topics', $topicId, 'total', 1));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
@@ -1610,8 +1610,9 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
         if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
+
         $subscriber = $dbForProject->deleteDocument('subscribers', $subscriberId);
-        $dbForProject->deleteCachedDocument('topics', $topicId);
+        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', 1));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
