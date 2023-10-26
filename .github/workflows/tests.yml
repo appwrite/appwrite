@@ -6,6 +6,7 @@ concurrency:
 
 env:
   IMAGE: appwrite-dev
+  CACHE_KEY: ${{ env.IMAGE }}-${{ github.sha }}
 
 on: [pull_request]
 
@@ -40,7 +41,7 @@ jobs:
       - name: Cache Docker Image
         uses: actions/cache@v3
         with:
-          key: ${{ env.IMAGE }}-${{ github.sha }}
+          key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
 
   unit_test:
@@ -55,7 +56,7 @@ jobs:
       - name: Load Cache
         uses: actions/cache@v3
         with:
-          key: ${{ env.IMAGE }}-${{ github.sha }}
+          key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
@@ -101,12 +102,12 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Load Cache
         uses: actions/cache@v3
         with:
-          key: ${{ env.IMAGE }}-${{ github.sha }}
+          key: ${{ env.CACHE_KEY }}
           path: /tmp/${{ env.IMAGE }}.tar
           fail-on-cache-miss: true
 
@@ -118,7 +119,3 @@ jobs:
 
       - name: Run ${{matrix.services}} Tests
         run: docker compose exec -T appwrite test /usr/src/code/tests/e2e/Services/${{matrix.services}} --debug
-
-      - name: Output build logs
-        if: always() && ${{ matrix.services == 'GraphQL' }}
-        run: docker compose logs appwrite-worker-builds
