@@ -38,7 +38,6 @@ class DeleteOrphanedProjects extends Action
 
     public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
     {
-        //docker compose exec -t appwrite delete-orphaned-projects
 
         Console::title('Delete orphaned projects V1');
         Console::success(APP_NAME . ' Delete orphaned projects started');
