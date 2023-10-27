@@ -17,6 +17,9 @@ use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Nullable;
+use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\Database\Helpers\Permission;
+use Utopia\Database\Helpers\Role;
 
 App::get('/v1/mock/tests/foo')
     ->desc('Get Foo')
@@ -248,8 +251,7 @@ App::get('/v1/mock/tests/general/download')
             ->addHeader('Content-Disposition', 'attachment; filename="test.txt"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->send("GET:/v1/mock/tests/general/download:passed")
-        ;
+            ->send("GET:/v1/mock/tests/general/download:passed");
     });
 
 App::post('/v1/mock/tests/general/upload')
@@ -331,7 +333,7 @@ App::post('/v1/mock/tests/general/upload')
             }
 
             if ($file['size'] !== 38756) {
-                    throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
+                throw new Exception(Exception::GENERAL_MOCK, 'Wrong file size');
             }
 
             if (\md5(\file_get_contents($file['tmp_name'])) !== 'd80e7e6999a3eb2ae0d631a96fe135a4') {
@@ -506,8 +508,7 @@ App::get('/v1/mock/tests/general/502-error')
 
         $response
             ->setStatusCode(502)
-            ->text('This is a text error')
-        ;
+            ->text('This is a text error');
     });
 
 App::get('/v1/mock/tests/general/oauth2')
@@ -644,6 +645,66 @@ App::patch('/v1/mock/functions-v2')
         $dbForProject->updateDocument('functions', $function->getId(), $function->setAttribute('version', 'v2'));
 
         $response->noContent();
+    });
+
+App::get('/v1/mock/github/callback')
+    ->desc('Create installation document using GitHub installation id')
+    ->groups(['mock', 'api', 'vcs'])
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('providerInstallationId', '', new UID(), 'GitHub installation ID')
+    ->param('projectId', '', new UID(), 'Project ID of the project where app is to be installed')
+    ->inject('gitHub')
+    ->inject('project')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForConsole) {
+        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+
+        if (!$isDevelopment) {
+            throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
+        }
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            $error = 'Project with the ID from state could not be found.';
+            throw new Exception(Exception::PROJECT_NOT_FOUND, $error);
+        }
+
+        if (!empty($providerInstallationId)) {
+            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
+            $owner = $github->getOwnerName($providerInstallationId) ?? '';
+
+            $projectInternalId = $project->getInternalId();
+
+            $teamId = $project->getAttribute('teamId', '');
+
+            $installation = new Document([
+                '$id' => ID::unique(),
+                '$permissions' => [
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                ],
+                'providerInstallationId' => $providerInstallationId,
+                'projectId' => $projectId,
+                'projectInternalId' => $projectInternalId,
+                'provider' => 'github',
+                'organization' => $owner,
+                'personal' => false
+            ]);
+
+            $installation = $dbForConsole->createDocument('installations', $installation);
+        }
+
+        $response->json([
+            'installationId' => $installation->getId(),
+        ]);
     });
 
 App::shutdown()
