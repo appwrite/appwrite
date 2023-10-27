@@ -117,16 +117,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
             $path .= '?' . $query;
         }
 
-        $swooleHeaders = $swooleRequest->header;
-
-        $cookieHeaders = [];
-        foreach ($swooleRequest->cookie as $key => $value) {
-            $cookieHeaders[] = "{$key}={$value}";
-        }
-
-        if (!empty($cookieHeaders)) {
-            $swooleHeaders['cookie'] = \implode('; ', $cookieHeaders);
-        }
+        $swooleHeaders = $request->getHeaders();
 
         $body = \json_encode([
             'async' => false,
