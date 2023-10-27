@@ -1524,28 +1524,6 @@ $commonCollections = [
         'name' => 'Messages',
         'attributes' => [
             [
-                '$id' => ID::custom('providerId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('providerInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('description'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1647,20 +1625,6 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_providerId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['providerId'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_providerInternalId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['providerInternalId'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
@@ -1675,28 +1639,6 @@ $commonCollections = [
         '$id' => ID::custom('topics'),
         'name' => 'Topics',
         'attributes' => [
-            [
-                '$id' => ID::custom('providerId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('providerInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
             [
                 '$id' => ID::custom('name'),
                 'type' => Database::VAR_STRING,
@@ -1754,20 +1696,6 @@ $commonCollections = [
             ],
         ],
         'indexes' => [
-            [
-                '$id' => ID::custom('_key_providerId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['providerId'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
-            [
-                '$id' => ID::custom('_key_providerInternalId'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['providerInternalId'],
-                'lengths' => [],
-                'orders' => [Database::ORDER_ASC],
-            ],
             [
                 '$id' => ID::custom('_key_name'),
                 'type' => Database::INDEX_FULLTEXT,

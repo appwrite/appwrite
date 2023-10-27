@@ -218,23 +218,11 @@ trait MessagingBase
 
     public function testCreateTopic(): array
     {
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'providerId' => 'unique()',
-            'name' => 'Sendgrid1',
-            'apiKey' => 'my-apikey',
-            'from' => 'sender-email@my-domain.com',
-        ]);
-        $this->assertEquals(201, $provider['headers']['status-code']);
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => 'unique()',
             'name' => 'my-app',
             'description' => 'web app'
@@ -297,13 +285,27 @@ trait MessagingBase
     public function testCreateSubscriber(array $topic)
     {
         $userId = $this->getUser()['$id'];
+
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'providerId' => ID::unique(),
+            'name' => 'Sendgrid1',
+            'apiKey' => 'my-apikey',
+            'from' => 'sender-email@my-domain.com',
+        ]);
+
+        $this->assertEquals(201, $provider['headers']['status-code']);
+
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $userId . '/targets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'targetId' => ID::unique(),
-            'providerId' => $topic['providerId'],
+            'providerId' => $provider['body']['$id'],
             'identifier' => 'my-token',
         ]);
         $this->assertEquals(201, $target['headers']['status-code']);
@@ -433,7 +435,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -485,7 +486,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'to' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -553,7 +553,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -605,7 +604,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'status' => 'draft',
             'to' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
@@ -668,7 +666,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -720,7 +717,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'to' => [$topic['body']['$id']],
             'content' => '064763',
         ]);
@@ -785,7 +781,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -837,7 +832,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'status' => 'draft',
             'to' => [$topic['body']['$id']],
             'content' => '047487',
@@ -895,7 +889,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -947,7 +940,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'to' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
@@ -1009,7 +1001,6 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'providerId' => $provider['body']['$id'],
             'topicId' => ID::unique(),
             'name' => 'topic1',
             'description' => 'Test Topic'
@@ -1061,7 +1052,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
             'status' => 'draft',
             'to' => [$topic['body']['$id']],
             'title' => 'Test-Notification',

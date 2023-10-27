@@ -1351,8 +1351,6 @@ App::post('/v1/account/sessions/phone')
             'data' => [
                 'content' => $message,
             ],
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
         ]));
 
         $queueForMessaging
@@ -2986,8 +2984,6 @@ App::post('/v1/account/verification/phone')
             'data' => [
                 'content' => $message,
             ],
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
         ]));
 
         $queueForMessaging

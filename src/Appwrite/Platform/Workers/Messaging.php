@@ -36,7 +36,6 @@ class Messaging extends Action
         return "messaging";
     }
 
-
     /**
      * @throws Exception
      */
@@ -64,24 +63,14 @@ class Messaging extends Action
             return;
         }
 
-
         $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-        $provider = $dbForProject->getDocument('providers', $message->getAttribute('providerId'));
-
-        $this->processMessage($dbForProject, $message, $provider);
+        $this->processMessage($dbForProject, $message);
     }
 
-    private function processMessage(Database $dbForProject, Document $message, Document $provider): void
+    private function processMessage(Database $dbForProject, Document $message): void
     {
-        $adapter = match ($provider->getAttribute('type')) {
-            'sms' => $this->sms($provider),
-            'push' => $this->push($provider),
-            'email' => $this->email($provider),
-            default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
-        };
-
-        $recipientsId = $message->getAttribute('to');
+        $recipientsId = $message->getAttribute('to', []);
 
         /**
         * @var Document[] $recipients
@@ -100,44 +89,65 @@ class Messaging extends Action
 
         $targets = $dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
         $recipients = \array_merge($recipients, $targets);
-        $recipients = \array_filter($recipients, function (Document $recipient) use ($provider) {
-                return $recipient->getAttribute('providerId') === $provider->getId();
-        });
 
-        $identifiers = \array_map(function (Document $recipient) {
-            return $recipient->getAttribute('identifier');
-        }, $recipients);
+        $providers = [];
+        foreach ($recipients as $recipient) {
+            $providerId = $recipient->getAttribute('providerId');
+            if (!isset($providers[$providerId])) {
+                $providers[$providerId] = [];
+            }
+            $providers[$providerId][] = $recipient->getAttribute('identifier');
+        }
 
-        $maxBatchSize = $adapter->getMaxMessagesPerRequest();
-        $batches = \array_chunk($identifiers, $maxBatchSize);
-        $batchIndex = 0;
-
-        $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
-            return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
-                $deliveredTo = 0;
-                $deliveryErrors = [];
-                $messageData = clone $message;
-                $messageData->setAttribute('to', $batch);
-                $data = match ($provider->getAttribute('type')) {
-                    'sms' => $this->buildSMSMessage($messageData, $provider),
-                    'push' => $this->buildPushMessage($messageData),
-                    'email' => $this->buildEmailMessage($messageData, $provider),
+        /**
+        * @var array[] $results
+        */
+        $results = batch(\array_map(function ($providerId) use ($providers, $message, $dbForProject) {
+            return function () use ($providerId, $providers, $message, $dbForProject) {
+                $provider = $dbForProject->getDocument('providers', $providerId);
+                $identifiers = $providers[$providerId];
+                $adapter = match ($provider->getAttribute('type')) {
+                    'sms' => $this->sms($provider),
+                    'push' => $this->push($provider),
+                    'email' => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
-                try {
-                    $adapter->send($data);
-                    $deliveredTo += \count($batch);
-                } catch (\Exception $e) {
-                    $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
-                } finally {
-                    $batchIndex++;
-                    return [
-                        'deliveredTo' => $deliveredTo,
-                        'deliveryErrors' => $deliveryErrors,
-                    ];
-                }
+                $maxBatchSize = $adapter->getMaxMessagesPerRequest();
+                $batches = \array_chunk($identifiers, $maxBatchSize);
+                $batchIndex = 0;
+
+                $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
+                    return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+                        $deliveredTo = 0;
+                        $deliveryErrors = [];
+                        $messageData = clone $message;
+                        $messageData->setAttribute('to', $batch);
+                        $data = match ($provider->getAttribute('type')) {
+                            'sms' => $this->buildSMSMessage($messageData, $provider),
+                            'push' => $this->buildPushMessage($messageData),
+                            'email' => $this->buildEmailMessage($messageData, $provider),
+                            default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
+                        };
+                        try {
+                            $adapter->send($data);
+                            $deliveredTo += \count($batch);
+                        } catch (\Exception $e) {
+                            $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
+                        } finally {
+                            $batchIndex++;
+                            return [
+                                'deliveredTo' => $deliveredTo,
+                                'deliveryErrors' => $deliveryErrors,
+                            ];
+                        }
+                    };
+                }, $batches));
+
+                return $results;
             };
-        }, $batches));
+        }, \array_keys($providers)));
+
+        $results = array_merge(...$results);
 
         $deliveredTo = 0;
         $deliveryErrors = [];

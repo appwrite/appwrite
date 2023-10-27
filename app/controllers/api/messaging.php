@@ -1260,23 +1260,15 @@ App::post('/v1/messaging/topics')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
-    ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
     ->param('description', '', new Text(2048), 'Topic Description.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $providerId, string $name, string $description, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
-        $provider = $dbForProject->getDocument('providers', $providerId);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
 
         $topic = new Document([
             '$id' => $topicId,
-            'providerId' => $providerId,
-            'providerInternalId' => $provider->getInternalId(),
             'name' => $name,
         ]);
 
@@ -1628,8 +1620,7 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerId', '', new UID(), 'Email Provider ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
     ->param('description', '', new Text(256), 'Description for message.', true)
@@ -1640,23 +1631,11 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
-
-        $provider = $dbForProject->getDocument('providers', $providerId);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        if ($provider->getAttribute('type') !== 'email') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
-        }
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
             'description' => $description,
             'data' => [
@@ -1665,7 +1644,7 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $subject . ' ' . $providerId,
+            'search' => $messageId . ' ' . $description . ' ' . $subject,
         ]));
 
         if ($status === 'processing') {
@@ -1694,8 +1673,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerId', '', new UID(), 'SMS Provider ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('content', '', new Text(64230), 'SMS Content.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
@@ -1704,31 +1682,18 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $content, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $content, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
-
-        $provider = $dbForProject->getDocument('providers', $providerId);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        if ($provider->getAttribute('type') !== 'sms') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
-        }
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
             'description' => $description,
-            'deliveryTime' => $deliveryTime,
             'data' => [
                 'content' => $content,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $providerId,
+            'search' => $messageId . ' ' . $description,
         ]));
 
         if ($status === 'processing') {
@@ -1757,8 +1722,7 @@ App::post('/v1/messaging/messages/push')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerId', '', new UID(), 'Push Provider ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.')
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('title', '', new Text(256), 'Title for push notification.')
     ->param('body', '', new Text(64230), 'Body for push notification.')
     ->param('description', '', new Text(256), 'Description for Message.', true)
@@ -1775,18 +1739,8 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $providerId, array $to, string $title, string $body, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $to, string $title, string $body, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
-
-        $provider = $dbForProject->getDocument('providers', $providerId);
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
-
-        if ($provider->getAttribute('type') !== 'push') {
-            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
-        }
 
         $pushData = [
             'title' => $title,
@@ -1823,14 +1777,12 @@ App::post('/v1/messaging/messages/push')
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'providerId' => $provider->getId(),
-            'providerInternalId' => $provider->getInternalId(),
             'to' => $to,
             'description' => $description,
             'deliveryTime' => $deliveryTime,
             'data' => $pushData,
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $title . ' ' . $providerId,
+            'search' => $messageId . ' ' . $description . ' ' . $title,
         ]));
 
         if ($status === 'processing') {
@@ -1926,7 +1878,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
@@ -2013,7 +1965,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
@@ -2090,7 +2042,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('title', '', new Text(256), 'Title for push notification.', true)
     ->param('body', '', new Text(64230), 'Body for push notification.', true)

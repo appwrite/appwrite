@@ -16,12 +16,6 @@ class Topic extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
-            ->addRule('providerId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Provider ID.',
-                'default' => '',
-                'example' => '259125845563242502',
-            ])
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The name of the topic.',
