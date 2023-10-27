@@ -72,11 +72,6 @@ class Messaging extends Action
     {
         $recipientsId = $message->getAttribute('to', []);
 
-        if (\count($recipientsId) < 1) {
-            Console::error('Recipients not found');
-            return;
-        }
-
         /**
         * @var Document[] $recipients
         */
