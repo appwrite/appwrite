@@ -15,6 +15,7 @@ use Utopia\Cache\Cache;
 
 class VCSConsoleClientTest extends Scope
 {
+    use VCSBase;
     use ProjectCustom;
     use SideConsole;
 
