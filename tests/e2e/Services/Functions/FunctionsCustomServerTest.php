@@ -1406,7 +1406,7 @@ class FunctionsCustomServerTest extends Scope
         // Wait a little for activation to finish
         sleep(5);
 
-        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=value4';
+        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
 
         $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
             'content-type' => 'application/json',
