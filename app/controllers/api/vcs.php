@@ -66,7 +66,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            try {
+                $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                if (empty($repositoryName)) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
+            } catch (RepositoryNotFound $e) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
 
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
@@ -154,7 +161,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $message = 'Authorization required for external contributor.';
 
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                try {
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
                 $owner = $github->getOwnerName($providerInstallationId);
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
                 continue;
@@ -206,7 +220,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $message = 'Starting...';
 
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                try {
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
                 $owner = $github->getOwnerName($providerInstallationId);
 
                 $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
@@ -459,7 +480,10 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
 
         $owner = $github->getOwnerName($providerInstallationId);
         try {
-            $repositoryName = $github->getRepositoryName($providerRepositoryId);
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -722,6 +746,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
         try {
             $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -768,6 +795,9 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
         try {
             $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
         } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
@@ -1090,7 +1120,14 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repositoryName = $github->getRepositoryName($providerRepositoryId);
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
         $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
 
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';

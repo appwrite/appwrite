@@ -23,7 +23,7 @@ class VCSConsoleClientTest extends Scope
     public string $providerRepositoryId = '705764267';
     public string $providerRepositoryId2 = '708688544';
 
-    public function testGitHubAuthorize()
+    public function testGitHubAuthorize(): string
     {
         /**
          * Test for SUCCESS
@@ -43,7 +43,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testGetInstallation(string $installationId)
+    public function testGetInstallation(string $installationId): void
     {
         /**
          * Test for SUCCESS
@@ -61,7 +61,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testDetectRuntime(string $installationId)
+    public function testDetectRuntime(string $installationId): void
     {
         /**
          * Test for SUCCESS
@@ -88,7 +88,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testListRepositories(string $installationId)
+    public function testListRepositories(string $installationId): void
     {
         /**
          * Test for SUCCESS
@@ -131,7 +131,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testGetRepository(string $installationId)
+    public function testGetRepository(string $installationId): void
     {
         /**
          * Test for SUCCESS
@@ -169,7 +169,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testListRepositoryBranches(string $installationId)
+    public function testListRepositoryBranches(string $installationId): void
     {
         /**
          * Test for SUCCESS
@@ -198,7 +198,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testCreateFunctionUsingVCS(string $installationId)
+    public function testCreateFunctionUsingVCS(string $installationId): array
     {
         $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
             'content-type' => 'application/json',
@@ -236,7 +236,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testCreateFunctionUsingVCS
      */
-    public function testUpdateFunctionUsingVCS(array $data)
+    public function testUpdateFunctionUsingVCS(array $data): string
     {
         $function = $this->client->call(Client::METHOD_PUT, '/functions/' . $data['functionId'], array_merge([
             'content-type' => 'application/json',
@@ -271,7 +271,7 @@ class VCSConsoleClientTest extends Scope
     /**
      * @depends testGitHubAuthorize
      */
-    public function testCreateRepository(string $installationId)
+    public function testCreateRepository(string $installationId): void
     {
         /**
          * Test for SUCCESS
