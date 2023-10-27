@@ -81,7 +81,7 @@ class DeleteOrphanedProjects extends Action
                     $dbForProject->setNamespace('_' . $project->getInternalId());
                     $collectionsCreated = $dbForProject->count(Database::METADATA);
                     $message = ' (' . $collectionsCreated . ') collections where found on project (' . $project->getId() . '))';
-                    if ($collectionsCreated < ($collectionsConfig + 2)) {
+                    if ($collectionsCreated < (count($collectionsConfig) + 2)) {
                         Console::error($message);
                         $orphans++;
                     } else {
