@@ -124,7 +124,7 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
             $cookieHeaders[] = "{$key}={$value}";
         }
 
-        if(!empty($cookieHeaders)) {
+        if (!empty($cookieHeaders)) {
             $swooleHeaders['cookie'] = \implode('; ', $cookieHeaders);
         }
 
