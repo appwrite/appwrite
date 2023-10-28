@@ -217,7 +217,9 @@ class HealthCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/health/queue/databases', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
+        ], $this->getHeaders()), [
+            'name' => 'database_db_main',
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['size']);

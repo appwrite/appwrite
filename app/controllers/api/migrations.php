@@ -51,8 +51,9 @@ App::post('/v1/migrations/appwrite')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -69,11 +70,10 @@ App::post('/v1/migrations/appwrite')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -104,9 +104,10 @@ App::post('/v1/migrations/firebase/oauth')
     ->inject('dbForConsole')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
     ->inject('request')
-    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $events, Request $request) {
+    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
         $firebase = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
@@ -171,11 +172,10 @@ App::post('/v1/migrations/firebase/oauth')
             'errors' => []
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -205,8 +205,9 @@ App::post('/v1/migrations/firebase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -221,11 +222,10 @@ App::post('/v1/migrations/firebase')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -260,8 +260,9 @@ App::post('/v1/migrations/supabase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -281,11 +282,10 @@ App::post('/v1/migrations/supabase')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -321,8 +321,9 @@ App::post('/v1/migrations/nhost')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -343,11 +344,10 @@ App::post('/v1/migrations/nhost')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -931,8 +931,8 @@ App::patch('/v1/migrations/:migrationId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventInstance) {
+    ->inject('queueForMigrations')
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Migration $queueForMigrations) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -948,8 +948,7 @@ App::patch('/v1/migrations/:migrationId')
             ->setAttribute('dateUpdated', \time());
 
         // Trigger Migration
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -974,8 +973,8 @@ App::delete('/v1/migrations/:migrationId')
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -986,7 +985,7 @@ App::delete('/v1/migrations/:migrationId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB');
         }
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response->noContent();
     });

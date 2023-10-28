@@ -86,7 +86,7 @@ return [
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
-        'code' => 500,
+        'code' => 426,
     ],
     Exception::GENERAL_CODES_DISABLED => [
         'name' => Exception::GENERAL_CODES_DISABLED,
@@ -460,11 +460,15 @@ return [
         'description' => 'Database not found',
         'code' => 404
     ],
-
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',
         'code' => 409
+    ],
+    Exception::DATABASE_TIMEOUT => [
+        'name' => Exception::DATABASE_TIMEOUT,
+        'description' => 'Database timed out. Try adjusting your queries or adding an index.',
+        'code' => 408
     ],
 
     /** Collections */
@@ -727,5 +731,22 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+
+    /** Realtime */
+    Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
+        'name' => Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+        'description' => 'Message format is not valid.',
+        'code' => 1003,
+    ],
+    Exception::REALTIME_POLICY_VIOLATION => [
+        'name' => Exception::REALTIME_POLICY_VIOLATION,
+        'description' => 'Policy violation.',
+        'code' => 1008,
+    ],
+    Exception::REALTIME_TOO_MANY_MESSAGES => [
+        'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
+        'description' => 'Too many messages.',
+        'code' => 1013,
     ],
 ];
