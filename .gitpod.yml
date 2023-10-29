@@ -1,10 +1,17 @@
+# Define a list of tasks to be executed
 tasks:
   - name: Run Appwrite Docker Stack
+    # Initialization steps before running the task
     init: |
+      # Initialize Git submodules
       git submodule update --init
+      # Build the Docker Compose configuration
       docker compose build
+      # Pull Docker Compose images
       docker compose pull
+      # Pull the Composer Docker image
       docker pull composer
+    # Command to run inside the Docker container
     command: |
       docker run --rm --interactive --tty \
       --volume $PWD:/app \
@@ -15,20 +22,23 @@ tasks:
       --no-scripts \
       --prefer-dist
 
+# Define a list of ports to be exposed
 ports:
   - port: 8080
+    # Action to take when the port is opened
     onOpen: open-preview
-    visibility: public
+    # Set the visibility of the port to public
 
+# Visual Studio Code (VSCode) configuration
 vscode:
   extensions:
     - ms-azuretools.vscode-docker
     - zobo.php-intellisense
 
+# GitHub-specific configuration for prebuilds
 github:
-  # https://www.gitpod.io/docs/prebuilds#github-specific-configuration
   prebuilds:
-    # enable for pull requests coming from forks (defaults to false)
+    # Enable for pull requests coming from forks (defaults to false)
     pullRequestsFromForks: true
-    # add a check to pull requests (defaults to true)
+    # Add a check to pull requests (defaults to true)
     addCheck: false
