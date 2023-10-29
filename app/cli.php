@@ -1,8 +1,10 @@
 <?php
 
+// Include necessary files
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+// Import and use necessary classes and namespaces
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
@@ -22,11 +24,17 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
+// Disable authorization
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+// Set CLI resources
 
+// Register the 'register' resource
+CLI::setResource('register', fn() => $register);
+
+// Register the 'cache' resource
 CLI::setResource('cache', function ($pools) {
+    // Initialize cache adapters
     $list = Config::getParam('pools-cache', []);
     $adapters = [];
 
@@ -34,18 +42,20 @@ CLI::setResource('cache', function ($pools) {
         $adapters[] = $pools
             ->get($value)
             ->pop()
-            ->getResource()
-        ;
+            ->getResource();
     }
 
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
+// Register the 'pools' resource
 CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
+// Register the 'dbForConsole' resource
 CLI::setResource('dbForConsole', function ($pools, $cache) {
+    // Initialize database for the console
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -67,7 +77,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             $collections = Config::getParam('collections', [])['console'];
             $last = \array_key_last($collections);
 
-            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { /** TODO cache ready variable using registry */
+            if (!($dbForConsole->exists($dbForConsole->getDefaultDatabase(), $last))) { 
                 throw new Exception('Tables not ready yet.');
             }
 
@@ -86,8 +96,9 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
     return $dbForConsole;
 }, ['pools', 'cache']);
 
+// Register the 'getProjectDB' resource
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
-    $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
+    $databases = [];
 
     return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
@@ -117,18 +128,19 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
     };
 }, ['pools', 'dbForConsole', 'cache']);
 
+// Register the 'influxdb' resource
 CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
+    $client = $register->get('influxdb');
     $attempts = 0;
     $max = 10;
     $sleep = 1;
 
-    do { // check if telegraf database is ready
+    do {
         try {
             $attempts++;
             $database = $client->selectDB('telegraf');
             if (in_array('telegraf', $client->listDatabases())) {
-                break; // leave the do-while if successful
+                break;
             }
         } catch (\Throwable $th) {
             Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
@@ -141,6 +153,7 @@ CLI::setResource('influxdb', function (Registry $register) {
     return $database;
 }, ['register']);
 
+// Register the 'queue' resource
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
