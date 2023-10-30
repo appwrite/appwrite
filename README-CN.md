@@ -21,7 +21,7 @@
 <!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
 <!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
 
-[English](README.md) | 简体中文
+[English](README.md) | [Español](README-ES.md) | 简体中文
 
 [**Appwrite 云公开测试版！立即注册！**](https://cloud.appwrite.io)
 
