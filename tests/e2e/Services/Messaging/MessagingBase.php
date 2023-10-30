@@ -408,6 +408,10 @@ trait MessagingBase
 
     public function testSendEmail()
     {
+        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
         $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $from = $emailDSN->getParam('from');
@@ -519,6 +523,10 @@ trait MessagingBase
      */
     public function testUpdateEmail(array $email)
     {
+        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
         $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
         $from = $emailDSN->getParam('from');
@@ -645,6 +653,10 @@ trait MessagingBase
 
     public function testSendSMS()
     {
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
         $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $from = $smsDSN->getParam('from');
@@ -753,6 +765,10 @@ trait MessagingBase
      */
     public function testUpdateSMS(array $sms)
     {
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
         $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $from = $smsDSN->getParam('from');
@@ -876,6 +892,10 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
+        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
         $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $pushDSN->getParam('to');
         $serverKey = $pushDSN->getPassword();
@@ -981,6 +1001,10 @@ trait MessagingBase
      */
     public function testUpdatePushNotification(array $push)
     {
+        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
         $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $pushDSN->getParam('to');
         $serverKey = $pushDSN->getPassword();

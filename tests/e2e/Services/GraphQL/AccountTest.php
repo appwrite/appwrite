@@ -124,6 +124,10 @@ class AccountTest extends Scope
      */
     public function testCreatePhoneVerification(): array
     {
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
         $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $from = $smsDSN->getParam('from');
