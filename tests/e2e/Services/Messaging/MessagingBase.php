@@ -223,7 +223,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => 'unique()',
+            'topicId' => ID::unique(),
             'name' => 'my-app',
             'description' => 'web app'
         ]);
@@ -258,6 +258,8 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => 'updated-description',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, \count($response['body']['topics']));

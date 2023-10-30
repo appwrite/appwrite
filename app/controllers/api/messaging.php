@@ -1400,6 +1400,9 @@ App::post('/v1/messaging/topics')
 
         if ($description) {
             $topic->setAttribute('description', $description);
+            $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
+        } else {
+            $topic->setAttribute('search', $topic->getId() . ' ' . $name);
         }
 
         try {
@@ -1514,6 +1517,16 @@ App::patch('/v1/messaging/topics/:topicId')
 
         if (!empty($description)) {
             $topic->setAttribute('description', $description);
+        }
+
+        if (!empty($name) || !empty($description)) {
+            if (!empty($name) && !empty($description)) {
+                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
+            } elseif (!empty($name)) {
+                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $topic->getAttribute('description'));
+            } else {
+                $topic->setAttribute('search', $topic->getId() . ' ' . $topic->getAttribute('name') . ' ' . $description);
+            }
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);

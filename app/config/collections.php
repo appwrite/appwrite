@@ -1728,7 +1728,7 @@ $commonCollections = [
             [
                 '$id' => ID::custom('_key_search'),
                 'type' => Database::INDEX_FULLTEXT,
-                'attributes' => ['name'],
+                'attributes' => ['search'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ]
