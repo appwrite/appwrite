@@ -631,7 +631,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             ],
@@ -660,7 +660,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
         return $message['body']['data']['messagingGetMessage'];
@@ -777,7 +777,7 @@ class MessagingTest extends Scope
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             ],
@@ -822,7 +822,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
     }
 
@@ -931,7 +931,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'content' => '454665',
             ],
         ];
@@ -959,7 +959,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
         return $message['body']['data']['messagingGetMessage'];
     }
@@ -1073,7 +1073,7 @@ class MessagingTest extends Scope
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'content' => '345463',
             ],
         ];
@@ -1117,7 +1117,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
     }
 
@@ -1222,7 +1222,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
             ],
@@ -1251,7 +1251,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
 
         return $message['body']['data']['messagingGetMessage'];
@@ -1361,7 +1361,7 @@ class MessagingTest extends Scope
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'to' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
             ],
@@ -1406,7 +1406,7 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['data']['messagingGetMessage']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['data']['messagingGetMessage']['deliveryErrors']));
     }
 }

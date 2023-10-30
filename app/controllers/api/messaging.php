@@ -69,14 +69,14 @@ App::post('/v1/messaging/providers/mailgun')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['email'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -127,14 +127,14 @@ App::post('/v1/messaging/providers/sendgrid')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -187,14 +187,14 @@ App::post('/v1/messaging/providers/msg91')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -247,14 +247,14 @@ App::post('/v1/messaging/providers/telesign')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -307,14 +307,14 @@ App::post('/v1/messaging/providers/textmagic')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -367,14 +367,14 @@ App::post('/v1/messaging/providers/twilio')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -427,14 +427,14 @@ App::post('/v1/messaging/providers/vonage')
             ]
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['sms'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -481,14 +481,14 @@ App::post('/v1/messaging/providers/fcm')
             ],
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['push'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -543,14 +543,14 @@ App::post('/v1/messaging/providers/apns')
             ],
         ]);
 
-        // Check if a default provider exists, if not, set this one as default
+        // Check if a internal provider exists, if not, set this one as internal
         if (
             empty($dbForProject->findOne('providers', [
-                Query::equal('default', [true]),
+                Query::equal('internal', [true]),
                 Query::equal('type', ['push'])
             ]))
         ) {
-            $provider->setAttribute('default', true);
+            $provider->setAttribute('internal', true);
         }
 
         try {
@@ -647,13 +647,14 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as eu region.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -680,6 +681,10 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if ($isEuRegion === true || $isEuRegion === false) {
@@ -697,6 +702,15 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -718,11 +732,12 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -749,6 +764,10 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         if (!empty($apiKey)) {
             $provider->setAttribute('credentials', [
                 'apiKey' => $apiKey,
@@ -756,6 +775,15 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -777,12 +805,13 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $senderId, string $authKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $senderId, string $authKey, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -809,6 +838,10 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($senderId)) {
@@ -822,6 +855,15 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -843,12 +885,13 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $password, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $password, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -875,6 +918,10 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($username)) {
@@ -888,6 +935,15 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -909,12 +965,13 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $apiKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $apiKey, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -941,6 +998,10 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($username)) {
@@ -954,6 +1015,15 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -975,12 +1045,13 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $accountSid, string $authToken, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $accountSid, string $authToken, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1007,6 +1078,10 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($accountSid)) {
@@ -1020,6 +1095,15 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -1041,12 +1125,13 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $apiSecret, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $apiSecret, string $from, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1073,6 +1158,10 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($apiKey)) {
@@ -1086,6 +1175,15 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -1107,10 +1205,11 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $serverKey, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1131,11 +1230,24 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $provider->setAttribute('enabled', $enabled);
         }
 
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
+        }
+
         if (!empty($serverKey)) {
             $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -1158,6 +1270,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
@@ -1165,7 +1278,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1184,6 +1297,10 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         if ($enabled === true || $enabled === false) {
             $provider->setAttribute('enabled', $enabled);
+        }
+
+        if ($internal === true) {
+            $provider->setAttribute('internal', $internal);
         }
 
         $credentials = $provider->getAttribute('credentials');
@@ -1211,6 +1328,15 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        if ($internal === true) {
+            $internalProvider = $dbForProject->findOne('providers', [
+                'internal' => true,
+                'type' => 'email',
+            ]);
+            $internalProvider->setAttribute('internal', false);
+            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
+        }
 
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -1620,9 +1746,11 @@ App::post('/v1/messaging/messages/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
@@ -1631,12 +1759,18 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $content, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
+        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'to' => $to,
+            'topics' => $topics,
+            'users' => $users,
+            'targets' => $targets,
             'description' => $description,
             'data' => [
                 'subject' => $subject,
@@ -1673,8 +1807,10 @@ App::post('/v1/messaging/messages/sms')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('content', '', new Text(64230), 'SMS Content.')
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
@@ -1682,12 +1818,18 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $content, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
+        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'to' => $to,
+            'topics' => $topics,
+            'users' => $users,
+            'targets' => $targets,
             'description' => $description,
             'data' => [
                 'content' => $content,
@@ -1722,9 +1864,11 @@ App::post('/v1/messaging/messages/push')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.')
     ->param('title', '', new Text(256), 'Title for push notification.')
     ->param('body', '', new Text(64230), 'Body for push notification.')
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
@@ -1739,8 +1883,12 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $title, string $body, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+
+        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
 
         $pushData = [
             'title' => $title,
@@ -1777,7 +1925,9 @@ App::post('/v1/messaging/messages/push')
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
-            'to' => $to,
+            'topics' => $topics,
+            'users' => $users,
+            'targets' => $targets,
             'description' => $description,
             'deliveryTime' => $deliveryTime,
             'data' => $pushData,
@@ -1878,7 +2028,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
@@ -1889,7 +2041,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -1904,8 +2056,16 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($to) > 0) {
-            $message->setAttribute('to', $to);
+        if (\count($topics) > 0) {
+            $message->setAttribute('topics', $topics);
+        }
+
+        if (\count($users) > 0) {
+            $message->setAttribute('users', $users);
+        }
+
+        if (\count($targets) > 0) {
+            $message->setAttribute('targets', $targets);
         }
 
         $data = $message->getAttribute('data');
@@ -1965,7 +2125,9 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
@@ -1974,7 +2136,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $description, string $content, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $content, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -1989,8 +2151,16 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($to) > 0) {
-            $message->setAttribute('to', $to);
+        if (\count($topics) > 0) {
+            $message->setAttribute('topics', $topics);
+        }
+
+        if (\count($users) > 0) {
+            $message->setAttribute('users', $users);
+        }
+
+        if (\count($targets) > 0) {
+            $message->setAttribute('targets', $targets);
         }
 
         $data = $message->getAttribute('data');
@@ -2042,7 +2212,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('to', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs or List of User IDs or List of Target IDs.', true)
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('title', '', new Text(256), 'Title for push notification.', true)
     ->param('body', '', new Text(64230), 'Body for push notification.', true)
@@ -2058,7 +2230,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $to, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2073,8 +2245,16 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($to) > 0) {
-            $message->setAttribute('to', $to);
+        if (\count($topics) > 0) {
+            $message->setAttribute('topics', $topics);
+        }
+
+        if (\count($users) > 0) {
+            $message->setAttribute('users', $users);
+        }
+
+        if (\count($targets) > 0) {
+            $message->setAttribute('targets', $targets);
         }
 
         $pushData = $message->getAttribute('data');

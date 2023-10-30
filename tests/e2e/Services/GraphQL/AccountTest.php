@@ -142,7 +142,6 @@ class AccountTest extends Scope
                 'from' => $from,
                 'senderId' => $senderId,
                 'authKey' => $authKey,
-                'default' => true,
             ],
         ];
 

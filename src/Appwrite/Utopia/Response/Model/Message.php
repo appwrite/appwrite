@@ -17,12 +17,26 @@ class Message extends Any
                 'default' => '',
                 'example' => '5e5ea5c16897e',
             ])
-            ->addRule('to', [
+            ->addRule('topics', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Message recipients.',
+                'description' => 'Topic IDs set as recipients.',
                 'default' => '',
                 'array' => true,
-                'example' => ['user-1'],
+                'example' => ['5e5ea5c16897e'],
+            ])
+            ->addRule('users', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User IDs set as recipients.',
+                'default' => '',
+                'array' => true,
+                'example' => ['5e5ea5c16897e'],
+            ])
+            ->addRule('targets', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Target IDs set as recipients.',
+                'default' => '',
+                'array' => true,
+                'example' => ['5e5ea5c16897e'],
             ])
             ->addRule('deliveryTime', [
                 'type' => self::TYPE_DATETIME,
@@ -46,7 +60,7 @@ class Message extends Any
                 'array' => true,
                 'example' => ['Failed to send message to target 5e5ea5c16897e: Credentials not valid.'],
             ])
-            ->addRule('deliveredTo', [
+            ->addRule('deliveredTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Number of recipients the message was delivered to.',
                 'default' => 0,

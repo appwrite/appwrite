@@ -486,7 +486,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
@@ -503,7 +503,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -605,7 +605,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
@@ -632,7 +632,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 
@@ -717,7 +717,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'content' => '064763',
         ]);
 
@@ -733,7 +733,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -833,7 +833,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'content' => '047487',
         ]);
 
@@ -859,7 +859,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 
@@ -940,7 +940,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
         ]);
@@ -957,7 +957,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -1053,7 +1053,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
         ]);
@@ -1080,7 +1080,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 }

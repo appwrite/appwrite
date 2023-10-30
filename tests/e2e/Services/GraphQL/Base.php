@@ -1790,7 +1790,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1801,7 +1801,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1812,7 +1812,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1823,7 +1823,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1834,7 +1834,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1845,7 +1845,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1856,7 +1856,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1867,7 +1867,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1878,7 +1878,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1891,7 +1891,7 @@ trait Base
                             name
                             provider
                             type
-                            default
+                            internal
                             enabled
                         }
                     }
@@ -1903,7 +1903,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1914,7 +1914,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1925,7 +1925,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1936,7 +1936,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1947,7 +1947,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1958,7 +1958,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1969,7 +1969,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1980,7 +1980,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -1991,7 +1991,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -2002,7 +2002,7 @@ trait Base
                         name
                         provider
                         type
-                        default
+                        internal
                         enabled
                     }
                 }';
@@ -2087,40 +2087,46 @@ trait Base
                     }
             }';
             case self::$CREATE_EMAIL:
-                return 'mutation createEmail($messageId: String!, $to: [String!]!, $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
-                    messagingCreateEmail(messageId: $messageId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
+                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
+                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
                 }';
             case self::$CREATE_SMS:
-                return 'mutation createSMS($messageId: String!, $to: [String!]!, $content: String!, $status: String, $description: String, $deliveryTime: String) {
-                    messagingCreateSMS(messageId: $messageId, to: $to, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation createSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String!, $status: String, $description: String, $deliveryTime: String) {
+                    messagingCreateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
                 }';
             case self::$CREATE_PUSH_NOTIFICATION:
-                return 'mutation createPushNotification($messageId: String!, $to: [String!]!, $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
-                    messagingCreatePushNotification(messageId: $messageId, to: $to, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation createPushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
+                    messagingCreatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
@@ -2131,11 +2137,13 @@ trait Base
                         total
                         messages {
                             _id
-                            to
+                            topics
+                            users
+                            targets
                             deliveryTime
                             deliveredAt
                             deliveryErrors
-                            deliveredTo
+                            deliveredTotal
                             status
                             description
                         }
@@ -2145,50 +2153,58 @@ trait Base
                 return 'query getMessage($messageId: String!) {
                     messagingGetMessage(messageId: $messageId) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
                 }';
             case self::$UPDATE_EMAIL:
-                return 'mutation updateEmail($messageId: String!, $to: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
-                    messagingUpdateEmail(messageId: $messageId, to: $to, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $deliveryTime: String) {
+                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
                 }';
             case self::$UPDATE_SMS:
-                return 'mutation updateSMS($messageId: String!, $to: [String!], $content: String, $status: String, $description: String, $deliveryTime: String) {
-                    messagingUpdateSMS(messageId: $messageId, to: $to, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation updateSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String, $status: String, $description: String, $deliveryTime: String) {
+                    messagingUpdateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }
                 }';
             case self::$UPDATE_PUSH_NOTIFICATION:
-                return 'mutation updatePushNotification($messageId: String!, $to: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
-                    messagingUpdatePushNotification(messageId: $messageId, to: $to, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
+                return 'mutation updatePushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $deliveryTime: String) {
+                    messagingUpdatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, deliveryTime: $deliveryTime) {
                         _id
-                        to
+                        topics
+                        users
+                        targets
                         deliveryTime
                         deliveredAt
                         deliveryErrors
-                        deliveredTo
+                        deliveredTotal
                         status
                         description
                     }

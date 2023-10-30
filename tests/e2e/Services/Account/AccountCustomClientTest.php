@@ -762,7 +762,6 @@ class AccountCustomClientTest extends Scope
             'name' => 'Sms provider',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'default' => true,
             'from' => $from,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -810,7 +809,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
 
@@ -1040,7 +1039,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return \array_merge($data, [

@@ -8,7 +8,7 @@ class Providers extends Base
         'name',
         'provider',
         'type',
-        'default',
+        'internal',
         'enabled',
     ];
 
