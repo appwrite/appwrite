@@ -8,6 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 
 class AccountTest extends Scope
 {
@@ -123,10 +124,11 @@ class AccountTest extends Scope
      */
     public function testCreatePhoneVerification(): array
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
 
         if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
             $this->markTestSkipped('SMS provider not configured');

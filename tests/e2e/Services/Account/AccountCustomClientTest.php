@@ -11,6 +11,7 @@ use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\DSN\DSN;
 
 use function sleep;
 
@@ -743,10 +744,11 @@ class AccountCustomClientTest extends Scope
 
     public function testCreatePhone(): array
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
 
         if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
             $this->markTestSkipped('SMS provider not configured');

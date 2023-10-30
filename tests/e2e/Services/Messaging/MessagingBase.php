@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Messaging;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 
 trait MessagingBase
 {
@@ -407,11 +408,13 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
-        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
-        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
-        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
-        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
+        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $to = $emailDSN->getParam('to');
+        $from = $emailDSN->getParam('from');
+        $isEuRegion = $emailDSN->getParam('isEuRegion');
+        $apiKey = $emailDSN->getPassword();
+        $domain = $emailDSN->getUser();
+
         if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
@@ -516,11 +519,13 @@ trait MessagingBase
      */
     public function testUpdateEmail(array $email)
     {
-        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
-        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
-        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
-        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
-        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
+        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $to = $emailDSN->getParam('to');
+        $from = $emailDSN->getParam('from');
+        $isEuRegion = $emailDSN->getParam('isEuRegion');
+        $apiKey = $emailDSN->getPassword();
+        $domain = $emailDSN->getUser();
+
         if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
@@ -640,10 +645,12 @@ trait MessagingBase
 
     public function testSendSMS()
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
+
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
         }
@@ -746,10 +753,12 @@ trait MessagingBase
      */
     public function testUpdateSMS(array $sms)
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
+
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
         }
@@ -867,8 +876,10 @@ trait MessagingBase
 
     public function testSendPushNotification()
     {
-        $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
-        $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
+        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $pushDSN->getParam('to');
+        $serverKey = $pushDSN->getPassword();
+
         if (empty($to) || empty($serverKey)) {
             $this->markTestSkipped('Push provider not configured');
         }
@@ -970,8 +981,10 @@ trait MessagingBase
      */
     public function testUpdatePushNotification(array $push)
     {
-        $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
-        $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
+        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $pushDSN->getParam('to');
+        $serverKey = $pushDSN->getPassword();
+
         if (empty($to) || empty($serverKey)) {
             $this->markTestSkipped('Push provider not configured');
         }
