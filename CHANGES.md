@@ -1,3 +1,9 @@
+# Version 1.4.9
+
+## Bug fixes
+
+* Fix 400 error on function domain execution in [#7059](https://github.com/appwrite/appwrite/pull/7059)
+
 # Version 1.4.8
 
 ## Notable changes
