@@ -33,7 +33,7 @@ App::post('/v1/messaging/providers/mailgun')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -89,7 +89,7 @@ App::post('/v1/messaging/providers/mailgun')
         }
 
         $queueForEvents
-            ->setParam('provider', 'mailgun');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -152,7 +152,7 @@ App::post('/v1/messaging/providers/sendgrid')
         }
 
         $queueForEvents
-            ->setParam('provider', 'sendgrid');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -165,7 +165,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('scope', 'providers.write')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createMsg91Provider')
@@ -217,7 +217,7 @@ App::post('/v1/messaging/providers/msg91')
         }
 
         $queueForEvents
-            ->setParam('provider', 'msg91');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -229,7 +229,7 @@ App::post('/v1/messaging/providers/telesign')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -282,7 +282,7 @@ App::post('/v1/messaging/providers/telesign')
         }
 
         $queueForEvents
-            ->setParam('provider', 'telesign');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -295,7 +295,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
     ->inject('queueForEvents')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -313,7 +313,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, bool $enabled, Event $queueForEvents Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -348,7 +348,7 @@ App::post('/v1/messaging/providers/textmagic')
         }
 
         $queueForEvents
-            ->setParam('provider', 'textmagic');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -360,7 +360,7 @@ App::post('/v1/messaging/providers/twilio')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -413,7 +413,7 @@ App::post('/v1/messaging/providers/twilio')
         }
 
         $queueForEvents
-            ->setParam('provider', 'twilio');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -425,7 +425,7 @@ App::post('/v1/messaging/providers/vonage')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -478,7 +478,7 @@ App::post('/v1/messaging/providers/vonage')
         }
 
         $queueForEvents
-            ->setParam('provider', 'vonage');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -490,7 +490,7 @@ App::post('/v1/messaging/providers/fcm')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -537,7 +537,7 @@ App::post('/v1/messaging/providers/fcm')
         }
 
         $queueForEvents
-            ->setParam('provider', 'fcm');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -549,7 +549,7 @@ App::post('/v1/messaging/providers/apns')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
-    ->label('event', 'providers.[provider].create')
+    ->label('event', 'providers.[providerId].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -604,7 +604,7 @@ App::post('/v1/messaging/providers/apns')
         }
 
         $queueForEvents
-            ->setParam('provider', 'apns');
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -683,6 +683,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -699,9 +700,10 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -759,6 +761,9 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -768,6 +773,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -782,9 +788,10 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -832,6 +839,9 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -841,6 +851,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -856,9 +867,10 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $senderId, string $authKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $senderId, string $authKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -912,6 +924,9 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -921,6 +936,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -936,9 +952,10 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $password, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $password, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -992,6 +1009,9 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1001,6 +1021,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1016,9 +1037,10 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $apiKey, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1072,6 +1094,9 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1081,6 +1106,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1096,9 +1122,10 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $accountSid, string $authToken, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $accountSid, string $authToken, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1152,6 +1179,9 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1161,6 +1191,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1176,9 +1207,10 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $apiSecret, string $from, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $apiSecret, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1232,6 +1264,9 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1241,6 +1276,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1254,9 +1290,10 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1296,6 +1333,9 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1306,6 +1346,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.update')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1323,9 +1364,10 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
     ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1385,6 +1427,9 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
         }
 
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
         $response
             ->dynamic($provider, Response::MODEL_PROVIDER);
     });
@@ -1394,6 +1439,7 @@ App::delete('/v1/messaging/providers/:providerId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.delete')
     ->label('audits.resource', 'provider/{request.id}')
+    ->label('event', 'providers.[providerId].delete')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1403,9 +1449,10 @@ App::delete('/v1/messaging/providers/:providerId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('providerId', '', new UID(), 'Provider ID.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1413,6 +1460,9 @@ App::delete('/v1/messaging/providers/:providerId')
         }
 
         $dbForProject->deleteDocument('providers', $provider->getId());
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
@@ -1422,8 +1472,9 @@ App::delete('/v1/messaging/providers/:providerId')
 App::post('/v1/messaging/topics')
     ->desc('Create a topic.')
     ->groups(['api', 'messaging'])
-    ->label('audits.event', 'topic.create')
+    ->label('audits.event', 'topic.[topicId].create')
     ->label('audits.resource', 'topic/{response.$id}')
+    ->label('event', 'topics.create')
     ->label('scope', 'topics.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1435,9 +1486,10 @@ App::post('/v1/messaging/topics')
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
     ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, string $description, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
         $topic = new Document([
@@ -1457,6 +1509,9 @@ App::post('/v1/messaging/topics')
         } catch (DuplicateException) {
             throw new Exception(Exception::TOPIC_ALREADY_EXISTS);
         }
+
+        $queueForEvents
+            ->setParam('topicId', $topic->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1538,6 +1593,7 @@ App::patch('/v1/messaging/topics/:topicId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
     ->label('audits.resource', 'topic/{response.$id}')
+    ->label('event', 'topics.[topicId].update')
     ->label('scope', 'topics.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1549,9 +1605,10 @@ App::patch('/v1/messaging/topics/:topicId')
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.', true)
     ->param('description', '', new Text(2048), 'Topic Description.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, string $description, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, string $description, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -1578,6 +1635,9 @@ App::patch('/v1/messaging/topics/:topicId')
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
 
+        $queueForEvents
+            ->setParam('topicId', $topic->getId());
+
         $response
             ->dynamic($topic, Response::MODEL_TOPIC);
     });
@@ -1587,6 +1647,7 @@ App::delete('/v1/messaging/topics/:topicId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
     ->label('audits.resource', 'topic/{request.topicId}')
+    ->label('event', 'topics.[topicId].delete')
     ->label('scope', 'topics.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1596,10 +1657,11 @@ App::delete('/v1/messaging/topics/:topicId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('topicId', '', new UID(), 'Topic ID.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('response')
-    ->action(function (string $topicId, Database $dbForProject, Delete $queueForDeletes, Response $response) {
+    ->action(function (string $topicId, Event $queueForEvents, Database $dbForProject, Delete $queueForDeletes, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -1612,6 +1674,9 @@ App::delete('/v1/messaging/topics/:topicId')
             ->setType(DELETE_TYPE_TOPIC)
             ->setDocument($topic);
 
+        $queueForEvents
+            ->setParam('topicId', $topic->getId());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
             ->noContent();
@@ -1622,6 +1687,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
     ->label('audits.resource', 'subscriber/{response.$id}')
+    ->label('event', 'topics.[topicId].subscribers.[subscriberId].create')
     ->label('scope', 'subscribers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1633,9 +1699,10 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Database $dbForProject, Response $response) {
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
         $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
@@ -1668,6 +1735,10 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
+
+        $queueForEvents
+            ->setParam('topicId', $topic->getId())
+            ->setParam('subscriberId', $subscriber->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1759,6 +1830,7 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
     ->label('audits.resource', 'subscriber/{request.subscriberId}')
+    ->label('event', 'topics.[topicId].subscribers.[subscriberId].delete')
     ->label('scope', 'subscribers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1769,9 +1841,10 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
@@ -1784,8 +1857,12 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $subscriber = $dbForProject->deleteDocument('subscribers', $subscriberId);
+        $dbForProject->deleteDocument('subscribers', $subscriberId);
         Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+        $queueForEvents
+            ->setParam('topicId', $topic->getId())
+            ->setParam('subscriberId', $subscriber->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_NOCONTENT)
@@ -1797,6 +1874,7 @@ App::post('/v1/messaging/messages/email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1815,11 +1893,12 @@ App::post('/v1/messaging/messages/email')
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -1848,6 +1927,9 @@ App::post('/v1/messaging/messages/email')
                 ->trigger();
         }
 
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
@@ -1858,6 +1940,7 @@ App::post('/v1/messaging/messages/sms')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1874,11 +1957,12 @@ App::post('/v1/messaging/messages/sms')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -1905,6 +1989,9 @@ App::post('/v1/messaging/messages/sms')
                 ->trigger();
         }
 
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($message, Response::MODEL_MESSAGE);
@@ -1915,6 +2002,7 @@ App::post('/v1/messaging/messages/push')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].create')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -1939,11 +2027,12 @@ App::post('/v1/messaging/messages/push')
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2001,6 +2090,9 @@ App::post('/v1/messaging/messages/push')
                 ->setProject($project)
                 ->trigger();
         }
+
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2079,6 +2171,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -2097,11 +2190,12 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2167,6 +2261,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 ->trigger();
         }
 
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
+
         $response
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
@@ -2176,6 +2273,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -2192,11 +2290,12 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $content, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $content, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2254,6 +2353,9 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 ->trigger();
         }
 
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
+
         $response
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
@@ -2263,6 +2365,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
+    ->label('event', 'messages.[messageId].update')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -2286,11 +2389,12 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2379,6 +2483,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 ->setProject($project)
                 ->trigger();
         }
+
+        $queueForEvents
+            ->setParam('messageId', $message->getId());
 
         $response
             ->dynamic($message, Response::MODEL_MESSAGE);

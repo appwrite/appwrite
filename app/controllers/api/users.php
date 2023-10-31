@@ -384,6 +384,7 @@ App::post('/v1/users/:userId/targets')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -396,9 +397,10 @@ App::post('/v1/users/:userId/targets')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Event $queueForEvents, Response $response, Database $dbForProject) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -430,6 +432,10 @@ App::post('/v1/users/:userId/targets')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1203,6 +1209,7 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
+    ->label('event', 'users.[userId].targets.[targetId].update')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1214,9 +1221,10 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, string $identifier, Event $queueForEvents, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1238,6 +1246,10 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
 
         $response
             ->dynamic($target, Response::MODEL_TARGET);
@@ -1378,6 +1390,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.delete')
     ->label('audits.resource', 'target/{request.$targetId}')
+    ->label('event', 'users.[userId].targets.[targetId].delete')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
@@ -1388,9 +1401,10 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, Response $response, Database $dbForProject) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1408,8 +1422,12 @@ App::delete('/v1/users/:userId/targets/:targetId')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $target = $dbForProject->deleteDocument('targets', $target->getId());
+        $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
 
         $response->noContent();
     });
