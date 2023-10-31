@@ -1000,7 +1000,12 @@ App::post('/v1/account/sessions/magic-url')
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-        $message->setParam('{{body}}', $body);
+        $message
+            ->setParam('{{body}}', $body)
+            ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -1050,16 +1055,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         $emailVariables = [
-            'subject' => $subject,
-            'hello' => $locale->getText("emails.magicSession.hello"),
-            'body' => $body,
-            'footer' => $locale->getText("emails.magicSession.footer"),
-            'thanks' => $locale->getText("emails.magicSession.thanks"),
-            'signature' => $locale->getText("emails.magicSession.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => '',
             'team' => '',
@@ -2457,7 +2453,12 @@ App::post('/v1/account/recovery')
         $customTemplate = $project->getAttribute('templates', [])['email.recovery-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-        $message->setParam('{{body}}', $body);
+        $message
+            ->setParam('{{body}}', $body)
+            ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.recovery.signature"));
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -2507,23 +2508,13 @@ App::post('/v1/account/recovery')
         }
 
         $emailVariables = [
-            'subject' => $subject,
-            'hello' => $locale->getText("emails.recovery.hello"),
-            'body' => $body,
-            'footer' => $locale->getText("emails.recovery.footer"),
-            'thanks' => $locale->getText("emails.recovery.thanks"),
-            'signature' => $locale->getText("emails.recovery.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => $profile->getAttribute('name'),
             'team' => '',
             'project' => $projectName,
             'redirect' => $url
         ];
-
 
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
@@ -2709,7 +2700,12 @@ App::post('/v1/account/verification')
         $customTemplate = $project->getAttribute('templates', [])['email.verification-' . $locale->default] ?? [];
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-        $message->setParam('{{body}}', $body);
+        $message
+            ->setParam('{{body}}', $body)
+            ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.verification.signature"));
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -2759,16 +2755,7 @@ App::post('/v1/account/verification')
         }
 
         $emailVariables = [
-            'subject' => $subject,
-            'hello' => $locale->getText("emails.verification.hello"),
-            'body' => $body,
-            'footer' => $locale->getText("emails.verification.footer"),
-            'thanks' => $locale->getText("emails.verification.thanks"),
-            'signature' => $locale->getText("emails.verification.signature"),
             'direction' => $locale->getText('settings.direction'),
-            'bg-body' => '#f7f7f7',
-            'bg-content' => '#ffffff',
-            'text-content' => '#000000',
             /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
             'user' => $user->getAttribute('name'),
             'team' => '',
