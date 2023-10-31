@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -32,6 +33,7 @@ App::post('/v1/messaging/providers/mailgun')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -47,9 +49,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('domain', '', new Text(0), 'Mailgun Domain.')
     ->param('isEuRegion', false, new Boolean(), 'Set as EU region.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, bool $isEuRegion, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, bool $isEuRegion, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $provider = new Document([
@@ -85,6 +88,9 @@ App::post('/v1/messaging/providers/mailgun')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'mailgun');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -95,6 +101,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -108,9 +115,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('from', '', new Text(256), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -143,6 +151,9 @@ App::post('/v1/messaging/providers/sendgrid')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'sendgrid');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -154,6 +165,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('scope', 'providers.write')
+    ->label('event', 'providers.[provider].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createMsg91Provider')
@@ -167,9 +179,10 @@ App::post('/v1/messaging/providers/msg91')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $senderId, string $authKey, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $senderId, string $authKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -203,6 +216,9 @@ App::post('/v1/messaging/providers/msg91')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'msg91');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -213,6 +229,7 @@ App::post('/v1/messaging/providers/telesign')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -227,9 +244,10 @@ App::post('/v1/messaging/providers/telesign')
     ->param('username', '', new Text(0), 'Telesign username.')
     ->param('password', '', new Text(0), 'Telesign password.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $password, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $username, string $password, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -263,6 +281,9 @@ App::post('/v1/messaging/providers/telesign')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'telesign');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -273,6 +294,8 @@ App::post('/v1/messaging/providers/textmagic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->inject('queueForEvents')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -287,9 +310,10 @@ App::post('/v1/messaging/providers/textmagic')
     ->param('username', '', new Text(0), 'Textmagic username.')
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, bool $enabled, Event $queueForEvents Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -323,6 +347,9 @@ App::post('/v1/messaging/providers/textmagic')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'textmagic');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -333,6 +360,7 @@ App::post('/v1/messaging/providers/twilio')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -347,9 +375,10 @@ App::post('/v1/messaging/providers/twilio')
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
     ->param('authToken', '', new Text(0), 'Twilio authentication token.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $accountSid, string $authToken, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $accountSid, string $authToken, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -383,6 +412,9 @@ App::post('/v1/messaging/providers/twilio')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'twilio');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -393,6 +425,7 @@ App::post('/v1/messaging/providers/vonage')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -407,9 +440,10 @@ App::post('/v1/messaging/providers/vonage')
     ->param('apiKey', '', new Text(0), 'Vonage API key.')
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $apiSecret, bool $enabled, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $apiSecret, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -443,6 +477,9 @@ App::post('/v1/messaging/providers/vonage')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'vonage');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -453,6 +490,7 @@ App::post('/v1/messaging/providers/fcm')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -465,9 +503,10 @@ App::post('/v1/messaging/providers/fcm')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM server key.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $enabled, string $serverKey, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $enabled, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -497,6 +536,9 @@ App::post('/v1/messaging/providers/fcm')
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
 
+        $queueForEvents
+            ->setParam('provider', 'fcm');
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($provider, Response::MODEL_PROVIDER);
@@ -507,6 +549,7 @@ App::post('/v1/messaging/providers/apns')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.create')
     ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[provider].create')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
@@ -523,9 +566,10 @@ App::post('/v1/messaging/providers/apns')
     ->param('teamId', '', new Text(0), 'APNS team ID.')
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.')
+    ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
@@ -558,6 +602,9 @@ App::post('/v1/messaging/providers/apns')
         } catch (DuplicateException) {
             throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
         }
+
+        $queueForEvents
+            ->setParam('provider', 'apns');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
