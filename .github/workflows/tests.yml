@@ -98,6 +98,7 @@ jobs:
             Teams,
             Users,
             Webhooks,
+            VCS,
           ]
 
     steps:

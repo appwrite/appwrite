@@ -355,7 +355,7 @@ return [
     ],
     Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
         'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
-        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::STORAGE_BUCKET_NOT_FOUND => [
@@ -479,7 +479,7 @@ return [
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
@@ -511,7 +511,7 @@ return [
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
@@ -553,7 +553,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -585,7 +585,7 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
@@ -602,7 +602,7 @@ return [
     ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
-        'description' => 'Project with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
