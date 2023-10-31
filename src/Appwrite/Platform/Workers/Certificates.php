@@ -426,29 +426,31 @@ class Certificates extends Action
             $locale->setDefault('en');
         }
 
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
-
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-        $body
-            ->setParam('{{domain}}', $domain)
-            ->setParam('{{error}}', $errorMessage)
-            ->setParam('{{attempt}}', $attempt)
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
+
+        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
+        $message
             ->setParam('{{body}}', $locale->getText("emails.certificate.body"))
-            ->setParam('{{redirect}}', 'https://' . $domain)
+            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"))
-            ->setParam('{{project}}', 'Console')
-            ->setParam('{{direction}}', $locale->getText('settings.direction'))
-            ->setParam('{{bg-body}}', '#f7f7f7')
-            ->setParam('{{bg-content}}', '#ffffff')
-            ->setParam('{{text-content}}', '#000000');
+            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"));
+        $body = $message->render();
+
+        $emailVariables = [
+            'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
+            'error' => '<br><pre>' . $errorMessage . '</pre>',
+            'attempt' => $attempt,
+            'project' => 'Console',
+            'redirect' => 'https://' . $domain,
+        ];
 
         $queueForMails
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
-            ->setBody($body->render())
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setVariables($emailVariables)
             ->setName('Appwrite Administrator')
             ->trigger();
     }
