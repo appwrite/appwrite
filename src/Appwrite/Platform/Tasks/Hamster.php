@@ -17,6 +17,10 @@ use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
 
+use Swoole\Coroutine;
+use function Swoole\Coroutine\run;
+use function Swoole\Coroutine\go;
+
 class Hamster extends Action
 {
     private array $metrics = [
@@ -323,25 +327,32 @@ class Hamster extends Action
             /* Initialise new Utopia app */
             $app = new App('UTC');
 
-            Console::info('Getting stats for all projects');
-            $this->getStatsPerProject($pools, $cache, $dbForConsole);
-            Console::success('Completed getting stats for all projects');
+            Console::info('Getting stats for all projects, organizations and users');
 
-            Console::info('Getting stats for all organizations');
-            $this->getStatsPerOrganization($dbForConsole);
-            Console::success('Completed getting stats for all organizations');
+            run(function () use ($pools, $cache, $dbForConsole, $loopStart) {
+                Coroutine::join([
+                    go(function () use ($pools, $cache, $dbForConsole, $loopStart) {
+                        $this->getStatsPerProject($pools, $cache, $dbForConsole);
+                        Console::success('Completed getting stats for all projects, took ' . (microtime(true) - $loopStart) . ' seconds');
+                    }),
+                    go(function () use ($dbForConsole, $loopStart) {
+                        $this->getStatsPerOrganization($dbForConsole);
+                        Console::success('Completed getting stats for all organizations, took ' . (microtime(true) - $loopStart) . ' seconds');
+                    }),
+                    go(function () use ($dbForConsole, $loopStart) {
+                        $this->getStatsPerUser($dbForConsole);
+                        Console::success('Completed getting stats for all users, took ' . (microtime(true) - $loopStart) . ' seconds');
+                    }),
+                ]);
 
-            Console::info('Getting stats for all users');
-            $this->getStatsPerUser($dbForConsole);
-            Console::success('Completed getting stats for all users');
+                $pools
+                    ->get('console')
+                    ->reclaim();
 
-            $pools
-                ->get('console')
-                ->reclaim();
-
-            $loopTook = microtime(true) - $loopStart;
-            $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
+                $loopTook = microtime(true) - $loopStart;
+                $now = date('d-m-Y H:i:s', time());
+                Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
+            });
         }, $sleep, $delay);
     }
 
