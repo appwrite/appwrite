@@ -18,7 +18,7 @@ class UsageUsers extends Model
             ])
             ->addRule('usersTotal', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of users.',
+                'description' => 'Aggregated total statistics of users.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -26,7 +26,22 @@ class UsageUsers extends Model
 
             ->addRule('sessionsTotal', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for sessions created.',
+                'description' => 'Aggregated total statistics sessions created.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('users', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated statistics of users per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+
+            ->addRule('sessions', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated statistics sessions created per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

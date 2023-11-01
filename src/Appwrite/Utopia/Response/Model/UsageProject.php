@@ -23,7 +23,7 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('network', [
+            ->addRule('networkTotal', [
                 'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated stats for consumed bandwidth.',
                 'default' => [],

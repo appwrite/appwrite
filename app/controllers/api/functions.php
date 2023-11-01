@@ -447,7 +447,7 @@ App::get('/v1/functions/:functionId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
     ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
@@ -471,8 +471,15 @@ App::get('/v1/functions/:functionId/usage')
             str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -484,7 +491,7 @@ App::get('/v1/functions/:functionId/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -510,12 +517,19 @@ App::get('/v1/functions/:functionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'deploymentsTotal' => $usage[$metrics[0]],
+            'deploymentsTotal' => $total[0],
+            'deploymentsStorageTotal' => $total[1],
+            'buildsTotal' => $total[2],
+            'buildsStorageTotal' => $total[3],
+            'buildsTimeTotal' => $total[4],
+            'executionsTotal' => $total[5],
+            'executionsTimeTotal' => $total[6],
+            'deployments' => $usage[$metrics[0]],
             'deploymentsStorage' => $usage[$metrics[1]],
-            'buildsTotal' => $usage[$metrics[2]],
+            'builds' => $usage[$metrics[2]],
             'buildsStorage' => $usage[$metrics[3]],
             'buildsTime' => $usage[$metrics[4]],
-            'executionsTotal' => $usage[$metrics[5]],
+            'executions' => $usage[$metrics[5]],
             'executionsTime' => $usage[$metrics[6]],
         ]), Response::MODEL_USAGE_FUNCTION);
     });
@@ -530,7 +544,7 @@ App::get('/v1/functions/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_FUNCTIONS)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d']), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -549,8 +563,15 @@ App::get('/v1/functions/usage')
             METRIC_EXECUTIONS_COMPUTE,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -562,7 +583,7 @@ App::get('/v1/functions/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -587,13 +608,21 @@ App::get('/v1/functions/usage')
     }
         $response->dynamic(new Document([
             'range' => $range,
-            'functionsTotal' => $usage[$metrics[0]],
-            'deploymentsTotal' => $usage[$metrics[1]],
+            'functionsTotal' => $total[0],
+            'deploymentsTotal' => $total[1],
+            'deploymentsStorageTotal' => $total[2],
+            'buildsTotal' => $total[3],
+            'buildsStorageTotal' => $total[4],
+            'buildsTimeTotal' => $total[5],
+            'executionsTotal' => $total[6],
+            'executionsTimeTotal' => $total[7],
+            'functions' => $usage[$metrics[0]],
+            'deployments' => $usage[$metrics[1]],
             'deploymentsStorage' => $usage[$metrics[2]],
-            'buildsTotal' => $usage[$metrics[3]],
+            'builds' => $usage[$metrics[3]],
             'buildsStorage' => $usage[$metrics[4]],
             'buildsTime' => $usage[$metrics[5]],
-            'executionsTotal' => $usage[$metrics[6]],
+            'executions' => $usage[$metrics[6]],
             'executionsTime' => $usage[$metrics[7]],
         ]), Response::MODEL_USAGE_FUNCTIONS);
     });

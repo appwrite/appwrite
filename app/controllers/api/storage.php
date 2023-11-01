@@ -1476,7 +1476,7 @@ App::get('/v1/storage/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -1537,7 +1537,7 @@ App::get('/v1/storage/usage')
             'range' => $range,
             'bucketsTotal' => $total[0],
             'filesTotal' => $total[1],
-            'storageTotal' => $total[2],
+            'filesStorageTotal' => $total[2],
             'buckets' => $usage[$metrics[0]],
             'files' => $usage[$metrics[1]],
             'storage' => $usage[$metrics[2]],
@@ -1555,7 +1555,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
     ->param('bucketId', '', new UID(), 'Bucket ID.')
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {

@@ -15,7 +15,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\Database\DateTime;
 
 App::get('/v1/project/usage')
     ->desc('Get usage stats for a project')
@@ -27,7 +26,7 @@ App::get('/v1/project/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -90,13 +89,13 @@ App::get('/v1/project/usage')
         $response->dynamic(new Document([
             'range' => $range,
             'requestsTotal' => ($usage[$metrics[0]]),
-            'network' => ($usage[$metrics[1]] + $usage[$metrics[2]]),
+            'networkTotal' => ($usage[$metrics[1]] + $usage[$metrics[2]]),
             'executionsTotal' => $usage[$metrics[3]],
             'documentsTotal' => $usage[$metrics[4]],
             'databasesTotal' => $usage[$metrics[5]],
             'usersTotal' => $usage[$metrics[6]],
             'bucketsTotal' => $usage[$metrics[7]],
-            'filesStorage' => $usage[$metrics[8]],
+            'filesStorageTotal' => $usage[$metrics[8]],
         ]), Response::MODEL_USAGE_PROJECT);
     });
 

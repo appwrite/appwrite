@@ -1222,7 +1222,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
@@ -1236,8 +1236,15 @@ App::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -1249,7 +1256,7 @@ App::get('/v1/users/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -1275,7 +1282,9 @@ App::get('/v1/users/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'usersTotal'   => $usage[$metrics[0]],
-            'sessionsTotal' => $usage[$metrics[1]],
+            'usersTotal'   => $total[0],
+            'sessionsTotal' => $total[1],
+            'users'   => $usage[$metrics[0]],
+            'sessions' => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_USERS);
     });

@@ -18,39 +18,39 @@ class UsageStorage extends Model
             ])
             ->addRule('bucketsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for total number of buckets.',
+                'description' => 'Aggregated total statistics of buckets',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('filesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for total number of files.',
+                'description' => 'Aggregated total statistics of files.',
                 'default' => 0,
                 'example' => 0,
             ])
-            ->addRule('storageTotal', [
+            ->addRule('filesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for the total occupied  storage size (in bytes).',
+                'description' => 'Aggregated total statistics  of files storage (in bytes).',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('buckets', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for  number of buckets per period.',
+                'description' => 'Aggregated statistics of buckets per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('files', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for  number of files per period.',
+                'description' => 'Aggregated statistics of files per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for the occupied storage size (in bytes) per period .',
+                'description' => 'Aggregated statistics of storage (in bytes) per period .',
                 'default' => [],
                 'example' => [],
                 'array' => true

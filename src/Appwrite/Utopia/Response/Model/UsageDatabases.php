@@ -18,39 +18,39 @@ class UsageDatabases extends Model
             ])
             ->addRule('databasesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated total statistics of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for total number of collections.',
+                'description' => 'Aggregated total statistics of collections.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated total statistics of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('databases', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents per period.',
+                'description' => 'Aggregated total statistics of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of collections per period.',
+                'description' => 'Aggregated total statistics  of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents per period.',
+                'description' => 'Aggregated total statistics  of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
