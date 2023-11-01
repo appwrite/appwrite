@@ -17,15 +17,27 @@ class UsageDatabase extends Model
                 'example' => '30d',
             ])
             ->addRule('collectionsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for total number of collections.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('documentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Aggregated stats for total number of documents.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('collections', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for total number of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('documentsTotal', [
+            ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents.',
+                'description' => 'Aggregated stats for total number of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

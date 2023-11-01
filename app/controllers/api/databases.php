@@ -3557,7 +3557,7 @@ App::get('/v1/databases/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -3571,8 +3571,15 @@ App::get('/v1/databases/usage')
             METRIC_DOCUMENTS,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -3584,7 +3591,7 @@ App::get('/v1/databases/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -3609,9 +3616,12 @@ App::get('/v1/databases/usage')
     }
         $response->dynamic(new Document([
             'range' => $range,
-            'databasesTotal'   => $usage[$metrics[0]],
-            'collectionsTotal' => $usage[$metrics[1]],
-            'documentsTotal'   => $usage[$metrics[2]],
+            'databasesTotal'   => $total[0],
+            'collectionsTotal' => $total[1],
+            'documentsTotal'   => $total[2],
+            'databases'   => $usage[$metrics[0]],
+            'collections' => $usage[$metrics[1]],
+            'documents'   => $usage[$metrics[2]],
         ]), Response::MODEL_USAGE_DATABASES);
     });
 
@@ -3645,8 +3655,15 @@ App::get('/v1/databases/:databaseId/usage')
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -3658,7 +3675,7 @@ App::get('/v1/databases/:databaseId/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -3684,8 +3701,10 @@ App::get('/v1/databases/:databaseId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'collectionsTotal'   => $usage[$metrics[0]],
-            'documentsTotal'   => $usage[$metrics[1]],
+            'collectionsTotal'   => $total[0],
+            'documentsTotal'   => $total[1],
+            'collections'   => $usage[$metrics[0]],
+            'documents'   => $usage[$metrics[1]],
         ]), Response::MODEL_USAGE_DATABASE);
     });
 
@@ -3722,8 +3741,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $count => $metric) {
+                $result =  $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $total[$count] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -3735,7 +3761,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 $stats[$metric] = [];
                 foreach ($results as $result) {
                     $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $result->getAttribute('value'),
+                        'value' => $total[$count] - $result->getAttribute('value'),
                     ];
                 }
             }
@@ -3761,6 +3787,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'documentsTotal'   => $usage[$metrics[0]],
+            'documentsTotal'   => $total[0],
+            'documents'   => $usage[$metrics[0]],
         ]), Response::MODEL_USAGE_COLLECTION);
     });

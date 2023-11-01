@@ -17,15 +17,27 @@ class UsageBuckets extends Model
                 'example' => '30d',
             ])
             ->addRule('filesTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for total number of files in this bucket.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('storageTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Aggregated stats for total storage of files in this bucket.',
+                'default' => 0,
+                'example' => 0,
+            ])
+            ->addRule('files', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated stats for number of files in this bucket per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
-            ->addRule('filesStorage', [
+            ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total storage of files in this bucket.',
+                'description' => 'Aggregated stats for  storage of files in this bucket per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
