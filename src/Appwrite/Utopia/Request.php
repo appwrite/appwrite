@@ -107,6 +107,10 @@ class Request extends UtopiaRequest
     {
         $headers = $this->generateHeaders();
 
+        if (empty($this->swoole->cookie)) {
+            return $headers;
+        }
+
         $cookieHeaders = [];
         foreach ($this->swoole->cookie as $key => $value) {
             $cookieHeaders[] = "{$key}={$value}";
