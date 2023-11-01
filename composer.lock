@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9afc62ce9c6ba587b9c028e11494e026",
+    "content-hash": "31937ddcd75e14c0af8d387941678509",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -3136,16 +3136,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.35.2",
+            "version": "dev-feat-whitelist-enums",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "2dfe0430a64ffd2a07078d83b20144b871acac3b"
+                "reference": "c921cbbcfb5ef16305c6455fe5ca27fdab75c00a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/2dfe0430a64ffd2a07078d83b20144b871acac3b",
-                "reference": "2dfe0430a64ffd2a07078d83b20144b871acac3b",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/c921cbbcfb5ef16305c6455fe5ca27fdab75c00a",
+                "reference": "c921cbbcfb5ef16305c6455fe5ca27fdab75c00a",
                 "shasum": ""
             },
             "require": {
@@ -3181,9 +3181,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.35.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/feat-whitelist-enums"
             },
-            "time": "2023-09-14T14:59:50+00:00"
+            "time": "2023-11-01T04:40:27+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -5796,9 +5796,18 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "appwrite/sdk-generator",
+            "version": "dev-feat-whitelist-enums",
+            "alias": "0.35.2",
+            "alias_normalized": "0.35.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "appwrite/sdk-generator": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
@@ -5822,5 +5831,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

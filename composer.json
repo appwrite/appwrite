@@ -86,7 +86,7 @@
     ],
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.35.*",
+        "appwrite/sdk-generator": "dev-feat-whitelist-enums as 0.35.2",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.7",
         "swoole/ide-helper": "5.0.2",
