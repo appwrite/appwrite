@@ -331,9 +331,9 @@ class Auth
      * @param int    $type   Type of token to verify, if null will verify any type
      * @param string $secret
      *
-     * @return bool|Document
+     * @return false|Document
      */
-    public static function tokenVerify(array $tokens, int $type = null, string $secret)
+    public static function tokenVerify(array $tokens, int $type = null, string $secret): false|Document
     {
         foreach ($tokens as $token) {
             /** @var Document $token */
