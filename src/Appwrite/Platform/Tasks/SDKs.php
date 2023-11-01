@@ -252,20 +252,19 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                 }
 
                 if ($git && !empty($gitUrl)) {
-                    \exec("
-                        rm -rf $target
-                        mkdir -p $target
-                        cd $target
-                        git init --initial-branch=$gitBranch
-                        git remote add origin $gitUrl
-                        git fetch origin $gitBranch
-                        git pull origin $gitBranch
-                        rm -rf $target/*
-                        cp -r $result/* $target/
-                        git add .
-                        git commit -m \"$message\"
-                        git push -u origin $gitBranch
-                    ");
+                    \exec('rm -rf ' . $target . ' && \
+                        mkdir -p ' . $target . ' && \
+                        cd ' . $target . ' && \
+                        git init --initial-branch=' . $gitBranch . ' && \
+                        git remote add origin ' . $gitUrl . ' && \
+                        git fetch origin ' . $gitBranch . ' && \
+                        git pull origin ' . $gitBranch . ' && \
+                        rm -rf ' . $target . '/* && \
+                        cp -r ' . $result . '/* ' . $target . '/ && \
+                        git add . && \
+                        git commit -m "' . $message . '" && \
+                        git push -u origin ' . $gitBranch . '
+                    ');
 
                     Console::success("Pushed {$language['name']} SDK to {$gitUrl}");
 
