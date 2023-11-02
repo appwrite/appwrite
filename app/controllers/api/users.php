@@ -34,6 +34,7 @@ use Utopia\Validator\Assoc;
 use Utopia\Validator\WhiteList;
 use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
@@ -1096,10 +1097,11 @@ App::post('/v1/users/:userId/tokens')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->param('userId', '', new UID(), 'User ID.')
+    ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, 60 * 60 * 24 * 365), 'Token expiration in seconds from now.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, int $expire, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1107,7 +1109,7 @@ App::post('/v1/users/:userId/tokens')
         }
 
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
