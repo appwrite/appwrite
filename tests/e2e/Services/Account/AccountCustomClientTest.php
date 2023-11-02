@@ -1018,6 +1018,8 @@ class AccountCustomClientTest extends Scope
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $from = $smsDSN->getParam('from');
 
         /**
          * Test for SUCCESS
@@ -1028,7 +1030,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
 
-        ]), ['from' => App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM')]);
+        ]), ['from' => $from]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);

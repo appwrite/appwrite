@@ -113,7 +113,7 @@ class Messaging extends Action
         */
         $results = batch(\array_map(function ($providerId) use ($providers, $message, $dbForProject) {
             return function () use ($providerId, $providers, $message, $dbForProject) {
-                $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+                $provider = $dbForProject->getDocument('providers', $providerId);
                 $identifiers = $providers[$providerId];
                 $adapter = match ($provider->getAttribute('type')) {
                     'sms' => $this->sms($provider),
