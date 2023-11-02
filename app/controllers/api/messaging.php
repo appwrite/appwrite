@@ -2180,9 +2180,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
@@ -2194,7 +2194,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2209,15 +2209,15 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($topics) > 0) {
+        if (!\is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (\count($users) > 0) {
+        if (!\is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (\count($targets) > 0) {
+        if (!\is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
@@ -2282,9 +2282,9 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
@@ -2294,7 +2294,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $content, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2309,15 +2309,15 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($topics) > 0) {
+        if (!\is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (\count($users) > 0) {
+        if (!\is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (\count($targets) > 0) {
+        if (!\is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
@@ -2374,9 +2374,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('title', '', new Text(256), 'Title for push notification.', true)
     ->param('body', '', new Text(64230), 'Body for push notification.', true)
@@ -2393,7 +2393,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, array $topics, array $users, array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2408,15 +2408,15 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
-        if (\count($topics) > 0) {
+        if (!\is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
 
-        if (\count($users) > 0) {
+        if (!\is_null($users)) {
             $message->setAttribute('users', $users);
         }
 
-        if (\count($targets) > 0) {
+        if (!\is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
 
