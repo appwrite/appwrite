@@ -188,7 +188,6 @@ services:
       - traefik.http.routers.appwrite_realtime_wss.rule=PathPrefix(`/v1/realtime`)
       - traefik.http.routers.appwrite_realtime_wss.service=appwrite_realtime
       - traefik.http.routers.appwrite_realtime_wss.tls=true
-      - traefik.http.routers.appwrite_realtime_wss.tls.certresolver=dns
     networks:
       - appwrite
     depends_on:
@@ -668,7 +667,7 @@ services:
     <<: *x-logging
     restart: unless-stopped
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.3
+    image: openruntimes/executor:0.4.5
     networks:
       - appwrite
       - runtimes

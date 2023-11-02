@@ -60,8 +60,8 @@ App::post('/v1/teams')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
         $isAppUser = Auth::isAppUser(Authorization::getRoles());
@@ -117,10 +117,10 @@ App::post('/v1/teams')
             $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         if (!empty($user->getId())) {
-            $events->setParam('userId', $user->getId());
+            $queueForEvents->setParam('userId', $user->getId());
         }
 
         $response
@@ -256,8 +256,8 @@ App::put('/v1/teams/:teamId')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $name, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -273,7 +273,7 @@ App::put('/v1/teams/:teamId')
             return $dbForProject->updateDocument('teams', $team->getId(), $team);
         });
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         $response->dynamic($team, Response::MODEL_TEAM);
     });
@@ -298,8 +298,8 @@ App::put('/v1/teams/:teamId/prefs')
     ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, array $prefs, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -309,7 +309,7 @@ App::put('/v1/teams/:teamId/prefs')
 
         $team = $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('prefs', $prefs));
 
-        $events->setParam('teamId', $team->getId());
+        $queueForEvents->setParam('teamId', $team->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
@@ -330,9 +330,9 @@ App::delete('/v1/teams/:teamId')
     ->param('teamId', '', new UID(), 'Team ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->inject('deletes')
-    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $events, Delete $deletes) {
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->action(function (string $teamId, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -344,11 +344,11 @@ App::delete('/v1/teams/:teamId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove team from DB');
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($team);
 
-        $events
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setPayload($response->output($team, Response::MODEL_TEAM))
         ;
@@ -385,10 +385,10 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
-    ->inject('mails')
-    ->inject('messaging')
-    ->inject('events')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $mails, EventPhone $messaging, Event $events) {
+    ->inject('queueForMails')
+    ->inject('queueForMessaging')
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -555,7 +555,12 @@ App::post('/v1/teams/:teamId/memberships')
                 $customTemplate = $project->getAttribute('templates', [])['email.invitation-' . $locale->default] ?? [];
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
-                $message->setParam('{{body}}', $body);
+                $message
+                    ->setParam('{{body}}', $body)
+                    ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
+                    ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.invitation.signature"));
                 $body = $message->render();
 
                 $smtp = $project->getAttribute('smtp', []);
@@ -576,7 +581,7 @@ App::post('/v1/teams/:teamId/memberships')
                         $replyTo = $smtp['replyTo'];
                     }
 
-                    $mails
+                    $queueForMails
                         ->setSmtpHost($smtp['host'] ?? '')
                         ->setSmtpPort($smtp['port'] ?? '')
                         ->setSmtpUsername($smtp['username'] ?? '')
@@ -598,7 +603,7 @@ App::post('/v1/teams/:teamId/memberships')
                         $subject = $customTemplate['subject'] ?? $subject;
                     }
 
-                    $mails
+                    $queueForMails
                         ->setSmtpReplyTo($replyTo)
                         ->setSmtpSenderEmail($senderEmail)
                         ->setSmtpSenderName($senderName);
@@ -606,16 +611,7 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
-                    'subject' => $subject,
-                    'hello' => $locale->getText("emails.invitation.hello"),
-                    'body' => $body,
-                    'footer' => $locale->getText("emails.invitation.footer"),
-                    'thanks' => $locale->getText("emails.invitation.thanks"),
-                    'signature' => $locale->getText("emails.invitation.signature"),
                     'direction' => $locale->getText('settings.direction'),
-                    'bg-body' => '#f7f7f7',
-                    'bg-content' => '#ffffff',
-                    'text-content' => '#000000',
                     /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
@@ -623,7 +619,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'redirect' => $url
                 ];
 
-                $mails
+                $queueForMails
                     ->setSubject($subject)
                     ->setBody($body)
                     ->setRecipient($invitee->getAttribute('email'))
@@ -642,14 +638,14 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
-                $messaging
+                $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
                     ->trigger();
             }
         }
 
-        $events
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -812,8 +808,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -849,7 +845,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
          */
         $dbForProject->deleteCachedDocument('users', $profile->getId());
 
-        $events
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
 
@@ -887,8 +883,8 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('geodb')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -972,7 +968,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
-        $events
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
         ;
@@ -1014,8 +1010,8 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->param('membershipId', '', new UID(), 'Membership ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -1054,7 +1050,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
-        $events
+        $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
             ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))

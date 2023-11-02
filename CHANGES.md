@@ -1,3 +1,58 @@
+# Version 1.4.9
+
+## Bug fixes
+
+* Fix 400 error on function domain execution in [#7059](https://github.com/appwrite/appwrite/pull/7059)
+
+# Version 1.4.8
+
+## Notable changes
+
+* Fix certificate emails and add support for variables in email template subject in [#6495](https://github.com/appwrite/appwrite/)pull/6495
+* Bump console to version 3.2.5 in [#7027](https://github.com/appwrite/appwrite/pull/7027)
+* Bump utopia database and storage versions in [#7002](https://github.com/appwrite/appwrite/pull/7002)
+
+## Bug fixes
+
+* Fixes cookie headers not being passed properly by router in [#7024](https://github.com/appwrite/appwrite/pull/7024)
+* Fix permission problem in deletes worker in [#7013](https://github.com/appwrite/appwrite/pull/7013)
+
+## Miscellaneous
+
+* Improve error handling in the realtime service in [#6998](https://github.com/appwrite/appwrite/pull/6998)
+* Update the error code for unsupported protocol in [#7006](https://github.com/appwrite/appwrite/pull/7006)
+* Improve CI tests by executing them in parallel in [#6198](https://github.com/appwrite/appwrite/pull/6198)
+* Update README.md to add links to orchestration tools in [#7011](https://github.com/appwrite/appwrite/pull/7011)
+* Update gitpod setup to install instead of update dependencies in [#6938](https://github.com/appwrite/appwrite/pull/6938)
+* Remove analytics from install script in [#7017](https://github.com/appwrite/appwrite/pull/7017)
+* Improve database logging in [#7003](https://github.com/appwrite/appwrite/pull/7003)
+* Add VCS tests in [#6894](https://github.com/appwrite/appwrite/pull/6894)
+* Improve error messages in [#6487](https://github.com/appwrite/appwrite/pull/6487)
+* Add command to delete orphaned projects in [#7015](https://github.com/appwrite/appwrite/pull/7015)
+
+# Version 1.4.7
+
+## Fixes
+- Fix missing body in async function execution in [#6988](https://github.com/appwrite/appwrite/pull/6988)
+
+# Version 1.4.6
+
+## Changes
+- Bump console to version 3.2.3 in [#6947](https://github.com/appwrite/appwrite/pull/6947)
+- New health endpoints in [#6319](https://github.com/appwrite/appwrite/pull/6319)
+- 30 second sync executions timeout in [#6370](https://github.com/appwrite/appwrite/pull/6370)
+- Feat db per worker in [#6888](https://github.com/appwrite/appwrite/pull/6888)
+- Feat: Dart 3.1 support in [#6936](https://github.com/appwrite/appwrite/pull/6936)
+- chore: remove resque library and update health check endpoints in [#6946](https://github.com/appwrite/appwrite/pull/6946)
+- Refactor workers in [#6928](https://github.com/appwrite/appwrite/pull/6928)
+
+## Fixes
+- Fix realtime deletes in [#6897](https://github.com/appwrite/appwrite/pull/6897)
+- Update teamInternalId when updating project team in [#6898](https://github.com/appwrite/appwrite/pull/6898)
+- Fix: spanish translations (emails) in [#5290](https://github.com/appwrite/appwrite/pull/5290)
+- chore: fix spec links in [#6434](https://github.com/appwrite/appwrite/pull/6434)
+- Delegate custom deletes in [#6934](https://github.com/appwrite/appwrite/pull/6934)
+
 # Version 1.4.5
 
 ## Changes

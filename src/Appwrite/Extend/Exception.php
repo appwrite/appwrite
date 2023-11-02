@@ -145,6 +145,7 @@ class Exception extends \Exception
     /** Databases */
     public const DATABASE_NOT_FOUND                = 'database_not_found';
     public const DATABASE_ALREADY_EXISTS           = 'database_already_exists';
+    public const DATABASE_TIMEOUT                  = 'database_timeout';
 
     /** Collections */
     public const COLLECTION_NOT_FOUND              = 'collection_not_found';
@@ -225,8 +226,13 @@ class Exception extends \Exception
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
     public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
-    protected $type = '';
-    protected $errors = [];
+    /** Realtime */
+    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
+
+    protected string $type = '';
+    protected array $errors = [];
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {

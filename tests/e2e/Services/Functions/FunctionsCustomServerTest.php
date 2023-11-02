@@ -1344,4 +1344,192 @@ class FunctionsCustomServerTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
     }
+
+    public function testCookieExecution()
+    {
+        $timeout = 5;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-cookie/code.tar.gz";
+        $this->packageCode('php-cookie');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Cookie executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
+
+        $execution = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/executions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'async' => false,
+            'headers' => [
+                'cookie' => $cookie
+            ]
+        ]);
+
+        $this->assertEquals(201, $execution['headers']['status-code']);
+        $this->assertEquals('completed', $execution['body']['status']);
+        $this->assertEquals(200, $execution['body']['responseStatusCode']);
+        $this->assertEquals($cookie, $execution['body']['responseBody']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
+
+    public function testFunctionsDomain()
+    {
+        $timeout = 5;
+        $code = realpath(__DIR__ . '/../../../resources/functions') . "/php-cookie/code.tar.gz";
+        $this->packageCode('php-cookie');
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'functionId' => ID::unique(),
+            'name' => 'Test PHP Cookie executions',
+            'runtime' => 'php-8.0',
+            'entrypoint' => 'index.php',
+            'timeout' => $timeout,
+            'execute' => ['any']
+        ]);
+
+        $functionId = $function['body']['$id'] ?? '';
+
+        $this->assertEquals(201, $function['headers']['status-code']);
+
+        $rules = $this->client->call(Client::METHOD_GET, '/proxy/rules', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [ 'equal("resourceId", "' . $functionId . '")', 'equal("resourceType", "function")' ]
+        ]);
+
+        $this->assertEquals(200, $rules['headers']['status-code']);
+        $this->assertEquals(1, $rules['body']['total']);
+        $this->assertCount(1, $rules['body']['rules']);
+        $this->assertNotEmpty($rules['body']['rules'][0]['domain']);
+
+        $domain = $rules['body']['rules'][0]['domain'];
+
+        $deployment = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/deployments', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'entrypoint' => 'index.php',
+            'code' => new CURLFile($code, 'application/x-gzip', basename($code)),
+            'activate' => true
+        ]);
+
+        $deploymentId = $deployment['body']['$id'] ?? '';
+        $this->assertEquals(202, $deployment['headers']['status-code']);
+
+        // Poll until deployment is built
+        while (true) {
+            $deployment = $this->client->call(Client::METHOD_GET, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]);
+
+            if (
+                $deployment['headers']['status-code'] >= 400
+                || \in_array($deployment['body']['status'], ['ready', 'failed'])
+            ) {
+                break;
+            }
+
+            \sleep(1);
+        }
+
+        $deployment = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $deployment['headers']['status-code']);
+
+        // Wait a little for activation to finish
+        sleep(5);
+
+        $cookie = 'cookieName=cookieValue; cookie2=value2; cookie3=value=3; cookie4=val:ue4; cookie5=value5';
+
+        $proxyClient = new Client();
+        $proxyClient->setEndpoint('http://' . $domain);
+
+        $response = $proxyClient->call(Client::METHOD_GET, '/', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => $cookie
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($cookie, $response['body']);
+
+        // Cleanup : Delete function
+        $response = $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], []);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+    }
 }

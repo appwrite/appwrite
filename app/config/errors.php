@@ -86,7 +86,7 @@ return [
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
-        'code' => 500,
+        'code' => 426,
     ],
     Exception::GENERAL_CODES_DISABLED => [
         'name' => Exception::GENERAL_CODES_DISABLED,
@@ -355,7 +355,7 @@ return [
     ],
     Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
         'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
-        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::STORAGE_BUCKET_NOT_FOUND => [
@@ -460,11 +460,15 @@ return [
         'description' => 'Database not found',
         'code' => 404
     ],
-
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',
         'code' => 409
+    ],
+    Exception::DATABASE_TIMEOUT => [
+        'name' => Exception::DATABASE_TIMEOUT,
+        'description' => 'Database timed out. Try adjusting your queries or adding an index.',
+        'code' => 408
     ],
 
     /** Collections */
@@ -475,7 +479,7 @@ return [
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
@@ -507,7 +511,7 @@ return [
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::DOCUMENT_UPDATE_CONFLICT => [
@@ -549,7 +553,7 @@ return [
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -581,7 +585,7 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
         'code' => 409,
     ],
     Exception::INDEX_INVALID => [
@@ -598,7 +602,7 @@ return [
     ],
     Exception::PROJECT_ALREADY_EXISTS => [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
-        'description' => 'Project with the requested ID already exists. Try again with a different ID or use "unique()" to generate a unique ID.',
+        'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
@@ -727,6 +731,23 @@ return [
         'name' => Exception::MIGRATION_IN_PROGRESS,
         'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
         'code' => 409,
+    ],
+
+    /** Realtime */
+    Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
+        'name' => Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+        'description' => 'Message format is not valid.',
+        'code' => 1003,
+    ],
+    Exception::REALTIME_POLICY_VIOLATION => [
+        'name' => Exception::REALTIME_POLICY_VIOLATION,
+        'description' => 'Policy violation.',
+        'code' => 1008,
+    ],
+    Exception::REALTIME_TOO_MANY_MESSAGES => [
+        'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
+        'description' => 'Too many messages.',
+        'code' => 1013,
     ],
     Exception::MIGRATION_PROVIDER_ERROR => [
         'name' => Exception::MIGRATION_PROVIDER_ERROR,
