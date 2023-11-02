@@ -2162,7 +2162,7 @@ class AccountCustomClientTest extends Scope
      */
     public function testUpdateCustomSession(array $data): array
     {
-        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/sessions', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -2176,7 +2176,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/custom', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -2194,7 +2194,7 @@ class AccountCustomClientTest extends Scope
          * Test for FAILURE
          */
         // Invalid userId
-        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/custom', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [
@@ -2205,7 +2205,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         // Invalid secret
-        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/token', [
+        $response = $this->client->call(Client::METHOD_PUT, '/account/sessions/custom', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], [

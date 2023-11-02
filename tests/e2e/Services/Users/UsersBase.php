@@ -237,7 +237,7 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
-        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/sessions', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'expire' => 60,
@@ -251,7 +251,7 @@ trait UsersBase
         /**
          * Test for FAILURE
          */
-        $token = $this->client->call(Client::METHOD_POST, '/users/invalid/tokens', array_merge([
+        $token = $this->client->call(Client::METHOD_POST, '/users/invalid/sessions', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
 
