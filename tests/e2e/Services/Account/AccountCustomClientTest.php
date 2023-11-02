@@ -2160,12 +2160,14 @@ class AccountCustomClientTest extends Scope
      * @depends testGetAccountSessions
      * @depends testGetAccountLogs
      */
-    public function testUpdateUniversalToken(array $data): array
+    public function testUpdateCustomSession(array $data): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'expire' => 60
         ]);
 
         $userId = $response['body']['userId'];

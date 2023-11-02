@@ -232,14 +232,16 @@ trait UsersBase
     /**
      * @depends testCreateUser
      */
-    public function testCreateUniversalToken(array $data): void
+    public function testCreateCustomSession(array $data): void
     {
         /**
          * Test for SUCCESS
          */
         $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'expire' => 60,
+        ]);
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($data['userId'], $token['body']['userId']);
