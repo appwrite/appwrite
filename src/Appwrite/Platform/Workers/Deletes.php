@@ -178,7 +178,8 @@ class Deletes extends Action
                 $project = $dbForConsole->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    $dbForConsole->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
 
