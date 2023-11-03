@@ -18,13 +18,14 @@ class Upgrade extends Install
             ->desc('Upgrade Appwrite')
             ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
             ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+            ->param('registry', 'ghcr.io', new Text(0), 'Docker Container Registry', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive));
+            ->callback(fn ($httpPort, $httpsPort, $registry, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $registry, $organization, $image, $interactive));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
+    public function action(string $httpPort, string $httpsPort, string $registry, string $organization, string $image, string $interactive): void
     {
         // Check for previous installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
@@ -37,6 +38,6 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive);
+        parent::action($httpPort, $httpsPort, $registry, $organization, $image, $interactive);
     }
 }

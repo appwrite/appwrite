@@ -26,13 +26,14 @@ class Install extends Action
             ->desc('Install Appwrite')
             ->param('httpPort', '', new Text(4), 'Server HTTP port', true)
             ->param('httpsPort', '', new Text(4), 'Server HTTPS port', true)
+            ->param('registry', 'ghcr.io', new Text(0), 'Docker Registry organization', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive));
+            ->callback(fn ($httpPort, $httpsPort, $registry, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $registry, $organization, $image, $interactive));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
+    public function action(string $httpPort, string $httpsPort, string $registry, string $organization, string $image, string $interactive): void
     {
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
@@ -193,18 +194,19 @@ class Install extends Action
             ->setParam('httpPort', $httpPort)
             ->setParam('httpsPort', $httpsPort)
             ->setParam('version', APP_VERSION_STABLE)
+            ->setParam('registry', $registry)
             ->setParam('organization', $organization)
             ->setParam('image', $image);
 
         $templateForEnv->setParam('vars', $input);
 
-        if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
+        if (!file_put_contents($this->path . '/docker-compose.yml', trim($templateForCompose->render(false)))) {
             $message = 'Failed to save Docker Compose file';
             Console::error($message);
             Console::exit(1);
         }
 
-        if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
+        if (!file_put_contents($this->path . '/.env', trim($templateForEnv->render(false)))) {
             $message = 'Failed to save environment variables file';
             Console::error($message);
             Console::exit(1);
