@@ -1108,7 +1108,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFiles->read(
@@ -1261,7 +1260,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
 
         $size = $deviceFiles->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFiles->read(

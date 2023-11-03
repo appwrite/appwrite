@@ -893,7 +893,6 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFunctions->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFunctions->read(
