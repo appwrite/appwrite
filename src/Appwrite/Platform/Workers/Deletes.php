@@ -450,21 +450,21 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
-        // Delete VCS Installations, Repositories and Comments
+        // Delete VCS Installations
         $this->deleteByGroup('installations', [
             Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete VCS Repositories and Comments
+        $this->deleteByGroup('repositories', [
+            Query::equal('installationInternalId', [$projectInternalId]),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
-            $projectInternalId = $document->getAttribute('projectInternalId', '');
-            $this->deleteByGroup('repositories', [
-                Query::equal('installationInternalId', [$projectInternalId]),
-            ], $dbForConsole, function (Document $document) use ($dbForConsole) {
-                $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-                $projectId = $document->getAttribute('projectId', '');
-                $this->deleteByGroup('vcsComments', [
-                    Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                    Query::equal('projectId', [$projectId]),
-                ], $dbForConsole);
-            });
+            $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
+            $projectId = $document->getAttribute('projectId', '');
+            $this->deleteByGroup('vcsComments', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                Query::equal('projectId', [$projectId]),
+            ], $dbForConsole);
         });
 
         // Delete metadata tables
