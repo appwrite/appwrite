@@ -457,13 +457,13 @@ class Deletes extends Action
 
         // Delete VCS Repositories and Comments
         $this->deleteByGroup('repositories', [
-            Query::equal('installationInternalId', [$projectInternalId]),
+            Query::equal('projectInternalId', [$projectInternalId]),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-            $projectId = $document->getAttribute('projectId', '');
+            $projectInternalId = $document->getAttribute('projectInternalId', '');
             $this->deleteByGroup('vcsComments', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
             ], $dbForConsole);
         });
 
