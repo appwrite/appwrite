@@ -61,7 +61,11 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('_console');
+
+            $dbForConsole
+                ->setNamespace('_console')
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', 'console');
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -111,7 +115,10 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
 
         return $database;
     };

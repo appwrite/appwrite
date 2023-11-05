@@ -22,7 +22,6 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Database\Validator\UID;
 use Utopia\Detector\Adapter\Bun;
 use Utopia\Detector\Adapter\CPP;
 use Utopia\Detector\Adapter\Dart;
@@ -36,6 +35,7 @@ use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\Validator\Boolean;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
 
@@ -66,7 +66,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             }
 
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
-            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            try {
+                $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                if (empty($repositoryName)) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
+            } catch (RepositoryNotFound $e) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
 
             if (empty($repositoryName)) {
                 throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
@@ -154,7 +161,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $message = 'Authorization required for external contributor.';
 
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                try {
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
                 $owner = $github->getOwnerName($providerInstallationId);
                 $github->updateCommitStatus($repositoryName, $providerCommitHash, $owner, 'failure', $message, $authorizeUrl, $name);
                 continue;
@@ -206,7 +220,14 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
                 $message = 'Starting...';
 
                 $providerRepositoryId = $resource->getAttribute('providerRepositoryId');
-                $repositoryName = $github->getRepositoryName($providerRepositoryId);
+                try {
+                    $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+                    if (empty($repositoryName)) {
+                        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                    }
+                } catch (RepositoryNotFound $e) {
+                    throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+                }
                 $owner = $github->getOwnerName($providerInstallationId);
 
                 $providerTargetUrl = $request->getProtocol() . '://' . $request->getHostname() . "/console/project-$projectId/functions/function-$functionId";
@@ -273,7 +294,7 @@ App::get('/v1/vcs/github/callback')
     ->label('scope', 'public')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->param('installation_id', '', new Text(256, 0), 'GitHub installation ID', true)
-    ->param('setup_action', '', new Text(256, 0), 'GitHub setup actuon type', true)
+    ->param('setup_action', '', new Text(256, 0), 'GitHub setup action type', true)
     ->param('state', '', new Text(2048), 'GitHub state. Contains info sent when starting authorization flow.', true)
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->inject('gitHub')
@@ -458,9 +479,12 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repositoryName = $github->getRepositoryName($providerRepositoryId);
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
@@ -720,9 +744,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
-        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
@@ -766,9 +793,12 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
-        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
-
-        if (empty($repositoryName)) {
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
             throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
         }
 
@@ -1090,7 +1120,14 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
         $providerRepositoryId = $repository->getAttribute('providerRepositoryId');
 
         $owner = $github->getOwnerName($providerInstallationId);
-        $repositoryName = $github->getRepositoryName($providerRepositoryId);
+        try {
+            $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+            if (empty($repositoryName)) {
+                throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+            }
+        } catch (RepositoryNotFound $e) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
         $pullRequestResponse = $github->getPullRequest($owner, $repositoryName, $providerPullRequestId);
 
         $providerBranch = \explode(':', $pullRequestResponse['head']['label'])[1] ?? '';

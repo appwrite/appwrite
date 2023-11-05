@@ -1604,7 +1604,6 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{user}}', '')
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
                 ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))

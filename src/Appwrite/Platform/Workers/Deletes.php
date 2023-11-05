@@ -178,7 +178,8 @@ class Deletes extends Action
                 $project = $dbForConsole->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    $dbForConsole->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
 
@@ -921,16 +922,27 @@ class Deletes extends Action
         $count = 0;
         $chunk = 0;
         $limit = 50;
+        $results = [];
         $sum = $limit;
+        $cursor = null;
 
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
+            if ($cursor instanceof Document) {
+                $mergedQueries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find($collection, $mergedQueries);
 
             $sum = count($results);
+
+            if ($sum > 0) {
+                $cursor = $results[$sum - 1];
+            }
 
             foreach ($results as $document) {
                 if (is_callable($callback)) {
