@@ -170,7 +170,7 @@ return [
         'docs' => false,
         'docsUrl' => '',
         'tests' => false,
-        'optional' => true,
+        'optional' => false,
         'icon' => '',
     ],
     'functions' => [
@@ -196,7 +196,7 @@ return [
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/proxy',
         'tests' => false,
-        'optional' => true,
+        'optional' => false,
         'icon' => '/images/services/proxy.png',
     ],
     'mock' => [
@@ -248,7 +248,7 @@ return [
         'docs' => true,
         'docsUrl' => 'https://appwrite.io/docs/migrations',
         'tests' => true,
-        'optional' => true,
+        'optional' => false,
         'icon' => '/images/services/migrations.png',
     ],
 ];
