@@ -208,7 +208,7 @@ return [
     Exception::USER_AUTH_METHOD_UNSUPPORTED => [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
-        'code' => 501,
+        'code' => 403,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
