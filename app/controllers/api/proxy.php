@@ -90,7 +90,7 @@ App::post('/v1/proxy/rules')
         try {
             $domain = new Domain($domain);
         } catch (\Exception) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid domain. Domain may not start with http:// or https://.');
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Domain may not start with http:// or https://.');
         }
 
         $ruleId = ID::unique();
