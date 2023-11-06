@@ -56,6 +56,7 @@ COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
+COPY ./dev /usr/src/code/dev
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -110,8 +111,7 @@ RUN chmod +x /usr/local/bin/hamster && \
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
-RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/src/code/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
-
+RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
