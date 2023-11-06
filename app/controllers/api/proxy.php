@@ -87,8 +87,12 @@ App::post('/v1/proxy/rules')
             $resourceInternalId = $function->getInternalId();
         }
 
-        $domain = new Domain($domain);
-
+        try {
+            $domain = new Domain($domain);
+        } catch (Exception) {
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Invalid domain. Domain may not start with http:// or https://.');
+        }
+        
         $ruleId = ID::unique();
         $rule = new Document([
             '$id' => $ruleId,
