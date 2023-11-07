@@ -975,7 +975,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals($response['headers']['status-code'], 403);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -1095,7 +1095,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => $name,
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 501);
+        $this->assertEquals($response['headers']['status-code'], 403);
 
         /**
          * Test for FAILURE
@@ -1525,8 +1525,8 @@ class ProjectsConsoleClientTest extends Scope
             'userId' => $userId
         ]);
 
-        $this->assertEquals(400, $response['headers']['status-code']);
-        $this->assertEquals(400, $response['body']['code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['body']['code']);
         $this->assertEquals(Exception::USER_PASSWORD_PERSONAL_DATA, $response['body']['type']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
