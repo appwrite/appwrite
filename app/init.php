@@ -54,6 +54,8 @@ use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Messaging\Adapters\SMS\GEOSMS;
+use Utopia\Messaging\Adapters\SMS\GEOSMS\CallingCode;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
