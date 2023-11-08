@@ -87,20 +87,16 @@ App::get('/v1/health/db')
                             'ping' => \round((\microtime(true) - $checkStart) / 1000)
                         ]);
                     } else {
-                        $output[] = new Document([
-                            'name' => $key . " ($database)",
-                            'status' => 'fail',
-                            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                        ]);
+                        $failure[] = $database;
                     }
                 } catch (\Throwable $th) {
-                    $output[] = new Document([
-                        'name' => $key . " ($database)",
-                        'status' => 'fail',
-                        'ping' => \round((\microtime(true) - $checkStart) / 1000)
-                    ]);
+                    $failure[] = $database;
                 }
             }
+        }
+
+        if (!empty($failure)) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'DB failure on: ' . implode(", ", $failure));
         }
 
         $response->dynamic(new Document([
@@ -536,10 +532,10 @@ App::get('/v1/health/storage/local')
 
         foreach (
             [
-            'Uploads' => APP_STORAGE_UPLOADS,
-            'Cache' => APP_STORAGE_CACHE,
-            'Config' => APP_STORAGE_CONFIG,
-            'Certs' => APP_STORAGE_CERTIFICATES
+                'Uploads' => APP_STORAGE_UPLOADS,
+                'Cache' => APP_STORAGE_CACHE,
+                'Config' => APP_STORAGE_CONFIG,
+                'Certs' => APP_STORAGE_CERTIFICATES
             ] as $key => $volume
         ) {
             $device = new Local($volume);
@@ -601,7 +597,7 @@ App::get('/v1/health/anti-virus')
     });
 
 App::get('/v1/health/stats') // Currently only used internally
-    ->desc('Get system stats')
+->desc('Get system stats')
     ->groups(['api', 'health'])
     ->label('scope', 'root')
     // ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
