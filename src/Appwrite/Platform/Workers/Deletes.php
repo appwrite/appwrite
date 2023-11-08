@@ -455,17 +455,15 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
-        // Delete VCS Repositories and Comments
+        // Delete VCS Repositories
         $this->deleteByGroup('repositories', [
             Query::equal('projectInternalId', [$projectInternalId]),
-        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
-            $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-            $projectInternalId = $document->getAttribute('projectInternalId', '');
-            $this->deleteByGroup('vcsComments', [
-                Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::equal('projectInternalId', [$projectInternalId]),
-            ], $dbForConsole);
-        });
+        ], $dbForConsole);
+
+        // Delete VCS commments
+        $this->deleteByGroup('vcsComments', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
 
         // Delete metadata tables
         try {
