@@ -1476,7 +1476,7 @@ App::get('/v1/storage/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
-    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -1492,13 +1492,13 @@ App::get('/v1/storage/usage')
 
         $total = [];
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
-            foreach ($metrics as $count => $metric) {
+            foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
 
-                $total[$count] = $result['value'] ?? 0;
+                $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -1507,10 +1507,10 @@ App::get('/v1/storage/usage')
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
-                $stats[$metric] = [];
+                $stats[$metric]['data'] = [];
                 foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $total[$count] - $result->getAttribute('value'),
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
                     ];
                 }
             }
@@ -1522,25 +1522,26 @@ App::get('/v1/storage/usage')
         };
 
     foreach ($metrics as $metric) {
-        $usage[$metric] = [];
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
         $leap = time() - ($days['limit'] * $days['factor']);
         while ($leap < time()) {
             $leap += $days['factor'];
             $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
             ];
         }
     }
         $response->dynamic(new Document([
             'range' => $range,
-            'bucketsTotal' => $total[0],
-            'filesTotal' => $total[1],
-            'filesStorageTotal' => $total[2],
-            'buckets' => $usage[$metrics[0]],
-            'files' => $usage[$metrics[1]],
-            'storage' => $usage[$metrics[2]],
+            'bucketsTotal' => $usage[$metrics[0]]['total'],
+            'filesTotal' => $usage[$metrics[1]]['total'],
+            'filesStorageTotal' => $usage[$metrics[2]]['total'],
+            'buckets' => $usage[$metrics[0]]['data'],
+            'files' =>  $usage[$metrics[1]]['data'],
+            'storage' =>  $usage[$metrics[2]]['data'],
         ]), Response::MODEL_USAGE_STORAGE);
     });
 
@@ -1555,7 +1556,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
     ->param('bucketId', '', new UID(), 'Bucket ID.')
-    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
@@ -1574,15 +1575,15 @@ App::get('/v1/storage/:bucketId/usage')
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
         ];
 
-        $total = [];
+
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
-            foreach ($metrics as $count => $metric) {
+            foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
 
-                $total[$count] = $result['value'] ?? 0;
+                $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -1591,14 +1592,15 @@ App::get('/v1/storage/:bucketId/usage')
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
-                $stats[$metric] = [];
+                $stats[$metric]['data'] = [];
                 foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $total[$count] - $result->getAttribute('value'),
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
                     ];
                 }
             }
         });
+
 
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
@@ -1606,14 +1608,14 @@ App::get('/v1/storage/:bucketId/usage')
         };
 
     foreach ($metrics as $metric) {
-        $usage[$metric] = [];
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
         $leap = time() - ($days['limit'] * $days['factor']);
-
         while ($leap < time()) {
             $leap += $days['factor'];
             $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
             ];
         }
@@ -1621,9 +1623,9 @@ App::get('/v1/storage/:bucketId/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'filesTotal' => $total[0],
-            'storageTotal' => $total[1],
-            'files' => $usage[$metrics[0]],
-            'storage' => $usage[$metrics[1]],
+            'filesTotal' => $usage[$metrics[0]]['total'],
+            'filesStorageTotal' => $usage[$metrics[1]]['total'],
+            'files' => $usage[$metrics[0]]['data'],
+            'storage' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_BUCKETS);
     });

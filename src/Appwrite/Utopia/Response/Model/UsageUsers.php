@@ -17,19 +17,17 @@ class UsageUsers extends Model
                 'example' => '30d',
             ])
             ->addRule('usersTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated total statistics of users.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
 
             ->addRule('sessionsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated total statistics sessions created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('users', [
                 'type' => Response::MODEL_METRIC,

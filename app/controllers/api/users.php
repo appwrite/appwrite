@@ -1222,7 +1222,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
-    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
@@ -1236,15 +1236,14 @@ App::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        $total = [];
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
 
-                $total[$count] = $result['value'] ?? 0;
+                $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -1253,10 +1252,10 @@ App::get('/v1/users/usage')
                     Query::limit($limit),
                     Query::orderDesc('time'),
                 ]);
-                $stats[$metric] = [];
+                $stats[$metric]['data'] = [];
                 foreach ($results as $result) {
-                    $stats[$metric][$result->getAttribute('time')] = [
-                        'value' => $total[$count] - $result->getAttribute('value'),
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
                     ];
                 }
             }
@@ -1268,13 +1267,14 @@ App::get('/v1/users/usage')
         };
 
     foreach ($metrics as $metric) {
-        $usage[$metric] = [];
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
         $leap = time() - ($days['limit'] * $days['factor']);
         while ($leap < time()) {
             $leap += $days['factor'];
             $formatDate = date($format, $leap);
-            $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
             ];
         }
@@ -1282,9 +1282,9 @@ App::get('/v1/users/usage')
 
         $response->dynamic(new Document([
             'range' => $range,
-            'usersTotal'   => $total[0],
-            'sessionsTotal' => $total[1],
-            'users'   => $usage[$metrics[0]],
-            'sessions' => $usage[$metrics[1]],
+            'usersTotal'   => $usage[$metrics[0]]['total'],
+            'sessionsTotal' => $usage[$metrics[1]]['total'],
+            'users'   => $usage[$metrics[0]]['data'],
+            'sessions' => $usage[$metrics[1]]['data'],
         ]), Response::MODEL_USAGE_USERS);
     });

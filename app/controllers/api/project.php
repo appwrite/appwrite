@@ -26,7 +26,7 @@ App::get('/v1/project/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('range', '24h', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
@@ -84,7 +84,6 @@ App::get('/v1/project/usage')
             ];
         }
     }
-
 
         $response->dynamic(new Document([
             'range' => $range,

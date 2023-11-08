@@ -11,66 +11,58 @@ class UsageProject extends Model
     {
         $this
             ->addRule('range', [
-                'type' => self::TYPE_STRING,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'The time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('requestsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for number of requests.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('networkTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for consumed bandwidth.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('executionsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for function executions.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('documentsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for number of documents.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('databasesTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for number of databases.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('usersTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for number of users.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
-            ->addRule('filesStorage', [
-                'type' => Response::MODEL_METRIC,
+            ->addRule('filesStorageTotal', [
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for the occupied storage size (in bytes).',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
             ->addRule('bucketsTotal', [
-                'type' => Response::MODEL_METRIC,
+                'type' => self::TYPE_INTEGER,
                 'description' => 'Aggregated stats for number of buckets.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+                'default' => 0,
+                'example' => 0,
             ])
         ;
     }

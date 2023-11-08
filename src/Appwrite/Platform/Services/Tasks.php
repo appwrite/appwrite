@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Services;
 
+use Appwrite\Platform\Tasks\CreateInfMetric;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
@@ -40,6 +41,7 @@ class Tasks extends Service
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
+            ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
 
         ;
     }
