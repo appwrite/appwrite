@@ -32,22 +32,35 @@ App::get('/v1/project/usage')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
         $periods = Config::getParam('usage', []);
-        $stats = $usage = [];
+        $stats = $total = $usage = [];
         $days = $periods[$range];
+
         $metrics = [
-            METRIC_NETWORK_REQUESTS,
-            METRIC_NETWORK_INBOUND,
-            METRIC_NETWORK_OUTBOUND,
-            METRIC_EXECUTIONS,
-            METRIC_DOCUMENTS,
-            METRIC_DATABASES,
-            METRIC_USERS,
-            METRIC_BUCKETS,
-            METRIC_FILES_STORAGE
+           'total' => [
+                METRIC_EXECUTIONS,
+                METRIC_DOCUMENTS,
+                METRIC_DATABASES,
+                METRIC_USERS,
+                METRIC_BUCKETS,
+                METRIC_FILES_STORAGE
+           ],
+           'period' => [
+                METRIC_NETWORK_REQUESTS,
+                METRIC_NETWORK_INBOUND,
+                METRIC_NETWORK_OUTBOUND,
+             ]
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
-            foreach ($metrics as $metric) {
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$total, &$stats) {
+            foreach ($metrics['total'] as $metric) {
+                $result = $dbForProject->findOne('stats', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+                $total[$metric] = $result['value'] ?? 0;
+            }
+
+            foreach ($metrics['period'] as $metric) {
                 $limit = $days['limit'];
                 $period = $days['period'];
                 $results = $dbForProject->find('stats', [
@@ -66,13 +79,12 @@ App::get('/v1/project/usage')
             }
         });
 
-
         $format = match ($days['period']) {
             '1h' => 'Y-m-d\TH:00:00.000P',
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
+    foreach ($metrics['period'] as $metric) {
         $usage[$metric] = [];
         $leap = time() - ($days['limit'] * $days['factor']);
         while ($leap < time()) {
@@ -84,17 +96,16 @@ App::get('/v1/project/usage')
             ];
         }
     }
-
         $response->dynamic(new Document([
             'range' => $range,
-            'requestsTotal' => ($usage[$metrics[0]]),
-            'networkTotal' => ($usage[$metrics[1]] + $usage[$metrics[2]]),
-            'executionsTotal' => $usage[$metrics[3]],
-            'documentsTotal' => $usage[$metrics[4]],
-            'databasesTotal' => $usage[$metrics[5]],
-            'usersTotal' => $usage[$metrics[6]],
-            'bucketsTotal' => $usage[$metrics[7]],
-            'filesStorageTotal' => $usage[$metrics[8]],
+            'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
+            'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
+            'executionsTotal' => $total[METRIC_EXECUTIONS],
+            'documentsTotal' => $total[METRIC_DOCUMENTS],
+            'databasesTotal' => $total[METRIC_DATABASES],
+            'usersTotal' => $total[METRIC_USERS],
+            'bucketsTotal' => $total[METRIC_BUCKETS],
+            'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
