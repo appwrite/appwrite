@@ -36,7 +36,6 @@ use Utopia\Queue\Connection;
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
-
 Server::setResource('register', fn () => $register);
 
 Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
