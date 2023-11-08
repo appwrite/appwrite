@@ -34,8 +34,8 @@ class Messaging extends Action
     public function __construct()
     {
         $provider = App::getEnv('_APP_SMS_PROVIDER', '');
-        if (!empty($this->provider)) {
-            $this->provider = new DSN($provider);
+        if (!empty($provider)) {
+            $this->dsn = new DSN($provider);
         }
 
         $geoProviders = App::getEnv('_APP_GEOSMS_PROVIDERS', '');
