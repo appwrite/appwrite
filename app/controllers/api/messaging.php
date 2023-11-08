@@ -32,6 +32,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use MaxMind\Db\Reader;
 use Utopia\Validator\WhiteList;
 
 App::post('/v1/messaging/providers/mailgun')

@@ -205,6 +205,116 @@ trait MessagingBase
     /**
      * @depends testUpdateProviders
      */
+    public function testGetProviderLogs(array $providers): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)', 'offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['equal("$id", "asdf")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['orderAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['cursorAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+    }
+
+    /**
+     * @depends testUpdateProviders
+     */
     public function testDeleteProvider(array $providers)
     {
         foreach ($providers as $provider) {
@@ -280,6 +390,116 @@ trait MessagingBase
         $this->assertEquals('android-app', $response['body']['name']);
         $this->assertEquals('updated-description', $response['body']['description']);
         $this->assertEquals(0, $response['body']['total']);
+    }
+
+    /**
+     * @depends testUpdateTopic
+     */
+    public function testGetTopicLogs(string $topicId): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)', 'offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['equal("$id", "asdf")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['orderAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['cursorAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     /**
@@ -367,6 +587,116 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
+    }
+
+    /**
+     * @depends testCreateSubscriber
+     */
+    public function testGetSubscriberLogs(array $data): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)', 'offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['equal("$id", "asdf")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['orderAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/subscribers/' . $data['subscriberId'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['cursorAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     /**
@@ -649,6 +979,116 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+    }
+
+    /**
+     * @depends testSendEmail
+     */
+    public function testGetMessageLogs(array $email): void
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(1)', 'offset(1)'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertLessThanOrEqual(1, count($logs['body']['logs']));
+        $this->assertIsNumeric($logs['body']['total']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['limit(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['offset(-1)']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['equal("$id", "asdf")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['orderAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => ['cursorAsc("$id")']
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
     }
 
     public function testSendSMS()
