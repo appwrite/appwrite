@@ -13,15 +13,15 @@ use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Messaging\Adapters\SMS\GEOSMS;
+use Utopia\Messaging\Adapters\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
 class Messaging extends Action
 {
-    private ?DSN $dsn = null;
-    private string $user = '';
-    private string $secret = '';
-    private string $provider = '';
+    private DSN $dsn;
+    private array $geosmsDSNs = [];
 
     public static function getName(): string
     {
@@ -33,11 +33,17 @@ class Messaging extends Action
      */
     public function __construct()
     {
-        $this->provider  = App::getEnv('_APP_SMS_PROVIDER', '');
+        $provider = App::getEnv('_APP_SMS_PROVIDER', '');
         if (!empty($this->provider)) {
-            $this->dsn = new DSN($this->provider);
-            $this->user = $this->dsn->getUser();
-            $this->secret = $this->dsn->getPassword();
+            $this->provider = new DSN($provider);
+        }
+
+        $geoProviders = App::getEnv('_APP_GEOSMS_PROVIDERS', '');
+        if (!empty($geoProviders)) {
+            foreach (explode(',', $geoProviders) as $geoProvider) {
+                $dsn = new DSN($geoProvider);
+                $this->geosmsDSNs[$dsn->getHost()] = $dsn;
+            }
         }
 
         $this
@@ -70,19 +76,27 @@ class Messaging extends Action
             return;
         }
 
-        $sms =  match ($this->dsn->getHost()) {
-            'mock' => new Mock($this->user, $this->secret), // used for tests
-            'twilio' => new Twilio($this->user, $this->secret),
-            'text-magic' => new TextMagic($this->user, $this->secret),
-            'telesign' => new Telesign($this->user, $this->secret),
-            'msg91' => new Msg91($this->user, $this->secret),
-            'vonage' => new Vonage($this->user, $this->secret),
-            default => null
-        };
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        
+        if (empty(App::getEnv('_APP_SMS_PROVIDER') && empty(App::getEnv('_APP_GEOSMS_PROVIDERS')))) {
             Console::error('Skipped sms processing. No Phone provider has been set.');
             return;
+        }
+
+        if (empty(App::getEnv('_APP_GEOSMS_PROVIDERS'))) {
+            $sms = match ($this->dsn->getHost()) {
+                'mock' => new Mock($this->dsn->getUser(), $this->dsn->getPassword()), // used for tests
+                'twilio' => new Twilio($this->dsn->getUser(), $this->dsn->getPassword()),
+                'text-magic' => new TextMagic($this->dsn->getUser(), $this->dsn->getPassword()),
+                'telesign' => new Telesign($this->dsn->getUser(), $this->dsn->getPassword()),
+                'msg91' => new Msg91($this->dsn->getUser(), $this->dsn->getPassword()),
+                'vonage' => new Vonage($this->dsn->getUser(), $this->dsn->getPassword()),
+                default => null
+            };
+        } else {
+            $twilio = new Twilio($this->geosmsDSNs['twilio']->getUser(), $this->geosmsDSNs['twilio']->getPassword());
+            $msg91 = new Msg91($this->geosmsDSNs['msg91']>getUser(), $this->geosmsDSNs['msg91']->getPassword());
+            $sms = new GEOSMS($twilio);
+            $sms->setLocal(CallingCode::INDIA, $msg91); 
         }
 
         $from = App::getEnv('_APP_SMS_FROM');

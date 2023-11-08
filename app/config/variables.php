@@ -448,6 +448,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_GEOSMS_PROVIDERS',
+                'description' => "Comma seperated list of providers used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER],sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, and vonage.",
+                'introduction' => '1.4.10',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_SMS_FROM',
                 'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
                 'introduction' => '0.15.0',
