@@ -80,7 +80,7 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 0);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        \curl_setopt($ch, CURLOPT_MAXFILESIZE, 1073741824);
+        \curl_setopt($ch, CURLOPT_MAXFILESIZE, 5242880);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
             App::getEnv('_APP_VERSION', 'UNKNOWN'),
