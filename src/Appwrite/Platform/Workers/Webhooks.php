@@ -99,7 +99,8 @@ class Webhooks extends Action
                 'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
             ]
         );
-
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
+        
         if (!$webhook->getAttribute('security', true)) {
             \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             \curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
