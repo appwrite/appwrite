@@ -2318,16 +2318,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.3.5",
+            "version": "0.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "b2fd3a8310296f4e44ff0e85b0eb0230ad9a2f83"
+                "reference": "f78273b38bade23db5866e5c7cb5f55427ba82af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/b2fd3a8310296f4e44ff0e85b0eb0230ad9a2f83",
-                "reference": "b2fd3a8310296f4e44ff0e85b0eb0230ad9a2f83",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f78273b38bade23db5866e5c7cb5f55427ba82af",
+                "reference": "f78273b38bade23db5866e5c7cb5f55427ba82af",
                 "shasum": ""
             },
             "require": {
@@ -2360,9 +2360,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.3.5"
+                "source": "https://github.com/utopia-php/migration/tree/0.3.6"
             },
-            "time": "2023-09-25T16:51:47+00:00"
+            "time": "2023-11-02T15:13:03+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -2904,16 +2904,16 @@
         },
         {
             "name": "utopia-php/vcs",
-            "version": "0.6.1",
+            "version": "0.6.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/vcs.git",
-                "reference": "d161d1156ef336d197a8d45384b531e5ec31243d"
+                "reference": "f135291b87cb45335fc6608722e7f89894bc33ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/d161d1156ef336d197a8d45384b531e5ec31243d",
-                "reference": "d161d1156ef336d197a8d45384b531e5ec31243d",
+                "url": "https://api.github.com/repos/utopia-php/vcs/zipball/f135291b87cb45335fc6608722e7f89894bc33ee",
+                "reference": "f135291b87cb45335fc6608722e7f89894bc33ee",
                 "shasum": ""
             },
             "require": {
@@ -2947,9 +2947,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/vcs/issues",
-                "source": "https://github.com/utopia-php/vcs/tree/0.6.1"
+                "source": "https://github.com/utopia-php/vcs/tree/0.6.2"
             },
-            "time": "2023-10-19T07:43:31+00:00"
+            "time": "2023-11-08T15:36:03+00:00"
         },
         {
             "name": "utopia-php/websocket",
@@ -5822,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
