@@ -12,45 +12,45 @@ class UsageStorage extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('bucketsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of buckets',
+                'description' => 'Total aggregated number of buckets',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('filesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of files.',
+                'description' => 'Total aggregated number of files.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('filesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics  of files storage (in bytes).',
+                'description' => 'Total aggregated number of files storage (in bytes).',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('buckets', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of buckets per period.',
+                'description' => 'Aggregated number of buckets per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('files', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of files per period.',
+                'description' => 'Aggregated number of files per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of storage (in bytes) per period .',
+                'description' => 'Aggregated number of files storage (in bytes) per period .',
                 'default' => [],
                 'example' => [],
                 'array' => true

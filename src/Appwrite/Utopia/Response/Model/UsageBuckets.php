@@ -12,32 +12,32 @@ class UsageBuckets extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('filesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of bucket files.',
+                'description' => 'Total aggregated number of bucket files.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('filesStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of bucket files storage.',
+                'description' => 'Total aggregated number of bucket files storage (in bytes).',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('files', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  statistics of bucket files per period.',
+                'description' => 'Aggregated  number of bucket files per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('storage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of bucket storage files per period.',
+                'description' => 'Aggregated  number of bucket storage files (in bytes) per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

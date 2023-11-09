@@ -12,26 +12,26 @@ class UsageUsers extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('usersTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of users.',
+                'description' => 'Total aggregated number of statistics of users.',
                 'default' => 0,
                 'example' => 0,
             ])
 
             ->addRule('sessionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics sessions created.',
+                'description' => 'Total aggregated number of active sessions.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('users', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of users per period.',
+                'description' => 'Aggregated number of users per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -39,7 +39,7 @@ class UsageUsers extends Model
 
             ->addRule('sessions', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics sessions created per period.',
+                'description' => 'Aggregated number of active sessions  per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

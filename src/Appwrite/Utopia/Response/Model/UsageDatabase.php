@@ -12,32 +12,32 @@ class UsageDatabase extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of collections.',
+                'description' => 'Total aggregated number of collections.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of documents.',
+                'description' => 'Total aggregated number of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  statistics collections per period.',
+                'description' => 'Aggregated  number of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated  statistics of documents per period.',
+                'description' => 'Aggregated  number of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

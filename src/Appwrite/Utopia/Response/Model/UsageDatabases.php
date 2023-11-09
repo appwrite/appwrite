@@ -12,45 +12,45 @@ class UsageDatabases extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
             ->addRule('databasesTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of documents.',
+                'description' => 'Total aggregated number of databases.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('collectionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of collections.',
+                'description' => 'Total aggregated number  of collections.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('documentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of documents.',
+                'description' => 'Total aggregated number of documents.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('databases', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated total statistics of documents per period.',
+                'description' => 'Aggregated number of databases per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('collections', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated total statistics  of collections per period.',
+                'description' => 'Aggregated number of collections per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated total statistics  of documents per period.',
+                'description' => 'Aggregated number of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true

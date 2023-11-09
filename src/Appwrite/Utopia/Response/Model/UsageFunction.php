@@ -18,84 +18,84 @@ class UsageFunction extends Model
             ])
             ->addRule('deploymentsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of function deployments.',
+                'description' => 'Total aggregated number of function deployments.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('deploymentsStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of function deployments storage.',
+                'description' => 'Total aggregated sum of function deployments storage.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('buildsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of function builds.',
+                'description' => 'Total aggregated number of function builds.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('buildsStorageTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregate total statistics of builds storage.',
+                'description' => 'total aggregated sum of function builds storage.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('buildsTimeTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregate total statistics of  build compute time.',
+                'description' => 'Total aggregated sum of function builds compute time.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('executionsTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics of executions.',
+                'description' => 'Total  aggregated number of function executions.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('executionsTimeTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Aggregated total statistics if execution compute time.',
+                'description' => 'Total aggregated sum of function  executions compute time.',
                 'default' => 0,
                 'example' => 0,
             ])
             ->addRule('deployments', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of deployments per time period.',
+                'description' => 'Aggregated number of function deployments per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('deploymentsStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of deployment storage per time period.',
+                'description' => 'Aggregated number of  function deployments storage per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('builds', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of builds per time period.',
+                'description' => 'Aggregated number of function builds per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('buildsStorage', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of build storage per time period.',
+                'description' => 'Aggregated sum of function builds storage per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('buildsTime', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of build compute per time period.',
+                'description' => 'Aggregated sum of function builds compute time per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('executions', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of executions per time period.',
+                'description' => 'Aggregated number of function executions per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
@@ -103,7 +103,7 @@ class UsageFunction extends Model
 
             ->addRule('executionsTime', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated statistics of executions compute per time period.',
+                'description' => 'Aggregated number of function executions compute time per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
