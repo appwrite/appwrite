@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -70,25 +71,33 @@ class Messaging extends Action
 
     private function processMessage(Database $dbForProject, Document $message): void
     {
-        $recipientsId = $message->getAttribute('to', []);
+        $topicsId = $message->getAttribute('topics', []);
+        $targetsId = $message->getAttribute('targets', []);
+        $usersId = $message->getAttribute('users', []);
 
         /**
         * @var Document[] $recipients
         */
         $recipients = [];
 
-        $topics = $dbForProject->find('topics', [Query::equal('$id', $recipientsId)]);
-        foreach ($topics as $topic) {
-            $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
+        if (\count($topicsId) > 0) {
+            $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
+            foreach ($topics as $topic) {
+                $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
+            }
         }
 
-        $users = $dbForProject->find('users', [Query::equal('$id', $recipientsId)]);
-        foreach ($users as $user) {
-            $recipients = \array_merge($recipients, $user->getAttribute('targets'));
+        if (\count($usersId) > 0) {
+            $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
+            foreach ($users as $user) {
+                $recipients = \array_merge($recipients, $user->getAttribute('targets'));
+            }
         }
 
-        $targets = $dbForProject->find('targets', [Query::equal('$id', $recipientsId)]);
-        $recipients = \array_merge($recipients, $targets);
+        if (\count($targetsId) > 0) {
+            $targets = $dbForProject->find('targets', [Query::equal('$id', $targetsId)]);
+            $recipients = \array_merge($recipients, $targets);
+        }
 
         $providers = [];
         foreach ($recipients as $recipient) {
@@ -118,7 +127,7 @@ class Messaging extends Action
 
                 $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
                     return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
-                        $deliveredTo = 0;
+                        $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
                         $messageData->setAttribute('to', $batch);
@@ -130,13 +139,13 @@ class Messaging extends Action
                         };
                         try {
                             $adapter->send($data);
-                            $deliveredTo += \count($batch);
+                            $deliveredTotal += \count($batch);
                         } catch (\Exception $e) {
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
                             $batchIndex++;
                             return [
-                                'deliveredTo' => $deliveredTo,
+                                'deliveredTotal' => $deliveredTotal,
                                 'deliveryErrors' => $deliveryErrors,
                             ];
                         }
@@ -149,10 +158,10 @@ class Messaging extends Action
 
         $results = array_merge(...$results);
 
-        $deliveredTo = 0;
+        $deliveredTotal = 0;
         $deliveryErrors = [];
         foreach ($results as $result) {
-            $deliveredTo += $result['deliveredTo'];
+            $deliveredTotal += $result['deliveredTotal'];
             $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
         }
         $message->setAttribute('deliveryErrors', $deliveryErrors);
@@ -162,8 +171,8 @@ class Messaging extends Action
         } else {
             $message->setAttribute('status', 'sent');
         }
-        $message->setAttribute('to', $recipientsId);
-        $message->setAttribute('deliveredTo', $deliveredTo);
+        $message->removeAttribute('to');
+        $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
 
         $dbForProject->updateDocument('messages', $message->getId(), $message);

@@ -633,7 +633,7 @@ App::post('/v1/teams/:teamId/memberships')
                 ;
             } elseif (!empty($phone)) {
                 $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-                    Query::equal('default', [true]),
+                    Query::equal('internal', [true]),
                     Query::equal('type', ['sms'])
                 ]));
 
@@ -662,7 +662,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $messageDoc = $dbForProject->createDocument('messages', new Document([
                     // Here membership ID is used as message ID so that it can be used in test cases to verify the message
                     '$id' => $membership->getId(),
-                    'to' => [$target->getId()],
+                    'targets' => [$target->getId()],
                     'data' => [
                         'content' => $message,
                     ],

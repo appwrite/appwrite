@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Messaging;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 
 trait MessagingBase
 {
@@ -223,7 +224,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'topicId' => 'unique()',
+            'topicId' => ID::unique(),
             'name' => 'my-app',
             'description' => 'web app'
         ]);
@@ -258,6 +259,8 @@ trait MessagingBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'search' => 'updated-description',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, \count($response['body']['topics']));
@@ -405,11 +408,17 @@ trait MessagingBase
 
     public function testSendEmail()
     {
-        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
-        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
-        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
-        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
-        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
+        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
+        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $to = $emailDSN->getParam('to');
+        $from = $emailDSN->getParam('from');
+        $isEuRegion = $emailDSN->getParam('isEuRegion');
+        $apiKey = $emailDSN->getPassword();
+        $domain = $emailDSN->getUser();
+
         if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
@@ -486,7 +495,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
@@ -503,7 +512,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -514,11 +523,17 @@ trait MessagingBase
      */
     public function testUpdateEmail(array $email)
     {
-        $to = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_RECEIVER_EMAIL');
-        $from = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_FROM');
-        $apiKey = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_API_KEY');
-        $domain = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_DOMAIN');
-        $isEuRegion = App::getEnv('_APP_MESSAGE_EMAIL_PROVIDER_MAILGUN_IS_EU_REGION');
+        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
+            $this->markTestSkipped('Email DSN not provided');
+        }
+
+        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
+        $to = $emailDSN->getParam('to');
+        $from = $emailDSN->getParam('from');
+        $isEuRegion = $emailDSN->getParam('isEuRegion');
+        $apiKey = $emailDSN->getPassword();
+        $domain = $emailDSN->getUser();
+
         if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
             $this->markTestSkipped('Email provider not configured');
         }
@@ -605,7 +620,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
@@ -632,16 +647,22 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendSMS()
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
+
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
         }
@@ -717,7 +738,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'content' => '064763',
         ]);
 
@@ -733,7 +754,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -744,10 +765,16 @@ trait MessagingBase
      */
     public function testUpdateSMS(array $sms)
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
+
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
         }
@@ -833,7 +860,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'content' => '047487',
         ]);
 
@@ -859,14 +886,20 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 
     public function testSendPushNotification()
     {
-        $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
-        $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
+        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
+        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $pushDSN->getParam('to');
+        $serverKey = $pushDSN->getPassword();
+
         if (empty($to) || empty($serverKey)) {
             $this->markTestSkipped('Push provider not configured');
         }
@@ -940,7 +973,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
         ]);
@@ -957,7 +990,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return $message;
@@ -968,8 +1001,14 @@ trait MessagingBase
      */
     public function testUpdatePushNotification(array $push)
     {
-        $to = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_RECEIVER_TOKEN');
-        $serverKey = App::getEnv('_APP_MESSAGE_PUSH_PROVIDER_FCM_SERVERY_KEY');
+        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
+            $this->markTestSkipped('Push DSN empty');
+        }
+
+        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $pushDSN->getParam('to');
+        $serverKey = $pushDSN->getPassword();
+
         if (empty($to) || empty($serverKey)) {
             $this->markTestSkipped('Push provider not configured');
         }
@@ -1053,7 +1092,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'to' => [$topic['body']['$id']],
+            'topics' => [$topic['body']['$id']],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
         ]);
@@ -1080,7 +1119,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
     }
 }

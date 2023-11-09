@@ -11,6 +11,7 @@ use Utopia\App;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\DSN\DSN;
 
 use function sleep;
 
@@ -743,10 +744,15 @@ class AccountCustomClientTest extends Scope
 
     public function testCreatePhone(): array
     {
-        $to = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_TO');
-        $from = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM');
-        $authKey = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_AUTH_KEY');
-        $senderId = App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_SENDER_ID');
+        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
+            $this->markTestSkipped('SMS DSN not provided');
+        }
+
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $to = $smsDSN->getParam('to');
+        $from = $smsDSN->getParam('from');
+        $authKey = $smsDSN->getPassword();
+        $senderId = $smsDSN->getUser();
 
         if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
             $this->markTestSkipped('SMS provider not configured');
@@ -762,7 +768,6 @@ class AccountCustomClientTest extends Scope
             'name' => 'Sms provider',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'default' => true,
             'from' => $from,
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -810,7 +815,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
 
@@ -1013,6 +1018,8 @@ class AccountCustomClientTest extends Scope
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
+        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
+        $from = $smsDSN->getParam('from');
 
         /**
          * Test for SUCCESS
@@ -1023,7 +1030,7 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
 
-        ]), ['from' => App::getEnv('_APP_MESSAGE_SMS_PROVIDER_MSG91_FROM')]);
+        ]), ['from' => $from]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
@@ -1040,7 +1047,7 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
-        $this->assertEquals(1, $message['body']['deliveredTo']);
+        $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
         return \array_merge($data, [

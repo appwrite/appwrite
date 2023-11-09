@@ -1241,7 +1241,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
+            Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
@@ -1347,7 +1347,7 @@ App::post('/v1/account/sessions/phone')
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $token->getId(),
-            'to' => [$target->getId()],
+            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],
@@ -2914,7 +2914,7 @@ App::post('/v1/account/verification/phone')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
         $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('default', [true]),
+            Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
         if ($provider === false || $provider->isEmpty()) {
@@ -2980,7 +2980,7 @@ App::post('/v1/account/verification/phone')
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $verification->getId(),
-            'to' => [$target->getId()],
+            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],

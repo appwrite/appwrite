@@ -16,6 +16,18 @@ class Subscriber extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
+            ->addRule('$createdAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Subscriber creation time in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
+            ->addRule('$updatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Subscriber update date in ISO 8601 format.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
             ->addRule('targetId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Target ID.',
