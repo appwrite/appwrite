@@ -85,7 +85,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'status' => true,
             'labels' => [],
             'password' => $password,
-            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
+            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
