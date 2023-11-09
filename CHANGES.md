@@ -2,7 +2,7 @@
 
 ## Bug fixes
 * Handle cases where password history could contain NULLs [#7092](https://github.com/appwrite/appwrite/pull/7092)
-* Missing functionId error on create execution [#7091] (https://github.com/appwrite/appwrite/pull/7091)
+* Missing functionId error on create execution [#7091](https://github.com/appwrite/appwrite/pull/7091)
 * Ensure usage endpoints don't throw 500 when usage is disabled [#7087](https://github.com/appwrite/appwrite/pull/7087)
 * Missing sessionId error when deleting all user sessions [#7085](https://github.com/appwrite/appwrite/pull/7085)
 * Domain validation in Create Proxy rule results in 500 error [#7084](https://github.com/appwrite/appwrite/pull/7084)
