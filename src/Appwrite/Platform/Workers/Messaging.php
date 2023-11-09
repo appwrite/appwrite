@@ -76,7 +76,7 @@ class Messaging extends Action
             return;
         }
 
-        
+
         if (empty(App::getEnv('_APP_SMS_PROVIDER') && empty(App::getEnv('_APP_GEOSMS_PROVIDERS')))) {
             Console::error('Skipped sms processing. No Phone provider has been set.');
             return;
@@ -94,9 +94,9 @@ class Messaging extends Action
             };
         } else {
             $twilio = new Twilio($this->geosmsDSNs['twilio']->getUser(), $this->geosmsDSNs['twilio']->getPassword());
-            $msg91 = new Msg91($this->geosmsDSNs['msg91']>getUser(), $this->geosmsDSNs['msg91']->getPassword());
+            $msg91 = new Msg91($this->geosmsDSNs['msg91'] > getUser(), $this->geosmsDSNs['msg91']->getPassword());
             $sms = new GEOSMS($twilio);
-            $sms->setLocal(CallingCode::INDIA, $msg91); 
+            $sms->setLocal(CallingCode::INDIA, $msg91);
         }
 
         $from = App::getEnv('_APP_SMS_FROM');

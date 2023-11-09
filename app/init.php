@@ -1331,7 +1331,7 @@ App::setResource('passwordsDictionary', function ($register) {
 
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    
+
     if (empty(App::getEnv('_APP_GEOSMS_PROVIDERS'))) {
         return match ($dsn->getHost()) {
             'mock' => new Mock($dsn->getUser(), $dsn->getPassword()), // used for tests
@@ -1353,9 +1353,10 @@ App::setResource('sms', function () {
     }
 
     $twilio = new Twilio($this->geosmsDSNs['twilio']->getUser(), $this->geosmsDSNs['twilio']->getPassword());
-    $msg91 = new Msg91($this->geosmsDSNs['msg91']>getUser(), $this->geosmsDSNs['msg91']->getPassword());
+    $msg91 = new Msg91($this->geosmsDSNs['msg91']-> getUser(), $this->geosmsDSNs['msg91']->getPassword());
+    $msg91->setTemplate('654cad00d6fc050612135b33');
     $sms = new GEOSMS($twilio);
-    return $sms->setLocal(CallingCode::INDIA, $msg91); 
+    return $sms->setLocal(CallingCode::INDIA, $msg91);
 });
 
 App::setResource('servers', function () {
