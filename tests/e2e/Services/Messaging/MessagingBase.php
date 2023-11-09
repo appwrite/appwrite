@@ -220,6 +220,29 @@ trait MessagingBase
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/sendgrid/' . $providers[0]['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'sendgrid' => [
+                'name' => 'Sendgrid3',
+                'apiKey' => 'my-apikey',
+        ]]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+        $this->assertCount(2, $logs['body']['logs']);
+
         $logs = $this->client->call(Client::METHOD_GET, '/messaging/providers/' . $providers[0]['$id'] . '/logs', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -410,6 +433,27 @@ trait MessagingBase
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
 
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topicId, [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'description' => 'updated-description-1'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertCount(2, $logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+
         $logs = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topicId . '/logs', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -549,7 +593,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals('updated-description-1', $topic['body']['description']);
         $this->assertEquals(1, $topic['body']['total']);
 
         return [
@@ -719,7 +763,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals('updated-description', $topic['body']['description']);
+        $this->assertEquals('updated-description-1', $topic['body']['description']);
         $this->assertEquals(0, $topic['body']['total']);
     }
 
@@ -998,6 +1042,41 @@ trait MessagingBase
         $this->assertEquals($logs['headers']['status-code'], 200);
         $this->assertIsArray($logs['body']['logs']);
         $this->assertIsNumeric($logs['body']['total']);
+
+        $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'status' => 'draft',
+            'topics' => [ID::unique()],
+            'subject' => 'Khali beats Undertaker',
+            'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+        ]);
+
+        $this->assertEquals(201, $email['headers']['status-code']);
+
+        $email = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $email['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'subject' => 'Khali beats John Cena!',
+        ]);
+
+        $this->assertEquals(200, $email['headers']['status-code']);
+
+        $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+                
+        $this->assertEquals($logs['headers']['status-code'], 200);
+        $this->assertIsArray($logs['body']['logs']);
+        $this->assertIsNumeric($logs['body']['total']);
+        $this->assertCount(2,$logs['body']['logs']);
 
         $logs = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'] . '/logs', [
             'content-type' => 'application/json',
