@@ -92,12 +92,12 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_v14x_02'] = ['from' => '7:30', 'to' => '8:15'];
-        $backups['database_db_fra1_v14x_03'] = ['from' => '10:30', 'to' => '11:15'];
-        $backups['database_db_fra1_v14x_04'] = ['from' => '13:30', 'to' => '14:15'];
-        $backups['database_db_fra1_v14x_05'] = ['from' => '4:30', 'to' => '5:15'];
-        $backups['database_db_fra1_v14x_06'] = ['from' => '16:30', 'to' => '17:15'];
-        $backups['database_db_fra1_v14x_07'] = ['from' => '19:30', 'to' => '20:15'];
+        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
+        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
 
         $databases = Config::getParam('pools-database', []);
 
@@ -123,7 +123,7 @@ App::post('/v1/projects')
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
-        if ($index) {
+        if ($index !== false) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
@@ -481,15 +481,43 @@ App::patch('/v1/projects/:projectId/team')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project
+        $permissions = [
+            Permission::read(Role::team(ID::custom($teamId))),
+            Permission::update(Role::team(ID::custom($teamId), 'owner')),
+            Permission::update(Role::team(ID::custom($teamId), 'developer')),
+            Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+            Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+        ];
+
+        $project
             ->setAttribute('teamId', $teamId)
-            ->setAttribute('$permissions', [
-                Permission::read(Role::team(ID::custom($teamId))),
-                Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                Permission::delete(Role::team(ID::custom($teamId), 'developer')),
-            ]));
+            ->setAttribute('teamInternalId', $team->getInternalId())
+            ->setAttribute('$permissions', $permissions);
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project);
+
+        $installations = $dbForConsole->find('installations', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($installations as $installation) {
+            $installation->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('installations', $installation->getId(), $installation);
+        }
+
+        $repositories = $dbForConsole->find('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($repositories as $repository) {
+            $repository->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('repositories', $repository->getId(), $repository);
+        }
+
+        $vcsComments = $dbForConsole->find('vcsComments', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+        ]);
+        foreach ($vcsComments as $vcsComment) {
+            $vcsComment->getAttribute('$permissions', $permissions);
+            $dbForConsole->updateDocument('vcsComments', $vcsComment->getId(), $vcsComment);
+        }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -836,15 +864,15 @@ App::delete('/v1/projects/:projectId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $queueForDeletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1675,7 +1703,6 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{user}}', '')
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
                 ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
