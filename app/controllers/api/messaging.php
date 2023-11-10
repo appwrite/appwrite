@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
@@ -14,6 +15,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
+use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -21,11 +23,16 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
+use MaxMind\Db\Reader;
 use Utopia\Validator\WhiteList;
 
 App::post('/v1/messaging/providers/mailgun')
@@ -651,6 +658,89 @@ App::get('/v1/messaging/providers')
             'providers' => $dbForProject->find('providers', $queries),
             'total' => $dbForProject->count('providers', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_PROVIDER_LIST);
+    });
+
+App::get('/v1/messaging/providers/:providerId/logs')
+    ->desc('List provider logs')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'providers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listProviderLogs')
+    ->label('sdk.description', '/docs/references/messaging/providers/get-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
+
+        $audit = new Audit($dbForProject);
+        $resource = 'provider/' . $providerId;
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/messaging/providers/:providerId')
@@ -1437,7 +1527,7 @@ App::delete('/v1/messaging/providers/:providerId')
     ->desc('Delete provider')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'provider.delete')
-    ->label('audits.resource', 'provider/{request.id}')
+    ->label('audits.resource', 'provider/{request.$providerId}')
     ->label('event', 'providers.[providerId].delete')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -1560,6 +1650,90 @@ App::get('/v1/messaging/topics')
         ]), Response::MODEL_TOPIC_LIST);
     });
 
+App::get('/v1/messaging/topics/:topicId/logs')
+    ->desc('List topic logs')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'topics.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listTopicLogs')
+    ->label('sdk.description', '/docs/references/messaging/topics/get-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $topic = $dbForProject->getDocument('topics', $topicId);
+
+        if ($topic->isEmpty()) {
+            throw new Exception(Exception::TOPIC_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
+
+        $audit = new Audit($dbForProject);
+        $resource = 'topic/' . $topicId;
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
+    });
+
 App::get('/v1/messaging/topics/:topicId')
     ->desc('Get a topic.')
     ->groups(['api', 'messaging'])
@@ -1645,7 +1819,7 @@ App::delete('/v1/messaging/topics/:topicId')
     ->desc('Delete a topic.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
-    ->label('audits.resource', 'topic/{request.topicId}')
+    ->label('audits.resource', 'topic/{request.$topicId}')
     ->label('event', 'topics.[topicId].delete')
     ->label('scope', 'topics.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -1792,6 +1966,90 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
 
+App::get('/v1/messaging/subscribers/:subscriberId/logs')
+    ->desc('List subscriber logs')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'subscribers.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listSubscriberLogs')
+    ->label('sdk.description', '/docs/references/messaging/subscribers/get-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('subscriberId', '', new UID(), 'Subscriber ID.')
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
+
+        if ($subscriber->isEmpty()) {
+            throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
+
+        $audit = new Audit($dbForProject);
+        $resource = 'subscriber/' . $subscriberId;
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
+    });
+
 App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->desc('Get a topic\'s subscriber.')
     ->groups(['api', 'messaging'])
@@ -1828,7 +2086,7 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->desc('Delete a subscriber from a topic.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
-    ->label('audits.resource', 'subscriber/{request.subscriberId}')
+    ->label('audits.resource', 'subscriber/{request.$subscriberId}')
     ->label('event', 'topics.[topicId].subscribers.[subscriberId].delete')
     ->label('scope', 'subscribers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_JWT, APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2139,6 +2397,90 @@ App::get('/v1/messaging/messages')
             'messages' => $dbForProject->find('messages', $queries),
             'total' => $dbForProject->count('messages', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_MESSAGE_LIST);
+    });
+
+App::get('/v1/messaging/messages/:messageId/logs')
+    ->desc('List message logs')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listMessageLogs')
+    ->label('sdk.description', '/docs/references/messaging/messages/get-logs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_LOG_LIST)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('queries', [], new Queries([new Limit(), new Offset()]), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Only supported methods are limit and offset', true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+        $grouped = Query::groupByType($queries);
+        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $offset = $grouped['offset'] ?? 0;
+
+        $audit = new Audit($dbForProject);
+        $resource = 'message/' . $messageId;
+        $logs = $audit->getLogsByResource($resource, $limit, $offset);
+
+        $output = [];
+
+        foreach ($logs as $i => &$log) {
+            $log['userAgent'] = (!empty($log['userAgent'])) ? $log['userAgent'] : 'UNKNOWN';
+
+            $detector = new Detector($log['userAgent']);
+            $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+            $os = $detector->getOS();
+            $client = $detector->getClient();
+            $device = $detector->getDevice();
+
+            $output[$i] = new Document([
+                'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
+                'mode' => $log['data']['mode'] ?? null,
+                'ip' => $log['ip'],
+                'time' => $log['time'],
+                'osCode' => $os['osCode'],
+                'osName' => $os['osName'],
+                'osVersion' => $os['osVersion'],
+                'clientType' => $client['clientType'],
+                'clientCode' => $client['clientCode'],
+                'clientName' => $client['clientName'],
+                'clientVersion' => $client['clientVersion'],
+                'clientEngine' => $client['clientEngine'],
+                'clientEngineVersion' => $client['clientEngineVersion'],
+                'deviceName' => $device['deviceName'],
+                'deviceBrand' => $device['deviceBrand'],
+                'deviceModel' => $device['deviceModel']
+            ]);
+
+            $record = $geodb->get($log['ip']);
+
+            if ($record) {
+                $output[$i]['countryCode'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), false) ? \strtolower($record['country']['iso_code']) : '--';
+                $output[$i]['countryName'] = $locale->getText('countries.' . strtolower($record['country']['iso_code']), $locale->getText('locale.country.unknown'));
+            } else {
+                $output[$i]['countryCode'] = '--';
+                $output[$i]['countryName'] = $locale->getText('locale.country.unknown');
+            }
+        }
+
+        $response->dynamic(new Document([
+            'total' => $audit->countLogsByResource($resource),
+            'logs' => $output,
+        ]), Response::MODEL_LOG_LIST);
     });
 
 App::get('/v1/messaging/messages/:messageId')
