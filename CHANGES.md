@@ -1,3 +1,9 @@
+# Version 1.4.11
+
+## Miscellaneous
+
+* Update database by @abnegate in [#7111](https://github.com/appwrite/appwrite/pull/7111)
+
 # Version 1.4.10
 
 ## Bug fixes
