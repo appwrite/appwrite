@@ -1156,11 +1156,19 @@ App::delete('/v1/users/:userId/sessions')
             /** @var Document $session */
             $dbForProject->deleteDocument('sessions', $session->getId());
             //TODO: fix this
+
+            $queueForEvents
+                ->setEvent('users.[userId].sessions.[sessionId].delete')
+                ->setParam('userId', $user->getId())
+                ->setParam('sessionId', $session->getId())
+                ->setPayload($response->output($session, Response::MODEL_SESSION))
+                ->trigger();
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
+            ->setEvent('users.[userId].sessions.delete')
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_USER));
 
