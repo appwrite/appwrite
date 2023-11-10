@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Messaging\Adapter\SMS\SMSFactory;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -21,7 +22,6 @@ use Utopia\Queue\Message;
 class Messaging extends Action
 {
     private DSN $dsn;
-    private array $geosmsDSNs = [];
 
     public static function getName(): string
     {
@@ -36,14 +36,6 @@ class Messaging extends Action
         $provider = App::getEnv('_APP_SMS_PROVIDER', '');
         if (!empty($provider)) {
             $this->dsn = new DSN($provider);
-        }
-
-        $geoProviders = App::getEnv('_APP_GEOSMS_PROVIDERS', '');
-        if (!empty($geoProviders)) {
-            foreach (explode(',', $geoProviders) as $geoProvider) {
-                $dsn = new DSN($geoProvider);
-                $this->geosmsDSNs[$dsn->getHost()] = $dsn;
-            }
         }
 
         $this
@@ -82,23 +74,7 @@ class Messaging extends Action
             return;
         }
 
-        if (empty(App::getEnv('_APP_GEOSMS_PROVIDERS'))) {
-            $sms = match ($this->dsn->getHost()) {
-                'mock' => new Mock($this->dsn->getUser(), $this->dsn->getPassword()), // used for tests
-                'twilio' => new Twilio($this->dsn->getUser(), $this->dsn->getPassword()),
-                'text-magic' => new TextMagic($this->dsn->getUser(), $this->dsn->getPassword()),
-                'telesign' => new Telesign($this->dsn->getUser(), $this->dsn->getPassword()),
-                'msg91' => new Msg91($this->dsn->getUser(), $this->dsn->getPassword()),
-                'vonage' => new Vonage($this->dsn->getUser(), $this->dsn->getPassword()),
-                default => null
-            };
-        } else {
-            $twilio = new Twilio($this->geosmsDSNs['twilio']->getUser(), $this->geosmsDSNs['twilio']->getPassword());
-            $msg91 = new Msg91($this->geosmsDSNs['msg91'] > getUser(), $this->geosmsDSNs['msg91']->getPassword());
-            $sms = new GEOSMS($twilio);
-            $sms->setLocal(CallingCode::INDIA, $msg91);
-        }
-
+        $sms = SMSFactory::createFromDSN($this->dsn);
         $from = App::getEnv('_APP_SMS_FROM');
 
         if (empty($from)) {

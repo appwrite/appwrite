@@ -74,6 +74,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Messaging\Adapter\SMS\SMSFactory;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -1331,32 +1332,8 @@ App::setResource('passwordsDictionary', function ($register) {
 
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-
-    if (empty(App::getEnv('_APP_GEOSMS_PROVIDERS'))) {
-        return match ($dsn->getHost()) {
-            'mock' => new Mock($dsn->getUser(), $dsn->getPassword()), // used for tests
-            'twilio' => new Twilio($dsn->getUser(), $dsn->getPassword()),
-            'text-magic' => new TextMagic($dsn->getUser(), $dsn->getPassword()),
-            'telesign' => new Telesign($dsn->getUser(), $dsn->getPassword()),
-            'msg91' => new Msg91($dsn->getUser(), $dsn->getPassword()),
-            'vonage' => new Vonage($dsn->getUser(), $dsn->getPassword()),
-            default => null
-        };
-    }
-
-    $geosmsProviders = explode(',', App::getEnv('_APP_GEOSMS_PROVIDERS', ''));
-    $geosmsDSNs = [];
-
-    foreach ($geosmsProviders as $geosmsProvider) {
-        $dsn = new DSN($geosmsProvider);
-        $geosmsDSNs[$dsn->getHost()] = $dsn;
-    }
-
-    $twilio = new Twilio($this->geosmsDSNs['twilio']->getUser(), $this->geosmsDSNs['twilio']->getPassword());
-    $msg91 = new Msg91($this->geosmsDSNs['msg91']-> getUser(), $this->geosmsDSNs['msg91']->getPassword());
-    $msg91->setTemplate('654cad00d6fc050612135b33');
-    $sms = new GEOSMS($twilio);
-    return $sms->setLocal(CallingCode::INDIA, $msg91);
+    $sms = SMSFactory::createFromDSN($dsn);
+    return $sms;
 });
 
 App::setResource('servers', function () {
