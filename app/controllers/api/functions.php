@@ -46,6 +46,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use MaxMind\Db\Reader;
 use Utopia\VCS\Adapter\Git\GitHub;
+use Utopia\VCS\Exception\RepositoryNotFound;
 
 include_once __DIR__ . '/../shared/api.php';
 
@@ -58,7 +59,14 @@ $redeployVcs = function (Request $request, Document $function, Document $project
     $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
     $owner = $github->getOwnerName($providerInstallationId);
     $providerRepositoryId = $function->getAttribute('providerRepositoryId', '');
-    $repositoryName = $github->getRepositoryName($providerRepositoryId);
+    try {
+        $repositoryName = $github->getRepositoryName($providerRepositoryId) ?? '';
+        if (empty($repositoryName)) {
+            throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+        }
+    } catch (RepositoryNotFound $e) {
+        throw new Exception(Exception::PROVIDER_REPOSITORY_NOT_FOUND);
+    }
     $providerBranch = $function->getAttribute('providerBranch', 'main');
     $authorUrl = "https://github.com/$owner";
     $repositoryUrl = "https://github.com/$owner/$repositoryName";
@@ -287,9 +295,8 @@ App::post('/v1/functions')
             $ruleModel = new Rule();
             $ruleCreate =
                 $queueForEvents
-                     ->setClass(Event::WEBHOOK_CLASS_NAME)
-                     ->setQueue(Event::WEBHOOK_QUEUE_NAME)
-                ;
+                ->setClass(Event::WEBHOOK_CLASS_NAME)
+                ->setQueue(Event::WEBHOOK_QUEUE_NAME);
 
             $ruleCreate
                 ->setProject($project)
@@ -870,8 +877,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->setContentType('application/gzip')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"')
-        ;
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
         $size = $deviceFunctions->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
@@ -899,7 +905,6 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFunctions->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFunctions->read(
