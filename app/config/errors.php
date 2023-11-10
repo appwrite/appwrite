@@ -827,5 +827,5 @@ return [
         'description' => 'Message with the requested ID has already been scheduled for delivery.',
         'code' => 400,
     ],
-    
+
 ];
