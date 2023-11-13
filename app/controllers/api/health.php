@@ -345,17 +345,17 @@ App::get('/v1/health/queue/webhooks')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::WEBHOOK_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -372,17 +372,17 @@ App::get('/v1/health/queue/logs')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::AUDITS_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -399,17 +399,17 @@ App::get('/v1/health/queue/certificates')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::CERTIFICATES_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -426,17 +426,17 @@ App::get('/v1/health/queue/builds')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::BUILDS_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -454,17 +454,17 @@ App::get('/v1/health/queue/databases')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->param('name', 'database_db_main', new Text(256), 'Queue name for which to check the queue size', true)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (string $name, int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (string $name, int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client($name, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -481,17 +481,17 @@ App::get('/v1/health/queue/deletes')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::DELETE_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -508,17 +508,17 @@ App::get('/v1/health/queue/mails')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::MAILS_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -535,17 +535,17 @@ App::get('/v1/health/queue/messaging')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::MESSAGING_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -562,17 +562,17 @@ App::get('/v1/health/queue/migrations')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::MIGRATIONS_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -589,17 +589,17 @@ App::get('/v1/health/queue/functions')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
-    ->param('treshold', 5000, new Integer(true), 'Queue size treshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
+    ->param('threshold', 5000, new Integer(true), 'Queue size threshold. When hit (equal or higher), endpoint returns server error. Default value is 5000.', true)
     ->inject('queue')
     ->inject('response')
-    ->action(function (int|string $treshold, Connection $queue, Response $response) {
-        $treshold = \intval($treshold);
+    ->action(function (int|string $threshold, Connection $queue, Response $response) {
+        $threshold = \intval($threshold);
 
         $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
         $size = $client->getQueueSize();
 
-        if ($size >= $treshold) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size treshold hit. Current size is {$size} and treshold is {$treshold}.");
+        if ($size >= $threshold) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
