@@ -16,6 +16,7 @@ use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -565,7 +566,7 @@ App::get('/v1/health/storage')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
-App::get('/v1/health/storage/files')
+App::get('/v1/health/storage/:device')
     ->desc('Get files storage')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
@@ -576,107 +577,42 @@ App::get('/v1/health/storage/files')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->param('device', '', new WhiteList(['files', 'functions', 'builds']), 'Device name')
     ->inject('response')
     ->inject('deviceFiles')
-    ->action(function (Response $response, Device $files) {
+    ->inject('deviceFunctions')
+    ->inject('deviceBuilds')
+    ->action(function (string $device, Response $response, Device $files, Device $functions, Device $builds) {
         $checkStart = \microtime(true);
 
         $uid = ID::unique();
 
+        $adapter = null;
+        switch ($device) {
+            case 'files':
+                $adapter = $files;
+                break;
+            case 'functions':
+                $adapter = $functions;
+                break;
+            case 'builds':
+                $adapter = $builds;
+                break;
+        }
+
         try {
-            $files->write("health_{$uid}.txt", 'health', 'text/plain');
+            $adapter->write("health_{$uid}.txt", 'health', 'text/plain');
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files device dir is not writable');
         }
 
         try {
-            $files->read("health_{$uid}.txt");
+            $adapter->read("health_{$uid}.txt");
         } catch (\Exception $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Files device dir is not readable');
         }
 
-        $files->delete("health_{$uid}.txt");
-
-        $output = [
-            'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-        ];
-
-        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
-    });
-
-
-App::get('/v1/health/storage/functions')
-    ->desc('Get functions storage')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorageFunctions')
-    ->label('sdk.description', '/docs/references/health/get-storage-functions.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->inject('response')
-    ->inject('deviceFunctions')
-    ->action(function (Response $response, Device $functions) {
-        $checkStart = \microtime(true);
-
-        $uid = ID::unique();
-
-        try {
-            $functions->write("health_{$uid}.txt", 'health', 'text/plain');
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Functions device dir is not writable');
-        }
-
-        try {
-            $functions->read("health_{$uid}.txt");
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Functions device dir is not readable');
-        }
-
-        $functions->delete("health_{$uid}.txt");
-
-        $output = [
-            'status' => 'pass',
-            'ping' => \round((\microtime(true) - $checkStart) / 1000)
-        ];
-
-        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
-    });
-
-App::get('/v1/health/storage/builds')
-    ->desc('Get builds storage')
-    ->groups(['api', 'health'])
-    ->label('scope', 'health.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getStorageBuilds')
-    ->label('sdk.description', '/docs/references/health/get-storage-builds.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->inject('response')
-    ->inject('deviceBuilds')
-    ->action(function (Response $response, Device $builds) {
-        $checkStart = \microtime(true);
-
-        $uid = ID::unique();
-
-        try {
-            $builds->write("health_{$uid}.txt", 'health', 'text/plain');
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Builds device dir is not writable');
-        }
-
-        try {
-            $builds->read("health_{$uid}.txt");
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Builds device dir is not readable');
-        }
-
-        $builds->delete("health_{$uid}.txt");
+        $adapter->delete("health_{$uid}.txt");
 
         $output = [
             'status' => 'pass',
