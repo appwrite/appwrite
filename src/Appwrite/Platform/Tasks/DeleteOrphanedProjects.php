@@ -86,9 +86,9 @@ class DeleteOrphanedProjects extends Action
                         $collectionsCreated = $dbForProject->count(Database::METADATA);
                     }
 
-                    $msg = '(' . $cnt . ') ignoring found (' . $collectionsCreated . ') collections on project  (' . $project->getInternalId() . ') , database (' . $project['database'] . ')';
+                    $msg = '(' . $cnt . ') found (' . $collectionsCreated . ') collections on project  (' . $project->getInternalId() . ') , database (' . $project['database'] . ')';
                     /**
-                     * +2 == audit+abuse
+                     * +2 = audit+abuse
                      */
                     if ($collectionsCreated === (count($collectionsConfig) + 2)) {
                         Console::log($msg . ' ignoring....');
