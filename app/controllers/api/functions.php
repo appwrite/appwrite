@@ -1658,6 +1658,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->setJWT($jwt)
                 ->setProject($project)
                 ->setUser($user)
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $execution->getId())
                 ->trigger();
 
             return $response
