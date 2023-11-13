@@ -1332,8 +1332,7 @@ App::setResource('passwordsDictionary', function ($register) {
 
 App::setResource('sms', function () {
     $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    $sms = SMSFactory::createFromDSN($dsn);
-    return $sms;
+    return SMSFactory::createFromDSN($dsn);
 });
 
 App::setResource('servers', function () {

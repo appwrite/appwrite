@@ -13,9 +13,7 @@ use Utopia\Messaging\Adapters\SMS\GEOSMS;
 use Utopia\Messaging\Adapters\SMS\GEOSMS\CallingCode;
 use Utopia\DSN\DSN;
 
-
-
-class SMSFactory 
+class SMSFactory
 {
     public static function createFromDSN(DSN $dsn): SMS
     {
@@ -49,26 +47,27 @@ class SMSFactory
         return $adapter;
     }
 
-    protected static function createGEOSMS(DSN $dsn) {
+    protected static function createGEOSMS(DSN $dsn)
+    {
+        $defaultDSN = new DSN($dsn->getParam('default', ''));
+        $geosms = new GEOSMS(SMSFactory::createFromDSN($defaultDSN));
 
-        $defaultParam = $dsn->getParam('default', '');
-        $defaultDSN = new DSN($defaultParam);
-        $defaultAdapter = SMSFactory::createFromDSN($defaultDSN);
+        $geosmsConfig = [];
+        \parse_str($dsn->getQuery(), $geosmsConfig);
 
-        $geosms = new GEOSMS($defaultAdapter);
-
-        foreach (CallingCode::getCodes() as $callingCode) {
-            $paramKey = "local[{$callingCode}]";
-            $param = $dsn->getParam($paramKey, '');
-
-            if (empty($param)) {
+        foreach ($geosmsConfig as $key => $nestedDSN) {
+            // Extract the calling code in the format of local[callingCode]
+            // e.g. local[1] = twilio://...
+            $matches = [];
+            if (\preg_match('/^local\[[0-9]+\]$/', $key, $matches) !== 1) {
                 continue;
             }
+            $callingCode = $matches[1];
 
             $dsn = null;
             try {
-                $dsn = new DSN($param);
-            } catch (\Exception $e) {
+                $dsn = new DSN($nestedDSN);
+            } catch (\Exception) {
                 continue;
             }
 
