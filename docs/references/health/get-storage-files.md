@@ -1,0 +1,1 @@
+Check the Appwrite files storage device is up and connection is successful.

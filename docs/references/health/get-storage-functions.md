@@ -1,0 +1,1 @@
+Check the Appwrite functions storage device is up and connection is successful.
