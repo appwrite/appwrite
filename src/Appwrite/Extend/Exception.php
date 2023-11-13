@@ -225,6 +225,12 @@ class Exception extends \Exception
     public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
     public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+    public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
+
+    /** Realtime */
+    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
@@ -245,8 +251,8 @@ class Exception extends \Exception
     public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
     public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
 
-    protected $type = '';
-    protected $errors = [];
+    protected string $type = '';
+    protected array $errors = [];
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
