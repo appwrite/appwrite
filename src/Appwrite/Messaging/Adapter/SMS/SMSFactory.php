@@ -10,7 +10,6 @@ use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Messaging\Adapters\SMS\GEOSMS;
-use Utopia\Messaging\Adapters\SMS\GEOSMS\CallingCode;
 use Utopia\DSN\DSN;
 
 class SMSFactory
