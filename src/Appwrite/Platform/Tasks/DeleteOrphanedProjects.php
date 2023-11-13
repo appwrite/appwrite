@@ -25,7 +25,7 @@ class DeleteOrphanedProjects extends Action
 
         $this
             ->desc('Delete orphaned projects')
-            ->param('commit', false, new boolean(true), 'Commit  project deletion', true)
+            ->param('commit', false, new Boolean(true), 'Commit  project deletion', true)
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
