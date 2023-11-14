@@ -1920,18 +1920,11 @@ $commonCollections = [
             ],
             [
                 '$id' => ID::custom('_key_identifier'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['identifier'],
                 'lengths' => [],
                 'orders' => [],
             ],
-            [
-                '$id' => ID::custom('_key_identifier_userInternalId'),
-                'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['identifier', 'userInternalId'],
-                'lengths' => [],
-                'orders' => [],
-            ]
         ],
     ],
 ];

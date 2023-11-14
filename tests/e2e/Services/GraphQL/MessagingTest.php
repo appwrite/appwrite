@@ -680,120 +680,13 @@ class MessagingTest extends Scope
      */
     public function testUpdateEmail(array $email)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
-            $this->markTestSkipped('Email DSN not provided');
-        }
-
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
-        $to = $emailDSN->getParam('to');
-        $from = $emailDSN->getParam('from');
-        $isEuRegion = $emailDSN->getParam('isEuRegion');
-        $apiKey = $emailDSN->getPassword();
-        $domain = $emailDSN->getUser();
-
-        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
-            $this->markTestSkipped('Email provider not configured');
-        }
-
-        $query = $this->getQuery(self::$CREATE_MAILGUN_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'providerId' => ID::unique(),
-                'name' => 'Mailgun2',
-                'apiKey' => $apiKey,
-                'domain' => $domain,
-                'from' => $from,
-                'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
-            ],
-        ];
-        $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $provider['headers']['status-code']);
-
-        $providerId = $provider['body']['data']['messagingCreateMailgunProvider']['_id'];
-
-        $query = $this->getQuery(self::$CREATE_TOPIC);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => ID::unique(),
-                'name' => 'topic1',
-                'description' => 'Active users',
-            ],
-        ];
-        $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $topic['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => ID::unique(),
-                'email' => 'random2-mail@mail.org',
-                'password' => 'password',
-                'name' => 'Messaging User',
-            ]
-        ];
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $user['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'targetId' => ID::unique(),
-                'providerType' => 'email',
-                'userId' => $user['body']['data']['usersCreate']['_id'],
-                'providerId' => $providerId,
-                'identifier' => $to,
-            ],
-        ];
-        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $target['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'subscriberId' => ID::unique(),
-                'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
-                'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
-            ],
-        ];
-        $subscriber = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertEquals(200, $subscriber['headers']['status-code']);
-
         $query = $this->getQuery(self::$CREATE_EMAIL);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$email['topics'][0]],
                 'subject' => 'Khali beats Undertaker',
                 'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
             ],
@@ -992,118 +885,13 @@ class MessagingTest extends Scope
      */
     public function testUpdateSMS(array $sms)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
-            $this->markTestSkipped('SMS DSN not provided');
-        }
-
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
-        $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
-        $authKey = $smsDSN->getPassword();
-        $senderId = $smsDSN->getUser();
-
-        if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
-            $this->markTestSkipped('SMS provider not configured');
-        }
-
-        $query = $this->getQuery(self::$CREATE_MSG91_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'providerId' => ID::unique(),
-                'name' => 'Msg91-2',
-                'senderId' => $senderId,
-                'authKey' => $authKey,
-                'from' => $from,
-            ],
-        ];
-        $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $provider['headers']['status-code']);
-
-        $providerId = $provider['body']['data']['messagingCreateMsg91Provider']['_id'];
-
-        $query = $this->getQuery(self::$CREATE_TOPIC);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => ID::unique(),
-                'name' => 'topic1',
-                'description' => 'Active users',
-            ],
-        ];
-        $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $topic['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => ID::unique(),
-                'email' => 'random4-email@mail.org',
-                'password' => 'password',
-                'name' => 'Messaging User',
-            ]
-        ];
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $user['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'targetId' => ID::unique(),
-                'providerType' => 'sms',
-                'userId' => $user['body']['data']['usersCreate']['_id'],
-                'providerId' => $providerId,
-                'identifier' => $to,
-            ],
-        ];
-        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $target['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'subscriberId' => ID::unique(),
-                'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
-                'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
-            ],
-        ];
-        $subscriber = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertEquals(200, $subscriber['headers']['status-code']);
-
         $query = $this->getQuery(self::$CREATE_SMS);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$sms['topics'][0]],
                 'content' => '345463',
             ],
         ];
@@ -1299,113 +1087,13 @@ class MessagingTest extends Scope
      */
     public function testUpdatePushNotification(array $push)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
-            $this->markTestSkipped('Push DSN empty');
-        }
-
-        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
-        $to = $pushDSN->getParam('to');
-        $serverKey = $pushDSN->getPassword();
-
-        if (empty($to) || empty($serverKey)) {
-            $this->markTestSkipped('Push provider not configured');
-        }
-
-        $query = $this->getQuery(self::$CREATE_FCM_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'providerId' => ID::unique(),
-                'name' => 'FCM2',
-                'serverKey' => $serverKey,
-            ],
-        ];
-        $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $provider['headers']['status-code']);
-        $providerId = $provider['body']['data']['messagingCreateFcmProvider']['_id'];
-
-        $query = $this->getQuery(self::$CREATE_TOPIC);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'topicId' => ID::unique(),
-                'name' => 'topic1',
-                'description' => 'Active users',
-            ],
-        ];
-        $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $topic['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'userId' => ID::unique(),
-                'email' => 'random5-email@mail.org',
-                'password' => 'password',
-                'name' => 'Messaging User',
-            ]
-        ];
-        $user = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $user['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_USER_TARGET);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'targetId' => ID::unique(),
-                'providerType' => 'push',
-                'userId' => $user['body']['data']['usersCreate']['_id'],
-                'providerId' => $providerId,
-                'identifier' => $to,
-            ],
-        ];
-        $target = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), $graphQLPayload);
-
-        $this->assertEquals(200, $target['headers']['status-code']);
-
-        $query = $this->getQuery(self::$CREATE_SUBSCRIBER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'subscriberId' => ID::unique(),
-                'topicId' => $topic['body']['data']['messagingCreateTopic']['_id'],
-                'targetId' => $target['body']['data']['usersCreateTarget']['_id'],
-            ],
-        ];
-        $subscriber = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), $graphQLPayload);
-
-        $this->assertEquals(200, $subscriber['headers']['status-code']);
-
         $query = $this->getQuery(self::$CREATE_PUSH_NOTIFICATION);
         $graphQLPayload = [
             'query' => $query,
             'variables' => [
                 'messageId' => ID::unique(),
                 'status' => 'draft',
-                'topics' => [$topic['body']['data']['messagingCreateTopic']['_id']],
+                'topics' => [$push['topics'][0]],
                 'title' => 'Push Notification Title',
                 'body' => 'Push Notifiaction Body',
             ],

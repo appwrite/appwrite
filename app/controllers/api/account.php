@@ -147,15 +147,21 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
-            $userInternalId = $user->getInternalId();
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
-            Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
                 'userId' => $user->getId(),
-                'userInternalId' => $userInternalId,
+                'userInternalId' => $user->getInternalId(),
                 'providerType' => 'email',
                 'identifier' => $email,
             ])));
+            $user->setAttribute('targets', [$target]);
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -663,7 +669,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $userDoc->getId(),
+                        'userInternalId' => $userDoc->getInternalId(),
+                        'providerType' => 'email',
+                        'identifier' => $email,
+                    ]));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1336,16 +1353,21 @@ App::post('/v1/account/sessions/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
-            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
 
         if (!$target || $target->isEmpty()) {
             $target = $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'providerType' => 'sms',
                 'identifier' => $phone,
             ]));
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
@@ -2029,7 +2051,6 @@ App::patch('/v1/account/email')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$email]),
-            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
 
         if ($target && !$target->isEmpty()) {
@@ -2041,9 +2062,16 @@ App::patch('/v1/account/email')
         */
         $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            try {
+                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
+        }
+
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -2090,7 +2118,6 @@ App::patch('/v1/account/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
-            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
 
         if ($target && !$target->isEmpty()) {
@@ -2115,9 +2142,16 @@ App::patch('/v1/account/phone')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            try {
+                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
+            } catch (Duplicate) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
+        }
+
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
-            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -2991,8 +3025,22 @@ App::post('/v1/account/verification/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$user->getAttribute('phone')]),
-            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
+
+        if (!$target || $target->isEmpty()) {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerType' => 'sms',
+                'identifier' => $user->getAttribute('phone'),
+            ]));
+            $dbForProject->deleteCachedDocument('users', $user->getId());
+        }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $verification->getId(),
