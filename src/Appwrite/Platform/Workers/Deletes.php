@@ -45,7 +45,7 @@ class Deletes extends Action
             ->inject('getFunctionsDevice')
             ->inject('getBuildsDevice')
             ->inject('getCacheDevice')
-            ->callback(fn($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
     }
 
     /**
@@ -178,7 +178,8 @@ class Deletes extends Action
                 $project = $dbForConsole->getDocument('projects', $document->getAttribute('projectId'));
 
                 if ($project->isEmpty()) {
-                    Console::warning('Unable to delete schedule for function ' . $document->getAttribute('resourceId'));
+                    $dbForConsole->deleteDocument('schedules', $document->getId());
+                    Console::success('Deleted schedule for deleted project ' . $document->getAttribute('projectId'));
                     return;
                 }
 
@@ -450,6 +451,21 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
+        // Delete VCS Installations
+        $this->deleteByGroup('installations', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete VCS Repositories
+        $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
+        // Delete VCS commments
+        $this->deleteByGroup('vcsComments', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
         // Delete metadata tables
         try {
             $dbForProject->deleteCollection('_metadata');
@@ -688,7 +704,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($functionsStorage, $document);
         });
 
-         /**
+        /**
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
@@ -708,6 +724,22 @@ class Deletes extends Action
         $this->deleteByGroup('executions', [
             Query::equal('functionInternalId', [$functionInternalId])
         ], $dbForProject);
+
+        /**
+         * Delete VCS Repositories and VCS Comments
+         */
+        Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
+        $this->deleteByGroup('repositories', [
+            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['function']),
+        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
+            $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
+            $projectId = $document->getAttribute('projectId', '');
+            $this->deleteByGroup('vcsComments', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                Query::equal('projectId', [$projectId]),
+            ], $dbForConsole);
+        });
 
         /**
          * Request executor to delete all deployment containers
@@ -920,16 +952,27 @@ class Deletes extends Action
         $count = 0;
         $chunk = 0;
         $limit = 50;
+        $results = [];
         $sum = $limit;
+        $cursor = null;
 
         $executionStart = \microtime(true);
 
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $database->find($collection, \array_merge([Query::limit($limit)], $queries));
+            $mergedQueries = \array_merge([Query::limit($limit)], $queries);
+            if ($cursor instanceof Document) {
+                $mergedQueries[] = Query::cursorAfter($cursor);
+            }
+
+            $results = $database->find($collection, $mergedQueries);
 
             $sum = count($results);
+
+            if ($sum > 0) {
+                $cursor = $results[$sum - 1];
+            }
 
             foreach ($results as $document) {
                 if (is_callable($callback)) {
