@@ -147,8 +147,15 @@ App::post('/v1/account')
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
+            $userInternalId = $user->getInternalId();
             $user->removeAttribute('$internalId');
             Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                'userId' => $user->getId(),
+                'userInternalId' => $userInternalId,
+                'providerType' => 'email',
+                'identifier' => $email,
+            ])));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -1329,10 +1336,10 @@ App::post('/v1/account/sessions/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
+            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
 
-        if (!$target) {
+        if (!$target || $target->isEmpty()) {
             $target = $dbForProject->createDocument('targets', new Document([
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
@@ -1995,6 +2002,7 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $oldEmail = $user->getAttribute('email');
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
@@ -2019,8 +2027,23 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+            Query::equal('userInternalId', [$user->getInternalId()])
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -2065,6 +2088,20 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+            Query::equal('userInternalId', [$user->getInternalId()])
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $user->getAttribute('phone'), 'targets');
+
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -2080,6 +2117,7 @@ App::patch('/v1/account/phone')
 
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -2904,6 +2942,7 @@ App::post('/v1/account/verification/phone')
             Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
+
         if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2952,17 +2991,8 @@ App::post('/v1/account/verification/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$user->getAttribute('phone')]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
+            Query::equal('userInternalId', [$user->getInternalId()])
         ]);
-
-        if (!$target) {
-            $target = $dbForProject->createDocument('targets', new Document([
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'providerType' => 'sms',
-                'identifier' => $user->getAttribute('phone'),
-            ]));
-        }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
             '$id' => $verification->getId(),

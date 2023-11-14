@@ -1926,9 +1926,9 @@ $commonCollections = [
                 'orders' => [],
             ],
             [
-                '$id' => ID::custom('_key_identifier_providerId'),
+                '$id' => ID::custom('_key_identifier_userInternalId'),
                 'type' => Database::INDEX_UNIQUE,
-                'attributes' => ['providerId', 'identifier'],
+                'attributes' => ['identifier', 'userInternalId'],
                 'lengths' => [],
                 'orders' => [],
             ]
