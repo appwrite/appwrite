@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -25,15 +26,17 @@ class Webhooks extends Action
         $this
             ->desc('Webhooks worker')
             ->inject('message')
-            ->callback(fn($message) => $this->action($message));
+            ->inject('dbForConsole')
+            ->callback(fn($message, Database $dbForConsole) => $this->action($message, $dbForConsole));
     }
 
     /**
      * @param Message $message
+     * @param Database $dbForConsole
      * @return void
      * @throws Exception
      */
-    public function action(Message $message): void
+    public function action(Message $message, Database $dbForConsole): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -47,8 +50,8 @@ class Webhooks extends Action
         $user = new Document($payload['user'] ?? []);
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                    $this->execute($events, $webhookPayload, $webhook, $user, $project);
+            if ($webhook->getAttribute('status') === true && array_intersect($webhook->getAttribute('events', []), $events)) {
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole);
             }
         }
 
@@ -63,10 +66,14 @@ class Webhooks extends Action
      * @param Document $webhook
      * @param Document $user
      * @param Document $project
+     * @param Database $dbForConsole
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole): void
     {
+        if ($webhook->getAttribute('status') === false) {
+            return;
+        }
 
         $url = \rawurldecode($webhook->getAttribute('url'));
         $signatureKey = $webhook->getAttribute('signatureKey');
@@ -78,7 +85,9 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         \curl_setopt($ch, CURLOPT_HEADER, 0);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 0);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        \curl_setopt($ch, CURLOPT_MAXFILESIZE, 5242880);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
             App::getEnv('_APP_VERSION', 'UNKNOWN'),
@@ -110,7 +119,19 @@ class Webhooks extends Action
         }
 
         if (false === \curl_exec($ch)) {
-            $this->errors[] = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+            $errorCount = $webhook->getAttribute('errors', 0) + 1;
+            $lastErrorLogs = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
+            $webhook->setAttribute('errors', $errorCount);
+            $webhook->setAttribute('logs', $lastErrorLogs);
+
+            if ($errorCount > 9) {
+                $webhook->setAttribute('status', false);
+            }
+
+            $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+            $this->errors[] = $lastErrorLogs;
         }
 
         \curl_close($ch);

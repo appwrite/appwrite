@@ -1067,7 +1067,10 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass);
+            ->setAttribute('httpPass', $httpPass)
+            ->setAttribute('errors', 0)
+            ->setAttribute('status', true)
+            ->setAttribute('logs', '');
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
