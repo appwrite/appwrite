@@ -761,11 +761,9 @@ App::put('/v1/functions/:functionId')
             $repository = $dbForConsole->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
-                    Permission::read(Role::team(ID::custom($teamId))),
-                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
-                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::read(Role::any()),
+                    Permission::update(Role::any()),
+                    Permission::delete(Role::any()),
                 ],
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getInternalId(),
