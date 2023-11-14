@@ -37,9 +37,17 @@ class PatchRecreateRepositoriesDocuments extends Action
         $startTime = microtime(true);
 
         if (!empty($projectId)) {
-            $project = $dbForConsole->getDocument('projects', $projectId);
-            $dbForProject = call_user_func($getProjectDB, $project);
-            $this->recreateRepositories($dbForConsole, $dbForProject, $project);
+            try {
+                $project = $dbForConsole->getDocument('projects', $projectId);
+                $dbForProject = call_user_func($getProjectDB, $project);
+                $this->recreateRepositories($dbForConsole, $dbForProject, $project);
+            } catch (\Throwable $th) {
+                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
         } else {
             $queries = [];
             if (!empty($after)) {
@@ -50,8 +58,18 @@ class PatchRecreateRepositoriesDocuments extends Action
                 Console::info("Iterating all projects");
             }
             $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole) {
-                $dbForProject = call_user_func($getProjectDB, $project);
-                $this->recreateRepositories($dbForConsole, $dbForProject, $project);
+                $projectId = $project->getId();
+
+                try {
+                    $dbForProject = call_user_func($getProjectDB, $project);
+                    $this->recreateRepositories($dbForConsole, $dbForProject, $project);
+                } catch (\Throwable $th) {
+                    Console::error("Unexpected error occured with Project ID {$projectId}");
+                    Console::error('[Error] Type: ' . get_class($th));
+                    Console::error('[Error] Message: ' . $th->getMessage());
+                    Console::error('[Error] File: ' . $th->getFile());
+                    Console::error('[Error] Line: ' . $th->getLine());
+                }
             });
         }
 
