@@ -3,8 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\Platform\Action;
-use Appwrite\Event\Certificate;
-use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -12,10 +10,9 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Validator\Hostname;
 use Utopia\Validator\Text;
 
-class patchRecreateRepositoriesDocuments extends Action
+class PatchRecreateRepositoriesDocuments extends Action
 {
     public static function getName(): string
     {
@@ -34,25 +31,25 @@ class patchRecreateRepositoriesDocuments extends Action
     }
 
     public function action($after, $projectId, Database $dbForConsole, callable $getProjectDB): void
-    { 
+    {
         Console::info("Starting the patch");
 
         $startTime = microtime(true);
 
-        if(!empty($projectId)) {
+        if (!empty($projectId)) {
             $project = $dbForConsole->getDocument('projects', $projectId);
             $dbForProject = call_user_func($getProjectDB, $project);
             $this->recreateRepositories($dbForConsole, $dbForProject, $project);
         } else {
             $queries = [];
-            if(!empty($after)) {
+            if (!empty($after)) {
                 Console::info("Iterating remaining projects after project with ID {$after}");
                 $project = $dbForConsole->getDocument('projects', $after);
                 $queries = [Query::cursorAfter($project)];
             } else {
                 Console::info("Iterating all projects");
             }
-            $this->foreachDocument($dbForConsole, 'projects', $queries, function(Document $project) use($getProjectDB, $dbForConsole){
+            $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole) {
                 $dbForProject = call_user_func($getProjectDB, $project);
                 $this->recreateRepositories($dbForConsole, $dbForProject, $project);
             });
@@ -106,13 +103,13 @@ class patchRecreateRepositoriesDocuments extends Action
         $projectId = $project->getId();
         Console::log("Running patch for project {$projectId}");
 
-        $this->foreachDocument($dbForProject, 'functions', [], function(Document $function) use ($dbForConsole, $project) {
+        $this->foreachDocument($dbForProject, 'functions', [], function (Document $function) use ($dbForProject, $dbForConsole, $project) {
             $isConnected = !empty($function->getAttribute('providerRepositoryId', ''));
 
-            if($isConnected) {
+            if ($isConnected) {
                 $repository = $dbForConsole->getDocument('repositories', $function->getAttribute('repositoryId', ''));
 
-                if($repository->isEmpty()) {
+                if ($repository->isEmpty()) {
                     $projectId = $project->getId();
                     $functionId = $function->getId();
                     Console::success("Recreating repositories document for project ID {$projectId}, function ID {$functionId}");
@@ -134,6 +131,19 @@ class patchRecreateRepositoriesDocuments extends Action
                         'resourceType' => 'function',
                         'providerPullRequestIds' => []
                     ]));
+
+                    $function = $dbForProject->updateDocument('functions', $function->getId(), $function
+                        ->setAttribute('repositoryId', $repository->getId())
+                        ->setAttribute('repositoryInternalId', $repository->getInternalId()));
+
+                    $this->foreachDocument($dbForProject, 'deployments', [
+                        Query::equal('resourceInternalId', [$function->getInternalId()]),
+                        Query::equal('resourceType', ['functions'])
+                    ], function (Document $deployment) use ($dbForProject, $repository) {
+                        $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment
+                            ->setAttribute('repositoryId', $repository->getId())
+                            ->setAttribute('repositoryInternalId', $repository->getInternalId()));
+                    });
                 }
             }
         });
