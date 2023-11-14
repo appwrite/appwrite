@@ -735,10 +735,10 @@ class Deletes extends Action
             Query::equal('resourceType', ['function']),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-            $projectId = $document->getAttribute('projectId', '');
+            $projectInternalId = $document->getAttribute('projectInternalId', '');
             $this->deleteByGroup('vcsComments', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
             ], $dbForConsole);
         });
 
