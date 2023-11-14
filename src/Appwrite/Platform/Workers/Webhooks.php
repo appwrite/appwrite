@@ -97,16 +97,17 @@ class Webhooks extends Action
             $ch,
             CURLOPT_HTTPHEADER,
             [
-            'Content-Type: application/json',
-            'Content-Length: ' . \strlen($payload),
-            'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
-            'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
-            'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
-            'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
-            'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
-            'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
+                'Content-Type: application/json',
+                'Content-Length: ' . \strlen($payload),
+                'X-' . APP_NAME . '-Webhook-Id: ' . $webhook->getId(),
+                'X-' . APP_NAME . '-Webhook-Events: ' . implode(',', $events),
+                'X-' . APP_NAME . '-Webhook-Name: ' . $webhook->getAttribute('name', ''),
+                'X-' . APP_NAME . '-Webhook-User-Id: ' . $user->getId(),
+                'X-' . APP_NAME . '-Webhook-Project-Id: ' . $project->getId(),
+                'X-' . APP_NAME . '-Webhook-Signature: ' . $signature,
             ]
         );
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
 
         if (!$webhook->getAttribute('security', true)) {
             \curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);

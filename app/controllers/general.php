@@ -117,12 +117,14 @@ function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleReques
             $path .= '?' . $query;
         }
 
+        $requestHeaders = $request->getHeaders();
+
         $body = \json_encode([
             'async' => false,
             'body' => $swooleRequest->getContent() ?? '',
             'method' => $swooleRequest->server['request_method'],
             'path' => $path,
-            'headers' => $swooleRequest->header
+            'headers' => $requestHeaders
         ]);
 
         $headers = [

@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Utopia\Database\Validator\Query\Limit;
@@ -85,7 +86,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'status' => true,
             'labels' => [],
             'password' => $password,
-            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
+            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
@@ -753,20 +754,38 @@ App::get('/v1/users/:userId/targets')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
     ->param('userId', '', new UID(), 'User ID.')
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, Response $response, Database $dbForProject) {
-
+    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $targets = $user->getAttribute('targets', []);
+        $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('userId', [$userId]);
+
+         // Get cursor document if there was a cursor query
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = reset($cursor);
+
+        if ($cursor) {
+            $targetId = $cursor->getValue();
+            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Target '{$targetId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
         $response->dynamic(new Document([
-            'targets' => $targets,
-            'total' => \count($targets),
+            'targets' => $dbForProject->find('targets', $queries),
+            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_TARGET_LIST);
     });
 
@@ -1302,7 +1321,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 App::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('event', 'users.[userId].sessions.delete')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')

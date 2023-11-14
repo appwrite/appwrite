@@ -2,6 +2,8 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use Utopia\CLI\Console;
+
 trait Base
 {
     // Databases
@@ -2455,5 +2457,14 @@ trait Base
         }
 
         throw new \InvalidArgumentException('Invalid query type');
+    }
+
+    // Function-related methods
+    protected string $stdout = '';
+    protected string $stderr = '';
+
+    protected function packageCode($folder)
+    {
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
     }
 }
