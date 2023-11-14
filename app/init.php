@@ -557,6 +557,70 @@ Database::addFilter(
         return [];
     }
 );
+
+Database::addFilter(
+    'providerSearch',
+    function (mixed $value, Document $provider) {
+        $searchValues = [
+            $provider->getId(),
+            $provider->getAttribute('name', ''),
+            $provider->getAttribute('provider', ''),
+            $provider->getAttribute('type', '')
+        ];
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'topicSearch',
+    function (mixed $value, Document $topic) {
+        $searchValues = [
+            $topic->getId(),
+            $topic->getAttribute('name', ''),
+            $topic->getAttribute('description', ''),
+        ];
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'messageSearch',
+    function (mixed $value, Document $message) {
+        $searchValues = [
+            $message->getId(),
+            $message->getAttribute('description', ''),
+            $message->getAttribute('status', ''),
+        ];
+
+        if (\array_key_exists('subject', $message->getAttribute('data'))) {
+            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['subject'], 'email']);
+        } else if (\array_key_exists('content', $message->getAttribute('data'))) {
+            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['content'], 'sms']);
+        } else {
+            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['title'], 'push']);
+        }
+
+        $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
 /**
  * DB Formats
  */

@@ -68,7 +68,6 @@ App::post('/v1/messaging/providers/mailgun')
             'provider' => 'mailgun',
             'type' => 'email',
             'enabled' => $enabled,
-            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
@@ -133,7 +132,6 @@ App::post('/v1/messaging/providers/sendgrid')
             'provider' => 'sendgrid',
             'type' => 'email',
             'enabled' => $enabled,
-            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
@@ -196,7 +194,6 @@ App::post('/v1/messaging/providers/msg91')
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'senderId' => $senderId,
@@ -261,7 +258,6 @@ App::post('/v1/messaging/providers/telesign')
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
@@ -324,9 +320,8 @@ App::post('/v1/messaging/providers/textmagic')
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
-            'provider' => 'text-magic',
+            'provider' => 'textmagic',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
@@ -391,7 +386,6 @@ App::post('/v1/messaging/providers/twilio')
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'accountSid' => $accountSid,
@@ -456,7 +450,6 @@ App::post('/v1/messaging/providers/vonage')
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'apiKey' => $apiKey,
@@ -519,7 +512,6 @@ App::post('/v1/messaging/providers/fcm')
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
             'enabled' => $enabled,
             'credentials' => [
                 'serverKey' => $serverKey,
@@ -582,7 +574,6 @@ App::post('/v1/messaging/providers/apns')
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
             'enabled' => $enabled,
             'credentials' => [
                 'authKey' => $authKey,
@@ -806,7 +797,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email');
         }
 
         if (!empty($from)) {
@@ -894,7 +884,6 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email');
         }
 
         if (!empty($from)) {
@@ -973,7 +962,6 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1058,7 +1046,6 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1137,13 +1124,12 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         }
         $providerAttr = $provider->getAttribute('provider');
 
-        if ($providerAttr !== 'text-magic') {
+        if ($providerAttr !== 'textmagic') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'textmagic' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1228,7 +1214,6 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1313,7 +1298,6 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1396,7 +1380,6 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'fcm' . ' ' . 'push');
         }
 
         if ($enabled === true || $enabled === false) {
@@ -1470,7 +1453,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'apns' . ' ' . 'push');
         }
 
         if ($enabled === true || $enabled === false) {
@@ -1588,9 +1570,6 @@ App::post('/v1/messaging/topics')
 
         if ($description) {
             $topic->setAttribute('description', $description);
-            $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
-        } else {
-            $topic->setAttribute('search', $topic->getId() . ' ' . $name);
         }
 
         try {
@@ -1794,16 +1773,6 @@ App::patch('/v1/messaging/topics/:topicId')
 
         if (!empty($description)) {
             $topic->setAttribute('description', $description);
-        }
-
-        if (!empty($name) || !empty($description)) {
-            if (!empty($name) && !empty($description)) {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
-            } elseif (!empty($name)) {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $topic->getAttribute('description'));
-            } else {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $topic->getAttribute('name') . ' ' . $description);
-            }
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
@@ -2174,7 +2143,6 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $subject,
         ]));
 
         if ($status === 'processing') {
@@ -2236,7 +2204,6 @@ App::post('/v1/messaging/messages/sms')
                 'content' => $content,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description,
         ]));
 
         if ($status === 'processing') {
@@ -2338,7 +2305,6 @@ App::post('/v1/messaging/messages/push')
             'deliveryTime' => $deliveryTime,
             'data' => $pushData,
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $title,
         ]));
 
         if ($status === 'processing') {
@@ -2583,8 +2549,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('description', $description);
         }
 
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $data['subject'] . ' ' . $message->getAttribute('providerId'));
-
         if (!empty($status)) {
             $message->setAttribute('status', $status);
         }
@@ -2682,8 +2646,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         if (!is_null($deliveryTime)) {
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
-
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $message->getAttribute('providerId'));
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
@@ -2813,8 +2775,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (!is_null($deliveryTime)) {
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
-
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $pushData['title'] . ' ' . $message->getAttribute('providerId'));
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
