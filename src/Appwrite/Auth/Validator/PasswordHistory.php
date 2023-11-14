@@ -44,7 +44,7 @@ class PasswordHistory extends Password
     public function isValid($value): bool
     {
         foreach ($this->history as $hash) {
-            if (Auth::passwordVerify($value, $hash, $this->algo, $this->algoOptions)) {
+            if (!empty($hash) && Auth::passwordVerify($value, $hash, $this->algo, $this->algoOptions)) {
                 return false;
             }
         }

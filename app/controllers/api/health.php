@@ -350,7 +350,7 @@ App::get('/v1/health/queue/webhooks')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::WEBHOOK_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/logs')
@@ -368,7 +368,7 @@ App::get('/v1/health/queue/logs')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::AUDITS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
@@ -386,7 +386,7 @@ App::get('/v1/health/queue/certificates')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::CERTIFICATES_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/builds')
@@ -404,7 +404,7 @@ App::get('/v1/health/queue/builds')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::BUILDS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/databases')
@@ -423,7 +423,7 @@ App::get('/v1/health/queue/databases')
     ->inject('response')
     ->action(function (string $name, Connection $queue, Response $response) {
         $client = new Client($name, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/deletes')
@@ -441,7 +441,7 @@ App::get('/v1/health/queue/deletes')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::DELETE_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/mails')
@@ -459,7 +459,7 @@ App::get('/v1/health/queue/mails')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::MAILS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/messaging')
@@ -477,7 +477,7 @@ App::get('/v1/health/queue/messaging')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::MESSAGING_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/migrations')
@@ -495,7 +495,7 @@ App::get('/v1/health/queue/migrations')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::MIGRATIONS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/queue/functions')
@@ -513,7 +513,7 @@ App::get('/v1/health/queue/functions')
     ->inject('response')
     ->action(function (Connection $queue, Response $response) {
         $client = new Client(Event::FUNCTIONS_QUEUE_NAME, $queue);
-        $response->dynamic(new Document([ 'size' => $client->sumProcessingJobs() ]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $client->getQueueSize() ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
 
 App::get('/v1/health/storage')
