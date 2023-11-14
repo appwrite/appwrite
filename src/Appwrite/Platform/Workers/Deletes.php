@@ -730,6 +730,7 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
