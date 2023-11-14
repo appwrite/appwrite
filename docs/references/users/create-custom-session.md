@@ -1,1 +1,1 @@
-Use this endpoint to generate a 'universal' token which can be sent to a user by a secure method, and then exchanged for a session.
+Returns a custom token with a secret key for creating a session. If the provided user ID has not be registered, a new user will be created. Use the returned user ID and secret and submit a request to the [PUT /account/sessions/custom](https://appwrite.io/docs/references/cloud/client-web/account#updateCustomSession) endpoint to complete the login process. By default, the secret sent in the response is valid for 15 minutes.
