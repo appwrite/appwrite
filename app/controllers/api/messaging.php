@@ -812,10 +812,10 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
 
             $provider->setAttribute('enabled', $enabled);
@@ -906,7 +906,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -987,7 +987,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -1074,7 +1074,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -1248,7 +1248,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -1335,7 +1335,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -1414,7 +1414,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
@@ -1490,7 +1490,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         if ($enabled === true || $enabled === false) {
             if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_DISABLED);
+                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
             $provider->setAttribute('enabled', $enabled);
         }
