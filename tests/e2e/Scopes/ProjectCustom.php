@@ -81,6 +81,8 @@ trait ProjectCustom
                 'locale.read',
                 'avatars.read',
                 'health.read',
+                'rules.read',
+                'rules.write',
                 'targets.read',
                 'targets.write',
                 'providers.read',
@@ -90,7 +92,7 @@ trait ProjectCustom
                 'topics.write',
                 'topics.read',
                 'subscribers.write',
-                'subscribers.read'
+                'subscribers.read',
             ],
         ]);
 
