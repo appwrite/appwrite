@@ -568,7 +568,7 @@ Database::addFilter(
             $provider->getAttribute('type', '')
         ];
 
-        $search = implode(' ', \array_filter($searchValues));
+        $search = \implode(' ', \array_filter($searchValues));
 
         return $search;
     },
@@ -586,7 +586,7 @@ Database::addFilter(
             $topic->getAttribute('description', ''),
         ];
 
-        $search = implode(' ', \array_filter($searchValues));
+        $search = \implode(' ', \array_filter($searchValues));
 
         return $search;
     },
@@ -604,15 +604,17 @@ Database::addFilter(
             $message->getAttribute('status', ''),
         ];
 
-        if (\array_key_exists('subject', $message->getAttribute('data'))) {
-            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['subject'], 'email']);
-        } else if (\array_key_exists('content', $message->getAttribute('data'))) {
-            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['content'], 'sms']);
+        $data = \json_decode($message->getAttribute('data', []), true);
+
+        if (\array_key_exists('subject', $data)) {
+            $searchValues = \array_merge($searchValues, [$data['subject'], 'email']);
+        } elseif (\array_key_exists('content', $data)) {
+            $searchValues = \array_merge($searchValues, [$data['content'], 'sms']);
         } else {
-            $searchValues[] = \array_merge($searchValues, [$message->getAttribute('data')['title'], 'push']);
+            $searchValues = \array_merge($searchValues, [$data['title'], 'push']);
         }
 
-        $search = implode(' ', \array_filter($searchValues));
+        $search = \implode(' ', \array_filter($searchValues));
 
         return $search;
     },

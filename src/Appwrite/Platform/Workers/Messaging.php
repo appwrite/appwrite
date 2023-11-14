@@ -10,7 +10,6 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -99,22 +98,31 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
+        /**
+        * @var array<string, array<string>> $identifiersByProviderId
+        */
+        $identifiersByProviderId = [];
+
+        /**
+        * @var Document[] $providers
+        */
         $providers = [];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
-            if (!isset($providers[$providerId])) {
-                $providers[$providerId] = [];
+            if (!isset($identifiersByProviderId[$providerId])) {
+                $identifiersByProviderId[$providerId] = [];
             }
-            $providers[$providerId][] = $recipient->getAttribute('identifier');
+            $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
         }
 
         /**
         * @var array[] $results
         */
-        $results = batch(\array_map(function ($providerId) use ($providers, $message, $dbForProject) {
-            return function () use ($providerId, $providers, $message, $dbForProject) {
+        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $message, $dbForProject) {
+            return function () use ($providerId, $identifiersByProviderId, $providers, $message, $dbForProject) {
                 $provider = $dbForProject->getDocument('providers', $providerId);
-                $identifiers = $providers[$providerId];
+                $providers[] = $provider;
+                $identifiers = $identifiersByProviderId[$providerId];
                 $adapter = match ($provider->getAttribute('type')) {
                     'sms' => $this->sms($provider),
                     'push' => $this->push($provider),
@@ -154,7 +162,7 @@ class Messaging extends Action
 
                 return $results;
             };
-        }, \array_keys($providers)));
+        }, \array_keys($identifiersByProviderId)));
 
         $results = array_merge(...$results);
 
@@ -172,6 +180,11 @@ class Messaging extends Action
             $message->setAttribute('status', 'sent');
         }
         $message->removeAttribute('to');
+
+        foreach ($providers as $provider) {
+            $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
+        }
+
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
 
