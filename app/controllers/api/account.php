@@ -1240,6 +1240,7 @@ App::post('/v1/account/sessions/phone')
             Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
+
         if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -1335,8 +1336,7 @@ App::post('/v1/account/sessions/phone')
             $target = $dbForProject->createDocument('targets', new Document([
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
+                'providerType' => 'sms',
                 'identifier' => $phone,
             ]));
         }
@@ -2959,8 +2959,7 @@ App::post('/v1/account/verification/phone')
             $target = $dbForProject->createDocument('targets', new Document([
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
+                'providerType' => 'sms',
                 'identifier' => $user->getAttribute('phone'),
             ]));
         }

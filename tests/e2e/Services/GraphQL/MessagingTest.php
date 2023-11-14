@@ -395,6 +395,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'email',
                 'userId' => $userId,
                 'providerId' => $providerId,
                 'identifier' => 'token',
@@ -604,6 +605,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'email',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,
@@ -755,6 +757,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'email',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,
@@ -916,6 +919,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'sms',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,
@@ -1063,6 +1067,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'sms',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,
@@ -1219,6 +1224,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'push',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,
@@ -1363,6 +1369,7 @@ class MessagingTest extends Scope
             'query' => $query,
             'variables' => [
                 'targetId' => ID::unique(),
+                'providerType' => 'push',
                 'userId' => $user['body']['data']['usersCreate']['_id'],
                 'providerId' => $providerId,
                 'identifier' => $to,

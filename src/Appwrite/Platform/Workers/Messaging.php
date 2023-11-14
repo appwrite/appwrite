@@ -98,6 +98,11 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
+        $internalProvider = $dbForProject->findOne('providers', [
+            Query::equal('internal', [true]),
+            Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
+        ]);
+
         /**
         * @var array<string, array<string>> $identifiersByProviderId
         */
@@ -109,6 +114,11 @@ class Messaging extends Action
         $providers = [];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
+
+            if (!$providerId) {
+                $providerId = $internalProvider->getId();
+            }
+
             if (!isset($identifiersByProviderId[$providerId])) {
                 $identifiersByProviderId[$providerId] = [];
             }
@@ -118,17 +128,26 @@ class Messaging extends Action
         /**
         * @var array[] $results
         */
-        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $message, $dbForProject) {
-            return function () use ($providerId, $identifiersByProviderId, $providers, $message, $dbForProject) {
-                $provider = $dbForProject->getDocument('providers', $providerId);
+        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+            return function () use ($providerId, $identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+                $provider = new Document();
+
+                if ($internalProvider->getId() === $providerId) {
+                    $provider = $internalProvider;
+                } else {
+                    $provider = $dbForProject->getDocument('providers', $providerId);
+                }
+
                 $providers[] = $provider;
                 $identifiers = $identifiersByProviderId[$providerId];
+
                 $adapter = match ($provider->getAttribute('type')) {
                     'sms' => $this->sms($provider),
                     'push' => $this->push($provider),
                     'email' => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
+
                 $maxBatchSize = $adapter->getMaxMessagesPerRequest();
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
@@ -139,12 +158,14 @@ class Messaging extends Action
                         $deliveryErrors = [];
                         $messageData = clone $message;
                         $messageData->setAttribute('to', $batch);
+
                         $data = match ($provider->getAttribute('type')) {
                             'sms' => $this->buildSMSMessage($messageData, $provider),
                             'push' => $this->buildPushMessage($messageData),
                             'email' => $this->buildEmailMessage($messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
+
                         try {
                             $adapter->send($data);
                             $deliveredTotal += \count($batch);
@@ -168,10 +189,12 @@ class Messaging extends Action
 
         $deliveredTotal = 0;
         $deliveryErrors = [];
+
         foreach ($results as $result) {
             $deliveredTotal += $result['deliveredTotal'];
             $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
         }
+
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
@@ -179,6 +202,7 @@ class Messaging extends Action
         } else {
             $message->setAttribute('status', 'sent');
         }
+
         $message->removeAttribute('to');
 
         foreach ($providers as $provider) {

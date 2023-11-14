@@ -934,10 +934,11 @@ trait Base
                     }
                 }';
             case self::$CREATE_USER_TARGET:
-                return 'mutation createUserTarget($userId: String!, $targetId: String!, $providerId: String!, $identifier: String!){
-                    usersCreateTarget(userId: $userId, targetId: $targetId, providerId: $providerId, identifier: $identifier) {
+                return 'mutation createUserTarget($userId: String!, $targetId: String!, $providerType: String!, $identifier: String! $providerId: String){
+                    usersCreateTarget(userId: $userId, targetId: $targetId, providerType: $providerType, identifier: $identifier, providerId: $providerId) {
                         _id
                         userId
+                        providerType
                         providerId
                         identifier
                     }
@@ -949,6 +950,7 @@ trait Base
                         targets {
                             _id
                             userId
+                            providerType
                             providerId
                             identifier
                         }
@@ -959,15 +961,17 @@ trait Base
                     usersGetTarget(userId: $userId, targetId: $targetId) {
                         _id
                         userId
+                        providerType
                         providerId
                         identifier
                     }
                 }';
             case self::$UPDATE_USER_TARGET:
-                return 'mutation updateUserTarget($userId: String!, $targetId: String!, $identifier: String!){
-                    usersUpdateTargetIdentifier(userId: $userId, targetId: $targetId, identifier: $identifier) {
+                return 'mutation updateUserTarget($userId: String!, $targetId: String!, $providerId: String, $identifier: String){
+                    usersUpdateTarget(userId: $userId, targetId: $targetId, providerId: $providerId, identifier: $identifier) {
                         _id
                         userId
+                        providerType
                         providerId
                         identifier
                     }

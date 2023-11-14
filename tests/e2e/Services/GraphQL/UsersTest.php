@@ -78,6 +78,7 @@ class UsersTest extends Scope
             'variables' => [
                 'targetId' => ID::unique(),
                 'userId' => $user['_id'],
+                'providerType' => 'email',
                 'providerId' => $providerId,
                 'identifier' => 'identifier',
             ]
@@ -479,7 +480,7 @@ class UsersTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertEquals(200, $target['headers']['status-code']);
-        $this->assertEquals('newidentifier', $target['body']['data']['usersUpdateTargetIdentifier']['identifier']);
+        $this->assertEquals('newidentifier', $target['body']['data']['usersUpdateTarget']['identifier']);
     }
 
     public function testDeleteUserSessions()

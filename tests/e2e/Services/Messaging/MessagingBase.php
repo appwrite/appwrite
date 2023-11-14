@@ -317,6 +317,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'targetId' => ID::unique(),
+            'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => 'my-token',
         ]);
@@ -558,6 +559,7 @@ trait MessagingBase
             'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -570,6 +572,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -593,6 +596,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -682,6 +686,7 @@ trait MessagingBase
             'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -694,6 +699,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -717,6 +723,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -801,6 +808,7 @@ trait MessagingBase
             'authKey' => $authKey,
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -813,6 +821,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -836,6 +845,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'sms',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -922,6 +932,7 @@ trait MessagingBase
             'authKey' => $authKey,
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -934,6 +945,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -957,6 +969,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'sms',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -1036,6 +1049,7 @@ trait MessagingBase
             'name' => 'FCM-1',
             'serverKey' => $serverKey,
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -1048,6 +1062,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -1071,6 +1086,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -1154,6 +1170,7 @@ trait MessagingBase
             'name' => 'FCM-2',
             'serverKey' => $serverKey,
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -1166,6 +1183,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -1189,6 +1207,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
