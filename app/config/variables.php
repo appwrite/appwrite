@@ -440,7 +440,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, vonage and geosms. When using the geosms provider, the adapter will use the `default` query to parameter unless a `local-x` parameter is set for a country calling code. `default` and `local-x` parameters should be URL encoded.",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, vonage and geosms. When using the geosms provider, the adapter will parse `default` query parameter for a nested provider unless a `local-x` parameter is set for a country calling code. `default` and `local-x` parameters should be URL encoded.",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
