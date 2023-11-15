@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69bc2e21a65b78344393706b39d789b4",
+    "content-hash": "a22aa4ae1f306fc85bc7ef8488c97a27",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1906,16 +1906,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.45.1",
+            "version": "0.45.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0e76f996439b80794ab73c2fffdb51ebd6676e4b"
+                "reference": "dc789f2c1fd8b5ee07ff883e11c9ad7970824788"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0e76f996439b80794ab73c2fffdb51ebd6676e4b",
-                "reference": "0e76f996439b80794ab73c2fffdb51ebd6676e4b",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/dc789f2c1fd8b5ee07ff883e11c9ad7970824788",
+                "reference": "dc789f2c1fd8b5ee07ff883e11c9ad7970824788",
                 "shasum": ""
             },
             "require": {
@@ -1956,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.45.1"
+                "source": "https://github.com/utopia-php/database/tree/0.45.2"
             },
-            "time": "2023-11-01T08:30:19+00:00"
+            "time": "2023-11-15T03:38:47+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2270,16 +2270,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/d488223876f88f97bb76fd6681fed0df80558f62",
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62",
                 "shasum": ""
             },
             "require": {
@@ -2312,9 +2312,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.3.0"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-11-14T21:02:37+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -5822,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
