@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-
-
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
