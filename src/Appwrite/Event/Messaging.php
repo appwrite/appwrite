@@ -13,7 +13,7 @@ class Messaging extends Event
     protected ?array $recipients = null;
     protected ?string $deliveryTime = null;
     protected ?string $providerType = null;
-    
+
 
     public function __construct(protected Connection $connection)
     {

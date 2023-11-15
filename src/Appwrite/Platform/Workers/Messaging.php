@@ -77,7 +77,7 @@ class Messaging extends Action
         }
     }
 
-    
+
 
     private function processMessage(Database $dbForProject, Document $message): void
     {
@@ -228,7 +228,7 @@ class Messaging extends Action
 
     private function processInternalSMSMessage(Document $message, array $recipients): void
     {
-        if(empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
             Console::info('Skipped SMS processing. No Phone configuration has been set.');
             return;
         }
