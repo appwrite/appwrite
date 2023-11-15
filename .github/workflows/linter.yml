@@ -21,7 +21,7 @@ jobs:
     - name: Validate composer.json and composer.lock
       run: |
         docker run --rm -v $PWD:/app composer sh -c \
-        "composer install --profile --ignore-platform-reqs && composer validate"
+        "composer validate"
     - name: Run Linter
       run: |
         docker run --rm -v $PWD:/app composer sh -c \
