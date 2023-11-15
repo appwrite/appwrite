@@ -8,7 +8,6 @@ $member = [
     'home',
     'console',
     'graphql',
-    'sessions',
     'account',
     'teams.read',
     'teams.write',

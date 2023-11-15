@@ -1,6 +1,9 @@
 <?php
 
 return [ // List of publicly visible scopes
+    'sessions' => [
+        'description' => 'Access to read and write your project\'s sessions',
+    ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
     ],
