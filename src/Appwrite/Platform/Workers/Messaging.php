@@ -3,7 +3,10 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
+use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Database\Database;
@@ -63,10 +66,18 @@ class Messaging extends Action
             return;
         }
 
-        $message = $dbForProject->getDocument('messages', $payload['messageId']);
+        if (!\is_null($payload['message']) && !\is_null($payload['recipients'])) {
+            if ($payload['providerType'] === 'SMS') {
+                $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
+            }
+        } else {
+            $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-        $this->processMessage($dbForProject, $message);
+            $this->processMessage($dbForProject, $message);
+        }
     }
+
+    
 
     private function processMessage(Database $dbForProject, Document $message): void
     {
@@ -99,7 +110,7 @@ class Messaging extends Action
         }
 
         $internalProvider = $dbForProject->findOne('providers', [
-            Query::equal('internal', [true]),
+            Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
 
@@ -215,6 +226,74 @@ class Messaging extends Action
         $dbForProject->updateDocument('messages', $message->getId(), $message);
     }
 
+    private function processInternalSMSMessage(Document $message, array $recipients): void
+    {
+        if(empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+            Console::info('Skipped SMS processing. No Phone configuration has been set.');
+            return;
+        }
+
+        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $host = $smsDSN->getHost();
+        $password = $smsDSN->getPassword();
+        $user = $smsDSN->getUser();
+
+        $from = App::getEnv('_APP_SMS_FROM');
+
+        $provider = new Document([
+            '$id' => ID::unique(),
+            'provider' => $host,
+            'type' => 'sms',
+            'name' => 'Internal SMS',
+            'enabled' => true,
+            'credentials' => match ($host) {
+                'twilio' => [
+                    'accountSid' => $user,
+                    'authToken' => $password
+                ],
+                'textmagic' => [
+                    'username' => $user,
+                    'apiKey' => $password
+                ],
+                'telesign' => [
+                    'username' => $user,
+                    'password' => $password
+                ],
+                'msg91' => [
+                    'senderId' => $user,
+                    'authKey' => $password
+                ],
+                'vonage' => [
+                    'apiKey' => $user,
+                    'apiSecret' => $password
+                ],
+                default => null
+            },
+            'options' => [
+                'from' => $from
+            ]
+        ]);
+        $adapter = $this->sms($provider);
+
+        $maxBatchSize = $adapter->getMaxMessagesPerRequest();
+        $batches = \array_chunk($recipients, $maxBatchSize);
+        $batchIndex = 0;
+
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
+            return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+                $message->setAttribute('to', $batch);
+
+                $data = $this->buildSMSMessage($message, $provider);
+
+                try {
+                    $adapter->send($data);
+                } catch (\Exception $e) {
+                    Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage());
+                }
+            };
+        }, $batches));
+    }
+
     public function shutdown(): void
     {
     }
@@ -225,7 +304,7 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'text-magic' => new TextMagic($credentials['username'], $credentials['apiKey']),
+            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),

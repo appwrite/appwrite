@@ -9,7 +9,11 @@ use Utopia\Queue\Client;
 class Messaging extends Event
 {
     protected ?string $messageId = null;
-    private ?string $deliveryTime = null;
+    protected ?Document $message = null;
+    protected ?array $recipients = null;
+    protected ?string $deliveryTime = null;
+    protected ?string $providerType = null;
+    
 
     public function __construct(protected Connection $connection)
     {
@@ -18,6 +22,52 @@ class Messaging extends Event
         $this
             ->setQueue(Event::MESSAGING_QUEUE_NAME)
             ->setClass(Event::MESSAGING_CLASS_NAME);
+    }
+
+    /**
+     * Sets recipient for the messaging event.
+     *
+     * @param string[] $recipients
+     * @return self
+     */
+    public function setRecipients(array $recipients): self
+    {
+        $this->recipients = $recipients;
+
+        return $this;
+    }
+
+    /**
+     * Returns set recipient for messaging event.
+     *
+     * @return string[]
+     */
+    public function getRecipient(): array
+    {
+        return $this->recipients;
+    }
+
+    /**
+     * Sets message document for the messaging event.
+     *
+     * @param Document $message
+     * @return self
+     */
+    public function setMessage(Document $message): self
+    {
+        $this->message = $message;
+
+        return $this;
+    }
+
+    /**
+     * Returns message document for the messaging event.
+     *
+     * @return string
+     */
+    public function getMessage(): Document
+    {
+        return $this->message;
     }
 
     /**
@@ -41,6 +91,29 @@ class Messaging extends Event
     public function getMessageId(): string
     {
         return $this->messageId;
+    }
+
+    /**
+     * Sets provider type for the messaging event.
+     *
+     * @param string $providerType
+     * @return self
+     */
+    public function setProviderType(string $providerType): self
+    {
+        $this->providerType = $providerType;
+
+        return $this;
+    }
+
+    /**
+     * Returns set provider type for the messaging event.
+     *
+     * @return string
+     */
+    public function getProviderType(): string
+    {
+        return $this->providerType;
     }
 
     /**
@@ -92,6 +165,9 @@ class Messaging extends Event
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,
+            'message' => $this->message,
+            'recipients' => $this->recipients,
+            'providerType' => $this->providerType,
         ]);
     }
 }

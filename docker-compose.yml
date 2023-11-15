@@ -582,6 +582,8 @@ services:
       - _APP_DB_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_SMS_FROM
+      - _APP_SMS_PROVIDER
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
