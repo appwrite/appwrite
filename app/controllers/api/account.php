@@ -1677,6 +1677,96 @@ App::post('/v1/account/jwt')
         ])]), Response::MODEL_JWT);
     });
 
+App::post('/v1/account/targets')
+    ->desc('Create Account Target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerType', '', new WhiteList(['email', 'sms', 'push']), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->param('name', '', new Text(256), 'Set Client device name manually instead of using user agent. Used to identify the client device make, model, OS, etc.', true)
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = new Document();
+
+        if ($providerType === 'push') {
+            $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+        }
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $os = $detector->getOS();
+        $client = $detector->getClient();
+        $device = $detector->getDevice();
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                ],
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  $providerType,
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+                'name' => $name ?? [
+                    'osCode' => $os['osCode'],
+                    'osName' => $os['osName'],
+                    'osVersion' => $os['osVersion'],
+                    'clientType' => $client['clientType'],
+                    'clientCode' => $client['clientCode'],
+                    'clientName' => $client['clientName'],
+                    'clientVersion' => $client['clientVersion'],
+                    'clientEngine' => $client['clientEngine'],
+                    'clientEngineVersion' => $client['clientEngineVersion'],
+                    'deviceName' => $device['deviceName'],
+                    'deviceBrand' => $device['deviceBrand'],
+                    'deviceModel' => $device['deviceModel']
+                ]
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        Authorization::skip(fn () => $dbForProject->deleteCachedDocument('users', $user->getId()));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
@@ -3076,4 +3166,67 @@ App::put('/v1/account/verification/phone')
         ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+    });
+
+App::put('/v1/account/targets/:targetId')
+    ->desc('Update Account Target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('scope', 'public')
+    ->label('docs', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->param('name', '', new Text(256), 'Set Client device name manually instead of using user agent. Used to identify the client device make, model, OS, etc.', true)
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        if ($providerId) {
+            $provider = $dbForProject->getDocument('providers', $providerId);
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+
+            $target->setAttribute('providerId', $provider->getId());
+            $target->setAttribute('providerInternalId', $provider->getInternalId());
+        }
+
+        if ($name) {
+            $target->setAttribute('name', $name);
+        }
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        Authorization::skip(fn () => $dbForProject->deleteCachedDocument('users', $user->getId()));
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
     });

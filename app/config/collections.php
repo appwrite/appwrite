@@ -1870,6 +1870,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('name'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['json'],
+            ],
         ],
         'indexes' => [
             [
