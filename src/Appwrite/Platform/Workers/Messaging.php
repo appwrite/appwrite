@@ -77,8 +77,6 @@ class Messaging extends Action
         }
     }
 
-
-
     private function processMessage(Database $dbForProject, Document $message): void
     {
         $topicsId = $message->getAttribute('topics', []);
@@ -273,6 +271,7 @@ class Messaging extends Action
                 'from' => $from
             ]
         ]);
+
         $adapter = $this->sms($provider);
 
         $maxBatchSize = $adapter->getMaxMessagesPerRequest();
