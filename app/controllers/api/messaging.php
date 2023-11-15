@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -68,7 +69,6 @@ App::post('/v1/messaging/providers/mailgun')
             'provider' => 'mailgun',
             'type' => 'email',
             'enabled' => $enabled,
-            'search' => $providerId . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
                 'domain' => $domain,
@@ -119,7 +119,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender email address.')
+    ->param('from', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
@@ -133,7 +133,6 @@ App::post('/v1/messaging/providers/sendgrid')
             'provider' => 'sendgrid',
             'type' => 'email',
             'enabled' => $enabled,
-            'search' => $providerId . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email',
             'credentials' => [
                 'apiKey' => $apiKey,
             ],
@@ -182,7 +181,7 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender number.')
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
@@ -196,7 +195,6 @@ App::post('/v1/messaging/providers/msg91')
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'senderId' => $senderId,
@@ -247,7 +245,7 @@ App::post('/v1/messaging/providers/telesign')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender number.')
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('username', '', new Text(0), 'Telesign username.')
     ->param('password', '', new Text(0), 'Telesign password.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
@@ -261,7 +259,6 @@ App::post('/v1/messaging/providers/telesign')
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
@@ -312,7 +309,7 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender number.')
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('username', '', new Text(0), 'Textmagic username.')
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
@@ -324,9 +321,8 @@ App::post('/v1/messaging/providers/textmagic')
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
-            'provider' => 'text-magic',
+            'provider' => 'textmagic',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'text-magic' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'username' => $username,
@@ -377,7 +373,7 @@ App::post('/v1/messaging/providers/twilio')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender number.')
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
     ->param('authToken', '', new Text(0), 'Twilio authentication token.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
@@ -391,7 +387,6 @@ App::post('/v1/messaging/providers/twilio')
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'accountSid' => $accountSid,
@@ -442,7 +437,7 @@ App::post('/v1/messaging/providers/vonage')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Text(256), 'Sender number.')
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
     ->param('apiKey', '', new Text(0), 'Vonage API key.')
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
     ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
@@ -456,7 +451,6 @@ App::post('/v1/messaging/providers/vonage')
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
-            'search' => $providerId . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms',
             'enabled' => $enabled,
             'credentials' => [
                 'apiKey' => $apiKey,
@@ -507,19 +501,18 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('serverKey', '', new Text(0), 'FCM server key.')
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $enabled, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $serverKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'fcm' . ' ' . 'push',
             'enabled' => $enabled,
             'credentials' => [
                 'serverKey' => $serverKey,
@@ -566,23 +559,22 @@ App::post('/v1/messaging/providers/apns')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
     ->param('teamId', '', new Text(0), 'APNS team ID.')
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
     ->param('endpoint', '', new Text(0), 'APNS endpoint.')
+    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
-            'search' => $providerId . ' ' . $name . ' ' . 'apns' . ' ' . 'push',
             'enabled' => $enabled,
             'credentials' => [
                 'authKey' => $authKey,
@@ -785,7 +777,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
-    ->param('isEuRegion', null, new Boolean(), 'Set as eu region.', true)
+    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
@@ -806,7 +798,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'mailgun' . ' ' . 'email');
         }
 
         if (!empty($from)) {
@@ -894,7 +885,6 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'sendgrid' . ' ' . 'email');
         }
 
         if (!empty($from)) {
@@ -973,7 +963,6 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'msg91' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1058,7 +1047,6 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'telesign' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1137,13 +1125,12 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         }
         $providerAttr = $provider->getAttribute('provider');
 
-        if ($providerAttr !== 'text-magic') {
+        if ($providerAttr !== 'textmagic') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'textmagic' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1228,7 +1215,6 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'twilio' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1313,7 +1299,6 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'vonage' . ' ' . 'sms');
         }
 
         if (!empty($from)) {
@@ -1396,7 +1381,6 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'fcm' . ' ' . 'push');
         }
 
         if ($enabled === true || $enabled === false) {
@@ -1470,7 +1454,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         if (!empty($name)) {
             $provider->setAttribute('name', $name);
-            $provider->setAttribute('search', $provider->getId() . ' ' . $name . ' ' . 'apns' . ' ' . 'push');
         }
 
         if ($enabled === true || $enabled === false) {
@@ -1588,9 +1571,6 @@ App::post('/v1/messaging/topics')
 
         if ($description) {
             $topic->setAttribute('description', $description);
-            $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
-        } else {
-            $topic->setAttribute('search', $topic->getId() . ' ' . $name);
         }
 
         try {
@@ -1796,16 +1776,6 @@ App::patch('/v1/messaging/topics/:topicId')
             $topic->setAttribute('description', $description);
         }
 
-        if (!empty($name) || !empty($description)) {
-            if (!empty($name) && !empty($description)) {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $description);
-            } elseif (!empty($name)) {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $name . ' ' . $topic->getAttribute('description'));
-            } else {
-                $topic->setAttribute('search', $topic->getId() . ' ' . $topic->getAttribute('name') . ' ' . $description);
-            }
-        }
-
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
 
         $queueForEvents
@@ -1856,7 +1826,7 @@ App::delete('/v1/messaging/topics/:topicId')
     });
 
 App::post('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('Adds a subscriber to a topic.')
+    ->desc('Create a subscriber.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
     ->label('audits.resource', 'subscriber/{response.$id}')
@@ -1869,9 +1839,9 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
-    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Topic ID or a new Topic ID.')
-    ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('subscriberId', '', new CustomId(), 'Subscriber ID. Choose a custom Subscriber ID or a new Subscriber ID.')
+    ->param('topicId', '', new UID(), 'Topic ID. The topic ID to subscribe to.')
+    ->param('targetId', '', new UID(), 'Target ID. The target ID to link to the specified Topic ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -1919,7 +1889,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('List topic\'s subscribers.')
+    ->desc('List subscribers.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -1929,7 +1899,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
     ->inject('dbForProject')
     ->inject('response')
@@ -2050,8 +2020,8 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
-    ->desc('Get a topic\'s subscriber.')
+App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+    ->desc('Get a subscriber.')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2061,7 +2031,7 @@ App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER)
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
     ->inject('response')
@@ -2082,8 +2052,8 @@ App::get('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
-App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
-    ->desc('Delete a subscriber from a topic.')
+App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
+    ->desc('Delete a subscriber.')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
@@ -2096,7 +2066,7 @@ App::delete('/v1/messaging/topics/:topicId/subscriber/:subscriberId')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('topicId', '', new UID(), 'Topic ID.')
+    ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2149,7 +2119,7 @@ App::post('/v1/messaging/messages/email')
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2174,7 +2144,6 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $subject,
         ]));
 
         if ($status === 'processing') {
@@ -2213,7 +2182,7 @@ App::post('/v1/messaging/messages/sms')
     ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2236,7 +2205,6 @@ App::post('/v1/messaging/messages/sms')
                 'content' => $content,
             ],
             'status' => $status,
-            'search' => $messageId . ' ' . $description,
         ]));
 
         if ($status === 'processing') {
@@ -2283,7 +2251,7 @@ App::post('/v1/messaging/messages/push')
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2338,7 +2306,6 @@ App::post('/v1/messaging/messages/push')
             'deliveryTime' => $deliveryTime,
             'data' => $pushData,
             'status' => $status,
-            'search' => $messageId . ' ' . $description . ' ' . $title,
         ]));
 
         if ($status === 'processing') {
@@ -2530,7 +2497,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2583,8 +2550,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('description', $description);
         }
 
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $data['subject'] . ' ' . $message->getAttribute('providerId'));
-
         if (!empty($status)) {
             $message->setAttribute('status', $status);
         }
@@ -2630,7 +2595,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2683,8 +2648,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
 
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $message->getAttribute('providerId'));
-
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
         if ($status === 'processing') {
@@ -2729,7 +2692,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in ISO 8601 format. DateTime value must be in future.', true)
+    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
@@ -2813,8 +2776,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
         if (!is_null($deliveryTime)) {
             $message->setAttribute('deliveryTime', $deliveryTime);
         }
-
-        $message->setAttribute('search', $message->getId() . ' ' . $message->getAttribute('description') . ' ' . $pushData['title'] . ' ' . $message->getAttribute('providerId'));
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 

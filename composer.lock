@@ -1958,7 +1958,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/0.45.1"
             },
-            "time": "2023-11-01T08:30:19+00:00"
+            "time": "2023-11-09T22:39:48+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5822,5 +5822,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.3.0"
 }
