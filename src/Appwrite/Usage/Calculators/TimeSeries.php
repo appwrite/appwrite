@@ -432,13 +432,13 @@ class TimeSeries extends Calculator
                 $document = $database->getDocument('stats', $id);
                 if ($document->isEmpty()) {
                     $database->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'period' => $period,
-                    'time' => $time,
-                    'metric' => $metric,
-                    'value' => $value,
-                    'type' => $type,
-                    'region' => $this->region,
+                        '$id' => $id,
+                        'period' => $period,
+                        'time' => $time,
+                        'metric' => $metric,
+                        'value' => $value,
+                        'type' => $type,
+                        'region' => $this->region,
                     ]));
                 } else {
                     $database->updateDocument(
