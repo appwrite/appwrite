@@ -135,8 +135,8 @@ class Messaging extends Action
         \parse_str($dsn->getQuery(), $geosmsConfig);
 
         foreach ($geosmsConfig as $key => $nestedDSN) {
-            // Extract the calling code in the format of local[callingCode]
-            // e.g. local-1 = twilio://...
+            // Extract the calling code in the format of local-callingCode
+            // e.g. ?local-1=twilio://...
             $matches = [];
             if (\preg_match('/^local-(\d+)$/', $key, $matches) !== 1) {
                 continue;
