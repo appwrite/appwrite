@@ -112,9 +112,9 @@ class DeleteOrphanedProjects extends Action
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
                     }
 
-                        Console::info('--Deleting project no (' . $project->getInternalId() . ')');
+                    Console::info('--Deleting project no (' . $project->getInternalId() . ')');
 
-                        $orphans++;
+                    $orphans++;
                 } catch (\Throwable $th) {
                         Console::error('Error: ' . $th->getMessage());
                 } finally {
