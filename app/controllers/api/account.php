@@ -148,7 +148,20 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerType' => 'email',
+                'identifier' => $email,
+            ])));
+            $user->setAttribute('targets', [$target]);
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -656,7 +669,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $userDoc->getId(),
+                        'userInternalId' => $userDoc->getInternalId(),
+                        'providerType' => 'email',
+                        'identifier' => $email,
+                    ]));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1240,6 +1264,7 @@ App::post('/v1/account/sessions/phone')
             Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
+
         if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -1328,17 +1353,21 @@ App::post('/v1/account/sessions/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$phone]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
         ]);
 
-        if (!$target) {
+        if (!$target || $target->isEmpty()) {
             $target = $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
+                'providerType' => 'sms',
                 'identifier' => $phone,
             ]));
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([
@@ -1995,6 +2024,7 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $oldEmail = $user->getAttribute('email');
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
@@ -2017,6 +2047,23 @@ App::patch('/v1/account/email')
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
         }
 
         try {
@@ -2065,6 +2112,19 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $user->getAttribute('phone'), 'targets');
+
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -2076,6 +2136,10 @@ App::patch('/v1/account/phone')
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
         }
 
         try {
@@ -2904,6 +2968,7 @@ App::post('/v1/account/verification/phone')
             Query::equal('internal', [true]),
             Query::equal('type', ['sms'])
         ]));
+
         if ($provider === false || $provider->isEmpty()) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -2952,17 +3017,21 @@ App::post('/v1/account/verification/phone')
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$user->getAttribute('phone')]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
         ]);
 
-        if (!$target) {
+        if (!$target || $target->isEmpty()) {
             $target = $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
+                'providerType' => 'sms',
                 'identifier' => $user->getAttribute('phone'),
             ]));
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         $messageDoc = $dbForProject->createDocument('messages', new Document([

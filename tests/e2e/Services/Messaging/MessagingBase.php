@@ -317,6 +317,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'targetId' => ID::unique(),
+            'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => 'my-token',
         ]);
@@ -558,6 +559,7 @@ trait MessagingBase
             'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -570,6 +572,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -593,6 +596,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -645,21 +649,6 @@ trait MessagingBase
      */
     public function testUpdateEmail(array $email)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
-            $this->markTestSkipped('Email DSN not provided');
-        }
-
-        $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
-        $to = $emailDSN->getParam('to');
-        $from = $emailDSN->getParam('from');
-        $isEuRegion = $emailDSN->getParam('isEuRegion');
-        $apiKey = $emailDSN->getPassword();
-        $domain = $emailDSN->getUser();
-
-        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
-            $this->markTestSkipped('Email provider not configured');
-        }
-
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $email['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -669,71 +658,6 @@ trait MessagingBase
         // Test failure as the message has already been sent.
         $this->assertEquals(400, $message['headers']['status-code']);
 
-        // Create provider
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'providerId' => ID::unique(),
-            'name' => 'Mailgun-provider-2',
-            'apiKey' => $apiKey,
-            'domain' => $domain,
-            'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
-            'from' => $from
-        ]);
-        $this->assertEquals(201, $provider['headers']['status-code']);
-
-        // Create Topic
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'topicId' => ID::unique(),
-            'name' => 'topic1',
-            'description' => 'Test Topic'
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
-
-        // Create User
-        $user = $this->client->call(Client::METHOD_POST, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'userId' => ID::unique(),
-            'email' => 'random-email@mail.org',
-            'password' => 'password',
-            'name' => 'Messaging User',
-        ]);
-
-        $this->assertEquals(201, $user['headers']['status-code']);
-
-        // Create Target
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'targetId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $to,
-        ]);
-
-        $this->assertEquals(201, $target['headers']['status-code']);
-
-        // Create Subscriber
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
-        ]);
-
-        $this->assertEquals(201, $subscriber['headers']['status-code']);
-
         // Create Email
         $email = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
@@ -742,7 +666,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'topics' => [$topic['body']['$id']],
+            'topics' => [$email['body']['topics'][0]],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
         ]);
@@ -801,6 +725,7 @@ trait MessagingBase
             'authKey' => $authKey,
             'from' => $from
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -813,6 +738,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -836,6 +762,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'sms',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -887,20 +814,6 @@ trait MessagingBase
      */
     public function testUpdateSMS(array $sms)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
-            $this->markTestSkipped('SMS DSN not provided');
-        }
-
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
-        $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
-        $authKey = $smsDSN->getPassword();
-        $senderId = $smsDSN->getUser();
-
-        if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
-            $this->markTestSkipped('SMS provider not configured');
-        }
-
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/sms/' . $sms['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -910,70 +823,6 @@ trait MessagingBase
         // Test failure as the message has already been sent.
         $this->assertEquals(400, $message['headers']['status-code']);
 
-        // Create provider
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/msg91', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'providerId' => ID::unique(),
-            'name' => 'Msg91-2',
-            'senderId' => $senderId,
-            'authKey' => $authKey,
-            'from' => $from
-        ]);
-        $this->assertEquals(201, $provider['headers']['status-code']);
-
-        // Create Topic
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'topicId' => ID::unique(),
-            'name' => 'topic1',
-            'description' => 'Test Topic'
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
-
-        // Create User
-        $user = $this->client->call(Client::METHOD_POST, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'userId' => ID::unique(),
-            'email' => 'random2-email@mail.org',
-            'password' => 'password',
-            'name' => 'Messaging User',
-        ]);
-
-        $this->assertEquals(201, $user['headers']['status-code']);
-
-        // Create Target
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'targetId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $to,
-        ]);
-
-        $this->assertEquals(201, $target['headers']['status-code']);
-
-        // Create Subscriber
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
-        ]);
-
-        $this->assertEquals(201, $subscriber['headers']['status-code']);
-
         // Create SMS
         $sms = $this->client->call(Client::METHOD_POST, '/messaging/messages/sms', [
             'content-type' => 'application/json',
@@ -982,7 +831,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'topics' => [$topic['body']['$id']],
+            'topics' => [$sms['body']['topics'][0]],
             'content' => '047487',
         ]);
 
@@ -1036,6 +885,7 @@ trait MessagingBase
             'name' => 'FCM-1',
             'serverKey' => $serverKey,
         ]);
+
         $this->assertEquals(201, $provider['headers']['status-code']);
 
         // Create Topic
@@ -1048,6 +898,7 @@ trait MessagingBase
             'name' => 'topic1',
             'description' => 'Test Topic'
         ]);
+
         $this->assertEquals(201, $topic['headers']['status-code']);
 
         // Create User
@@ -1071,6 +922,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'targetId' => ID::unique(),
+            'providerType' => 'push',
             'providerId' => $provider['body']['$id'],
             'identifier' => $to,
         ]);
@@ -1123,18 +975,6 @@ trait MessagingBase
      */
     public function testUpdatePushNotification(array $push)
     {
-        if (empty(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'))) {
-            $this->markTestSkipped('Push DSN empty');
-        }
-
-        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
-        $to = $pushDSN->getParam('to');
-        $serverKey = $pushDSN->getPassword();
-
-        if (empty($to) || empty($serverKey)) {
-            $this->markTestSkipped('Push provider not configured');
-        }
-
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/push/' . $push['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1144,68 +984,6 @@ trait MessagingBase
         // Test failure as the message has already been sent.
         $this->assertEquals(400, $message['headers']['status-code']);
 
-        // Create provider
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'providerId' => ID::unique(),
-            'name' => 'FCM-2',
-            'serverKey' => $serverKey,
-        ]);
-        $this->assertEquals(201, $provider['headers']['status-code']);
-
-        // Create Topic
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'topicId' => ID::unique(),
-            'name' => 'topic1',
-            'description' => 'Test Topic'
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
-
-        // Create User
-        $user = $this->client->call(Client::METHOD_POST, '/users', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'userId' => ID::unique(),
-            'email' => 'random4-email@mail.org',
-            'password' => 'password',
-            'name' => 'Messaging User',
-        ]);
-
-        $this->assertEquals(201, $user['headers']['status-code']);
-
-        // Create Target
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'targetId' => ID::unique(),
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $to,
-        ]);
-
-        $this->assertEquals(201, $target['headers']['status-code']);
-
-        // Create Subscriber
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
-        ]);
-
-        $this->assertEquals(201, $subscriber['headers']['status-code']);
-
         // Create push notification
         $push = $this->client->call(Client::METHOD_POST, '/messaging/messages/push', [
             'content-type' => 'application/json',
@@ -1214,7 +992,7 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'status' => 'draft',
-            'topics' => [$topic['body']['$id']],
+            'topics' => [$push['body']['topics'][0]],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
         ]);

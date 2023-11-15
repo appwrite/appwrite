@@ -650,8 +650,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $target = $dbForProject->createDocument('targets', new Document([
                     'userId' => $invitee->getId(),
                     'userInternalId' => $invitee->getInternalId(),
-                    'providerId' => $provider->getId(),
-                    'providerInternalId' => $provider->getInternalId(),
+                    'providerType' => 'sms',
                     'identifier' => $phone,
                 ]));
 

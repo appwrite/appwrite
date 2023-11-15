@@ -394,18 +394,25 @@ App::post('/v1/users/:userId/targets')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('targetId', '', new UID(), 'Target ID.')
-    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('providerType', '', new WhiteList(['email', 'sms', 'push']), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Event $queueForEvents, Response $response, Database $dbForProject) {
-        $provider = $dbForProject->getDocument('providers', $providerId);
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        $provider = new Document();
+
+        if ($providerType === 'push') {
+            $provider = $dbForProject->getDocument('providers', $providerId);
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
         }
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -423,8 +430,9 @@ App::post('/v1/users/:userId/targets')
         try {
             $target = $dbForProject->createDocument('targets', new Document([
                 '$id' => $targetId,
-                'providerId' => $providerId,
-                'providerInternalId' => $provider->getInternalId(),
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getInternalId(),
                 'identifier' => $identifier,
@@ -1223,8 +1231,8 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::patch('/v1/users/:userId/targets/:targetId/identifier')
-    ->desc('Update user target\'s identifier')
+App::patch('/v1/users/:userId/targets/:targetId')
+    ->desc('Update User target')
     ->groups(['api', 'users'])
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/{response.$id}')
@@ -1232,19 +1240,19 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
     ->label('scope', 'targets.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'updateTargetIdentifier')
-    ->label('sdk.description', '/docs/references/users/update-target-identifier.md')
+    ->label('sdk.method', 'updateTarget')
+    ->label('sdk.description', '/docs/references/users/update-target.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
     ->inject('queueForEvents')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, string $identifier, Event $queueForEvents, Response $response, Database $dbForProject) {
-
+    ->action(function (string $userId, string $targetId, string $providerId, string $identifier, Event $queueForEvents, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1261,7 +1269,20 @@ App::patch('/v1/users/:userId/targets/:targetId/identifier')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $target->setAttribute('identifier', $identifier);
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        if ($providerId) {
+            $provider = $dbForProject->getDocument('providers', $providerId);
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+
+            $target->setAttribute('providerId', $provider->getId());
+            $target->setAttribute('providerInternalId', $provider->getInternalId());
+        }
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
         $dbForProject->deleteCachedDocument('users', $user->getId());
