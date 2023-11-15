@@ -814,10 +814,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             if ($provider->getAttribute('internal') === true && $enabled === false) {
                 throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
             }
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
-
             $provider->setAttribute('enabled', $enabled);
         }
 

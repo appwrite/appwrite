@@ -2063,11 +2063,7 @@ App::patch('/v1/account/email')
         $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
         if ($oldTarget !== false && !$oldTarget->isEmpty()) {
-            try {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
-            } catch (Duplicate) {
-                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
-            }
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
         }
 
         try {
@@ -2143,11 +2139,7 @@ App::patch('/v1/account/phone')
         }
 
         if ($oldTarget !== false && !$oldTarget->isEmpty()) {
-            try {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
-            } catch (Duplicate) {
-                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
-            }
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
         }
 
         try {
