@@ -47,15 +47,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Adapters\SMS\Mock;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
-use Utopia\Messaging\Adapters\SMS\GEOSMS;
-use Utopia\Messaging\Adapters\SMS\GEOSMS\CallingCode;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -1330,10 +1322,6 @@ App::setResource('passwordsDictionary', function ($register) {
     return $register->get('passwordsDictionary');
 }, ['register']);
 
-App::setResource('sms', function () {
-    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    return SMSFactory::createFromDSN($dsn);
-});
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
