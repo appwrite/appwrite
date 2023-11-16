@@ -240,6 +240,16 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_EMAIL_ALREADY_VERIFIED => [
+        'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
+        'description' => 'User email is already verified',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_ALREADY_VERIFIED => [
+        'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
+        'description' => 'User phone is already verified',
+        'code' => 409
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -748,5 +758,10 @@ return [
         'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
         'description' => 'Too many messages.',
         'code' => 1013,
+    ],
+    Exception::MIGRATION_PROVIDER_ERROR => [
+        'name' => Exception::MIGRATION_PROVIDER_ERROR,
+        'description' => 'An error occurred on the provider\'s side. Please try again later.',
+        'code' => 400,
     ],
 ];

@@ -1,3 +1,36 @@
+# Version 1.4.12
+
+## Miscellaneous
+* Bump console to version 3.2.7 [#7148](https://github.com/appwrite/appwrite/pull/7148)
+* Chore update database to 0.45.2 [#7138](https://github.com/appwrite/appwrite/pull/7138)
+* Implement queue thresholds for the health API [#7123](https://github.com/appwrite/appwrite/pull/7123)
+* Add Authorization::skip to the usage worker [#7124](https://github.com/appwrite/appwrite/pull/7124)
+
+## Bug fixes
+* fix: use queueForDeletes in git installation delete endpoint [#7140](https://github.com/appwrite/appwrite/pull/7140)
+* fix: patch script, make errors silent [#7134](https://github.com/appwrite/appwrite/pull/7134)
+* fix: repositories recreation script [#7133](https://github.com/appwrite/appwrite/pull/7133)
+* fix: Only delete repositories linked to the particular project [#7131](https://github.com/appwrite/appwrite/pull/7131)
+
+# Version 1.4.11
+
+## Miscellaneous
+
+* Update database by @abnegate in [#7111](https://github.com/appwrite/appwrite/pull/7111)
+
+# Version 1.4.10
+
+## Bug fixes
+* Handle cases where password history could contain NULLs [#7092](https://github.com/appwrite/appwrite/pull/7092)
+* Missing functionId error on create execution [#7091](https://github.com/appwrite/appwrite/pull/7091)
+* Ensure usage endpoints don't throw 500 when usage is disabled [#7087](https://github.com/appwrite/appwrite/pull/7087)
+* Missing sessionId error when deleting all user sessions [#7085](https://github.com/appwrite/appwrite/pull/7085)
+* Domain validation in Create Proxy rule results in 500 error [#7084](https://github.com/appwrite/appwrite/pull/7084)
+* Fix optional services [#7078](https://github.com/appwrite/appwrite/pull/7078)
+* Fix regression from worker refactor [#7074](https://github.com/appwrite/appwrite/pull/7074)
+* Use getQueueSize() in the Health service's get X queue endpoints [#7073](https://github.com/appwrite/appwrite/pull/7073)
+* Delete linked VCS repos and comments [#7066](https://github.com/appwrite/appwrite/pull/7066)
+
 # Version 1.4.9
 
 ## Bug fixes

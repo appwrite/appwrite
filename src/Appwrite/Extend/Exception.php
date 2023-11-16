@@ -84,6 +84,8 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
+    public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -224,6 +226,7 @@ class Exception extends \Exception
     public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
     public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+    public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     /** Realtime */
     public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';

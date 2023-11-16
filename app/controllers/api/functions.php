@@ -242,12 +242,16 @@ App::post('/v1/functions')
 
         // Git connect logic
         if (!empty($providerRepositoryId)) {
+            $teamId = $project->getAttribute('teamId', '');
+
             $repository = $dbForConsole->createDocument('repositories', new Document([
                 '$id' => ID::unique(),
                 '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::team(ID::custom($teamId))),
+                    Permission::update(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::update(Role::team(ID::custom($teamId), 'developer')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'owner')),
+                    Permission::delete(Role::team(ID::custom($teamId), 'developer')),
                 ],
                 'installationId' => $installation->getId(),
                 'installationInternalId' => $installation->getInternalId(),
@@ -1658,6 +1662,8 @@ App::post('/v1/functions/:functionId/executions')
                 ->setJWT($jwt)
                 ->setProject($project)
                 ->setUser($user)
+                ->setParam('functionId', $function->getId())
+                ->setParam('executionId', $execution->getId())
                 ->trigger();
 
             return $response

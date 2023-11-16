@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
@@ -46,17 +45,6 @@ class DeleteOrphanedProjects extends Action
         /** @var array $collections */
         $collectionsConfig = Config::getParam('collections', [])['projects'] ?? [];
 
-        $collectionsConfig = array_merge([
-            'audit' => [
-                '$id' => ID::custom('audit'),
-                '$collection' => Database::METADATA
-            ],
-            'abuse' => [
-                '$id' => ID::custom('abuse'),
-                '$collection' => Database::METADATA
-            ]
-        ], $collectionsConfig);
-
         /* Initialise new Utopia app */
         $app = new App('UTC');
         $console = $app->getResource('console');
@@ -92,7 +80,6 @@ class DeleteOrphanedProjects extends Action
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDefaultDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
-
                     $collectionsCreated = 0;
                     $cnt++;
                     if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
@@ -100,8 +87,10 @@ class DeleteOrphanedProjects extends Action
                     }
 
                     $msg = '(' . $cnt . ') found (' . $collectionsCreated . ') collections on project  (' . $project->getInternalId() . ') , database (' . $project['database'] . ')';
-
-                    if ($collectionsCreated >= count($collectionsConfig)) {
+                    /**
+                     * +2 = audit+abuse
+                     */
+                    if ($collectionsCreated >= (count($collectionsConfig) + 2)) {
                         Console::log($msg . ' ignoring....');
                         continue;
                     }
@@ -118,7 +107,6 @@ class DeleteOrphanedProjects extends Action
                             Console::info('--Deleting collection  (' . $collection->getId() . ') project no (' . $project->getInternalId() . ')');
                         }
                     }
-
                     if ($commit) {
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
@@ -128,7 +116,7 @@ class DeleteOrphanedProjects extends Action
 
                     $orphans++;
                 } catch (\Throwable $th) {
-                        Console::error('Error: ' . $th->getMessage() . ' ' . $th->getTraceAsString());
+                        Console::error('Error: ' . $th->getMessage());
                 } finally {
                     $pools
                         ->get($db)
@@ -147,6 +135,6 @@ class DeleteOrphanedProjects extends Action
             $count = $count + $sum;
         }
 
-        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects found ' . $orphans . ' orphans');
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects found ' . $orphans  . ' orphans');
     }
 }
