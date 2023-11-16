@@ -122,6 +122,15 @@ class DeleteOrphanedProjects extends Action
                     if ($commit) {
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+                        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                            try {
+                                $dbForProject->deleteCollection(Database::METADATA);
+                                $dbForProject->deleteCachedCollection(Database::METADATA);
+                            } catch (\Throwable $th) {
+                                Console::warning('Metadata collection does not exist');
+                            }
+                        }
                     }
 
                     Console::info('--Deleting project no (' . $project->getInternalId() . ')');
