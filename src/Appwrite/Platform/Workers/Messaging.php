@@ -152,8 +152,8 @@ class Messaging extends Action
             if ($adapter === null) {
                 Console::warning('Ignoring unknown GEOSMS local adapter: ' . $dsn->getHost());
                 continue;
-            } 
-            
+            }
+
             $geosms->setLocal($callingCodeMatches[1], $adapter);
         }
 
