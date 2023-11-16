@@ -94,7 +94,7 @@ class Messaging extends Action
         }
     }
 
-    protected static function createAdapterFromDSN(DSN $dsn): ?SMSAdapter
+    protected static function createAdapterFromDSN(DSN $dsn): SMSAdapter
     {
         switch ($dsn->getHost()) {
             case 'mock':
@@ -118,14 +118,14 @@ class Messaging extends Action
             case 'geosms':
                 return self::createGEOSMSAdapter($dsn);
             default:
-                return null;
+                throw new \Exception('Unknown SMS adapter: ' . $dsn->getHost());
         }
     }
 
     protected static function createGEOSMSAdapter(DSN $dsn): GEOSMS
     {
-        $defaultDSN = new DSN($dsn->getParam('default', ''));
-        $geosms = new GEOSMS(self::createAdapterFromDSN($defaultDSN));
+        $defaultAdapter = self::createAdapterFromDSN(new DSN($dsn->getParam('default', '')));
+        $geosms = new GEOSMS($defaultAdapter);
 
         $parameters = [];
         \parse_str($dsn->getQuery(), $parameters);
@@ -148,13 +148,12 @@ class Messaging extends Action
                 continue;
             }
 
-            $adapter = self::createAdapterFromDSN($dsn);
-            if ($adapter === null) {
-                Console::warning('Ignoring unknown GEOSMS local adapter: ' . $dsn->getHost());
-                continue;
+            try {
+                $adapter = self::createAdapterFromDSN($dsn);
+                $geosms->setLocal($callingCodeMatches[1], $adapter);
+            } catch (\Exception $e) {
+                Console::warning('Ignoring invalid GEOSMS adapter: ' . $dsn->getHost());
             }
-
-            $geosms->setLocal($callingCodeMatches[1], $adapter);
         }
 
         return $geosms;
