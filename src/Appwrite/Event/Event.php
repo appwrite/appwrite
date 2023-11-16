@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Event
 {
@@ -23,6 +24,9 @@ class Event
     public const FUNCTIONS_QUEUE_NAME = 'v1-functions';
     public const FUNCTIONS_CLASS_NAME = 'FunctionsV1';
 
+    public const USAGE_QUEUE_NAME = 'v1-usage';
+    public const USAGE_CLASS_NAME = 'UsageV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -35,6 +39,9 @@ class Event
     public const MESSAGING_QUEUE_NAME = 'v1-messaging';
     public const MESSAGING_CLASS_NAME = 'MessagingV1';
 
+    public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
+    public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
@@ -43,16 +50,14 @@ class Event
     protected array $context = [];
     protected ?Document $project = null;
     protected ?Document $user = null;
+    protected bool $paused = false;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param Connection $connection
      * @return void
      */
-    public function __construct(string $queue, string $class)
+    public function __construct(protected Connection $connection)
     {
-        $this->queue = $queue;
-        $this->class = $class;
     }
 
     /**
@@ -260,7 +265,13 @@ class Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        if ($this->paused) {
+            return false;
+        }
+
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,
@@ -464,5 +475,23 @@ class Event
          * Force a non-assoc array.
          */
         return \array_values($events);
+    }
+
+    /**
+     * Get the value of paused
+     */
+    public function isPaused(): bool
+    {
+        return $this->paused;
+    }
+
+    /**
+     * Set the value of paused
+     */
+    public function setPaused(bool $paused): self
+    {
+        $this->paused = $paused;
+
+        return $this;
     }
 }

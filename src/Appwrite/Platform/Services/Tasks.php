@@ -8,16 +8,18 @@ use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\Schedule;
-use Appwrite\Platform\Tasks\PatchCreateMissingSchedules;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
-use Appwrite\Platform\Tasks\PatchDeleteScheduleUpdatedAtAttribute;
 use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
+use Appwrite\Platform\Tasks\CalcTierStats;
+use Appwrite\Platform\Tasks\Upgrade;
+use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
+use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
 
 class Tasks extends Service
 {
@@ -32,13 +34,17 @@ class Tasks extends Service
             ->addAction(Hamster::getName(), new Hamster())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
+            ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Maintenance::getName(), new Maintenance())
-            ->addAction(PatchCreateMissingSchedules::getName(), new PatchCreateMissingSchedules())
-            ->addAction(PatchDeleteScheduleUpdatedAtAttribute::getName(), new PatchDeleteScheduleUpdatedAtAttribute())
             ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(Specs::getName(), new Specs());
+            ->addAction(Specs::getName(), new Specs())
+            ->addAction(CalcTierStats::getName(), new CalcTierStats())
+            ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
+            ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
+
+        ;
     }
 }

@@ -4,7 +4,7 @@ namespace Tests\Unit\Network\Validators;
 
 use Appwrite\Network\Validator\Origin;
 use PHPUnit\Framework\TestCase;
-use Utopia\Database\ID;
+use Utopia\Database\Helpers\ID;
 
 class OriginTest extends TestCase
 {
@@ -14,20 +14,26 @@ class OriginTest extends TestCase
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Production',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'appwrite.io',
             ],
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Development',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'appwrite.test',
             ],
             [
                 '$collection' => ID::custom('platforms'),
                 'name' => 'Localhost',
-                'type' => 'web',
+                'type' => Origin::CLIENT_TYPE_WEB,
                 'hostname' => 'localhost',
+            ],
+            [
+                '$collection' => ID::custom('platforms'),
+                'name' => 'Flutter',
+                'type' => Origin::CLIENT_TYPE_FLUTTER_WEB,
+                'hostname' => 'appwrite.flutter',
             ],
         ]);
 
@@ -42,6 +48,10 @@ class OriginTest extends TestCase
         $this->assertEquals($validator->isValid('https://appwrite.test'), true);
         $this->assertEquals($validator->isValid('http://appwrite.test'), true);
         $this->assertEquals($validator->isValid('http://appwrite.test:80'), true);
+
+        $this->assertEquals($validator->isValid('https://appwrite.flutter'), true);
+        $this->assertEquals($validator->isValid('http://appwrite.flutter'), true);
+        $this->assertEquals($validator->isValid('http://appwrite.flutter:80'), true);
 
         $this->assertEquals($validator->isValid('https://example.com'), false);
         $this->assertEquals($validator->isValid('http://example.com'), false);

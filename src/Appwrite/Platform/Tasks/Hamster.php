@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Network\Validator\Origin;
 use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
@@ -12,6 +13,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event;
+use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Pools\Group;
 
@@ -95,11 +97,54 @@ class Hamster extends Action
                 /** Get Project Name */
                 $statsPerProject['project_name'] = $project->getAttribute('name');
 
+                /** Total Project Variables */
+                $statsPerProject['custom_variables'] = $dbForProject->count('variables', [], APP_LIMIT_COUNT);
+
+                /** Total Migrations */
+                $statsPerProject['custom_migrations'] = $dbForProject->count('migrations', [], APP_LIMIT_COUNT);
+
+                /** Get Custom SMTP */
+                $smtp = $project->getAttribute('smtp', null);
+                if ($smtp) {
+                    $statsPerProject['custom_smtp_status'] = $smtp['enabled'] === true ? 'enabled' : 'disabled';
+
+                    /** Get Custom Templates Count */
+                    $templates = array_keys($project->getAttribute('templates', []));
+                    $statsPerProject['custom_email_templates'] = array_filter($templates, function ($template) {
+                        return str_contains($template, 'email');
+                    });
+                    $statsPerProject['custom_sms_templates'] = array_filter($templates, function ($template) {
+                        return str_contains($template, 'sms');
+                    });
+                }
+
+                /** Get total relationship attributes */
+                $statsPerProject['custom_relationship_attributes'] = $dbForProject->count('attributes', [
+                    Query::equal('type', ['relationship'])
+                ], APP_LIMIT_COUNT);
+
                 /** Get Total Functions */
                 $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
 
+                foreach (\array_keys(Config::getParam('runtimes')) as $runtime) {
+                    $statsPerProject['custom_functions_' . $runtime] = $dbForProject->count('functions', [
+                        Query::equal('runtime', [$runtime]),
+                    ], APP_LIMIT_COUNT);
+                }
+
                 /** Get Total Deployments */
                 $statsPerProject['custom_deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_deployments_manual'] = $dbForProject->count('deployments', [
+                    Query::equal('type', ['manual'])
+                ], APP_LIMIT_COUNT);
+                $statsPerProject['custom_deployments_git'] = $dbForProject->count('deployments', [
+                    Query::equal('type', ['vcs'])
+                ], APP_LIMIT_COUNT);
+
+                /** Get VCS repos connected */
+                $statsPerProject['custom_vcs_repositories'] = $dbForConsole->count('repositories', [
+                    Query::equal('projectInternalId', [$project->getInternalId()])
+                ], APP_LIMIT_COUNT);
 
                 /** Get Total Teams */
                 $statsPerProject['custom_teams'] = $dbForProject->count('teams', [], APP_LIMIT_COUNT);
@@ -124,19 +169,19 @@ class Hamster extends Action
                         throw new Exception('Membership not found. Skipping project : ' . $project->getId());
                     }
 
-                    $userInternalId = $membership->getAttribute('userInternalId', null);
-                    if ($userInternalId) {
-                        $user = $dbForConsole->findOne('users', [
-                            Query::equal('_id', [$userInternalId]),
-                        ]);
-
+                    $userId = $membership->getAttribute('userId', null);
+                    if ($userId) {
+                        $user = $dbForConsole->getDocument('users', $userId);
                         $statsPerProject['email'] = $user->getAttribute('email', null);
                         $statsPerProject['name'] = $user->getAttribute('name', null);
                     }
                 }
 
                 /** Get Domains */
-                $statsPerProject['custom_domains'] = $dbForProject->count('domains', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
+                    Query::equal('projectInternalId', [$project->getInternalId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
 
                 /** Get Platforms */
                 $platforms = $dbForConsole->find('platforms', [
@@ -152,13 +197,26 @@ class Hamster extends Action
                     return $platform['type'] === 'android';
                 }));
 
-                $statsPerProject['custom_platforms_iOS'] = sizeof(array_filter($platforms, function ($platform) {
+                $statsPerProject['custom_platforms_apple'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'apple');
                 }));
 
                 $statsPerProject['custom_platforms_flutter'] = sizeof(array_filter($platforms, function ($platform) {
                     return str_contains($platform['type'], 'flutter');
                 }));
+
+                $flutterPlatforms = [Origin::CLIENT_TYPE_FLUTTER_ANDROID, Origin::CLIENT_TYPE_FLUTTER_IOS, Origin::CLIENT_TYPE_FLUTTER_MACOS, Origin::CLIENT_TYPE_FLUTTER_WINDOWS, Origin::CLIENT_TYPE_FLUTTER_LINUX];
+
+                foreach ($flutterPlatforms as $flutterPlatform) {
+                    $statsPerProject['custom_platforms_' . $flutterPlatform] = sizeof(array_filter($platforms, function ($platform) use ($flutterPlatform) {
+                        return $platform['type'] === $flutterPlatform;
+                    }));
+                }
+
+                $statsPerProject['custom_platforms_api_keys'] = $dbForConsole->count('keys', [
+                    Query::equal('projectInternalId', [$project->getInternalId()]),
+                    Query::limit(APP_LIMIT_COUNT)
+                ]);
 
                 /** Get Usage $statsPerProject */
                 $periods = [
@@ -210,15 +268,16 @@ class Hamster extends Action
                     if (!$res) {
                         Console::error('Failed to create user profile for project: ' . $project->getId());
                     }
+                }
 
-                    $event = new Event();
-                    $event
-                        ->setName('Project Daily Usage')
-                        ->setProps($statsPerProject);
-                    $res = $this->mixpanel->createEvent($event);
-                    if (!$res) {
-                        Console::error('Failed to create event for project: ' . $project->getId());
-                    }
+                $event = new Event();
+                $event
+                    ->setName('Project Daily Usage')
+                    ->setProps($statsPerProject);
+                $res = $this->mixpanel->createEvent($event);
+
+                if (!$res) {
+                    Console::error('Failed to create event for project: ' . $project->getId());
                 }
             } catch (Exception $e) {
                 Console::error('Failed to send stats for project: ' . $project->getId());
@@ -338,12 +397,9 @@ class Hamster extends Action
                     throw new Exception('Membership not found. Skipping organization : ' . $document->getId());
                 }
 
-                $userInternalId = $membership->getAttribute('userInternalId', null);
-                if ($userInternalId) {
-                    $user = $dbForConsole->findOne('users', [
-                        Query::equal('_id', [$userInternalId]),
-                    ]);
-
+                $userId = $membership->getAttribute('userId', null);
+                if ($userId) {
+                    $user = $dbForConsole->getDocument('users', $userId);
                     $statsPerOrganization['email'] = $user->getAttribute('email', null);
                 }
 

@@ -86,12 +86,22 @@ return [
     Exception::GENERAL_PROTOCOL_UNSUPPORTED => [
         'name' => Exception::GENERAL_PROTOCOL_UNSUPPORTED,
         'description' => 'The request cannot be fulfilled with the current protocol. Please check the value of the _APP_OPTIONS_FORCE_HTTPS environment variable.',
-        'code' => 500,
+        'code' => 426,
     ],
     Exception::GENERAL_CODES_DISABLED => [
         'name' => Exception::GENERAL_CODES_DISABLED,
         'description' => 'Invitation codes are disabled on this server. Please contact the server administrator.',
         'code' => 500,
+    ],
+    Exception::GENERAL_USAGE_DISABLED => [
+        'name' => Exception::GENERAL_USAGE_DISABLED,
+        'description' => 'Usage stats is not configured. Please check the value of the _APP_USAGE_STATS environment variable of your Appwrite server.',
+        'code' => 501,
+    ],
+    Exception::GENERAL_NOT_IMPLEMENTED => [
+        'name' => Exception::GENERAL_NOT_IMPLEMENTED,
+        'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
+        'code' => 405,
     ],
 
     /** User Errors */
@@ -107,12 +117,12 @@ return [
     ],
     Exception::USER_ALREADY_EXISTS => [
         'name' => Exception::USER_ALREADY_EXISTS,
-        'description' => 'A user with the same email already exists in your project.',
+        'description' => 'A user with the same id, email, or phone already exists in this project.',
         'code' => 409,
     ],
     Exception::USER_BLOCKED => [
         'name' => Exception::USER_BLOCKED,
-        'description' => 'The current user has been blocked. You can unblock the user from the Appwrite console.',
+        'description' => 'The current user has been blocked. You can unblock the user by making a request to the User API\'s "Update User Status" endpoint or in the Appwrite Console\'s Auth section.',
         'code' => 401,
     ],
     Exception::USER_INVALID_TOKEN => [
@@ -170,9 +180,24 @@ return [
         'description' => 'Passwords do not match. Please check the password and confirm password.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_RECENTLY_USED => [
+        'name' => Exception::USER_PASSWORD_RECENTLY_USED,
+        'description' => 'The password you are trying to use is similar to your previous password. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
+    Exception::USER_PASSWORD_PERSONAL_DATA => [
+        'name' => Exception::USER_PASSWORD_PERSONAL_DATA,
+        'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_IDENTITY_NOT_FOUND => [
+        'name' => Exception::USER_IDENTITY_NOT_FOUND,
+        'description' => 'The identity could not be found. Please sign in with OAuth provider to create identity first.',
         'code' => 404,
     ],
     Exception::USER_UNAUTHORIZED => [
@@ -200,6 +225,31 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::USER_OAUTH2_BAD_REQUEST => [
+        'name' => Exception::USER_OAUTH2_BAD_REQUEST,
+        'description' => 'OAuth2 provider rejected the bad request.',
+        'code' => 400,
+    ],
+    Exception::USER_OAUTH2_UNAUTHORIZED => [
+        'name' => Exception::USER_OAUTH2_UNAUTHORIZED,
+        'description' => 'OAuth2 provider rejected the unauthorized request.',
+        'code' => 401,
+    ],
+    Exception::USER_OAUTH2_PROVIDER_ERROR => [
+        'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
+        'description' => 'OAuth2 provider returned some error.',
+        'code' => 424,
+    ],
+    Exception::USER_EMAIL_ALREADY_VERIFIED => [
+        'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
+        'description' => 'User email is already verified',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_ALREADY_VERIFIED => [
+        'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
+        'description' => 'User phone is already verified',
+        'code' => 409
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [
@@ -219,7 +269,7 @@ return [
     ],
     Exception::TEAM_INVALID_SECRET => [
         'name' => Exception::TEAM_INVALID_SECRET,
-        'description' => 'The team invitation secret is invalid.',
+        'description' => 'The team invitation secret is invalid. Please request  a new invitation and try again.',
         'code' => 401,
     ],
     Exception::TEAM_MEMBERSHIP_MISMATCH => [
@@ -232,6 +282,11 @@ return [
         'description' => 'The invite does not belong to the current user.',
         'code' => 401,
     ],
+    Exception::TEAM_ALREADY_EXISTS => [
+        'name' => Exception::TEAM_ALREADY_EXISTS,
+        'description' => 'Team with requested ID already exists. Please choose a different ID and try again.',
+        'code' => 409,
+    ],
 
     /** Membership */
     Exception::MEMBERSHIP_NOT_FOUND => [
@@ -241,7 +296,7 @@ return [
     ],
     Exception::MEMBERSHIP_ALREADY_CONFIRMED => [
         'name' => Exception::MEMBERSHIP_ALREADY_CONFIRMED,
-        'description' => 'Membership already confirmed',
+        'description' => 'Membership is already confirmed.',
         'code' => 409,
     ],
 
@@ -273,6 +328,11 @@ return [
     ],
 
     /** Storage */
+    Exception::STORAGE_FILE_ALREADY_EXISTS => [
+        'name' => Exception::STORAGE_FILE_ALREADY_EXISTS,
+        'description' => 'A storage file with the requested ID already exists.',
+        'code' => 409,
+    ],
     Exception::STORAGE_FILE_NOT_FOUND => [
         'name' => Exception::STORAGE_FILE_NOT_FOUND,
         'description' => 'The requested file could not be found.',
@@ -305,7 +365,7 @@ return [
     ],
     Exception::STORAGE_BUCKET_ALREADY_EXISTS => [
         'name' => Exception::STORAGE_BUCKET_ALREADY_EXISTS,
-        'description' => 'A storage bucket with the requested ID already exists.',
+        'description' => 'A storage bucket with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::STORAGE_BUCKET_NOT_FOUND => [
@@ -323,6 +383,38 @@ return [
         'description' => 'The requested range is not satisfiable. Please check the value of the Range header.',
         'code' => 416,
     ],
+    Exception::STORAGE_INVALID_APPWRITE_ID => [
+        'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
+        'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is a valid id and not unique().',
+        'code' => 400,
+    ],
+
+    /** VCS */
+    Exception::INSTALLATION_NOT_FOUND => [
+        'name' => Exception::INSTALLATION_NOT_FOUND,
+        'description' => 'Installation with the requested ID could not be found. Check to see if the ID is correct, or create the installation.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_REPOSITORY_NOT_FOUND => [
+        'name' => Exception::PROVIDER_REPOSITORY_NOT_FOUND,
+        'description' => 'VCS (Version Control System) repository with the requested ID could not be found. Check to see if the ID is correct, and if it belongs to installationId you provided.',
+        'code' => 404,
+    ],
+    Exception::REPOSITORY_NOT_FOUND => [
+        'name' => Exception::REPOSITORY_NOT_FOUND,
+        'description' => 'Repository with the requested ID could not be found. Check to see if the ID is correct, or create the respository.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_CONTRIBUTION_CONFLICT => [
+        'name' => Exception::PROVIDER_CONTRIBUTION_CONFLICT,
+        'description' => 'External contribution is already authorized.',
+        'code' => 409,
+    ],
+    Exception::GENERAL_PROVIDER_FAILURE => [
+        'name' => Exception::GENERAL_PROVIDER_FAILURE,
+        'description' => 'VCS (Version Control System) provider failed to proccess the request. We believe this is an error with the VCS provider. Try again, or contact support for more information.',
+        'code' => 400,
+    ],
 
     /** Functions  */
     Exception::FUNCTION_NOT_FOUND => [
@@ -333,6 +425,11 @@ return [
     Exception::FUNCTION_RUNTIME_UNSUPPORTED => [
         'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
         'description' => 'The requested runtime is either inactive or unsupported. Please check the value of the _APP_FUNCTIONS_RUNTIMES environment variable.',
+        'code' => 404,
+    ],
+    Exception::FUNCTION_ENTRYPOINT_MISSING => [
+        'name' => Exception::FUNCTION_RUNTIME_UNSUPPORTED,
+        'description' => 'Entrypoint for your Appwrite Function is missing. Please specify it when making deployment or update the entrypoint under your function\'s "Settings" > "Configuration" > "Entrypoint".',
         'code' => 404,
     ],
 
@@ -373,11 +470,15 @@ return [
         'description' => 'Database not found',
         'code' => 404
     ],
-
     Exception::DATABASE_ALREADY_EXISTS => [
         'name' => Exception::DATABASE_ALREADY_EXISTS,
         'description' => 'Database already exists',
         'code' => 409
+    ],
+    Exception::DATABASE_TIMEOUT => [
+        'name' => Exception::DATABASE_TIMEOUT,
+        'description' => 'Database timed out. Try adjusting your queries or adding an index.',
+        'code' => 408
     ],
 
     /** Collections */
@@ -388,7 +489,7 @@ return [
     ],
     Exception::COLLECTION_ALREADY_EXISTS => [
         'name' => Exception::COLLECTION_ALREADY_EXISTS,
-        'description' => 'A collection with the requested ID already exists.',
+        'description' => 'A collection with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
     Exception::COLLECTION_LIMIT_EXCEEDED => [
@@ -408,15 +509,30 @@ return [
         'description' => 'The document structure is invalid. Please ensure the attributes match the collection definition.',
         'code' => 400,
     ],
+    Exception::DOCUMENT_MISSING_DATA => [
+        'name' => Exception::DOCUMENT_MISSING_DATA,
+        'description' => 'The document data is missing. Try again with document data populated',
+        'code' => 400,
+    ],
     Exception::DOCUMENT_MISSING_PAYLOAD => [
         'name' => Exception::DOCUMENT_MISSING_PAYLOAD,
-        'description' => 'The document payload is missing.',
+        'description' => 'The document data and permissions are missing. You must provide either document data or permissions to be updated.',
         'code' => 400,
     ],
     Exception::DOCUMENT_ALREADY_EXISTS => [
         'name' => Exception::DOCUMENT_ALREADY_EXISTS,
-        'description' => 'Document with the requested ID already exists.',
+        'description' => 'Document with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
+    ],
+    Exception::DOCUMENT_UPDATE_CONFLICT => [
+        'name' => Exception::DOCUMENT_UPDATE_CONFLICT,
+        'description' => 'Remote document is newer than local.',
+        'code' => 409,
+    ],
+    Exception::DOCUMENT_DELETE_RESTRICTED => [
+        'name' => Exception::DOCUMENT_DELETE_RESTRICTED,
+        'description' => 'Document cannot be deleted because it is referenced by another document.',
+        'code' => 403,
     ],
 
     /** Attributes */
@@ -427,12 +543,12 @@ return [
     ],
     Exception::ATTRIBUTE_UNKNOWN => [
         'name' => Exception::ATTRIBUTE_UNKNOWN,
-        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the <span class="tag">available</span> state.',
+        'description' => 'The attribute required for the index could not be found. Please confirm all your attributes are in the available state.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_NOT_AVAILABLE => [
         'name' => Exception::ATTRIBUTE_NOT_AVAILABLE,
-        'description' => 'The requested attribute is not yet <span class="tag">available</span>. Please try again later.',
+        'description' => 'The requested attribute is not yet available. Please try again later.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_FORMAT_UNSUPPORTED => [
@@ -442,12 +558,12 @@ return [
     ],
     Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED => [
         'name' => Exception::ATTRIBUTE_DEFAULT_UNSUPPORTED,
-        'description' => 'Default values cannot be set for <span class="tag">array</span> and <span class="tag">required</span> attributes.',
+        'description' => 'Default values cannot be set for array or required attributes.',
         'code' => 400,
     ],
     Exception::ATTRIBUTE_ALREADY_EXISTS => [
         'name' => Exception::ATTRIBUTE_ALREADY_EXISTS,
-        'description' => 'Attribute with the requested ID already exists.',
+        'description' => 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.',
         'code' => 409,
     ],
     Exception::ATTRIBUTE_LIMIT_EXCEEDED => [
@@ -458,6 +574,11 @@ return [
     Exception::ATTRIBUTE_VALUE_INVALID => [
         'name' => Exception::ATTRIBUTE_VALUE_INVALID,
         'description' => 'The attribute value is invalid. Please check the type, range and value of the attribute.',
+        'code' => 400,
+    ],
+    Exception::ATTRIBUTE_TYPE_INVALID => [
+        'name' => Exception::ATTRIBUTE_TYPE_INVALID,
+        'description' => 'The attribute type is invalid.',
         'code' => 400,
     ],
 
@@ -474,8 +595,13 @@ return [
     ],
     Exception::INDEX_ALREADY_EXISTS => [
         'name' => Exception::INDEX_ALREADY_EXISTS,
-        'description' => 'Index with the requested ID already exists.',
+        'description' => 'Index with the requested key already exists. Try again with a different key.',
         'code' => 409,
+    ],
+    Exception::INDEX_INVALID => [
+        'name' => Exception::INDEX_INVALID,
+        'description' => 'Index invalid.',
+        'code' => 400,
     ],
 
     /** Project Errors */
@@ -483,6 +609,11 @@ return [
         'name' => Exception::PROJECT_NOT_FOUND,
         'description' => 'Project with the requested ID could not be found. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
         'code' => 404,
+    ],
+    Exception::PROJECT_ALREADY_EXISTS => [
+        'name' => Exception::PROJECT_ALREADY_EXISTS,
+        'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
+        'code' => 409,
     ],
     Exception::PROJECT_UNKNOWN => [
         'name' => Exception::PROJECT_UNKNOWN,
@@ -519,6 +650,46 @@ return [
         'description' => 'The project key has expired. Please generate a new key using the Appwrite console.',
         'code' => 401,
     ],
+    Exception::ROUTER_HOST_NOT_FOUND => [
+        'name' => Exception::ROUTER_HOST_NOT_FOUND,
+        'description' => 'Host is not trusted. This could occur because you have not configured a custom domain. Add a custom domain to your project first and try again.',
+        'code' => 404,
+    ],
+    Exception::ROUTER_DOMAIN_NOT_CONFIGURED => [
+        'name' => Exception::ROUTER_DOMAIN_NOT_CONFIGURED,
+        'description' => '_APP_DOMAIN, _APP_DOMAIN_TARGET, and _APP_DOMAIN_FUNCTIONS environment variables have not been configured. Please configure the domain environment variables before accessing the Appwrite Console via any IP address or hostname other than localhost. This value could be an IP like 203.0.113.0 or a hostname like example.com.',
+        'code' => 500,
+    ],
+    Exception::RULE_RESOURCE_NOT_FOUND => [
+        'name' => Exception::RULE_RESOURCE_NOT_FOUND,
+        'description' => 'Resource could not be found. Please check if the resourceId and resourceType are correct, or if the resource actually exists.',
+        'code' => 404,
+    ],
+    Exception::RULE_NOT_FOUND => [
+        'name' => Exception::RULE_NOT_FOUND,
+        'description' => 'Rule with the requested ID could not be found. Please check if the ID provided is correct or if the rule actually exists.',
+        'code' => 404,
+    ],
+    Exception::RULE_ALREADY_EXISTS => [
+        'name' => Exception::RULE_ALREADY_EXISTS,
+        'description' => 'Domain is already used. Please try again with a different domain.',
+        'code' => 409,
+    ],
+    Exception::RULE_VERIFICATION_FAILED => [
+        'name' => Exception::RULE_VERIFICATION_FAILED,
+        'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
+        'code' => 401,
+    ],
+    Exception::PROJECT_SMTP_CONFIG_INVALID => [
+        'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
+        'description' => 'Provided SMTP config is invalid. Please check the configured values and try again.',
+        'code' => 400,
+    ],
+    Exception::PROJECT_TEMPLATE_DEFAULT_DELETION => [
+        'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
+        'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
+        'code' => 401,
+    ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
         'description' => 'Webhook with the requested ID could not be found.',
@@ -534,16 +705,6 @@ return [
         'description' => 'Platform with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::DOMAIN_NOT_FOUND => [
-        'name' => Exception::DOMAIN_NOT_FOUND,
-        'description' => 'Domain with the requested ID could not be found.',
-        'code' => 404,
-    ],
-    Exception::DOMAIN_ALREADY_EXISTS => [
-        'name' => Exception::DOMAIN_ALREADY_EXISTS,
-        'description' => 'A Domain with the requested ID already exists.',
-        'code' => 409,
-    ],
     Exception::VARIABLE_NOT_FOUND => [
         'name' => Exception::VARIABLE_NOT_FOUND,
         'description' => 'Variable with the requested ID could not be found.',
@@ -551,12 +712,56 @@ return [
     ],
     Exception::VARIABLE_ALREADY_EXISTS => [
         'name' => Exception::VARIABLE_ALREADY_EXISTS,
-        'description' => 'Variable with the same ID already exists in your project.',
+        'description' => 'Variable with the same ID already exists in this project. Try again with a different ID.',
         'code' => 409,
     ],
-    Exception::DOMAIN_VERIFICATION_FAILED => [
-        'name' => Exception::DOMAIN_VERIFICATION_FAILED,
-        'description' => 'Domain verification for the requested domain has failed.',
-        'code' => 401,
+    Exception::GRAPHQL_NO_QUERY => [
+        'name' => Exception::GRAPHQL_NO_QUERY,
+        'description' => 'Param "query" is not optional.',
+        'code' => 400,
+    ],
+    Exception::GRAPHQL_TOO_MANY_QUERIES => [
+        'name' => Exception::GRAPHQL_TOO_MANY_QUERIES,
+        'description' => 'Too many queries.',
+        'code' => 400,
+    ],
+
+    /** Migrations */
+    Exception::MIGRATION_NOT_FOUND => [
+        'name' => Exception::MIGRATION_NOT_FOUND,
+        'description' => 'Migration with the requested ID could not be found. Please verify that the provided ID is correct and try again.',
+        'code' => 404,
+    ],
+    Exception::MIGRATION_ALREADY_EXISTS => [
+        'name' => Exception::MIGRATION_ALREADY_EXISTS,
+        'description' => 'Migration with the requested ID already exists. Try again with a different ID.',
+        'code' => 409,
+    ],
+    Exception::MIGRATION_IN_PROGRESS => [
+        'name' => Exception::MIGRATION_IN_PROGRESS,
+        'description' => 'Migration is already in progress. You can check the status of the migration in your Appwrite Console\'s "Settings" > "Migrations".',
+        'code' => 409,
+    ],
+
+    /** Realtime */
+    Exception::REALTIME_MESSAGE_FORMAT_INVALID => [
+        'name' => Exception::REALTIME_MESSAGE_FORMAT_INVALID,
+        'description' => 'Message format is not valid.',
+        'code' => 1003,
+    ],
+    Exception::REALTIME_POLICY_VIOLATION => [
+        'name' => Exception::REALTIME_POLICY_VIOLATION,
+        'description' => 'Policy violation.',
+        'code' => 1008,
+    ],
+    Exception::REALTIME_TOO_MANY_MESSAGES => [
+        'name' => Exception::REALTIME_TOO_MANY_MESSAGES,
+        'description' => 'Too many messages.',
+        'code' => 1013,
+    ],
+    Exception::MIGRATION_PROVIDER_ERROR => [
+        'name' => Exception::MIGRATION_PROVIDER_ERROR,
+        'description' => 'An error occurred on the provider\'s side. Please try again later.',
+        'code' => 400,
     ],
 ];
