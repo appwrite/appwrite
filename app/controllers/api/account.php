@@ -1677,6 +1677,81 @@ App::post('/v1/account/jwt')
         ])]), Response::MODEL_JWT);
     });
 
+App::post('/v1/account/targets/push')
+    ->desc('Create Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $providerId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                ],
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  'push',
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
@@ -3076,4 +3151,62 @@ App::put('/v1/account/verification/phone')
         ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+    });
+
+App::put('/v1/account/targets/:targetId/push')
+    ->desc('Update Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
     });
