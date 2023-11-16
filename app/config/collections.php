@@ -1879,7 +1879,7 @@ $commonCollections = [
                 'required' => false,
                 'default' => null,
                 'array' => false,
-                'filters' => [''],
+                'filters' => [],
             ],
         ],
         'indexes' => [
