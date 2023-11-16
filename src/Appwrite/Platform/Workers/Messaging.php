@@ -73,7 +73,7 @@ class Messaging extends Action
             return;
         }
 
-        $sms = self::createFromDSN($this->dsn);
+        $sms = self::createAdapterFromDSN($this->dsn);
         $from = App::getEnv('_APP_SMS_FROM');
 
         if (empty($from)) {
@@ -94,63 +94,67 @@ class Messaging extends Action
         }
     }
 
-    protected static function createFromDSN(DSN $dsn): SMSAdapter
+    protected static function createAdapterFromDSN(DSN $dsn): ?SMSAdapter
     {
-        $adapter = null;
-
         switch ($dsn->getHost()) {
             case 'mock':
-                $adapter = new Mock($dsn->getUser(), $dsn->getPassword());
-                break;
+                return new Mock($dsn->getUser(), $dsn->getPassword());
             case 'msg91':
                 $adapter = new Msg91($dsn->getUser(), $dsn->getPassword());
-                $adapter->setTemplate($dsn->getParam('template', ''));
-                break;
+                $template = $dsn->getParam('template', App::getEnv('_APP_SMS_FROM', ''));
+                if (!empty($template)) {
+                    $adapter->setTemplate($template);
+                }
+                return $adapter;
             case 'telesign':
-                $adapter = new Telesign($dsn->getUser(), $dsn->getPassword());
-                break;
+                return new Telesign($dsn->getUser(), $dsn->getPassword());
             case 'textmagic':
-                $adapter = new TextMagic($dsn->getUser(), $dsn->getPassword());
-                break;
+            case 'text-magic':
+                return new TextMagic($dsn->getUser(), $dsn->getPassword());
             case 'twilio':
-                $adapter = new Twilio($dsn->getUser(), $dsn->getPassword());
-                break;
+                return new Twilio($dsn->getUser(), $dsn->getPassword());
             case 'vonage':
-                $adapter = new Vonage($dsn->getUser(), $dsn->getPassword());
-                break;
+                return new Vonage($dsn->getUser(), $dsn->getPassword());
             case 'geosms':
-                $adapter = self::createGEOSMS($dsn);
-                break;
+                return self::createGEOSMSAdapter($dsn);
+            default:
+                return null;
         }
-
-        return $adapter;
     }
 
-    protected static function createGEOSMS(DSN $dsn): GEOSMS
+    protected static function createGEOSMSAdapter(DSN $dsn): GEOSMS
     {
         $defaultDSN = new DSN($dsn->getParam('default', ''));
-        $geosms = new GEOSMS(self::createFromDSN($defaultDSN));
+        $geosms = new GEOSMS(self::createAdapterFromDSN($defaultDSN));
 
-        $geosmsConfig = [];
-        \parse_str($dsn->getQuery(), $geosmsConfig);
+        $parameters = [];
+        \parse_str($dsn->getQuery(), $parameters);
+        unset($parameters['default']);
 
-        foreach ($geosmsConfig as $key => $nestedDSN) {
+        foreach ($parameters as $parameter => $nestedDSN) {
             // Extract the calling code in the format of local-callingCode
             // e.g. ?local-1=twilio://...
-            $matches = [];
-            if (\preg_match('/^local-(\d+)$/', $key, $matches) !== 1) {
+            $callingCodeMatches = [];
+            if (\preg_match('/^local-(\d+)$/', $parameter, $callingCodeMatches) !== 1) {
+                Console::warning('Ignoring invalid GEOSMS parameter: ' . $parameter);
                 continue;
             }
-            $callingCode = $matches[1];
 
             $dsn = null;
             try {
                 $dsn = new DSN($nestedDSN);
-            } catch (\Exception) {
+            } catch (\Exception $e) {
+                Console::warning('Ignoring invalid GEOSMS adapter DSN: ' . $nestedDSN);
                 continue;
             }
 
-            $geosms->setLocal($callingCode, self::createFromDSN($dsn));
+            $adapter = self::createAdapterFromDSN($dsn);
+            if ($adapter === null) {
+                Console::warning('Ignoring unknown GEOSMS local adapter: ' . $dsn->getHost());
+                continue;
+            } 
+            
+            $geosms->setLocal($callingCodeMatches[1], $adapter);
         }
 
         return $geosms;
