@@ -1677,36 +1677,35 @@ App::post('/v1/account/jwt')
         ])]), Response::MODEL_JWT);
     });
 
-App::post('/v1/account/targets')
+App::post('/v1/account/targets/push')
     ->desc('Create Account Target')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('scope', 'public')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
     ->label('docs', false)
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerType', '', new WhiteList(['email', 'sms', 'push']), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
-    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
-    ->param('name', '', new Text(256), 'Set Client device name manually instead of using user agent. Used to identify the client device make, model, OS, etc.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $providerId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
-        $provider = new Document();
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
-        if ($providerType === 'push') {
-            $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
-
-            if ($provider->isEmpty()) {
-                throw new Exception(Exception::PROVIDER_NOT_FOUND);
-            }
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
         if ($user->isEmpty()) {
@@ -1735,11 +1734,11 @@ App::post('/v1/account/targets')
                 ],
                 'providerId' => $providerId ?? null,
                 'providerInternalId' => $provider->getInternalId() ?? null,
-                'providerType' =>  $providerType,
+                'providerType' =>  'push',
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'identifier' => $identifier,
-                'name' => $name ?? [
+                'name' => [
                     'osCode' => $os['osCode'],
                     'osName' => $os['osName'],
                     'osVersion' => $os['osVersion'],
@@ -1749,7 +1748,6 @@ App::post('/v1/account/targets')
                     'clientVersion' => $client['clientVersion'],
                     'clientEngine' => $client['clientEngine'],
                     'clientEngineVersion' => $client['clientEngineVersion'],
-                    'deviceName' => $device['deviceName'],
                     'deviceBrand' => $device['deviceBrand'],
                     'deviceModel' => $device['deviceModel']
                 ]
@@ -1757,13 +1755,14 @@ App::post('/v1/account/targets')
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
-        Authorization::skip(fn () => $dbForProject->deleteCachedDocument('users', $user->getId()));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('targetId', $target->getId());
 
         $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
@@ -3168,7 +3167,7 @@ App::put('/v1/account/verification/phone')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/targets/:targetId')
+App::put('/v1/account/targets/:targetId/push')
     ->desc('Update Account Target')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -3180,13 +3179,12 @@ App::put('/v1/account/targets/:targetId')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
     ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
-    ->param('name', '', new Text(256), 'Set Client device name manually instead of using user agent. Used to identify the client device make, model, OS, etc.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -3216,12 +3214,29 @@ App::put('/v1/account/targets/:targetId')
             $target->setAttribute('providerInternalId', $provider->getInternalId());
         }
 
-        if ($name) {
-            $target->setAttribute('name', $name);
-        }
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $os = $detector->getOS();
+        $client = $detector->getClient();
+        $device = $detector->getDevice();
+
+        $target->setAttribute('name', [
+            'osCode' => $os['osCode'],
+            'osName' => $os['osName'],
+            'osVersion' => $os['osVersion'],
+            'clientType' => $client['clientType'],
+            'clientCode' => $client['clientCode'],
+            'clientName' => $client['clientName'],
+            'clientVersion' => $client['clientVersion'],
+            'clientEngine' => $client['clientEngine'],
+            'clientEngineVersion' => $client['clientEngineVersion'],
+            'deviceBrand' => $device['deviceBrand'],
+            'deviceModel' => $device['deviceModel']
+        ]);
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
-        Authorization::skip(fn () => $dbForProject->deleteCachedDocument('users', $user->getId()));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
