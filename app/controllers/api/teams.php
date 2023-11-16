@@ -628,12 +628,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
-                $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-                    Query::equal('internal', [true]),
-                    Query::equal('type', ['sms'])
-                ]));
-
-                if ($provider === false || $provider->isEmpty()) {
+                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
 
@@ -647,27 +642,17 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
-                $target = $dbForProject->createDocument('targets', new Document([
-                    'userId' => $invitee->getId(),
-                    'userInternalId' => $invitee->getInternalId(),
-                    'providerType' => 'sms',
-                    'identifier' => $phone,
-                ]));
-
-                $messageDoc = $dbForProject->createDocument('messages', new Document([
-                    // Here membership ID is used as message ID so that it can be used in test cases to verify the message
-                    '$id' => $membership->getId(),
-                    'targets' => [$target->getId()],
+                $messageDoc = new Document([
+                    '$id' => ID::unique(),
                     'data' => [
                         'content' => $message,
                     ],
-                    'providerId' => $provider->getId(),
-                    'providerInternalId' => $provider->getInternalId(),
-                    'deliveryTime' => Datetime::now(),
-                ]));
+                ]);
 
                 $queueForMessaging
-                    ->setMessageId($messageDoc->getId())
+                    ->setMessage($messageDoc)
+                    ->setRecipients([$phone])
+                    ->setProviderType('SMS')
                     ->setProject($project)
                     ->trigger();
             }

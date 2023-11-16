@@ -79,16 +79,6 @@ App::post('/v1/messaging/providers/mailgun')
             ]
         ]);
 
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['email'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
-
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
@@ -140,16 +130,6 @@ App::post('/v1/messaging/providers/sendgrid')
                 'from' => $from,
             ]
         ]);
-
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
 
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
@@ -205,16 +185,6 @@ App::post('/v1/messaging/providers/msg91')
             ]
         ]);
 
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
-
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
@@ -268,16 +238,6 @@ App::post('/v1/messaging/providers/telesign')
                 'from' => $from,
             ]
         ]);
-
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
 
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
@@ -333,16 +293,6 @@ App::post('/v1/messaging/providers/textmagic')
             ]
         ]);
 
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
-
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
@@ -396,16 +346,6 @@ App::post('/v1/messaging/providers/twilio')
                 'from' => $from,
             ]
         ]);
-
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
 
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
@@ -461,16 +401,6 @@ App::post('/v1/messaging/providers/vonage')
             ]
         ]);
 
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['sms'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
-
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
         } catch (DuplicateException) {
@@ -518,16 +448,6 @@ App::post('/v1/messaging/providers/fcm')
                 'serverKey' => $serverKey,
             ],
         ]);
-
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['push'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
 
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
@@ -584,16 +504,6 @@ App::post('/v1/messaging/providers/apns')
                 'endpoint' => $endpoint,
             ],
         ]);
-
-        // Check if a internal provider exists, if not, set this one as internal
-        if (
-            empty($dbForProject->findOne('providers', [
-                Query::equal('internal', [true]),
-                Query::equal('type', ['push'])
-            ]))
-        ) {
-            $provider->setAttribute('internal', true);
-        }
 
         try {
             $provider = $dbForProject->createDocument('providers', $provider);
@@ -776,7 +686,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
@@ -784,7 +693,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -806,14 +715,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -834,15 +736,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -868,13 +761,12 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('from', '', new Text(256), 'Sender email address.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -896,14 +788,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -914,15 +799,6 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -948,14 +824,13 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
     ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $senderId, string $authKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $senderId, string $authKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -977,14 +852,7 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1001,15 +869,6 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1035,14 +894,13 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('username', '', new Text(0), 'Telesign username.', true)
     ->param('password', '', new Text(0), 'Telesign password.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $password, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $password, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1064,14 +922,7 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1088,15 +939,6 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1122,14 +964,13 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('username', '', new Text(0), 'Textmagic username.', true)
     ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $username, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1151,14 +992,7 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1175,15 +1009,6 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1209,14 +1034,13 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('accountSid', null, new Text(0), 'Twilio account secret ID.', true)
     ->param('authToken', null, new Text(0), 'Twilio authentication token.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $accountSid, string $authToken, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $accountSid, string $authToken, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1238,14 +1062,7 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1262,15 +1079,6 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1296,14 +1104,13 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
     ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $apiKey, string $apiSecret, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $apiSecret, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1325,14 +1132,7 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             ]);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1349,15 +1149,6 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1383,12 +1174,11 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1404,14 +1194,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1420,15 +1203,6 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());
@@ -1455,7 +1229,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('internal', null, new Boolean(), 'Set as internal. Internal providers are used in services other than Messaging service such as Authentication service', true)
     ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
@@ -1464,7 +1237,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $internal, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1480,14 +1253,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if ($internal === true) {
-            $provider->setAttribute('internal', $internal);
-        }
-
         if ($enabled === true || $enabled === false) {
-            if ($provider->getAttribute('internal') === true && $enabled === false) {
-                throw new Exception(Exception::PROVIDER_INTERNAL_UPDATE_DISABLED);
-            }
             $provider->setAttribute('enabled', $enabled);
         }
 
@@ -1516,15 +1282,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         $provider->setAttribute('credentials', $credentials);
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
-
-        if ($internal === true) {
-            $internalProvider = $dbForProject->findOne('providers', [
-                'internal' => true,
-                'type' => 'email',
-            ]);
-            $internalProvider->setAttribute('internal', false);
-            $dbForProject->updateDocument('providers', $internalProvider->getId(), $internalProvider);
-        }
 
         $queueForEvents
             ->setParam('providerId', $provider->getId());

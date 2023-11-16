@@ -781,11 +781,6 @@ return [
         'description' => 'Provider with the requested ID is of incorrect type: ',
         'code' => 400,
     ],
-    Exception::PROVIDER_INTERNAL_UPDATE_DISABLED => [
-        'name' => Exception::PROVIDER_INTERNAL_UPDATE_DISABLED,
-        'description' => 'Provider with the requested ID cannot be disabled.',
-        'code' => 400,
-    ],
 
     /** Topic Errors */
     Exception::TOPIC_NOT_FOUND => [

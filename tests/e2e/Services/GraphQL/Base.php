@@ -1796,7 +1796,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1807,7 +1806,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1818,7 +1816,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1829,7 +1826,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1840,7 +1836,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1851,7 +1846,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1862,7 +1856,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1873,7 +1866,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1884,7 +1876,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1897,7 +1888,7 @@ trait Base
                             name
                             provider
                             type
-                            internal
+
                             enabled
                         }
                     }
@@ -1909,7 +1900,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1920,7 +1910,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1931,7 +1920,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1942,7 +1930,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1953,7 +1940,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1964,7 +1950,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1975,7 +1960,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1986,7 +1970,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -1997,7 +1980,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';
@@ -2008,7 +1990,6 @@ trait Base
                         name
                         provider
                         type
-                        internal
                         enabled
                     }
                 }';

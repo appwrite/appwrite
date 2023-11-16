@@ -1260,12 +1260,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
-        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('internal', [true]),
-            Query::equal('type', ['sms'])
-        ]));
-
-        if ($provider === false || $provider->isEmpty()) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1351,35 +1346,18 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$phone]),
-        ]);
 
-        if (!$target || $target->isEmpty()) {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'providerType' => 'sms',
-                'identifier' => $phone,
-            ]));
-            $dbForProject->deleteCachedDocument('users', $user->getId());
-        }
-
-        $messageDoc = $dbForProject->createDocument('messages', new Document([
+        $messageDoc = new Document([
             '$id' => $token->getId(),
-            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],
-        ]));
+        ]);
 
         $queueForMessaging
-            ->setMessageId($messageDoc->getId())
+            ->setMessage($messageDoc)
+            ->setRecipients([$phone])
+            ->setProviderType('SMS')
             ->setProject($project)
             ->trigger();
 
@@ -2964,12 +2942,7 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
-        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('internal', [true]),
-            Query::equal('type', ['sms'])
-        ]));
-
-        if ($provider === false || $provider->isEmpty()) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -3015,35 +2988,17 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$user->getAttribute('phone')]),
-        ]);
-
-        if (!$target || $target->isEmpty()) {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ],
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'providerType' => 'sms',
-                'identifier' => $user->getAttribute('phone'),
-            ]));
-            $dbForProject->deleteCachedDocument('users', $user->getId());
-        }
-
-        $messageDoc = $dbForProject->createDocument('messages', new Document([
+        $messageDoc = new Document([
             '$id' => $verification->getId(),
-            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],
-        ]));
+        ]);
 
         $queueForMessaging
-            ->setMessageId($messageDoc->getId())
+            ->setMessage($messageDoc)
+            ->setRecipients([$user->getAttribute('phone')])
+            ->setProviderType('SMS')
             ->setProject($project)
             ->trigger();
 
