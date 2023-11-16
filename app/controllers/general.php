@@ -608,9 +608,14 @@ App::error()
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+        $publishLog = true;
+
+        if ($error instanceof AppwriteException) {
+            $publishLog = $error->getLog();
+        }
 
         if ($logger) {
-            if ($error->getCode() >= 500 || $error->getCode() === 0) {
+            if (($error->getCode() >= 500 || $error->getCode() === 0) && $publishLog) {
                 try {
                     /** @var Utopia\Database\Document $user */
                     $user = $utopia->getResource('user');

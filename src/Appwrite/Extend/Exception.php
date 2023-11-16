@@ -229,12 +229,16 @@ class Exception extends \Exception
     public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     /** Realtime */
-    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
-    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
-    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
+    public const REALTIME_MESSAGE_FORMAT_INVALID    = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES         = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
+
+    /** Health */
+    public const QUEUE_SIZE_EXCEEDS                 = 'queue_size_exceeds';
 
     protected string $type = '';
     protected array $errors = [];
+    protected bool $log = true;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
@@ -244,6 +248,7 @@ class Exception extends \Exception
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];
             $this->message = $this->errors[$type]['description'];
+            $this->log = $this->errors[$type]['log'] ?? true;
         }
 
         $this->message = $message ?? $this->message;
@@ -272,5 +277,15 @@ class Exception extends \Exception
     public function setType(string $type): void
     {
         $this->type = $type;
+    }
+
+    /**
+     * Get the log of the exception.
+     *
+     * @return bool
+     */
+    public function getLog(): bool
+    {
+        return $this->log;
     }
 }
