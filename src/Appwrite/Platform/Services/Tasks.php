@@ -19,6 +19,7 @@ use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcTierStats;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
+use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
 
 class Tasks extends Service
 {
@@ -42,6 +43,7 @@ class Tasks extends Service
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
+            ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
 
         ;
     }
