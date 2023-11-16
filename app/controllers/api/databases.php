@@ -1642,7 +1642,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         /** @var Document[] $attributes */
         foreach ($attributes as $attribute) {
             if (\strtolower($attribute->getId()) === \strtolower($key)) {
-                throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
             }
 
             if (
@@ -1650,11 +1650,17 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                if ($twoWayKeyNull) {
-                    $twoWayKey .= '_' . uniqid();
-                } else {
-                    throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
-                }
+                // Currently, we always throw an Exception even when, We do not want to change $twoWayKsy on $twoWayKeyNull
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+            }
+
+            if (
+                $type === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP &&
+                $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                throw new Exception('Cannot create more than one ManyToMany relation.');
             }
         }
 
