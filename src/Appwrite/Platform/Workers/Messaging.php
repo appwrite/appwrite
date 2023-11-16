@@ -118,7 +118,7 @@ class Messaging extends Action
             case 'geosms':
                 return self::createGEOSMSAdapter($dsn);
             default:
-                throw new \Exception('Unknown SMS adapter: ' . $dsn->getHost());
+                throw new \Exception('Unknown SMS provider: ' . $dsn->getHost());
         }
     }
 
