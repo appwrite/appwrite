@@ -90,7 +90,7 @@ class DeleteOrphanedProjects extends Action
                     /**
                      * +2 = audit+abuse
                      */
-                    if ($collectionsCreated === (count($collectionsConfig) + 2)) {
+                    if ($collectionsCreated >= (count($collectionsConfig) + 2)) {
                         Console::log($msg . ' ignoring....');
                         continue;
                     }
