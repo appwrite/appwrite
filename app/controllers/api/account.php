@@ -1678,7 +1678,7 @@ App::post('/v1/account/jwt')
     });
 
 App::post('/v1/account/targets/push')
-    ->desc('Create Account Target')
+    ->desc('Create Account\'s push target')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('audits.event', 'target.create')
@@ -1686,7 +1686,7 @@ App::post('/v1/account/targets/push')
     ->label('event', 'users.[userId].targets.[targetId].create')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createTarget')
+    ->label('sdk.method', 'createPushTarget')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
@@ -1721,8 +1721,6 @@ App::post('/v1/account/targets/push')
         $detector = new Detector($request->getUserAgent());
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-        $os = $detector->getOS();
-        $client = $detector->getClient();
         $device = $detector->getDevice();
 
         try {
@@ -1738,19 +1736,7 @@ App::post('/v1/account/targets/push')
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'identifier' => $identifier,
-                'name' => [
-                    'osCode' => $os['osCode'],
-                    'osName' => $os['osName'],
-                    'osVersion' => $os['osVersion'],
-                    'clientType' => $client['clientType'],
-                    'clientCode' => $client['clientCode'],
-                    'clientName' => $client['clientName'],
-                    'clientVersion' => $client['clientVersion'],
-                    'clientEngine' => $client['clientEngine'],
-                    'clientEngineVersion' => $client['clientEngineVersion'],
-                    'deviceBrand' => $device['deviceBrand'],
-                    'deviceModel' => $device['deviceModel']
-                ]
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
@@ -3168,23 +3154,27 @@ App::put('/v1/account/verification/phone')
     });
 
 App::put('/v1/account/targets/:targetId/push')
-    ->desc('Update Account Target')
+    ->desc('Update Account\'s push target')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/response.$id')
-    ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('scope', 'public')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
     ->label('docs', false)
     ->param('targetId', '', new UID(), 'Target ID.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
-    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
@@ -3203,37 +3193,12 @@ App::put('/v1/account/targets/:targetId/push')
             $target->setAttribute('identifier', $identifier);
         }
 
-        if ($providerId) {
-            $provider = $dbForProject->getDocument('providers', $providerId);
-
-            if ($provider->isEmpty()) {
-                throw new Exception(Exception::PROVIDER_NOT_FOUND);
-            }
-
-            $target->setAttribute('providerId', $provider->getId());
-            $target->setAttribute('providerInternalId', $provider->getInternalId());
-        }
-
         $detector = new Detector($request->getUserAgent());
         $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
 
-        $os = $detector->getOS();
-        $client = $detector->getClient();
         $device = $detector->getDevice();
 
-        $target->setAttribute('name', [
-            'osCode' => $os['osCode'],
-            'osName' => $os['osName'],
-            'osVersion' => $os['osVersion'],
-            'clientType' => $client['clientType'],
-            'clientCode' => $client['clientCode'],
-            'clientName' => $client['clientName'],
-            'clientVersion' => $client['clientVersion'],
-            'clientEngine' => $client['clientEngine'],
-            'clientEngineVersion' => $client['clientEngineVersion'],
-            'deviceBrand' => $device['deviceBrand'],
-            'deviceModel' => $device['deviceModel']
-        ]);
+        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
         $dbForProject->deleteCachedDocument('users', $user->getId());
