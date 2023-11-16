@@ -54,7 +54,7 @@ class DeleteOrphanedProjects extends Action
         $totalProjects = $dbForConsole->count('projects');
         Console::success("Found a total of: {$totalProjects} projects");
 
-        $orphans = 1;
+        $orphans = 0;
         $cnt = 0;
         $count = 0;
         $limit = 30;
@@ -135,6 +135,6 @@ class DeleteOrphanedProjects extends Action
             $count = $count + $sum;
         }
 
-        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects found ' . $orphans - 1 . ' orphans');
+        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects found ' . $orphans  . ' orphans');
     }
 }
