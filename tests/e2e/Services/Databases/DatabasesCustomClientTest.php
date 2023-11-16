@@ -381,8 +381,8 @@ class DatabasesCustomClientTest extends Scope
 
         \sleep(2);
 
-        $this->assertEquals(500, $relation['body']['code']);
-        $this->assertEquals('Server Error', $relation['body']['message']);
+        $this->assertEquals(409, $relation['body']['code']);
+        $this->assertEquals('Creating more than one "manyToMany" relationship on the same collection is currently not permitted.', $relation['body']['message']);
     }
 
     public function testUpdateWithoutRelationPermission(): void
