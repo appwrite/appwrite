@@ -238,7 +238,7 @@ class Exception extends \Exception
 
     protected string $type = '';
     protected array $errors = [];
-    protected bool $publishLog = true;
+    protected bool $publish = true;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
@@ -248,7 +248,7 @@ class Exception extends \Exception
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];
             $this->message = $this->errors[$type]['description'];
-            $this->publishLog = $this->errors[$type]['publishLog'] ?? true;
+            $this->publish = $this->errors[$type]['publish'] ?? true;
         }
 
         $this->message = $message ?? $this->message;
@@ -280,12 +280,12 @@ class Exception extends \Exception
     }
 
     /**
-     * Get the value of publishLog for the exception.
+     * Check whether the log is publishable for the exception.
      *
      * @return bool
      */
-    public function getPublishLog(): bool
+    public function isPublishable(): bool
     {
-        return $this->publishLog;
+        return $this->publish;
     }
 }

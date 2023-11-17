@@ -611,7 +611,7 @@ App::error()
         $publish = true;
 
         if ($error instanceof AppwriteException) {
-            $publish = $error->getPublishLog();
+            $publish = $error->isPublishable();
         }
 
         if ($logger && $publish) {
