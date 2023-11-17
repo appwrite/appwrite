@@ -100,6 +100,7 @@ RUN chmod +x /usr/local/bin/doctor && \
 RUN chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/volume-sync && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
+    chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
     chmod +x /usr/local/bin/patch-delete-project-collections && \
     chmod +x /usr/local/bin/delete-orphaned-projects && \
     chmod +x /usr/local/bin/clear-card-cache && \
