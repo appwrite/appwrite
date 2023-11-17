@@ -234,11 +234,11 @@ class Exception extends \Exception
     public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
 
     /** Health */
-    public const QUEUE_SIZE_EXCEEDS                 = 'queue_size_exceeds';
+    public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
 
     protected string $type = '';
     protected array $errors = [];
-    protected bool $log = true;
+    protected bool $publishLog = true;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
@@ -248,7 +248,7 @@ class Exception extends \Exception
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];
             $this->message = $this->errors[$type]['description'];
-            $this->log = $this->errors[$type]['log'] ?? true;
+            $this->publishLog = $this->errors[$type]['publishLog'] ?? true;
         }
 
         $this->message = $message ?? $this->message;
@@ -280,12 +280,12 @@ class Exception extends \Exception
     }
 
     /**
-     * Get the log of the exception.
+     * Get the value of publishLog for the exception.
      *
      * @return bool
      */
-    public function getLog(): bool
+    public function getPublishLog(): bool
     {
-        return $this->log;
+        return $this->publishLog;
     }
 }

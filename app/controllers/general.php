@@ -611,10 +611,10 @@ App::error()
         $publish = true;
 
         if ($error instanceof AppwriteException) {
-            $publishLog = $error->getLog();
+            $publish = $error->getPublishLog();
         }
 
-        if ($logger && publish) {
+        if ($logger && $publish) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {
                     /** @var Utopia\Database\Document $user */

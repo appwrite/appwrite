@@ -209,7 +209,7 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
-        'log' => false,
+        'publishLog' => false,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
@@ -767,10 +767,10 @@ return [
     ],
 
     /** Health */
-    Exception::QUEUE_SIZE_EXCEEDS => [
-        'name' => Exception::QUEUE_SIZE_EXCEEDS,
+    Exception::QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::QUEUE_SIZE_EXCEEDED,
         'description' => 'Queue size threshold hit.',
         'code' => 503,
-        'log' => false
+        'publishLog' => false
     ],
 ];
