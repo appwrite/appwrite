@@ -1240,16 +1240,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-        // use length of longest string as attribute size
-        $size = 0;
-        foreach ($elements as $element) {
-            $length = \strlen($element);
-            if ($length === 0) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
-            }
-            $size = ($length > $size) ? $length : $size;
-        }
-
         if (!is_null($default) && !in_array($default, $elements)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
         }
@@ -1257,7 +1247,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
-            'size' => $size,
+            'size' => Database::LENGTH_KEY,
             'required' => $required,
             'default' => $default,
             'array' => $array,
