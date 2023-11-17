@@ -608,7 +608,7 @@ App::error()
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
-        $publishLog = true;
+        $publish = true;
 
         if ($error instanceof AppwriteException) {
             $publishLog = $error->getLog();
