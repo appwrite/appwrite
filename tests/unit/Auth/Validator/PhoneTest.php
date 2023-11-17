@@ -41,6 +41,5 @@ class PhoneTest extends TestCase
         $this->assertEquals($this->object->isValid('+5511552563253'), true);
         $this->assertEquals($this->object->isValid('+55115525632534'), true);
         $this->assertEquals($this->object->isValid('+919367788755111'), true);
-        
     }
 }
