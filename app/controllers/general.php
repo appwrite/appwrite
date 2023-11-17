@@ -615,7 +615,7 @@ App::error()
         }
 
         if ($logger && publish) {
-            if (($error->getCode() >= 500 || $error->getCode() === 0) && $publishLog) {
+            if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {
                     /** @var Utopia\Database\Document $user */
                     $user = $utopia->getResource('user');
