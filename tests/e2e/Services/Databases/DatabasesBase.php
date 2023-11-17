@@ -978,7 +978,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $badEnum['headers']['status-code']);
-        $this->assertEquals('Each enum element must not be empty', $badEnum['body']['message']);
+        $this->assertEquals('Invalid `elements` param: Value must a valid array and Value must be a valid string and at least 1 chars and no longer than 4096 chars', $badEnum['body']['message']);
 
         return $data;
     }
