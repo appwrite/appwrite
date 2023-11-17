@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
 use Utopia\Config\Config;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
@@ -45,6 +46,17 @@ class DeleteOrphanedProjects extends Action
         /** @var array $collections */
         $collectionsConfig = Config::getParam('collections', [])['projects'] ?? [];
 
+        $collectionsConfig = array_merge([
+            'audit' => [
+                '$id' => ID::custom('audit'),
+                '$collection' => Database::METADATA
+            ],
+            'abuse' => [
+                '$id' => ID::custom('abuse'),
+                '$collection' => Database::METADATA
+            ]
+        ], $collectionsConfig);
+
         /* Initialise new Utopia app */
         $app = new App('UTC');
         $console = $app->getResource('console');
@@ -80,6 +92,7 @@ class DeleteOrphanedProjects extends Action
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDefaultDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
+
                     $collectionsCreated = 0;
                     $cnt++;
                     if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
@@ -87,10 +100,8 @@ class DeleteOrphanedProjects extends Action
                     }
 
                     $msg = '(' . $cnt . ') found (' . $collectionsCreated . ') collections on project  (' . $project->getInternalId() . ') , database (' . $project['database'] . ')';
-                    /**
-                     * +2 = audit+abuse
-                     */
-                    if ($collectionsCreated === (count($collectionsConfig) + 2)) {
+
+                    if ($collectionsCreated >= count($collectionsConfig)) {
                         Console::log($msg . ' ignoring....');
                         continue;
                     }
@@ -107,16 +118,26 @@ class DeleteOrphanedProjects extends Action
                             Console::info('--Deleting collection  (' . $collection->getId() . ') project no (' . $project->getInternalId() . ')');
                         }
                     }
+
                     if ($commit) {
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
+
+                        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                            try {
+                                $dbForProject->deleteCollection(Database::METADATA);
+                                $dbForProject->deleteCachedCollection(Database::METADATA);
+                            } catch (\Throwable $th) {
+                                Console::warning('Metadata collection does not exist');
+                            }
+                        }
                     }
 
                     Console::info('--Deleting project no (' . $project->getInternalId() . ')');
 
                     $orphans++;
                 } catch (\Throwable $th) {
-                        Console::error('Error: ' . $th->getMessage());
+                    Console::error('Error: ' . $th->getMessage() . ' ' . $th->getTraceAsString());
                 } finally {
                     $pools
                         ->get($db)
