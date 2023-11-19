@@ -654,14 +654,15 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-            $projectId = $document->getAttribute('projectId', '');
+            $projectInternalId = $document->getAttribute('projectInternalId', '');
             $this->deleteByGroup('vcsComments', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
             ], $dbForConsole);
         });
 
