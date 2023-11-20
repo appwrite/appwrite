@@ -12,6 +12,7 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
+    private const failedAttemptsCount = 10;
 
     public static function getName(): string
     {
@@ -27,7 +28,7 @@ class Webhooks extends Action
             ->desc('Webhooks worker')
             ->inject('message')
             ->inject('dbForConsole')
-            ->callback(fn($message, Database $dbForConsole) => $this->action($message, $dbForConsole));
+            ->callback(fn ($message, Database $dbForConsole) => $this->action($message, $dbForConsole));
     }
 
     /**
@@ -50,7 +51,7 @@ class Webhooks extends Action
         $user = new Document($payload['user'] ?? []);
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if ($webhook->getAttribute('status') === true && array_intersect($webhook->getAttribute('events', []), $events)) {
+            if ($webhook->getAttribute('enabled') === true && array_intersect($webhook->getAttribute('events', []), $events)) {
                 $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole);
             }
         }
@@ -71,7 +72,7 @@ class Webhooks extends Action
      */
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole): void
     {
-        if ($webhook->getAttribute('status') === false) {
+        if ($webhook->getAttribute('enabled') === false) {
             return;
         }
 
@@ -120,13 +121,13 @@ class Webhooks extends Action
         }
 
         if (false === \curl_exec($ch)) {
-            $errorCount = $webhook->getAttribute('errors', 0) + 1;
-            $lastErrorLogs = \curl_error($ch) . ' in events ' . implode(', ', $events) . ' for webhook ' . $webhook->getAttribute('name');
-            $webhook->setAttribute('errors', $errorCount);
+            $errorCount = $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
+            $lastErrorLogs = \curl_error($ch) . ' in events ' . implode(', ', $events);
+            $webhook->setAttribute('attempts', $errorCount);
             $webhook->setAttribute('logs', $lastErrorLogs);
 
-            if ($errorCount > 9) {
-                $webhook->setAttribute('status', false);
+            if ($errorCount >= self::failedAttemptsCount) {
+                $webhook->setAttribute('enabled', false);
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
