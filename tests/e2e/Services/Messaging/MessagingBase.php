@@ -321,6 +321,7 @@ trait MessagingBase
             'providerId' => $provider['body']['$id'],
             'identifier' => 'my-token',
         ]);
+
         $this->assertEquals(201, $target['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['$id'] . '/subscribers', \array_merge([
@@ -330,13 +331,16 @@ trait MessagingBase
             'subscriberId' => ID::unique(),
             'targetId' => $target['body']['$id'],
         ]);
+
         $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($target['body']['userId'], $response['body']['userId']);
 
         $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
         $this->assertEquals('updated-description', $topic['body']['description']);
@@ -345,6 +349,7 @@ trait MessagingBase
         return [
             'topicId' => $topic['body']['$id'],
             'targetId' => $target['body']['$id'],
+            'userId' => $target['body']['userId'],
             'subscriberId' => $response['body']['$id']
         ];
     }
@@ -359,9 +364,11 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($data['topicId'], $response['body']['topicId']);
         $this->assertEquals($data['targetId'], $response['body']['targetId']);
+        $this->assertEquals($data['userId'], $response['body']['userId']);
     }
 
     /**
@@ -377,6 +384,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals($data['userId'], $response['body']['subscribers'][0]['userId']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
 
         return $data;

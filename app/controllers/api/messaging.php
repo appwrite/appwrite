@@ -36,6 +36,8 @@ use Utopia\Validator\Text;
 use MaxMind\Db\Reader;
 use Utopia\Validator\WhiteList;
 
+use function Swoole\Coroutine\batch;
+
 App::post('/v1/messaging/providers/mailgun')
     ->desc('Create Mailgun provider')
     ->groups(['api', 'messaging'])
@@ -1644,12 +1646,16 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
+        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($target->getAttribute('userId'))),
+                Permission::read(Role::user($user->getId())),
                 Permission::delete(Role::user($target->getAttribute('userId'))),
             ],
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
@@ -1666,6 +1672,8 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
         $queueForEvents
             ->setParam('topicId', $topic->getId())
             ->setParam('subscriberId', $subscriber->getId());
+
+        $subscriber->setAttribute('userName', $user->getAttribute('name'));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1713,9 +1721,20 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             $cursor->setValue($cursorDocument);
         }
 
+        $subscribers = $dbForProject->find('subscribers', $queries);
+
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
+            return function () use ($subscriber, $dbForProject) {
+                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
+
+                return $subscriber
+                    ->setAttribute('userName', $user->getAttribute('name'));
+            };
+        }, $subscribers));
+
         $response
             ->dynamic(new Document([
-                'subscribers' => $dbForProject->find('subscribers', $queries),
+                'subscribers' => $subscribers,
                 'total' => $dbForProject->count('subscribers', $queries, APP_LIMIT_COUNT),
             ]), Response::MODEL_SUBSCRIBER_LIST);
     });
@@ -1831,6 +1850,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
         if ($subscriber->isEmpty() || $subscriber->getAttribute('topicId') !== $topicId) {
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
+
+        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
+
+        $subscriber->setAttribute('userName', $user->getAttribute('name'));
 
         $response
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);

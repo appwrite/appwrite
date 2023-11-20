@@ -1723,6 +1723,28 @@ $commonCollections = [
         'name' => 'Subscribers',
         'attributes' => [
             [
+                '$id' => ID::custom('userId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('userInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('targetId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1768,6 +1790,20 @@ $commonCollections = [
             ],
         ],
         'indexes' => [
+            [
+                '$id' => ID::custom('_key_userId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['userId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => ID::custom('_key_userInternalId'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['userInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
             [
                 '$id' => ID::custom('_key_targetId'),
                 'type' => Database::INDEX_KEY,
