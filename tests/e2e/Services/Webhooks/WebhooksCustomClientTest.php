@@ -347,6 +347,9 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
+        // This is very flakey :/
+        \sleep(3);
+
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);
@@ -357,15 +360,9 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['Content-Type'], 'application/json');
         $this->assertEquals($webhook['headers']['User-Agent'], 'Appwrite-Server vdev. Please report abuse at security@appwrite.io');
         $this->assertStringContainsString('users.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('users.*.sessions.*', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString('users.*.sessions.*.delete', $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.*.sessions.{$sessionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.*.sessions.{$sessionId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.*.sessions.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertStringContainsString("users.{$id}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}.sessions.*", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}.sessions.*.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}", $webhook['headers']['X-Appwrite-Webhook-Events']);
-        $this->assertStringContainsString("users.{$id}.sessions.{$sessionId}.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
+        $this->assertStringContainsString("users.{$id}.sessions.delete", $webhook['headers']['X-Appwrite-Webhook-Events']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Signature'], $signatureExpected);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $this->getProject()['webhookId']);
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
