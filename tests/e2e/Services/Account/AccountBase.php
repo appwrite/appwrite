@@ -948,6 +948,32 @@ trait AccountBase
     /**
      * @depends testUpdateAccountVerification
      */
+    public function testCreateAccountVerificationForVerifiedEmail($data): array
+    {
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateAccountVerification
+     */
     public function testDeleteAccountSession($data): array
     {
         $email = $data['email'] ?? '';
