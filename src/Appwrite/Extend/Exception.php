@@ -84,8 +84,11 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
+    public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
     public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
     public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
+
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
     public const TEAM_INVITE_ALREADY_EXISTS        = 'team_invite_already_exists';
@@ -236,6 +239,7 @@ class Exception extends \Exception
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
     public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
+    public const PROVIDER_INTERNAL_UPDATE_DISABLED  = 'provider_internal_update_disabled';
 
     /** Topic */
     public const TOPIC_NOT_FOUND                    = 'topic_not_found';

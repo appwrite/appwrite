@@ -105,8 +105,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 516;
-const APP_VERSION_STABLE = '1.4.11';
+const APP_CACHE_BUSTER = 327;
+const APP_VERSION_STABLE = '1.4.12';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -557,6 +557,72 @@ Database::addFilter(
         return [];
     }
 );
+
+Database::addFilter(
+    'providerSearch',
+    function (mixed $value, Document $provider) {
+        $searchValues = [
+            $provider->getId(),
+            $provider->getAttribute('name', ''),
+            $provider->getAttribute('provider', ''),
+            $provider->getAttribute('type', '')
+        ];
+
+        $search = \implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'topicSearch',
+    function (mixed $value, Document $topic) {
+        $searchValues = [
+            $topic->getId(),
+            $topic->getAttribute('name', ''),
+            $topic->getAttribute('description', ''),
+        ];
+
+        $search = \implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'messageSearch',
+    function (mixed $value, Document $message) {
+        $searchValues = [
+            $message->getId(),
+            $message->getAttribute('description', ''),
+            $message->getAttribute('status', ''),
+        ];
+
+        $data = \json_decode($message->getAttribute('data', []), true);
+
+        if (\array_key_exists('subject', $data)) {
+            $searchValues = \array_merge($searchValues, [$data['subject'], 'email']);
+        } elseif (\array_key_exists('content', $data)) {
+            $searchValues = \array_merge($searchValues, [$data['content'], 'sms']);
+        } else {
+            $searchValues = \array_merge($searchValues, [$data['title'], 'push']);
+        }
+
+        $search = \implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
 /**
  * DB Formats
  */

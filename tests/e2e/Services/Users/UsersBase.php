@@ -1232,7 +1232,7 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'providerId' => 'unique()',
+            'providerId' => ID::unique(),
             'name' => 'Sengrid1',
             'apiKey' => 'my-apikey',
             'from' => 'from@domain.com',
@@ -1244,6 +1244,7 @@ trait UsersBase
         ], $this->getHeaders()), [
             'targetId' => ID::unique(),
             'providerId' => $provider['body']['$id'],
+            'providerType' => 'email',
             'identifier' => 'my-token',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -1257,7 +1258,7 @@ trait UsersBase
      */
     public function testUpdateUserTarget(array $data): array
     {
-        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'] . '/identifier', array_merge([
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -1303,11 +1304,14 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(204, $response['headers']['status-code']);
+
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(0, $response['body']['total']);
     }

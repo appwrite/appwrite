@@ -41,6 +41,12 @@ class Target extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
+            ->addRule('providerType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The target provider type. Can be one of the following: `email`, `sms` or `push`.',
+                'default' => '',
+                'example' => 'email',
+            ])
             ->addRule('identifier', [
                 'type' => self::TYPE_STRING,
                 'description' => 'The target identifier.',

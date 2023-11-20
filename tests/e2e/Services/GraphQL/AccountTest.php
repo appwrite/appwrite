@@ -124,38 +124,7 @@ class AccountTest extends Scope
      */
     public function testCreatePhoneVerification(): array
     {
-        if (empty(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'))) {
-            $this->markTestSkipped('SMS DSN not provided');
-        }
-
-        $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
-        $to = $smsDSN->getParam('to');
-        $from = $smsDSN->getParam('from');
-        $authKey = $smsDSN->getPassword();
-        $senderId = $smsDSN->getUser();
-
-        if (empty($to) || empty($from) || empty($authKey) || empty($senderId)) {
-            $this->markTestSkipped('SMS provider not configured');
-        }
-
         $projectId = $this->getProject()['$id'];
-        $query = $this->getQuery(self::$CREATE_MSG91_PROVIDER);
-        $graphQLPayload = [
-            'query' => $query,
-            'variables' => [
-                'providerId' => ID::unique(),
-                'name' => 'Sms Provider',
-                'from' => $from,
-                'senderId' => $senderId,
-                'authKey' => $authKey,
-            ],
-        ];
-
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], $graphQLPayload);
 
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [

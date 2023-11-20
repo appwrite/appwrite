@@ -3,14 +3,16 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
+use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -64,9 +66,15 @@ class Messaging extends Action
             return;
         }
 
-        $message = $dbForProject->getDocument('messages', $payload['messageId']);
+        if (!\is_null($payload['message']) && !\is_null($payload['recipients'])) {
+            if ($payload['providerType'] === 'SMS') {
+                $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
+            }
+        } else {
+            $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-        $this->processMessage($dbForProject, $message);
+            $this->processMessage($dbForProject, $message);
+        }
     }
 
     private function processMessage(Database $dbForProject, Document $message): void
@@ -99,28 +107,56 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
+        $internalProvider = $dbForProject->findOne('providers', [
+            Query::equal('enabled', [true]),
+            Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
+        ]);
+
+        /**
+        * @var array<string, array<string>> $identifiersByProviderId
+        */
+        $identifiersByProviderId = [];
+
+        /**
+        * @var Document[] $providers
+        */
         $providers = [];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
-            if (!isset($providers[$providerId])) {
-                $providers[$providerId] = [];
+
+            if (!$providerId) {
+                $providerId = $internalProvider->getId();
             }
-            $providers[$providerId][] = $recipient->getAttribute('identifier');
+
+            if (!isset($identifiersByProviderId[$providerId])) {
+                $identifiersByProviderId[$providerId] = [];
+            }
+            $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
         }
 
         /**
         * @var array[] $results
         */
-        $results = batch(\array_map(function ($providerId) use ($providers, $message, $dbForProject) {
-            return function () use ($providerId, $providers, $message, $dbForProject) {
-                $provider = $dbForProject->getDocument('providers', $providerId);
-                $identifiers = $providers[$providerId];
+        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+            return function () use ($providerId, $identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+                $provider = new Document();
+
+                if ($internalProvider->getId() === $providerId) {
+                    $provider = $internalProvider;
+                } else {
+                    $provider = $dbForProject->getDocument('providers', $providerId);
+                }
+
+                $providers[] = $provider;
+                $identifiers = $identifiersByProviderId[$providerId];
+
                 $adapter = match ($provider->getAttribute('type')) {
                     'sms' => $this->sms($provider),
                     'push' => $this->push($provider),
                     'email' => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
+
                 $maxBatchSize = $adapter->getMaxMessagesPerRequest();
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
@@ -131,12 +167,14 @@ class Messaging extends Action
                         $deliveryErrors = [];
                         $messageData = clone $message;
                         $messageData->setAttribute('to', $batch);
+
                         $data = match ($provider->getAttribute('type')) {
                             'sms' => $this->buildSMSMessage($messageData, $provider),
                             'push' => $this->buildPushMessage($messageData),
                             'email' => $this->buildEmailMessage($messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
+
                         try {
                             $adapter->send($data);
                             $deliveredTotal += \count($batch);
@@ -154,16 +192,18 @@ class Messaging extends Action
 
                 return $results;
             };
-        }, \array_keys($providers)));
+        }, \array_keys($identifiersByProviderId)));
 
         $results = array_merge(...$results);
 
         $deliveredTotal = 0;
         $deliveryErrors = [];
+
         foreach ($results as $result) {
             $deliveredTotal += $result['deliveredTotal'];
             $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
         }
+
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
@@ -171,11 +211,86 @@ class Messaging extends Action
         } else {
             $message->setAttribute('status', 'sent');
         }
+
         $message->removeAttribute('to');
+
+        foreach ($providers as $provider) {
+            $message->setAttribute('search', "{$message->getAttribute('search')} {$provider->getAttribute('name')} {$provider->getAttribute('provider')} {$provider->getAttribute('type')}");
+        }
+
         $message->setAttribute('deliveredTotal', $deliveredTotal);
         $message->setAttribute('deliveredAt', DateTime::now());
 
         $dbForProject->updateDocument('messages', $message->getId(), $message);
+    }
+
+    private function processInternalSMSMessage(Document $message, array $recipients): void
+    {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
+            Console::info('Skipped SMS processing. No Phone configuration has been set.');
+            return;
+        }
+
+        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $host = $smsDSN->getHost();
+        $password = $smsDSN->getPassword();
+        $user = $smsDSN->getUser();
+
+        $from = App::getEnv('_APP_SMS_FROM');
+
+        $provider = new Document([
+            '$id' => ID::unique(),
+            'provider' => $host,
+            'type' => 'sms',
+            'name' => 'Internal SMS',
+            'enabled' => true,
+            'credentials' => match ($host) {
+                'twilio' => [
+                    'accountSid' => $user,
+                    'authToken' => $password
+                ],
+                'textmagic' => [
+                    'username' => $user,
+                    'apiKey' => $password
+                ],
+                'telesign' => [
+                    'username' => $user,
+                    'password' => $password
+                ],
+                'msg91' => [
+                    'senderId' => $user,
+                    'authKey' => $password
+                ],
+                'vonage' => [
+                    'apiKey' => $user,
+                    'apiSecret' => $password
+                ],
+                default => null
+            },
+            'options' => [
+                'from' => $from
+            ]
+        ]);
+
+        $adapter = $this->sms($provider);
+
+        $maxBatchSize = $adapter->getMaxMessagesPerRequest();
+        $batches = \array_chunk($recipients, $maxBatchSize);
+        $batchIndex = 0;
+
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
+            return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+                $message->setAttribute('to', $batch);
+
+                $data = $this->buildSMSMessage($message, $provider);
+
+                try {
+                    $adapter->send($data);
+                } catch (\Exception $e) {
+                    Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage());
+                }
+            };
+        }, $batches));
     }
 
     public function shutdown(): void
@@ -188,7 +303,7 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'text-magic' => new TextMagic($credentials['username'], $credentials['apiKey']),
+            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),

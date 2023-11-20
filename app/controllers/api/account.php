@@ -148,7 +148,20 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'providerType' => 'email',
+                'identifier' => $email,
+            ])));
+            $user->setAttribute('targets', [$target]);
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -656,7 +669,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $userDoc->getId(),
+                        'userInternalId' => $userDoc->getInternalId(),
+                        'providerType' => 'email',
+                        'identifier' => $email,
+                    ]));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -1236,11 +1260,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
-        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('internal', [true]),
-            Query::equal('type', ['sms'])
-        ]));
-        if ($provider === false || $provider->isEmpty()) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1326,31 +1346,18 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$phone]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
-        ]);
 
-        if (!$target) {
-            $target = $dbForProject->createDocument('targets', new Document([
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
-                'identifier' => $phone,
-            ]));
-        }
-
-        $messageDoc = $dbForProject->createDocument('messages', new Document([
+        $messageDoc = new Document([
             '$id' => $token->getId(),
-            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],
-        ]));
+        ]);
 
         $queueForMessaging
-            ->setMessageId($messageDoc->getId())
+            ->setMessage($messageDoc)
+            ->setRecipients([$phone])
+            ->setProviderType('SMS')
             ->setProject($project)
             ->trigger();
 
@@ -1668,6 +1675,81 @@ App::post('/v1/account/jwt')
             'userId' => $user->getId(),
             'sessionId' => $current->getId(),
         ])]), Response::MODEL_JWT);
+    });
+
+App::post('/v1/account/targets/push')
+    ->desc('Create Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $providerId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                ],
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  'push',
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::get('/v1/account')
@@ -1995,6 +2077,7 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $oldEmail = $user->getAttribute('email');
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
@@ -2017,6 +2100,23 @@ App::patch('/v1/account/email')
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
         }
 
         try {
@@ -2065,6 +2165,19 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+        ]);
+
+        if ($target && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        /**
+        * @var Document $oldTarget
+        */
+        $oldTarget = $user->find('identifier', $user->getAttribute('phone'), 'targets');
+
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -2076,6 +2189,10 @@ App::patch('/v1/account/phone')
                 ->setAttribute('hash', Auth::DEFAULT_ALGO)
                 ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
                 ->setAttribute('passwordUpdate', DateTime::now());
+        }
+
+        if ($oldTarget !== false && !$oldTarget->isEmpty()) {
+            $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone));
         }
 
         try {
@@ -2688,6 +2805,10 @@ App::post('/v1/account/verification')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
+        if ($user->getAttribute('emailVerification')) {
+            throw new Exception(Exception::USER_EMAIL_ALREADY_VERIFIED);
+        }
+
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
@@ -2900,16 +3021,16 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
-        $provider = Authorization::skip(fn () => $dbForProject->findOne('providers', [
-            Query::equal('internal', [true]),
-            Query::equal('type', ['sms'])
-        ]));
-        if ($provider === false || $provider->isEmpty()) {
+        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         if (empty($user->getAttribute('phone'))) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+        }
+
+        if ($user->getAttribute('phoneVerification')) {
+            throw new Exception(Exception::USER_PHONE_ALREADY_VERIFIED);
         }
 
         $roles = Authorization::getRoles();
@@ -2950,31 +3071,17 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$user->getAttribute('phone')]),
-            Query::equal('providerInternalId', [$provider->getInternalId()])
-        ]);
-
-        if (!$target) {
-            $target = $dbForProject->createDocument('targets', new Document([
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'providerId' => $provider->getId(),
-                'providerInternalId' => $provider->getInternalId(),
-                'identifier' => $user->getAttribute('phone'),
-            ]));
-        }
-
-        $messageDoc = $dbForProject->createDocument('messages', new Document([
+        $messageDoc = new Document([
             '$id' => $verification->getId(),
-            'targets' => [$target->getId()],
             'data' => [
                 'content' => $message,
             ],
-        ]));
+        ]);
 
         $queueForMessaging
-            ->setMessageId($messageDoc->getId())
+            ->setMessage($messageDoc)
+            ->setRecipients([$user->getAttribute('phone')])
+            ->setProviderType('SMS')
             ->setProject($project)
             ->trigger();
 
@@ -3052,4 +3159,62 @@ App::put('/v1/account/verification/phone')
         ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+    });
+
+App::put('/v1/account/targets/:targetId/push')
+    ->desc('Update Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
     });

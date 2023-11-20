@@ -40,12 +40,6 @@ class Provider extends Model
                 'default' => '',
                 'example' => 'mailgun',
             ])
-            ->addRule('internal', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Is this a pre-configured provider instance?',
-                'default' => false,
-                'example' => true,
-            ])
             ->addRule('enabled', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Is provider enabled?',
