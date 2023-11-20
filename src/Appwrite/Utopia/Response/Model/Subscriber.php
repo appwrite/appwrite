@@ -34,6 +34,18 @@ class Subscriber extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User ID.',
+                'default' => '',
+                'example' => '259125845563242502',
+            ])
+            ->addRule('userName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'User Name.',
+                'default' => '',
+                'example' => 'Aegon Targaryen',
+            ])
             ->addRule('topicId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Topic ID.',

@@ -2044,6 +2044,7 @@ trait Base
                 return 'mutation createSubscriber($subscriberId: String!, $targetId: String!, $topicId: String!) {
                     messagingCreateSubscriber(subscriberId: $subscriberId, targetId: $targetId, topicId: $topicId) {
                         _id
+                        userId
                         targetId
                         topicId
                     }
@@ -2054,6 +2055,7 @@ trait Base
                         total
                         subscribers {
                             _id
+                            userId
                             targetId
                             topicId
                         }
@@ -2063,6 +2065,7 @@ trait Base
                 return 'query getSubscriber($topicId: String!, $subscriberId: String!) {
                     messagingGetSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
                         _id
+                        userId
                         targetId
                         topicId
                     }
