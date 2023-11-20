@@ -96,6 +96,8 @@ class Messaging extends Action
 
     protected static function createAdapterFromDSN(DSN $dsn): SMSAdapter
     {
+        $from = empty($dsn->getParam('from', '')) ? null : $dsn->getParam('from', '');
+
         switch ($dsn->getHost()) {
             case 'mock':
                 return new Mock($dsn->getUser(), $dsn->getPassword());
@@ -110,11 +112,11 @@ class Messaging extends Action
                 return new Telesign($dsn->getUser(), $dsn->getPassword());
             case 'textmagic':
             case 'text-magic':
-                return new TextMagic($dsn->getUser(), $dsn->getPassword());
+                return new TextMagic($dsn->getUser(), $dsn->getPassword(), $from);
             case 'twilio':
-                return new Twilio($dsn->getUser(), $dsn->getPassword());
+                return new Twilio($dsn->getUser(), $dsn->getPassword(), $from);
             case 'vonage':
-                return new Vonage($dsn->getUser(), $dsn->getPassword());
+                return new Vonage($dsn->getUser(), $dsn->getPassword(), $from);
             case 'geosms':
                 return self::createGEOSMSAdapter($dsn);
             default:
