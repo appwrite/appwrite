@@ -648,17 +648,17 @@ class V19 extends Migration
 
     private function migrateEnumAttributeSize(): void
     {
-        \Co\run(function () {
-            foreach ($this->documentsIterator('attributes') as $attribute) {
-                go(function ($attribute) {
-                    $attribute->setAttribute('size', Database::LENGTH_KEY);
-                    $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
-                    $databaseInternalId = $attribute->getAttribute('databaseInternalId');
-                    $collectionInternalId = $attribute->getAttribute('collectionInternalId');
-                    $this->changeAttributeInternalType('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), 'varchar(255)');
-                }, $attribute);
+        foreach ($this->documentsIterator('attributes') as $attribute) {
+            if ($attribute->getAttribute('format') !== 'enum' || $attribute->getAttribute('size') >= Database::LENGTH_KEY) {
+                return;
             }
-        });
+
+            $attribute->setAttribute('size', Database::LENGTH_KEY);
+            $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
+            $databaseInternalId = $attribute->getAttribute('databaseInternalId');
+            $collectionInternalId = $attribute->getAttribute('collectionInternalId');
+            $this->projectDB->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
+        }
     }
 
     /**
