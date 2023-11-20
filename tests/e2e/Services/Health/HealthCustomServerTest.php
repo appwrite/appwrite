@@ -145,7 +145,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -171,7 +171,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -197,7 +197,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -223,7 +223,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -249,7 +249,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -280,7 +280,7 @@ class HealthCustomServerTest extends Scope
             'name' => 'database_db_main',
             'threshold' => '0'
         ]);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -306,7 +306,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -332,7 +332,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -358,7 +358,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -384,7 +384,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
