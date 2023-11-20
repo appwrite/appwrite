@@ -38,7 +38,7 @@ class Subscriber extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
                 'default' => '',
-                'example' => '259125845563242502',
+                'example' => '5e5ea5c16897e',
             ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,

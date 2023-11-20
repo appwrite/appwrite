@@ -1673,14 +1673,11 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             ->setParam('topicId', $topic->getId())
             ->setParam('subscriberId', $subscriber->getId());
 
+        $subscriber->setAttribute('userName', $user->getAttribute('name'));
+
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic(
-                $subscriber
-                    ->setAttribute('userId', $user->getId())
-                    ->setAttribute('userName', $user->getAttribute('name')),
-                Response::MODEL_SUBSCRIBER
-            );
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
@@ -1856,12 +1853,10 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
 
+        $subscriber->setAttribute('userName', $user->getAttribute('name'));
+
         $response
-            ->dynamic(
-                $subscriber
-                    ->setAttribute('userName', $user->getAttribute('name')),
-                Response::MODEL_SUBSCRIBER
-            );
+            ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);
     });
 
 App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
