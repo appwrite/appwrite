@@ -240,6 +240,16 @@ return [
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
     ],
+    Exception::USER_EMAIL_ALREADY_VERIFIED => [
+        'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
+        'description' => 'User email is already verified',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_ALREADY_VERIFIED => [
+        'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
+        'description' => 'User phone is already verified',
+        'code' => 409
+    ],
     Exception::USER_TARGET_NOT_FOUND => [
         'name' => Exception::USER_TARGET_NOT_FOUND,
         'description' => 'The target could not be found.',

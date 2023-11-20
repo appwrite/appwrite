@@ -8,6 +8,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Registry\Registry;
 
 class TimeSeries extends Calculator
@@ -426,32 +427,34 @@ class TimeSeries extends Calculator
         $project = $this->database->getDocument('projects', $projectId);
         $database = call_user_func($this->getProjectDB, $project);
 
-        try {
-            $document = $database->getDocument('stats', $id);
-            if ($document->isEmpty()) {
-                $database->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'period' => $period,
-                    'time' => $time,
-                    'metric' => $metric,
-                    'value' => $value,
-                    'type' => $type,
-                    'region' => $this->region,
-                ]));
-            } else {
-                $database->updateDocument(
-                    'stats',
-                    $document->getId(),
-                    $document->setAttribute('value', $value)
-                );
+        Authorization::skip(function () use ($database, $id, $period, $time, $metric, $value, $type, $projectId) {
+            try {
+                $document = $database->getDocument('stats', $id);
+                if ($document->isEmpty()) {
+                    $database->createDocument('stats', new Document([
+                        '$id' => $id,
+                        'period' => $period,
+                        'time' => $time,
+                        'metric' => $metric,
+                        'value' => $value,
+                        'type' => $type,
+                        'region' => $this->region,
+                    ]));
+                } else {
+                    $database->updateDocument(
+                        'stats',
+                        $document->getId(),
+                        $document->setAttribute('value', $value)
+                    );
+                }
+            } catch (\Exception $e) { // if projects are deleted this might fail
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
+                } else {
+                    throw $e;
+                }
             }
-        } catch (\Exception $e) { // if projects are deleted this might fail
-            if (is_callable($this->errorHandler)) {
-                call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
-            } else {
-                throw $e;
-            }
-        }
+        });
 
         $this->register->get('pools')->reclaim();
     }
