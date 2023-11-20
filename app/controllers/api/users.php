@@ -1164,12 +1164,11 @@ App::delete('/v1/users/:userId/sessions')
                 ->setPayload($response->output($session, Response::MODEL_SESSION))
                 ->trigger();
         }
-
-        $queueForEvents->reset();
-
+        
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
+            ->reset()
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_USER));
 
