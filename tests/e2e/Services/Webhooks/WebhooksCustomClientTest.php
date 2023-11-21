@@ -347,9 +347,6 @@ class WebhooksCustomClientTest extends Scope
 
         $this->assertEquals($accountSession['headers']['status-code'], 204);
 
-        // This is very flakey :/
-        \sleep(3);
-
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
         $payload = json_encode($webhook['data']);

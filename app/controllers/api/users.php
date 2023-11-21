@@ -1169,6 +1169,7 @@ App::delete('/v1/users/:userId/sessions')
 
         $queueForEvents
             ->reset()
+            ->setEvent('users.[userId].sessions.delete')
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_USER));
 
