@@ -428,6 +428,8 @@ App::post('/v1/users/:userId/targets')
                     throw new Exception(Exception::GENERAL_INVALID_PHONE);
                 }
                 break;
+            case 'push':
+                break;
             default:
                 throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
@@ -1301,6 +1303,8 @@ App::patch('/v1/users/:userId/targets/:targetId')
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_PHONE);
                     }
+                    break;
+                case 'push':
                     break;
                 default:
                     throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
