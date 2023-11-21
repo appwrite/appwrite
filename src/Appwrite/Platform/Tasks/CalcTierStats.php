@@ -99,8 +99,8 @@ class CalcTierStats extends Action
 
         $projects = [$console];
         $count = 0;
-        $limit = 30;
-        $sum = 30;
+        $limit = 100;
+        $sum = 100;
         $offset = 0;
         while (!empty($projects)) {
             foreach ($projects as $project) {

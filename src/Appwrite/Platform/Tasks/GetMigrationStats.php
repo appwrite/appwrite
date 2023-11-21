@@ -79,8 +79,8 @@ class GetMigrationStats extends Action
 
         $projects = [$console];
         $count = 0;
-        $limit = 30;
-        $sum = 30;
+        $limit = 100;
+        $sum = 100;
         $offset = 0;
         while (!empty($projects)) {
             foreach ($projects as $project) {
@@ -123,7 +123,9 @@ class GetMigrationStats extends Action
                         return array_values($result);
                     }, $migrations);
 
-                    $csv->insertAll($migrations);
+                    if(!empty($migrations)) {
+                        $csv->insertAll($migrations);
+                    }
                 } catch (\Throwable $th) {
                     Console::error('Failed on project ("' . $project->getId() . '") with error on File: ' . $th->getFile() . '  line no: ' . $th->getline() . ' with message: ' . $th->getMessage());
                 } finally {
