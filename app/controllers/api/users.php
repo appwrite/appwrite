@@ -415,16 +415,21 @@ App::post('/v1/users/:userId/targets')
             }
         }
 
-        if ($providerType === 'email') {
-            $validator = new Email();
-            if (!$validator->isValid($identifier)) {
-                throw new Exception(Exception::GENERAL_INVALID_EMAIL);
-            }
-        } elseif ($providerType === 'sms') {
-            $validator = new Phone();
-            if (!$validator->isValid($identifier)) {
-                throw new Exception(Exception::GENERAL_INVALID_PHONE);
-            }
+        switch ($providerType) {
+            case 'email':
+                $validator = new Email();
+                if (!$validator->isValid($identifier)) {
+                    throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+                }
+                break;
+            case 'sms':
+                $validator = new Phone();
+                if (!$validator->isValid($identifier)) {
+                    throw new Exception(Exception::GENERAL_INVALID_PHONE);
+                }
+                break;
+            default:
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
         $user = $dbForProject->getDocument('users', $userId);
@@ -1283,16 +1288,22 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
         if ($identifier) {
             $providerType = $target->getAttribute('providerType');
-            if ($providerType === 'email') {
-                $emailValidator = new Email();
-                if (!$emailValidator->isValid($identifier)) {
-                    throw new Exception(Exception::GENERAL_INVALID_EMAIL);
-                }
-            } elseif ($providerType === 'sms') {
-                $phoneValidator = new Phone();
-                if (!$phoneValidator->isValid($identifier)) {
-                    throw new Exception(Exception::GENERAL_INVALID_PHONE);
-                }
+
+            switch ($providerType) {
+                case 'email':
+                    $validator = new Email();
+                    if (!$validator->isValid($identifier)) {
+                        throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+                    }
+                    break;
+                case 'sms':
+                    $validator = new Phone();
+                    if (!$validator->isValid($identifier)) {
+                        throw new Exception(Exception::GENERAL_INVALID_PHONE);
+                    }
+                    break;
+                default:
+                    throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
             }
 
             $target->setAttribute('identifier', $identifier);
