@@ -195,17 +195,23 @@ abstract class Migration
      * @return iterable<Document>
      * @throws \Exception
      */
-    public function documentsIterator(string $collectionId): iterable
+    public function documentsIterator(string $collectionId, $queries = []): iterable
     {
         $sum = 0;
         $nextDocument = null;
         $collectionCount = $this->projectDB->count($collectionId);
+        $queries[] = Query::limit($this->limit);
 
         do {
-            $queries = [Query::limit($this->limit)];
             if ($nextDocument !== null) {
-                $queries[] = Query::cursorAfter($nextDocument);
+                $lastQuery = $queries[\count($queries) - 1];
+                if ($lastQuery->getMethod() === 'cursorAfter') {
+                    $queries[\count($queries) - 1] = Query::cursorAfter($nextDocument);
+                } else {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
             }
+
             $documents = $this->projectDB->find($collectionId, $queries);
             $count = count($documents);
             $sum += $count;
