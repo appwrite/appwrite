@@ -1245,11 +1245,11 @@ trait UsersBase
             'targetId' => ID::unique(),
             'providerId' => $provider['body']['$id'],
             'providerType' => 'email',
-            'identifier' => 'my-token',
+            'identifier' => 'random-email@mail.org',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
-        $this->assertEquals('my-token', $response['body']['identifier']);
+        $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
         return $response['body'];
     }
 
@@ -1262,10 +1262,10 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'identifier' => 'my-updated-token',
+            'identifier' => 'random-email1@mail.org',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('my-updated-token', $response['body']['identifier']);
+        $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
         return $response['body'];
     }
 

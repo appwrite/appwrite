@@ -47,7 +47,7 @@ class MessagingTest extends Scope
                 'password' => 'my-password',
                 'from' => '+123456789',
             ],
-            'TextMagic' => [
+            'Textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
@@ -134,7 +134,7 @@ class MessagingTest extends Scope
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
-            'TextMagic' => [
+            'Textmagic' => [
                 'providerId' => $providers[4]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
@@ -398,7 +398,7 @@ class MessagingTest extends Scope
                 'providerType' => 'email',
                 'userId' => $userId,
                 'providerId' => $providerId,
-                'identifier' => 'token',
+                'identifier' => 'random-email@mail.org',
             ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -409,7 +409,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($userId, $response['body']['data']['usersCreateTarget']['userId']);
-        $this->assertEquals('token', $response['body']['data']['usersCreateTarget']['identifier']);
+        $this->assertEquals('random-email@mail.org', $response['body']['data']['usersCreateTarget']['identifier']);
 
         $targetId = $response['body']['data']['usersCreateTarget']['_id'];
 

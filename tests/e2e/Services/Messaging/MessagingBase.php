@@ -319,7 +319,7 @@ trait MessagingBase
             'targetId' => ID::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
-            'identifier' => 'my-token',
+            'identifier' => 'random-email@mail.org',
         ]);
 
         $this->assertEquals(201, $target['headers']['status-code']);

@@ -466,7 +466,7 @@
 ## Features
 - Added Phone Authentication by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3357
   - Added Twilio Support
-  - Added TextMagic Support
+  - Added Textmagic Support
   - Added Telesign Support
   - Added Endpoint to create Phone Session (`POST:/v1/account/sessions/phone`)
   - Added Endpoint to confirm Phone Session (`PUT:/v1/account/sessions/phone`)

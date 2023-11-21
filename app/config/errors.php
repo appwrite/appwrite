@@ -103,6 +103,16 @@ return [
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
     ],
+    Exception::GENERAL_INVALID_EMAIL => [
+        'name' => Exception::GENERAL_INVALID_EMAIL,
+        'description' => 'Value must be a valid email address.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_INVALID_PHONE => [
+        'name' => Exception::GENERAL_INVALID_PHONE,
+        'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [

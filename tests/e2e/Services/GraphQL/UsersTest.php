@@ -80,7 +80,7 @@ class UsersTest extends Scope
                 'userId' => $user['_id'],
                 'providerType' => 'email',
                 'providerId' => $providerId,
-                'identifier' => 'identifier',
+                'identifier' => 'random-email@mail.org',
             ]
         ];
 
@@ -90,7 +90,7 @@ class UsersTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertEquals(200, $target['headers']['status-code']);
-        $this->assertEquals('identifier', $target['body']['data']['usersCreateTarget']['identifier']);
+        $this->assertEquals('random-email@mail.org', $target['body']['data']['usersCreateTarget']['identifier']);
 
         return $target['body']['data']['usersCreateTarget'];
     }
@@ -271,7 +271,7 @@ class UsersTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertEquals(200, $target['headers']['status-code']);
-        $this->assertEquals('identifier', $target['body']['data']['usersGetTarget']['identifier']);
+        $this->assertEquals('random-email@mail.org', $target['body']['data']['usersGetTarget']['identifier']);
     }
 
     public function testUpdateUserStatus()
@@ -470,7 +470,7 @@ class UsersTest extends Scope
             'variables' => [
                 'userId' => $target['userId'],
                 'targetId' => $target['_id'],
-                'identifier' => 'newidentifier',
+                'identifier' => 'random-email1@mail.org',
             ],
         ];
 
@@ -480,7 +480,7 @@ class UsersTest extends Scope
         ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertEquals(200, $target['headers']['status-code']);
-        $this->assertEquals('newidentifier', $target['body']['data']['usersUpdateTarget']['identifier']);
+        $this->assertEquals('random-email1@mail.org', $target['body']['data']['usersUpdateTarget']['identifier']);
     }
 
     public function testDeleteUserSessions()

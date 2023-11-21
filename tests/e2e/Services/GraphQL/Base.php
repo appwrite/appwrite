@@ -1830,8 +1830,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TEXTMAGIC_PROVIDER:
-                return 'mutation createTextMagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
-                    messagingCreateTextMagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
+                return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
+                    messagingCreateTextmagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1944,8 +1944,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TEXTMAGIC_PROVIDER:
-                return 'mutation updateTextMagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
-                    messagingUpdateTextMagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
                         _id
                         name
                         provider
