@@ -114,13 +114,14 @@ class GetMigrationStats extends Action
                     ]);
 
                     $migrations = array_map(function ($migration) use ($project) {
-                        $result['Project ID'] = $project->getId();
-                        $result['$id'] = $migration->getAttribute('$id');
-                        $result['$createdAt'] = $migration->getAttribute('$createdAt');
-                        $result['status'] = $migration->getAttribute('status');
-                        $result['stage'] = $migration->getAttribute('stage');
-                        $result['source'] = $migration->getAttribute('source');
-                        return array_values($result);
+                        return [
+                            $project->getId(),
+                            $migration->getAttribute('$id'),
+                            $migration->getAttribute('$createdAt'),
+                            $migration->getAttribute('status'),
+                            $migration->getAttribute('stage'),
+                            $migration->getAttribute('source'),
+                        ];
                     }, $migrations);
 
                     if (!empty($migrations)) {
