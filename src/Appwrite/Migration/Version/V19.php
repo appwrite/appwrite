@@ -648,7 +648,10 @@ class V19 extends Migration
 
     private function migrateEnumAttributeSize(): void
     {
-        foreach ($this->documentsIterator('attributes', [Query::equal('format', ['enum']), Query::lessThan('size', Database::LENGTH_KEY)]) as $attribute) {
+        foreach ($this->documentsIterator('attributes', [
+            Query::equal('format', ['enum']), 
+            Query::lessThan('size', Database::LENGTH_KEY)
+        ]) as $attribute) {
             $attribute->setAttribute('size', Database::LENGTH_KEY);
             $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
             $databaseInternalId = $attribute->getAttribute('databaseInternalId');
