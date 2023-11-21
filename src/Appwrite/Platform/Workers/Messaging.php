@@ -17,7 +17,7 @@ use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Textmagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Messaging\Adapters\Push as PushAdapter;
@@ -303,7 +303,7 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
+            'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),

@@ -47,7 +47,7 @@ class MessagingTest extends Scope
                 'password' => 'my-password',
                 'from' => '+123456789',
             ],
-            'TextMagic' => [
+            'Textmagic' => [
                 'providerId' => ID::unique(),
                 'name' => 'Textmagic1',
                 'username' => 'my-username',
@@ -134,7 +134,7 @@ class MessagingTest extends Scope
                 'username' => 'my-username',
                 'password' => 'my-password',
             ],
-            'TextMagic' => [
+            'Textmagic' => [
                 'providerId' => $providers[4]['_id'],
                 'name' => 'Textmagic2',
                 'username' => 'my-username',
