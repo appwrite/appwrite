@@ -204,9 +204,10 @@ abstract class Migration
 
         do {
             if ($nextDocument !== null) {
-                $lastQuery = $queries[\count($queries) - 1];
-                if ($lastQuery->getMethod() === 'cursorAfter') {
-                    $queries[\count($queries) - 1] = Query::cursorAfter($nextDocument);
+                $cursorQueryIndex = \array_search('cursorAfter', \array_map(fn (Query $query) => $query->getMethod(), $queries));
+
+                if ($cursorQueryIndex !== false) {
+                    $queries[$cursorQueryIndex] = Query::cursorAfter($nextDocument);
                 } else {
                     $queries[] = Query::cursorAfter($nextDocument);
                 }
