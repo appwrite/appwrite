@@ -41,6 +41,7 @@ class CalcTierStats extends Action
         'Functions',
         'Deployments',
         'Executions',
+        'Migrations',
     ];
 
     protected string $directory = '/usr/local';
@@ -288,6 +289,13 @@ class CalcTierStats extends Action
                         $stats['Executions'] = $dbForProject->count('executions', []);
                     } catch (\Throwable) {
                         $stats['Executions'] = 0;
+                    }
+
+                    /** Get Total Migrations */
+                    try {
+                        $stats['Migrations'] = $dbForProject->count('migrations', []);
+                    } catch (\Throwable) {
+                        $stats['Migrations'] = 0;
                     }
 
                     $csv->insertOne(array_values($stats));
