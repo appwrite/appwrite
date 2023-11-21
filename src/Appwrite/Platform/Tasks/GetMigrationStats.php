@@ -123,7 +123,7 @@ class GetMigrationStats extends Action
                         return array_values($result);
                     }, $migrations);
 
-                    if(!empty($migrations)) {
+                    if (!empty($migrations)) {
                         $csv->insertAll($migrations);
                     }
                 } catch (\Throwable $th) {
