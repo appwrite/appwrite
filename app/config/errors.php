@@ -209,6 +209,7 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+        'publish' => false,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
@@ -239,6 +240,16 @@ return [
         'name' => Exception::USER_OAUTH2_PROVIDER_ERROR,
         'description' => 'OAuth2 provider returned some error.',
         'code' => 424,
+    ],
+    Exception::USER_EMAIL_ALREADY_VERIFIED => [
+        'name' => Exception::USER_EMAIL_ALREADY_VERIFIED,
+        'description' => 'User email is already verified',
+        'code' => 409,
+    ],
+    Exception::USER_PHONE_ALREADY_VERIFIED => [
+        'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
+        'description' => 'User phone is already verified',
+        'code' => 409
     ],
 
     /** Teams */
@@ -753,5 +764,13 @@ return [
         'name' => Exception::MIGRATION_PROVIDER_ERROR,
         'description' => 'An error occurred on the provider\'s side. Please try again later.',
         'code' => 400,
+    ],
+
+    /** Health */
+    Exception::QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+        'description' => 'Queue size threshold hit.',
+        'code' => 503,
+        'publish' => false
     ],
 ];
