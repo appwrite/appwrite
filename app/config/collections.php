@@ -3269,6 +3269,17 @@ $consoleCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('shareTables'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('logo'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

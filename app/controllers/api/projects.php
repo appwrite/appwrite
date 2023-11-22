@@ -175,7 +175,8 @@ App::post('/v1/projects')
                 'keys' => null,
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
-                'database' => $database
+                'database' => $database,
+                'shareTables' => $shareTables,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
