@@ -34,6 +34,18 @@ class Subscriber extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
+            ->addRule('providerType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Target\'s provider type.',
+                'default' => '',
+                'example' => 'email',
+            ])
+            ->addRule('identifier', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Target identifier.',
+                'default' => '',
+                'example' => 'random-email@mail.org',
+            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',

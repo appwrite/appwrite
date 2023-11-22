@@ -54,16 +54,48 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.')
-    ->param('apiKey', '', new Text(0), 'Mailgun API Key.')
-    ->param('domain', '', new Text(0), 'Mailgun Domain.')
-    ->param('isEuRegion', false, new Boolean(), 'Set as EU region.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
+    ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
+    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, bool $isEuRegion, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if ($isEuRegion === true || $isEuRegion === false) {
+            $credentials['isEuRegion'] = $isEuRegion;
+        }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (!empty($domain)) {
+            $credentials['domain'] = $domain;
+        }
+
+        if (
+            $enabled === true &&
+            \array_key_exists('isEuRegion', $credentials) &&
+            \array_key_exists('apiKey', $credentials) &&
+            \array_key_exists('domain', $credentials) &&
+            \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
 
         $provider = new Document([
             '$id' => $providerId,
@@ -71,14 +103,8 @@ App::post('/v1/messaging/providers/mailgun')
             'provider' => 'mailgun',
             'type' => 'email',
             'enabled' => $enabled,
-            'credentials' => [
-                'apiKey' => $apiKey,
-                'domain' => $domain,
-                'isEuRegion' => $isEuRegion,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -111,26 +137,45 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.')
-    ->param('apiKey', '', new Text(0), 'Sendgrid API key.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('apiKey', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'sendgrid',
             'type' => 'email',
             'enabled' => $enabled,
-            'credentials' => [
-                'apiKey' => $apiKey,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -163,28 +208,51 @@ App::post('/v1/messaging/providers/msg91')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.')
-    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('senderId', '', new Text(0), 'Msg91 Sender ID.', true)
+    ->param('authKey', '', new Text(0), 'Msg91 Auth Key.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $senderId, string $authKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $senderId, string $authKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($senderId)) {
+            $credentials['senderId'] = $senderId;
+        }
+
+        if (!empty($authKey)) {
+            $credentials['authKey'] = $authKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('senderId', $credentials)
+            && \array_key_exists('authKey', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'msg91',
             'type' => 'sms',
             'enabled' => $enabled,
-            'credentials' => [
-                'senderId' => $senderId,
-                'authKey' => $authKey,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -217,28 +285,51 @@ App::post('/v1/messaging/providers/telesign')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('username', '', new Text(0), 'Telesign username.')
-    ->param('password', '', new Text(0), 'Telesign password.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('username', '', new Text(0), 'Telesign username.', true)
+    ->param('password', '', new Text(0), 'Telesign password.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $password, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $username, string $password, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($username)) {
+            $credentials['username'] = $username;
+        }
+
+        if (!empty($password)) {
+            $credentials['password'] = $password;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('username', $credentials)
+            && \array_key_exists('password', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'telesign',
             'type' => 'sms',
             'enabled' => $enabled,
-            'credentials' => [
-                'username' => $username,
-                'password' => $password,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -271,28 +362,51 @@ App::post('/v1/messaging/providers/textmagic')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('username', '', new Text(0), 'Textmagic username.')
-    ->param('apiKey', '', new Text(0), 'Textmagic apiKey.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('username', '', new Text(0), 'Textmagic username.', true)
+    ->param('apiKey', '', new Text(0), 'Textmagic apiKey.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $username, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($username)) {
+            $credentials['username'] = $username;
+        }
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('username', $credentials)
+            && \array_key_exists('apiKey', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'textmagic',
             'type' => 'sms',
             'enabled' => $enabled,
-            'credentials' => [
-                'username' => $username,
-                'apiKey' => $apiKey,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -325,28 +439,51 @@ App::post('/v1/messaging/providers/twilio')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('accountSid', '', new Text(0), 'Twilio account secret ID.')
-    ->param('authToken', '', new Text(0), 'Twilio authentication token.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('accountSid', '', new Text(0), 'Twilio account secret ID.', true)
+    ->param('authToken', '', new Text(0), 'Twilio authentication token.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $accountSid, string $authToken, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $accountSid, string $authToken, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($accountSid)) {
+            $credentials['accountSid'] = $accountSid;
+        }
+
+        if (!empty($authToken)) {
+            $credentials['authToken'] = $authToken;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('accountSid', $credentials)
+            && \array_key_exists('authToken', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'twilio',
             'type' => 'sms',
             'enabled' => $enabled,
-            'credentials' => [
-                'accountSid' => $accountSid,
-                'authToken' => $authToken,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $from,
         ]);
 
         try {
@@ -379,28 +516,51 @@ App::post('/v1/messaging/providers/vonage')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.')
-    ->param('apiKey', '', new Text(0), 'Vonage API key.')
-    ->param('apiSecret', '', new Text(0), 'Vonage API secret.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
+    ->param('apiKey', '', new Text(0), 'Vonage API key.', true)
+    ->param('apiSecret', '', new Text(0), 'Vonage API secret.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $apiSecret, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $apiSecret, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $options = [];
+
+        if (!empty($from)) {
+            $options ['from'] = $from;
+        }
+
+        $credentials = [];
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
+        if (!empty($apiSecret)) {
+            $credentials['apiSecret'] = $apiSecret;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('apiKey', $credentials)
+            && \array_key_exists('apiSecret', $credentials)
+            && \array_key_exists('from', $options)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'vonage',
             'type' => 'sms',
             'enabled' => $enabled,
-            'credentials' => [
-                'apiKey' => $apiKey,
-                'apiSecret' => $apiSecret,
-            ],
-            'options' => [
-                'from' => $from,
-            ]
+            'credentials' => $credentials,
+            'options' => $options,
         ]);
 
         try {
@@ -433,22 +593,33 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serverKey', '', new Text(0), 'FCM server key.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('serverKey', '', new Text(0), 'FCM server key.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $serverKey, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $serverKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($serverKey)) {
+            $credentials['serverKey'] = $serverKey;
+        }
+
+        if ($enabled === true && \array_key_exists('serverKey', $credentials)) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'fcm',
             'type' => 'push',
             'enabled' => $enabled,
-            'credentials' => [
-                'serverKey' => $serverKey,
-            ],
+            'credentials' => $credentials
         ]);
 
         try {
@@ -481,30 +652,60 @@ App::post('/v1/messaging/providers/apns')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('authKey', '', new Text(0), 'APNS authentication key.')
-    ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.')
-    ->param('teamId', '', new Text(0), 'APNS team ID.')
-    ->param('bundleId', '', new Text(0), 'APNS bundle ID.')
-    ->param('endpoint', '', new Text(0), 'APNS endpoint.')
-    ->param('enabled', true, new Boolean(), 'Set as enabled.', true)
+    ->param('authKey', '', new Text(0), 'APNS authentication key.', true)
+    ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
+    ->param('teamId', '', new Text(0), 'APNS team ID.', true)
+    ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [];
+
+        if (!empty($authKey)) {
+            $credentials['authKey'] = $authKey;
+        }
+
+        if (!empty($authKeyId)) {
+            $credentials['authKeyId'] = $authKeyId;
+        }
+
+        if (!empty($teamId)) {
+            $credentials['teamId'] = $teamId;
+        }
+
+        if (!empty($bundleId)) {
+            $credentials['bundleId'] = $bundleId;
+        }
+
+        if (!empty($endpoint)) {
+            $credentials['endpoint'] = $endpoint;
+        }
+
+        if (
+            $enabled === true
+            && \array_key_exists('authKey', $credentials)
+            && \array_key_exists('authKeyId', $credentials)
+            && \array_key_exists('teamId', $credentials)
+            && \array_key_exists('bundleId', $credentials)
+            && \array_key_exists('endpoint', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'apns',
             'type' => 'push',
             'enabled' => $enabled,
-            'credentials' => [
-                'authKey' => $authKey,
-                'authKeyId' => $authKeyId,
-                'teamId' => $teamId,
-                'bundleId' => $bundleId,
-                'endpoint' => $endpoint,
-            ],
+            'credentials' => $credentials,
         ]);
 
         try {
@@ -717,10 +918,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if ($isEuRegion === true || $isEuRegion === false) {
@@ -736,6 +933,21 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true &&
+                \array_key_exists('isEuRegion', $credentials) &&
+                \array_key_exists('apiKey', $credentials) &&
+                \array_key_exists('domain', $credentials) &&
+                \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -790,14 +1002,23 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         if (!empty($apiKey)) {
             $provider->setAttribute('credentials', [
                 'apiKey' => $apiKey,
             ]);
+        }
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('apiKey', $provider->getAttribute('credentials'))
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -854,10 +1075,6 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($senderId)) {
@@ -869,6 +1086,20 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('senderId', $credentials)
+                && \array_key_exists('authKey', $credentials)
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -924,10 +1155,6 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($username)) {
@@ -939,6 +1166,21 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('username', $credentials)
+                && \array_key_exists('password', $credentials)
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -994,10 +1236,6 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($username)) {
@@ -1009,6 +1247,21 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('username', $credentials)
+                && \array_key_exists('apiKey', $credentials)
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -1064,10 +1317,6 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($accountSid)) {
@@ -1079,6 +1328,21 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('accountSid', $credentials)
+                && \array_key_exists('authToken', $credentials)
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -1134,10 +1398,6 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($apiKey)) {
@@ -1149,6 +1409,21 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('apiKey', $credentials)
+                && \array_key_exists('apiSecret', $credentials)
+                && \array_key_exists('from', $provider->getAttribute('options'))
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -1196,12 +1471,18 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         if (!empty($serverKey)) {
             $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
+        }
+
+        if ($enabled === true || $enabled === false) {
+            if ($enabled === true && \array_key_exists('serverKey', $provider->getAttribute('credentials'))) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1255,10 +1536,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if ($enabled === true || $enabled === false) {
-            $provider->setAttribute('enabled', $enabled);
-        }
-
         $credentials = $provider->getAttribute('credentials');
 
         if (!empty($authKey)) {
@@ -1282,6 +1559,23 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        if ($enabled === true || $enabled === false) {
+            if (
+                $enabled === true
+                && \array_key_exists('authKey', $credentials)
+                && \array_key_exists('authKeyId', $credentials)
+                && \array_key_exists('teamId', $credentials)
+                && \array_key_exists('bundleId', $credentials)
+                && \array_key_exists('endpoint', $credentials)
+            ) {
+                $enabled = true;
+            } else {
+                $enabled = false;
+            }
+
+            $provider->setAttribute('enabled', $enabled);
+        }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
 
@@ -1726,8 +2020,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
             return function () use ($subscriber, $dbForProject) {
                 $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
+                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
 
                 return $subscriber
+                    ->setAttribute('identifier', $target->getAttribute('identifier'))
+                    ->setAttribute('providerType', $target->getAttribute('providerType'))
                     ->setAttribute('userName', $user->getAttribute('name'));
             };
         }, $subscribers));
@@ -1852,8 +2149,12 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
         }
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
 
-        $subscriber->setAttribute('userName', $user->getAttribute('name'));
+        $subscriber
+            ->setAttribute('identifier', $target->getAttribute('identifier'))
+            ->setAttribute('providerType', $target->getAttribute('providerType'))
+            ->setAttribute('userName', $user->getAttribute('name'));
 
         $response
             ->dynamic($subscriber, Response::MODEL_SUBSCRIBER);

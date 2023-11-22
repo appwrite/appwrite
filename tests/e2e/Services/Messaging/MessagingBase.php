@@ -350,7 +350,9 @@ trait MessagingBase
             'topicId' => $topic['body']['$id'],
             'targetId' => $target['body']['$id'],
             'userId' => $target['body']['userId'],
-            'subscriberId' => $response['body']['$id']
+            'subscriberId' => $response['body']['$id'],
+            'identifier' => $target['body']['identifier'],
+            'providerType' => $target['body']['providerType'],
         ];
     }
 
@@ -369,6 +371,8 @@ trait MessagingBase
         $this->assertEquals($data['topicId'], $response['body']['topicId']);
         $this->assertEquals($data['targetId'], $response['body']['targetId']);
         $this->assertEquals($data['userId'], $response['body']['userId']);
+        $this->assertEquals($data['providerType'], $response['body']['providerType']);
+        $this->assertEquals($data['identifier'], $response['body']['identifier']);
     }
 
     /**
@@ -385,6 +389,8 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
         $this->assertEquals($data['userId'], $response['body']['subscribers'][0]['userId']);
+        $this->assertEquals($data['providerType'], $response['body']['subscribers'][0]['providerType']);
+        $this->assertEquals($data['identifier'], $response['body']['subscribers'][0]['identifier']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
 
         return $data;
