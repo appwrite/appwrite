@@ -6,6 +6,7 @@ use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
 use Utopia\Messaging\Messages\Sms;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
@@ -43,15 +44,17 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
-            ->callback(fn($message) => $this->action($message));
+            ->inject('log')
+            ->callback(fn(Message $message, Log $log) => $this->action($message, $log));
     }
 
     /**
      * @param Message $message
+     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message): void
+    public function action(Message $message, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -69,6 +72,8 @@ class Messaging extends Action
             Console::error('Message arg not found');
             return;
         }
+
+        $log->addTag('type', $this->dsn->getHost());
 
         $sms =  match ($this->dsn->getHost()) {
             'mock' => new Mock($this->user, $this->secret), // used for tests

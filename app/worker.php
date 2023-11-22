@@ -199,6 +199,12 @@ if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
 }
 
+if (\str_starts_with($workerName, 'databases')) {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+} else {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+}
+
 try {
     /**
      * Any worker can be configured with the following env vars:
@@ -206,12 +212,6 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
-    if ($workerName === 'databases') {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-    } else {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
-    }
-
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
@@ -237,7 +237,7 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
+    ->action(function (Throwable $error, ?Logger $logger, Log $log) use ($queueName) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -250,7 +250,7 @@ $worker
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
+            $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());

@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -25,15 +26,17 @@ class Webhooks extends Action
         $this
             ->desc('Webhooks worker')
             ->inject('message')
-            ->callback(fn ($message) => $this->action($message));
+            ->inject('log')
+            ->callback(fn (Message $message, Log $log) => $this->action($message, $log));
     }
 
     /**
      * @param Message $message
+     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message): void
+    public function action(Message $message, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -45,6 +48,8 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $project = new Document($payload['project']);
         $user = new Document($payload['user'] ?? []);
+
+        $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {

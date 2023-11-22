@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -36,17 +37,19 @@ class Databases extends Action
             ->inject('message')
             ->inject('dbForConsole')
             ->inject('dbForProject')
-            ->callback(fn($message, $dbForConsole, $dbForProject) => $this->action($message, $dbForConsole, $dbForProject));
+            ->inject('log')
+            ->callback(fn(Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForConsole
      * @param Database $dbForProject
+     * @param Log $log
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Database $dbForConsole, Database $dbForProject): void
+    public function action(Message $message, Database $dbForConsole, Database $dbForProject, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -60,9 +63,14 @@ class Databases extends Action
         $document = new Document($payload['document'] ?? []);
         $database = new Document($payload['database'] ?? []);
 
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
+
         if ($database->isEmpty()) {
             throw new Exception('Missing database');
         }
+
+        $log->addTag('databaseId', $database->getId());
 
         match (strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),

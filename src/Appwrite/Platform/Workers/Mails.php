@@ -8,6 +8,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
@@ -28,17 +29,19 @@ class Mails extends Action
             ->desc('Mails worker')
             ->inject('message')
             ->inject('register')
-            ->callback(fn($message, $register) => $this->action($message, $register));
+            ->inject('log')
+            ->callback(fn(Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
     }
 
     /**
      * @param Message $message
      * @param Registry $register
+     * @param Log $log
      * @throws \PHPMailer\PHPMailer\Exception
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Registry $register): void
+    public function action(Message $message, Registry $register, Log $log): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
@@ -53,6 +56,8 @@ class Mails extends Action
             Console::info('Skipped mail processing. No SMTP configuration has been set.');
             return;
         }
+
+        $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
