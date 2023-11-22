@@ -2368,7 +2368,7 @@ App::delete('/v1/account/sessions')
             ->reset()
             ->setEvent('users.[userId].sessions.delete')
             ->setParam('userId', $user->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
+            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->noContent();
     });
