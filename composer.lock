@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "69bc2e21a65b78344393706b39d789b4",
+    "content-hash": "2c23008af30193734b6717a41632aa54",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1615,23 +1615,23 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "0.33.0",
+            "version": "dev-feat-isolation-modes",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "1ba8d5f2793885cbf779e3b5b9d886968af43d2c"
+                "reference": "171eda04bfc53e5e24bdb36230ae84fe686ac2ee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/1ba8d5f2793885cbf779e3b5b9d886968af43d2c",
-                "reference": "1ba8d5f2793885cbf779e3b5b9d886968af43d2c",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/171eda04bfc53e5e24bdb36230ae84fe686ac2ee",
+                "reference": "171eda04bfc53e5e24bdb36230ae84fe686ac2ee",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-pdo": "*",
                 "php": ">=8.0",
-                "utopia-php/database": "0.45.*"
+                "utopia-php/database": "dev-feat-isolation-mode as 0.45.0"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1658,9 +1658,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/0.33.0"
+                "source": "https://github.com/utopia-php/abuse/tree/feat-isolation-modes"
             },
-            "time": "2023-11-01T08:51:33+00:00"
+            "time": "2023-11-22T09:49:43+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1710,21 +1710,21 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "0.35.0",
+            "version": "dev-feat-isolation-modes",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "ed9366ef05556da040de7a8b570f4160c7d8ea4a"
+                "reference": "b561fa872c60e28afda02b4428ad5a2444099c44"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/ed9366ef05556da040de7a8b570f4160c7d8ea4a",
-                "reference": "ed9366ef05556da040de7a8b570f4160c7d8ea4a",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/b561fa872c60e28afda02b4428ad5a2444099c44",
+                "reference": "b561fa872c60e28afda02b4428ad5a2444099c44",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.0",
-                "utopia-php/database": "0.45.*"
+                "utopia-php/database": "dev-feat-isolation-mode as 0.45.0"
             },
             "require-dev": {
                 "laravel/pint": "1.5.*",
@@ -1751,9 +1751,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/0.35.0"
+                "source": "https://github.com/utopia-php/audit/tree/feat-isolation-modes"
             },
-            "time": "2023-11-01T08:51:29+00:00"
+            "time": "2023-11-22T09:49:57+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -1906,16 +1906,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.45.2",
+            "version": "dev-feat-isolation-mode",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "dc789f2c1fd8b5ee07ff883e11c9ad7970824788"
+                "reference": "b7bcc9b373242a9e494b0b7bbf78dfa54333727c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/dc789f2c1fd8b5ee07ff883e11c9ad7970824788",
-                "reference": "dc789f2c1fd8b5ee07ff883e11c9ad7970824788",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/b7bcc9b373242a9e494b0b7bbf78dfa54333727c",
+                "reference": "b7bcc9b373242a9e494b0b7bbf78dfa54333727c",
                 "shasum": ""
             },
             "require": {
@@ -1956,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.45.2"
+                "source": "https://github.com/utopia-php/database/tree/feat-isolation-mode"
             },
-            "time": "2023-11-15T03:38:47+00:00"
+            "time": "2023-11-22T07:58:21+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5796,9 +5796,32 @@
             "time": "2023-08-28T11:09:02+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/abuse",
+            "version": "dev-feat-isolation-modes",
+            "alias": "0.33.0",
+            "alias_normalized": "0.33.0.0"
+        },
+        {
+            "package": "utopia-php/audit",
+            "version": "dev-feat-isolation-modes",
+            "alias": "0.35.0",
+            "alias_normalized": "0.35.0.0"
+        },
+        {
+            "package": "utopia-php/database",
+            "version": "dev-feat-isolation-mode",
+            "alias": "0.45.2",
+            "alias_normalized": "0.45.2.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/abuse": 20,
+        "utopia-php/audit": 20,
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
