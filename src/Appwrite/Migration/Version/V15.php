@@ -295,7 +295,7 @@ class V15 extends Migration
     protected function removeWritePermissions(string $table): void
     {
         try {
-            $this->pdo->prepare("DELETE FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _type = 'write'")->execute();
+            $this->pdo->prepare("DELETE FROM `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _type = 'write'")->execute();
         } catch (\Throwable $th) {
             Console::warning("Remove 'write' permissions from {$table}: {$th->getMessage()}");
         }
@@ -311,7 +311,7 @@ class V15 extends Migration
      */
     protected function getSQLColumnTypes(string $table): array
     {
-        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getInternalId()}_{$table}' AND table_schema = '{$this->projectDB->getDefaultDatabase()}'");
+        $query = $this->pdo->prepare("SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name = '_{$this->project->getInternalId()}_{$table}' AND table_schema = '{$this->projectDB->getDatabase()}'");
         $query->execute();
 
         return array_reduce($query->fetchAll(), function (array $carry, array $item) {
@@ -333,8 +333,8 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'int') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
-                $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} VARCHAR(64)")->execute();
+                $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` SET {$attribute} = IF({$attribute} = 0, NULL, FROM_UNIXTIME({$attribute}))")->execute();
                 $columns[$attribute] = 'varchar';
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
@@ -343,7 +343,7 @@ class V15 extends Migration
 
         if ($columns[$attribute] === 'varchar') {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` MODIFY {$attribute} DATETIME(3)")->execute();
             } catch (\Throwable $th) {
                 Console::warning($th->getMessage());
             }
@@ -389,7 +389,7 @@ class V15 extends Migration
 
         if (!array_key_exists('_permissions', $columns)) {
             try {
-                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
+                $this->pdo->prepare("ALTER TABLE IF EXISTS `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}` ADD `_permissions` MEDIUMTEXT DEFAULT NULL")->execute();
             } catch (\Throwable $th) {
                 Console::warning("Add '_permissions' column to '{$table}': {$th->getMessage()}");
             }
@@ -410,7 +410,7 @@ class V15 extends Migration
     {
         $table ??= $document->getCollection();
 
-        $query = $this->pdo->prepare("SELECT * FROM `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
+        $query = $this->pdo->prepare("SELECT * FROM `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$table}_perms` WHERE _document = '{$document->getId()}'");
         $query->execute();
         $results = $query->fetchAll();
         $permissions = [];
@@ -1472,9 +1472,9 @@ class V15 extends Migration
             $from = $this->pdo->quote($from);
             $to = $this->pdo->quote($to);
 
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_stats` SET metric = {$to} WHERE metric = {$from}")->execute();
         } catch (\Throwable $th) {
-            Console::warning("Migrating steps from {$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
+            Console::warning("Migrating steps from {$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_stats:" . $th->getMessage());
         }
     }
 

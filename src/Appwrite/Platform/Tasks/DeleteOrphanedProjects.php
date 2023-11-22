@@ -90,12 +90,12 @@ class DeleteOrphanedProjects extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     $collectionsCreated = 0;
                     $cnt++;
-                    if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                    if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                         $collectionsCreated = $dbForProject->count(Database::METADATA);
                     }
 
@@ -123,7 +123,7 @@ class DeleteOrphanedProjects extends Action
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-                        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                        if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                             try {
                                 $dbForProject->deleteCollection(Database::METADATA);
                                 $dbForProject->deleteCachedCollection(Database::METADATA);

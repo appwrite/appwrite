@@ -50,7 +50,7 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        if ($this->consoleDB->exists($this->consoleDB->getDefaultDatabase(), 'domains')) {
+        if ($this->consoleDB->exists($this->consoleDB->getDatabase(), 'domains')) {
             foreach ($this->documentsIterator('domains') as $domain) {
                 $status = 'created';
                 if ($domain->getAttribute('verification', false)) {

@@ -12,11 +12,11 @@ if (\file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
 }
 
-ini_set('memory_limit', '512M');
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-ini_set('default_socket_timeout', -1);
-error_reporting(E_ALL);
+\ini_set('memory_limit', '512M');
+\ini_set('display_errors', 1);
+\ini_set('display_startup_errors', 1);
+\ini_set('default_socket_timeout', -1);
+\error_reporting(E_ALL);
 
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;
@@ -34,6 +34,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Appwrite\Usage\Stats;
 use Utopia\App;
+use Utopia\CLI\Console;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
@@ -653,14 +654,13 @@ $register->set('pools', function () {
 
     foreach ($connections as $key => $connection) {
         $type = $connection['type'] ?? '';
-        $dsns = $connection['dsns'] ?? '';
-        $multipe = $connection['multiple'] ?? false;
+        $multiple = $connection['multiple'] ?? false;
         $schemes = $connection['schemes'] ?? [];
         $config = [];
         $dsns = explode(',', $connection['dsns'] ?? '');
         foreach ($dsns as &$dsn) {
             $dsn = explode('=', $dsn);
-            $name = ($multipe) ? $key . '_' . $dsn[0] : $key;
+            $name = ($multiple) ? $key . '_' . $dsn[0] : $key;
             $dsn = $dsn[1] ?? '';
             $config[] = $name;
             if (empty($dsn)) {
@@ -732,7 +732,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDefaultDatabase($dsn->getPath());
+                        $adapter->setDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
                         $adapter = $resource();
@@ -1136,8 +1136,7 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $database = new Database($dbAdapter, $cache);
 
@@ -1247,21 +1246,14 @@ function getDevice($root): Device
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 
-        switch ($device) {
-            case Storage::DEVICE_S3:
-                return new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case STORAGE::DEVICE_DO_SPACES:
-                return new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_BACKBLAZE:
-                return new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LINODE:
-                return new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_WASABI:
-                return new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl);
-            case Storage::DEVICE_LOCAL:
-            default:
-                return new Local($root);
-        }
+        return match ($device) {
+            Storage::DEVICE_S3 => new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            STORAGE::DEVICE_DO_SPACES => new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            Storage::DEVICE_BACKBLAZE => new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            Storage::DEVICE_LINODE => new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            Storage::DEVICE_WASABI => new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            default => new Local($root),
+        };
     } else {
         switch (strtolower(App::getEnv('_APP_STORAGE_DEVICE', Storage::DEVICE_LOCAL) ?? '')) {
             case Storage::DEVICE_LOCAL:

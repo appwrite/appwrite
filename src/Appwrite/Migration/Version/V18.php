@@ -244,7 +244,7 @@ class V18 extends Migration
             /**
              * Create 'documentSecurity' column
              */
-            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
+            $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` ADD COLUMN IF NOT EXISTS documentSecurity TINYINT(1);")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
@@ -253,7 +253,7 @@ class V18 extends Migration
             /**
              * Set 'documentSecurity' column to 1 if NULL
              */
-            $this->pdo->prepare("UPDATE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
+            $this->pdo->prepare("UPDATE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}__metadata` SET documentSecurity = 1 WHERE documentSecurity IS NULL")->execute();
         } catch (\Throwable $th) {
             Console::warning($th->getMessage());
         }
