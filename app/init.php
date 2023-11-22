@@ -1129,6 +1129,13 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
+    if ($project->getAttribute('shareTables')) {
+        $database
+            ->setNamespace('')
+            ->setShareTables(true)
+            ->setTenant($project->getId());
+    }
+
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
@@ -1153,22 +1160,31 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache, Document 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
 
         $databaseName = $project->getAttribute('database');
 
-        if (isset($databases[$databaseName])) {
-            $database = $databases[$databaseName];
-
+        $configure = (function (Database $database) use ($project) {
             $database
                 ->setNamespace('_' . $project->getInternalId())
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
+            if ($project->getAttribute('shareTables')) {
+                $database
+                    ->setNamespace('')
+                    ->setShareTables(true)
+                    ->setTenant($project->getId());
+            }
+        });
+
+        if (isset($databases[$databaseName])) {
+            $database = $databases[$databaseName];
+            $configure($database);
             return $database;
         }
 
@@ -1178,19 +1194,10 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
-
         $databases[$databaseName] = $database;
-
-        $database
-            ->setNamespace('_' . $project->getInternalId())
-            ->setMetadata('host', \gethostname())
-            ->setMetadata('project', $project->getId())
-            ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
-
+        $configure($database);
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
 App::setResource('cache', function (Group $pools) {

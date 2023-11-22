@@ -61,15 +61,25 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     }
 
     $pools = $register->get('pools');
-    $database = $pools
+
+    $adapter = $pools
         ->get($project->getAttribute('database'))
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_' . $project->getInternalId());
-    return $adapter;
+    $database = new Database($adapter, $cache);
+
+    if ($project->getAttribute('shareTables')) {
+        $database
+            ->setShareTables(true)
+            ->setTenant($project->getId());
+    } else {
+        $database
+            ->setNamespace('_' . $project->getInternalId());
+    }
+
+
+    return $database;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
@@ -84,7 +94,14 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+            if ($project->getAttribute('shareTables')) {
+                $database
+                    ->setShareTables(true)
+                    ->setTenant($project->getId());
+            } else {
+                $database
+                    ->setNamespace('_' . $project->getInternalId());
+            }
             return $database;
         }
 
@@ -97,7 +114,14 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        if ($project->getAttribute('shareTables')) {
+            $database
+                ->setShareTables(true)
+                ->setTenant($project->getId());
+        } else {
+            $database
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         return $database;
     };

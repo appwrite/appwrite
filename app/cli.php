@@ -24,7 +24,7 @@ use Utopia\Registry\Registry;
 
 Authorization::disable();
 
-CLI::setResource('register', fn()=>$register);
+CLI::setResource('register', fn() => $register);
 
 CLI::setResource('cache', function ($pools) {
     $list = Config::getParam('pools-cache', []);
