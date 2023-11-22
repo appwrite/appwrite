@@ -77,7 +77,6 @@ App::post('/v1/projects')
     ->inject('pools')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
 
-
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -85,12 +84,21 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
-        foreach ($auth as $index => $method) {
+        $auths = [
+            'limit' => 0,
+            'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
+            'passwordHistory' => 0,
+            'passwordDictionary' => false,
+            'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
+            'personalDataCheck' => false
+        ];
+        foreach ($auth as $method) {
             $auths[$method['key'] ?? ''] = true;
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
+
+        $dbForConsole->setTenant($projectId);
 
         $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
         $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
@@ -133,6 +141,9 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
+        static $counter = 0;
+        $shareTables = $counter++ % 2 === 0;
+
         try {
             $project = $dbForConsole->createDocument('projects', new Document([
                 '$id' => $projectId,
@@ -166,12 +177,21 @@ App::post('/v1/projects')
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $database
             ]));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
-        $dbForProject->setNamespace("_{$project->getInternalId()}");
+
+        if ($shareTables) {
+            $dbForProject
+                ->setShareTables(true)
+                ->setTenant($project->getId());
+        } else {
+            $dbForProject
+                ->setNamespace("_{$project->getInternalId()}");
+        }
+
         $dbForProject->create();
 
         $audit = new Audit($dbForProject);
@@ -188,33 +208,19 @@ App::post('/v1/projects')
                 continue;
             }
 
-            $attributes = [];
-            $indexes = [];
+            $attributes = \array_map(function (array $attribute) {
+                return new Document($attribute);
+            }, $collection['attributes']);
 
-            foreach ($collection['attributes'] as $attribute) {
-                $attributes[] = new Document([
-                    '$id' => $attribute['$id'],
-                    'type' => $attribute['type'],
-                    'size' => $attribute['size'],
-                    'required' => $attribute['required'],
-                    'signed' => $attribute['signed'],
-                    'array' => $attribute['array'],
-                    'filters' => $attribute['filters'],
-                    'default' => $attribute['default'] ?? null,
-                    'format' => $attribute['format'] ?? ''
-                ]);
-            }
+            $indexes = \array_map(function (array $index) {
+                return new Document($index);
+            }, $collection['indexes']);
 
-            foreach ($collection['indexes'] as $index) {
-                $indexes[] = new Document([
-                    '$id' => $index['$id'],
-                    'type' => $index['type'],
-                    'attributes' => $index['attributes'],
-                    'lengths' => $index['lengths'],
-                    'orders' => $index['orders'],
-                ]);
+            try {
+                $dbForProject->createCollection($key, $attributes, $indexes);
+            } catch (Duplicate) {
+                // Collection already exists
             }
-            $dbForProject->createCollection($key, $attributes, $indexes);
         }
 
         $response

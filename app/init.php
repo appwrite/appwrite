@@ -1132,7 +1132,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+App::setResource('dbForConsole', function (Group $pools, Cache $cache, Document $project) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -1141,13 +1141,14 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $database = new Database($dbAdapter, $cache);
 
     $database
+        ->setTenant($project->getId())
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'project']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
