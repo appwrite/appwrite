@@ -28,6 +28,12 @@ class Target extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Target Name.',
+                'default' => '',
+                'example' => 'Aegon apple token',
+            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
