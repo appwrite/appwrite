@@ -1946,10 +1946,8 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             '$id' => $subscriberId,
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
-                Permission::delete(Role::user($target->getAttribute('userId'))),
+                Permission::delete(Role::user($user->getId())),
             ],
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
@@ -1967,7 +1965,9 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             ->setParam('topicId', $topic->getId())
             ->setParam('subscriberId', $subscriber->getId());
 
-        $subscriber->setAttribute('userName', $user->getAttribute('name'));
+        $subscriber
+            ->setAttribute('target', $target)
+            ->setAttribute('userName', $user->getAttribute('name'));
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2019,12 +2019,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
             return function () use ($subscriber, $dbForProject) {
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
                 $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
-                    ->setAttribute('identifier', $target->getAttribute('identifier'))
-                    ->setAttribute('providerType', $target->getAttribute('providerType'))
+                    ->setAttribute('target', $target)
                     ->setAttribute('userName', $user->getAttribute('name'));
             };
         }, $subscribers));
@@ -2148,12 +2147,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $subscriber->getAttribute('userId')));
         $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
-            ->setAttribute('identifier', $target->getAttribute('identifier'))
-            ->setAttribute('providerType', $target->getAttribute('providerType'))
+            ->setAttribute('target', $target)
             ->setAttribute('userName', $user->getAttribute('name'));
 
         $response
