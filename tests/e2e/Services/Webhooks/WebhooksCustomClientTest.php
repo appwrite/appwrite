@@ -365,29 +365,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Project-Id'] ?? '', $this->getProject()['$id']);
         $this->assertEquals(empty($webhook['headers']['X-Appwrite-Webhook-User-Id'] ?? ''), ('server' === $this->getSide()));
         $this->assertNotEmpty($webhook['data']['$id']);
-        $this->assertNotEmpty($webhook['data']['userId']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($webhook['data']['expire']));
-        $this->assertEquals($webhook['data']['ip'], '127.0.0.1');
-        $this->assertNotEmpty($webhook['data']['osCode']);
-        $this->assertIsString($webhook['data']['osCode']);
-        $this->assertNotEmpty($webhook['data']['osName']);
-        $this->assertIsString($webhook['data']['osName']);
-        $this->assertNotEmpty($webhook['data']['osVersion']);
-        $this->assertIsString($webhook['data']['osVersion']);
-        $this->assertEquals($webhook['data']['clientType'], 'browser');
-        $this->assertEquals($webhook['data']['clientCode'], 'CH');
-        $this->assertEquals($webhook['data']['clientName'], 'Chrome');
-        $this->assertNotEmpty($webhook['data']['clientVersion']);
-        $this->assertIsString($webhook['data']['clientVersion']);
-        $this->assertNotEmpty($webhook['data']['clientEngine']);
-        $this->assertIsString($webhook['data']['clientEngine']);
-        $this->assertIsString($webhook['data']['clientEngineVersion']);
-        $this->assertIsString($webhook['data']['deviceName']);
-        $this->assertIsString($webhook['data']['deviceBrand']);
-        $this->assertIsString($webhook['data']['deviceModel']);
-        $this->assertIsString($webhook['data']['countryCode']);
-        $this->assertIsString($webhook['data']['countryName']);
-        $this->assertEquals($webhook['data']['current'], true);
+        $this->assertEquals($email, $webhook['data']['email']);
 
         $accountSession = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
