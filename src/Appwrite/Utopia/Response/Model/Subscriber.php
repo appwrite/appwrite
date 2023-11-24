@@ -34,11 +34,20 @@ class Subscriber extends Model
                 'default' => '',
                 'example' => '259125845563242502',
             ])
-            ->addRule('userId', [
-                'type' => self::TYPE_STRING,
-                'description' => 'User ID.',
-                'default' => '',
-                'example' => '5e5ea5c16897e',
+            ->addRule('target', [
+                'type' => Response::MODEL_TARGET,
+                'description' => 'Target.',
+                'default' => [],
+                'example' => [
+                    '$id' => '259125845563242502',
+                    '$createdAt' => self::TYPE_DATETIME_EXAMPLE,
+                    '$updatedAt' => self::TYPE_DATETIME_EXAMPLE,
+                    'providerType' => 'email',
+                    'providerId' => '259125845563242502',
+                    'name' => 'ageon-app-email',
+                    'identifier' => 'random-mail@email.org',
+                    'userId' => '5e5ea5c16897e',
+                ],
             ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,

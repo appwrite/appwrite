@@ -430,7 +430,7 @@ class MessagingTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['topicId'], $topicId);
         $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['targetId'], $targetId);
-        $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['userId'], $userId);
+        $this->assertEquals($response['body']['data']['messagingCreateSubscriber']['target']['userId'], $userId);
 
         return $response['body']['data']['messagingCreateSubscriber'];
     }
@@ -454,9 +454,9 @@ class MessagingTest extends Scope
         ]), $graphQLPayload);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals($response['body']['data']['messagingListSubscribers']['subscribers'][0]['topicId'], $subscriber['topicId']);
-        $this->assertEquals($response['body']['data']['messagingListSubscribers']['subscribers'][0]['targetId'], $subscriber['targetId']);
-        $this->assertEquals($response['body']['data']['messagingListSubscribers']['subscribers'][0]['userId'], $subscriber['userId']);
+        $this->assertEquals($subscriber['topicId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['topicId']);
+        $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['targetId']);
+        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingListSubscribers']['subscribers'][0]['target']['userId']);
         $this->assertEquals(1, \count($response['body']['data']['messagingListSubscribers']['subscribers']));
     }
 
@@ -487,7 +487,7 @@ class MessagingTest extends Scope
         $this->assertEquals($subscriberId, $response['body']['data']['messagingGetSubscriber']['_id']);
         $this->assertEquals($topicId, $response['body']['data']['messagingGetSubscriber']['topicId']);
         $this->assertEquals($subscriber['targetId'], $response['body']['data']['messagingGetSubscriber']['targetId']);
-        $this->assertEquals($subscriber['userId'], $response['body']['data']['messagingGetSubscriber']['userId']);
+        $this->assertEquals($subscriber['target']['userId'], $response['body']['data']['messagingGetSubscriber']['target']['userId']);
     }
 
     /**

@@ -144,7 +144,11 @@ class Messaging extends Action
                 if ($internalProvider->getId() === $providerId) {
                     $provider = $internalProvider;
                 } else {
-                    $provider = $dbForProject->getDocument('providers', $providerId);
+                    $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
+
+                    if ($provider->isEmpty()) {
+                        $provider = $internalProvider;
+                    }
                 }
 
                 $providers[] = $provider;
