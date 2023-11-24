@@ -231,6 +231,15 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
+            [
+                'name' => '_APP_SHARED_COOKIE_DOMAIN',
+                'description' => 'This variable enables cookie sharing between subdomains. This value is set to \'disabled\' by default, to enable cookie sharing set the value to host you want cookies to be shared from. For example: \'cloud.appwrite.io\'. will share with all subdomains of appwrite.io.',
+                'introduction' => '0.14.14',
+                'default' => 'disabled',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ]
         ],
     ],
     [

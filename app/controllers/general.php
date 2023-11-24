@@ -370,8 +370,9 @@ App::init()
                 )
         );
 
-        if ($request->getHostname() == 'cloud.appwrite.io') {
-            Config::setParam('cookieDomain', '.' . 'appwrite.io');
+        if (App::getEnv('_APP_SHARED_COOKIE_DOMAIN', 'disabled') !== 'disabled' && $request->getHostname() == App::getEnv('_APP_SHARED_COOKIE_DOMAIN', '')) {
+            $cookieDomain = new Domain(App::getEnv('_APP_SHARED_COOKIE_DOMAIN', ''));
+            Config::setParam('cookieDomain', '.' . $cookieDomain->getRegisterable());
         }
 
         /*
