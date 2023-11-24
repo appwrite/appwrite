@@ -613,8 +613,13 @@ App::error()
 
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
+        $publish = true;
 
-        if ($logger) {
+        if ($error instanceof AppwriteException) {
+            $publish = $error->isPublishable();
+        }
+
+        if ($logger && $publish) {
             if ($error->getCode() >= 500 || $error->getCode() === 0) {
                 try {
                     /** @var Utopia\Database\Document $user */
