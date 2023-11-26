@@ -106,7 +106,8 @@ RUN chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/calc-users-stats && \
     chmod +x /usr/local/bin/calc-tier-stats && \
-    chmod +x /usr/local/bin/get-migration-stats
+    chmod +x /usr/local/bin/get-migration-stats && \
+    chmod +x /usr/local/bin/create-inf-metric
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
