@@ -149,6 +149,9 @@ class Hamster extends Action
                 /** Get Total Teams */
                 $statsPerProject['custom_teams'] = $dbForProject->count('teams', [], APP_LIMIT_COUNT);
 
+                /** Get Total Migrations */
+                $statsPerProject['custom_migrations'] = $dbForProject->count('migrations', [], APP_LIMIT_COUNT);
+
                 /** Get Total Members */
                 $teamInternalId = $project->getAttribute('teamInternalId', null);
                 if ($teamInternalId) {

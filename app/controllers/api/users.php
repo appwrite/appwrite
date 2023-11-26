@@ -85,7 +85,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'status' => true,
             'labels' => [],
             'password' => $password,
-            'passwordHistory' => is_null($password) && $passwordHistory === 0 ? [] : [$password],
+            'passwordHistory' => is_null($password) || $passwordHistory === 0 ? [] : [$password],
             'passwordUpdate' => (!empty($password)) ? DateTime::now() : null,
             'hash' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO : $hash,
             'hashOptions' => $hash === 'plaintext' ? Auth::DEFAULT_ALGO_OPTIONS : $hashOptionsObject + ['type' => $hash],
@@ -1102,7 +1102,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
 App::delete('/v1/users/:userId/sessions')
     ->desc('Delete user sessions')
     ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.[sessionId].delete')
+    ->label('event', 'users.[userId].sessions.delete')
     ->label('scope', 'users.write')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')

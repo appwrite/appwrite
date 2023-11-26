@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Services;
 
-use Appwrite\Platform\Tasks\CreateInfMetric;
 use Utopia\Platform\Service;
 use Appwrite\Platform\Tasks\Doctor;
 use Appwrite\Platform\Tasks\Install;
@@ -19,6 +18,10 @@ use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcTierStats;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
+use Appwrite\Platform\Tasks\GetMigrationStats;
+use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
+use Appwrite\Platform\Tasks\CreateInfMetric;
+
 
 class Tasks extends Service
 {
@@ -41,6 +44,8 @@ class Tasks extends Service
             ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
+            ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
+            ->addAction(GetMigrationStats::getName(), new GetMigrationStats())
             ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
 
         ;

@@ -45,7 +45,7 @@ class Deletes extends Action
             ->inject('getFunctionsDevice')
             ->inject('getBuildsDevice')
             ->inject('getCacheDevice')
-            ->callback(fn($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
     }
 
     /**
@@ -452,6 +452,21 @@ class Deletes extends Action
             Query::equal('projectInternalId', [$projectInternalId])
         ], $dbForConsole);
 
+        // Delete VCS Installations
+        $this->deleteByGroup('installations', [
+            Query::equal('projectInternalId', [$projectInternalId])
+        ], $dbForConsole);
+
+        // Delete VCS Repositories
+        $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
+        // Delete VCS commments
+        $this->deleteByGroup('vcsComments', [
+            Query::equal('projectInternalId', [$projectInternalId]),
+        ], $dbForConsole);
+
         // Delete metadata tables
         try {
             $dbForProject->deleteCollection('_metadata');
@@ -690,7 +705,7 @@ class Deletes extends Action
             $this->deleteDeploymentFiles($functionsStorage, $document);
         });
 
-         /**
+        /**
          * Delete builds
          */
         Console::info("Deleting builds for function " . $functionId);
@@ -710,6 +725,23 @@ class Deletes extends Action
         $this->deleteByGroup('executions', [
             Query::equal('functionInternalId', [$functionInternalId])
         ], $dbForProject);
+
+        /**
+         * Delete VCS Repositories and VCS Comments
+         */
+        Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
+        $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
+            Query::equal('resourceInternalId', [$functionInternalId]),
+            Query::equal('resourceType', ['function']),
+        ], $dbForConsole, function (Document $document) use ($dbForConsole) {
+            $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
+            $projectInternalId = $document->getAttribute('projectInternalId', '');
+            $this->deleteByGroup('vcsComments', [
+                Query::equal('providerRepositoryId', [$providerRepositoryId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
+            ], $dbForConsole);
+        });
 
         /**
          * Request executor to delete all deployment containers

@@ -1208,7 +1208,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE, min: 0), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('elements', [], new ArrayList(new Text(DATABASE::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . DATABASE::LENGTH_KEY . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Text(0), 'Default value for attribute when not provided. Cannot be set when attribute is required.', true)
     ->param('array', false, new Boolean(), 'Is attribute an array?', true)
@@ -1217,16 +1217,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
-        // use length of longest string as attribute size
-        $size = 0;
-        foreach ($elements as $element) {
-            $length = \strlen($element);
-            if ($length === 0) {
-                throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
-            }
-            $size = ($length > $size) ? $length : $size;
-        }
-
         if (!is_null($default) && !in_array($default, $elements)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
         }
@@ -1234,7 +1224,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
             'type' => Database::VAR_STRING,
-            'size' => $size,
+            'size' => Database::LENGTH_KEY,
             'required' => $required,
             'default' => $default,
             'array' => $array,
@@ -1883,7 +1873,7 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('collectionId', '', new UID(), 'Collection ID. You can create a new collection using the Database service [server integration](https://appwrite.io/docs/server/databases#databasesCreateCollection).')
     ->param('key', '', new Key(), 'Attribute Key.')
-    ->param('elements', null, new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.')
+    ->param('elements', null, new ArrayList(new Text(DATABASE::LENGTH_KEY), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of elements in enumerated type. Uses length of longest element to determine size. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' elements are allowed, each ' . DATABASE::LENGTH_KEY . ' characters long.')
     ->param('required', null, new Boolean(), 'Is attribute required?')
     ->param('default', null, new Nullable(new Text(0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.')
     ->inject('response')
@@ -3549,7 +3539,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
 App::get('/v1/databases/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -3627,7 +3617,7 @@ App::get('/v1/databases/usage')
 
 App::get('/v1/databases/:databaseId/usage')
     ->desc('Get usage stats for the database')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -3711,7 +3701,7 @@ App::get('/v1/databases/:databaseId/usage')
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
     ->desc('Get usage stats for a collection')
-    ->groups(['api', 'database'])
+    ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')

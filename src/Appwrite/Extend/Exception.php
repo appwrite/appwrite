@@ -84,6 +84,8 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
+    public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -224,14 +226,19 @@ class Exception extends \Exception
     public const MIGRATION_NOT_FOUND                 = 'migration_not_found';
     public const MIGRATION_ALREADY_EXISTS            = 'migration_already_exists';
     public const MIGRATION_IN_PROGRESS               = 'migration_in_progress';
+    public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     /** Realtime */
-    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
-    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
-    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
+    public const REALTIME_MESSAGE_FORMAT_INVALID    = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES         = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
+
+    /** Health */
+    public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
 
     protected string $type = '';
     protected array $errors = [];
+    protected bool $publish = true;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
@@ -241,6 +248,7 @@ class Exception extends \Exception
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];
             $this->message = $this->errors[$type]['description'];
+            $this->publish = $this->errors[$type]['publish'] ?? true;
         }
 
         $this->message = $message ?? $this->message;
@@ -269,5 +277,15 @@ class Exception extends \Exception
     public function setType(string $type): void
     {
         $this->type = $type;
+    }
+
+    /**
+     * Check whether the log is publishable for the exception.
+     *
+     * @return bool
+     */
+    public function isPublishable(): bool
+    {
+        return $this->publish;
     }
 }

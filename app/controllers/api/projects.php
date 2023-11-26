@@ -100,11 +100,6 @@ App::post('/v1/projects')
         $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
 
         $databases = Config::getParam('pools-database', []);
-        $databaseSelfHosted = 'database_db_fra1_self_hosted_0_0';
-        $selfHostedIndex = array_search($databaseSelfHosted, $databases);
-        if ($selfHostedIndex !== false) {
-            unset($databases[$selfHostedIndex]);
-        }
 
         /**
          * Remove databases from the list that are currently undergoing an backup
@@ -173,16 +168,6 @@ App::post('/v1/projects')
             ]));
         } catch (Duplicate $th) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
-        }
-
-        /**
-         * Update database with self-managed db every $mod projects
-         */
-        $mod = 20;
-        if ($project->getInternalId() % $mod === 0 && $selfHostedIndex !== false) {
-            $database = $databaseSelfHosted;
-            $project->setAttribute('database', $database);
-            $dbForConsole->updateDocument('projects', $project->getId(), $project);
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
