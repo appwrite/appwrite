@@ -1945,6 +1945,17 @@ $projectCollections = array_merge([
                 'filters' => ['subQueryVariables'],
             ],
             [
+                '$id' => ID::custom('varsProject'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['subQueryProjectVariables'],
+            ],
+            [
                 '$id' => ID::custom('events'),
                 'type' => Database::VAR_STRING,
                 'format' => '',

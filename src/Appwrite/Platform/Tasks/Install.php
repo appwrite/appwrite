@@ -6,9 +6,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Utopia\View;
-use Utopia\Analytics\Adapter;
-use Utopia\Analytics\Adapter\GoogleAnalytics;
-use Utopia\Analytics\Event;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Validator\Text;
@@ -40,17 +37,12 @@ class Install extends Action
         $config = Config::getParam('variables');
         $defaultHTTPPort = '80';
         $defaultHTTPSPort = '443';
+        /** @var array<string, array<string, string>> $vars array whre key is variable name and value is variable */
         $vars = [];
-
-        /**
-         * We are using a random value every execution for identification.
-         * This allows us to collect information without invading the privacy of our users.
-         */
-        $analytics = new GoogleAnalytics('UA-26264668-9', uniqid('server.', true));
 
         foreach ($config as $category) {
             foreach ($category['variables'] ?? [] as $var) {
-                $vars[] = $var;
+                $vars[$var['name']] = $var;
             }
         }
 
@@ -70,7 +62,7 @@ class Install extends Action
             if ($interactive == 'Y' && Console::isInteractive()) {
                 $answer = Console::confirm('Previous installation found, do you want to overwrite it (a backup will be created before overwriting)? (Y/n)');
 
-                if ($answer !== 'Y') {
+                if (\strtolower($answer) !== 'y') {
                     Console::info('No action taken.');
                     return;
                 }
@@ -81,7 +73,7 @@ class Install extends Action
             file_put_contents($this->path . '/docker-compose.yml.' . $time . '.backup', $data);
             $compose = new Compose($data);
             $appwrite = $compose->getService('appwrite');
-            $oldVersion = ($appwrite) ? $appwrite->getImageVersion() : null;
+            $oldVersion = $appwrite?->getImageVersion();
             try {
                 $ports = $compose->getService('traefik')->getPorts();
             } catch (\Throwable $th) {
@@ -104,10 +96,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as $i => $var) {
-                            if ($var['name'] === $key) {
-                                $vars[$i]['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }
@@ -123,10 +115,10 @@ class Install extends Action
                         if (is_null($value)) {
                             continue;
                         }
-                        foreach ($vars as $i => $var) {
-                            if ($var['name'] === $key) {
-                                $vars[$i]['default'] = $value;
-                            }
+
+                        $configVar = $vars[$key] ?? [];
+                        if (!empty($configVar) && !($configVar['overwrite'] ?? false)) {
+                            $vars[$key]['default'] = $value;
                         }
                     }
                 }
@@ -208,14 +200,12 @@ class Install extends Action
 
         if (!file_put_contents($this->path . '/docker-compose.yml', $templateForCompose->render(false))) {
             $message = 'Failed to save Docker Compose file';
-            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::exit(1);
         }
 
         if (!file_put_contents($this->path . '/.env', $templateForEnv->render(false))) {
             $message = 'Failed to save environment variables file';
-            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::exit(1);
         }
@@ -236,29 +226,12 @@ class Install extends Action
 
         if ($exit !== 0) {
             $message = 'Failed to install Appwrite dockers';
-            $this->sendEvent($analytics, $message);
             Console::error($message);
             Console::error($stderr);
             Console::exit($exit);
         } else {
             $message = 'Appwrite installed successfully';
-            $this->sendEvent($analytics, $message);
             Console::success($message);
         }
-    }
-
-    private function sendEvent(Adapter $analytics, string $message): void
-    {
-        $event = new Event();
-        $event->setName(APP_VERSION_STABLE);
-        $event->setValue($message);
-        $event->setUrl('http://localhost/');
-        $event->setProps([
-            'category' => 'install/server',
-            'action' => 'install',
-        ]);
-        $event->setType('install/server');
-
-        $analytics->createEvent($event);
     }
 }

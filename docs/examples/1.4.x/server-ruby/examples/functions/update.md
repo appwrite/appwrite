@@ -9,6 +9,6 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]', runtime: 'node-14.5')
+response = functions.update(function_id: '[FUNCTION_ID]', name: '[NAME]')
 
 puts response.inspect
