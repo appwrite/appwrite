@@ -224,10 +224,12 @@ class DatabasesConsoleClientTest extends Scope
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 3);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsTotal']);
-        $this->assertIsArray($response['body']['collectionsTotal']);
+        $this->assertEquals(5, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['collectionsTotal']);
+        $this->assertIsArray($response['body']['collections']);
+        $this->assertIsArray($response['body']['documents']);
     }
 
 
@@ -269,9 +271,10 @@ class DatabasesConsoleClientTest extends Scope
             'range' => '24h'
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 2);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsTotal']);
+        $this->assertEquals(3, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsArray($response['body']['documents']);
     }
 
     /**

@@ -451,17 +451,18 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 9);
+        $this->assertEquals(9, count($response['body']));
         $this->assertNotEmpty($response['body']);
         $this->assertEquals('30d', $response['body']['range']);
-        $this->assertIsArray($response['body']['requestsTotal']);
+        $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
-        $this->assertIsArray($response['body']['executionsTotal']);
-        $this->assertIsArray($response['body']['documentsTotal']);
-        $this->assertIsArray($response['body']['databasesTotal']);
-        $this->assertIsArray($response['body']['bucketsTotal']);
-        $this->assertIsArray($response['body']['usersTotal']);
-        $this->assertIsArray($response['body']['filesStorage']);
+        $this->assertIsNumeric($response['body']['executionsTotal']);
+        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['databasesTotal']);
+        $this->assertIsNumeric($response['body']['bucketsTotal']);
+        $this->assertIsNumeric($response['body']['usersTotal']);
+        $this->assertIsNumeric($response['body']['filesStorageTotal']);
+
 
         /**
          * Test for FAILURE

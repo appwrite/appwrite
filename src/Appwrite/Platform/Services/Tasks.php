@@ -22,7 +22,6 @@ use Appwrite\Platform\Tasks\GetMigrationStats;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
 use Appwrite\Platform\Tasks\CreateInfMetric;
 
-
 class Tasks extends Service
 {
     public function __construct()

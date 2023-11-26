@@ -91,15 +91,23 @@ class FunctionsConsoleClientTest extends Scope
             'range' => '24h'
         ]);
 
-        $this->assertEquals($response['headers']['status-code'], 200);
-        $this->assertEquals(count($response['body']), 8);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['deploymentsTotal']);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(15, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['deploymentsTotal']);
+        $this->assertIsNumeric($response['body']['deploymentsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsTotal']);
+        $this->assertIsNumeric($response['body']['buildsStorageTotal']);
+        $this->assertIsNumeric($response['body']['buildsTimeTotal']);
+        $this->assertIsNumeric($response['body']['executionsTotal']);
+        $this->assertIsNumeric($response['body']['executionsTimeTotal']);
+        $this->assertIsArray($response['body']['deployments']);
         $this->assertIsArray($response['body']['deploymentsStorage']);
-        $this->assertIsArray($response['body']['buildsTotal']);
+        $this->assertIsArray($response['body']['builds']);
+        $this->assertIsArray($response['body']['buildsTime']);
         $this->assertIsArray($response['body']['buildsStorage']);
         $this->assertIsArray($response['body']['buildsTime']);
-        $this->assertIsArray($response['body']['executionsTotal']);
+        $this->assertIsArray($response['body']['executions']);
         $this->assertIsArray($response['body']['executionsTime']);
     }
 
