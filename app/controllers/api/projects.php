@@ -144,7 +144,7 @@ App::post('/v1/projects')
         // One in 20 projects use shared tables
         $shareTables = !\mt_rand(0, 19);
 
-        // Allow overriding in development mode
+        // Allow overriding in development mode, to be removed once all project are using shared tables
         if (App::isDevelopment()) {
             $shareTables = (bool) $request->getHeader('x-appwrite-share-tables', false);
         }

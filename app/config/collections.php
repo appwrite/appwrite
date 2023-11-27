@@ -3269,6 +3269,7 @@ $consoleCollections = array_merge([
                 'filters' => [],
             ],
             [
+                // To be removed once all project are using shared tables
                 '$id' => ID::custom('shareTables'),
                 'type' => Database::VAR_BOOLEAN,
                 'format' => '',
