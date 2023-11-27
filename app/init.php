@@ -1264,7 +1264,7 @@ function getDevice($root): Device
 
         return match ($device) {
             Storage::DEVICE_S3 => new S3($root, $accessKey, $accessSecret, $bucket, $region, $acl),
-            STORAGE::DEVICE_DO_SPACES => new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl),
+            Storage::DEVICE_DO_SPACES => new DOSpaces($root, $accessKey, $accessSecret, $bucket, $region, $acl),
             Storage::DEVICE_BACKBLAZE => new Backblaze($root, $accessKey, $accessSecret, $bucket, $region, $acl),
             Storage::DEVICE_LINODE => new Linode($root, $accessKey, $accessSecret, $bucket, $region, $acl),
             Storage::DEVICE_WASABI => new Wasabi($root, $accessKey, $accessSecret, $bucket, $region, $acl),
