@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c23008af30193734b6717a41632aa54",
+    "content-hash": "75330561b68809c4c842c513ead64783",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1910,12 +1910,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "8756141bef49993643acea5120314b9390bfe30a"
+                "reference": "ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/8756141bef49993643acea5120314b9390bfe30a",
-                "reference": "8756141bef49993643acea5120314b9390bfe30a",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6",
+                "reference": "ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6",
                 "shasum": ""
             },
             "require": {
@@ -1958,7 +1958,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-isolation-mode"
             },
-            "time": "2023-11-27T07:58:37+00:00"
+            "time": "2023-11-27T11:35:51+00:00"
         },
         {
             "name": "utopia-php/domains",
