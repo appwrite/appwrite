@@ -135,6 +135,12 @@ Choose from one of the providers below:
           <br /><sub><b>Akamai Compute</b></sub></a>    
       </a>
     </td>
+    <td align="center" width="100" height="100">
+      <a href="https://elest.io/open-source/appwrite">
+        <img width="40" height="40" src="public/images/integrations/Elestio.png" alt="Elestio Logo" />
+          <br /><sub><b>Elestio</b></sub></a> 
+      </a>
+    </td>
   </tr>
 </table>
 
