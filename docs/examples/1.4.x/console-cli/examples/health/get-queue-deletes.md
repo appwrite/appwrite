@@ -1,1 +1,2 @@
-appwrite health getQueueDeletes
+appwrite health getQueueDeletes \
+
