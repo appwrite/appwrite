@@ -72,9 +72,12 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     if ($project->getAttribute('shareTables')) {
         $database
             ->setShareTables(true)
-            ->setTenant($project->getId());
+            ->setTenant($project->getInternalId())
+            ->setNamespace('');
     } else {
         $database
+            ->setShareTables(false)
+            ->setTenant(null)
             ->setNamespace('_' . $project->getInternalId());
     }
 
@@ -94,14 +97,19 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
+
             if ($project->getAttribute('shareTables')) {
                 $database
                     ->setShareTables(true)
-                    ->setTenant($project->getId());
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace('');
             } else {
                 $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
                     ->setNamespace('_' . $project->getInternalId());
             }
+
             return $database;
         }
 
@@ -117,9 +125,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if ($project->getAttribute('shareTables')) {
             $database
                 ->setShareTables(true)
-                ->setTenant($project->getId());
+                ->setTenant($project->getInternalId())
+                ->setNamespace('');
         } else {
             $database
+                ->setShareTables(false)
+                ->setTenant(null)
                 ->setNamespace('_' . $project->getInternalId());
         }
 
@@ -228,7 +239,7 @@ try {
      * Any worker can be configured with the following env vars:
      * - _APP_WORKERS_NUM           The total number of worker processes
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
-     * - _APP_QUEUE_NAME  The name of the queue to read for database events
+     * - _APP_QUEUE_NAME            The name of the queue to read for database events
      */
     if ($workerName === 'databases') {
         $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
