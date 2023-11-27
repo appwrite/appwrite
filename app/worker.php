@@ -81,7 +81,6 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
             ->setNamespace('_' . $project->getInternalId());
     }
 
-
     return $database;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
