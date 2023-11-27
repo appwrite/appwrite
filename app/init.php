@@ -953,9 +953,7 @@ App::setResource('clients', function ($request, $console, $project) {
         }
     }
 
-    $clients = array_unique($clients);
-
-    return $clients;
+    return \array_unique($clients);
 }, ['request', 'console', 'project']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
@@ -1127,22 +1125,26 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
     $database = new Database($dbAdapter, $cache);
 
     $database
-        ->setNamespace('_' . $project->getInternalId())
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     if ($project->getAttribute('shareTables')) {
         $database
-            ->setNamespace('')
             ->setShareTables(true)
-            ->setTenant($project->getId());
+            ->setTenant($project->getInternalId())
+            ->setNamespace('');
+    } else {
+        $database
+            ->setShareTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getInternalId());
     }
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
-App::setResource('dbForConsole', function (Group $pools, Cache $cache, Document $project) {
+App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -1151,14 +1153,13 @@ App::setResource('dbForConsole', function (Group $pools, Cache $cache, Document 
     $database = new Database($dbAdapter, $cache);
 
     $database
-        ->setTenant($project->getId())
         ->setNamespace('_console')
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', 'console')
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache', 'project']);
+}, ['pools', 'cache']);
 
 App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
@@ -1172,16 +1173,20 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $configure = (function (Database $database) use ($project) {
             $database
-                ->setNamespace('_' . $project->getInternalId())
                 ->setMetadata('host', \gethostname())
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             if ($project->getAttribute('shareTables')) {
                 $database
-                    ->setNamespace('')
                     ->setShareTables(true)
-                    ->setTenant($project->getId());
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace('');
+            } else {
+                $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
             }
         });
 
