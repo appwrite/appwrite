@@ -1910,12 +1910,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6"
+                "reference": "c1341e2daa90aaa93511a98838cd48243aa2eae5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6",
-                "reference": "ba6d104d2d0ac2de115bb426b01cdcbdc5143ce6",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c1341e2daa90aaa93511a98838cd48243aa2eae5",
+                "reference": "c1341e2daa90aaa93511a98838cd48243aa2eae5",
                 "shasum": ""
             },
             "require": {
@@ -1958,7 +1958,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/feat-isolation-mode"
             },
-            "time": "2023-11-27T11:35:51+00:00"
+            "time": "2023-11-27T12:29:12+00:00"
         },
         {
             "name": "utopia-php/domains",

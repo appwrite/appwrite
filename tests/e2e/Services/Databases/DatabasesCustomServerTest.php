@@ -1374,10 +1374,10 @@ class DatabasesCustomServerTest extends Scope
         }
 
         // Test indexLimit = 64
-        // MariaDB, MySQL, and MongoDB create 5 indexes per new collection
+        // MariaDB, MySQL, and MongoDB create 6 indexes per new collection
         // Add up to the limit, then check if the next index throws IndexLimitException
-        for ($i = 0; $i < 59; $i++) {
             // $this->assertEquals(true, static::getDatabase()->createIndex('indexLimit', "index{$i}", Database::INDEX_KEY, ["test{$i}"], [16]));
+        for ($i = 0; $i < 58; $i++) {
             $index = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
@@ -1405,7 +1405,7 @@ class DatabasesCustomServerTest extends Scope
         $this->assertIsArray($collection['body']['attributes']);
         $this->assertIsArray($collection['body']['indexes']);
         $this->assertCount(64, $collection['body']['attributes']);
-        $this->assertCount(59, $collection['body']['indexes']);
+        $this->assertCount(58, $collection['body']['indexes']);
 
         $tooMany = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $collectionId . '/indexes', array_merge([
             'content-type' => 'application/json',
