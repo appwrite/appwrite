@@ -186,10 +186,10 @@ class Databases extends Action
         }
 
         if ($type === Database::VAR_RELATIONSHIP && $options['twoWay']) {
-            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -336,12 +336,12 @@ class Databases extends Action
             }
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
-        $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
 
         if (!$relatedCollection->isEmpty() && !$relatedAttribute->isEmpty()) {
-            $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
         }
     }
 
@@ -402,7 +402,7 @@ class Databases extends Action
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collectionId);
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collectionId);
     }
 
     /**
@@ -459,7 +459,7 @@ class Databases extends Action
             $this->trigger($database, $collection, $index, $project, $projectId, $events);
         }
 
-        $dbForProject->deleteCachedDocument('database_' . $database->getInternalId(), $collection->getId());
+        $dbForProject->purgeCachedDocument('database_' . $database->getInternalId(), $collection->getId());
     }
 
     /**
@@ -514,8 +514,8 @@ class Databases extends Action
             }
             $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
             $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $collection->getInternalId());

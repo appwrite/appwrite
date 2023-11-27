@@ -232,7 +232,9 @@ App::init()
         Request::setRoute($route);
 
         if ($route === null) {
-            return $response->setStatusCode(404)->send('Not Found');
+            return $response
+                ->setStatusCode(404)
+                ->send('Not Found');
         }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
@@ -511,7 +513,7 @@ App::init()
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
                     $key->setAttribute('accessedAt', DateTime::now());
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -525,7 +527,7 @@ App::init()
                         /** Update access time as well */
                         $key->setAttribute('accessedAt', Datetime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
                     }
                 }
             }
@@ -678,6 +680,7 @@ App::error()
             Console::error('[Error] Message: ' . $message);
             Console::error('[Error] File: ' . $file);
             Console::error('[Error] Line: ' . $line);
+            Console::error('[Error] Trace: ' . $error->getTraceAsString());
         }
 
         /** Handle Utopia Errors */

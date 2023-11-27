@@ -220,7 +220,7 @@ class Migrations extends Action
         ]);
 
         $this->dbForConsole->createDocument('keys', $key);
-        $this->dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $this->dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         return $key;
     }

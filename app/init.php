@@ -935,22 +935,25 @@ App::setResource('clients', function ($request, $console, $project) {
         fn ($node) => $node['hostname'],
         \array_filter(
             $console->getAttribute('platforms', []),
-            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && isset($node['hostname']) && !empty($node['hostname']))
+            fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB) && !empty($node['hostname']))
         )
     );
 
-    $clients = \array_unique(
-        \array_merge(
-            $clientsConsole,
-            \array_map(
-                fn ($node) => $node['hostname'],
-                \array_filter(
-                    $project->getAttribute('platforms', []),
-                    fn ($node) => (isset($node['type']) && ($node['type'] === Origin::CLIENT_TYPE_WEB || $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) && isset($node['hostname']) && !empty($node['hostname']))
-                )
-            )
-        )
-    );
+    $clients = $clientsConsole;
+    $platforms = $project->getAttribute('platforms', []);
+
+    foreach ($platforms as $node) {
+        if (
+            isset($node['type']) &&
+            ($node['type'] === Origin::CLIENT_TYPE_WEB ||
+            $node['type'] === Origin::CLIENT_TYPE_FLUTTER_WEB) &&
+            !empty($node['hostname'])
+        ) {
+            $clients[] = $node['hostname'];
+        }
+    }
+
+    $clients = array_unique($clients);
 
     return $clients;
 }, ['request', 'console', 'project']);

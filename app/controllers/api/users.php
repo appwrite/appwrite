@@ -1114,7 +1114,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         }
 
         $dbForProject->deleteDocument('sessions', $session->getId());
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1158,7 +1158,7 @@ App::delete('/v1/users/:userId/sessions')
             //TODO: fix this
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())

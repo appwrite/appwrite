@@ -311,8 +311,8 @@ class Deletes extends Action
             }
             $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
             $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
@@ -370,7 +370,7 @@ class Deletes extends Action
             $dbForProject,
             function (Document $membership) use ($dbForProject) {
                 $userId = $membership->getAttribute('userId');
-                $dbForProject->deleteCachedDocument('users', $userId);
+                $dbForProject->purgeCachedDocument('users', $userId);
             }
         );
     }
@@ -504,7 +504,7 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
 
-        $dbForProject->deleteCachedDocument('users', $userId);
+        $dbForProject->purgeCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [

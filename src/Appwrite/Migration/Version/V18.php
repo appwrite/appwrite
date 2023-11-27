@@ -106,7 +106,7 @@ class V18 extends Migration
                          * Create 'passwordHistory' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'passwordHistory');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'passwordHistory' from {$id}: {$th->getMessage()}");
                     }
@@ -117,7 +117,7 @@ class V18 extends Migration
                          * Create 'prefs' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'prefs');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'prefs' from {$id}: {$th->getMessage()}");
                     }
@@ -128,7 +128,7 @@ class V18 extends Migration
                          * Create 'options' attribute
                          */
                         $this->createAttributeFromCollection($this->projectDB, $id, 'options');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (\Throwable $th) {
                         Console::warning("'options' from {$id}: {$th->getMessage()}");
                     }

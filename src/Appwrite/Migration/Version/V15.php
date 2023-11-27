@@ -372,7 +372,7 @@ class V15 extends Migration
             }
         }
 
-        $this->projectDB->deleteCachedCollection($table);
+        $this->projectDB->purgeCachedCollection($table);
     }
 
     /**
@@ -479,7 +479,7 @@ class V15 extends Migration
                     $this->createCollection('cache');
                     Console::log('Created new Collection "variables" collection');
                     $this->createCollection('variables');
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
                     break;
 
                 case 'abuse':

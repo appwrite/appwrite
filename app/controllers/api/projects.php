@@ -941,7 +941,7 @@ App::post('/v1/projects/:projectId/webhooks')
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1062,7 +1062,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('httpPass', $httpPass);
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -1101,7 +1101,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $webhook->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -1138,7 +1138,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1188,7 +1188,7 @@ App::post('/v1/projects/:projectId/keys')
 
         $key = $dbForConsole->createDocument('keys', $key);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1302,7 +1302,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     });
@@ -1339,7 +1339,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->deleteDocument('keys', $key->getId());
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1389,7 +1389,7 @@ App::post('/v1/projects/:projectId/platforms')
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1504,7 +1504,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
@@ -1541,7 +1541,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->deleteDocument('platforms', $platformId);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
