@@ -38,7 +38,9 @@ Using Appwrite, you can easily integrate your app with user authentication and m
     <br />
 </p>
 
-![Appwrite](public/images/github.png)
+<!-- ![Appwrite](https://appwrite.io/images/appwrite.svg) -->
+<img src="https://appwrite.io/images/appwrite.svg" alt="Appwrite" width="150" height="20"/>
+
 
 Find out more at: [https://appwrite.io](https://appwrite.io)
 
@@ -119,13 +121,13 @@ Choose from one of the providers below:
   <tr>
     <td align="center" width="100" height="100">
       <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
+        <img width="50" height="39" src="https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg" alt="DigitalOcean Logo" />
           <br /><sub><b>DigitalOcean</b></sub></a>
         </a>
     </td>
     <td align="center" width="100" height="100">
       <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
+        <img width="50" height="39" src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Gitpod-ddd.svg" alt="Gitpod Logo" />
           <br /><sub><b>Gitpod</b></sub></a>    
       </a>
     </td>
