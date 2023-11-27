@@ -9,6 +9,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
@@ -71,11 +72,12 @@ App::post('/v1/projects')
     ->param('legalCity', '', new Text(256), 'Project legal City. Max length: 256 chars.', true)
     ->param('legalAddress', '', new Text(256), 'Project legal Address. Max length: 256 chars.', true)
     ->param('legalTaxId', '', new Text(256), 'Project legal Tax ID. Max length: 256 chars.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Request $request, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -97,8 +99,6 @@ App::post('/v1/projects')
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
-
-        $dbForConsole->setTenant($projectId);
 
         $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
         $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
@@ -141,8 +141,13 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        static $counter = 0;
-        $shareTables = $counter++ % 2 === 0;
+        // One in 20 projects use shared tables
+        $shareTables = !\mt_rand(0, 19);
+
+        // Allow overriding in development mode
+        if (App::isDevelopment()) {
+            $shareTables = (bool) $request->getHeader('x-appwrite-share-tables', false);
+        }
 
         try {
             $project = $dbForConsole->createDocument('projects', new Document([
@@ -187,10 +192,13 @@ App::post('/v1/projects')
         if ($shareTables) {
             $dbForProject
                 ->setShareTables(true)
-                ->setTenant($project->getId());
+                ->setTenant($project->getInternalId())
+                ->setNamespace('');
         } else {
             $dbForProject
-                ->setNamespace("_{$project->getInternalId()}");
+                ->setShareTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
         }
 
         $dbForProject->create();
