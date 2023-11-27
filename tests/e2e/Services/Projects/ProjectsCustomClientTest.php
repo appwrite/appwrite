@@ -11,9 +11,4 @@ class ProjectsCustomClientTest extends Scope
 {
     use ProjectCustom;
     use SideClient;
-
-    public function testMock()
-    {
-        $this->assertEquals(true, true);
-    }
 }
