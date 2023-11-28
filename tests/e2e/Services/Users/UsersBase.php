@@ -23,6 +23,7 @@ trait UsersBase
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
         ], false);
+        $this->assertEquals($user['headers']['status-code'], 201);
 
         // Test empty prefs is object not array
         $bodyString = $user['body'];
@@ -1279,7 +1280,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, \count($response['body']['targets']));
+        $this->assertEquals(2, \count($response['body']['targets']));
     }
 
     /**
@@ -1313,7 +1314,7 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, $response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
     }
 
     /**
