@@ -39,6 +39,7 @@ class Functions extends Action
     {
         $this
             ->desc('Functions worker')
+            ->groups(['functions'])
             ->inject('message')
             ->inject('dbForProject')
             ->inject('queueForFunctions')
