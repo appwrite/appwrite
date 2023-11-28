@@ -105,7 +105,8 @@ RUN chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/delete-orphaned-projects && \
     chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/worker-hamster
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
