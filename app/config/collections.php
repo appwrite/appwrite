@@ -1506,6 +1506,17 @@ $commonCollections = [
         'name' => 'Messages',
         'attributes' => [
             [
+                '$id' => ID::custom('providerType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('description'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -1572,7 +1583,7 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('deliveryTime'),
+                '$id' => ID::custom('scheduledAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,

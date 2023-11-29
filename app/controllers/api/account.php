@@ -153,7 +153,7 @@ App::post('/v1/account')
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
-                    'providerType' => 'email',
+                    'providerType' => MESSAGE_TYPE_EMAIL,
                     'identifier' => $email,
                 ])));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
@@ -680,7 +680,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ],
                         'userId' => $userDoc->getId(),
                         'userInternalId' => $userDoc->getInternalId(),
-                        'providerType' => 'email',
+                        'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
                 } catch (Duplicate) {
@@ -1315,7 +1315,7 @@ App::post('/v1/account/sessions/phone')
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
-                    'providerType' => 'sms',
+                    'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
                 ])));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
@@ -1374,7 +1374,7 @@ App::post('/v1/account/sessions/phone')
         $queueForMessaging
             ->setMessage($messageDoc)
             ->setRecipients([$phone])
-            ->setProviderType('SMS')
+            ->setProviderType(MESSAGE_TYPE_SMS)
             ->setProject($project)
             ->trigger();
 
@@ -1749,7 +1749,7 @@ App::post('/v1/account/targets/push')
                 ],
                 'providerId' => $providerId ?? null,
                 'providerInternalId' => $provider->getInternalId() ?? null,
-                'providerType' =>  'push',
+                'providerType' =>  MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'identifier' => $identifier,
@@ -3100,7 +3100,7 @@ App::post('/v1/account/verification/phone')
         $queueForMessaging
             ->setMessage($messageDoc)
             ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType('SMS')
+            ->setProviderType(MESSAGE_TYPE_SMS)
             ->setProject($project)
             ->trigger();
 

@@ -5,8 +5,9 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document as DatabaseDocument;
 
-class Message extends Any
+class Message extends Model
 {
     public function __construct()
     {
@@ -29,6 +30,12 @@ class Message extends Any
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('providerType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Message provider type.',
+                'default' => '',
+                'example' => MESSAGE_TYPE_EMAIL,
+            ])
             ->addRule('topics', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Topic IDs set as recipients.',
@@ -50,7 +57,7 @@ class Message extends Any
                 'array' => true,
                 'example' => ['5e5ea5c16897e'],
             ])
-            ->addRule('deliveryTime', [
+            ->addRule('scheduledAt', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'The scheduled time for message.',
                 'required' => false,

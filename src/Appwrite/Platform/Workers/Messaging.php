@@ -67,7 +67,7 @@ class Messaging extends Action
         }
 
         if (!\is_null($payload['message']) && !\is_null($payload['recipients'])) {
-            if ($payload['providerType'] === 'SMS') {
+            if ($payload['providerType'] === MESSAGE_TYPE_SMS) {
                 $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
             }
         } else {
@@ -157,9 +157,9 @@ class Messaging extends Action
                 $identifiers = $identifiersByProviderId[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
-                    'sms' => $this->sms($provider),
-                    'push' => $this->push($provider),
-                    'email' => $this->email($provider),
+                    MESSAGE_TYPE_SMS => $this->sms($provider),
+                    MESSAGE_TYPE_PUSH => $this->push($provider),
+                    MESSAGE_TYPE_EMAIL  => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
@@ -175,9 +175,9 @@ class Messaging extends Action
                         $messageData->setAttribute('to', $batch);
 
                         $data = match ($provider->getAttribute('type')) {
-                            'sms' => $this->buildSMSMessage($messageData, $provider),
-                            'push' => $this->buildPushMessage($messageData),
-                            'email' => $this->buildEmailMessage($messageData, $provider),
+                            MESSAGE_TYPE_SMS => $this->buildSMSMessage($messageData, $provider),
+                            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -247,7 +247,7 @@ class Messaging extends Action
         $provider = new Document([
             '$id' => ID::unique(),
             'provider' => $host,
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'name' => 'Internal SMS',
             'enabled' => true,
             'credentials' => match ($host) {
