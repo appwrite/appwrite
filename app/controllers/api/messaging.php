@@ -2240,6 +2240,7 @@ App::post('/v1/messaging/messages/email')
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
+            'providerType' => MESSAGE_TYPE_EMAIL,
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
@@ -2303,6 +2304,7 @@ App::post('/v1/messaging/messages/sms')
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
+            'providerType' => MESSAGE_TYPE_SMS,
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
@@ -2370,41 +2372,19 @@ App::post('/v1/messaging/messages/push')
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        $pushData = [
-            'title' => $title,
-            'body' => $body,
-        ];
+        $pushData = [];
 
-        if (!is_null($data)) {
-            $pushData['data'] = $data;
-        }
+        $keys = ['title', 'body', 'data', 'action', 'icon', 'sound', 'color', 'tag', 'badge'];
 
-        if ($action) {
-            $pushData['action'] = $action;
-        }
-
-        if ($icon) {
-            $pushData['icon'] = $icon;
-        }
-
-        if ($sound) {
-            $pushData['sound'] = $sound;
-        }
-
-        if ($color) {
-            $pushData['color'] = $color;
-        }
-
-        if ($tag) {
-            $pushData['tag'] = $tag;
-        }
-
-        if ($badge) {
-            $pushData['badge'] = $badge;
+        foreach ($keys as $key) {
+            if (!empty($$key)) {
+                $pushData[$key] = $$key;
+            }
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
+            'providerType' => MESSAGE_TYPE_PUSH,
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
