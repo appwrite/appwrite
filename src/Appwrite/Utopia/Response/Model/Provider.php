@@ -50,7 +50,7 @@ class Provider extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Type of provider.',
                 'default' => '',
-                'example' => 'sms',
+                'example' => MESSAGE_TYPE_SMS,
             ])
             ->addRule('credentials', [
                 'type' => self::TYPE_JSON,

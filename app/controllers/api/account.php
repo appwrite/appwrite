@@ -157,7 +157,7 @@ App::post('/v1/account')
                 ],
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
-                'providerType' => 'email',
+                'providerType' => MESSAGE_TYPE_EMAIL,
                 'identifier' => $email,
             ])));
             $user->setAttribute('targets', [$target]);
@@ -678,7 +678,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         ],
                         'userId' => $userDoc->getId(),
                         'userInternalId' => $userDoc->getInternalId(),
-                        'providerType' => 'email',
+                        'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
                 } catch (Duplicate) {
@@ -1732,7 +1732,7 @@ App::post('/v1/account/targets/push')
                 ],
                 'providerId' => $providerId ?? null,
                 'providerInternalId' => $provider->getInternalId() ?? null,
-                'providerType' =>  'push',
+                'providerType' =>  MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
                 'identifier' => $identifier,

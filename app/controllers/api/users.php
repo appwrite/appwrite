@@ -396,7 +396,7 @@ App::post('/v1/users/:userId/targets')
     ->label('sdk.response.model', Response::MODEL_TARGET)
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('providerType', '', new WhiteList(['email', 'sms', 'push']), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
+    ->param('providerType', '', new WhiteList([MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH]), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
     ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
     ->inject('queueForEvents')
@@ -407,7 +407,7 @@ App::post('/v1/users/:userId/targets')
 
         $provider = new Document();
 
-        if ($providerType === 'push') {
+        if ($providerType === MESSAGE_TYPE_PUSH) {
             $provider = $dbForProject->getDocument('providers', $providerId);
 
             if ($provider->isEmpty()) {
@@ -422,13 +422,13 @@ App::post('/v1/users/:userId/targets')
                     throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                 }
                 break;
-            case 'sms':
+            case MESSAGE_TYPE_SMS:
                 $validator = new Phone();
                 if (!$validator->isValid($identifier)) {
                     throw new Exception(Exception::GENERAL_INVALID_PHONE);
                 }
                 break;
-            case 'push':
+            case MESSAGE_TYPE_PUSH:
                 break;
             default:
                 throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
@@ -1298,13 +1298,13 @@ App::patch('/v1/users/:userId/targets/:targetId')
                         throw new Exception(Exception::GENERAL_INVALID_EMAIL);
                     }
                     break;
-                case 'sms':
+                case MESSAGE_TYPE_SMS:
                     $validator = new Phone();
                     if (!$validator->isValid($identifier)) {
                         throw new Exception(Exception::GENERAL_INVALID_PHONE);
                     }
                     break;
-                case 'push':
+                case MESSAGE_TYPE_PUSH:
                     break;
                 default:
                     throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
