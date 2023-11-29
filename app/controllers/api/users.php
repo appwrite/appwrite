@@ -1161,7 +1161,7 @@ App::patch('/v1/users/:userId/email')
             Query::equal('identifier', [$email]),
         ]);
 
-        if ($target && !$target->isEmpty()) {
+        if ($target instanceof Document && !$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
@@ -1232,7 +1232,7 @@ App::patch('/v1/users/:userId/phone')
             Query::equal('identifier', [$number]),
         ]);
 
-        if ($target && !$target->isEmpty()) {
+        if ($target instanceof Document && !$target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
