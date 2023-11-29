@@ -247,7 +247,7 @@ class UsersTest extends Scope
 
         $this->assertEquals(200, $targets['headers']['status-code']);
         $this->assertIsArray($targets['body']['data']['usersListTargets']);
-        $this->assertCount(1, $targets['body']['data']['usersListTargets']['targets']);
+        $this->assertCount(2, $targets['body']['data']['usersListTargets']['targets']);
     }
 
     /**

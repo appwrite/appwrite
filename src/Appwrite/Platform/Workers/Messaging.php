@@ -107,7 +107,7 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
-        $internalProvider = $dbForProject->findOne('providers', [
+        $primaryProvider = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
@@ -124,30 +124,32 @@ class Messaging extends Action
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
 
-            if (!$providerId) {
-                $providerId = $internalProvider->getId();
+            if (!$providerId && $primaryProvider instanceof Document && !$primaryProvider->isEmpty()) {
+                $providerId = $primaryProvider->getId();
             }
 
-            if (!isset($identifiersByProviderId[$providerId])) {
-                $identifiersByProviderId[$providerId] = [];
+            if ($providerId) {
+                if (!isset($identifiersByProviderId[$providerId])) {
+                    $identifiersByProviderId[$providerId] = [];
+                }
+                $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
             }
-            $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
         }
 
         /**
         * @var array[] $results
         */
-        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
-            return function () use ($providerId, $identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
+            return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
                 $provider = new Document();
 
-                if ($internalProvider->getId() === $providerId) {
-                    $provider = $internalProvider;
+                if ($primaryProvider->getId() === $providerId) {
+                    $provider = $primaryProvider;
                 } else {
                     $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
 
                     if ($provider->isEmpty()) {
-                        $provider = $internalProvider;
+                        $provider = $primaryProvider;
                     }
                 }
 
