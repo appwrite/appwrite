@@ -1572,7 +1572,7 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('deliveryTime'),
+                '$id' => ID::custom('scheduledAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 0,

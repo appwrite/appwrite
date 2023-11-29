@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/mailgun')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'mailgun',
-            'type' => 'email',
+            'type' => MESSAGE_TYPE_EMAIL,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -172,7 +172,7 @@ App::post('/v1/messaging/providers/sendgrid')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'sendgrid',
-            'type' => 'email',
+            'type' => MESSAGE_TYPE_EMAIL,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -249,7 +249,7 @@ App::post('/v1/messaging/providers/msg91')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'msg91',
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -326,7 +326,7 @@ App::post('/v1/messaging/providers/telesign')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'telesign',
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -403,7 +403,7 @@ App::post('/v1/messaging/providers/textmagic')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'textmagic',
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -480,7 +480,7 @@ App::post('/v1/messaging/providers/twilio')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'twilio',
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $from,
@@ -557,7 +557,7 @@ App::post('/v1/messaging/providers/vonage')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'vonage',
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
             'options' => $options,
@@ -617,7 +617,7 @@ App::post('/v1/messaging/providers/fcm')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'fcm',
-            'type' => 'push',
+            'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials
         ]);
@@ -703,7 +703,7 @@ App::post('/v1/messaging/providers/apns')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'apns',
-            'type' => 'push',
+            'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials,
         ]);
@@ -2211,7 +2211,7 @@ App::post('/v1/messaging/messages/email')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createEmail')
+    ->label('sdk.method', 'createEmailMessage')
     ->label('sdk.description', '/docs/references/messaging/create-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2225,13 +2225,13 @@ App::post('/v1/messaging/messages/email')
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2276,7 +2276,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMS')
+    ->label('sdk.method', 'createSMSMessage')
     ->label('sdk.description', '/docs/references/messaging/create-sms.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2288,13 +2288,13 @@ App::post('/v1/messaging/messages/sms')
     ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2337,7 +2337,7 @@ App::post('/v1/messaging/messages/push')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createPushNotification')
+    ->label('sdk.method', 'createPushMessage')
     ->label('sdk.description', '/docs/references/messaging/create-push-notification.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2357,13 +2357,13 @@ App::post('/v1/messaging/messages/push')
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2409,7 +2409,7 @@ App::post('/v1/messaging/messages/push')
             'users' => $users,
             'targets' => $targets,
             'description' => $description,
-            'deliveryTime' => $deliveryTime,
+            'scheduledAt' => $scheduledAt,
             'data' => $pushData,
             'status' => $status,
         ]));
@@ -2603,13 +2603,13 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2620,7 +2620,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2660,8 +2660,8 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('status', $status);
         }
 
-        if (!is_null($deliveryTime)) {
-            $message->setAttribute('deliveryTime', $deliveryTime);
+        if (!is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
@@ -2701,13 +2701,13 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2718,7 +2718,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2750,8 +2750,8 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             $message->setAttribute('description', $description);
         }
 
-        if (!is_null($deliveryTime)) {
-            $message->setAttribute('deliveryTime', $deliveryTime);
+        if (!is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
@@ -2798,13 +2798,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
-    ->param('deliveryTime', null, new DatetimeValidator(requireDateInFuture: true), 'Delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
+    ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $deliveryTime, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2815,7 +2815,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('deliveryTime')) && $message->getAttribute('deliveryTime') < new \DateTime()) {
+        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2879,8 +2879,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $message->setAttribute('description', $description);
         }
 
-        if (!is_null($deliveryTime)) {
-            $message->setAttribute('deliveryTime', $deliveryTime);
+        if (!is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
