@@ -609,10 +609,11 @@ Database::addFilter(
         ];
 
         $data = \json_decode($message->getAttribute('data', []), true);
+        $providerType = $message->getAttribute('providerType', '');
 
-        if (\array_key_exists('subject', $data)) {
+        if ($providerType === MESSAGE_TYPE_EMAIL) {
             $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
-        } elseif (\array_key_exists('content', $data)) {
+        } elseif ($providerType === MESSAGE_TYPE_SMS) {
             $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
         } else {
             $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);

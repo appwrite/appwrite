@@ -1315,7 +1315,7 @@ App::post('/v1/account/sessions/phone')
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
-                    'providerType' => 'sms',
+                    'providerType' => MESSAGE_TYPE_SMS,
                     'identifier' => $phone,
                 ])));
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
@@ -1374,7 +1374,7 @@ App::post('/v1/account/sessions/phone')
         $queueForMessaging
             ->setMessage($messageDoc)
             ->setRecipients([$phone])
-            ->setProviderType('SMS')
+            ->setProviderType(MESSAGE_TYPE_SMS)
             ->setProject($project)
             ->trigger();
 
@@ -3100,7 +3100,7 @@ App::post('/v1/account/verification/phone')
         $queueForMessaging
             ->setMessage($messageDoc)
             ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType('SMS')
+            ->setProviderType(MESSAGE_TYPE_SMS)
             ->setProject($project)
             ->trigger();
 
