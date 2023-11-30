@@ -13,6 +13,10 @@ class Hamster extends Event
     protected ?Document $organization = null;
     protected ?Document $user = null;
 
+    const TYPE_PROJECT = 'project';
+    const TYPE_ORGANISATION = 'organisation';
+    const TYPE_USER = 'user';
+
     public function __construct(protected Connection $connection)
     {
         parent::__construct($connection);
@@ -47,7 +51,7 @@ class Hamster extends Event
 
     /**
      * Sets the project for the hamster event.
-     * 
+     *
      * @param Document $project
      */
     public function setProject(Document $project): self
@@ -59,7 +63,7 @@ class Hamster extends Event
 
     /**
      * Returns the set project for the hamster event.
-     * 
+     *
      * @return Document
      */
     public function getProject(): Document
@@ -69,7 +73,7 @@ class Hamster extends Event
 
     /**
      * Sets the organization for the hamster event.
-     * 
+     *
      * @param Document $organization
      */
     public function setOrganization(Document $organization): self
@@ -81,7 +85,7 @@ class Hamster extends Event
 
     /**
      * Returns the set organization for the hamster event.
-     * 
+     *
      * @return string
      */
     public function getOrganization(): Document
@@ -91,7 +95,7 @@ class Hamster extends Event
 
     /**
      * Sets the user for the hamster event.
-     * 
+     *
      * @param Document $user
      */
     public function setUser(Document $user): self
@@ -103,7 +107,7 @@ class Hamster extends Event
 
     /**
      * Returns the set user for the hamster event.
-     * 
+     *
      * @return Document
      */
     public function getUser(): Document

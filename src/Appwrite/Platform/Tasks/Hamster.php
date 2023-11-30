@@ -3,31 +3,16 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Hamster as EventHamster;
-use Appwrite\Network\Validator\Origin;
 use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
-use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Analytics\Adapter\Mixpanel;
-use Utopia\Analytics\Event;
-use Utopia\Config\Config;
 use Utopia\Database\Document;
-use Utopia\Pools\Group;
 
 class Hamster extends Action
 {
-    protected string $directory = '/usr/local';
-
-    protected string $path;
-
-    protected string $date;
-
-    protected Mixpanel $mixpanel;
-
     public static function getName(): string
     {
         return 'hamster';
@@ -35,48 +20,30 @@ class Hamster extends Action
 
     public function __construct()
     {
-        $this->mixpanel = new Mixpanel(App::getEnv('_APP_MIXPANEL_TOKEN', ''));
-
         $this
             ->desc('Get stats for projects')
-            ->inject('pools')
-            ->inject('cache')
+            ->inject('queueForHamster')
             ->inject('dbForConsole')
-            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole) {
-                $this->action($pools, $cache, $dbForConsole);
+            ->callback(function (EventHamster $queueForHamster, Database $dbForConsole) {
+                $this->action($queueForHamster, $dbForConsole);
             });
     }
 
-    private function getStatsPerProject(Group $pools, Database $dbForConsole)
+    public function action(EventHamster $queueForHamster, Database $dbForConsole): void
     {
-        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($pools) {
-            $queue = $pools->get('queue')->pop();
-            $connection = $queue->getResource();
-
-            $hamsterTask = new EventHamster($connection);
-
-            $hamsterTask
-                ->setType('project')
-                ->setProject($project)
-                ->trigger();
-
-            $queue->reclaim();
-        });
-    }
-
-    public function action(Group $pools, Cache $cache, Database $dbForConsole): void
-    {
-
         Console::title('Cloud Hamster V1');
         Console::success(APP_NAME . ' cloud hamster process has started');
 
         $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
 
         $jobInitTime = App::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
+
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+
         $next = new \DateTime($now->format("Y-m-d $jobInitTime"));
         $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+
         $delay = $next->getTimestamp() - $now->getTimestamp();
 
         $delay = 5;
@@ -91,29 +58,24 @@ class Hamster extends Action
 
         Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
 
-        Console::loop(function () use ($pools, $cache, $dbForConsole, $sleep) {
+        Console::loop(function () use ($queueForHamster, $dbForConsole, $sleep) {
             $now = date('d-m-Y H:i:s', time());
-            Console::info("[{$now}] Getting Cloud Usage Stats every {$sleep} seconds");
+            Console::info("[{$now}] Queuing Cloud Usage Stats every {$sleep} seconds");
             $loopStart = microtime(true);
 
-            /* Initialise new Utopia app */
-            $app = new App('UTC');
-
             Console::info('Queuing stats for all projects');
-            $this->getStatsPerProject($pools, $dbForConsole);
+            $this->getStatsPerProject($queueForHamster, $dbForConsole);
             Console::success('Completed queuing stats for all projects');
 
             Console::info('Queuing stats for all organizations');
-            $this->getStatsPerOrganization($pools, $dbForConsole);
+            $this->getStatsPerOrganization($queueForHamster, $dbForConsole);
             Console::success('Completed queuing stats for all organizations');
 
             Console::info('Queuing stats for all users');
-            $this->getStatsPerUser($pools, $dbForConsole);
+            $this->getStatsPerUser($queueForHamster, $dbForConsole);
             Console::success('Completed queuing stats for all users');
 
-            $pools
-                ->get('console')
-                ->reclaim();
+            $queue->reclaim();
 
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
@@ -121,7 +83,7 @@ class Hamster extends Action
         }, $sleep, $delay);
     }
 
-    protected function calculateByGroup(string $collection, Database $dbForConsole, callable $callback)
+    protected function calculateByGroup(string $collection, Database $database, callable $callback)
     {
         $count = 0;
         $chunk = 0;
@@ -134,7 +96,7 @@ class Hamster extends Action
         while ($sum === $limit) {
             $chunk++;
 
-            $results = $dbForConsole->find($collection, \array_merge([
+            $results = $database->find($collection, \array_merge([
                 Query::limit($limit),
                 Query::offset($count)
             ]));
@@ -144,7 +106,7 @@ class Hamster extends Action
             Console::log('Processing chunk #' . $chunk . '. Found ' . $sum . ' documents');
 
             foreach ($results as $document) {
-                call_user_func($callback, $dbForConsole, $document);
+                call_user_func($callback, $database, $document);
                 $count++;
             }
         }
@@ -154,43 +116,42 @@ class Hamster extends Action
         Console::log("Processed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    protected function getStatsPerOrganization(Group $pools, Database $dbForConsole)
+    protected function getStatsPerOrganization(EventHamster $hamster, Database $dbForConsole)
     {
-
-        $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $organization) use ($pools) {
+        $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $organization) use ($hamster) {
             try {
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
-    
-                $hamsterTask = new EventHamster($connection);
-    
-                $hamsterTask
-                    ->setType('organization')
+                $hamster
+                    ->setType(EventHamster::TYPE_ORGANISATION)
                     ->setOrganization($organization)
                     ->trigger();
-    
-                $queue->reclaim();
             } catch (Exception $e) {
                 Console::error($e->getMessage());
             }
         });
     }
 
-    protected function getStatsPerUser(Group $pools, Database $dbForConsole)
+    private function getStatsPerProject(EventHamster $hamster, Database $dbForConsole)
     {
-        $this->calculateByGroup('users', $dbForConsole, function (Database $dbForConsole, Document $user) use ($pools) {
+        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($hamster) {
             try {
-                $queue = $pools->get('queue')->pop();
-                $connection = $queue->getResource();
-    
-                $hamsterTask = new EventHamster($connection);
-    
-                $hamsterTask
-                    ->setType('user')
+                $hamster
+                    ->setType(EventHamster::TYPE_PROJECT)
+                    ->setProject($project)
+                    ->trigger();
+            } catch (Exception $e) {
+                Console::error($e->getMessage());
+            }
+        });
+    }
+
+    protected function getStatsPerUser(EventHamster $hamster, Database $dbForConsole)
+    {
+        $this->calculateByGroup('users', $dbForConsole, function (Database $dbForConsole, Document $user) use ($hamster) {
+            try {
+                $hamster
+                    ->setType(EventHamster::TYPE_USER)
                     ->setUser($user)
                     ->trigger();
-    
-                $queue->reclaim();
             } catch (Exception $e) {
                 Console::error($e->getMessage());
             }
