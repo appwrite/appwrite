@@ -69,6 +69,10 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     $database = new Database($adapter, $cache);
 
+    $database
+        ->setMetadata('host', \gethostname())
+        ->setMetadata('project', $project->getId());
+
     if ($project->getAttribute('shareTables')) {
         $database
             ->setShareTables(true)
