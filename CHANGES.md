@@ -7,36 +7,8 @@
   - Removed usage labels dependency.
   - Dropped type attribute from stats collection.
   - Usage metrics are processed via new usage worker.
-  - Metrics changes:
-    - Storage
-      - deprecated
-        - filesCreate, filesRead, filesUpdate, filesDelete, bucketsCreate, bucketsRead, bucketsUpdate, bucketsDelete.
-      - renamed
-        - filesCount to filesTotal, storage to filesStorage, bucketsCount to bucketsTotal.
-    - Auth
-      - deprecated
-        - usersCreate, usersRead, usersUpdate, usersDelete, sessionsCreate sessionsProviderCreate, sessionsDelete.
-      - renamed
-        - usersCount to usersTotal.
-      - added
-        - sessionsTotal.
-    - Databases
-      - deprecated
-        - databasesCreate, databasesRead, databasesDelete, documentsCreate, documentsRead, documentsUpdate, documentsDelete, collectionsCreate, collectionsRead, collectionsUpdate, collectionsDelete.
-      - renamed
-        - databasesCount to databasesTotal, collectionsCount to collectionsTotal, documentsCount to documentsTotal.
-    - Functions
-      - deprecated
-        - executionsFailure, executionsSuccess, buildsFailure, buildsSuccess, executionsFailure, executionsSuccess.
-      - renamed
-        - executionsTime to executionsCompute, buildsTime to buildsCompute, documentsCount to documentsTotal.
-      - added
-        - functionsTotal, buildsStorage, deploymentsTotal, deploymentsStorage.
-    - Project
-      - renamed
-        - executions to executionsTotal, builds to buildsTotal, requests to requestsTotal, storage to filesStorage, buckets to bucketsTotal, users to usersTotal, documents to documentsTotal, collections to collectionsTotal, databases to databasesTotal.
-
-
+  - updated Metric names
+  
 # Version 1.4.13
 
 ## Notable changes
