@@ -61,7 +61,7 @@ class Hamster extends Action
      * @param Group $pools
      * @param Cache $cache
      * @param Database $dbForConsole
-     * 
+     *
      * @return void
      * @throws \Utopia\Database\Exception
      */
