@@ -61,15 +61,15 @@ class Hamster extends Action
             $loopStart = microtime(true);
 
             Console::info('Queuing stats for all projects');
-            $this->getStatsPerProject($queueForHamster, $dbForConsole);
+            $this->getStatsPerProject($queueForHamster, $dbForConsole, $loopStart);
             Console::success('Completed queuing stats for all projects');
 
             Console::info('Queuing stats for all organizations');
-            $this->getStatsPerOrganization($queueForHamster, $dbForConsole);
+            $this->getStatsPerOrganization($queueForHamster, $dbForConsole, $loopStart);
             Console::success('Completed queuing stats for all organizations');
 
             Console::info('Queuing stats for all users');
-            $this->getStatsPerUser($queueForHamster, $dbForConsole);
+            $this->getStatsPerUser($queueForHamster, $dbForConsole, $loopStart);
             Console::success('Completed queuing stats for all users');
 
             $loopTook = microtime(true) - $loopStart;
@@ -111,10 +111,11 @@ class Hamster extends Action
         Console::log("Processed {$count} document by group in " . ($executionEnd - $executionStart) . " seconds");
     }
 
-    protected function getStatsPerOrganization(EventHamster $hamster, Database $dbForConsole)
+    protected function getStatsPerOrganization(EventHamster $hamster, Database $dbForConsole, float $loopStart)
     {
-        $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $organization) use ($hamster) {
+        $this->calculateByGroup('teams', $dbForConsole, function (Database $dbForConsole, Document $organization) use ($hamster, $loopStart) {
             try {
+                $organization->setAttribute('$time', $loopStart);
                 $hamster
                     ->setType(EventHamster::TYPE_ORGANISATION)
                     ->setOrganization($organization)
@@ -125,10 +126,11 @@ class Hamster extends Action
         });
     }
 
-    private function getStatsPerProject(EventHamster $hamster, Database $dbForConsole)
+    private function getStatsPerProject(EventHamster $hamster, Database $dbForConsole, float $loopStart)
     {
-        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($hamster) {
+        $this->calculateByGroup('projects', $dbForConsole, function (Database $dbForConsole, Document $project) use ($hamster, $loopStart) {
             try {
+                $project->setAttribute('$time', $loopStart);
                 $hamster
                     ->setType(EventHamster::TYPE_PROJECT)
                     ->setProject($project)
@@ -139,10 +141,11 @@ class Hamster extends Action
         });
     }
 
-    protected function getStatsPerUser(EventHamster $hamster, Database $dbForConsole)
+    protected function getStatsPerUser(EventHamster $hamster, Database $dbForConsole, float $loopStart)
     {
-        $this->calculateByGroup('users', $dbForConsole, function (Database $dbForConsole, Document $user) use ($hamster) {
+        $this->calculateByGroup('users', $dbForConsole, function (Database $dbForConsole, Document $user) use ($hamster, $loopStart) {
             try {
+                $user->setAttribute('$time', $loopStart);
                 $hamster
                     ->setType(EventHamster::TYPE_USER)
                     ->setUser($user)

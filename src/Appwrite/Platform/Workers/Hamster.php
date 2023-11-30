@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Usage\Stats;
-use Appwrite\Event\Event;
 use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
 use Utopia\Analytics\Adapter\Mixpanel;
@@ -37,12 +35,6 @@ class Hamster extends Action
         'usage_executions' => 'executions.$all.compute.total',
     ];
 
-    protected string $directory = '/usr/local';
-
-    protected string $path;
-
-    protected string $date;
-
     protected Mixpanel $mixpanel;
 
     public static function getName(): string
@@ -55,19 +47,13 @@ class Hamster extends Action
      */
     public function __construct()
     {
-        $this->mixpanel = new Mixpanel(App::getEnv('_APP_MIXPANEL_TOKEN', ''));
-
         $this
             ->desc('Hamster worker')
             ->inject('message')
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
-            ->inject('queueForHamster')
-            ->inject('queueForEvents')
-            ->inject('usage')
-            ->inject('log')
-            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole, EventHamster $queueForHamster, Event $queueForEvents, Stats $usage, Log $log) => $this->action($message, $pools, $cache, $dbForConsole, $queueForHamster, $queueForEvents, $usage, $log));
+            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole) => $this->action($message, $pools, $cache, $dbForConsole));
     }
 
     /**
@@ -75,24 +61,17 @@ class Hamster extends Action
      * @param Group $pools
      * @param Cache $cache
      * @param Database $dbForConsole
-     * @param EventHamster $queueForHamster
-     * @param Event $queueForEvents
-     * @param Stats $usage
-     * @param Log $log
+     * 
      * @return void
-     * @throws Authorization
-     * @throws Structure
      * @throws \Utopia\Database\Exception
-     * @throws Conflict
      */
-    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, EventHamster $queueForHamster, Event $queueForEvents, Stats $usage, Log $log): void
+    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole): void
     {
-        $payload = $message->getPayload() ?? [];
-
-        if (empty($payload)) {
-            throw new \Exception('Missing payload');
+        $token = App::getEnv('_APP_MIXPANEL_TOKEN', '');
+        if (empty($token)) {
+            throw new \Exception('Missing MixPanel Token');
         }
-
+        $this->mixpanel = new Mixpanel($token);
 
         $payload = $message->getPayload() ?? [];
 
@@ -103,13 +82,13 @@ class Hamster extends Action
         $type = $payload['type'] ?? '';
 
         switch ($type) {
-            case 'project':
-                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole, $log);
+            case EventHamster::TYPE_PROJECT:
+                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole);
                 break;
-            case 'organization':
-                $this->getStatsForOrganization(new Document($payload['organization']), $pools, $cache, $dbForConsole, $log);
+            case EventHamster::TYPE_ORGANISATION:
+                $this->getStatsForOrganization(new Document($payload['organization']), $dbForConsole);
                 break;
-            case 'user':
+            case EventHamster::TYPE_USER:
                 $this->getStatsPerUser(new Document($payload['user']), $dbForConsole);
                 break;
         }
@@ -120,10 +99,9 @@ class Hamster extends Action
      * @param Group $pools
      * @param Cache $cache
      * @param Database $dbForConsole
-     * @param Log $log
      * @throws \Utopia\Database\Exception
      */
-    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole, Log $log): void
+    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole): void
     {
         /**
          * Skip user projects with id 'console'
@@ -149,7 +127,7 @@ class Hamster extends Action
 
             $statsPerProject = [];
 
-            $statsPerProject['time'] = microtime(true);
+            $statsPerProject['time'] = $project->getAttribute('$time');
 
             /** Get Project ID */
             $statsPerProject['project_id'] = $project->getId();
@@ -354,19 +332,19 @@ class Hamster extends Action
 
     /**
      * @param Document $organization
-     * @param Group $pools
-     * @param Cache $cache
      * @param Database $dbForConsole
-     * @param Log $log
      * @throws \Utopia\Database\Exception
      */
-    private function getStatsForOrganization(Document $organization, Group $pools, Cache $cache, Database $dbForConsole, Log $log): void
+    private function getStatsForOrganization(Document $organization, Database $dbForConsole): void
     {
         try {
             $statsPerOrganization = [];
 
+            $statsPerOrganization['time'] = $organization->getAttribute('$time');
+
             /** Organization name */
             $statsPerOrganization['name'] = $organization->getAttribute('name');
+
 
             /** Get Email and of the organization owner */
             $membership = $dbForConsole->findOne('memberships', [
@@ -382,7 +360,6 @@ class Hamster extends Action
                 $user = $dbForConsole->getDocument('users', $userId);
                 $statsPerOrganization['email'] = $user->getAttribute('email', null);
             }
-
 
             /** Organization Creation Date */
             $statsPerOrganization['created'] = $organization->getAttribute('$createdAt');
@@ -418,6 +395,8 @@ class Hamster extends Action
         try {
             $statsPerUser = [];
 
+            $statsPerUser['time'] = $user->getAttribute('$time');
+
             /** Organization name */
             $statsPerUser['name'] = $user->getAttribute('name');
 
@@ -442,6 +421,7 @@ class Hamster extends Action
             $event
                 ->setName('User Daily Usage')
                 ->setProps($statsPerUser);
+
             $res = $this->mixpanel->createEvent($event);
 
             if (!$res) {

@@ -917,9 +917,6 @@ App::setResource('queueForCertificates', function (Connection $queue) {
 App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-App::setResource('queueForHamster', function (Connection $queue) {
-    return new Hamster($queue);
-}, ['queue']);
 App::setResource('usage', function ($register) {
     return new Stats($register->get('statsd'));
 }, ['register']);
