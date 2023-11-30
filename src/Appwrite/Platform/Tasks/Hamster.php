@@ -45,9 +45,6 @@ class Hamster extends Action
         $next->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         $delay = $next->getTimestamp() - $now->getTimestamp();
-
-        $delay = 5;
-
         /**
          * If time passed for the target day.
          */
