@@ -111,8 +111,7 @@ class Hamster extends Action
             return;
         }
 
-        Console::log("Getting stats for {$project->getId()}");
-
+        Console::log("Getting stats for Project {$project->getId()}");
 
         try {
             $db = $project->getAttribute('database');
@@ -337,6 +336,8 @@ class Hamster extends Action
      */
     private function getStatsForOrganization(Document $organization, Database $dbForConsole): void
     {
+        Console::log("Getting stats for Organization {$organization->getId()}");
+
         try {
             $statsPerOrganization = [];
 
@@ -392,6 +393,8 @@ class Hamster extends Action
 
     protected function getStatsPerUser(Document $user, Database $dbForConsole)
     {
+        Console::log("Getting stats for User {$user->getId()}");
+
         try {
             $statsPerUser = [];
 
