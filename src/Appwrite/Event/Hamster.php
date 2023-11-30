@@ -13,9 +13,9 @@ class Hamster extends Event
     protected ?Document $organization = null;
     protected ?Document $user = null;
 
-    const TYPE_PROJECT = 'project';
-    const TYPE_ORGANISATION = 'organisation';
-    const TYPE_USER = 'user';
+    public const TYPE_PROJECT = 'project';
+    public const TYPE_ORGANISATION = 'organisation';
+    public const TYPE_USER = 'user';
 
     public function __construct(protected Connection $connection)
     {
