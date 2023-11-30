@@ -1829,7 +1829,7 @@ $commonCollections = [
             [
                 '$id' => ID::custom('_key_userId'),
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['_key_userId'],
+                'attributes' => ['userId'],
                 'lengths' => [],
                 'orders' => [],
             ],
