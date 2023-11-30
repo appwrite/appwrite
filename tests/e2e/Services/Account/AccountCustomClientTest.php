@@ -1936,7 +1936,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1955,7 +1955,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/phone', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2325,7 +2325,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2363,7 +2363,7 @@ class AccountCustomClientTest extends Scope
         /**
          * Test for FAILURE
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2375,7 +2375,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -2387,7 +2387,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

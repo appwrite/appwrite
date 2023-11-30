@@ -58,7 +58,7 @@ class AccountCustomServerTest extends Scope
         /**
          * Test for SUCCESS
          */
-        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge(
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/magic-url', array_merge(
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id']
