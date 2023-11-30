@@ -72,8 +72,6 @@ class Hamster extends Action
             $this->getStatsPerUser($queueForHamster, $dbForConsole);
             Console::success('Completed queuing stats for all users');
 
-            $queue->reclaim();
-
             $loopTook = microtime(true) - $loopStart;
             $now = date('d-m-Y H:i:s', time());
             Console::info("[{$now}] Cloud Stats took {$loopTook} seconds");
