@@ -72,7 +72,6 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
-use Appwrite\Event\Hamster;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
