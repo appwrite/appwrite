@@ -129,7 +129,7 @@ App::post('/v1/projects')
             }
         }
 
-        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
+        $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE');
         $index = array_search($databaseOverride, $databases);
         if ($index !== false) {
             $database = $databases[$index];
@@ -142,11 +142,13 @@ App::post('/v1/projects')
         }
 
         // One in 20 projects use shared tables
-        $shareTables = !\mt_rand(0, 19);
+        if (!\mt_rand(0, 19)) {
+            $database = DATABASE_SHARED_TABLES;
+        }
 
-        // Allow overriding in development mode, to be removed once all project are using shared tables
-        if (App::isDevelopment()) {
-            $shareTables = (bool) $request->getHeader('x-appwrite-share-tables', false);
+        // Allow overriding in development mode, to be removed once all project are using shared tables.
+        if (App::isDevelopment() && $request->getHeader('x-appwrite-share-tables', false)) {
+            $database = DATABASE_SHARED_TABLES;
         }
 
         try {
@@ -181,7 +183,6 @@ App::post('/v1/projects')
                 'auths' => $auths,
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $database,
-                'shareTables' => $shareTables,
             ]));
         } catch (Duplicate) {
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);

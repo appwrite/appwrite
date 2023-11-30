@@ -140,7 +140,8 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
-// Database Reconnect
+// Database
+const DATABASE_SHARED_TABLES = 'database_db_self_hosted_shared_tables';
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
 // Database Worker Types
@@ -1148,7 +1149,7 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-    if ($project->getAttribute('shareTables')) {
+    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
             ->setShareTables(true)
             ->setTenant($project->getInternalId())
@@ -1196,7 +1197,7 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($project->getAttribute('shareTables')) {
+            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
