@@ -91,14 +91,16 @@ class Messaging extends Action
         if (\count($topicsId) > 0) {
             $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
             foreach ($topics as $topic) {
-                $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $recipients = \array_merge($recipients, $targets);
             }
         }
 
         if (\count($usersId) > 0) {
             $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
             foreach ($users as $user) {
-                $recipients = \array_merge($recipients, $user->getAttribute('targets'));
+                $targets = \array_filter($user->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $recipients = \array_merge($recipients, $targets);
             }
         }
 

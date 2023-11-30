@@ -483,7 +483,7 @@ App::post('/v1/messaging/providers/twilio')
             'type' => MESSAGE_TYPE_SMS,
             'enabled' => $enabled,
             'credentials' => $credentials,
-            'options' => $from,
+            'options' => $options,
         ]);
 
         try {
@@ -1952,6 +1952,9 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'providerType' => $target->getAttribute('providerType'),
         ]);
 
         try {
@@ -1987,10 +1990,15 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->label('sdk.response.model', Response::MODEL_SUBSCRIBER_LIST)
     ->param('topicId', '', new UID(), 'Topic ID. The topic ID subscribed to.')
     ->param('queries', [], new Subscribers(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, array $queries, Database $dbForProject, Response $response) {
         $queries = Query::parseQueries($queries);
+
+        if (!empty($search)) {
+            $queries[] = Query::search('search', $search);
+        }
 
         $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
@@ -2223,7 +2231,7 @@ App::post('/v1/messaging/messages/email')
     ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2236,6 +2244,18 @@ App::post('/v1/messaging/messages/email')
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        foreach ($targets as $target) {
+            $targetDocument = $dbForProject->getDocument('targets', $target);
+
+            if ($targetDocument->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            }
+
+            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_EMAIL) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL . ' ' . $targetDocument->getId());
+            }
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
@@ -2288,7 +2308,7 @@ App::post('/v1/messaging/messages/sms')
     ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2300,6 +2320,18 @@ App::post('/v1/messaging/messages/sms')
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        foreach ($targets as $target) {
+            $targetDocument = $dbForProject->getDocument('targets', $target);
+
+            if ($targetDocument->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            }
+
+            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_SMS) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS . ' ' . $targetDocument->getId());
+            }
         }
 
         $message = $dbForProject->createDocument('messages', new Document([
@@ -2358,7 +2390,7 @@ App::post('/v1/messaging/messages/push')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2370,6 +2402,18 @@ App::post('/v1/messaging/messages/push')
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        foreach ($targets as $target) {
+            $targetDocument = $dbForProject->getDocument('targets', $target);
+
+            if ($targetDocument->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            }
+
+            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH . ' ' . $targetDocument->getId());
+            }
         }
 
         $pushData = [];
@@ -2581,7 +2625,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('subject', '', new Text(998), 'Email Subject.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2613,6 +2657,18 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         if (!\is_null($targets)) {
+            foreach ($targets as $target) {
+                $targetDocument = $dbForProject->getDocument('targets', $target);
+
+                if ($targetDocument->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
+
+                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_EMAIL) {
+                    throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL . ' ' . $targetDocument->getId());
+                }
+            }
+
             $message->setAttribute('targets', $targets);
         }
 
@@ -2680,7 +2736,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2711,6 +2767,18 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (!\is_null($targets)) {
+            foreach ($targets as $target) {
+                $targetDocument = $dbForProject->getDocument('targets', $target);
+
+                if ($targetDocument->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
+
+                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_SMS) {
+                    throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS . ' ' . $targetDocument->getId());
+                }
+            }
+
             $message->setAttribute('targets', $targets);
         }
 
@@ -2777,7 +2845,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)    ->param('status', 'processing', new WhiteList(['draft', 'processing']), 'Message Status. Value must be either draft or processing.', true)
+    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
+    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2808,6 +2877,18 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($targets)) {
+            foreach ($targets as $target) {
+                $targetDocument = $dbForProject->getDocument('targets', $target);
+
+                if ($targetDocument->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
+
+                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
+                    throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH . ' ' . $targetDocument->getId());
+                }
+            }
+
             $message->setAttribute('targets', $targets);
         }
 
