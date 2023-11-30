@@ -7,7 +7,7 @@
   - Removed usage labels dependency.
   - Dropped type attribute from stats collection.
   - Usage metrics are processed via new usage worker.
-  - updated Metric names
+  - updated Metric names.
   
 # Version 1.4.13
 
