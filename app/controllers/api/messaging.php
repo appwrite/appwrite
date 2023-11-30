@@ -1993,7 +1993,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
         $queries = Query::parseQueries($queries);
 
         if (!empty($search)) {
