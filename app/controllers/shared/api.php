@@ -154,8 +154,7 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time)
-                ;
+                    ->addHeader('X-RateLimit-Reset', $time);
             }
 
             $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
@@ -167,6 +166,27 @@ App::init()
                 && $abuse->check()      // Route is rate-limited
             ) {
                 throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED);
+            }
+        }
+
+        /*
+        * Session refresh
+        */
+        if ($project->getAttribute('auths', [])['sessionRefresh'] ?? false) {
+            if ($user && !$user->isEmpty()) {
+                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+                $currentSessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+
+                if ($currentSessionId) {
+                    $currentSession = $dbForProject->getDocument('sessions', $currentSessionId);
+                    if (!$currentSession->isEmpty()) {
+                        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $authDuration));
+                        $currentSession = $currentSession->setAttribute('expire', $expire);
+
+                        $dbForProject->updateDocument('sessions', $currentSession->getId(), $currentSession);
+                        $dbForProject->deleteCachedDocument('users', $user->getId());
+                    }
+                }
             }
         }
 
@@ -240,7 +260,7 @@ App::init()
                     if ($fileSecurity && !$valid) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
@@ -252,8 +272,7 @@ App::init()
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
-                ;
+                    ->send(base64_decode($data['payload']));
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
@@ -495,7 +514,7 @@ App::shutdown()
                     'resource' => $resource,
                     'contentType' => $response->getContentType(),
                     'payload' => base64_encode($data['payload']),
-                ]) ;
+                ]);
 
                 $signature = md5($data);
                 $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -503,10 +522,10 @@ App::shutdown()
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'resource' => $resource,
-                    'accessedAt' => $now,
-                    'signature' => $signature,
+                        '$id' => $key,
+                        'resource' => $resource,
+                        'accessedAt' => $now,
+                        'signature' => $signature,
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
