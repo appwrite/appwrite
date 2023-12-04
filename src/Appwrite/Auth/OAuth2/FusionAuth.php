@@ -38,7 +38,6 @@ class FusionAuth extends OAuth2
     /**
      * @return string
      */
-     
     public function getLoginURL(): string
     {
         return 'https://' . $this->getFusionAuthDomain() . '/oauth2/authorize?' . \http_build_query([
