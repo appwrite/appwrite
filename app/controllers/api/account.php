@@ -769,6 +769,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->setPayload($response->output($session, Response::MODEL_SESSION))
         ;
 
+        if (!Config::getParam('domainVerification')) {
+            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
+        }
+
         // Add token for server platforms
         $tokenSecret = Auth::tokenGenerator();
 
@@ -796,15 +800,20 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
-        $query['secret'] = $tokenSecret;
-        $query['userId'] = $user->getId();
+
+        if (parse_url($state['success'], PHP_URL_PATH) == $oauthDefaultSuccess) {
+            $query['project'] = $project->getId();
+            $query['domain'] = Config::getParam('cookieDomain');
+            $query['key'] = Auth::$cookieName;
+            $query['secret'] = $sessionSecret;
+        } else {
+            $query['secret'] = $tokenSecret;
+            $query['userId'] = $user->getId();
+        }
+
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
 
-
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
-        }
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
