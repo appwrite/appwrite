@@ -13,22 +13,23 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Messaging\Adapters\SMS as SMSAdapter;
-use Utopia\Messaging\Adapters\SMS\Mock;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\Textmagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
-use Utopia\Messaging\Adapters\Push as PushAdapter;
-use Utopia\Messaging\Adapters\Push\APNS;
-use Utopia\Messaging\Adapters\Push\FCM;
-use Utopia\Messaging\Adapters\Email as EmailAdapter;
-use Utopia\Messaging\Adapters\Email\Mailgun;
-use Utopia\Messaging\Adapters\Email\SendGrid;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\Mailgun;
+use Utopia\Messaging\Adapter\Email\Sendgrid;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Mock;
+use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\Telesign;
+use Utopia\Messaging\Adapter\SMS\Textmagic;
+use Utopia\Messaging\Adapter\SMS\Twilio;
+use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Response;
 
 use function Swoole\Coroutine\batch;
 
@@ -169,8 +170,8 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
-                    return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+                $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $dbForProject) {
+                    return function () use ($batch, $message, $provider, $adapter, $batchIndex, $dbForProject) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -184,8 +185,24 @@ class Messaging extends Action
                         };
 
                         try {
-                            $adapter->send($data);
-                            $deliveredTotal += \count($batch);
+                            $response = new Response($provider->getAttribute('type'));
+                            $response->fromArray(\json_decode($adapter->send($data)));
+
+                            $deliveredTotal += $response->getDeliveredTo();
+                            $details[] = $response->getDetails();
+                            foreach ($details as $detail) {
+                                if ($detail['status'] === 'failure') {
+                                    $deliveryErrors[] = `Failed sending to target {$detail['recipient']} with error: {$detail['error']}`;
+                                }
+
+                                // Deleting push targets when token has expired.
+                                if ($detail['error'] === 'Expired token.') {
+                                    $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$detail['recipient']])]);
+                                    if ($target instanceof Document && !$target->isEmpty()) {
+                                        $dbForProject->deleteDocument('targets', $target->getId());
+                                    }
+                                }
+                            }
                         } catch (\Exception $e) {
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
@@ -313,7 +330,7 @@ class Messaging extends Action
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
-            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
+            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
             default => null
         };
@@ -323,6 +340,7 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials');
         return match ($provider->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
                 $credentials['authKey'],
                 $credentials['authKeyId'],
@@ -339,21 +357,65 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials');
         return match ($provider->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
             'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain'], $credentials['isEuRegion']),
-            'sendgrid' => new SendGrid($credentials['apiKey']),
+            'sendgrid' => new Sendgrid($credentials['apiKey']),
             default => null
         };
     }
 
     private function buildEmailMessage(Document $message, Document $provider): Email
     {
-        $from = $provider['options']['from'];
+        $fromName = $provider['options']['fromName'];
+        $fromEmail = $provider['options']['fromEmail'];
+        $replyToEmail = null;
+        $replyToName = null;
+        $cc = null;
+        $bcc = null;
+
+        if (isset($provider['options']['replyToName']) && isset($provider['options']['replyToEmail'])) {
+            $replyToName = $provider['options']['replyToName'];
+            $replyToEmail = $provider['options']['replyToEmail'];
+        }
+
+        if (isset($provider['options']['cc'])) {
+            foreach ($provider['options']['cc'] as $ccEmail) {
+                if (is_array($cc)) {
+                    $cc[] = [
+                        'email' => $ccEmail,
+                    ];
+                } else {
+                    $cc = [
+                        [
+                            'email' => $ccEmail,
+                        ]
+                    ];
+                }
+            }
+        }
+
+        if (isset($provider['options']['bcc'])) {
+            foreach ($provider['options']['bcc'] as $bccEmail) {
+                if (is_array($bcc)) {
+                    $bcc[] = [
+                        'email' => $bccEmail,
+                    ];
+                } else {
+                    $bcc = [
+                        [
+                            'email' => $bccEmail,
+                        ]
+                    ];
+                }
+            }
+        }
+
         $to = $message['to'];
         $subject = $message['data']['subject'];
         $content = $message['data']['content'];
         $html = $message['data']['html'];
 
-        return new Email($to, $subject, $content, $from, null, $html);
+        return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, html: $html);
     }
 
     private function buildSMSMessage(Document $message, Document $provider): SMS

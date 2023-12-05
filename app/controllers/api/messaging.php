@@ -54,21 +54,38 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.')
+    ->param('fromEmail', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email. Reply to email must have reply to name as well.', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
-        $options = [];
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+        ];
 
-        if (!empty($from)) {
-            $options ['from'] = $from;
+        if (!empty($replyToName) && !empty($replyToEmail)) {
+            $options['replyToName'] = $replyToName;
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        if (!empty($cc)) {
+            $options['cc'] = $cc;
+        }
+
+        if (!empty($bcc)) {
+            $options['bcc'] = $bcc;
         }
 
         $credentials = [];
@@ -137,19 +154,36 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.')
+    ->param('fromEmail', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, ?bool $enabled, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
-        $options = [];
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+        ];
 
-        if (!empty($from)) {
-            $options ['from'] = $from;
+        if (!empty($replyToName) && !empty($replyToEmail)) {
+            $options['replyToName'] = $replyToName;
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        if (!empty($cc)) {
+            $options['cc'] = $cc;
+        }
+
+        if (!empty($bcc)) {
+            $options['bcc'] = $bcc;
         }
 
         $credentials = [];
@@ -890,13 +924,18 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
-    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, array $cc, array $bcc, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -912,11 +951,33 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
         }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        if (\count($cc) > 0) {
+            $options['cc'] = $cc;
+        }
+
+        if (\count($bcc) > 0) {
+            $options['bcc'] = $bcc;
+        }
+
+        $provider->setAttribute('options', $options);
 
         $credentials = $provider->getAttribute('credentials');
 
@@ -976,11 +1037,16 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
-    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -996,11 +1062,33 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
         }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        if (\count($cc) > 0) {
+            $options['cc'] = $cc;
+        }
+
+        if (\count($bcc) > 0) {
+            $options['bcc'] = $bcc;
+        }
+
+        $provider->setAttribute('options', $options);
 
         if (!empty($apiKey)) {
             $provider->setAttribute('credentials', [
