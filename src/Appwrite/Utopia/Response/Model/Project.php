@@ -126,12 +126,25 @@ class Project extends Model
                 'default' => 0,
                 'example' => 5,
             ])
-            ->addRule('authPasswordDictionary', [
-                'type' => self::TYPE_BOOLEAN,
-                'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
-                'default' => false,
-                'example' => true,
-            ])
+                    // TODO: Khushboo add here
+                ->addRule('authPasswordDictionary', [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether or not to check user\'s password against most commonly used passwords.',
+                    'default' => false,
+                    'example' => true,
+                ])
+                ->addRule('authPasswordAi', [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether or not to check user\'s password against against AI opinion',
+                    'default' => false,
+                    'example' => true,
+                ])
+                ->addRule('authSessionRefresh', [
+                    'type' => self::TYPE_BOOLEAN,
+                    'description' => 'Whether or not sessions are automatically extended to session duration on every request',
+                    'default' => false,
+                    'example' => true,
+                ])
             ->addRule('authPersonalDataCheck', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
@@ -320,6 +333,9 @@ class Project extends Model
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
+        $document->setAttribute('authPasswordAi', $authValues['passwordAi'] ?? false);
+        $document->setAttribute('authSessionRefresh', $authValues['sessionRefresh'] ?? false);
+        // TODO: Khushboo add here
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
 
         foreach ($auth as $index => $method) {

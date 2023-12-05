@@ -4,6 +4,7 @@ use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\PasswordAi;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
@@ -116,6 +117,13 @@ App::post('/v1/account')
             $personalDataValidator = new PersonalData($userId, $email, $name, null);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordAi'] ?? false) {
+            $passwordAiValidator = new PasswordAi();
+            if (!$passwordAiValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_AI);
             }
         }
 

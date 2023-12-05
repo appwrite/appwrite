@@ -200,6 +200,11 @@ return [
         'description' => 'The password you are trying to use contains references to your name, email, phone or userID. For your security, please choose a different password and try again.',
         'code' => 400,
     ],
+    Exception::USER_PASSWORD_AI => [
+        'name' => Exception::USER_PASSWORD_AI,
+        'description' => 'AI does not like security of the password you are trying to use. For your security, please choose a different password and try again.',
+        'code' => 400,
+    ],
     Exception::USER_SESSION_NOT_FOUND => [
         'name' => Exception::USER_SESSION_NOT_FOUND,
         'description' => 'The current user session could not be found.',
