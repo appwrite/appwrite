@@ -801,7 +801,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
 
-        if (parse_url($state['success'], PHP_URL_PATH) == $oauthDefaultSuccess) {
+        if ($state['success']['path'] == $oauthDefaultSuccess) {
             $query['project'] = $project->getId();
             $query['domain'] = Config::getParam('cookieDomain');
             $query['key'] = Auth::$cookieName;
