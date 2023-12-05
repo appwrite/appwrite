@@ -23,7 +23,8 @@ trait MessagingBase
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'sender name',
+                'fromEmail' => 'sender-email@my-domain.com',
                 'isEuRegion' => false,
             ],
             'twilio' => [
@@ -552,7 +553,8 @@ trait MessagingBase
 
         $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
-        $from = $emailDSN->getParam('from');
+        $fromName = $emailDSN->getParam('fromName');
+        $fromEmail = $emailDSN->getParam('fromEmail');
         $isEuRegion = $emailDSN->getParam('isEuRegion');
         $apiKey = $emailDSN->getPassword();
         $domain = $emailDSN->getUser();
@@ -572,7 +574,8 @@ trait MessagingBase
             'apiKey' => $apiKey,
             'domain' => $domain,
             'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
-            'from' => $from
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);

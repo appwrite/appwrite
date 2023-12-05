@@ -378,8 +378,8 @@ class Messaging extends Action
             $replyToEmail = $provider['options']['replyToEmail'];
         }
 
-        if (isset($provider['options']['cc'])) {
-            foreach ($provider['options']['cc'] as $ccEmail) {
+        if (\count($message['data']['cc']) > 0) {
+            foreach ($message['data']['cc'] as $ccEmail) {
                 if (is_array($cc)) {
                     $cc[] = [
                         'email' => $ccEmail,
@@ -394,8 +394,8 @@ class Messaging extends Action
             }
         }
 
-        if (isset($provider['options']['bcc'])) {
-            foreach ($provider['options']['bcc'] as $bccEmail) {
+        if (\count($message['data']['bcc'])) {
+            foreach ($message['data']['bcc'] as $bccEmail) {
                 if (is_array($bcc)) {
                     $bcc[] = [
                         'email' => $bccEmail,

@@ -60,10 +60,8 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name. Reply to name must have reply to email as well.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email. Reply to email must have reply to name as well.', true)
-    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -78,14 +76,6 @@ App::post('/v1/messaging/providers/mailgun')
         if (!empty($replyToName) && !empty($replyToEmail)) {
             $options['replyToName'] = $replyToName;
             $options['replyToEmail'] = $replyToEmail;
-        }
-
-        if (!empty($cc)) {
-            $options['cc'] = $cc;
-        }
-
-        if (!empty($bcc)) {
-            $options['bcc'] = $bcc;
         }
 
         $credentials = [];
@@ -158,14 +148,12 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('fromEmail', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
-    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, ?bool $enabled, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, ?bool $enabled, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [
@@ -176,14 +164,6 @@ App::post('/v1/messaging/providers/sendgrid')
         if (!empty($replyToName) && !empty($replyToEmail)) {
             $options['replyToName'] = $replyToName;
             $options['replyToEmail'] = $replyToEmail;
-        }
-
-        if (!empty($cc)) {
-            $options['cc'] = $cc;
-        }
-
-        if (!empty($bcc)) {
-            $options['bcc'] = $bcc;
         }
 
         $credentials = [];
@@ -926,16 +906,14 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
-    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, array $cc, array $bcc, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -967,14 +945,6 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         if (!empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
-        }
-
-        if (\count($cc) > 0) {
-            $options['cc'] = $cc;
-        }
-
-        if (\count($bcc) > 0) {
-            $options['bcc'] = $bcc;
         }
 
         $provider->setAttribute('options', $options);
@@ -1041,12 +1011,10 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
-    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1078,14 +1046,6 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
 
         if (!empty($replyToEmail)) {
             $options['replyToEmail'] = $replyToEmail;
-        }
-
-        if (\count($cc) > 0) {
-            $options['cc'] = $cc;
-        }
-
-        if (\count($bcc) > 0) {
-            $options['bcc'] = $bcc;
         }
 
         $provider->setAttribute('options', $options);
@@ -2315,9 +2275,11 @@ App::post('/v1/messaging/messages/email')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of topic IDs.', true)
+    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of user IDs.', true)
+    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of target IDs.', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
@@ -2327,7 +2289,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, array $cc, array $bcc, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2357,6 +2319,8 @@ App::post('/v1/messaging/messages/email')
                 'subject' => $subject,
                 'content' => $content,
                 'html' => $html,
+                'cc' => $cc,
+                'bcc' => $bcc,
             ],
             'status' => $status,
         ]));
@@ -2715,13 +2679,15 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('content', '', new Text(64230), 'Email Content.', true)
     ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, array $cc, array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2772,6 +2738,14 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (!empty($html)) {
             $data['html'] = $html;
+        }
+
+        if (count($cc) > 0) {
+            $data['cc'] = $cc;
+        }
+
+        if (count($bcc) > 0) {
+            $data['bcc'] = $bcc;
         }
 
         $message->setAttribute('data', $data);
