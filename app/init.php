@@ -939,12 +939,20 @@ $register->set('passwordsDictionary100k', function () {
     return $content;
 });
 
-$register->set('passwordsDictionary1m', function () {
+$register->set('passwordsDictionary1M', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords');
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
 });
+
+$register->set('passwordsDictionary10M', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
+
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
@@ -1449,9 +1457,14 @@ App::setResource('passwordsDictionary100k', function ($register) {
     return $register->get('passwordsDictionary100k');
 }, ['register']);
 
-App::setResource('passwordsDictionary1m', function ($register) {
+App::setResource('passwordsDictionary1M', function ($register) {
     /** @var Utopia\Registry\Registry $register */
-    return $register->get('passwordsDictionary1m');
+    return $register->get('passwordsDictionary1M');
+}, ['register']);
+
+App::setResource('passwordsDictionary10M', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary10M');
 }, ['register']);
 
 App::setResource('servers', function () {
