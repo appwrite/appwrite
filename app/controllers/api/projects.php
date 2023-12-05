@@ -85,7 +85,7 @@ App::post('/v1/projects')
         }
 
         $auth = Config::getParam('auth', []);
-        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
+        $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordDictionary' => false, 'passwordDictionaryLength' => '10k', 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
@@ -790,7 +790,7 @@ App::patch('/v1/projects/:projectId/auth/password-history')
     });
 
 App::patch('/v1/projects/:projectId/auth/password-dictionary')
-    ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dicitonary check for user password')
+    ->desc('Update authentication password dictionary status. Use this endpoint to enable or disable the dictionary check for user password')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -801,9 +801,10 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
+    ->param('length', '10k', new WhiteList(['10k, 100k, 1m, 10m'], true), 'Set the length of the password dictionary to use', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, bool $enabled, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, bool $enabled, string $length, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -813,6 +814,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
 
         $auths = $project->getAttribute('auths', []);
         $auths['passwordDictionary'] = $enabled;
+        $auths['passwordDictionaryLength'] = $length;
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
