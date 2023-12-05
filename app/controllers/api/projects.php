@@ -86,7 +86,6 @@ App::post('/v1/projects')
 
         $auth = Config::getParam('auth', []);
         $auths = ['limit' => 0, 'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT, 'passwordHistory' => 0, 'passwordAi' => false, 'sessionRefresh' => false, 'passwordDictionary' => false, 'passwordDictionaryLength' => '10k', 'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, 'personalDataCheck' => false];
-        // TODO: Khushboo add here
         foreach ($auth as $index => $method) {
             $auths[$method['key'] ?? ''] = true;
         }
