@@ -485,7 +485,7 @@ App::get('/v1/avatars/qr')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->setContentType('image/png')
-            ->send($image->output('png', 5));
+            ->send($image->output('png', 9));
     });
 
 App::get('/v1/avatars/initials')
