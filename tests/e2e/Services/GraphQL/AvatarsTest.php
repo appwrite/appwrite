@@ -29,7 +29,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(18767, \strlen($creditCardIcon['body']));
+        $this->assertEquals(18546, \strlen($creditCardIcon['body']));
 
         return $creditCardIcon['body'];
     }
@@ -50,7 +50,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(11100, \strlen($browserIcon['body']));
+        $this->assertEquals(13328, \strlen($browserIcon['body']));
 
         return $browserIcon['body'];
     }
@@ -71,7 +71,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(7460, \strlen($countryFlag['body']));
+        $this->assertEquals(8830, \strlen($countryFlag['body']));
 
         return $countryFlag['body'];
     }
@@ -92,7 +92,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(36036, \strlen($image['body']));
+        $this->assertEquals(52601, \strlen($image['body']));
 
         return $image['body'];
     }
@@ -134,7 +134,7 @@ class AvatarsTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
 
-        $this->assertEquals(14771, \strlen($qrCode['body']));
+        $this->assertEquals(29444, \strlen($qrCode['body']));
 
         return $qrCode['body'];
     }
