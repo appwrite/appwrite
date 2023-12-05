@@ -1397,6 +1397,10 @@ App::patch('/v1/users/:userId/targets/:targetId')
                 throw new Exception(Exception::PROVIDER_NOT_FOUND);
             }
 
+            if ($provider->getAttribute('type') !== $target->getAttribute('providerType')) {
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+            }
+
             $target->setAttribute('providerId', $provider->getId());
             $target->setAttribute('providerInternalId', $provider->getInternalId());
         }

@@ -847,5 +847,20 @@ return [
         'description' => 'Message with the requested ID has already been scheduled for delivery.',
         'code' => 400,
     ],
+    Exception::MESSAGE_TARGET_NOT_EMAIL => [
+        'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
+        'description' => 'Message with the target ID is not an email target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_SMS => [
+        'name' => Exception::MESSAGE_TARGET_NOT_SMS,
+        'description' => 'Message with the target ID is not an SMS target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_PUSH => [
+        'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
+        'description' => 'Message with the target ID is not a push target:',
+        'code' => 400,
+    ],
 
 ];
