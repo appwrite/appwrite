@@ -849,7 +849,7 @@ return [
     ],
     Exception::MESSAGE_TARGET_NOT_EMAIL => [
         'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
-        'description' => 'Message with the target ID is not an Email target:',
+        'description' => 'Message with the target ID is not an email target:',
         'code' => 400,
     ],
     Exception::MESSAGE_TARGET_NOT_SMS => [
@@ -859,7 +859,7 @@ return [
     ],
     Exception::MESSAGE_TARGET_NOT_PUSH => [
         'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
-        'description' => 'Message with the target ID is not a Push target:',
+        'description' => 'Message with the target ID is not a push target:',
         'code' => 400,
     ],
 
