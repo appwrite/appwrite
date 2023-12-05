@@ -693,6 +693,37 @@ App::patch('/v1/projects/:projectId/auth/duration')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::patch('/v1/projects/:projectId/auth/session-refresh')
+    ->desc('Update project session refresh')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'updateSessionRefresh')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('sessionRefresh', false, new Boolean(), 'Automatic session refresh. If enabled, sessions are automatically extended to session duration on every request.', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->action(function (string $projectId, int $sessionRefresh, Response $response, Database $dbForConsole) {
+
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $auths = $project->getAttribute('auths', []);
+        $auths['sessionRefresh'] = $sessionRefresh;
+
+        $dbForConsole->updateDocument('projects', $project->getId(), $project
+            ->setAttribute('auths', $auths));
+
+        $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
 App::patch('/v1/projects/:projectId/auth/:method')
     ->desc('Update project auth method status. Use this endpoint to enable or disable a given auth method for this project.')
     ->groups(['api', 'projects'])

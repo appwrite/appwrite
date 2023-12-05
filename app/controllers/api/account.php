@@ -247,6 +247,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -290,7 +291,6 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $queueForEvents
@@ -758,6 +758,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => $expire
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         if (empty($user->getAttribute('email'))) {
@@ -783,8 +784,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $session->setAttribute('expire', $expire);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1176,6 +1175,7 @@ App::put('/v1/account/sessions/magic-url')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1229,8 +1229,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('countryName', $countryName);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1451,6 +1450,7 @@ App::put('/v1/account/sessions/phone')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1505,7 +1505,6 @@ App::put('/v1/account/sessions/phone')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1606,6 +1605,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => $expire
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1642,7 +1642,6 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1842,7 +1841,6 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
-            $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
 
             $sessions[$key] = $session;
         }
@@ -1949,7 +1947,6 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -2451,8 +2448,6 @@ App::patch('/v1/account/sessions/:sessionId')
 
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
-                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
-
                 $queueForEvents
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
@@ -2515,7 +2510,6 @@ App::delete('/v1/account/sessions')
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                  // If current session delete the cookies too
                 $response
