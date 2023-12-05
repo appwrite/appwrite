@@ -45,6 +45,7 @@ use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Messaging;
+use Utopia\Validator\Boolean;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -2480,18 +2481,27 @@ App::delete('/v1/account/sessions')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->label('abuse-limit', 100)
+    ->param('current', true, new Boolean(), 'Specify whether the current session should be deleted too.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents) {
+    ->inject('project')
+    ->action(function (bool $current, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Document $project) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
 
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $currentSessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+
         foreach ($sessions as $session) {/** @var Document $session */
+            if (!$current && $currentSessionId == $session->getId()) {
+                continue;
+            }
+
             $dbForProject->deleteDocument('sessions', $session->getId());
 
             if (!Config::getParam('domainVerification')) {
