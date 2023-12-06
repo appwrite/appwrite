@@ -1123,7 +1123,7 @@ App::post('/v1/account/sessions/magic-url')
                 'Uplift', 'Velvet', 'Wanderlust', 'Zest'
             );
 
-            $securityPhraseString = $wordArray1[array_rand($wordArray1)] . $wordArray2[array_rand($wordArray2)];
+            $securityPhraseString = "<br><hr><br>We have received a login attempt with the following phrase:<br><b>" . $wordArray1[array_rand($wordArray1)] . " " . $wordArray2[array_rand($wordArray2)] . "</b><hr>";
         }
 
         $token = new Document([
@@ -1159,10 +1159,6 @@ App::post('/v1/account/sessions/magic-url')
         $body = $type === 'code' ? $locale->getText("emails.magicSession.codeBody") : $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
-
-        if ($securityPhrase) {
-            $body = $body . "<br><br>We have received a login attempt with the following phrase: <b>";
-        }
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
