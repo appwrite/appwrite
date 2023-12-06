@@ -745,7 +745,7 @@ App::get('/v1/messaging/providers')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -1690,7 +1690,7 @@ App::get('/v1/messaging/topics')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2009,7 +2009,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2476,7 +2476,7 @@ App::get('/v1/messaging/messages')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
