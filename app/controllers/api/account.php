@@ -234,7 +234,6 @@ App::post('/v1/account/sessions/email')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
-    ->param('notify', false, new Boolean(), 'Send email notification about new session creation to user email.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -244,7 +243,7 @@ App::post('/v1/account/sessions/email')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $email, string $password, bool $notify, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
