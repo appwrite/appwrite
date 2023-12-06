@@ -363,7 +363,7 @@ class Auth
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getAttribute('expire')), $expires)) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz($session->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
