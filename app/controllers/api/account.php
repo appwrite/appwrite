@@ -371,7 +371,9 @@ App::post('/v1/account/sessions/email')
                 'device' =>  $device['deviceBrand'] . " " . $device['deviceModel'] . " " . $device['deviceName'],
                 'country' => $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')),
                 'ip' => $request->getIP(),
-                'redirect' => ''
+                'redirect' => '',
+                'code' => '',
+                'securityPhrase' => '',
             ];
 
             $queueForMails
@@ -966,7 +968,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'device' =>  $device['deviceBrand'] . " " . $device['deviceModel'] . " " . $device['deviceName'],
                 'country' => $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')),
                 'ip' => $request->getIP(),
-                'redirect' => ''
+                'redirect' => '',
+                'code' => '',
+                'securityPhrase' => '',
             ];
 
             $queueForMails
@@ -1752,7 +1756,9 @@ App::put('/v1/account/sessions/phone')
                 'device' =>  $device['deviceBrand'] . " " . $device['deviceModel'] . " " . $device['deviceName'],
                 'country' => $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')),
                 'ip' => $request->getIP(),
-                'redirect' => ''
+                'redirect' => '',
+                'code' => '',
+                'securityPhrase' => '',
             ];
 
             $queueForMails
