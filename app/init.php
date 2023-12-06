@@ -1224,6 +1224,7 @@ App::setResource('console', function () {
             'invites' => App::getEnv('_APP_CONSOLE_INVITES', 'enabled') === 'enabled',
             'limit' => (App::getEnv('_APP_CONSOLE_WHITELIST_ROOT', 'enabled') === 'enabled') ? 1 : 0, // limit signup to 1 user
             'duration' => Auth::TOKEN_EXPIRATION_LOGIN_LONG, // 1 Year in seconds
+            'notify' => true,
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

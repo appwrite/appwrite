@@ -138,18 +138,24 @@ class Project extends Model
                 'default' => '10k',
                 'example' => '1m',
             ])
-                ->addRule('authPasswordAi', [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => 'Whether or not to check user\'s password against against AI opinion',
-                    'default' => false,
-                    'example' => true,
-                ])
-                ->addRule('authSessionRefresh', [
-                    'type' => self::TYPE_BOOLEAN,
-                    'description' => 'Whether or not sessions are automatically extended to session duration on every request',
-                    'default' => false,
-                    'example' => true,
-                ])
+            ->addRule('authPasswordAi', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to check user\'s password against against AI opinion',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authNotify', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to send notification on new session creation.',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authSessionRefresh', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not sessions are automatically extended to session duration on every request',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('authPersonalDataCheck', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not to check the user password for similarity with their personal data.',
@@ -238,8 +244,7 @@ class Project extends Model
                 'description' => 'SMTP server secure protocol',
                 'default' => '',
                 'example' => 'tls',
-            ])
-        ;
+            ]);
 
         $services = Config::getParam('services', []);
         $auth = Config::getParam('auth', []);
@@ -254,8 +259,7 @@ class Project extends Model
                     'description' => $name . ' auth method status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
 
         foreach ($services as $service) {
@@ -272,8 +276,7 @@ class Project extends Model
                     'description' => $name . ' service status',
                     'example' => true,
                     'default' => true,
-                ])
-            ;
+                ]);
         }
     }
 
@@ -340,8 +343,8 @@ class Project extends Model
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
         $document->setAttribute('authPasswordDictionaryLength', $authValues['passwordDictionaryLength'] ?? false);
         $document->setAttribute('authPasswordAi', $authValues['passwordAi'] ?? false);
+        $document->setAttribute('authNotify', $authValues['notify'] ?? false);
         $document->setAttribute('authSessionRefresh', $authValues['sessionRefresh'] ?? false);
-        // TODO: Khushboo add here
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
 
         foreach ($auth as $index => $method) {

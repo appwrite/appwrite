@@ -234,6 +234,7 @@ App::post('/v1/account/sessions/email')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('notify', false, new Boolean(), 'Send email notification about new session creation to user email.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -242,7 +243,8 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->inject('queueForMails')
+    ->action(function (string $email, string $password, bool $notify, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Mail $queueForMails) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -308,6 +310,77 @@ App::post('/v1/account/sessions/email')
         if (!Config::getParam('domainVerification')) {
             $response
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+        }
+
+        if ($project->getAttribute('auths', [])['notify'] ?? false) {
+            $body = $locale->getText("emails.authNotify.body");
+            $subject = $locale->getText("emails.authNotify.subject");
+
+            $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+            $message
+                ->setParam('{{body}}', $body)
+                ->setParam('{{hello}}', $locale->getText("emails.authNotify.hello"))
+                ->setParam('{{footer}}', $locale->getText("emails.authNotify.footer"))
+                ->setParam('{{thanks}}', $locale->getText("emails.authNotify.thanks"))
+                ->setParam('{{signature}}', $locale->getText("emails.authNotify.signature"));
+            $body = $message->render();
+
+            $smtp = $project->getAttribute('smtp', []);
+            $smtpEnabled = $smtp['enabled'] ?? false;
+
+            $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+            $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+            $replyTo = "";
+
+            if ($smtpEnabled) {
+                if (!empty($smtp['senderEmail'])) {
+                    $senderEmail = $smtp['senderEmail'];
+                }
+                if (!empty($smtp['senderName'])) {
+                    $senderName = $smtp['senderName'];
+                }
+                if (!empty($smtp['replyTo'])) {
+                    $replyTo = $smtp['replyTo'];
+                }
+
+                $queueForMails
+                    ->setSmtpHost($smtp['host'] ?? '')
+                    ->setSmtpPort($smtp['port'] ?? '')
+                    ->setSmtpUsername($smtp['username'] ?? '')
+                    ->setSmtpPassword($smtp['password'] ?? '')
+                    ->setSmtpSecure($smtp['secure'] ?? '');
+
+                $queueForMails
+                    ->setSmtpReplyTo($replyTo)
+                    ->setSmtpSenderEmail($senderEmail)
+                    ->setSmtpSenderName($senderName);
+            }
+
+            $device = $detector->getDevice();
+
+            $sessionCreatedAt = $session->getCreatedAt();
+            $dateTime = new DateTimeImmutable($sessionCreatedAt);
+            $date = $dateTime->format('Y-m-d');
+            $time = $dateTime->format('H:i:s');
+
+            $emailVariables = [
+                'direction' => $locale->getText('settings.direction'),
+                'user' => $user->getAttribute('name'),
+                'project' => $project->getAttribute('name'),
+                'date' => $date,
+                'time' => $time,
+                'device' =>  $device['deviceBrand'] . " " . $device['deviceModel'] . " " . $device['deviceName'],
+                'country' => $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')),
+                'ip' => $request->getIP(),
+                'redirect' => ''
+            ];
+
+            $queueForMails
+                ->setSubject($subject)
+                ->setBody($body)
+                ->setVariables($emailVariables)
+                ->setRecipient($email)
+                ->trigger();
         }
 
         $response
