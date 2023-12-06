@@ -9,6 +9,7 @@ class Users extends Base
         'email',
         'phone',
         'status',
+        'hash',
         'passwordUpdate',
         'registration',
         'emailVerification',

@@ -172,7 +172,7 @@ App::init()
         /*
         * Session refresh
         */
-        if ($project->getAttribute('auths', [])['sessionRefresh'] ?? false) {
+        if ($project->getAttribute('auths', [])['renewal'] ?? false) {
             if ($user && !$user->isEmpty()) {
                 $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
                 $currentSessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);

@@ -6,6 +6,8 @@
 
 <a href="{{redirect}}" target="_blank">{{redirect}}</a>
 
+<b>{{code}}</b>
+
 <p>{{footer}}</p>
 
 <br>

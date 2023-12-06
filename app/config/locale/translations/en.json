@@ -12,6 +12,7 @@
     "emails.magicSession.subject": "Login",
     "emails.magicSession.hello": "Hey,",
     "emails.magicSession.body": "Follow this link to login.",
+    "emails.magicSession.codeBody": "Enter this code to login.",
     "emails.magicSession.footer": "If you didn’t ask to login using this email, you can ignore this message.",
     "emails.magicSession.thanks": "Thanks",
     "emails.magicSession.signature": "{{project}} team",

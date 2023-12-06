@@ -152,6 +152,16 @@ return [
         'beta' => false,
         'mock' => false,
     ],
+    'supabase' => [
+        'name' => 'Supabase',
+        'developers' => 'https://supabase.com/docs',
+        'icon' => 'icon-supabase',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'gitlab' => [
         'name' => 'GitLab',
         'developers' => 'https://docs.gitlab.com/ee/api/',
