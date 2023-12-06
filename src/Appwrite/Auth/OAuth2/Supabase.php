@@ -168,7 +168,6 @@ class Supabase extends OAuth2
                 $this->endpoint . '/organizations',
                 ['Authorization: Bearer ' . \urlencode($accessToken)]
             );
-            \var_dump($user);
             $this->user = \json_decode($user, true);
             $this->user = [
                 'username' => $this->user[0]['name'],

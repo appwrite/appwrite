@@ -207,7 +207,7 @@ return [
     ],
     Exception::USER_PASSWORD_AI => [
         'name' => Exception::USER_PASSWORD_AI,
-        'description' => 'As per AI, your password is as strong as Grandior wifi. Please choose a different password and try again.',
+        'description' => 'As per AI, your password is not strong enough. Please choose a different password and try again.',
         'code' => 400,
     ],
     Exception::USER_SESSION_NOT_FOUND => [
