@@ -1016,6 +1016,7 @@ App::post('/v1/account/sessions/magic-url')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('type', 'link', new WhiteList(['link', 'code']), 'The type of verification email to be sent. ', true)
+    ->param('securityPhrase', false, new Boolean(), 'Security phrase to verify that the user is the one who initiated the action. This phrase will be sent to the user email address.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1024,7 +1025,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, string $type, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, string $type, string $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -1097,6 +1098,35 @@ App::post('/v1/account/sessions/magic-url')
             $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
         }
 
+        if ($securityPhrase) {
+            // create two arrays of random words from the dictionary and pick one word from each array to generate a security phrase
+            $wordArray1 = array(
+                'Apple', 'Banana', 'Cherry', 'Dragon', 'Elephant', 'Flower', 'Giraffe', 'Harmony', 'Island', 'Journey', 'Kiwi', 'Lemon', 'Mango', 'Nebula', 'Ocean',
+                'Panda', 'Quasar', 'Rainbow', 'Sunshine', 'Tiger',
+                'Umbrella', 'Violet', 'Whale', 'Xylophone', 'Yoga',
+                'Zeppelin', 'Breeze', 'Cascade', 'Dolphin', 'Enigma',
+                'Fountain', 'Galaxy', 'Horizon', 'Ivory', 'Jubilee',
+                'Kaleidoscope', 'Lagoon', 'Midnight', 'Nova', 'Opulence',
+                'Pebble', 'Quasar', 'Radiance', 'Sapphire', 'Tranquil',
+                'Utopia', 'Vivid', 'Willow', 'Zenith'
+            );
+
+            $wordArray2 = array(
+                'Aurora', 'Bliss', 'Cerulean', 'Dusk', 'Eclipse',
+                'Fiesta', 'Grace', 'Harmony', 'Infinite', 'Jubilant',
+                'Kaleidoscope', 'Lullaby', 'Mystic', 'Nirvana', 'Orchid',
+                'Purity', 'Quintessence', 'Ripple', 'Serene', 'Tranquil',
+                'Utopia', 'Vibrant', 'Whisper', 'Xanadu', 'Yonder',
+                'Zephyr', 'Bamboo', 'Cascade', 'Dewdrop', 'Ethereal',
+                'Fandango', 'Gossamer', 'Harmony', 'Inferno', 'Jade',
+                'Kismet', 'Luminous', 'Majestic', 'Nebula', 'Opulent',
+                'Paradise', 'Quasar', 'Radiant', 'Serenade', 'Talisman',
+                'Uplift', 'Velvet', 'Wanderlust', 'Zest'
+            );
+
+            $securityPhraseString = $wordArray1[array_rand($wordArray1)] . $wordArray2[array_rand($wordArray2)];
+        }
+
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
@@ -1130,6 +1160,10 @@ App::post('/v1/account/sessions/magic-url')
         $body = $type === 'code' ? $locale->getText("emails.magicSession.codeBody") : $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
+
+        if ($securityPhrase) {
+            $body = $body . "<br><br>We have received a login attempt with the following phrase: <b>";
+        }
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
@@ -1194,6 +1228,7 @@ App::post('/v1/account/sessions/magic-url')
             'project' => $project->getAttribute('name'),
             'redirect' => $type === 'link' ? $url : '',
             'code' => $type === 'code' ? $loginSecret : '',
+            'securityPhrase' => $securityPhrase ? $securityPhraseString : '',
         ];
 
         $queueForMails
@@ -1212,6 +1247,7 @@ App::post('/v1/account/sessions/magic-url')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+        $token->setAttribute('securityPhrase', $securityPhrase ? $securityPhraseString : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)

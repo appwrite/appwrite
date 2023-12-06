@@ -40,6 +40,12 @@ class Token extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('securityPhrase', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token security phrase.',
+                'default' => '',
+                'example' => 'Tiger Whisper',
+            ])
         ;
     }
 
