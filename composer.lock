@@ -1910,12 +1910,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "786284821c7f25834cc973995653242aa770e257"
+                "reference": "f3ec6f0e8f6e616a8de99d66b4c165c3f5a0cd25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/786284821c7f25834cc973995653242aa770e257",
-                "reference": "786284821c7f25834cc973995653242aa770e257",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/f3ec6f0e8f6e616a8de99d66b4c165c3f5a0cd25",
+                "reference": "f3ec6f0e8f6e616a8de99d66b4c165c3f5a0cd25",
                 "shasum": ""
             },
             "require": {
@@ -1958,7 +1958,7 @@
                 "issues": "https://github.com/utopia-php/database/issues",
                 "source": "https://github.com/utopia-php/database/tree/parsing-nested"
             },
-            "time": "2023-12-06T11:12:24+00:00"
+            "time": "2023-12-06T15:11:21+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5832,5 +5832,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
