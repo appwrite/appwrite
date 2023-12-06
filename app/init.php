@@ -175,6 +175,8 @@ const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
 const COMPRESSION_TYPE_ZSTD = 'zstd';
 // Mail Types
+const MAIL_TYPE_VERIFICATION_URL = 'verificationUrl';
+const MAIL_TYPE_VERIFICATION_CODE = 'verificationCode';
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
 const MAIL_TYPE_RECOVERY = 'recovery';
@@ -1231,7 +1233,10 @@ App::setResource('console', function () {
         'oAuthProviders' => [
             'githubEnabled' => true,
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
-            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
+            'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', ''),
+            'supabaseEnabled' => true,
+            'supabaseSecret' => App::getEnv('_APP_CONSOLE_SUPABASE_SECRET', ''),
+            'supabaseAppid' => App::getEnv('_APP_CONSOLE_SUPABASE_APP_ID', ''),
         ],
     ]);
 }, []);

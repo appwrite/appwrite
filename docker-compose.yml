@@ -191,6 +191,8 @@ services:
       - _APP_MESSAGE_SMS_TEST_DSN
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
+      - _APP_CONSOLE_SUPABASE_SECRET
+      - _APP_CONSOLE_SUPABASE_APP_ID
   appwrite-realtime:
     entrypoint: realtime
     <<: *x-logging

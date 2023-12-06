@@ -133,7 +133,7 @@ class Project extends Model
                 'example' => true,
             ])
             ->addRule('authPasswordDictionaryLength', [
-                'type' => self::TYPE_BOOLEAN,
+                'type' => self::TYPE_STRING,
                 'description' => 'How many most commonly used password to check against. Possible values are: 10k, 100k, 1m, 10m',
                 'default' => '10k',
                 'example' => '1m',
@@ -151,6 +151,18 @@ class Project extends Model
                 'example' => true,
             ])
             ->addRule('authSessionRefresh', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not sessions are automatically extended to session duration on every request',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authPasswordAi', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Whether or not to check user\'s password against against AI opinion',
+                'default' => false,
+                'example' => true,
+            ])
+            ->addRule('authRenewal', [
                 'type' => self::TYPE_BOOLEAN,
                 'description' => 'Whether or not sessions are automatically extended to session duration on every request',
                 'default' => false,
@@ -344,7 +356,7 @@ class Project extends Model
         $document->setAttribute('authPasswordDictionaryLength', $authValues['passwordDictionaryLength'] ?? false);
         $document->setAttribute('authPasswordAi', $authValues['passwordAi'] ?? false);
         $document->setAttribute('authNotify', $authValues['notify'] ?? false);
-        $document->setAttribute('authSessionRefresh', $authValues['sessionRefresh'] ?? false);
+        $document->setAttribute('authRenewal', $authValues['renewal'] ?? false);
         $document->setAttribute('authPersonalDataCheck', $authValues['personalDataCheck'] ?? false);
 
         foreach ($auth as $index => $method) {

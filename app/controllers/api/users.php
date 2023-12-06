@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\PasswordAi;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
@@ -68,6 +69,13 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordAi'] ?? false) {
+            $passwordAiValidator = new PasswordAi();
+            if (!$passwordAiValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_AI);
             }
         }
 
@@ -1112,6 +1120,13 @@ App::patch('/v1/users/:userId/password')
             $personalDataValidator = new PersonalData($userId, $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+        
+        if ($project->getAttribute('auths', [])['passwordAi'] ?? false) {
+            $passwordAiValidator = new PasswordAi();
+            if (!$passwordAiValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_AI);
             }
         }
 

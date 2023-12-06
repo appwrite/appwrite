@@ -1014,7 +1014,8 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('type', 'link', new WhiteList(['link', 'code']), 'The type of verification email to be sent. ', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1023,7 +1024,7 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, string $type, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -1088,6 +1089,14 @@ App::post('/v1/account/sessions/magic-url')
         $loginSecret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
+        if ($type === 'code') {
+            $loginSecret = Auth::codeGenerator();
+            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
+        } else if($type === 'link') {
+            $loginSecret = Auth::tokenGenerator();
+            $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
+        }
+
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
@@ -1118,7 +1127,7 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        $body = $locale->getText("emails.magicSession.body");
+        $body = $type === 'code' ? $locale->getText("emails.magicSession.codeBody") : $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
@@ -1183,7 +1192,8 @@ App::post('/v1/account/sessions/magic-url')
             'user' => '',
             'team' => '',
             'project' => $project->getAttribute('name'),
-            'redirect' => $url
+            'redirect' => $type === 'link' ? $url : '',
+            'code' => $type === 'code' ? $loginSecret : '',
         ];
 
         $queueForMails
@@ -2138,6 +2148,13 @@ App::patch('/v1/account/password')
             }
         }
 
+        if ($project->getAttribute('auths', [])['passwordAi'] ?? false) {
+            $passwordAiValidator = new PasswordAi();
+            if (!$passwordAiValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_AI);
+            }
+        }
+        
         if ($project->getAttribute('auths', [])['passwordDictionary'] ?? false) {
             $passwordDictionaryLength = $project->getAttribute('auths', [])['passwordDictionaryLength'] ?? '10k';
             if ($passwordDictionaryLength == '10k') {
