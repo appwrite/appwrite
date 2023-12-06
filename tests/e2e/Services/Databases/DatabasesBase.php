@@ -13,6 +13,120 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
 {
+
+    public function testOrQueries(): void
+    {
+        // Create database
+        $database = $this->client->call(Client::METHOD_POST, '/databases', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'databaseId' => ID::unique(),
+            'name' => 'Or queries'
+        ]);
+
+        $this->assertNotEmpty($database['body']['$id']);
+        $this->assertEquals(201, $database['headers']['status-code']);
+        $this->assertEquals('Or queries', $database['body']['name']);
+
+        $databaseId = $database['body']['$id'];
+
+        // Create Collection
+        $students = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Students',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $students['headers']['status-code']);
+        $this->assertEquals($students['body']['name'], 'Students');
+
+        // Create Attributes
+        $firstName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'first_name',
+            'size' => 256,
+            'required' => true,
+        ]);
+        $this->assertEquals(202, $firstName['headers']['status-code']);
+
+        $lastName = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'last_name',
+            'size' => 256,
+            'required' => true,
+        ]);
+
+        $this->assertEquals(202, $lastName['headers']['status-code']);
+
+        $age = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/attributes/integer', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'year',
+            'required' => false,
+        ]);
+
+        $this->assertEquals(202, $age['headers']['status-code']);
+
+        // Wait for worker
+        sleep(2);
+
+        $document1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'first_name' => 'Donald',
+                'last_name' => 'Duck',
+                'year' => 2000,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $document2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'documentId' => ID::unique(),
+            'data' => [
+                'first_name' => 'Donald',
+                'last_name' => 'Trump',
+                'year' => 2000,
+            ],
+            'permissions' => [
+                Permission::read(Role::user($this->getUser()['$id'])),
+            ]
+        ]);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $students['body']['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+           // 'queries' => ['orderAsc("releaseYear")']
+        ]);
+
+        var_dump($documents);
+    }
+
     public function testCreateDatabase(): array
     {
         /**
@@ -30,8 +144,6 @@ trait DatabasesBase
         $this->assertNotEmpty($database['body']['$id']);
         $this->assertEquals(201, $database['headers']['status-code']);
         $this->assertEquals('Test Database', $database['body']['name']);
-
-        return ['databaseId' => $database['body']['$id']];
     }
 
     /**
