@@ -801,7 +801,7 @@ App::patch('/v1/projects/:projectId/auth/password-dictionary')
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('enabled', false, new Boolean(false), 'Set whether or not to enable checking user\'s password against most commonly used passwords. Default is false.')
-    ->param('length', '10k', new WhiteList(['10k, 100k, 1M, 10M'], true), 'Set the length of the password dictionary to use', true)
+    ->param('length', '10k', new WhiteList(['10k', '100k', '1m', '10m'], true), 'Set the length of the password dictionary to use', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, string $length, Response $response, Database $dbForConsole) {

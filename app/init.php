@@ -933,21 +933,21 @@ $register->set('passwordsDictionary10k', function () {
 });
 
 $register->set('passwordsDictionary100k', function () {
-    $content = \file_get_contents(__DIR__ . '/assets/security/100k-common-passwords');
+    $content = \file_get_contents(__DIR__ . '/assets/security/100k-common-passwords.txt');
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
 });
 
 $register->set('passwordsDictionary1M', function () {
-    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords');
+    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords.txt');
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;
 });
 
 $register->set('passwordsDictionary10M', function () {
-    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords');
+    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords.txt');
     $content = explode("\n", $content);
     $content = array_flip($content);
     return $content;

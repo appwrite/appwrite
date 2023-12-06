@@ -71,7 +71,7 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', new Text(512, 8), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary10k', 'passwordsDictionary100k', 'passwordsDictionary1M', 'passwordsDictionary10M'])
+    ->param('password', '', fn ($project, $passwordsDictionary10k) => new PasswordDictionary($passwordsDictionary10k, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary10k'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -79,7 +79,11 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('passwordsDictionary10k')
+    ->inject('passwordsDictionary100k')
+    ->inject('passwordsDictionary1M')
+    ->inject('passwordsDictionary10M')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, array $passwordsDictionary10k, array $passwordsDictionary100k, array $passwordsDictionary1M, array $passwordsDictionary10M) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -120,6 +124,25 @@ App::post('/v1/account')
             }
         }
 
+        if ($project->getAttribute('auths', [])['passwordDictionary'] ?? false) {
+            $passwordDictionaryLength = $project->getAttribute('auths', [])['passwordDictionaryLength'] ?? '10k';
+            if ($passwordDictionaryLength == '10k') {
+                $passwordDictionary = $passwordsDictionary10k;
+            } elseif ($passwordDictionaryLength == '100k') {
+                $passwordDictionary = $passwordsDictionary100k;
+            } elseif ($passwordDictionaryLength == '1m') {
+                $passwordDictionary = $passwordsDictionary1M;
+            } elseif ($passwordDictionaryLength == '10m') {
+                $passwordDictionary = $passwordsDictionary10M;
+            } else {
+                throw new Exception('Password dictionary length is not supported');
+            }
+            $passwordDictionaryValidator = new PasswordDictionary($passwordDictionary, true);
+            if (!$passwordDictionaryValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_DICTIONARY);
+            }
+        }
+
         if ($project->getAttribute('auths', [])['passwordAi'] ?? false) {
             $passwordAiValidator = new PasswordAi();
             if (!$passwordAiValidator->isValid($password)) {
@@ -157,9 +180,9 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => MESSAGE_TYPE_EMAIL,
@@ -284,27 +307,23 @@ App::post('/v1/account/sessions/email')
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-        ;
+            ->setAttribute('countryName', $countryName);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -323,9 +342,9 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
-    ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn ($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
@@ -680,7 +699,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::any()),
@@ -778,8 +797,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $user
-            ->setAttribute('status', true)
-        ;
+            ->setAttribute('status', true);
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
@@ -796,8 +814,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
-        ;
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -820,8 +837,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addHeader('Pragma', 'no-cache')
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->redirect($state['success'])
-        ;
+            ->redirect($state['success']);
     });
 
 App::get('/v1/account/identities')
@@ -925,7 +941,7 @@ App::post('/v1/account/sessions/magic-url')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1116,8 +1132,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/sessions/magic-url')
@@ -1153,7 +1168,7 @@ App::put('/v1/account/sessions/magic-url')
 
         /** @var Utopia\Database\Document $user */
 
-        $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1320,7 +1335,7 @@ App::post('/v1/account/sessions/phone')
             $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
-                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                $target = Authorization::skip(fn () => $dbForProject->createDocument('targets', new Document([
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => MESSAGE_TYPE_SMS,
@@ -1398,8 +1413,7 @@ App::post('/v1/account/sessions/phone')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($token, Response::MODEL_TOKEN)
-        ;
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::put('/v1/account/sessions/phone')
@@ -1428,7 +1442,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
-        $userFromRequest = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $userFromRequest = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($userFromRequest->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1493,8 +1507,7 @@ App::put('/v1/account/sessions/phone')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1505,15 +1518,13 @@ App::put('/v1/account/sessions/phone')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-        ;
+            ->setAttribute('countryName', $countryName);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1594,7 +1605,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$internalId');
-        Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+        Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
@@ -1622,18 +1633,17 @@ App::post('/v1/account/sessions/anonymous')
 
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-        ;
+            ->setParam('sessionId', $session->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
@@ -1642,15 +1652,13 @@ App::post('/v1/account/sessions/anonymous')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-        ;
+            ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-        ;
+            ->setAttribute('countryName', $countryName);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1678,7 +1686,8 @@ App::post('/v1/account/jwt')
         $sessions = $user->getAttribute('sessions', []);
         $current = new Document();
 
-        foreach ($sessions as $session) { /** @var Utopia\Database\Document $session */
+        foreach ($sessions as $session) {
+            /** @var Utopia\Database\Document $session */
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                 $current = $session;
             }
@@ -1693,13 +1702,13 @@ App::post('/v1/account/jwt')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-            // 'uid'    => 1,
-            // 'aud'    => 'http://site.com',
-            // 'scopes' => ['user'],
-            // 'iss'    => 'http://api.mysite.com',
-            'userId' => $user->getId(),
-            'sessionId' => $current->getId(),
-        ])]), Response::MODEL_JWT);
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $current->getId(),
+            ])]), Response::MODEL_JWT);
     });
 
 App::post('/v1/account/targets/push')
@@ -1844,7 +1853,8 @@ App::get('/v1/account/sessions')
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
@@ -1948,14 +1958,14 @@ App::get('/v1/account/sessions/:sessionId')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
-                    ->setAttribute('countryName', $countryName)
-                ;
+                    ->setAttribute('countryName', $countryName);
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -2024,7 +2034,11 @@ App::patch('/v1/account/password')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('passwordsDictionary10k')
+    ->inject('passwordsDictionary100k')
+    ->inject('passwordsDictionary1M')
+    ->inject('passwordsDictionary10M')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, array $passwordsDictionary10k, array $passwordsDictionary100k, array $passwordsDictionary1M, array $passwordsDictionary10M) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -2048,6 +2062,25 @@ App::patch('/v1/account/password')
             $personalDataValidator = new PersonalData($user->getId(), $user->getAttribute('email'), $user->getAttribute('name'), $user->getAttribute('phone'));
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordDictionary'] ?? false) {
+            $passwordDictionaryLength = $project->getAttribute('auths', [])['passwordDictionaryLength'] ?? '10k';
+            if ($passwordDictionaryLength == '10k') {
+                $passwordDictionary = $passwordsDictionary10k;
+            } elseif ($passwordDictionaryLength == '100k') {
+                $passwordDictionary = $passwordsDictionary100k;
+            } elseif ($passwordDictionaryLength == '1m') {
+                $passwordDictionary = $passwordsDictionary1M;
+            } elseif ($passwordDictionaryLength == '10m') {
+                $passwordDictionary = $passwordsDictionary10M;
+            } else {
+                throw new Exception('Password dictionary length is not supported');
+            }
+            $passwordDictionaryValidator = new PasswordDictionary($passwordDictionary, true);
+            if (!$passwordDictionaryValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_DICTIONARY);
             }
         }
 
@@ -2303,8 +2336,7 @@ App::patch('/v1/account/status')
         $protocol = $request->getProtocol();
         $response
             ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -2343,7 +2375,8 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
                     return $dbForProject->deleteDocument('sessions', $session->getId());
@@ -2356,19 +2389,16 @@ App::delete('/v1/account/sessions/:sessionId')
                 if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
                     $session
                         ->setAttribute('current', true)
-                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                    ;
+                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
                     if (!Config::getParam('domainVerification')) {
                         $response
-                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                        ;
+                            ->addHeader('X-Fallback-Cookies', \json_encode([]));
                     }
 
                     $response
                         ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-                    ;
+                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
                 }
 
                 $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -2376,8 +2406,7 @@ App::delete('/v1/account/sessions/:sessionId')
                 $queueForEvents
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
+                    ->setPayload($response->output($session, Response::MODEL_SESSION));
                 return $response->noContent();
             }
         }
@@ -2418,7 +2447,8 @@ App::patch('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
             if ($sessionId == $session->getId()) {
                 // Comment below would skip re-generation if token is still valid
                 // We decided to not include this because developer can get expiration date from the session
@@ -2459,8 +2489,7 @@ App::patch('/v1/account/sessions/:sessionId')
                 $queueForEvents
                     ->setParam('userId', $user->getId())
                     ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
+                    ->setPayload($response->output($session, Response::MODEL_SESSION));
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
             }
@@ -2500,7 +2529,8 @@ App::delete('/v1/account/sessions')
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $currentSessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
 
-        foreach ($sessions as $session) {/** @var Document $session */
+        foreach ($sessions as $session) {
+            /** @var Document $session */
             if (!$current && $currentSessionId == $session->getId()) {
                 continue;
             }
@@ -2513,13 +2543,12 @@ App::delete('/v1/account/sessions')
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-            ;
+                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
 
-                 // If current session delete the cookies too
+                // If current session delete the cookies too
                 $response
                     ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
@@ -2705,8 +2734,7 @@ App::post('/v1/account/recovery')
             ->setPayload($response->output(
                 $recovery->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $recovery->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
@@ -2778,12 +2806,12 @@ App::put('/v1/account/recovery')
         }
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('emailVerification', true));
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+            ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 
@@ -2798,8 +2826,7 @@ App::put('/v1/account/recovery')
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
-            ->setParam('tokenId', $recoveryDocument->getId())
-        ;
+            ->setParam('tokenId', $recoveryDocument->getId());
 
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
@@ -2821,7 +2848,7 @@ App::post('/v1/account/verification')
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},userId:{userId}')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the verification email. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', false, ['clients']) // TODO add built-in confirm page
     ->inject('request')
     ->inject('response')
     ->inject('project')
@@ -2990,7 +3017,7 @@ App::put('/v1/account/verification')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3020,8 +3047,7 @@ App::put('/v1/account/verification')
 
         $queueForEvents
             ->setParam('userId', $userId)
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
@@ -3122,8 +3148,7 @@ App::post('/v1/account/verification/phone')
             ->setPayload($response->output(
                 $verification->setAttribute('secret', $secret),
                 Response::MODEL_TOKEN
-            ))
-        ;
+            ));
 
         // Hide secret for clients
         $verification->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
@@ -3158,7 +3183,7 @@ App::put('/v1/account/verification/phone')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
+        $profile = Authorization::skip(fn () => $dbForProject->getDocument('users', $userId));
 
         if ($profile->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -3186,8 +3211,7 @@ App::put('/v1/account/verification/phone')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('tokenId', $verificationDocument->getId())
-        ;
+            ->setParam('tokenId', $verificationDocument->getId());
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
