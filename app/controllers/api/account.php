@@ -1099,31 +1099,10 @@ App::post('/v1/account/sessions/magic-url')
 
         if ($securityPhrase) {
             // create two arrays of random words from the dictionary and pick one word from each array to generate a security phrase
-            $wordArray1 = array(
-                'Apple', 'Banana', 'Cherry', 'Dragon', 'Elephant', 'Flower', 'Giraffe', 'Harmony', 'Island', 'Journey', 'Kiwi', 'Lemon', 'Mango', 'Nebula', 'Ocean',
-                'Panda', 'Quasar', 'Rainbow', 'Sunshine', 'Tiger',
-                'Umbrella', 'Violet', 'Whale', 'Xylophone', 'Yoga',
-                'Zeppelin', 'Breeze', 'Cascade', 'Dolphin', 'Enigma',
-                'Fountain', 'Galaxy', 'Horizon', 'Ivory', 'Jubilee',
-                'Kaleidoscope', 'Lagoon', 'Midnight', 'Nova', 'Opulence',
-                'Pebble', 'Quasar', 'Radiance', 'Sapphire', 'Tranquil',
-                'Utopia', 'Vivid', 'Willow', 'Zenith'
-            );
-
-            $wordArray2 = array(
-                'Aurora', 'Bliss', 'Cerulean', 'Dusk', 'Eclipse',
-                'Fiesta', 'Grace', 'Harmony', 'Infinite', 'Jubilant',
-                'Kaleidoscope', 'Lullaby', 'Mystic', 'Nirvana', 'Orchid',
-                'Purity', 'Quintessence', 'Ripple', 'Serene', 'Tranquil',
-                'Utopia', 'Vibrant', 'Whisper', 'Xanadu', 'Yonder',
-                'Zephyr', 'Bamboo', 'Cascade', 'Dewdrop', 'Ethereal',
-                'Fandango', 'Gossamer', 'Harmony', 'Inferno', 'Jade',
-                'Kismet', 'Luminous', 'Majestic', 'Nebula', 'Opulent',
-                'Paradise', 'Quasar', 'Radiant', 'Serenade', 'Talisman',
-                'Uplift', 'Velvet', 'Wanderlust', 'Zest'
-            );
-
-            $securityPhraseString = "<br><hr><br>We have received a login attempt with the following phrase:<br><b>" . $wordArray1[array_rand($wordArray1)] . " " . $wordArray2[array_rand($wordArray2)] . "</b><hr>";
+            $wordArray1 = array("apple","banana","cat","dog","elephant","fish","guitar","hat","ice cream","jacket","kangaroo","lemon","moon","notebook","orange","piano","quilt","rabbit","sun","tree","umbrella","violin","watermelon","xylophone","yogurt","zebra","airplane","ball","cloud","diamond","eagle","fire","giraffe","hammer","island","jellyfish","kiwi","lamp","mango","needle","ocean","pear","quasar","rose","star","turtle","unicorn","volcano","whale","xylograph","yarn","zephyr","ant","book","candle","door","envelope","feather","globe","harp","insect","jar","kite","lighthouse","magnet","necklace","owl","puzzle","queen","rainbow","sailboat","telescope","umbrella","vase","wallet","xylograph","yacht","zeppelin","accordion","brush","chocolate","dolphin","easel","fountain","globe","hairbrush","iceberg","jigsaw","kettle","leopard","marble","nutmeg","obstacle","penguin","quiver","raccoon","sphinx","trampoline","utensil","velvet","wagon","xerox","yodel","zipper");
+            $wordArray2 = array("abundant", "adaptable", "adventurous", "affectionate", "agile", "amiable", "amazing", "ambitious", "amicable", "amusing", "astonishing", "attentive", "authentic", "awesome", "balanced", "beautiful", "bold", "brave", "bright", "bubbly", "calm", "capable", "charismatic", "charming", "cheerful", "clever", "colorful", "compassionate", "confident", "cooperative", "courageous", "courteous", "creative", "curious", "dazzling", "dedicated", "delightful", "determined", "diligent", "dynamic", "easygoing", "effervescent", "efficient", "elegant", "empathetic", "energetic", "enthusiastic", "exuberant", "faithful", "fantastic", "fearless", "flexible", "friendly", "fun-loving", "generous", "gentle", "genuine", "graceful", "gracious", "happy", "hardworking", "harmonious", "helpful", "honest", "hopeful", "humble", "imaginative", "impressive", "incredible", "inspiring", "intelligent", "joyful", "kind", "knowledgeable", "lively", "lovable", "lovely", "loyal", "majestic", "magnificent", "mindful", "modest", "passionate", "patient", "peaceful", "perseverant", "playful", "polite", "positive", "powerful", "practical", "precious", "proactive", "productive", "punctual", "quick-witted", "radiant", "reliable", "resilient", "resourceful", "respectful", "responsible", "sensitive", "serene", "sincere", "skillful", "soothing", "spirited", "splendid", "steadfast", "strong", "supportive", "sweet", "talented", "thankful", "thoughtful", "thriving", "tranquil", "trustworthy", "upbeat", "versatile", "vibrant", "vigilant", "warmhearted", "welcoming", "wholesome", "witty", "wonderful", "zealous");
+            $securityPhraseString = $wordArray1[array_rand($wordArray1)] . " " . $wordArray2[array_rand($wordArray2)];
+            $securityPhraseMessage = "<br><hr><br>We have received a login attempt with the following phrase:<br><b>" . $securityPhraseString . "</b><hr>";
         }
 
         $token = new Document([
@@ -1223,7 +1202,7 @@ App::post('/v1/account/sessions/magic-url')
             'project' => $project->getAttribute('name'),
             'redirect' => $type === 'link' ? $url : '',
             'code' => $type === 'code' ? $loginSecret : '',
-            'securityPhrase' => $securityPhrase ? $securityPhraseString : '',
+            'securityPhrase' => $securityPhrase ? $securityPhraseMessage : '',
         ];
 
         $queueForMails
