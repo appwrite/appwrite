@@ -176,7 +176,29 @@ App::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('passwordsDictionary10k')
+    ->inject('passwordsDictionary100k')
+    ->inject('passwordsDictionary1M')
+    ->inject('passwordsDictionary10M')
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, array $passwordsDictionary10k, array $passwordsDictionary100k, array $passwordsDictionary1M, array $passwordsDictionary10M) {
+        if ($project->getAttribute('auths', [])['passwordDictionary'] ?? false) {
+            $passwordDictionaryLength = $project->getAttribute('auths', [])['passwordDictionaryLength'] ?? '10k';
+            if ($passwordDictionaryLength == '10k') {
+                $passwordDictionary = $passwordsDictionary10k;
+            } elseif ($passwordDictionaryLength == '100k') {
+                $passwordDictionary = $passwordsDictionary100k;
+            } elseif ($passwordDictionaryLength == '1m') {
+                $passwordDictionary = $passwordsDictionary1M;
+            } elseif ($passwordDictionaryLength == '10m') {
+                $passwordDictionary = $passwordsDictionary10M;
+            } else {
+                throw new Exception('Password dictionary length is not supported');
+            }
+            $passwordDictionaryValidator = new PasswordDictionary($passwordDictionary, true);
+            if (!$passwordDictionaryValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_DICTIONARY);
+            }
+        }
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents);
 
         $response
@@ -1082,7 +1104,11 @@ App::patch('/v1/users/:userId/password')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('passwordsDictionary10k')
+    ->inject('passwordsDictionary100k')
+    ->inject('passwordsDictionary1M')
+    ->inject('passwordsDictionary10M')
+    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, array $passwordsDictionary10k, array $passwordsDictionary100k, array $passwordsDictionary1M, array $passwordsDictionary10M) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -1101,6 +1127,25 @@ App::patch('/v1/users/:userId/password')
             $passwordAiValidator = new PasswordAi();
             if (!$passwordAiValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_AI);
+            }
+        }
+
+        if ($project->getAttribute('auths', [])['passwordDictionary'] ?? false) {
+            $passwordDictionaryLength = $project->getAttribute('auths', [])['passwordDictionaryLength'] ?? '10k';
+            if ($passwordDictionaryLength == '10k') {
+                $passwordDictionary = $passwordsDictionary10k;
+            } elseif ($passwordDictionaryLength == '100k') {
+                $passwordDictionary = $passwordsDictionary100k;
+            } elseif ($passwordDictionaryLength == '1m') {
+                $passwordDictionary = $passwordsDictionary1M;
+            } elseif ($passwordDictionaryLength == '10m') {
+                $passwordDictionary = $passwordsDictionary10M;
+            } else {
+                throw new Exception('Password dictionary length is not supported');
+            }
+            $passwordDictionaryValidator = new PasswordDictionary($passwordDictionary, true);
+            if (!$passwordDictionaryValidator->isValid($password)) {
+                throw new Exception(Exception::USER_PASSWORD_DICTIONARY);
             }
         }
 

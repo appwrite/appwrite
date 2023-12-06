@@ -934,6 +934,27 @@ $register->set('passwordsDictionary10k', function () {
     return $content;
 });
 
+$register->set('passwordsDictionary100k', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/100k-common-passwords.txt');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
+
+$register->set('passwordsDictionary1M', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords.txt');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
+
+$register->set('passwordsDictionary10M', function () {
+    $content = \file_get_contents(__DIR__ . '/assets/security/1m-common-passwords.txt');
+    $content = explode("\n", $content);
+    $content = array_flip($content);
+    return $content;
+});
+
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
@@ -1433,6 +1454,22 @@ App::setResource('geodb', function ($register) {
 App::setResource('passwordsDictionary10k', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary10k');
+}, ['register']);
+
+
+App::setResource('passwordsDictionary100k', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary100k');
+}, ['register']);
+
+App::setResource('passwordsDictionary1M', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary1M');
+}, ['register']);
+
+App::setResource('passwordsDictionary10M', function ($register) {
+    /** @var Utopia\Registry\Registry $register */
+    return $register->get('passwordsDictionary10M');
 }, ['register']);
 
 App::setResource('servers', function () {

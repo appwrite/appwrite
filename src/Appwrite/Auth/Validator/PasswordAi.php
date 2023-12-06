@@ -77,7 +77,7 @@ class PasswordAi extends Password
 
         curl_close($ch);
 
-        if($answer !== 'Yes') {
+        if ($answer !== 'Yes') {
             return false;
         }
 
