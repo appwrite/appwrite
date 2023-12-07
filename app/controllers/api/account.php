@@ -2571,7 +2571,7 @@ App::get('/v1/account/mfa/providers')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'get')
+    ->label('sdk.method', 'listProviders')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2602,11 +2602,11 @@ App::post('/v1/account/mfa/:provider')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateMFA')
+    ->label('sdk.method', 'addAuthenticator')
     ->label('sdk.description', '/docs/references/account/update-mfa.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->param('provider', null, new WhiteList(['totp']), 'Provider.')
@@ -2628,18 +2628,18 @@ App::post('/v1/account/mfa/:provider')
 
         $backups = Provider::generateBackupCodes();
 
-    switch ($provider) {
-        case 'totp':
-            if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
-            }
-            $user
-                ->setAttribute('totp', true)
-                ->setAttribute('totpVerification', false)
-                ->setAttribute('totpBackup', $backups)
-                ->setAttribute('totpSecret', $otp->getSecret());
-            break;
-    }
+        switch ($provider) {
+            case 'totp':
+                if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
+                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
+                }
+                $user
+                    ->setAttribute('totp', true)
+                    ->setAttribute('totpVerification', false)
+                    ->setAttribute('totpBackup', $backups)
+                    ->setAttribute('totpSecret', $otp->getSecret());
+                break;
+        }
 
         $model = new Document();
         $model
@@ -2665,7 +2665,7 @@ App::put('/v1/account/mfa/:provider')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateMFA')
+    ->label('sdk.method', 'verifyAuthenticator')
     ->label('sdk.description', '/docs/references/account/update-mfa.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2687,20 +2687,20 @@ App::put('/v1/account/mfa/:provider')
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    switch ($provider) {
-        case 'totp':
-            if (!$user->getAttribute('totp')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-            } elseif ($user->getAttribute('totpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
-            }
-            $user->setAttribute('totpVerification', true);
-            break;
-    }
+        switch ($provider) {
+            case 'totp':
+                if (!$user->getAttribute('totp')) {
+                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+                } elseif ($user->getAttribute('totpVerification')) {
+                    throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+                }
+                $user->setAttribute('totpVerification', true);
+                break;
+        }
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
@@ -2818,7 +2818,7 @@ App::put('/v1/account/mfa/challenge')
     ->label('sdk.method', 'updateChallenge')
     ->label('sdk.description', '/docs/references/account/update-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{param-userId}')
     ->param('challengeId', '', new Text(256), 'Valid verification token.')
@@ -2836,16 +2836,17 @@ App::put('/v1/account/mfa/challenge')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $success = match ($challenge->getAttribute('provider')) {
+        $provider = $challenge->getAttribute('provider');
+        $success = match ($provider) {
             'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
             'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
             'email' => Challenge\Email::challenge($challenge, $user, $otp),
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->deleteCachedDocument('users', $user->getId());
@@ -2854,7 +2855,7 @@ App::put('/v1/account/mfa/challenge')
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $session->getAttribute('factors', 1) + 1));
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
 
-        $response->noContent();
+        $response->dynamic($session, Response::MODEL_SESSION);
     });
