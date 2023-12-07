@@ -572,7 +572,8 @@ trait MessagingBase
             'apiKey' => $apiKey,
             'domain' => $domain,
             'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
-            'from' => $from
+            'from' => $from,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
@@ -605,18 +606,8 @@ trait MessagingBase
         $this->assertEquals(201, $user['headers']['status-code']);
 
         // Create Target
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'targetId' => ID::unique(),
-            'providerType' => 'email',
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $to,
-        ]);
+        $target = $user['body']['targets'][0];
 
-        $this->assertEquals(201, $target['headers']['status-code']);
 
         // Create Subscriber
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
@@ -624,7 +615,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
+            'targetId' => $target['$id'],
         ]);
 
         $this->assertEquals(201, $subscriber['headers']['status-code']);

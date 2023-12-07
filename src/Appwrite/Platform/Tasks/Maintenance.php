@@ -85,7 +85,7 @@ class Maintenance extends Action
 
     private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        ($queueFor)
             ->setType(DELETE_TYPE_USAGE)
             ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
             ->trigger();

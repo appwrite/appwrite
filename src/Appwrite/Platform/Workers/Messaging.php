@@ -106,7 +106,6 @@ class Messaging extends Action
             $targets = $dbForProject->find('targets', [Query::equal('$id', $targetsId)]);
             $recipients = \array_merge($recipients, $targets);
         }
-
         $primaryProvider = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
@@ -155,7 +154,6 @@ class Messaging extends Action
 
                 $providers[] = $provider;
                 $identifiers = $identifiersByProviderId[$providerId];
-
                 $adapter = match ($provider->getAttribute('type')) {
                     MESSAGE_TYPE_SMS => $this->sms($provider),
                     MESSAGE_TYPE_PUSH => $this->push($provider),

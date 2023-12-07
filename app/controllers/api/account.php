@@ -1375,7 +1375,6 @@ App::post('/v1/account/sessions/phone')
             ->setMessage($messageDoc)
             ->setRecipients([$phone])
             ->setProviderType(MESSAGE_TYPE_SMS)
-            ->setProject($project)
             ->trigger();
 
         $queueForEvents->setPayload(
@@ -3101,7 +3100,6 @@ App::post('/v1/account/verification/phone')
             ->setMessage($messageDoc)
             ->setRecipients([$user->getAttribute('phone')])
             ->setProviderType(MESSAGE_TYPE_SMS)
-            ->setProject($project)
             ->trigger();
 
         $queueForEvents

@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
@@ -97,6 +98,7 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
+    ->inject('queueForMessaging')
     ->inject('queueForAudits')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
@@ -104,7 +106,7 @@ App::init()
     ->inject('mode')
     ->inject('queueForMails')
     ->inject('usage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Stats $usage) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Stats $usage) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -177,6 +179,9 @@ App::init()
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
             ->setUser($user);
+
+        $queueForMessaging
+            ->setProject($project);
 
         $queueForAudits
             ->setMode($mode)

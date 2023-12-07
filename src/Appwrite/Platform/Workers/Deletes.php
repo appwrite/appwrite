@@ -148,7 +148,7 @@ class Deletes extends Action
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_SCHEDULES:
-                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
+                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
                 break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
@@ -167,13 +167,13 @@ class Deletes extends Action
      * @throws Authorization
      * @throws Throwable
      */
-    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime, ?Document $document = null): void
     {
         $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', [$document ?? $document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],

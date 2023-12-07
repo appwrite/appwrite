@@ -20,6 +20,7 @@ use Appwrite\Platform\Tasks\CalcTierStats;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
+use Appwrite\Platform\Tasks\ScheduleMessage;
 
 class Tasks extends Service
 {
@@ -36,6 +37,7 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Maintenance::getName(), new Maintenance())
+            ->addAction(ScheduleMessage::getName(), new ScheduleMessage())
             ->addAction(Schedule::getName(), new Schedule())
             ->addAction(Migrate::getName(), new Migrate())
             ->addAction(SDKs::getName(), new SDKs())

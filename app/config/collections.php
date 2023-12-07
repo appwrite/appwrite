@@ -1594,6 +1594,28 @@ $commonCollections = [
                 'filters' => ['datetime'],
             ],
             [
+                '$id' => ID::custom('scheduleInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('scheduleId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('deliveredAt'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
@@ -4166,6 +4188,13 @@ $consoleCollections = array_merge([
                 'lengths' => [],
                 'orders' => [],
             ],
+            [
+                '$id' => ID::custom('_key_schedule_resourceType_active_resourceUpdatedAt'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['schedule', 'resourceType', 'active', 'resourceUpdatedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ]
         ],
     ],
 

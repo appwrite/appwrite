@@ -34,6 +34,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use MaxMind\Db\Reader;
+use Utopia\Database\DateTime;
 use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
@@ -1441,7 +1442,6 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('audits.resource', 'provider/{response.$id}')
     ->label('event', 'providers.[providerId].update')
     ->label('scope', 'providers.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updateFcmProvider')
     ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
@@ -2228,10 +2228,11 @@ App::post('/v1/messaging/messages/email')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2245,6 +2246,7 @@ App::post('/v1/messaging/messages/email')
             'users' => $users,
             'targets' => $targets,
             'description' => $description,
+            'scheduledAt' => $scheduledAt,
             'data' => [
                 'subject' => $subject,
                 'content' => $content,
@@ -2253,11 +2255,24 @@ App::post('/v1/messaging/messages/email')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && $scheduledAt === null) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
+        } else if ($scheduledAt !== null) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $message->getAttribute('scheduledAt'),
+                'active' => $status === 'processing' ? true : false,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+            $dbForProject->updateDocument('messages', $message->getId(), $message);
         }
 
         $queueForEvents
@@ -2292,10 +2307,11 @@ App::post('/v1/messaging/messages/sms')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2315,11 +2331,24 @@ App::post('/v1/messaging/messages/sms')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && $scheduledAt === null) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
+        } else if ($status === 'processing' && $scheduledAt !== null) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $message->getAttribute('scheduledAt'),
+                'active' => $status === 'processing' ? true : false,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+            $dbForProject->updateDocument('messages', $message->getId(), $message);
         }
 
         $queueForEvents
@@ -2362,10 +2391,11 @@ App::post('/v1/messaging/messages/push')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
@@ -2394,11 +2424,24 @@ App::post('/v1/messaging/messages/push')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && $scheduledAt === null) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
+        } else if ($status === 'processing' && $scheduledAt !== null) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $message->getAttribute('scheduledAt'),
+                'active' => $status === 'processing' ? true : false,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+            $dbForProject->updateDocument('messages', $message->getId(), $message);
         }
 
         $queueForEvents
@@ -2586,10 +2629,11 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2642,14 +2686,25 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (!is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
+
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('schedule', $message->getAttribute('schedule'));
+            
+            if ($message->getAttribute('status') === 'processing') {
+                $schedule->setAttribute('active', true);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
         }
 
@@ -2684,10 +2739,11 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2732,14 +2788,25 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (!is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
+
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('schedule', $message->getAttribute('schedule'));
+            
+            if ($message->getAttribute('status') === 'processing') {
+                $schedule->setAttribute('active', true);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
         }
 
@@ -2781,10 +2848,11 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2861,16 +2929,27 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (!is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
+
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('schedule', $message->getAttribute('schedule'));
+            
+            if ($message->getAttribute('status') === 'processing') {
+                $schedule->setAttribute('active', true);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
-        }
+        } 
 
         $queueForEvents
             ->setParam('messageId', $message->getId());
