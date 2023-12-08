@@ -59,6 +59,7 @@ class Mails extends Action
         $variables = $payload['variables'];
         $name = $payload['name'];
         $body = $payload['body'];
+        $attachment = $payload['attachment'] ?? [];
 
         $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
         $bodyTemplate->setParam('{{body}}', $body);
@@ -89,6 +90,14 @@ class Mails extends Action
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
+        if(!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                $attachment['content'],
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
 
         try {
             $mail->send();
