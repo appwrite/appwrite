@@ -98,6 +98,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
+        var_dump($session['headers']['set-cookie']);
         $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
 
         self::$root = [
