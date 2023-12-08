@@ -92,7 +92,7 @@ class Mails extends Action
         $mail->AltBody = \strip_tags($body);
         if (!empty($attachment['content'] ?? '')) {
             $mail->AddStringAttachment(
-                $attachment['content'],
+                base64_decode($attachment['content']),
                 $attachment['filename'] ?? 'unknown.file',
                 $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
                 $attachment['type'] ?? 'plain/text'

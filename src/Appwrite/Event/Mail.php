@@ -317,11 +317,12 @@ class Mail extends Event
     public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
     {
         $this->attachment = [
-            'content' => $content,
+            'content' => base64_encode($content),
             'filename' => $filename,
             'encoding' => $encoding,
             'type' => $type,
         ];
+        return $this;
     }
 
     public function getAttachment(): array
