@@ -32,7 +32,7 @@ trait StoragePermissionsScope
             'password' => $password,
         ]);
 
-        $session = $session['a_session_' . $this->getProject()['$id']];
+        $session = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
 
         $user = [

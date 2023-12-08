@@ -73,7 +73,7 @@ class AuthTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->token1 = $session1['a_session_' . $projectId];
+        $this->token1 = $session1['cookies']['a_session_' . $projectId];
 
         // Create session 2
         $graphQLPayload['variables']['email'] = $email2;
@@ -83,7 +83,7 @@ class AuthTest extends Scope
             'x-appwrite-project' => $projectId,
         ], $graphQLPayload);
 
-        $this->token2 = $session1['a_session_' . $projectId];
+        $this->token2 = $session2['cookies']['a_session_' . $projectId];
 
         // Create database
         $query = $this->getQuery(self::$CREATE_DATABASE);
