@@ -107,7 +107,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $id = $account['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['a_session_' . $this->getProject()['$id']];
 
         $account = $this->client->call(Client::METHOD_PATCH, '/account/status', array_merge([
             'origin' => 'http://localhost',
@@ -170,7 +170,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['a_session_' . $this->getProject()['$id']];
 
         $webhook = $this->getLastRequest();
         $signatureKey = $this->getProject()['signatureKey'];
@@ -248,7 +248,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
@@ -334,7 +334,7 @@ class WebhooksCustomClientTest extends Scope
         ]);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
@@ -407,7 +407,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $this->client->parseCookie((string)$accountSession['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['a_session_' . $this->getProject()['$id']];
 
         return array_merge($data, [
             'sessionId' => $sessionId,
