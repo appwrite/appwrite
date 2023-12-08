@@ -2979,7 +2979,7 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $session2['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
         $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
             'origin' => 'http://localhost',
