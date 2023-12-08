@@ -931,7 +931,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $originalPassword,
         ]);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $id];
+        $session = $response['cookies']['a_session_' . $id];
 
         /**
          * Test for SUCCESS
