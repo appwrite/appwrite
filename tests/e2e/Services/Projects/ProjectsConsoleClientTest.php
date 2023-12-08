@@ -1313,7 +1313,7 @@ class ProjectsConsoleClientTest extends Scope
             'password' => $password,
         ]);
         $this->assertEquals(201, $session['headers']['status-code']);
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $id];
+        $session = $session['cookie']['a_session_' . $id];
 
         $response = $this->client->call(Client::METHOD_PATCH, '/account/password', array_merge([
             'origin' => 'http://localhost',
