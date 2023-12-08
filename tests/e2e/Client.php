@@ -203,9 +203,9 @@ class Client
                 $name = array_key_first($parsed);
                 $cookies[$name] = $parsed[$name];
             }
-            
+
             $responseHeaders[strtolower(trim($header[0]))] = trim($header[1]);
-            
+
             return $len;
         });
 
