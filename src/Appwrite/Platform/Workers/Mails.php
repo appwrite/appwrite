@@ -90,7 +90,7 @@ class Mails extends Action
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
-        if(!empty($attachment['content'] ?? '')) {
+        if (!empty($attachment['content'] ?? '')) {
             $mail->AddStringAttachment(
                 $attachment['content'],
                 $attachment['filename'] ?? 'unknown.file',
