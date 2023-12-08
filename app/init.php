@@ -684,47 +684,38 @@ $register->set('pools', function () {
             /**
              * Get Resource
              *
-             * Creation could be reused accross connection types like database, cache, queue, etc.
+             * Creation could be reused across connection types like database, cache, queue, etc.
              *
              * Resource assignment to an adapter will happen below.
              */
-            switch ($dsnScheme) {
-                case 'mysql':
-                case 'mariadb':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                        return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
-                            return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
-                                PDO::ATTR_TIMEOUT => 3, // Seconds
-                                PDO::ATTR_PERSISTENT => true,
-                                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
-                                PDO::ATTR_EMULATE_PREPARES => true,
-                                PDO::ATTR_STRINGIFY_FETCHES => true
-                            ));
-                        });
-                    };
-                    break;
-                case 'redis':
-                    $resource = function () use ($dsnHost, $dsnPort, $dsnPass) {
-                        $redis = new Redis();
-                        @$redis->pconnect($dsnHost, (int)$dsnPort);
-                        if ($dsnPass) {
-                            $redis->auth($dsnPass);
-                        }
-                        $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
+            $resource = match ($dsnScheme) {
+                'mysql',
+                'mariadb' => function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                    return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
+                        return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                            PDO::ATTR_TIMEOUT => 3, // Seconds
+                            PDO::ATTR_PERSISTENT => true,
+                            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                            PDO::ATTR_EMULATE_PREPARES => true,
+                            PDO::ATTR_STRINGIFY_FETCHES => true
+                        ));
+                    });
+                },
+                'redis' => function () use ($dsnHost, $dsnPort, $dsnPass) {
+                    $redis = new Redis();
+                    @$redis->pconnect($dsnHost, (int)$dsnPort);
+                    if ($dsnPass) {
+                        $redis->auth($dsnPass);
+                    }
+                    $redis->setOption(Redis::OPT_READ_TIMEOUT, -1);
 
-                        return $redis;
-                    };
-                    break;
-
-                default:
-                    throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
-                    break;
-            }
+                    return $redis;
+                },
+                default => throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme"),
+            };
 
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
-                $adapter = null;
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -753,7 +744,6 @@ $register->set('pools', function () {
 
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-                        break;
                 }
 
                 return $adapter;

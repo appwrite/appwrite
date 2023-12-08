@@ -141,13 +141,20 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_RESERVED_PROJECT, "'console' is a reserved project.");
         }
 
-        // One in 20 projects use shared tables
-        if (!\mt_rand(0, 19)) {
+        // TODO: One in 20 projects use shared tables. Temporary until all projects are using shared tables.
+        if (
+            !\mt_rand(0, 19)
+            && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+        ) {
             $database = DATABASE_SHARED_TABLES;
         }
 
-        // Allow overriding in development mode, to be removed once all project are using shared tables.
-        if (App::isDevelopment() && $request->getHeader('x-appwrite-share-tables', false)) {
+        // TODO: Allow overriding in development mode. Temporary until all projects are using shared tables.
+        if (
+            App::isDevelopment()
+            && App::getEnv('_APP_EDITION', 'self-hosted') !== 'self-hosted'
+            && $request->getHeader('x-appwrite-share-tables', false)
+        ) {
             $database = DATABASE_SHARED_TABLES;
         }
 
@@ -190,7 +197,7 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
 
-        if ($shareTables) {
+        if ($database === DATABASE_SHARED_TABLES) {
             $dbForProject
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
