@@ -792,7 +792,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, null)
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->redirect($state['success'])
         ;
     });
@@ -1205,7 +1204,6 @@ App::put('/v1/account/sessions/magic-url')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, null)
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->setStatusCode(Response::STATUS_CODE_CREATED);
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1459,7 +1457,6 @@ App::put('/v1/account/sessions/phone')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, null)
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
         $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
@@ -1598,7 +1595,6 @@ App::post('/v1/account/sessions/anonymous')
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, null)
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
