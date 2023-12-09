@@ -407,7 +407,7 @@ class WebhooksCustomClientTest extends Scope
         $this->assertEquals($accountSession['headers']['status-code'], 201);
 
         $sessionId = $accountSession['body']['$id'];
-        $session = $accountSession['a_session_' . $this->getProject()['$id']];
+        $session = $accountSession['cookies']['a_session_' . $this->getProject()['$id']];
 
         return array_merge($data, [
             'sessionId' => $sessionId,
