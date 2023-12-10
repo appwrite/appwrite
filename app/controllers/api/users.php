@@ -1077,7 +1077,7 @@ App::patch('/v1/users/:userId/prefs')
         $queueForEvents
             ->setParam('userId', $user->getId());
 
-        $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+            $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
