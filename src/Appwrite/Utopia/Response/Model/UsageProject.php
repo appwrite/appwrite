@@ -10,12 +10,6 @@ class UsageProject extends Model
     public function __construct()
     {
         $this
-            ->addRule('range', [
-                'type' => self::TYPE_INTEGER,
-                'description' => 'The time range of the usage stats.',
-                'default' => '',
-                'example' => '30d',
-            ])
             ->addRule('executionsTotal', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Total aggregated number of function executions.',

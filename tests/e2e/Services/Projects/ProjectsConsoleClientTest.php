@@ -8,6 +8,7 @@ use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
 use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
+use Tests\E2E\General\UsageTest;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 
@@ -440,20 +441,20 @@ class ProjectsConsoleClientTest extends Scope
      */
     public function testGetProjectUsage($data): array
     {
-        $id = $data['projectId'] ?? '';
-
         /**
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/project/usage', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ], $this->getHeaders()), [
+            'startDate' => UsageTest::getToday(),
+            'endDate' => UsageTest::getTomorrow(),
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(9, count($response['body']));
+        $this->assertEquals(8, count($response['body']));
         $this->assertNotEmpty($response['body']);
-        $this->assertEquals('30d', $response['body']['range']);
         $this->assertIsArray($response['body']['requests']);
         $this->assertIsArray($response['body']['network']);
         $this->assertIsNumeric($response['body']['executionsTotal']);
