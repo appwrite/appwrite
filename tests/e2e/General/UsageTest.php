@@ -7,10 +7,10 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use CURLFile;
+use DateTime;
 use Tests\E2E\Services\Functions\FunctionsBase;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class UsageTest extends Scope
 {
@@ -35,6 +35,19 @@ class UsageTest extends Scope
         foreach ($metrics as $metric) {
             $this->assertIsObject(\DateTime::createFromFormat("Y-m-d\TH:i:s.vP", $metric['date']));
         }
+    }
+
+    public static function getToday(): string
+    {
+        $date = new DateTime();
+        return $date->format(self::$formatTz);
+    }
+
+    public static function getTomorrow(): string
+    {
+        $date = new DateTime();
+        $date->modify('+1 day');
+        return $date->format(self::$formatTz);
     }
 
     public function testPrepareUsersStats(): array
@@ -107,8 +120,13 @@ class UsageTest extends Scope
 
         $res = $this->client->call(
             Client::METHOD_GET,
-            '/project/usage?range=24h',
-            $consoleHeaders
+            '/project/usage',
+            $consoleHeaders,
+            [
+                'period' => '1h',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
         );
         $res = $res['body'];
 
@@ -265,11 +283,16 @@ class UsageTest extends Scope
 
         $res = $this->client->call(
             Client::METHOD_GET,
-            '/project/usage?range=30d',
+            '/project/usage',
             array_merge(
                 $data['headers'],
                 $data['consoleHeaders']
-            )
+            ),
+            [
+                'period' => '1d',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
         );
         $res = $res['body'];
 
@@ -470,8 +493,13 @@ class UsageTest extends Scope
 
         $res = $this->client->call(
             Client::METHOD_GET,
-            '/project/usage?range=30d',
-            $data['consoleHeaders']
+            '/project/usage',
+            $data['consoleHeaders'],
+            [
+                'period' => '1d',
+                'startDate' => self::getToday(),
+                'endDate' => self::getTomorrow(),
+            ]
         );
         $res = $res['body'];
 
