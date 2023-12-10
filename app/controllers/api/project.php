@@ -96,15 +96,16 @@ App::get('/v1/project/usage')
             }
         });
 
+        $now = time();
         foreach ($metrics['period'] as $metric) {
             $usage[$metric] = [];
-            $leap = time() - ($limit * $factor);
-            while ($leap < time()) {
+            $leap = $now - ($limit * $factor);
+            while ($leap < $now) {
                 $leap += $factor;
                 $formatDate = date($format, $leap);
                 $usage[$metric][] = [
-                'value' => $stats[$metric][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
+                    'value' => $stats[$metric][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
                 ];
             }
         }
