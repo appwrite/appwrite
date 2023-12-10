@@ -9,11 +9,11 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
 {
-
     public function testOrQueries(): void
     {
         // Create database
@@ -119,14 +119,25 @@ trait DatabasesBase
                 Permission::read(Role::user($this->getUser()['$id'])),
             ]
         ]);
+
         $this->assertEquals(201, $document3['headers']['status-code']);
 
-        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents', array_merge([
+        $queries = Query::or([
+            Query::equal('first_name', ['Donald']),
+            Query::equal('last_name', ['Bush'])
+        ])->toString();
+
+        $documents = $this->client->call(
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
+            array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-           // 'queries' => ['`first_name` = 'Donald' or `last_name` = 'Bush'']
-        ]);
+            ], $this->getHeaders()),
+            [
+                'queries' => $queries,
+            ]
+        );
 
         var_dump($documents);
     }
