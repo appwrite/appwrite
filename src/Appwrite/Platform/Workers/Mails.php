@@ -60,8 +60,11 @@ class Mails extends Action
         $name = $payload['name'];
         $body = $payload['body'];
         $attachment = $payload['attachment'] ?? [];
-
-        $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+        $bodyTemplate = $payload['bodyTemplate'];
+        if (empty($bodyTemplate)) {
+            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
+        }
+        $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body);
         foreach ($variables as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value);

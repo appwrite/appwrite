@@ -13,6 +13,7 @@ class Mail extends Event
     protected string $body = '';
     protected array $smtp = [];
     protected array $variables = [];
+    protected string $bodyTemplate = '';
     protected array $attachment = [];
 
     public function __construct(protected Connection $connection)
@@ -114,6 +115,29 @@ class Mail extends Event
     public function getName(): string
     {
         return $this->name;
+    }
+
+    /**
+     * Sets bodyTemplate for the mail event.
+     *
+     * @param string $bodyTemplate
+     * @return self
+     */
+    public function setbodyTemplate(string $bodyTemplate): self
+    {
+        $this->bodyTemplate = $bodyTemplate;
+
+        return $this;
+    }
+
+    /**
+     * Returns subject for the mail event.
+     *
+     * @return string
+     */
+    public function getbodyTemplate(): string
+    {
+        return $this->bodyTemplate;
     }
 
     /**
@@ -344,6 +368,7 @@ class Mail extends Event
             'recipient' => $this->recipient,
             'name' => $this->name,
             'subject' => $this->subject,
+            'bodyTemplate' => $this->bodyTemplate,
             'body' => $this->body,
             'smtp' => $this->smtp,
             'variables' => $this->variables,
