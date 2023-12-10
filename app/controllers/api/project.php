@@ -6,6 +6,7 @@ use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -26,14 +27,16 @@ App::get('/v1/project/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
+    ->param('startDate', '', new DateTimeValidator(), 'Starting date for the usage')
+    ->param('endDate', '', new DateTimeValidator(), 'End date for the usage')
+    ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
-
-        $periods = Config::getParam('usage', []);
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
         $stats = $total = $usage = [];
-        $days = $periods[$range];
+        $format = 'Y-m-d 00:00:00';
+        $firstDay = (new DateTime($startDate))->format($format);
+        $lastDay = (new DateTime($endDate))->format($format);
 
         $metrics = [
            'total' => [
@@ -51,7 +54,22 @@ App::get('/v1/project/usage')
              ]
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$total, &$stats) {
+        $factor = match ($period) {
+            '1h' => 3600,
+            '1d' => 86400,
+        };
+
+        $limit = match ($period) {
+            '1h' => (new DateTime($endDate))->diff(new DateTime($startDate))->h,
+            '1d' => (new DateTime($endDate))->diff(new DateTime($startDate))->days
+        };
+
+        $format = match ($period) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+        Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
                 $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -61,12 +79,11 @@ App::get('/v1/project/usage')
             }
 
             foreach ($metrics['period'] as $metric) {
-                $limit = $days['limit'];
-                $period = $days['period'];
                 $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
-                    Query::limit($limit),
+                    Query::greaterThanEqual('time', $firstDay),
+                    Query::lessThan('time', $lastDay),
                     Query::orderDesc('time'),
                 ]);
 
@@ -79,25 +96,20 @@ App::get('/v1/project/usage')
             }
         });
 
-        $format = match ($days['period']) {
-            '1h' => 'Y-m-d\TH:00:00.000P',
-            '1d' => 'Y-m-d\T00:00:00.000P',
-        };
-
-    foreach ($metrics['period'] as $metric) {
-        $usage[$metric] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric][] = [
+        foreach ($metrics['period'] as $metric) {
+            $usage[$metric] = [];
+            $leap = time() - ($limit * $factor);
+            while ($leap < time()) {
+                $leap += $factor;
+                $formatDate = date($format, $leap);
+                $usage[$metric][] = [
                 'value' => $stats[$metric][$formatDate]['value'] ?? 0,
                 'date' => $formatDate,
-            ];
+                ];
+            }
         }
-    }
+
         $response->dynamic(new Document([
-            'range' => $range,
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
             'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],
@@ -111,7 +123,6 @@ App::get('/v1/project/usage')
 
 
 // Variables
-
 App::post('/v1/project/variables')
     ->desc('Create Variable')
     ->groups(['api'])
