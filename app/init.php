@@ -190,6 +190,10 @@ const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
+// Message types
+const MESSAGE_TYPE_EMAIL = 'email';
+const MESSAGE_TYPE_SMS = 'sms';
+const MESSAGE_TYPE_PUSH = 'push';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -605,13 +609,14 @@ Database::addFilter(
         ];
 
         $data = \json_decode($message->getAttribute('data', []), true);
+        $providerType = $message->getAttribute('providerType', '');
 
-        if (\array_key_exists('subject', $data)) {
-            $searchValues = \array_merge($searchValues, [$data['subject'], 'email']);
-        } elseif (\array_key_exists('content', $data)) {
-            $searchValues = \array_merge($searchValues, [$data['content'], 'sms']);
+        if ($providerType === MESSAGE_TYPE_EMAIL) {
+            $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
+        } elseif ($providerType === MESSAGE_TYPE_SMS) {
+            $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
         } else {
-            $searchValues = \array_merge($searchValues, [$data['title'], 'push']);
+            $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);
         }
 
         $search = \implode(' ', \array_filter($searchValues));

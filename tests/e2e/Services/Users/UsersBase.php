@@ -23,6 +23,7 @@ trait UsersBase
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
         ], false);
+        $this->assertEquals($user['headers']['status-code'], 201);
 
         // Test empty prefs is object not array
         $bodyString = $user['body'];
@@ -1245,11 +1246,11 @@ trait UsersBase
             'targetId' => ID::unique(),
             'providerId' => $provider['body']['$id'],
             'providerType' => 'email',
-            'identifier' => 'my-token',
+            'identifier' => 'random-email@mail.org',
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
-        $this->assertEquals('my-token', $response['body']['identifier']);
+        $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
         return $response['body'];
     }
 
@@ -1262,10 +1263,10 @@ trait UsersBase
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'identifier' => 'my-updated-token',
+            'identifier' => 'random-email1@mail.org',
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('my-updated-token', $response['body']['identifier']);
+        $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
         return $response['body'];
     }
 
@@ -1279,7 +1280,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, \count($response['body']['targets']));
+        $this->assertEquals(2, \count($response['body']['targets']));
     }
 
     /**
@@ -1313,7 +1314,7 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(0, $response['body']['total']);
+        $this->assertEquals(1, $response['body']['total']);
     }
 
     /**

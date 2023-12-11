@@ -319,7 +319,7 @@ trait MessagingBase
             'targetId' => ID::unique(),
             'providerType' => 'email',
             'providerId' => $provider['body']['$id'],
-            'identifier' => 'my-token',
+            'identifier' => 'random-email@mail.org',
         ]);
 
         $this->assertEquals(201, $target['headers']['status-code']);
@@ -333,7 +333,8 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals($target['body']['userId'], $response['body']['userId']);
+        $this->assertEquals($target['body']['userId'], $response['body']['target']['userId']);
+        $this->assertEquals($target['body']['providerType'], $response['body']['target']['providerType']);
 
         $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topic['$id'], [
             'content-type' => 'application/json',
@@ -350,7 +351,9 @@ trait MessagingBase
             'topicId' => $topic['body']['$id'],
             'targetId' => $target['body']['$id'],
             'userId' => $target['body']['userId'],
-            'subscriberId' => $response['body']['$id']
+            'subscriberId' => $response['body']['$id'],
+            'identifier' => $target['body']['identifier'],
+            'providerType' => $target['body']['providerType'],
         ];
     }
 
@@ -368,7 +371,9 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($data['topicId'], $response['body']['topicId']);
         $this->assertEquals($data['targetId'], $response['body']['targetId']);
-        $this->assertEquals($data['userId'], $response['body']['userId']);
+        $this->assertEquals($data['userId'], $response['body']['target']['userId']);
+        $this->assertEquals($data['providerType'], $response['body']['target']['providerType']);
+        $this->assertEquals($data['identifier'], $response['body']['target']['identifier']);
     }
 
     /**
@@ -384,7 +389,9 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals($data['userId'], $response['body']['subscribers'][0]['userId']);
+        $this->assertEquals($data['userId'], $response['body']['subscribers'][0]['target']['userId']);
+        $this->assertEquals($data['providerType'], $response['body']['subscribers'][0]['target']['providerType']);
+        $this->assertEquals($data['identifier'], $response['body']['subscribers'][0]['target']['identifier']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
 
         return $data;

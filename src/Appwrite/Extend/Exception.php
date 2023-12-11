@@ -55,6 +55,8 @@ class Exception extends \Exception
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
+    public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
+    public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -254,6 +256,10 @@ class Exception extends \Exception
     public const MESSAGE_MISSING_TARGET             = 'message_missing_target';
     public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
     public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
+    public const MESSAGE_TARGET_NOT_EMAIL           = 'message_target_not_email';
+    public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
+    public const MESSAGE_TARGET_NOT_PUSH            = 'message_target_not_push';
+
 
     protected string $type = '';
     protected array $errors = [];

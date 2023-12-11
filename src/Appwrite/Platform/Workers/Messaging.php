@@ -17,7 +17,7 @@ use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
+use Utopia\Messaging\Adapters\SMS\Textmagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Messaging\Adapters\Push as PushAdapter;
@@ -67,7 +67,7 @@ class Messaging extends Action
         }
 
         if (!\is_null($payload['message']) && !\is_null($payload['recipients'])) {
-            if ($payload['providerType'] === 'SMS') {
+            if ($payload['providerType'] === MESSAGE_TYPE_SMS) {
                 $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
             }
         } else {
@@ -91,14 +91,16 @@ class Messaging extends Action
         if (\count($topicsId) > 0) {
             $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
             foreach ($topics as $topic) {
-                $recipients = \array_merge($recipients, $topic->getAttribute('targets'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $recipients = \array_merge($recipients, $targets);
             }
         }
 
         if (\count($usersId) > 0) {
             $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
             foreach ($users as $user) {
-                $recipients = \array_merge($recipients, $user->getAttribute('targets'));
+                $targets = \array_filter($user->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $recipients = \array_merge($recipients, $targets);
             }
         }
 
@@ -107,7 +109,7 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
-        $internalProvider = $dbForProject->findOne('providers', [
+        $primaryProvider = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
@@ -124,36 +126,42 @@ class Messaging extends Action
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
 
-            if (!$providerId) {
-                $providerId = $internalProvider->getId();
+            if (!$providerId && $primaryProvider instanceof Document && !$primaryProvider->isEmpty()) {
+                $providerId = $primaryProvider->getId();
             }
 
-            if (!isset($identifiersByProviderId[$providerId])) {
-                $identifiersByProviderId[$providerId] = [];
+            if ($providerId) {
+                if (!isset($identifiersByProviderId[$providerId])) {
+                    $identifiersByProviderId[$providerId] = [];
+                }
+                $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
             }
-            $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
         }
 
         /**
         * @var array[] $results
         */
-        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
-            return function () use ($providerId, $identifiersByProviderId, $providers, $internalProvider, $message, $dbForProject) {
+        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
+            return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
                 $provider = new Document();
 
-                if ($internalProvider->getId() === $providerId) {
-                    $provider = $internalProvider;
+                if ($primaryProvider->getId() === $providerId) {
+                    $provider = $primaryProvider;
                 } else {
-                    $provider = $dbForProject->getDocument('providers', $providerId);
+                    $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
+
+                    if ($provider->isEmpty()) {
+                        $provider = $primaryProvider;
+                    }
                 }
 
                 $providers[] = $provider;
                 $identifiers = $identifiersByProviderId[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
-                    'sms' => $this->sms($provider),
-                    'push' => $this->push($provider),
-                    'email' => $this->email($provider),
+                    MESSAGE_TYPE_SMS => $this->sms($provider),
+                    MESSAGE_TYPE_PUSH => $this->push($provider),
+                    MESSAGE_TYPE_EMAIL  => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
@@ -169,9 +177,9 @@ class Messaging extends Action
                         $messageData->setAttribute('to', $batch);
 
                         $data = match ($provider->getAttribute('type')) {
-                            'sms' => $this->buildSMSMessage($messageData, $provider),
-                            'push' => $this->buildPushMessage($messageData),
-                            'email' => $this->buildEmailMessage($messageData, $provider),
+                            MESSAGE_TYPE_SMS => $this->buildSMSMessage($messageData, $provider),
+                            MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -241,7 +249,7 @@ class Messaging extends Action
         $provider = new Document([
             '$id' => ID::unique(),
             'provider' => $host,
-            'type' => 'sms',
+            'type' => MESSAGE_TYPE_SMS,
             'name' => 'Internal SMS',
             'enabled' => true,
             'credentials' => match ($host) {
@@ -303,7 +311,7 @@ class Messaging extends Action
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
-            'textmagic' => new TextMagic($credentials['username'], $credentials['apiKey']),
+            'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),

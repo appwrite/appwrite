@@ -28,6 +28,12 @@ class Target extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
+            ->addRule('name', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Target Name.',
+                'default' => '',
+                'example' => 'Aegon apple token',
+            ])
             ->addRule('userId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User ID.',
@@ -45,7 +51,7 @@ class Target extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'The target provider type. Can be one of the following: `email`, `sms` or `push`.',
                 'default' => '',
-                'example' => 'email',
+                'example' => MESSAGE_TYPE_EMAIL,
             ])
             ->addRule('identifier', [
                 'type' => self::TYPE_STRING,

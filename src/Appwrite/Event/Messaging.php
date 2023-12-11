@@ -11,7 +11,7 @@ class Messaging extends Event
     protected ?string $messageId = null;
     protected ?Document $message = null;
     protected ?array $recipients = null;
-    protected ?string $deliveryTime = null;
+    protected ?string $scheduledAt = null;
     protected ?string $providerType = null;
 
 
@@ -117,14 +117,14 @@ class Messaging extends Event
     }
 
     /**
-     * Sets Delivery time for the messaging event.
+     * Sets Scheduled delivery time for the messaging event.
      *
-     * @param string $deliveryTime
+     * @param string $scheduledAt
      * @return self
      */
-    public function setDeliveryTime(string $deliveryTime): self
+    public function setScheduledAt(string $scheduledAt): self
     {
-        $this->deliveryTime = $deliveryTime;
+        $this->scheduledAt = $scheduledAt;
 
         return $this;
     }
@@ -134,9 +134,9 @@ class Messaging extends Event
      *
      * @return string
      */
-    public function getDeliveryTime(): string
+    public function getScheduledAt(): string
     {
-        return $this->deliveryTime;
+        return $this->scheduledAt;
     }
 
     /**
