@@ -114,7 +114,7 @@ App::get('/v1/project/usage')
         $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
-            $metric = str_replace('{bucketInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
             $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
