@@ -47,15 +47,36 @@ class UsageProject extends Model
                 'example' => 0,
             ])
             ->addRule('requests', [
-                'type' => self::TYPE_INTEGER,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated  number of requests per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
             ])
             ->addRule('network', [
-                'type' => self::TYPE_INTEGER,
+                'type' => Response::MODEL_METRIC,
                 'description' => 'Aggregated number of consumed bandwidth per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('users', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of users per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('executionsBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of executions by functions.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
+            ->addRule('bucketsBreakdown', [
+                'type' => Response::MODEL_METRIC_BREAKDOWN,
+                'description' => 'Aggregated breakdown in totals of usage by buckets.',
                 'default' => [],
                 'example' => [],
                 'array' => true

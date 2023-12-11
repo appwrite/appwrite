@@ -51,6 +51,7 @@ App::get('/v1/project/usage')
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
+                METRIC_USERS,
              ]
         ];
 
@@ -60,8 +61,8 @@ App::get('/v1/project/usage')
         };
 
         $limit = match ($period) {
-            '1h' => (new DateTime($endDate))->diff(new DateTime($startDate))->h,
-            '1d' => (new DateTime($endDate))->diff(new DateTime($startDate))->days
+            '1h' => (new DateTime($startDate))->diff(new DateTime($endDate))->days * 24,
+            '1d' => (new DateTime($startDate))->diff(new DateTime($endDate))->days
         };
 
         $format = match ($period) {
@@ -110,15 +111,50 @@ App::get('/v1/project/usage')
             }
         }
 
+        $executionsBreakdown = array_map(function($function) use ($dbForProject) {
+            $id = $function->getId();
+            $name = $function->getAttribute('name');
+            $metric = str_replace('{bucketInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('functions'));
+
+        $bucketsBreakdown = array_map(function($bucket) use ($dbForProject) {
+            $id = $bucket->getId();
+            $name = $bucket->getAttribute('name');
+            $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
+            $value = $dbForProject->findOne('stats', [
+                Query::equal('metric', [$metric]),
+                Query::equal('period', ['inf'])
+            ]);
+
+            return [
+                'resourceId' => $id,
+                'name' => $name,
+                'value' => $value['value'] ?? 0,
+            ];
+        }, $dbForProject->find('buckets'));
+
         $response->dynamic(new Document([
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
             'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
+            'users' => ($usage[METRIC_USERS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],
             'usersTotal' => $total[METRIC_USERS],
             'bucketsTotal' => $total[METRIC_BUCKETS],
             'filesStorageTotal' => $total[METRIC_FILES_STORAGE],
+            'executionsBreakdown' => $executionsBreakdown,
+            'bucketsBreakdown' => $bucketsBreakdown
         ]), Response::MODEL_USAGE_PROJECT);
     });
 
