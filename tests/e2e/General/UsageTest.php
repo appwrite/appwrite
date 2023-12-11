@@ -130,14 +130,12 @@ class UsageTest extends Scope
         );
         $res = $res['body'];
 
-        $this->assertEquals('24h', $res['range']);
-        $this->assertEquals(9, count($res));
-        $this->assertEquals(24, count($res['requestsTotal']));
-        $this->assertEquals(24, count($res['usersTotal']));
-        $this->assertEquals($usersTotal, $res['usersTotal'][array_key_last($res['usersTotal'])]['value']);
-        $this->validateDates($res['usersTotal']);
-        $this->assertEquals($requestsTotal, $res['requestsTotal'][array_key_last($res['requestsTotal'])]['value']);
-        $this->validateDates($res['requestsTotal']);
+        $this->assertEquals(11, count($res));
+        $this->validateDates($res['network']);
+        $this->validateDates($res['requests']);
+        $this->validateDates($res['users']);
+        $this->assertArrayHasKey('executionsBreakdown', $res);
+        $this->assertArrayHasKey('bucketsBreakdown', $res);
 
         $res = $this->client->call(
             Client::METHOD_GET,
