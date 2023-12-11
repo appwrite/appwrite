@@ -41,8 +41,6 @@ use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
-use Appwrite\Services\Locale as ServicesLocale;
-use Appwrite\Utopia\Response\Model\Project;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents): Document
