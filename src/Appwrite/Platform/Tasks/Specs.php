@@ -173,6 +173,7 @@ class Specs extends Action
 
                     if (empty($routeSecurity)) {
                         $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlaforms[] = APP_PLATFORM_SERVER;
                     }
 
                     if (!$route->getLabel('docs', true)) {

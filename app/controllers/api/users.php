@@ -13,6 +13,7 @@ use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Audit\Audit;
@@ -40,6 +41,8 @@ use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Services\Locale as ServicesLocale;
+use Appwrite\Utopia\Response\Model\Project;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents): Document
@@ -1081,6 +1084,79 @@ App::patch('/v1/users/:userId/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
+App::post('v1/users/:userId/sessions')
+    ->desc('Create session')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].sessions.create')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('usage.metric', 'sessions.{scope}.requests.create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createSession')
+    ->label('sdk.description', '/docs/references/users/create-user-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $secret = Auth::codeGenerator();
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $record = $geodb->get($request->getIP());
+
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
+        $session = new Document(array_merge(
+            [
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => Auth::SESSION_PROVIDER_SERVER,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ],
+            $detector->getOS(),
+            $detector->getClient(),
+            $detector->getDevice()
+        ));
+
+        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
+
+        $session = $dbForProject->createDocument('sessions', $session);
+        $session
+            ->setAttribute('secret', $secret)
+            ->setAttribute('expire', $expire)
+            ->setAttribute('countryName', $countryName);
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION));
+
+        return $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($session, Response::MODEL_SESSION);
+    });
+
+
+
 App::post('/v1/users/:userId/tokens')
     ->desc('Create token')
     ->groups(['api', 'users'])
@@ -1097,29 +1173,31 @@ App::post('/v1/users/:userId/tokens')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, 60 * 60 * 24 * 365), 'Token expiration in seconds from now.')
+    ->param('length', 6, new Range(4, 128), 'Token length in chars.')
+    ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration in seconds from now.')
+    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $expire, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, int $length,int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $secret = Auth::tokenGenerator();
+        $secret = Auth::tokenGenerator($length);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $expire));
 
         $token = new Document([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_UNIVERSAL,
+            'type' => Auth::TOKEN_TYPE_GENERIC,
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'expire' => $expire,
             'userAgent' => 'UNKNOWN',
-            'ip' => 'UNKNOWN',
+            'ip' => $request->getIP()
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);

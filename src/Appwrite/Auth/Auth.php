@@ -53,7 +53,7 @@ class Auth
     public const TOKEN_TYPE_MAGIC_URL = 5;
     public const TOKEN_TYPE_PHONE = 6;
     public const TOKEN_TYPE_OAUTH2 = 7;
-    public const TOKEN_TYPE_UNIVERSAL = 8;
+    public const TOKEN_TYPE_GENERIC = 8;
 
     /**
      * Session Providers.
@@ -63,7 +63,8 @@ class Auth
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
     public const SESSION_PROVIDER_PHONE = 'phone';
     public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
-    public const SESSION_PROVIDER_UNIVERSAL = 'universal';
+    public const SESSION_PROVIDER_TOKEN = 'token';
+    public const SESSION_PROVIDER_SERVER = 'server';
 
     /**
      * Token Expiration times.
@@ -139,7 +140,7 @@ class Auth
             case Auth::TOKEN_TYPE_OAUTH2:
                 return Auth::SESSION_PROVIDER_OAUTH2;
             default:
-                return Auth::SESSION_PROVIDER_UNIVERSAL;
+                return Auth::SESSION_PROVIDER_TOKEN;
         }
     }
 
