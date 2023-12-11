@@ -111,7 +111,7 @@ App::get('/v1/project/usage')
             }
         }
 
-        $executionsBreakdown = array_map(function($function) use ($dbForProject) {
+        $executionsBreakdown = array_map(function ($function) use ($dbForProject) {
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{bucketInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
@@ -127,7 +127,7 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('functions'));
 
-        $bucketsBreakdown = array_map(function($bucket) use ($dbForProject) {
+        $bucketsBreakdown = array_map(function ($bucket) use ($dbForProject) {
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
