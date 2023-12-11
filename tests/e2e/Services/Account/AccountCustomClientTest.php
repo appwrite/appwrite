@@ -2435,7 +2435,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',

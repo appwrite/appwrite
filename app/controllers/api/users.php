@@ -1171,8 +1171,8 @@ App::post('/v1/users/:userId/tokens')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('length', 6, new Range(4, 128), 'Token length in chars.')
-    ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration in seconds from now.')
+    ->param('length', 6, new Range(4, 128), 'Token length in chars.', true)
+    ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration in seconds from now.', true)
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1192,9 +1192,9 @@ App::post('/v1/users/:userId/tokens')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'type' => Auth::TOKEN_TYPE_GENERIC,
-            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+            'secret' => Auth::hash($secret),
             'expire' => $expire,
-            'userAgent' => 'UNKNOWN',
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP()
         ]);
 
