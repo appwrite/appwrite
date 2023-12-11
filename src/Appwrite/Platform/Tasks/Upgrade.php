@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\CLI\Console;
+use Utopia\Validator\Boolean;
 use Utopia\Validator\Text;
 
 class Upgrade extends Install
@@ -21,10 +22,11 @@ class Upgrade extends Install
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
-            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive));
+            ->param('noStart', false, new Boolean(true), 'Run an interactive session', true)
+            ->callback(fn ($httpPort, $httpsPort, $organization, $image, $interactive, $noStart) => $this->action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart));
     }
 
-    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive): void
+    public function action(string $httpPort, string $httpsPort, string $organization, string $image, string $interactive, bool $noStart): void
     {
         // Check for previous installation
         $data = @file_get_contents($this->path . '/docker-compose.yml');
@@ -37,6 +39,6 @@ class Upgrade extends Install
             Console::log('      └── docker-compose.yml');
             Console::exit(1);
         }
-        parent::action($httpPort, $httpsPort, $organization, $image, $interactive);
+        parent::action($httpPort, $httpsPort, $organization, $image, $interactive, $noStart);
     }
 }
