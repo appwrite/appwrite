@@ -370,6 +370,15 @@ App::init()
                 )
         );
 
+        /** TODO: @christyjacob remove it after 1 month
+         * Temporarily expire the old cookie to stop the client from sending it */
+        Config::setParam(
+            'cookieDomainReset',
+            $isLocalHost || $isIpAddress
+                ? null
+                : ($isConsoleProject ? '.' . $request->getHostname() : null)
+        );
+
         /*
         * Response format
         */
