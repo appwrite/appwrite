@@ -21,6 +21,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
@@ -101,6 +102,24 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         return $database;
     };
 }, ['pools', 'dbForConsole', 'cache']);
+
+Server::setResource('getProjectAbuseRetention', function () {
+    return function (Document $project) {
+        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+    };
+});
+
+Server::setResource('getProjectAuditRetention', function () {
+    return function (Document $project) {
+        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
+    };
+});
+
+Server::setResource('getProjectExecutionRetention', function () {
+    return function (Document $project) {
+        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+    };
+});
 
 Server::setResource('cache', function (Registry $register) {
     $pools = $register->get('pools');
