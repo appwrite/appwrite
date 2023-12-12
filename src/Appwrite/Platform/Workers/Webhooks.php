@@ -121,10 +121,12 @@ class Webhooks extends Action
         }
 
         if (false === \curl_exec($ch)) {
-            $errorCount = $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
+            $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
+            $webhook = $dbForConsole->getDocument('webhooks', $webhook->getId());
+            $errorCount = $webhook->getAttribute('attempts');
             $lastErrorLogs = \curl_error($ch) . ' in events ' . implode(', ', $events);
-            $webhook->setAttribute('attempts', $errorCount);
             $webhook->setAttribute('logs', $lastErrorLogs);
+            // $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
             if ($errorCount >= self::failedAttemptsCount) {
                 $webhook->setAttribute('enabled', false);
