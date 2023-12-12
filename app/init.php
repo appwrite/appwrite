@@ -997,9 +997,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    );
 
-    // Get fallback session from clients who block 3rd-party cookies
+    // Get session from header for SSR clients
+    if (empty($session['id']) && empty($session['secret'])) {
+        $sessionHeader = $request->getHeader('x-appwrite-session', '');
+
+        if (!empty($sessionHeader)) {
+            $session = Auth::decodeSession($sessionHeader);
+        }
+    }
+    
+    // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
     }
