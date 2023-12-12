@@ -25,7 +25,11 @@ class Request extends UtopiaRequest
         $parameters = parent::getParams();
 
         if (self::hasFilter() && self::hasRoute()) {
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . self::getRoute()->getLabel('sdk.method', 'unknown');
+            $method = self::getRoute()->getLabel('sdk.method', ['unknown']);
+            if (\is_array($method)) {
+                $method = $method[0];
+            }
+            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' .$method;
             $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
         }
 

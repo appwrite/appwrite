@@ -804,8 +804,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
-
         if ($state['success']['path'] == $oauthDefaultSuccess) {
+            // TODO: Deprecate and remove this case
             $query['project'] = $project->getId();
             $query['domain'] = Config::getParam('cookieDomain');
             $query['key'] = Auth::$cookieName;
@@ -923,7 +923,7 @@ App::post('/v1/account/tokens/magic-url')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createMagicURLToken')
+    ->label('sdk.method', ['createMagicURLToken', 'createMagicURLSession'])
     ->label('sdk.description', '/docs/references/account/create-magic-url-token.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1141,7 +1141,7 @@ App::put('/v1/account/sessions/token')
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'exchangeTokenForSession')
+    ->label('sdk.method', ['exchangeTokenForSession', 'updateMagicURLSession', 'updatePhoneSession'])
     ->label('sdk.description', '/docs/references/account/exchange-token-for-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1267,7 +1267,7 @@ App::post('/v1/account/tokens/phone')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createPhoneToken')
+    ->label('sdk.method', ['createPhoneToken', 'createPhoneSession'])
     ->label('sdk.description', '/docs/references/account/create-phone-token.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
