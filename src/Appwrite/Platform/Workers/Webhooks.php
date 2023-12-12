@@ -12,7 +12,7 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const failedAttemptsCount = 10;
+    private const FAILEDATTEMPTSCOUNT = 10;
 
     public static function getName(): string
     {
@@ -128,7 +128,7 @@ class Webhooks extends Action
             $webhook->setAttribute('logs', $lastErrorLogs);
             // $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-            if ($errorCount >= self::failedAttemptsCount) {
+            if ($errorCount >= self::FAILEDATTEMPTSCOUNT) {
                 $webhook->setAttribute('enabled', false);
             }
 
