@@ -52,6 +52,7 @@ App::get('/v1/project/usage')
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
+                METRIC_EXECUTIONS
              ]
         ];
 
@@ -147,6 +148,7 @@ App::get('/v1/project/usage')
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
             'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
             'users' => ($usage[METRIC_USERS]),
+            'executions' => ($usage[METRIC_EXECUTIONS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],
             'documentsTotal' => $total[METRIC_DOCUMENTS],
             'databasesTotal' => $total[METRIC_DATABASES],

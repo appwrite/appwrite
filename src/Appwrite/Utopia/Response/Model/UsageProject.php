@@ -67,6 +67,13 @@ class UsageProject extends Model
                 'example' => [],
                 'array' => true
             ])
+            ->addRule('executions', [
+                'type' => Response::MODEL_METRIC,
+                'description' => 'Aggregated number of executions per period.',
+                'default' => [],
+                'example' => [],
+                'array' => true
+            ])
             ->addRule('executionsBreakdown', [
                 'type' => Response::MODEL_METRIC_BREAKDOWN,
                 'description' => 'Aggregated breakdown in totals of executions by functions.',
