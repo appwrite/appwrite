@@ -158,7 +158,7 @@ class Swagger2 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($id),
+                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
                 'consumes' => [],
                 'produces' => [],
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
@@ -169,7 +169,7 @@ class Swagger2 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
+                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
