@@ -114,15 +114,15 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
     };
 }, ['pools', 'dbForConsole', 'cache']);
 
-Server::setResource('getProjectAbuseRetention', function () {
+Server::setResource('abuseRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
 });
 
-Server::setResource('getProjectAuditRetention', function () {
+Server::setResource('auditRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
 });
 
-Server::setResource('getProjectExecutionRetention', function () {
+Server::setResource('executionRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
 });
 
