@@ -29,7 +29,7 @@ class Request extends UtopiaRequest
             if (\is_array($method)) {
                 $method = $method[0];
             }
-            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' .$method;
+            $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
             $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
         }
 
