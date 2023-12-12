@@ -89,10 +89,11 @@ class BatchTest extends Scope
             ],
         ]];
 
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
         $this->assertIsArray($response['body'][0]['data']);
         $this->assertIsArray($response['body'][1]['data']);
@@ -136,10 +137,11 @@ class BatchTest extends Scope
             ],
         ];
 
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
         $this->assertIsArray($response['body'][0]['data']);
         $this->assertIsArray($response['body'][1]['data']);
@@ -170,10 +172,11 @@ class BatchTest extends Scope
                 ]
             ],
         ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
         $this->assertIsArray($response['body'][0]['data']);
         $this->assertIsArray($response['body'][1]['data']);
@@ -211,10 +214,11 @@ class BatchTest extends Scope
                 ]
             ],
         ];
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
         $this->assertIsArray($response['body'][0]['data']);
         $this->assertIsArray($response['body'][1]['data']);
@@ -299,10 +303,11 @@ class BatchTest extends Scope
             ],
         ];
 
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
 
         $this->assertIsArray($response['body']['data']);
@@ -368,10 +373,11 @@ class BatchTest extends Scope
             ],
         ];
 
-        $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/graphql', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-        ], $this->getHeaders()), $graphQLPayload);
+            'origin' => 'http://localhost',
+        ], $graphQLPayload);
 
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
