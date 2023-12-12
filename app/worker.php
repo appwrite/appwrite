@@ -72,6 +72,17 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
+Server::setResource('project', function (Message $message, Database $dbForConsole) {
+    $payload = $message->getPayload() ?? [];
+    $project = new Document($payload['project'] ?? []);
+
+    if ($project->getId() === 'console') {
+        return $project;
+    }
+    return $dbForConsole->getDocument('projects', $project->getId());
+    ;
+}, ['message', 'dbForConsole']);
+
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
@@ -104,21 +115,15 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 }, ['pools', 'dbForConsole', 'cache']);
 
 Server::setResource('getProjectAbuseRetention', function () {
-    return function (Document $project) {
-        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
-    };
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
 });
 
 Server::setResource('getProjectAuditRetention', function () {
-    return function (Document $project) {
-        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
-    };
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
 });
 
 Server::setResource('getProjectExecutionRetention', function () {
-    return function (Document $project) {
-        return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
-    };
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
 });
 
 Server::setResource('cache', function (Registry $register) {
