@@ -111,7 +111,7 @@ class Schema
                     if (empty($name)) {
                         continue;
                     }
-    
+
                     foreach (Mapper::route($utopia, $route, $complexity) as $field) {
                         switch ($route->getMethod()) {
                             case 'GET':
