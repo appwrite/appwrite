@@ -1721,6 +1721,13 @@ App::post('/v1/functions/:functionId/executions')
             $execution->setAttribute('logs', $executionResponse['logs']);
             $execution->setAttribute('errors', $executionResponse['errors']);
             $execution->setAttribute('duration', $executionResponse['duration']);
+
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
+            ;
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
 
@@ -1730,6 +1737,11 @@ App::post('/v1/functions/:functionId/executions')
                 ->setAttribute('responseStatusCode', 500)
                 ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
             Console::error($th->getMessage());
+
+            $queueForUsage
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+            ;
         }
 
         if ($function->getAttribute('logging')) {
@@ -1737,12 +1749,7 @@ App::post('/v1/functions/:functionId/executions')
             $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
-        $queueForUsage
-            ->addMetric(METRIC_EXECUTIONS, 1)
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($executionResponse['duration'] * 1000))// per project
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($executionResponse['duration'] * 1000))// per function
-        ;
+
 
 
 
