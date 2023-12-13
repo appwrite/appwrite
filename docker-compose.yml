@@ -673,6 +673,7 @@ services:
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_USAGE_AGGREGATION_INTERVAL
 
   appwrite-schedule:
     entrypoint: schedule
