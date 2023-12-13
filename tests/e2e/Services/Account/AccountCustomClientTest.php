@@ -289,8 +289,6 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
-        fwrite(STDERR, print_r($response['body']['logs'], TRUE));
-
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
@@ -318,7 +316,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
 
-        $this->assertEquals("user.create", $response['body']['logs'][3]['event'], );
+        $this->assertEquals("user.create", $response['body']['logs'][3]['event']);
         $this->assertEquals(filter_var($response['body']['logs'][3]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][3]['ip']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
