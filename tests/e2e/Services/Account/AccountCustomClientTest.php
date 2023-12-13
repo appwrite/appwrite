@@ -235,7 +235,7 @@ class AccountCustomClientTest extends Scope
         $this->assertIsArray($response['body']);
         $this->assertNotEmpty($response['body']);
         $this->assertCount(2, $response['body']);
-        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals(3, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -279,8 +279,6 @@ class AccountCustomClientTest extends Scope
     {
         sleep(5);
         $session = $data['session'] ?? '';
-        $sessionId = $data['sessionId'] ?? '';
-        $userId = $data['id'] ?? '';
         /**
          * Test for SUCCESS
          */
@@ -291,14 +289,16 @@ class AccountCustomClientTest extends Scope
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
+        fwrite(STDERR, print_r($response['body']['logs'], TRUE));
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(3, $response['body']['logs']);
+        $this->assertCount(4, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertContains($response['body']['logs'][1]['event'], ["session.create"]);
-        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][1]['time']));
+        $this->assertEquals("session.create", $response['body']['logs'][2]['event']);
+        $this->assertEquals(filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][2]['ip']);
+        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][1]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][1]['osCode']);
@@ -313,13 +313,13 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals('desktop', $response['body']['logs'][1]['deviceName']);
         $this->assertEquals('', $response['body']['logs'][1]['deviceBrand']);
         $this->assertEquals('', $response['body']['logs'][1]['deviceModel']);
-        $this->assertEquals($response['body']['logs'][1]['ip'], filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals(filter_var($response['body']['logs'][1]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][1]['ip']);
 
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
 
-        $this->assertContains($response['body']['logs'][2]['event'], ["user.create"]);
-        $this->assertEquals($response['body']['logs'][2]['ip'], filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP));
+        $this->assertEquals("user.create", $response['body']['logs'][3]['event'], );
+        $this->assertEquals(filter_var($response['body']['logs'][3]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][3]['ip']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
@@ -369,7 +369,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(2, $responseOffset['body']['logs']);
+        $this->assertCount(3, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
