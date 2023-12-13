@@ -70,21 +70,29 @@ class UsageHook extends Usage
                             /**
                              * Infinity daily
                              */
-                            if ('inf_d' === $period) {
-                                $infinity = $dbForProject->getDocument('stats', \md5("{self::INFINITY_PERIOD}{$key}"));
+                            if ('infd' === $period) {
+                                $isInfDaily = array_reduce(["files", "buckets", "users"], function ($carry, $word) use ($key) {
+                                    return $carry || str_contains($key, $word);
+                                }, false);
+
+                                if (!$isInfDaily) {
+                                    continue;
+                                }
+
+                                $infinity = $dbForProject->getDocument('stats', \md5(self::INFINITY_PERIOD . $key));
                                 $infinityDaily = $dbForProject->getDocument('stats', $id);
 
-                                if (empty($infinityDaily) && $infinityDaily->isEmpty()) {
+                                if ($infinityDaily->isEmpty()) {
                                     $dbForProject->createDocument('stats', new Document([
                                         '$id' => $id,
                                         'period' => $period,
                                         'time' => $time,
                                         'metric' => $key,
-                                        'value' => $infinity['value'],
+                                        'value' => $infinity['value'] ?? 0,
                                         'region' => App::getEnv('_APP_REGION', 'default'),
                                     ]));
                                 } else {
-                                    $infinityDaily->setAttribute('value', $infinity['value']);
+                                    $infinityDaily->setAttribute('value', $infinity['value'] ?? 0);
                                     $dbForProject->updateDocument('stats', $infinityDaily->getId(), $infinityDaily);
                                 }
                                 continue;
@@ -120,7 +128,7 @@ class UsageHook extends Usage
                         }
                     }
                 } catch (\Exception $e) {
-                    console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
+                    var_dump($e->getMessage());
                 } finally {
                     $pools->reclaim();
                 }
