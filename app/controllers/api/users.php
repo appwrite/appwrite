@@ -1051,6 +1051,9 @@ App::patch('/v1/users/:userId/prefs')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].update.prefs')
     ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
@@ -1060,7 +1063,7 @@ App::patch('/v1/users/:userId/prefs')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('prefs', '', new Assoc(), 'Prefs key-value JSON object.')
+    ->param('prefs', [], new Assoc(), 'Prefs key-value JSON object.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1071,8 +1074,8 @@ App::patch('/v1/users/:userId/prefs')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
-        $user = $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('prefs', $prefs));
+        $user->setAttribute('prefs', $prefs);
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents
             ->setParam('userId', $user->getId());
