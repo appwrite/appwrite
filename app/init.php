@@ -1007,7 +1007,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             $session = Auth::decodeSession($sessionHeader);
         }
     }
-    
+
     // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
