@@ -8,6 +8,7 @@ $member = [
     'home',
     'console',
     'graphql',
+    'sessions',
     'account',
     'teams.read',
     'teams.write',
@@ -27,6 +28,7 @@ $member = [
 $admins = [
     'global',
     'graphql',
+    'sessions',
     'teams.read',
     'teams.write',
     'documents.read',
