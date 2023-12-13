@@ -328,10 +328,9 @@ class UsersTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
         ], $this->getHeaders()), $graphQLPayload);
-        $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']);
+        $this->assertArrayNotHasKey('errors', $user['body']);
         $this->assertIsArray($user['body']['data']['usersUpdatePhone']);
-
         $this->assertEquals('+123456789', $user['body']['data']['usersUpdatePhone']['phone']);
     }
 
