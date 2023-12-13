@@ -152,11 +152,10 @@ class AccountTest extends Scope
             ],
         ];
 
-        $token = $this->client->call(Client::METHOD_POST, '/graphql', [
+        $token = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'origin' => 'http://localhost',
-        ], $graphQLPayload);
+        ], $this->getHeaders()), $graphQLPayload);
 
         $this->assertArrayNotHasKey('errors', $token['body']);
         $this->assertIsArray($token['body']['data']);
