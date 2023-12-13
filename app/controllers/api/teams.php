@@ -982,8 +982,6 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp() - 3600, '/', Config::getParam('cookieDomainReset'), ('https' == $protocol), true, null)
         ;
 
         $response->dynamic(
