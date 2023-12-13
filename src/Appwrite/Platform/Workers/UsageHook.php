@@ -128,7 +128,7 @@ class UsageHook extends Usage
                         }
                     }
                 } catch (\Exception $e) {
-                    var_dump($e->getMessage());
+                    console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
                 } finally {
                     $pools->reclaim();
                 }
