@@ -12,6 +12,7 @@ use Appwrite\Platform\Workers\Databases;
 use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
+use Appwrite\Platform\Workers\Hamster;
 use Appwrite\Platform\Workers\Migrations;
 
 class Workers extends Service
@@ -30,6 +31,7 @@ class Workers extends Service
             ->addAction(Builds::getName(), new Builds())
             ->addAction(Deletes::getName(), new Deletes())
             ->addAction(Migrations::getName(), new Migrations())
+            ->addAction(Hamster::getName(), new Hamster())
 
         ;
     }
