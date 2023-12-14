@@ -118,11 +118,11 @@ class CreateInfMetric extends Action
         try {
             $id = \md5("_inf_{$metric}");
 
-            $dbForProject->deleteDocument('stats', $id);
+            $dbForProject->deleteDocument('stats_v2', $id);
 
             echo "_inf_{$metric}  , $value \n";
 
-            $dbForProject->createDocument('stats', new Document([
+            $dbForProject->createDocument('stats_v2', new Document([
                 '$id' => $id,
                 'metric' => $metric,
                 'period' => 'inf',
@@ -144,7 +144,7 @@ class CreateInfMetric extends Action
     protected function getFromMetric(database $dbForProject, string $metric): int|float
     {
 
-        return  $dbForProject->sum('stats', 'value', [
+        return  $dbForProject->sum('stats_v2', 'value', [
             Query::equal('metric', [
                 $metric,
             ]),
