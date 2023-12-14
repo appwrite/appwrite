@@ -12,7 +12,7 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const FAILEDATTEMPTSCOUNT = 10;
+    private const MAX_FAILED_ATTEMPTS = 10;
 
     public static function getName(): string
     {
@@ -123,19 +123,19 @@ class Webhooks extends Action
         if (false === \curl_exec($ch)) {
             $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForConsole->getDocument('webhooks', $webhook->getId());
-            $errorCount = $webhook->getAttribute('attempts');
-            $lastErrorLogs = \curl_error($ch) . ' in events ' . implode(', ', $events);
-            $webhook->setAttribute('logs', $lastErrorLogs);
+            $attempts = $webhook->getAttribute('attempts');
+            $logs = \curl_error($ch) . ' in events ' . implode(', ', $events);
+            $webhook->setAttribute('logs', $logs);
             // $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-            if ($errorCount >= self::FAILEDATTEMPTSCOUNT) {
+            if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
             $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
-            $this->errors[] = $lastErrorLogs;
+            $this->errors[] = $logs;
         }
 
         \curl_close($ch);
