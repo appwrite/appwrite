@@ -105,8 +105,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 327;
-const APP_VERSION_STABLE = '1.4.12';
+const APP_CACHE_BUSTER = 329;
+const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -869,6 +869,25 @@ $register->set('pools', function () {
     return $group;
 });
 
+$register->set('db', function () {
+    // This is usually for our workers or CLI commands scope
+       $dbHost = App::getEnv('_APP_DB_HOST', '');
+       $dbPort = App::getEnv('_APP_DB_PORT', '');
+       $dbUser = App::getEnv('_APP_DB_USER', '');
+       $dbPass = App::getEnv('_APP_DB_PASS', '');
+       $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+
+       $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
+           PDO::ATTR_TIMEOUT => 3, // Seconds
+           PDO::ATTR_PERSISTENT => true,
+           PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+           PDO::ATTR_EMULATE_PREPARES => true,
+           PDO::ATTR_STRINGIFY_FETCHES => true,
+       ));
+
+       return $pdo;
+});
 $register->set('influxdb', function () {
 
  // Register DB connection

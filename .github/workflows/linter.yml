@@ -18,6 +18,10 @@ jobs:
 
     - run: git checkout HEAD^2
 
+    - name: Validate composer.json and composer.lock
+      run: |
+        docker run --rm -v $PWD:/app composer sh -c \
+        "composer validate"
     - name: Run Linter
       run: |
         docker run --rm -v $PWD:/app composer sh -c \

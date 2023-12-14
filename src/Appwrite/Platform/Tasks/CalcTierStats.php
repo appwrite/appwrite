@@ -41,6 +41,7 @@ class CalcTierStats extends Action
         'Functions',
         'Deployments',
         'Executions',
+        'Migrations',
     ];
 
     protected string $directory = '/usr/local';
@@ -99,8 +100,8 @@ class CalcTierStats extends Action
 
         $projects = [$console];
         $count = 0;
-        $limit = 30;
-        $sum = 30;
+        $limit = 100;
+        $sum = 100;
         $offset = 0;
         while (!empty($projects)) {
             foreach ($projects as $project) {
@@ -200,7 +201,7 @@ class CalcTierStats extends Action
 
                     try {
                         /** Get Domains */
-                        $stats['Domains'] = $dbForConsole->count('domains', [
+                        $stats['Domains'] = $dbForConsole->count('rules', [
                             Query::equal('projectInternalId', [$project->getInternalId()]),
                         ]);
                     } catch (\Throwable) {
@@ -288,6 +289,13 @@ class CalcTierStats extends Action
                         $stats['Executions'] = $dbForProject->count('executions', []);
                     } catch (\Throwable) {
                         $stats['Executions'] = 0;
+                    }
+
+                    /** Get Total Migrations */
+                    try {
+                        $stats['Migrations'] = $dbForProject->count('migrations', []);
+                    } catch (\Throwable) {
+                        $stats['Migrations'] = 0;
                     }
 
                     $csv->insertOne(array_values($stats));
