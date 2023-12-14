@@ -50,7 +50,7 @@ class V19 extends Migration
 
     protected function migrateDomains(): void
     {
-        if ($this->consoleDB->exists($this->consoleDB->getDefaultDatabase(), 'domains')) {
+        if ($this->consoleDB->exists($this->consoleDB->getDatabase(), 'domains')) {
             foreach ($this->documentsIterator('domains') as $domain) {
                 $status = 'created';
                 if ($domain->getAttribute('verification', false)) {
@@ -100,7 +100,7 @@ class V19 extends Migration
 
             try {
                 $this->createAttributeFromCollection($this->projectDB, $id, 'bucketInternalId', 'files');
-                $this->projectDB->deleteCachedCollection($id);
+                $this->projectDB->purgeCachedCollection($id);
             } catch (\Throwable $th) {
                 Console::warning("'bucketInternalId' from {$id}: {$th->getMessage()}");
             }
@@ -160,7 +160,7 @@ class V19 extends Migration
                         Console::warning("'error' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'buckets':
@@ -188,7 +188,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'builds':
@@ -211,7 +211,7 @@ class V19 extends Migration
                         Console::warning("'path' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'certificates':
@@ -227,7 +227,7 @@ class V19 extends Migration
                         Console::warning("'logs' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'databases':
@@ -237,7 +237,7 @@ class V19 extends Migration
                         Console::warning("'enabled' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'deployments':
@@ -300,7 +300,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'executions':
@@ -361,7 +361,7 @@ class V19 extends Migration
                         Console::warning("'_key_responseStatusCode' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'files':
@@ -388,7 +388,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'functions':
@@ -450,7 +450,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'memberships':
@@ -460,7 +460,7 @@ class V19 extends Migration
                         Console::warning("'teamInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     // Intentional fall through to update memberships.userInternalId
                 case 'sessions':
@@ -471,7 +471,7 @@ class V19 extends Migration
                         Console::warning("'userInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'domains':
@@ -484,7 +484,7 @@ class V19 extends Migration
                         Console::warning("'projectInternalId' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'projects':
@@ -502,7 +502,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'stats':
@@ -515,26 +515,26 @@ class V19 extends Migration
                     // Holding off on these until a future release
                     // try {
                     //     $this->projectDB->deleteAttribute($id, 'type');
-                    //     $this->projectDB->deleteCachedCollection($id);
+                    //     $this->projectDB->purgeCachedCollection($id);
                     // } catch (\Throwable $th) {
                     //     Console::warning("'type' from {$id}: {$th->getMessage()}");
                     // }
 
                     // try {
                     //     $this->projectDB->deleteIndex($id, '_key_metric_period_time');
-                    //     $this->projectDB->deleteCachedCollection($id);
+                    //     $this->projectDB->purgeCachedCollection($id);
                     // } catch (\Throwable $th) {
                     //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     // }
 
                     // try {
                     //     $this->createIndexFromCollection($this->projectDB, $id, '_key_metric_period_time');
-                    //     $this->projectDB->deleteCachedCollection($id);
+                    //     $this->projectDB->purgeCachedCollection($id);
                     // } catch (\Throwable $th) {
                     //     Console::warning("'_key_metric_period_time' from {$id}: {$th->getMessage()}");
                     // }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'users':
@@ -562,7 +562,7 @@ class V19 extends Migration
                         Console::warning("'_key_accessedAt' from {$id}: {$th->getMessage()}");
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 case 'variables':
@@ -610,7 +610,7 @@ class V19 extends Migration
                         }
                     }
 
-                    $this->projectDB->deleteCachedCollection($id);
+                    $this->projectDB->purgeCachedCollection($id);
 
                     break;
                 default:
@@ -753,7 +753,7 @@ class V19 extends Migration
             Console::warning("'domains' from projects: {$th->getMessage()}");
         }
 
-        $this->projectDB->deleteCachedCollection('projects');
+        $this->projectDB->purgeCachedCollection('projects');
 
         try {
             $this->projectDB->deleteAttribute('builds', 'stderr');
@@ -767,7 +767,7 @@ class V19 extends Migration
             Console::warning("'stdout' from builds: {$th->getMessage()}");
         }
 
-        $this->projectDB->deleteCachedCollection('builds');
+        $this->projectDB->purgeCachedCollection('builds');
     }
 
     /**

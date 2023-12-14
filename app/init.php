@@ -834,7 +834,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDefaultDatabase($dsn->getPath());
+                        $adapter->setDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
                         $adapter = $resource();

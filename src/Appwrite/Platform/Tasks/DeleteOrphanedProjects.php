@@ -78,11 +78,11 @@ class DeleteOrphanedProjects extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
                     $collectionsCreated = 0;
                     $cnt++;
-                    if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                    if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                         $collectionsCreated = $dbForProject->count(Database::METADATA);
                     }
 
@@ -102,14 +102,14 @@ class DeleteOrphanedProjects extends Action
                         foreach ($collections as $collection) {
                             if ($commit) {
                                 $dbForProject->deleteCollection($collection->getId());
-                                $dbForConsole->deleteCachedCollection($collection->getId());
+                                $dbForConsole->purgeCachedCollection($collection->getId());
                             }
                             Console::info('--Deleting collection  (' . $collection->getId() . ') project no (' . $project->getInternalId() . ')');
                         }
                     }
                     if ($commit) {
                         $dbForConsole->deleteDocument('projects', $project->getId());
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
                     }
 
                     Console::info('--Deleting project no (' . $project->getInternalId() . ')');

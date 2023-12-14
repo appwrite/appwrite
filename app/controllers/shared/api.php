@@ -350,7 +350,7 @@ App::shutdown()
             $session = array_shift($sessions);
             $dbForProject->deleteDocument('sessions', $session->getId());
         }
-        $dbForProject->deleteCachedDocument('users', $userId);
+        $dbForProject->purgeCachedDocument('users', $userId);
     });
 
 App::shutdown()
