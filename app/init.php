@@ -798,7 +798,7 @@ $register->set('pools', function () {
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
+                                PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT, // Overwrite in PDOProxy
                                 PDO::ATTR_EMULATE_PREPARES => true,
                                 PDO::ATTR_STRINGIFY_FETCHES => true
                             ));
@@ -820,12 +820,10 @@ $register->set('pools', function () {
 
                 default:
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
-                    break;
             }
 
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
-                $adapter = null;
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -854,7 +852,6 @@ $register->set('pools', function () {
 
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-                        break;
                 }
 
                 return $adapter;
