@@ -372,8 +372,6 @@ class Functions extends Action
         ]);
 
         /** Execute function */
-
-
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
