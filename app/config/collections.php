@@ -1270,9 +1270,9 @@ $commonCollections = [
         ]
     ],
 
-    'stats' => [
+    'stats_v2' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('stats'),
+        '$id' => ID::custom('stats_v2'),
         'name' => 'Stats',
         'attributes' => [
             [
