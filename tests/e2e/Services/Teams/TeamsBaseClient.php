@@ -403,7 +403,7 @@ trait TeamsBaseClient
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
         $data['session'] = $session;
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
