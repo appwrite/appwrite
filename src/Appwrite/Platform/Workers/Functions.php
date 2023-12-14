@@ -412,16 +412,6 @@ class Functions extends Action
                 ->setAttribute('logs', $executionResponse['logs'])
                 ->setAttribute('errors', $executionResponse['errors'])
                 ->setAttribute('duration', $executionResponse['duration']);
-
-            /** Trigger usage queue */
-            $queueForUsage
-                ->setProject($project)
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
-                ->trigger()
-            ;
         } catch (\Throwable $th) {
             $durationEnd = \microtime(true);
             $execution
@@ -432,6 +422,7 @@ class Functions extends Action
 
             $error = $th->getMessage();
             $errorCode = $th->getCode();
+        } finally {
             /** Trigger usage queue */
             $queueForUsage
                 ->setProject($project)
