@@ -63,7 +63,7 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            Console::error('Payload arg not found');
+            Console::error('Payload not found.');
             return;
         }
 
@@ -85,14 +85,14 @@ class Messaging extends Action
         $usersId = $message->getAttribute('users', []);
 
         /**
-        * @var Document[] $recipients
-        */
+         * @var Document[] $recipients
+         */
         $recipients = [];
 
         if (\count($topicsId) > 0) {
             $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
             foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -100,7 +100,7 @@ class Messaging extends Action
         if (\count($usersId) > 0) {
             $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
             foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -116,13 +116,13 @@ class Messaging extends Action
         ]);
 
         /**
-        * @var array<string, array<string>> $identifiersByProviderId
-        */
+         * @var array<string, array<string>> $identifiersByProviderId
+         */
         $identifiersByProviderId = [];
 
         /**
-        * @var Document[] $providers
-        */
+         * @var Document[] $providers
+         */
         $providers = [];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
@@ -140,12 +140,10 @@ class Messaging extends Action
         }
 
         /**
-        * @var array[] $results
-        */
+         * @var array[] $results
+         */
         $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
             return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
-                $provider = new Document();
-
                 if ($primaryProvider->getId() === $providerId) {
                     $provider = $primaryProvider;
                 } else {
@@ -156,13 +154,12 @@ class Messaging extends Action
                     }
                 }
 
-                $providers[] = $provider;
                 $identifiers = $identifiersByProviderId[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
                     MESSAGE_TYPE_SMS => $this->sms($provider),
                     MESSAGE_TYPE_PUSH => $this->push($provider),
-                    MESSAGE_TYPE_EMAIL  => $this->email($provider),
+                    MESSAGE_TYPE_EMAIL => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
@@ -170,7 +167,7 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $dbForProject) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $dbForProject) {
                     return function () use ($batch, $message, $provider, $adapter, $batchIndex, $dbForProject) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
@@ -180,7 +177,7 @@ class Messaging extends Action
                         $data = match ($provider->getAttribute('type')) {
                             MESSAGE_TYPE_SMS => $this->buildSMSMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($messageData, $provider),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -214,8 +211,6 @@ class Messaging extends Action
                         }
                     };
                 }, $batches));
-
-                return $results;
             };
         }, \array_keys($identifiersByProviderId)));
 
@@ -364,58 +359,44 @@ class Messaging extends Action
         };
     }
 
-    private function buildEmailMessage(Document $message, Document $provider): Email
+    private function buildEmailMessage(Database $dbForProject, Document $message, Document $provider): Email
     {
         $fromName = $provider['options']['fromName'];
         $fromEmail = $provider['options']['fromEmail'];
         $replyToEmail = null;
         $replyToName = null;
-        $cc = null;
-        $bcc = null;
 
         if (isset($provider['options']['replyToName']) && isset($provider['options']['replyToEmail'])) {
             $replyToName = $provider['options']['replyToName'];
             $replyToEmail = $provider['options']['replyToEmail'];
         }
 
-        if (\count($message['data']['cc']) > 0) {
-            foreach ($message['data']['cc'] as $ccEmail) {
-                if (is_array($cc)) {
-                    $cc[] = [
-                        'email' => $ccEmail,
-                    ];
-                } else {
-                    $cc = [
-                        [
-                            'email' => $ccEmail,
-                        ]
-                    ];
-                }
+        $data = $message['data'] ?? [];
+        $ccTargets = $data['cc'] ?? [];
+        $bccTargets = $data['bcc'] ?? [];
+        $cc = [];
+        $bcc = [];
+
+        if (\count($ccTargets) > 0) {
+            $ccTargets = $dbForProject->find('targets', [Query::equal('identifier', $ccTargets)]);
+            foreach ($ccTargets as $ccTarget) {
+                $cc[] = ['email' => $ccTarget['identifier']];
             }
         }
 
-        if (\count($message['data']['bcc'])) {
-            foreach ($message['data']['bcc'] as $bccEmail) {
-                if (is_array($bcc)) {
-                    $bcc[] = [
-                        'email' => $bccEmail,
-                    ];
-                } else {
-                    $bcc = [
-                        [
-                            'email' => $bccEmail,
-                        ]
-                    ];
-                }
+        if (\count($bccTargets) > 0) {
+            $bccTargets = $dbForProject->find('targets', [Query::equal('identifier', $bccTargets)]);
+            foreach ($bccTargets as $bccTarget) {
+                $bcc[] = ['email' => $bccTarget['identifier']];
             }
         }
 
         $to = $message['to'];
-        $subject = $message['data']['subject'];
-        $content = $message['data']['content'];
-        $html = $message['data']['html'];
+        $subject = $data['subject'];
+        $content = $data['content'];
+        $html = $data['html'];
 
-        return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, html: $html);
+        return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, null, $html);
     }
 
     private function buildSMSMessage(Document $message, Document $provider): SMS

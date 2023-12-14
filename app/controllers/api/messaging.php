@@ -2278,8 +2278,8 @@ App::post('/v1/messaging/messages/email')
     ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
-    ->param('cc', [], new ArrayList(new Email()), 'Array of email addresses to be added as CC.', true)
-    ->param('bcc', [], new ArrayList(new Email()), 'Array of email addresses to be added as BCC.', true)
+    ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
@@ -2290,21 +2290,29 @@ App::post('/v1/messaging/messages/email')
     ->inject('queueForMessaging')
     ->inject('response')
     ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, array $cc, array $bcc, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $mergedTargets = \array_merge($targets, $cc, $bcc);
 
-            if ($targetDocument->isEmpty()) {
+        $foundTargets = $dbForProject->find('targets', [
+            Query::equal('$id', $mergedTargets),
+            Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+            Query::limit(\count($mergedTargets)),
+        ]);
+
+        if (\count($foundTargets) !== \count($mergedTargets)) {
+            throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
+        }
+
+        foreach ($foundTargets as $target) {
+            if ($target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-            }
-
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_EMAIL) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL . ' ' . $targetDocument->getId());
             }
         }
 
@@ -2368,21 +2376,27 @@ App::post('/v1/messaging/messages/sms')
     ->inject('queueForMessaging')
     ->inject('response')
     ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $foundTargets = $dbForProject->find('targets', [
+            Query::equal('$id', $targets),
+            Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+            Query::limit(\count($targets)),
+        ]);
 
-            if ($targetDocument->isEmpty()) {
+        if (\count($foundTargets) !== \count($targets)) {
+            throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+        }
+
+        foreach ($foundTargets as $target) {
+            if ($target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-            }
-
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_SMS) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS . ' ' . $targetDocument->getId());
             }
         }
 
@@ -2450,21 +2464,27 @@ App::post('/v1/messaging/messages/push')
     ->inject('queueForMessaging')
     ->inject('response')
     ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $foundTargets = $dbForProject->find('targets', [
+            Query::equal('$id', $targets),
+            Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+            Query::limit(\count($targets)),
+        ]);
 
-            if ($targetDocument->isEmpty()) {
+        if (\count($foundTargets) !== \count($targets)) {
+            throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+        }
+
+        foreach ($foundTargets as $target) {
+            if ($target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-            }
-
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH . ' ' . $targetDocument->getId());
             }
         }
 
