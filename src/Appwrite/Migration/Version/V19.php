@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
+use Utopia\Database\Query;
 
 class V19 extends Migration
 {
@@ -40,6 +41,11 @@ class V19 extends Migration
 
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
+
+        if ($this->project->getId() !== 'console') {
+            Console::info('Migrating Enum Attribute Size');
+            $this->migrateEnumAttributeSize();
+        }
 
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
@@ -638,6 +644,22 @@ class V19 extends Migration
         };
 
         return $commands;
+    }
+
+    private function migrateEnumAttributeSize(): void
+    {
+        foreach (
+            $this->documentsIterator('attributes', [
+            Query::equal('format', ['enum']),
+            Query::lessThan('size', Database::LENGTH_KEY)
+            ]) as $attribute
+        ) {
+            $attribute->setAttribute('size', Database::LENGTH_KEY);
+            $this->projectDB->updateDocument('attributes', $attribute->getId(), $attribute);
+            $databaseInternalId = $attribute->getAttribute('databaseInternalId');
+            $collectionInternalId = $attribute->getAttribute('collectionInternalId');
+            $this->projectDB->updateAttribute('database_' . $databaseInternalId . '_collection_' . $collectionInternalId, $attribute->getAttribute('key'), size: 255);
+        }
     }
 
     /**

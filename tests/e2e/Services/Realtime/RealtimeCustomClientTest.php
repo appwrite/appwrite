@@ -468,7 +468,7 @@ class RealtimeCustomClientTest extends Scope
                 'password' => 'new-password',
             ]);
 
-            $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $projectId];
+            $sessionNew = $response['cookies']['a_session_' . $projectId];
             $sessionNewId = $response['body']['$id'];
 
             return array("session" => $sessionNew, "sessionId" => $sessionNewId);
