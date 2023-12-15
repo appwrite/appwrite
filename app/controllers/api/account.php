@@ -163,6 +163,7 @@ App::post('/v1/account')
                 ]);
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
             }
+
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
