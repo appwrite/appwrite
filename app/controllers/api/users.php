@@ -1077,10 +1077,9 @@ App::patch('/v1/users/:userId/prefs')
         $user->setAttribute('prefs', $prefs);
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
-            $response->dynamic($user, Response::MODEL_USER);
+        $response->dynamic($user, Response::MODEL_USER);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
