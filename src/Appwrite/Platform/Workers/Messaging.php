@@ -6,7 +6,7 @@ use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Messages\Sms;
+use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
