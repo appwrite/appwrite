@@ -277,7 +277,7 @@ $worker
 
      $worker->workerStart()
          ->action(function () use ($workerName) {
-             Console::info("Worker $workerName  started");
+             Console::info("Worker $workerName started");
          });
 
      $worker->start();

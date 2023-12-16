@@ -85,6 +85,7 @@ trait MessagingBase
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $providersParams[$key]);
+
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
             \array_push($providers, $response['body']);
@@ -555,16 +556,14 @@ trait MessagingBase
         $to = $emailDSN->getParam('to');
         $fromName = $emailDSN->getParam('fromName');
         $fromEmail = $emailDSN->getParam('fromEmail');
-        $isEuRegion = $emailDSN->getParam('isEuRegion');
         $apiKey = $emailDSN->getPassword();
-        $domain = $emailDSN->getUser();
 
-        if (empty($to) || empty($from) || empty($apiKey) || empty($domain) || empty($isEuRegion)) {
+        if (empty($to) || empty($apiKey)) {
             $this->markTestSkipped('Email provider not configured');
         }
 
         // Create provider
-        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', \array_merge([
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
@@ -572,8 +571,6 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'Mailgun-provider',
             'apiKey' => $apiKey,
-            'domain' => $domain,
-            'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             'fromName' => $fromName,
             'fromEmail' => $fromEmail
         ]);
@@ -607,27 +604,13 @@ trait MessagingBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
-        // Create Target
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['body']['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'targetId' => ID::unique(),
-            'providerType' => 'email',
-            'providerId' => $provider['body']['$id'],
-            'identifier' => $to,
-        ]);
-
-        $this->assertEquals(201, $target['headers']['status-code']);
-
         // Create Subscriber
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
+            'targetId' => $user['body']['targets'][0]['$id'],
         ]);
 
         $this->assertEquals(201, $subscriber['headers']['status-code']);
@@ -640,13 +623,13 @@ trait MessagingBase
         ], [
             'messageId' => ID::unique(),
             'topics' => [$topic['body']['$id']],
-            'subject' => 'Khali beats Undertaker',
-            'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
         ]);
 
         $this->assertEquals(201, $email['headers']['status-code']);
 
-        \sleep(5);
+        \sleep(2);
 
         $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $email['body']['$id'], [
             'origin' => 'http://localhost',
@@ -654,6 +637,8 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
+
+        \var_dump($message);
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
@@ -665,7 +650,7 @@ trait MessagingBase
     /**
      * @depends testSendEmail
      */
-    public function testUpdateEmail(array $email)
+    public function testUpdateEmail(array $email): void
     {
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $email['body']['$id'], [
             'content-type' => 'application/json',
@@ -724,8 +709,8 @@ trait MessagingBase
         $smsDSN = new DSN(App::getEnv('_APP_MESSAGE_SMS_TEST_DSN'));
         $to = $smsDSN->getParam('to');
         $from = $smsDSN->getParam('from');
-        $authKey = $smsDSN->getPassword();
         $senderId = $smsDSN->getUser();
+        $authKey = $smsDSN->getPassword();
 
         if (empty($to) || empty($from) || empty($senderId) || empty($authKey)) {
             $this->markTestSkipped('SMS provider not configured');
@@ -738,7 +723,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'providerId' => ID::unique(),
-            'name' => 'Msg91-1',
+            'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
             'from' => $from
@@ -850,7 +835,7 @@ trait MessagingBase
             'messageId' => ID::unique(),
             'status' => 'draft',
             'topics' => [$sms['body']['topics'][0]],
-            'content' => '047487',
+            'content' => 'Your OTP code is 123456',
         ]);
 
         $this->assertEquals(201, $sms['headers']['status-code']);
@@ -865,7 +850,7 @@ trait MessagingBase
 
         $this->assertEquals(200, $sms['headers']['status-code']);
 
-        \sleep(5);
+        \sleep(2);
 
         $message = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $sms['body']['$id'], [
             'origin' => 'http://localhost',
@@ -885,9 +870,9 @@ trait MessagingBase
             $this->markTestSkipped('Push DSN empty');
         }
 
-        $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
-        $to = $pushDSN->getParam('to');
-        $serverKey = $pushDSN->getPassword();
+        $dsn = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
+        $to = $dsn->getParam('to');
+        $serviceAccountJSON = $dsn->getParam('saj');
 
         if (empty($to) || empty($serverKey)) {
             $this->markTestSkipped('Push provider not configured');
@@ -901,7 +886,7 @@ trait MessagingBase
         ]), [
             'providerId' => ID::unique(),
             'name' => 'FCM-1',
-            'serverKey' => $serverKey,
+            'serviceAccountJSON' => $serviceAccountJSON,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);

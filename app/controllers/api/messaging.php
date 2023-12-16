@@ -55,18 +55,18 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('fromName', '', new Text(128), 'Sender Name.')
-    ->param('fromEmail', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $replyToName, string $replyToEmail, array $cc, array $bcc, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [
@@ -145,16 +145,16 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('fromName', '', new Text(128), 'Sender Name.')
-    ->param('fromEmail', '', new Email(), 'Sender email address.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $fromName, string $fromEmail, string $apiKey, ?bool $enabled, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [
@@ -608,7 +608,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serverKey', '', new Text(0), 'FCM server key.', true)
+    ->param('serviceAccountJSON', '', new Text(0), 'FCM service account JSON.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -903,18 +903,18 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
+    ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
-    ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
-    ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -2290,7 +2290,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, array $cc, array $bcc, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2301,19 +2301,21 @@ App::post('/v1/messaging/messages/email')
 
         $mergedTargets = \array_merge($targets, $cc, $bcc);
 
-        $foundTargets = $dbForProject->find('targets', [
-            Query::equal('$id', $mergedTargets),
-            Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
-            Query::limit(\count($mergedTargets)),
-        ]);
+        if (!empty($mergedTargets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $mergedTargets),
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                Query::limit(\count($mergedTargets)),
+            ]);
 
-        if (\count($foundTargets) !== \count($mergedTargets)) {
-            throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
-        }
+            if (\count($foundTargets) !== \count($mergedTargets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
+            }
 
-        foreach ($foundTargets as $target) {
-            if ($target->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 

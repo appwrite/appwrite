@@ -1860,8 +1860,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_FCM_PROVIDER:
-                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
-                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: String!) {
+                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
                         name
                         provider
