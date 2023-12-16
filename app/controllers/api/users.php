@@ -1074,6 +1074,7 @@ App::patch('/v1/users/:userId/prefs')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
+        
         $user->setAttribute('prefs', $prefs);
         
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
