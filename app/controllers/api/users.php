@@ -1075,6 +1075,7 @@ App::patch('/v1/users/:userId/prefs')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
         $user->setAttribute('prefs', $prefs);
+        
         $user = $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
