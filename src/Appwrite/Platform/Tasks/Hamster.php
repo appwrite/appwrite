@@ -20,17 +20,18 @@ use Utopia\Pools\Group;
 class Hamster extends Action
 {
     private array $metrics = [
-        'usage_files' => 'files.$all.count.total',
-        'usage_buckets' => 'buckets.$all.count.total',
-        'usage_databases' => 'databases.$all.count.total',
-        'usage_documents' => 'documents.$all.count.total',
-        'usage_collections' => 'collections.$all.count.total',
-        'usage_storage' => 'project.$all.storage.size',
-        'usage_requests' => 'project.$all.network.requests',
-        'usage_bandwidth' => 'project.$all.network.bandwidth',
-        'usage_users' => 'users.$all.count.total',
-        'usage_sessions' => 'sessions.email.requests.create',
-        'usage_executions' => 'executions.$all.compute.total',
+        'usage_files' => 'files',
+        'usage_buckets' => 'buckets',
+        'usage_databases' => 'databases',
+        'usage_documents' => 'documents',
+        'usage_collections' => 'collections',
+        'usage_storage' => 'files.storage',
+        'usage_requests' => 'network.requests',
+        'usage_inbound' => 'network.inbound',
+        'usage_outbound' => 'network.outbound',
+        'usage_users' => 'users',
+        'usage_sessions' => 'sessions',
+        'usage_executions' => 'executions',
     ];
 
     protected string $directory = '/usr/local';
@@ -261,6 +262,16 @@ class Hamster extends Action
                     }
                 });
 
+                /**
+                 * Workaround to combine network.inbound+network.outbound as network.
+                 */
+                $statsPerProject["usage_network_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
+                $statsPerProject["usage_network_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
+                unset($statsPerProject["usage_outbound_24h"]);
+                unset($statsPerProject["usage_inbound_24h"]);
+                unset($statsPerProject["usage_outbound_infinity"]);
+                unset($statsPerProject["usage_inbound_infinity"]);
+
                 if (isset($statsPerProject['email'])) {
                     /** Send data to mixpanel */
                     $res = $this->mixpanel->createProfile($statsPerProject['email'], '', [
@@ -300,7 +311,6 @@ class Hamster extends Action
         Console::success(APP_NAME . ' cloud hamster process has started');
 
         $sleep = (int) App::getEnv('_APP_HAMSTER_INTERVAL', '30'); // 30 seconds (by default)
-
         $jobInitTime = App::getEnv('_APP_HAMSTER_TIME', '22:00'); // (hour:minutes)
         $now = new \DateTime();
         $now->setTimezone(new \DateTimeZone(date_default_timezone_get()));
@@ -315,7 +325,6 @@ class Hamster extends Action
             $next->add(\DateInterval::createFromDateString('1 days'));
             $delay = $next->getTimestamp() - $now->getTimestamp();
         }
-
         Console::log('[' . $now->format("Y-m-d H:i:s.v") . '] Delaying for ' . $delay . ' setting loop to [' . $next->format("Y-m-d H:i:s.v") . ']');
 
         Console::loop(function () use ($pools, $cache, $dbForConsole, $sleep) {

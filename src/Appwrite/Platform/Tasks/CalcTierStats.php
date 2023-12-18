@@ -49,8 +49,9 @@ class CalcTierStats extends Action
     protected string $date;
 
     private array $usageStats = [
-        'project.$all.network.requests'  => 'Requests',
-        'project.$all.network.bandwidth' => 'Bandwidth',
+        'network.requests'  => 'Requests',
+        'network.inbound' => 'Inbound',
+        'network.outbound' => 'Outbound',
 
     ];
 
@@ -171,6 +172,7 @@ class CalcTierStats extends Action
                             $limit = $periods[$range]['limit'];
                             $period = $periods[$range]['period'];
 
+
                             $requestDocs = $dbForProject->find('stats', [
                                 Query::equal('metric', [$metric]),
                                 Query::equal('period', [$period]),
@@ -198,6 +200,13 @@ class CalcTierStats extends Action
                     foreach ($tmp as $key => $value) {
                         $stats[$metrics[$key]]  = $value;
                     }
+
+                    /**
+                     * Workaround to combine network.inbound+network.outbound as network.
+                     */
+                    $stats['Network'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
+                    unset($stats['Inbound']);
+                    unset($stats['Outbound']);
 
                     try {
                         /** Get Domains */
@@ -350,7 +359,7 @@ class CalcTierStats extends Action
             /** Content */
             $mail->Subject = "Cloud Report for {$this->date}";
             $mail->Body = "Please find the daily cloud report atttached";
-            $mail->send();
+            //$mail->send();
             Console::success('Email has been sent!');
         } catch (Exception $e) {
             Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
