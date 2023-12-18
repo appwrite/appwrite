@@ -133,7 +133,7 @@ class ScheduleMessage extends Action
                  */
                 $enqueueMessages = function () use (&$schedules, $pools, $dbForConsole) {
                     foreach ($schedules as $scheduleId => $schedule) {
-                        \go(function () use ($schedules, $schedule, $pools, $dbForConsole) {
+                        \go(function () use (&$schedules, $schedule, $pools, $dbForConsole) {
                             $queue = $pools->get('queue')->pop();
                             $connection = $queue->getResource();
                             $queueForMessaging = new Messaging($connection);
