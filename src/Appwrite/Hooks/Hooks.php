@@ -7,7 +7,7 @@ class Hooks
     /**
      * @var callable[] $hooks
      */
-    static array $hooks = [];
+    private static array $hooks = [];
 
     public static function add(string $name, callable $action)
     {
