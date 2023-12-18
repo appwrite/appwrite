@@ -119,7 +119,7 @@ App::post('/v1/account')
             }
         }
 
-       $hooks->trigger('passwordValidator', [$project, $password, $user]);
+        $hooks->trigger('passwordValidator', [$project, $password, $user]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
