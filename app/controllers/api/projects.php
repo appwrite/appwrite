@@ -1657,7 +1657,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        if ($smtpEnabled) {
+        if (!$smtpEnabled) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
