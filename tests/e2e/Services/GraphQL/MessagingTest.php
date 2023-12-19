@@ -23,14 +23,16 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
                 'isEuRegion' => false,
             ],
             'Twilio' => [
@@ -71,7 +73,12 @@ class MessagingTest extends Scope
             'Fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
-                'serverKey' => 'my-serverkey',
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    "project_id" => "omegle-copy",
+                    "private_key_id" => "ewfwefwefwefwef",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkAgEAAoIBAQCeKDbvv4XvGuNAOxZBcxoNnvbINKlq0FtiqgsqLAgDOMt\nGPEANfni+D7lZRrMPhZhcL4YCjAUg+0ZI0D9d2LGofasj9GlBb57SZc/ud2L9FZZ\nk5liXrUk0SUirffBUmj5F/XPTJ+JXc89qPtt15+hqx30h2ID/wxN0AhmViLikR3o\n3YBHAYq0NbmAfQSfdsHX+lvNKvsAxU+LatRPE3tVcvSd3ZnP0zlHYVmp6UCeBWeW\nOTcSPecCcVXmBdMPtHGWdrNG2op1CmHc8JeYJMQ4xgz3obQcOX9+3USsysANjgta\nb07m6xS3AgMBAAECggEAIeSTVVCRZrq36zk8VgJ/r/NE4r95xEk2K/K/Lvb0fx75\no0BO5gsAkYqvgzem/LrVFCEFRkDGMbAhVQ5Fw1pN2U6CyA0hL4jUqgALtMImKJdX\nDa6I5Gibwd5+qt9NOZSgC/Kq14zAxhfQE3U2hyatohyx3Rsz/3lmJo90bX7Jp5md\nGBDOB3pFBqyfUvyHgeqCgvJvidJjxmwArLhUF8szuDRvmSs0lGsfqYprK0sb9phL\nP7Z3qMJk1J4IDL2abSGrTcMP+hk7ju1iqo7WfhIQCvM1TD5dRjYg2IYPIAIzszWz\nxSA67eJpQGSFfOuk82g3UMhfCD2DY2mCE/zkeid9jQKBgQDSB2xA+LpQDX2nuoDR\niZbPYBitxQtkbjieYTR8vwrIzyAvRtOwjnVKsXLyIbUYyHd6RFRDPeBcHb39KuRO\nz7VljQKTVB5RYUmqeGilor0TFaKMnneC7GFH6mWOJyf16DU7bkQw27Pg1e3xbF28\n5ig7QYPqEaDKLg6TMSLsBhdRDQKBgQDAxj9jS9UOTmF3N9T1JFzWfUB2r+AgwE4N\nSITmG/fSz9rlSg+XPh2ijpSrboUbuY/GYq5aCIy1twx09eta07Y/uD/GKLYrk873\no0TxQrnHSKl82fCyd2JPG/W8ocGDnj3u0Dp+tBrLxDiZN2pRurnlkt7P3QUg/gEG\nAovyd3ij0wKBgBbA7x1q1ORvUbmmHuaUfV4iDwpkWoOa3U9rQIBzQfvXVKlKhwyN\nom9hIg7RUAlLToZUeLyAK5pPLpIK34kaP5Cs4iaL6mzumUh6mvu20b0Ljvyk/lWU\nvkVIQ5BO9alSatHxdDnG04n8IzcQgmdAmAMzadMl7cF5k+KmZB4l2sjRAoGAP8JS\nPNlcAntSKUhCG0KHojmTFK5fBvYT2rjdm+4sLYGp+KRiO7fDvXxDF+BaDi11rDv/\nRrAFOiTs7dJYoZXcdX7POQ9GEWu1zJont1RGde9Gf5Dl12E9FsU8pcMqagnwmggt\nELMpGbQwtBxsAdQsoA3PvBhyFdNtKzu0ZeG1+RkCgYBOPhOCR88QPTmQANkwIMH+\n0vt+KhSjE3dhX7rzVkhoNmYF5AaSSpQ3F1JUlYntjblMQVjLesGvWa4gwCOF87xC\nJxHL6LkbNjAyUGZp7to6/F4vTmKoC6Xu/jTRRy2SVjdqiIa0Pm0eLLfRHmSI06pS\n+zLmdpZv/msPfGibbHcXUA==\n-----END PRIVATE KEY-----\n",
+                ]
             ],
             'Apns' => [
                 'providerId' => ID::unique(),
@@ -97,6 +104,7 @@ class MessagingTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
+            var_dump($response['body']);
             \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
@@ -155,7 +163,12 @@ class MessagingTest extends Scope
             'Fcm' => [
                 'providerId' => $providers[7]['_id'],
                 'name' => 'FCM2',
-                'serverKey' => 'my-serverkey',
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    "project_id" => "omegle-copy",
+                    "private_key_id" => "ewfwefwefwefwef",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkAgEAAoIBAQCeKDbvv4XvGuNAOxZBcxoNnvbINKlq0FtiqgsqLAgDOMt\nGPEANfni+D7lZRrMPhZhcL4YCjAUg+0ZI0D9d2LGofasj9GlBb57SZc/ud2L9FZZ\nk5liXrUk0SUirffBUmj5F/XPTJ+JXc89qPtt15+hqx30h2ID/wxN0AhmViLikR3o\n3YBHAYq0NbmAfQSfdsHX+lvNKvsAxU+LatRPE3tVcvSd3ZnP0zlHYVmp6UCeBWeW\nOTcSPecCcVXmBdMPtHGWdrNG2op1CmHc8JeYJMQ4xgz3obQcOX9+3USsysANjgta\nb07m6xS3AgMBAAECggEAIeSTVVCRZrq36zk8VgJ/r/NE4r95xEk2K/K/Lvb0fx75\no0BO5gsAkYqvgzem/LrVFCEFRkDGMbAhVQ5Fw1pN2U6CyA0hL4jUqgALtMImKJdX\nDa6I5Gibwd5+qt9NOZSgC/Kq14zAxhfQE3U2hyatohyx3Rsz/3lmJo90bX7Jp5md\nGBDOB3pFBqyfUvyHgeqCgvJvidJjxmwArLhUF8szuDRvmSs0lGsfqYprK0sb9phL\nP7Z3qMJk1J4IDL2abSGrTcMP+hk7ju1iqo7WfhIQCvM1TD5dRjYg2IYPIAIzszWz\nxSA67eJpQGSFfOuk82g3UMhfCD2DY2mCE/zkeid9jQKBgQDSB2xA+LpQDX2nuoDR\niZbPYBitxQtkbjieYTR8vwrIzyAvRtOwjnVKsXLyIbUYyHd6RFRDPeBcHb39KuRO\nz7VljQKTVB5RYUmqeGilor0TFaKMnneC7GFH6mWOJyf16DU7bkQw27Pg1e3xbF28\n5ig7QYPqEaDKLg6TMSLsBhdRDQKBgQDAxj9jS9UOTmF3N9T1JFzWfUB2r+AgwE4N\nSITmG/fSz9rlSg+XPh2ijpSrboUbuY/GYq5aCIy1twx09eta07Y/uD/GKLYrk873\no0TxQrnHSKl82fCyd2JPG/W8ocGDnj3u0Dp+tBrLxDiZN2pRurnlkt7P3QUg/gEG\nAovyd3ij0wKBgBbA7x1q1ORvUbmmHuaUfV4iDwpkWoOa3U9rQIBzQfvXVKlKhwyN\nom9hIg7RUAlLToZUeLyAK5pPLpIK34kaP5Cs4iaL6mzumUh6mvu20b0Ljvyk/lWU\nvkVIQ5BO9alSatHxdDnG04n8IzcQgmdAmAMzadMl7cF5k+KmZB4l2sjRAoGAP8JS\nPNlcAntSKUhCG0KHojmTFK5fBvYT2rjdm+4sLYGp+KRiO7fDvXxDF+BaDi11rDv/\nRrAFOiTs7dJYoZXcdX7POQ9GEWu1zJont1RGde9Gf5Dl12E9FsU8pcMqagnwmggt\nELMpGbQwtBxsAdQsoA3PvBhyFdNtKzu0ZeG1+RkCgYBOPhOCR88QPTmQANkwIMH+\n0vt+KhSjE3dhX7rzVkhoNmYF5AaSSpQ3F1JUlYntjblMQVjLesGvWa4gwCOF87xC\nJxHL6LkbNjAyUGZp7to6/F4vTmKoC6Xu/jTRRy2SVjdqiIa0Pm0eLLfRHmSI06pS\n+zLmdpZv/msPfGibbHcXUA==\n-----END PRIVATE KEY-----\n",
+                ]
             ],
             'Apns' => [
                 'providerId' => $providers[8]['_id'],
@@ -374,7 +387,8 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender',
+                'fromEmail' => 'sender-email@my-domain.com',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
@@ -543,7 +557,8 @@ class MessagingTest extends Scope
 
         $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
-        $from = $emailDSN->getParam('from');
+        $fromName = $emailDSN->getParam('fromName');
+        $fromEmail = $emailDSN->getParam('fromEmail');
         $isEuRegion = $emailDSN->getParam('isEuRegion');
         $apiKey = $emailDSN->getPassword();
         $domain = $emailDSN->getUser();
@@ -560,7 +575,8 @@ class MessagingTest extends Scope
                 'name' => 'Mailgun1',
                 'apiKey' => $apiKey,
                 'domain' => $domain,
-                'from' => $from,
+                'fromName' => $fromName,
+                'fromEmail' => $fromEmail,
                 'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             ],
         ];
@@ -956,9 +972,9 @@ class MessagingTest extends Scope
 
         $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $pushDSN->getParam('to');
-        $serverKey = $pushDSN->getPassword();
+        $serviceAccountJSON = $pushDSN->getParam('saj');
 
-        if (empty($to) || empty($serverKey)) {
+        if (empty($to) || empty($serviceAccountJSON)) {
             $this->markTestSkipped('Push provider not configured');
         }
 
@@ -968,7 +984,12 @@ class MessagingTest extends Scope
             'variables' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
-                'serverKey' => $serverKey,
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    "project_id" => "token-test",
+                    "private_key_id" => "bitcoin-is-the-future",
+                    "private_key" => "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkAgEAAoIBAQCeKDbvv4XvGuNAOxZBcxoNnvbINKlq0FtiqgsqLAgDOMt\nGPEANfni+D7lZRrMPhZhcL4YCjAUg+0ZI0D9d2LGofasj9GlBb57SZc/ud2L9FZZ\nk5liXrUk0SUirffBUmj5F/XPTJ+JXc89qPtt15+hqx30h2ID/wxN0AhmViLikR3o\n3YBHAYq0NbmAfQSfdsHX+lvNKvsAxU+LatRPE3tVcvSd3ZnP0zlHYVmp6UCeBWeW\nOTcSPecCcVXmBdMPtHGWdrNG2op1CmHc8JeYJMQ4xgz3obQcOX9+3USsysANjgta\nb07m6xS3AgMBAAECggEAIeSTVVCRZrq36zk8VgJ/r/NE4r95xEk2K/K/Lvb0fx75\no0BO5gsAkYqvgzem/LrVFCEFRkDGMbAhVQ5Fw1pN2U6CyA0hL4jUqgALtMImKJdX\nDa6I5Gibwd5+qt9NOZSgC/Kq14zAxhfQE3U2hyatohyx3Rsz/3lmJo90bX7Jp5md\nGBDOB3pFBqyfUvyHgeqCgvJvidJjxmwArLhUF8szuDRvmSs0lGsfqYprK0sb9phL\nP7Z3qMJk1J4IDL2abSGrTcMP+hk7ju1iqo7WfhIQCvM1TD5dRjYg2IYPIAIzszWz\nxSA67eJpQGSFfOuk82g3UMhfCD2DY2mCE/zkeid9jQKBgQDSB2xA+LpQDX2nuoDR\niZbPYBitxQtkbjieYTR8vwrIzyAvRtOwjnVKsXLyIbUYyHd6RFRDPeBcHb39KuRO\nz7VljQKTVB5RYUmqeGilor0TFaKMnneC7GFH6mWOJyf16DU7bkQw27Pg1e3xbF28\n5ig7QYPqEaDKLg6TMSLsBhdRDQKBgQDAxj9jS9UOTmF3N9T1JFzWfUB2r+AgwE4N\nSITmG/fSz9rlSg+XPh2ijpSrboUbuY/GYq5aCIy1twx09eta07Y/uD/GKLYrk873\no0TxQrnHSKl82fCyd2JPG/W8ocGDnj3u0Dp+tBrLxDiZN2pRurnlkt7P3QUg/gEG\nAovyd3ij0wKBgBbA7x1q1ORvUbmmHuaUfV4iDwpkWoOa3U9rQIBzQfvXVKlKhwyN\nom9hIg7RUAlLToZUeLyAK5pPLpIK34kaP5Cs4iaL6mzumUh6mvu20b0Ljvyk/lWU\nvkVIQ5BO9alSatHxdDnG04n8IzcQgmdAmAMzadMl7cF5k+KmZB4l2sjRAoGAP8JS\nPNlcAntSKUhCG0KHojmTFK5fBvYT2rjdm+4sLYGp+KRiO7fDvXxDF+BaDi11rDv/\nRrAFOiTs7dJYoZXcdX7POQ9GEWu1zJont1RGde9Gf5Dl12E9FsU8pcMqagnwmggt\nELMpGbQwtBxsAdQsoA3PvBhyFdNtKzu0ZeG1+RkCgYBOPhOCR88QPTmQANkwIMH+\n0vt+KhSjE3dhX7rzVkhoNmYF5AaSSpQ3F1JUlYntjblMQVjLesGvWa4gwCOF87xC\nJxHL6LkbNjAyUGZp7to6/F4vTmKoC6Xu/jTRRy2SVjdqiIa0Pm0eLLfRHmSI06pS\n+zLmdpZv/msPfGibbHcXUA==\n-----END PRIVATE KEY-----\n",
+                ]
             ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([

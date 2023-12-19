@@ -608,21 +608,21 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serviceAccountJSON', '', new Text(0), 'FCM service account JSON.', true)
+    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $serverKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?array $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
 
-        if (!empty($serverKey)) {
-            $credentials['serverKey'] = $serverKey;
+        if (!\is_null($serviceAccountJSON)) {
+            $credentials['serviceAccountJSON'] = $serviceAccountJSON;
         }
 
-        if ($enabled === true && \array_key_exists('serverKey', $credentials)) {
+        if ($enabled === true && \array_key_exists('serviceAccountJSON', $credentials)) {
             $enabled = true;
         } else {
             $enabled = false;
@@ -1500,11 +1500,11 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
+    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?array $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1520,12 +1520,12 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($serverKey)) {
-            $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
+        if (!\is_null($serviceAccountJSON)) {
+            $provider->setAttribute('credentials', ['serviceAccountJSON' => $serviceAccountJSON]);
         }
 
         if ($enabled === true || $enabled === false) {
-            if ($enabled === true && \array_key_exists('serverKey', $provider->getAttribute('credentials'))) {
+            if ($enabled === true && \array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
                 $enabled = true;
             } else {
                 $enabled = false;

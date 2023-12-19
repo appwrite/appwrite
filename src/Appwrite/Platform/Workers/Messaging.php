@@ -148,8 +148,7 @@ class Messaging extends Action
             return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
-                }
-                else {
+                } else {
                     $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
 
                     if ($provider->isEmpty()) {
@@ -348,7 +347,7 @@ class Messaging extends Action
                 $credentials['bundleId'],
                 $credentials['endpoint']
             ),
-            'fcm' => new FCM($credentials['serverKey']),
+            'fcm' => new FCM($credentials['serviceAccountJSON']),
             default => null
         };
     }
