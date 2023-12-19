@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -1542,12 +1543,12 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
-    ->desc('Update SMTP configuration')
+    ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmtpConfiguration')
+    ->label('sdk.method', 'updateSmtp')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
@@ -1629,6 +1630,57 @@ App::patch('/v1/projects/:projectId/smtp')
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('smtp', $smtp));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::post('/v1/projects/:projectId/smtp/tests')
+    ->desc('Create SMTP test')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createSmtpTest')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('email', false, new Email(), 'Email')
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('queueForMails')
+    ->action(function (string $projectId, string $email, Response $response, Database $dbForConsole, Mail $queueForMails) {
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+        
+        $smtp = $project->getAttribute('smtp', []);
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        if ($smtpEnabled) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+        }
+
+        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+
+        $subject = 'SMTP test email from Appwrite';
+        $body = 'You\'re good to go. If you see this email all your SMTP settings are set correctly.';
+
+        $queueForMails
+            ->setSmtpHost($smtp['host'] ?? '')
+            ->setSmtpPort($smtp['port'] ?? '')
+            ->setSmtpUsername($smtp['username'] ?? '')
+            ->setSmtpPassword($smtp['password'] ?? '')
+            ->setSmtpSecure($smtp['secure'] ?? '')
+            ->setSmtpSenderEmail($senderEmail)
+            ->setSmtpSenderName($senderName)
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setRecipient($email)
+            ->trigger();
+
+        return $response->noContent();
     });
 
 App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
