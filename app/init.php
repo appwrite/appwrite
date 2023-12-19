@@ -72,6 +72,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -828,6 +829,9 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+$register->set('hooks', function () {
+    return new Hooks();
+});
 /*
  * Localization
  */
@@ -865,6 +869,10 @@ foreach ($locales as $locale) {
 // Runtime Execution
 App::setResource('logger', function ($register) {
     return $register->get('logger');
+}, ['register']);
+
+App::setResource('hooks', function ($register) {
+    return $register->get('hooks');
 }, ['register']);
 
 App::setResource('loggerBreadcrumbs', function () {
