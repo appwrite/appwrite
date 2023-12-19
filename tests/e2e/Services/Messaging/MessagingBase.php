@@ -231,7 +231,6 @@ trait MessagingBase
         ], [
             'topicId' => ID::unique(),
             'name' => 'my-app',
-            'description' => 'web app'
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('my-app', $response['body']['name']);

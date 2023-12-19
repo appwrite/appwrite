@@ -123,7 +123,9 @@ class Messaging extends Action
         /**
          * @var Document[] $providers
          */
-        $providers = [];
+        $providers = [
+            $primaryProvider->getId() => $primaryProvider
+        ];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
 
@@ -144,13 +146,16 @@ class Messaging extends Action
          */
         $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
             return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
-                if ($primaryProvider->getId() === $providerId) {
-                    $provider = $primaryProvider;
-                } else {
+                if (\array_key_exists($providerId, $providers)) {
+                    $provider = $providers[$providerId];
+                }
+                else {
                     $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
 
                     if ($provider->isEmpty()) {
                         $provider = $primaryProvider;
+                    } else {
+                        $providers[$providerId] = $provider;
                     }
                 }
 
@@ -183,7 +188,7 @@ class Messaging extends Action
 
                         try {
                             $response = new Response($provider->getAttribute('type'));
-                            $response->fromArray(\json_decode($adapter->send($data)));
+                            $response->fromArray($adapter->send($data));
 
                             $deliveredTotal += $response->getDeliveredTo();
                             $details[] = $response->getDetails();
@@ -193,7 +198,7 @@ class Messaging extends Action
                                 }
 
                                 // Deleting push targets when token has expired.
-                                if ($detail['error'] === 'Expired token.') {
+                                if ($detail['error'] === 'Expired device token.') {
                                     $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$detail['recipient']])]);
                                     if ($target instanceof Document && !$target->isEmpty()) {
                                         $dbForProject->deleteDocument('targets', $target->getId());
