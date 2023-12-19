@@ -278,7 +278,7 @@ App::post('/v1/account/sessions/email')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '')
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
         ;
 
         $queueForEvents
@@ -1242,7 +1242,7 @@ App::put('/v1/account/sessions/token')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $sessionSecret : '')
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $sessionSecret) : '')
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1377,7 +1377,7 @@ App::post('/v1/account/tokens/phone')
         );
 
         // Hide secret for clients
-        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
+        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1520,7 +1520,7 @@ App::post('/v1/account/sessions/anonymous')
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
             ->setAttribute('expire', $expire)
-            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '')
+            ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);

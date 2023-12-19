@@ -133,13 +133,13 @@ class AccountCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['secret']);
 
         $sessionId = $response['body']['$id'];
-        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+        $session = $response['body']['secret'];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge(
             [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
-                'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+                'x-appwrite-session' => $session
             ],
             $this->getHeaders()
         ));

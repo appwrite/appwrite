@@ -83,7 +83,8 @@ trait ProjectCustom
                 'health.read',
                 'rules.read',
                 'rules.write',
-                'sessions'
+                'sessions',
+                'account'
             ],
         ]);
 
