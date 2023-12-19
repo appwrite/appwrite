@@ -595,8 +595,8 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(204, $response['headers']['status-code']);
 
         $lastEmail = $this->getLastEmail();
-
-        $this->assertEquals($email, $lastEmail['from'][0]['address']);
+var_dump($lastEmail);
+        $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals('SMTP test email from Appwrite', $lastEmail['subject']);
 
         return $data;
