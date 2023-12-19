@@ -1653,7 +1653,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
-        
+
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
