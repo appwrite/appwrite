@@ -92,7 +92,7 @@ void main() {
 }
 ```
 
-Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulators has network access to the Appwrite server hostname or IP address.
+Before starting to send any API calls to your new Appwrite instance, make sure your Android or iOS emulator has network access to the Appwrite server hostname or IP address.
 
 When trying to connect to Appwrite from an emulator or a mobile device, `localhost` is the hostname of the device or emulator and not your local Appwrite instance. You should replace `localhost` with your private IP. You can also use a service like [Tunnelmole](https://github.com/robbie-cahill/tunnelmole-client) or [ngrok](https://ngrok.com/) to proxy the Appwrite API.
 
