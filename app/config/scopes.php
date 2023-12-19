@@ -1,8 +1,11 @@
 <?php
 
 return [ // List of publicly visible scopes
+    'account' => [
+        'description' => 'Access to make actions on behalf of a user account',
+    ],
     'sessions' => [
-        'description' => 'Access to read and write your project\'s sessions',
+        'description' => 'Access to create new user sessions',
     ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
