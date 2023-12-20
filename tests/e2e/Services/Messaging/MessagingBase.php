@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Messaging;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 
 trait MessagingBase
@@ -420,7 +421,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -433,7 +436,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['offset(1)'],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -445,7 +450,10 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(1)', 'offset(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -461,7 +469,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(-1)']
+            'queries' => [
+                Query::limit(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -471,7 +481,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['offset(-1)']
+            'queries' => [
+                Query::offset(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -481,7 +493,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['equal("$id", "asdf")']
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -491,7 +505,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['orderAsc("$id")']
+            'queries' => [
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -501,7 +517,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['cursorAsc("$id")']
+            'queries' => [
+                '{"method":"cursorAsc","attribute":"$id","values":[]}'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
