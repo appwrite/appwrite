@@ -1679,7 +1679,6 @@ class ProjectsConsoleClientTest extends Scope
 
         foreach ($response['body'] as $key => $value) {
             if (\preg_match($pattern, $key)) {
-                \var_dump('Matched key: ' . $key);
                 $matches[$key] = $value;
             }
         }
