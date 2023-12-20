@@ -91,6 +91,8 @@ class CreateInfMetric extends Action
                         ->get($db)
                         ->reclaim();
                 }
+
+                Console::log('Finished project ' . $project->getId() . ' ' . $project->getInternalId());
             }
 
             $sum = \count($projects);
@@ -119,8 +121,6 @@ class CreateInfMetric extends Action
             $id = \md5("_inf_{$metric}");
 
             $dbForProject->deleteDocument('stats_v2', $id);
-
-            echo "_inf_{$metric}  , $value \n";
 
             $dbForProject->createDocument('stats_v2', new Document([
                 '$id' => $id,
