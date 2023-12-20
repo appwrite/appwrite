@@ -545,10 +545,9 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteExecutionLogs(Document $project, callable $getProjectDB, callable $getProjectExecutionRetention): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
     {
         $dbForProject = $getProjectDB($project);
-        $datetime = $getProjectExecutionRetention($project);
         // Delete Executions
         $this->deleteByGroup('executions', [
             Query::lessThan('$createdAt', $datetime)
