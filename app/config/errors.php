@@ -200,6 +200,11 @@ return [
         'description' => 'The identity could not be found. Please sign in with OAuth provider to create identity first.',
         'code' => 404,
     ],
+    Exception::USER_IDENTITY_ALREADY_EXISTS => [
+        'name' => Exception::USER_IDENTITY_ALREADY_EXISTS,
+        'description' => 'The identity already exists.',
+        'code' => 409,
+    ],
     Exception::USER_UNAUTHORIZED => [
         'name' => Exception::USER_UNAUTHORIZED,
         'description' => 'The current user is not authorized to perform the requested action.',

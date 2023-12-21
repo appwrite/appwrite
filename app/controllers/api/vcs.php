@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
+use Utopia\Database\Exception\Duplicate;
 use Utopia\Validator\Host;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -368,7 +369,8 @@ App::get('/v1/vcs/github/callback')
 
                 $dbForConsole->updateDocument('identities', $identity->getId(), $identity);
             } else {
-                $identity = $dbForConsole->createDocument('identities', new Document([
+                try {
+                    $dbForConsole->createDocument('identities', new Document([
                     '$id' => ID::unique(),
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -383,7 +385,10 @@ App::get('/v1/vcs/github/callback')
                     'providerAccessToken' => $accessToken,
                     'providerRefreshToken' => $refreshToken,
                     'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-                ]));
+                    ]));
+                } catch (Duplicate) {
+                    throw new Exception(Exception::USER_IDENTITY_ALREADY_EXISTS);
+                }
             }
         }
 
