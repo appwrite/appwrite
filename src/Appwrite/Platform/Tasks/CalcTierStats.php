@@ -360,8 +360,8 @@ class CalcTierStats extends Action
                 }
                 $counter++;
             }
-        } catch (\Throwable) {
-            ;
+        } catch (\Throwable $t) {
+            Console::error("Error while counting buckets: {$project->getId()}");
         }
             $stats['Buckets'] = $counter;
             $stats['Files'] = $filesCount;
