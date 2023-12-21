@@ -227,6 +227,8 @@ class CalcTierStats extends Action
             if ($user !== false && !$user->isEmpty()) {
                 $stats['Organization Email'] = $user['email'];
             }
+        } else {
+            Console::error("Email was not found for this Organization ID :{$teamInternalId}");
         }
 
             /** Get Total Members */
