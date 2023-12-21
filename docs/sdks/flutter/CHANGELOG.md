@@ -1,3 +1,7 @@
+## 11.0.1
+
+* Fix between queries
+
 ## 11.0.0
 
 * Parameter `url` is now optional in the `createMembership` endpoint
