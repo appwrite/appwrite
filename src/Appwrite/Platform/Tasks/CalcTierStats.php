@@ -211,21 +211,19 @@ class CalcTierStats extends Action
 
             $teamInternalId = $project->getAttribute('teamInternalId', 0);
 
-            $team = $dbForConsole->findOne('teams', [
-                Query::equal('$internalId', [(string)$teamInternalId]),
+        if ($teamInternalId) {
+            $membership = $dbForConsole->findOne('memberships', [
+                Query::equal('teamInternalId', [$teamInternalId]),
             ]);
 
-            $stats['Organization Email'] = '';
+            if (!$membership || $membership->isEmpty()) {
+                Console::error('Membership not found. Skipping project : ' . $project->getId());
+            }
 
-        if ($team !== false && !$team->isEmpty()) {
-            $userInternalId = $team->getAttribute('userInternalId', 0);
-
-            $user = $dbForConsole->findOne('users', [
-                Query::equal('$internalId', [(string)$userInternalId]),
-            ]);
-
-            if ($user !== false && !$user->isEmpty()) {
-                $stats['Organization Email'] = $user['email'];
+            $userId = $membership->getAttribute('userId', null);
+            if ($userId) {
+                $user = $dbForConsole->getDocument('users', $userId);
+                $stats['Organization Email'] = $user->getAttribute('email', null);
             }
         } else {
             Console::error("Email was not found for this Organization ID :{$teamInternalId}");
@@ -271,8 +269,7 @@ class CalcTierStats extends Action
                     $limit = $periods[$range]['limit'];
                     $period = $periods[$range]['period'];
 
-
-                    $requestDocs = $dbForProject->find('stats', [
+                    $requestDocs = $dbForProject->find('stats_v2', [
                         Query::equal('metric', [$metric]),
                         Query::equal('period', [$period]),
                         Query::limit($limit),
