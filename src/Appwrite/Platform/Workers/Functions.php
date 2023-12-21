@@ -421,6 +421,16 @@ class Functions extends Action
 
             $error = $th->getMessage();
             $errorCode = $th->getCode();
+        } finally {
+            /** Trigger usage queue */
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_EXECUTIONS, 1)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
+                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
+                ->trigger()
+            ;
         }
 
         if ($function->getAttribute('logging')) {
@@ -472,15 +482,5 @@ class Functions extends Action
         if (!empty($error)) {
             throw new Exception($error, $errorCode);
         }
-
-        /** Trigger usage queue */
-        $queueForUsage
-            ->setProject($project)
-            ->addMetric(METRIC_EXECUTIONS, 1)
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-            ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000))// per project
-            ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000))
-            ->trigger()
-        ;
     }
 }

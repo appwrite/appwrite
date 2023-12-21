@@ -45,6 +45,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Hooks\Hooks;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -76,7 +77,8 @@ App::post('/v1/account')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -116,6 +118,8 @@ App::post('/v1/account')
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
+
+        $hooks->trigger('passwordValidator', [$project, $password, $user]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);

@@ -44,16 +44,49 @@ class Maintenance extends Action
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-            $this->notifyDeleteExecutionLogs($queueForDeletes);
-            $this->notifyDeleteAbuseLogs($queueForDeletes);
-            $this->notifyDeleteAuditLogs($queueForDeletes);
-            $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+
+            $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+                $queueForDeletes->setProject($project);
+
+                $this->notifyDeleteExecutionLogs($queueForDeletes);
+                $this->notifyDeleteAbuseLogs($queueForDeletes);
+                $this->notifyDeleteAuditLogs($queueForDeletes);
+                $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+                $this->notifyDeleteExpiredSessions($queueForDeletes);
+            });
+
             $this->notifyDeleteConnections($queueForDeletes);
-            $this->notifyDeleteExpiredSessions($queueForDeletes);
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
         }, $interval);
+    }
+
+    protected function foreachProject(Database $dbForConsole, callable $callback): void
+    {
+        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $sum = $limit;
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
+
+            $chunk++;
+
+            /** @var string[] $projectIds */
+            $sum = count($projects);
+
+            foreach ($projects as $project) {
+                $callback($project);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
     private function notifyDeleteExecutionLogs(Delete $queueForDeletes): void

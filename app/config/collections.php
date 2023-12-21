@@ -18,6 +18,63 @@ $auth = Config::getParam('auth', []);
  */
 
 $commonCollections = [
+    'cache' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'cache',
+        'name' => 'Cache',
+        'attributes' => [
+            [
+                '$id' => 'resource',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'accessedAt',
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => 'signature',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_accessedAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resource'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
+
     'users' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('users'),
@@ -1270,10 +1327,10 @@ $commonCollections = [
         ]
     ],
 
-    'stats' => [
+    'stats_v2' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('stats'),
-        'name' => 'Stats',
+        '$id' => ID::custom('stats_v2'),
+        'name' => 'stats_v2',
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),
@@ -2868,63 +2925,6 @@ $projectCollections = array_merge([
                 'attributes' => ['duration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
-            ],
-        ],
-    ],
-
-    'cache' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'cache',
-        'name' => 'Cache',
-        'attributes' => [
-            [
-                '$id' => 'resource',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'accessedAt',
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => 'signature',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => '_key_accessedAt',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['accessedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_resource',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resource'],
-                'lengths' => [],
-                'orders' => [],
             ],
         ],
     ],
