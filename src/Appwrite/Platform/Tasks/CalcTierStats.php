@@ -112,7 +112,9 @@ class CalcTierStats extends Action
                 Console::error('[Error] Line: ' . $th->getLine());
             }
         }
-            $queries = [];
+
+        $queries = [];
+
         if (!empty($after)) {
             Console::info("Iterating remaining projects after project with ID {$after}");
             $project = $dbForConsole->getDocument('projects', $after);
@@ -120,21 +122,22 @@ class CalcTierStats extends Action
         } else {
             Console::info("Iterating all projects");
         }
-            $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole, $csv) {
-                $projectId = $project->getId();
-                console::log("Project " . $projectId);
-                try {
-                    $dbForProject = call_user_func($getProjectDB, $project);
-                    $data = $this->getData($project, $dbForConsole, $dbForProject);
-                    $csv->insertOne($data);
-                } catch (\Throwable $th) {
-                    Console::error("Unexpected error occured with Project ID {$projectId}");
-                    Console::error('[Error] Type: ' . get_class($th));
-                    Console::error('[Error] Message: ' . $th->getMessage());
-                    Console::error('[Error] File: ' . $th->getFile());
-                    Console::error('[Error] Line: ' . $th->getLine());
-                }
-            });
+
+        $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole, $csv) {
+            $projectId = $project->getId();
+            console::log("Project " . $projectId);
+            try {
+                $dbForProject = call_user_func($getProjectDB, $project);
+                $data = $this->getData($project, $dbForConsole, $dbForProject);
+                $csv->insertOne($data);
+            } catch (\Throwable $th) {
+                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
+        });
 
         $this->sendMail($register);
     }
@@ -206,10 +209,10 @@ class CalcTierStats extends Action
     private function getData(Document $project, Database $dbForConsole, Database $dbForProject): array
     {
 
-            $stats['Project ID'] = $project->getId();
-            $stats['Organization ID']   = $project->getAttribute('teamId', null);
+        $stats['Project ID'] = $project->getId();
+        $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
-            $teamInternalId = $project->getAttribute('teamInternalId', 0);
+        $teamInternalId = $project->getAttribute('teamInternalId', 0);
 
         if ($teamInternalId) {
             $membership = $dbForConsole->findOne('memberships', [
@@ -229,8 +232,8 @@ class CalcTierStats extends Action
             Console::error("Email was not found for this Organization ID :{$teamInternalId}");
         }
 
-            /** Get Total Members */
-            $teamInternalId = $project->getAttribute('teamInternalId', null);
+        /** Get Total Members */
+        $teamInternalId = $project->getAttribute('teamInternalId', null);
         if ($teamInternalId) {
             $stats['Organization Members'] = $dbForConsole->count('memberships', [
                 Query::equal('$internalId', [(string)$teamInternalId])
@@ -239,70 +242,70 @@ class CalcTierStats extends Action
             $stats['Organization Members'] = 0;
         }
 
-            /** Get Total internal Teams */
+        /** Get Total internal Teams */
         try {
             $stats['Teams'] = $dbForProject->count('teams', []);
         } catch (\Throwable) {
             $stats['Teams'] = 0;
         }
 
-            /** Get Total users */
+        /** Get Total users */
         try {
             $stats['Users'] = $dbForProject->count('users', []);
         } catch (\Throwable) {
             $stats['Users'] = 0;
         }
 
-            /** Get Usage stats */
-            $range = '30d';
-            $periods = [
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ]
-            ];
+        /** Get Usage stats */
+        $range = '30d';
+        $periods = [
+            '30d' => [
+                'period' => '1d',
+                'limit' => 30,
+            ]
+        ];
 
-            $tmp = [];
-            $metrics = $this->usageStats;
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$tmp) {
-                foreach ($metrics as $metric => $name) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
+        $tmp = [];
+        $metrics = $this->usageStats;
+        Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$tmp) {
+            foreach ($metrics as $metric => $name) {
+                $limit = $periods[$range]['limit'];
+                $period = $periods[$range]['period'];
 
-                    $requestDocs = $dbForProject->find('stats_v2', [
-                        Query::equal('metric', [$metric]),
-                        Query::equal('period', [$period]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
+                $requestDocs = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
 
-                    $tmp[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        if (empty($requestDoc)) {
-                            continue;
-                        }
-
-                        $tmp[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
+                $tmp[$metric] = [];
+                foreach ($requestDocs as $requestDoc) {
+                    if (empty($requestDoc)) {
+                        continue;
                     }
 
-                    $tmp[$metric] = array_reverse($tmp[$metric]);
-                    $tmp[$metric] = array_sum(array_column($tmp[$metric], 'value'));
+                    $tmp[$metric][] = [
+                        'value' => $requestDoc->getAttribute('value'),
+                        'date' => $requestDoc->getAttribute('time'),
+                    ];
                 }
-            });
+
+                $tmp[$metric] = array_reverse($tmp[$metric]);
+                $tmp[$metric] = array_sum(array_column($tmp[$metric], 'value'));
+            }
+        });
 
         foreach ($tmp as $key => $value) {
             $stats[$metrics[$key]]  = $value;
         }
 
-            /**
-             * Workaround to combine network.inbound+network.outbound as network.
-             */
-            $stats['Network'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
-            unset($stats['Inbound']);
-            unset($stats['Outbound']);
+        /**
+         * Workaround to combine network.inbound+network.outbound as network.
+         */
+        $stats['Network'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
+        unset($stats['Inbound']);
+        unset($stats['Outbound']);
 
         try {
             /** Get Domains */
@@ -340,11 +343,11 @@ class CalcTierStats extends Action
             $stats['Platforms'] = 0;
         }
 
-            /** Get Files & Buckets */
-            $filesCount = 0;
-            $filesSum = 0;
-            $maxFileSize = 0;
-            $counter = 0;
+        /** Get Files & Buckets */
+        $filesCount = 0;
+        $filesSum = 0;
+        $maxFileSize = 0;
+        $counter = 0;
         try {
             $buckets = $dbForProject->find('buckets', []);
             foreach ($buckets as $bucket) {
@@ -362,10 +365,10 @@ class CalcTierStats extends Action
         } catch (\Throwable $t) {
             Console::error("Error while counting buckets: {$project->getId()}");
         }
-            $stats['Buckets'] = $counter;
-            $stats['Files'] = $filesCount;
-            $stats['Storage (bytes)'] = $filesSum;
-            $stats['Max File Size (bytes)'] = $maxFileSize;
+        $stats['Buckets'] = $counter;
+        $stats['Files'] = $filesCount;
+        $stats['Storage (bytes)'] = $filesSum;
+        $stats['Max File Size (bytes)'] = $maxFileSize;
 
 
         try {
@@ -375,28 +378,28 @@ class CalcTierStats extends Action
             $stats['Databases'] = 0;
         }
 
-            /** Get Total Functions */
+        /** Get Total Functions */
         try {
             $stats['Functions'] = $dbForProject->count('functions', []);
         } catch (\Throwable) {
             $stats['Functions'] = 0;
         }
 
-            /** Get Total Deployments */
+        /** Get Total Deployments */
         try {
             $stats['Deployments'] = $dbForProject->count('deployments', []);
         } catch (\Throwable) {
             $stats['Deployments'] = 0;
         }
 
-            /** Get Total Executions */
+        /** Get Total Executions */
         try {
             $stats['Executions'] = $dbForProject->count('executions', []);
         } catch (\Throwable) {
             $stats['Executions'] = 0;
         }
 
-            /** Get Total Migrations */
+        /** Get Total Migrations */
         try {
             $stats['Migrations'] = $dbForProject->count('migrations', []);
         } catch (\Throwable) {
