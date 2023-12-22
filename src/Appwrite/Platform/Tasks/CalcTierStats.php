@@ -114,7 +114,7 @@ class CalcTierStats extends Action
         }
 
         $queries = [];
-        
+
         if (!empty($after)) {
             Console::info("Iterating remaining projects after project with ID {$after}");
             $project = $dbForConsole->getDocument('projects', $after);
@@ -122,7 +122,7 @@ class CalcTierStats extends Action
         } else {
             Console::info("Iterating all projects");
         }
-        
+
         $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB, $dbForConsole, $csv) {
             $projectId = $project->getId();
             console::log("Project " . $projectId);
