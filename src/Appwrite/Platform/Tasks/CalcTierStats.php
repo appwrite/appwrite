@@ -219,7 +219,7 @@ class CalcTierStats extends Action
             ]);
 
             if (!$membership || $membership->isEmpty()) {
-                throw new \Exception('Membership not found. Skipping project : ' . $project->getId());
+                Console::error('Membership not found. Skipping project : ' . $project->getId());
             }
 
             $userId = $membership->getAttribute('userId', null);
@@ -227,6 +227,8 @@ class CalcTierStats extends Action
                 $user = $dbForConsole->getDocument('users', $userId);
                 $stats['Organization Email'] = $user->getAttribute('email', null);
             }
+        } else {
+            Console::error("Email was not found for this Organization ID :{$teamInternalId}");
         }
 
         /** Get Total Members */
