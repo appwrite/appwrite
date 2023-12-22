@@ -53,8 +53,8 @@ class CalcTierStats extends Action
 
     private array $usageStats = [
         'network.requests'  => 'Requests',
-        'network.inbound' => 'Inbound',
-        'network.outbound' => 'Outbound',
+        'network.inbound'   => 'Inbound',
+        'network.outbound'  => 'Outbound',
 
     ];
 
@@ -139,6 +139,7 @@ class CalcTierStats extends Action
             }
         });
 
+        $csv->output('stats.csv');
         $this->sendMail($register);
     }
 
@@ -208,11 +209,10 @@ class CalcTierStats extends Action
 
     private function getData(Document $project, Database $dbForConsole, Database $dbForProject): array
     {
-
         $stats['Project ID'] = $project->getId();
         $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
-        $teamInternalId = $project->getAttribute('teamInternalId', 0);
+        $teamInternalId = $project->getAttribute('teamInternalId', null);
 
         if ($teamInternalId) {
             $membership = $dbForConsole->findOne('memberships', [
@@ -220,7 +220,7 @@ class CalcTierStats extends Action
             ]);
 
             if (!$membership || $membership->isEmpty()) {
-                Console::error('Membership not found. Skipping project : ' . $project->getId());
+                throw new \Exception('Membership not found. Skipping project : ' . $project->getId());
             }
 
             $userId = $membership->getAttribute('userId', null);
@@ -228,15 +228,12 @@ class CalcTierStats extends Action
                 $user = $dbForConsole->getDocument('users', $userId);
                 $stats['Organization Email'] = $user->getAttribute('email', null);
             }
-        } else {
-            Console::error("Email was not found for this Organization ID :{$teamInternalId}");
         }
 
         /** Get Total Members */
-        $teamInternalId = $project->getAttribute('teamInternalId', null);
         if ($teamInternalId) {
             $stats['Organization Members'] = $dbForConsole->count('memberships', [
-                Query::equal('$internalId', [(string)$teamInternalId])
+                Query::equal('teamInternalId', [$teamInternalId])
             ]);
         } else {
             $stats['Organization Members'] = 0;
@@ -303,7 +300,7 @@ class CalcTierStats extends Action
         /**
          * Workaround to combine network.inbound+network.outbound as network.
          */
-        $stats['Network'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
+        $stats['Bandwidth'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
         unset($stats['Inbound']);
         unset($stats['Outbound']);
 
