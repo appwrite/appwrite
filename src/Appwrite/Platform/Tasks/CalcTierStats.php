@@ -139,7 +139,6 @@ class CalcTierStats extends Action
             }
         });
 
-        $csv->output('stats.csv');
         $this->sendMail($register);
     }
 
