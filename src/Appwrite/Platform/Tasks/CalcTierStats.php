@@ -53,8 +53,8 @@ class CalcTierStats extends Action
 
     private array $usageStats = [
         'network.requests'  => 'Requests',
-        'network.inbound' => 'Inbound',
-        'network.outbound' => 'Outbound',
+        'network.inbound'   => 'Inbound',
+        'network.outbound'  => 'Outbound',
 
     ];
 
@@ -208,11 +208,10 @@ class CalcTierStats extends Action
 
     private function getData(Document $project, Database $dbForConsole, Database $dbForProject): array
     {
-
         $stats['Project ID'] = $project->getId();
         $stats['Organization ID']   = $project->getAttribute('teamId', null);
 
-        $teamInternalId = $project->getAttribute('teamInternalId', 0);
+        $teamInternalId = $project->getAttribute('teamInternalId', null);
 
         if ($teamInternalId) {
             $membership = $dbForConsole->findOne('memberships', [
@@ -233,10 +232,9 @@ class CalcTierStats extends Action
         }
 
         /** Get Total Members */
-        $teamInternalId = $project->getAttribute('teamInternalId', null);
         if ($teamInternalId) {
             $stats['Organization Members'] = $dbForConsole->count('memberships', [
-                Query::equal('$internalId', [(string)$teamInternalId])
+                Query::equal('teamInternalId', [$teamInternalId])
             ]);
         } else {
             $stats['Organization Members'] = 0;
@@ -303,7 +301,7 @@ class CalcTierStats extends Action
         /**
          * Workaround to combine network.inbound+network.outbound as network.
          */
-        $stats['Network'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
+        $stats['Bandwidth'] = ($stats['Inbound'] ?? 0) + ($stats['Outbound'] ?? 0);
         unset($stats['Inbound']);
         unset($stats['Outbound']);
 
