@@ -795,10 +795,10 @@ $register->set('pools', function () {
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                             return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                                // No need to set PDO::ATTR_ERRMODE it is overwitten in PDOProxy
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_ERRMODE => PDO::ERRMODE_SILENT, // Overwrite in PDOProxy
                                 PDO::ATTR_EMULATE_PREPARES => true,
                                 PDO::ATTR_STRINGIFY_FETCHES => true
                             ));
