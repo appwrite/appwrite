@@ -362,6 +362,16 @@ return [
         'beta' => false,
         'mock' => false,
     ],
+    'zoho' => [
+        'name' => 'Zoho',
+        'developers' => 'https://zoho.com/accounts/protocol/oauth.html',
+        'icon' => 'icon-zoho',
+        'enabled' => true,
+        'sandbox' => false,
+        'form' => false,
+        'beta' => false,
+        'mock' => false,
+    ],
     'zoom' => [
         'name' => 'Zoom',
         'developers' => 'https://marketplace.zoom.us/docs/guides/auth/oauth/',
