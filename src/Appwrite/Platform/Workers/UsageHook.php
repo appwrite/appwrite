@@ -40,6 +40,7 @@ class UsageHook extends Usage
     public function action($register, $cache, $pools): void
     {
         Timer::tick(30000, function () use ($register, $cache, $pools) {
+            var_dump('innn');
 
             $offset = count(self::$stats);
             $projects = array_slice(self::$stats, 0, $offset, true);
