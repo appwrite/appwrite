@@ -39,7 +39,7 @@ class UsageHook extends Usage
     public function action($register, $getProjectDB): void
     {
 
-            $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '50000');
+            $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '60000');
             Timer::tick($interval, function () use ($register, $getProjectDB) {
                 $offset = count(self::$stats);
                 $projects = array_slice(self::$stats, 0, $offset, true);
