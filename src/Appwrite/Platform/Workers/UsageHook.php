@@ -9,6 +9,7 @@ use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Swoole\Timer;
+use Utopia\Registry\Registry;
 
 class UsageHook extends Usage
 {
@@ -23,83 +24,70 @@ class UsageHook extends Usage
         $this
             ->setType(Action::TYPE_WORKER_START)
             ->inject('register')
-            ->inject('cache')
-            ->inject('pools')
-            ->callback(function ($register, $cache, $pools) {
-                $this->action($register, $cache, $pools);
+            ->inject('getProjectDB')
+            ->callback(function ($register, callable $getProjectDB) {
+                $this->action($register, $getProjectDB);
             })
         ;
     }
 
     /**
      * @param $register
-     * @param $cache
-     * @param $pools
+     * @param $getProjectDB
      * @return void
      */
-    public function action($register, $cache, $pools): void
+    public function action($register, $getProjectDB): void
     {
-        Timer::tick(30000, function () use ($register, $cache, $pools) {
 
-            $offset = count(self::$stats);
-            $projects = array_slice(self::$stats, 0, $offset, true);
-            array_splice(self::$stats, 0, $offset);
+            $interval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '60000');
+            Timer::tick($interval, function () use ($register, $getProjectDB) {
+                $offset = count(self::$stats);
+                $projects = array_slice(self::$stats, 0, $offset, true);
+                array_splice(self::$stats, 0, $offset);
+                foreach ($projects as $data) {
+                    try {
+                        $dbForProject = $getProjectDB($data['project']);
+                        foreach ($data['keys'] ?? [] as $key => $value) {
+                            if ($value == 0) {
+                                continue;
+                            }
 
-            foreach ($projects as $projectInternalId => $project) {
-                try {
-                    $dbForProject = new Database(
-                        $pools
-                            ->get($project['database'])
-                            ->pop()
-                            ->getResource(),
-                        $cache
-                    );
+                            foreach ($this->periods as $period => $format) {
+                                $time = 'inf' === $period ? null : date($format, time());
+                                $id = \md5("{$time}_{$period}_{$key}");
 
-                    $dbForProject->setNamespace('_' . $projectInternalId);
-
-                    foreach ($project['keys'] ?? [] as $key => $value) {
-                        if ($value == 0) {
-                            continue;
-                        }
-
-                        foreach ($this->periods as $period => $format) {
-                            $time = 'inf' === $period ? null : date($format, time());
-                            $id = \md5("{$time}_{$period}_{$key}");
-
-                            try {
-                                $dbForProject->createDocument('stats_v2', new Document([
+                                try {
+                                    $dbForProject->createDocument('stats_v2', new Document([
                                     '$id' => $id,
                                     'period' => $period,
                                     'time' => $time,
                                     'metric' => $key,
                                     'value' => $value,
                                     'region' => App::getEnv('_APP_REGION', 'default'),
-                                ]));
-                            } catch (Duplicate $th) {
-                                if ($value < 0) {
-                                    $dbForProject->decreaseDocumentAttribute(
-                                        'stats_v2',
-                                        $id,
-                                        'value',
-                                        abs($value)
-                                    );
-                                } else {
-                                    $dbForProject->increaseDocumentAttribute(
-                                        'stats_v2',
-                                        $id,
-                                        'value',
-                                        $value
-                                    );
+                                    ]));
+                                } catch (Duplicate $th) {
+                                    if ($value < 0) {
+                                        $dbForProject->decreaseDocumentAttribute(
+                                            'stats_v2',
+                                            $id,
+                                            'value',
+                                            abs($value)
+                                        );
+                                    } else {
+                                        $dbForProject->increaseDocumentAttribute(
+                                            'stats_v2',
+                                            $id,
+                                            'value',
+                                            $value
+                                        );
+                                    }
                                 }
                             }
                         }
+                    } catch (\Exception $e) {
+                        console::error("[logger] " . " {DateTime::now()} " .  " {$data->getInternalId()} " . " {$e->getMessage()}");
                     }
-                } catch (\Exception $e) {
-                    console::error("[logger] " . " {DateTime::now()} " .  " {$projectInternalId} " . " {$e->getMessage()}");
-                } finally {
-                    $pools->reclaim();
                 }
-            }
-        });
+            });
     }
 }
