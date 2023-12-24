@@ -44,7 +44,6 @@ class UsageHook extends Usage
                 $offset = count(self::$stats);
                 $projects = array_slice(self::$stats, 0, $offset, true);
                 array_splice(self::$stats, 0, $offset);
-                var_dump($projects);
                 foreach ($projects as $data) {
                     try {
                         $dbForProject = $getProjectDB($data['project']);
