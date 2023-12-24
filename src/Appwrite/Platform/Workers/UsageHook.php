@@ -66,6 +66,9 @@ class UsageHook extends Usage
                             $time = 'inf' === $period ? null : date($format, time());
                             $id = \md5("{$time}_{$period}_{$key}");
 
+                            var_dump($key);
+                            var_dump($value);
+                            var_dump('-------------');
                             try {
                                 $dbForProject->createDocument('stats_v2', new Document([
                                     '$id' => $id,
