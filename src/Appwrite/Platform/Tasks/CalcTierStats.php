@@ -9,7 +9,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Query;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;

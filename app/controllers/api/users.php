@@ -26,7 +26,7 @@ use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Validator\UID;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
@@ -424,7 +424,7 @@ App::get('/v1/users')
 
         $response->dynamic(new Document([
             'users' => $dbForProject->find('users', $queries),
-            'total' => $dbForProject->count('users', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('users', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_USER_LIST);
     });
 
@@ -592,7 +592,7 @@ App::get('/v1/users/:userId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
@@ -691,7 +691,7 @@ App::get('/v1/users/identities')
 
         $response->dynamic(new Document([
             'identities' => $dbForProject->find('identities', $queries),
-            'total' => $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('identities', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_IDENTITY_LIST);
     });
 

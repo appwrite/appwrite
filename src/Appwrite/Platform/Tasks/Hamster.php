@@ -2,13 +2,13 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Utopia\Database\Database;
 use Appwrite\Network\Validator\Origin;
 use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Analytics\Adapter\Mixpanel;
@@ -98,10 +98,10 @@ class Hamster extends Action
                 $statsPerProject['project_name'] = $project->getAttribute('name');
 
                 /** Total Project Variables */
-                $statsPerProject['custom_variables'] = $dbForProject->count('variables', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_variables'] = $dbForProject->count('variables', [], $dbForProject->getLimitCount());
 
                 /** Total Migrations */
-                $statsPerProject['custom_migrations'] = $dbForProject->count('migrations', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_migrations'] = $dbForProject->count('migrations', [], $dbForProject->getLimitCount());
 
                 /** Get Custom SMTP */
                 $smtp = $project->getAttribute('smtp', null);
@@ -121,40 +121,40 @@ class Hamster extends Action
                 /** Get total relationship attributes */
                 $statsPerProject['custom_relationship_attributes'] = $dbForProject->count('attributes', [
                     Query::equal('type', ['relationship'])
-                ], APP_LIMIT_COUNT);
+                ], $dbForProject->getLimitCount());
 
                 /** Get Total Functions */
-                $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_functions'] = $dbForProject->count('functions', [], $dbForProject->getLimitCount());
 
                 foreach (\array_keys(Config::getParam('runtimes')) as $runtime) {
                     $statsPerProject['custom_functions_' . $runtime] = $dbForProject->count('functions', [
                         Query::equal('runtime', [$runtime]),
-                    ], APP_LIMIT_COUNT);
+                    ], $dbForProject->getLimitCount());
                 }
 
                 /** Get Total Deployments */
-                $statsPerProject['custom_deployments'] = $dbForProject->count('deployments', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_deployments'] = $dbForProject->count('deployments', [], $dbForProject->getLimitCount());
                 $statsPerProject['custom_deployments_manual'] = $dbForProject->count('deployments', [
                     Query::equal('type', ['manual'])
-                ], APP_LIMIT_COUNT);
+                ], $dbForProject->getLimitCount());
                 $statsPerProject['custom_deployments_git'] = $dbForProject->count('deployments', [
                     Query::equal('type', ['vcs'])
-                ], APP_LIMIT_COUNT);
+                ], $dbForProject->getLimitCount());
 
                 /** Get VCS repos connected */
                 $statsPerProject['custom_vcs_repositories'] = $dbForConsole->count('repositories', [
                     Query::equal('projectInternalId', [$project->getInternalId()])
-                ], APP_LIMIT_COUNT);
+                ], $dbForProject->getLimitCount());
 
                 /** Get Total Teams */
-                $statsPerProject['custom_teams'] = $dbForProject->count('teams', [], APP_LIMIT_COUNT);
+                $statsPerProject['custom_teams'] = $dbForProject->count('teams', [], $dbForProject->getLimitCount());
 
                 /** Get Total Members */
                 $teamInternalId = $project->getAttribute('teamInternalId', null);
                 if ($teamInternalId) {
                     $statsPerProject['custom_organization_members'] = $dbForConsole->count('memberships', [
                         Query::equal('teamInternalId', [$teamInternalId])
-                    ], APP_LIMIT_COUNT);
+                    ], $dbForProject->getLimitCount());
                 } else {
                     $statsPerProject['custom_organization_members'] = 0;
                 }
@@ -180,13 +180,13 @@ class Hamster extends Action
                 /** Get Domains */
                 $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT)
+                    Query::limit($dbForProject->getLimitCount())
                 ]);
 
                 /** Get Platforms */
                 $platforms = $dbForConsole->find('platforms', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT)
+                    Query::limit($dbForProject->getLimitCount())
                 ]);
 
                 $statsPerProject['custom_platforms_web'] = sizeof(array_filter($platforms, function ($platform) {
@@ -215,7 +215,7 @@ class Hamster extends Action
 
                 $statsPerProject['custom_platforms_api_keys'] = $dbForConsole->count('keys', [
                     Query::equal('projectInternalId', [$project->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT)
+                    Query::limit($dbForProject->getLimitCount())
                 ]);
 
                 /** Get Usage $statsPerProject */
@@ -412,7 +412,7 @@ class Hamster extends Action
                 /** Number of projects in this organization */
                 $statsPerOrganization['projects'] = $dbForConsole->count('projects', [
                     Query::equal('teamId', [$document->getId()]),
-                    Query::limit(APP_LIMIT_COUNT)
+                    Query::limit($dbForProject->getLimitCount())
                 ]);
 
                 if (!isset($statsPerOrganization['email'])) {
@@ -451,7 +451,7 @@ class Hamster extends Action
                 /** Number of teams this user is a part of */
                 $statsPerUser['memberships'] = $dbForConsole->count('memberships', [
                     Query::equal('userInternalId', [$document->getInternalId()]),
-                    Query::limit(APP_LIMIT_COUNT)
+                    Query::limit($dbForProject->getLimitCount())
                 ]);
 
                 if (!isset($statsPerUser['email'])) {

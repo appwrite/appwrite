@@ -9,7 +9,7 @@ use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;

@@ -16,7 +16,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Registry\Registry;
 use Utopia\Request;
 use Utopia\Validator\WhiteList;

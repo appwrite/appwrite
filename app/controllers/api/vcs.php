@@ -5,7 +5,7 @@ use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Utopia\Validator\Host;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -995,7 +995,7 @@ App::get('/v1/vcs/installations')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForConsole->find('installations', $queries);
-        $total = $dbForConsole->count('installations', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForConsole->count('installations', $filterQueries, $dbForProject->getLimitCount());
 
         $response->dynamic(new Document([
             'installations' => $results,

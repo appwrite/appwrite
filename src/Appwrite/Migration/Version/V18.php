@@ -4,7 +4,7 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;

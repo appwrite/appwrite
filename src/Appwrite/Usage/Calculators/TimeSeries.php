@@ -4,7 +4,7 @@ namespace Appwrite\Usage\Calculators;
 
 use Utopia\App;
 use Appwrite\Usage\Calculator;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;

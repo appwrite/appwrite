@@ -3,7 +3,7 @@
 namespace Appwrite\Utopia\Request\Filters;
 
 use Appwrite\Utopia\Request\Filter;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Query;
 use Utopia\Database\Helpers\Role;

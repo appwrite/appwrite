@@ -29,9 +29,9 @@ services:
       - --entrypoints.appwrite_websecure.address=:443
       - --accesslog=true
     ports:
-      - 80:80
+      - 2080:80
       - 8080:80
-      - 443:443
+      - 2443:443
       - 9500:8080
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -121,6 +121,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_SMTP_HOST
       - _APP_SMTP_PORT
       - _APP_SMTP_SECURE
@@ -234,6 +235,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_USAGE_STATS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
@@ -264,6 +266,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -324,6 +327,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_STORAGE_DEVICE
       - _APP_STORAGE_S3_ACCESS_KEY
       - _APP_STORAGE_S3_SECRET
@@ -376,6 +380,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_WORKERS_NUM
@@ -411,6 +416,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_VCS_GITHUB_APP_NAME
@@ -478,6 +484,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -508,6 +515,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_FUNCTIONS_TIMEOUT
       - _APP_FUNCTIONS_BUILD_TIMEOUT
       - _APP_FUNCTIONS_CPUS
@@ -607,6 +615,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_MIGRATIONS_FIREBASE_CLIENT_ID
@@ -640,6 +649,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_MAINTENANCE_INTERVAL
       - _APP_MAINTENANCE_RETENTION_EXECUTION
       - _APP_MAINTENANCE_RETENTION_CACHE
@@ -671,6 +681,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
       - _APP_INFLUXDB_HOST
       - _APP_INFLUXDB_PORT
       - _APP_USAGE_AGGREGATION_INTERVAL
@@ -708,6 +719,7 @@ services:
       - _APP_DB_SCHEMA
       - _APP_DB_USER
       - _APP_DB_PASS
+      - _APP_DB_LIMIT_COUNT
 
   appwrite-assistant:
     container_name: appwrite-assistant

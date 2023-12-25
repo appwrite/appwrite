@@ -4,7 +4,7 @@ namespace Appwrite\Migration;
 
 use Swoole\Runtime;
 use Utopia\Database\Document;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;

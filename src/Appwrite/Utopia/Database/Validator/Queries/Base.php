@@ -10,7 +10,7 @@ use Utopia\Database\Validator\Query\Cursor;
 use Utopia\Database\Validator\Query\Filter;
 use Utopia\Database\Validator\Query\Order;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 
 class Base extends Queries

@@ -11,7 +11,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Migrations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -411,7 +411,7 @@ App::get('/v1/migrations')
 
         $response->dynamic(new Document([
             'migrations' => $dbForProject->find('migrations', $queries),
-            'total' => $dbForProject->count('migrations', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('migrations', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_MIGRATION_LIST);
     });
 

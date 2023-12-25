@@ -12,7 +12,7 @@ use Executor\Executor;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
