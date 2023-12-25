@@ -621,7 +621,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('openSSLIV', $openSSLIV)
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
-                    
+
                     // Validate create permission
                     $validator = new Authorization(Database::PERMISSION_CREATE);
                     if (!$validator->isValid($bucket->getCreate())) {
