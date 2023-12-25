@@ -85,7 +85,7 @@ class UsageHook extends Usage
                             }
                         }
                     } catch (\Exception $e) {
-                        console::error("[logger] " . " {DateTime::now()} " .  " {$data->getInternalId()} " . " {$e->getMessage()}");
+                        console::error("[logger] " . " {DateTime::now()} " .  " {$data['project']->getInternalId()} " . " {$e->getMessage()}");
                     }
                 }
             });
