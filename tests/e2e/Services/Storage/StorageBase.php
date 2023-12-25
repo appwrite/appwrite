@@ -107,9 +107,7 @@ trait StorageBase
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::any())
                 ],
             ]);
             $counter++;
