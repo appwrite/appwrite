@@ -126,7 +126,7 @@ trait AccountBase
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         // apiKey is only available in custom client test
         $apiKey = $this->getProject()['apiKey'];
@@ -993,7 +993,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1059,7 +1059,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1141,7 +1141,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $data['session'] = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         return $data;
     }
@@ -1417,7 +1417,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['userId']);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
