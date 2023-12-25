@@ -3194,6 +3194,67 @@ $projectCollections = array_merge([
             ]
         ],
     ],
+
+    'fileTokens' => [
+        '$collection' => ID::custom(Database::METADATA),
+        '$id' => ID::custom('fileTokens'),
+        'name' => 'File Tokens',
+        'attributes' => [
+            [
+                '$id' => ID::custom('fileId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('bucketId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('secret'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 2048,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['encrypt'],
+            ],
+            [
+                '$id' => ID::custom('expiryDate'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ]
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_file_id_bucket_id',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['bucketId', 'fileId'],
+                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
+                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
+            ]
+        ],
+    ],
 ], $commonCollections);
 
 $consoleCollections = array_merge([
