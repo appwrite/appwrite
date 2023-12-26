@@ -385,6 +385,13 @@ class CreateInfMetric extends Action
         $this->createInfMetric($dbForProject, 'users', $users);
     }
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Structure
+     * @throws Exception\Restricted
+     * @throws Exception\Conflict
+     * @throws Exception
+     */
     private function sessions(Database $dbForProject)
     {
         $users = $dbForProject->count('sessions');
