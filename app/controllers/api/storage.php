@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Hash\Sha;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -42,8 +41,9 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
+use Utopia\Validator\Nullable;
+use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 App::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -1487,7 +1487,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
 /** File Tokens */
 App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
-    ->desc('Create file')
+    ->desc('Create file token')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('audits.event', 'fileToken.create')
@@ -1495,7 +1495,7 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('audits.resource', 'token/{response.$id}')
     ->label('usage.metric', 'fileTokens.{scope}.requests.create')
     ->label('usage.params', ['bucketId:{request.bucketId}', 'fileId:{request.fileId}'])
-    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId},chunkId:{chunkId}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
@@ -1506,18 +1506,14 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_TOKEN)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
-    ->param('fileId', '', new CustomId(), 'File ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('fileId', '', new UID(), 'File unique ID.')
+    ->param('expiryDate', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
-    ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceFiles, Device $deviceLocal) {
-
+    ->action(function (string $bucketId, string $fileId, ?string $expiryDate, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1549,6 +1545,7 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
             'secret' => Auth::codeGenerator(128),
             'bucketId' => $bucketId,
             'fileId' => $fileId,
+            'expiryDate' => $expiryDate,
             '$permissions' => $permissions
         ]));
 
