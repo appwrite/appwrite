@@ -1545,6 +1545,8 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
             'secret' => Auth::codeGenerator(128),
             'bucketId' => $bucketId,
             'fileId' => $fileId,
+            'bucketInternalId' => $bucket->getInternalId(),
+            'fileInternalId' => $file->getInternalId(),
             'expiryDate' => $expiryDate,
             '$permissions' => $permissions
         ]));
@@ -1570,7 +1572,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFileTokens')
-    ->label('sdk.description', '/docs/references/storage/list-files.md')
+    ->label('sdk.description', '/docs/references/storage/list-file-tokens.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_FILE_TOKEN_LIST)
@@ -1579,8 +1581,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('mode')
-    ->action(function (string $bucketId, string $fileId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->action(function (string $bucketId, string $fileId, array $queries, Response $response, Database $dbForProject) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1625,6 +1626,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
             $cursor->setValue($cursorDocument);
         }
 
+        $queries = [...$queries, Query::equal('bucketInternalId', [$bucket->getInternalId()]), Query::equal('fileInternalId', [$file->getInternalId()])];
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
