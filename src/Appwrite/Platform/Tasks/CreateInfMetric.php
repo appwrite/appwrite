@@ -13,6 +13,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
+use Utopia\Validator\Text;
 
 class CreateInfMetric extends Action
 {
@@ -26,102 +27,147 @@ class CreateInfMetric extends Action
 
         $this
             ->desc('Create infinity stats metric')
-            ->inject('pools')
-            ->inject('cache')
+            ->param('after', '', new Text(36), 'After cursor', true)
+            ->param('projectId', '', new Text(36), 'Select project to validate', true)
+            ->inject('getProjectDB')
             ->inject('dbForConsole')
-            ->inject('register')
-            ->callback(function (Group $pools, Cache $cache, Database $dbForConsole, Registry $register) {
-                $this->action($pools, $cache, $dbForConsole, $register);
+            ->callback(function (string $after, string $projectId, callable $getProjectDB, Database $dbForConsole) {
+                $this->action($after, $projectId, $getProjectDB, $dbForConsole);
             });
     }
 
 
-    public function action(Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
+    /**
+     * @throws Exception
+     * @throws Exception\Timeout
+     * @throws Exception\Query
+     */
+    public function action(string $after, string $projectId, callable $getProjectDB, Database $dbForConsole): void
     {
 
         Console::title('Create infinity metric V1');
         Console::success(APP_NAME . ' Create infinity metric started');
 
-
-        /* Initialise new Utopia app */
-        $app = new App('UTC');
-        $console = $app->getResource('console');
-        $projects = [$console];
-
-        /** Database connections */
-        $totalProjects = $dbForConsole->count('projects');
-        Console::success("Found a total of: {$totalProjects} projects");
-
-        $count = 0;
-        $limit = 30;
-        $sum = 30;
-        $offset = 0;
-        while (!empty($projects)) {
-            foreach ($projects as $project) {
-
-                /**
-                 * Skip user projects with id 'console'
-                 */
-                if ($project->getId() === 'console') {
-                    continue;
-                }
+        if (!empty($projectId)) {
+            try {
+                $project = $dbForConsole->getDocument('projects', $projectId);
+                $dbForProject = call_user_func($getProjectDB, $project);
+                $this->getUsageData($dbForProject, $project);
+            } catch (\Throwable $th) {
+                Console::error("Unexpected error occured with Project ID {$projectId}");
+                Console::error('[Error] Type: ' . get_class($th));
+                Console::error('[Error] Message: ' . $th->getMessage());
+                Console::error('[Error] File: ' . $th->getFile());
+                Console::error('[Error] Line: ' . $th->getLine());
+            }
+        } else {
+            $queries = [];
+            if (!empty($after)) {
+                Console::info("Iterating remaining projects after project with ID {$after}");
+                $project = $dbForConsole->getDocument('projects', $after);
+                $queries = [Query::cursorAfter($project)];
+            } else {
+                Console::info("Iterating all projects");
+            }
+            $this->foreachDocument($dbForConsole, 'projects', $queries, function (Document $project) use ($getProjectDB) {
+                $projectId = $project->getId();
 
                 try {
-                    $db = $project->getAttribute('database');
-                    $adapter = $pools
-                        ->get($db)
-                        ->pop()
-                        ->getResource();
-
-                    $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
-                    $dbForProject->setNamespace('_' . $project->getInternalId());
-
-                    $this->network($dbForProject);
-                    $this->sessions($dbForProject);
-                    $this->users($dbForProject);
-                    $this->teams($dbForProject);
-                    $this->databases($dbForProject);
-                    $this->functions($dbForProject);
-                    $this->storage($dbForProject);
+                    $dbForProject = call_user_func($getProjectDB, $project);
+                    $this->getUsageData($dbForProject, $project);
                 } catch (\Throwable $th) {
-                    var_dump($th->getMessage());
-                } finally {
-                    $pools
-                        ->get($db)
-                        ->reclaim();
+                    Console::error("Unexpected error occured with Project ID {$projectId}");
+                    Console::error('[Error] Type: ' . get_class($th));
+                    Console::error('[Error] Message: ' . $th->getMessage());
+                    Console::error('[Error] File: ' . $th->getFile());
+                    Console::error('[Error] Line: ' . $th->getLine());
                 }
-
-                Console::log('Finished project ' . $project->getId() . ' ' . $project->getInternalId());
-            }
-
-            $sum = \count($projects);
-
-            $projects = $dbForConsole->find('projects', [
-                Query::limit($limit),
-                Query::offset($offset),
-            ]);
-
-            $offset = $offset + $limit;
-            $count = $count + $sum;
+            });
         }
-
-        Console::log('Iterated through ' . $count - 1 . '/' . $totalProjects . ' projects');
     }
 
     /**
+     * @param Database $database
+     * @param string $collection
+     * @param array $queries
+     * @param callable|null $callback
+     * @return void
+     * @throws Exception
+     * @throws Exception\Query
+     * @throws Exception\Timeout
+     */
+    private function foreachDocument(Database $database, string $collection, array $queries = [], callable $callback = null): void
+    {
+        $limit = 1000;
+        $results = [];
+        $sum = $limit;
+        $latestDocument = null;
+
+        while ($sum === $limit) {
+            $newQueries = $queries;
+
+            if ($latestDocument != null) {
+                array_unshift($newQueries, Query::cursorAfter($latestDocument));
+            }
+            $newQueries[] = Query::limit($limit);
+            $results = $database->find($collection, $newQueries);
+
+            if (empty($results)) {
+                return;
+            }
+
+            $sum = count($results);
+
+            foreach ($results as $document) {
+                if (is_callable($callback)) {
+                    $callback($document);
+                }
+            }
+            $latestDocument = $results[array_key_last($results)];
+        }
+    }
+
+
+    /**
+     * @param Database $dbForProject
+     * @param Document $project
+     * @return void
+     */
+    private function getUsageData(Database $dbForProject, Document $project): void
+    {
+        try {
+            $this->network($dbForProject);
+            $this->sessions($dbForProject);
+            $this->users($dbForProject);
+            $this->teams($dbForProject);
+            $this->databases($dbForProject);
+            $this->functions($dbForProject);
+            $this->storage($dbForProject);
+        } catch (\Throwable $th) {
+            var_dump($th->getMessage());
+        }
+
+        Console::log('Finished project ' . $project->getId() . ' ' . $project->getInternalId());
+    }
+
+
+    /**
+     * @param Database $dbForProject
      * @param string $metric
      * @param int|float $value
      * @return void
+     * @throws Exception
+     * @throws Exception\Authorization
+     * @throws Exception\Conflict
+     * @throws Exception\Restricted
+     * @throws Exception\Structure
      */
     private function createInfMetric(database $dbForProject, string $metric, int|float $value): void
     {
 
         try {
             $id = \md5("_inf_{$metric}");
-
             $dbForProject->deleteDocument('stats_v2', $id);
-
             $dbForProject->createDocument('stats_v2', new Document([
                 '$id' => $id,
                 'metric' => $metric,
@@ -153,7 +199,12 @@ class CreateInfMetric extends Action
     }
 
     /**
+     * @param Database $dbForProject
      * @throws Exception
+     * @throws Exception\Authorization
+     * @throws Exception\Conflict
+     * @throws Exception\Restricted
+     * @throws Exception\Structure
      */
     private function network(database $dbForProject)
     {
@@ -163,6 +214,15 @@ class CreateInfMetric extends Action
     }
 
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Restricted
+     * @throws Exception\Conflict
+     * @throws Exception\Timeout
+     * @throws Exception\Structure
+     * @throws Exception
+     * @throws Exception\Query
+     */
     private function storage(database $dbForProject)
     {
         $bucketsCount = 0;
@@ -188,6 +248,15 @@ class CreateInfMetric extends Action
     }
 
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Timeout
+     * @throws Exception\Restricted
+     * @throws Exception\Structure
+     * @throws Exception\Conflict
+     * @throws Exception
+     * @throws Exception\Query
+     */
     private function functions(Database $dbForProject)
     {
         $functionsCount = 0;
@@ -268,6 +337,15 @@ class CreateInfMetric extends Action
         $this->createInfMetric($dbForProject, 'executions.compute', $executionsComputeSum * 1000);
     }
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Timeout
+     * @throws Exception\Structure
+     * @throws Exception\Restricted
+     * @throws Exception\Conflict
+     * @throws Exception
+     * @throws Exception\Query
+     */
     private function databases(Database $dbForProject)
     {
         $databasesCount = 0;
@@ -294,6 +372,13 @@ class CreateInfMetric extends Action
     }
 
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Structure
+     * @throws Exception\Restricted
+     * @throws Exception\Conflict
+     * @throws Exception
+     */
     private function users(Database $dbForProject)
     {
         $users = $dbForProject->count('users');
@@ -306,6 +391,13 @@ class CreateInfMetric extends Action
         $this->createInfMetric($dbForProject, 'sessions', $users);
     }
 
+    /**
+     * @throws Exception\Authorization
+     * @throws Exception\Structure
+     * @throws Exception\Restricted
+     * @throws Exception\Conflict
+     * @throws Exception
+     */
     private function teams(Database $dbForProject)
     {
         $teams = $dbForProject->count('teams');
