@@ -3212,7 +3212,29 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('fileInternalId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('bucketId'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => Database::LENGTH_KEY,
+                'signed' => true,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('bucketInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3249,10 +3271,18 @@ $projectCollections = array_merge([
             [
                 '$id' => '_key_file_id_bucket_id',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['bucketId', 'fileId'],
+                'attributes' => ['bucketInternalId', 'fileInternalId'],
                 'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ]
+            ],
+            [
+                '$id' => '_key_expiry_date',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['expiryDate'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
+            ],
+
         ],
     ],
 ], $commonCollections);
