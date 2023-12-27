@@ -1680,7 +1680,13 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $response->dynamic($file, Response::MODEL_FILE_TOKEN);
+        $token = $dbForProject->getDocument('fileTokens', $tokenId);
+
+        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        $response->dynamic($token, Response::MODEL_FILE_TOKEN);
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
