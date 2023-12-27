@@ -67,6 +67,7 @@ use Appwrite\Utopia\Response\Model\Project;
 use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Detection;
+use Appwrite\Utopia\Response\Model\FileToken;
 use Appwrite\Utopia\Response\Model\Headers;
 use Appwrite\Utopia\Response\Model\TemplateEmail;
 use Appwrite\Utopia\Response\Model\Token;
@@ -175,6 +176,8 @@ class Response extends SwooleResponse
     public const MODEL_FILE_LIST = 'fileList';
     public const MODEL_BUCKET = 'bucket';
     public const MODEL_BUCKET_LIST = 'bucketList';
+    public const MODEL_FILE_TOKEN = 'fileToken';
+    public const MODEL_FILE_TOKEN_LIST = 'fileTokenList';
 
     // Locale
     public const MODEL_LOCALE = 'locale';
@@ -303,6 +306,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Logs List', self::MODEL_LOG_LIST, 'logs', self::MODEL_LOG))
             ->setModel(new BaseList('Files List', self::MODEL_FILE_LIST, 'files', self::MODEL_FILE))
             ->setModel(new BaseList('Buckets List', self::MODEL_BUCKET_LIST, 'buckets', self::MODEL_BUCKET))
+            ->setModel(new BaseList('File Tokens List', self::MODEL_FILE_TOKEN_LIST, 'tokens', self::MODEL_FILE_TOKEN))
             ->setModel(new BaseList('Teams List', self::MODEL_TEAM_LIST, 'teams', self::MODEL_TEAM))
             ->setModel(new BaseList('Memberships List', self::MODEL_MEMBERSHIP_LIST, 'memberships', self::MODEL_MEMBERSHIP))
             ->setModel(new BaseList('Functions List', self::MODEL_FUNCTION_LIST, 'functions', self::MODEL_FUNCTION))
@@ -366,6 +370,7 @@ class Response extends SwooleResponse
             ->setModel(new LocaleCode())
             ->setModel(new File())
             ->setModel(new Bucket())
+            ->setModel(new FileToken())
             ->setModel(new Team())
             ->setModel(new Membership())
             ->setModel(new Func())
