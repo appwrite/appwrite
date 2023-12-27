@@ -1690,7 +1690,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
-    ->desc('Update file token permission')
+    ->desc('Update file token')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
     ->label('event', 'buckets.[bucketId].files.[fileId].tokens.[tokenId].update')
@@ -1711,13 +1711,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('tokenId', '', new UID(), 'File token unique ID.')
+    ->param('expiryDate', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, string $tokenId, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $fileId, string $tokenId, ?string $expiryDate, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1729,14 +1730,17 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($bucket->getUpdate());
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        // Read permission should not be required for update
-        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1744,8 +1748,8 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
 
         $token = $dbForProject->getDocument('fileTokens', $tokenId);
 
-        if($token->isEmpty()) {
-            throw new Exception(Exception::TOKEN_NOT_FOUND);
+        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
         // Map aggregate permissions into the multiple permissions they represent.
@@ -1780,7 +1784,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             $permissions = $token->getPermissions() ?? [];
         }
 
-        $token->setAttribute('$permissions', $permissions);
+        $token
+            ->setAttribute('expiryDate', $expiryDate)
+            ->setAttribute('$permissions', $permissions);
 
         $token = $dbForProject->updateDocument('fileTokens', $tokenId, $token);
 
@@ -1818,10 +1824,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('mode')
-    ->inject('deviceFiles')
-    ->inject('queueForDeletes')
-    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceFiles, Delete $queueForDeletes) {
+    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1832,27 +1835,25 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_DELETE);
-        $valid = $validator->isValid($bucket->getDelete());
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        // Read permission should not be required for delete
-        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$validator->isValid($file->getWrite())) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
         $token = $dbForProject->getDocument('fileTokens', $tokenId);
-        if($token->isEmpty()) {
-            throw new Exception(Exception::TOKEN_NOT_FOUND);
+        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('fileTokens', $tokenId);
