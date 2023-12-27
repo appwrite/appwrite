@@ -28,6 +28,7 @@ use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Exception\Structure as StructureException;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Timeout as TimeoutException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -2973,7 +2974,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        try {
+            $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+        } catch (DatabaseException $e) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND, "Databases Collection not found");
+        }
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
