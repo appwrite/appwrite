@@ -892,7 +892,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
 
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm', 'none');
+        $algorithm = $file->getAttribute('algorithm', COMPRESSION_TYPE_NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -903,7 +903,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = 'none';
+            $algorithm = COMPRESSION_TYPE_NONE;
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
@@ -940,11 +940,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         switch ($algorithm) {
-            case 'zstd':
+            case COMPRESSION_TYPE_ZSTD:
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
                 break;
@@ -1085,15 +1085,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', COMPRESSION_TYPE_NONE)) {
+            case COMPRESSION_TYPE_ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
@@ -1236,15 +1236,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', COMPRESSION_TYPE_NONE)) {
+            case COMPRESSION_TYPE_ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
