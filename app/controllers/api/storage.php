@@ -1258,10 +1258,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 $response->send(substr($source, $start, ($end - $start + 1)));
             }
             $response->send($source);
+            return;
         }
 
         if (!empty($rangeHeader)) {
             $response->send($deviceFiles->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         $size = $deviceFiles->getFileSize($path);
