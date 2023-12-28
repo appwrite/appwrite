@@ -27,6 +27,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -34,6 +35,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -898,7 +900,7 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain(\parse_url($request->getPayload('url'), PHP_URL_HOST))], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
@@ -1021,7 +1023,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain(\parse_url($request->getPayload('url'), PHP_URL_HOST))], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
