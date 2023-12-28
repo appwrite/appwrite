@@ -915,6 +915,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (empty($output)) {
+            // when file extension is provided but it's not one of our 
+            // supported outputs we fallback to `jpg`
+            if(!empty($type) && !array_key_exists($type, $outputs)) {
+                $type = 'jpg';
+            }
+            
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
