@@ -3248,7 +3248,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('secret'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => 2048,
+                'size' => 512,
                 'signed' => true,
                 'required' => false,
                 'default' => [],
@@ -3256,7 +3256,7 @@ $projectCollections = array_merge([
                 'filters' => ['encrypt'],
             ],
             [
-                '$id' => ID::custom('expiryDate'),
+                '$id' => ID::custom('expire'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
                 'size' => 255,
@@ -3278,7 +3278,7 @@ $projectCollections = array_merge([
             [
                 '$id' => '_key_expiry_date',
                 'type' => Database::INDEX_KEY,
-                'attributes' => ['expiryDate'],
+                'attributes' => ['expire'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
             ],

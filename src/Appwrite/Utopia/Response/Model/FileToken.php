@@ -40,7 +40,7 @@ class FileToken extends Model
                 'default' => '',
                 'example' => '',
             ])
-            ->addRule('expiryDate', [
+            ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in ISO 8601 format.',
                 'default' => '',

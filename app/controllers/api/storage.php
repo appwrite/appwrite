@@ -1507,13 +1507,13 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('sdk.response.model', Response::MODEL_FILE_TOKEN)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
-    ->param('expiryDate', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, ?string $expiryDate, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $fileId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1539,15 +1539,14 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
-        
         $token = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), new Document([
             '$id' => ID::unique(),
-            'secret' => Auth::codeGenerator(128),
+            'secret' => Auth::tokenGenerator(128),
             'bucketId' => $bucketId,
             'fileId' => $fileId,
             'bucketInternalId' => $bucket->getInternalId(),
             'fileInternalId' => $file->getInternalId(),
-            'expiryDate' => $expiryDate,
+            'expire' => $expire,
             '$permissions' => $permissions
         ]));
 
@@ -1682,7 +1681,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
 
         $token = $dbForProject->getDocument('fileTokens', $tokenId);
 
-        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
@@ -1711,14 +1710,14 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('tokenId', '', new UID(), 'File token unique ID.')
-    ->param('expiryDate', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
+    ->param('expire', null, new Nullable(new DatetimeValidator()), 'File token expiry date', true)
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission string. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, string $tokenId, ?string $expiryDate, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+    ->action(function (string $bucketId, string $fileId, string $tokenId, ?string $expire, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
 
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1748,7 +1747,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
 
         $token = $dbForProject->getDocument('fileTokens', $tokenId);
 
-        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
@@ -1785,7 +1784,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         }
 
         $token
-            ->setAttribute('expiryDate', $expiryDate)
+            ->setAttribute('expire', $expire)
             ->setAttribute('$permissions', $permissions);
 
         $token = $dbForProject->updateDocument('fileTokens', $tokenId, $token);
@@ -1852,7 +1851,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         }
 
         $token = $dbForProject->getDocument('fileTokens', $tokenId);
-        if($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
