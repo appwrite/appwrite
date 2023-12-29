@@ -927,6 +927,18 @@ App::setResource('clients', function ($request, $console, $project) {
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
+    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    if (is_array($hostnames)) {
+        foreach ($hostnames as $hostname) {
+            $console->setAttribute('platforms', [
+                '$collection' => ID::custom('platforms'),
+                'type' => Origin::CLIENT_TYPE_WEB,
+                'name' => $hostname,
+                'hostname' => $hostname,
+            ], Document::SET_TYPE_APPEND);
+        }
+    }
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
