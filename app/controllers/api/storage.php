@@ -551,6 +551,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         break;
                 }
                 $data = $compressor->compress($data);
+            } else {
+                // reset the algorithm to none as we do not compress the file
+                // if file size exceedes the APP_STORAGE_READ_BUFFER
+                // regardless the bucket compression algoorithm
+                $algorithm = COMPRESSION_TYPE_NONE;
             }
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
