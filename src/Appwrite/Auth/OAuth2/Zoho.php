@@ -149,7 +149,11 @@ class Zoho extends OAuth2
      */
     public function isEmailVerified(string $accessToken): bool
     {
-        return $this->user['email_verified'] ?? '';
+        if ($this->user['email_verified'] ?? false) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
