@@ -551,6 +551,11 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         break;
                 }
                 $data = $compressor->compress($data);
+            } else {
+                // reset the algorithm to none as we do not compress the file
+                // if file size exceedes the APP_STORAGE_READ_BUFFER
+                // regardless the bucket compression algoorithm
+                $algorithm = COMPRESSION_TYPE_NONE;
             }
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
@@ -872,14 +877,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
-        $inputs = Config::getParam('storage-inputs');
-        $outputs = Config::getParam('storage-outputs');
-        $fileLogos = Config::getParam('storage-logos');
-
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
@@ -890,9 +887,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
+            $output = 'jpg';
+        }
+
+        $inputs = Config::getParam('storage-inputs');
+        $outputs = Config::getParam('storage-outputs');
+        $fileLogos = Config::getParam('storage-logos');
+
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm', 'none');
+        $algorithm = $file->getAttribute('algorithm', COMPRESSION_TYPE_NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -903,7 +908,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = 'none';
+            $algorithm = COMPRESSION_TYPE_NONE;
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
@@ -915,11 +920,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (empty($output)) {
+            // when file extension is provided but it's not one of our
+            // supported outputs we fallback to `jpg`
+            if (!empty($type) && !array_key_exists($type, $outputs)) {
+                $type = 'jpg';
+            }
+
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
-
 
         $source = $deviceFiles->read($path);
 
@@ -935,11 +945,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         switch ($algorithm) {
-            case 'zstd':
+            case COMPRESSION_TYPE_ZSTD:
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
                 break;
@@ -1080,15 +1090,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', COMPRESSION_TYPE_NONE)) {
+            case COMPRESSION_TYPE_ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
@@ -1231,15 +1241,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', COMPRESSION_TYPE_NONE)) {
+            case COMPRESSION_TYPE_ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case COMPRESSION_TYPE_GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
@@ -1253,10 +1263,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 $response->send(substr($source, $start, ($end - $start + 1)));
             }
             $response->send($source);
+            return;
         }
 
         if (!empty($rangeHeader)) {
             $response->send($deviceFiles->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         $size = $deviceFiles->getFileSize($path);
