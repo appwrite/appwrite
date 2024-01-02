@@ -904,9 +904,10 @@ App::post('/v1/projects/:projectId/webhooks')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
+    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, bool $enabled, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -932,6 +933,7 @@ App::post('/v1/projects/:projectId/webhooks')
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
             'signatureKey' => \bin2hex(\random_bytes(64)),
+            'enabled' => $enabled,
         ]);
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
@@ -1027,7 +1029,7 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
-    ->param('enabled', false, new Boolean(), 'Enable a disabled webhook.', true)
+    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, bool $enabled, Response $response, Database $dbForConsole) {
@@ -1056,9 +1058,11 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
             ->setAttribute('httpPass', $httpPass)
-            ->setAttribute('enabled', true)
-            ->setAttribute('logs', '')
-            ->setAttribute('attempts', 0);
+            ->setAttribute('enabled', $enabled);
+
+        if ($enabled) {
+            $webhook->setAttribute('attempts', 0);
+        }
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
         $dbForConsole->deleteCachedDocument('projects', $project->getId());
