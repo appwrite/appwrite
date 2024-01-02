@@ -7,7 +7,6 @@ use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
 use Utopia\App;
-use Utopia\CLI\Console;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -53,8 +52,7 @@ class Mails extends Action
         $smtp = $payload['smtp'];
 
         if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
-            Console::info('Skipped mail processing. No SMTP configuration has been set.');
-            return;
+            throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
         }
 
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');

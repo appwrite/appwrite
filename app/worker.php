@@ -247,7 +247,7 @@ $worker
             throw $error;
         }
 
-        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
+        if ($logger) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);

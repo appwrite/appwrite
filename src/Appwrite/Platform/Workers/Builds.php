@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Deployment;
@@ -28,7 +27,6 @@ use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device\Local;
-use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
@@ -514,10 +512,7 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage());
-            Console::error($th->getMessage());
-            Console::error($th->getFile() . ':' . $th->getLine());
-            Console::error($th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);

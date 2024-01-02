@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Utopia\Response\Model\Platform;
 use Exception;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
@@ -72,14 +71,14 @@ class Databases extends Action
 
         $log->addTag('databaseId', $database->getId());
 
-        match (strval($type)) {
+        match (\strval($type)) {
             DATABASE_TYPE_DELETE_DATABASE => $this->deleteDatabase($database, $project, $dbForProject),
             DATABASE_TYPE_DELETE_COLLECTION => $this->deleteCollection($database, $collection, $project, $dbForProject),
             DATABASE_TYPE_CREATE_ATTRIBUTE => $this->createAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_ATTRIBUTE => $this->deleteAttribute($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_CREATE_INDEX => $this->createIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
             DATABASE_TYPE_DELETE_INDEX => $this->deleteIndex($database, $collection, $document, $project, $dbForConsole, $dbForProject),
-            default => Console::error('No database operation for type: ' . $type),
+            default => throw new \Exception('No database operation for type: ' . \strval($type)),
         };
     }
 
@@ -167,6 +166,7 @@ class Databases extends Action
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
         } catch (\Exception $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -175,6 +175,7 @@ class Databases extends Action
                     $relatedAttribute->setAttribute('error', $e->getMessage());
                 }
             }
+
 
             $dbForProject->updateDocument(
                 'attributes',
@@ -269,6 +270,7 @@ class Databases extends Action
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
         } catch (\Exception $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -396,6 +398,7 @@ class Databases extends Action
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
         } catch (\Exception $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -453,6 +456,7 @@ class Databases extends Action
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
         } catch (\Exception $e) {
+            // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
             if ($e instanceof DatabaseException) {
@@ -589,7 +593,7 @@ class Databases extends Action
                         $callback($document);
                     }
                 } else {
-                    Console::error('Failed to delete document: ' . $document->getId());
+                    Console::warning('Failed to delete document: ' . $document->getId());
                 }
                 $count++;
             }

@@ -73,7 +73,7 @@ class Deletes extends Action
         $log->addTag('projectId', $project->getId());
         $log->addTag('type', $type);
 
-        switch (strval($type)) {
+        switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_DATABASES:
@@ -159,7 +159,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             default:
-                Console::error('No delete operation for type: ' . $type);
+                throw new \Exception('No delete operation for type: ' . \strval($type));
                 break;
         }
     }
