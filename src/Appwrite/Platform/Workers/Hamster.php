@@ -22,17 +22,18 @@ use Utopia\Pools\Group;
 class Hamster extends Action
 {
     private array $metrics = [
-        'usage_files' => 'files.$all.count.total',
-        'usage_buckets' => 'buckets.$all.count.total',
-        'usage_databases' => 'databases.$all.count.total',
-        'usage_documents' => 'documents.$all.count.total',
-        'usage_collections' => 'collections.$all.count.total',
-        'usage_storage' => 'project.$all.storage.size',
-        'usage_requests' => 'project.$all.network.requests',
-        'usage_bandwidth' => 'project.$all.network.bandwidth',
-        'usage_users' => 'users.$all.count.total',
-        'usage_sessions' => 'sessions.email.requests.create',
-        'usage_executions' => 'executions.$all.compute.total',
+        'usage_files' => 'files',
+        'usage_buckets' => 'buckets',
+        'usage_databases' => 'databases',
+        'usage_documents' => 'documents',
+        'usage_collections' => 'collections',
+        'usage_storage' => 'files.storage',
+        'usage_requests' => 'network.requests',
+        'usage_inbound' => 'network.inbound',
+        'usage_outbound' => 'network.outbound',
+        'usage_users' => 'users',
+        'usage_sessions' => 'sessions',
+        'usage_executions' => 'executions',
     ];
 
     protected Mixpanel $mixpanel;
@@ -297,6 +298,17 @@ class Hamster extends Action
                     }
                 }
             });
+
+            /**
+             * Workaround to combine network.inbound+network.outbound as network.
+             */
+            $statsPerProject["usage_network_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
+            $statsPerProject["usage_network_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
+            unset($statsPerProject["usage_outbound_24h"]);
+            unset($statsPerProject["usage_inbound_24h"]);
+            unset($statsPerProject["usage_outbound_infinity"]);
+            unset($statsPerProject["usage_inbound_infinity"]);
+
 
             if (isset($statsPerProject['email'])) {
                 /** Send data to mixpanel */
