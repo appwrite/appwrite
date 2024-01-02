@@ -1955,6 +1955,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
+            'search' => "{$target->getAttribute('providerType')} "
         ]);
 
         try {
