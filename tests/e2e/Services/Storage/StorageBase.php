@@ -74,10 +74,7 @@ trait StorageBase
             'name' => 'Test Bucket 2',
             'fileSecurity' => true,
             'permissions' => [
-                Permission::read(Role::any()),
                 Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
             ],
         ]);
         $this->assertEquals(201, $bucket2['headers']['status-code']);
@@ -110,9 +107,7 @@ trait StorageBase
                 'fileId' => $fileId,
                 'file' => $curlFile,
                 'permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::any()),
-                    Permission::delete(Role::any()),
+                    Permission::read(Role::any())
                 ],
             ]);
             $counter++;
