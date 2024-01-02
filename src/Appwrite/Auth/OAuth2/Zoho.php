@@ -15,11 +15,6 @@ class Zoho extends OAuth2
     private string $endpoint = 'https://accounts.zoho.com';
 
     /**
-     * @var string
-     */
-    private string $authEndpoint = 'https://accounts.zoho.com/oauth/v2/auth';
-
-    /**
      * @var array
      */
     protected array $scopes = [
@@ -50,7 +45,7 @@ class Zoho extends OAuth2
      */
     public function getLoginURL(): string
     {
-        $url = $this->authEndpoint . '?' .
+        $url = $this->endpoint . '/oauth/v2/auth?' .
             \http_build_query([
                 'response_type' => 'code',
                 'client_id' => $this->appID,
