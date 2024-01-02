@@ -9,6 +9,7 @@ use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
+use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
@@ -177,6 +178,9 @@ Server::setResource('queueForCertificates', function (Connection $queue) {
 }, ['queue']);
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
+}, ['queue']);
+Server::setResource('queueForHamster', function (Connection $queue) {
+    return new Hamster($queue);
 }, ['queue']);
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');

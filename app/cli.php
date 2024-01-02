@@ -6,6 +6,7 @@ require_once __DIR__ . '/controllers/general.php';
 use Appwrite\Event\Delete;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -129,6 +130,9 @@ CLI::setResource('queue', function (Group $pools) {
 }, ['pools']);
 CLI::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
+}, ['queue']);
+CLI::setResource('queueForHamster', function (Connection $queue) {
+    return new Hamster($queue);
 }, ['queue']);
 CLI::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
