@@ -628,7 +628,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
-                    // Validate create permission
+                    /**
+                     * Validate create permission and skip authorization in updateDocument
+                     * Without this, the file creation will fail when user doesn't have update permission
+                     * However as with chunk upload even if we are updating, we are essentially creating a file
+                     * adding it's new chunk so we validate create permission instead of update
+                     */
                     $validator = new Authorization(Database::PERMISSION_CREATE);
                     if (!$validator->isValid($bucket->getCreate())) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -670,7 +675,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded)
                         ->setAttribute('metadata', $metadata);
 
-                    // Validate create permission
+                    /**
+                     * Validate create permission and skip authorization in updateDocument
+                     * Without this, the file creation will fail when user doesn't have update permission
+                     * However as with chunk upload even if we are updating, we are essentially creating a file
+                     * adding it's new chunk so we validate create permission instead of update
+                     */
                     $validator = new Authorization(Database::PERMISSION_CREATE);
                     if (!$validator->isValid($bucket->getCreate())) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
