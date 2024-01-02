@@ -55,6 +55,8 @@ class Exception extends \Exception
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
+    public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
+    public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -86,6 +88,8 @@ class Exception extends \Exception
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
     public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
     public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
+    public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
+    public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -235,6 +239,30 @@ class Exception extends \Exception
 
     /** Health */
     public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
+
+    /** Provider */
+    public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
+    public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
+    public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
+    public const PROVIDER_INTERNAL_UPDATE_DISABLED  = 'provider_internal_update_disabled';
+
+    /** Topic */
+    public const TOPIC_NOT_FOUND                    = 'topic_not_found';
+    public const TOPIC_ALREADY_EXISTS               = 'topic_already_exists';
+
+    /** Subscriber */
+    public const SUBSCRIBER_NOT_FOUND               = 'subscriber_not_found';
+    public const SUBSCRIBER_ALREADY_EXISTS          = 'subscriber_already_exists';
+
+    /** Message */
+    public const MESSAGE_NOT_FOUND                  = 'message_not_found';
+    public const MESSAGE_MISSING_TARGET             = 'message_missing_target';
+    public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
+    public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
+    public const MESSAGE_TARGET_NOT_EMAIL           = 'message_target_not_email';
+    public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
+    public const MESSAGE_TARGET_NOT_PUSH            = 'message_target_not_push';
+
 
     protected string $type = '';
     protected array $errors = [];

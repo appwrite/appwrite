@@ -25,7 +25,7 @@ use Appwrite\Event\Audit;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Delete;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Network\Validator\Email;
@@ -47,13 +47,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Adapters\SMS\Mock;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -83,6 +77,7 @@ use Utopia\Validator\Range;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
+use Utopia\CLI\Console;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -103,13 +98,14 @@ const APP_LIMIT_COMPRESSION = 20000000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1000000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 328;
+const APP_CACHE_BUSTER = 329;
 const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -173,6 +169,7 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
+const DELETE_TYPE_TOPIC = 'topic';
 // Compression type
 const COMPRESSION_TYPE_NONE = 'none';
 const COMPRESSION_TYPE_GZIP = 'gzip';
@@ -193,6 +190,10 @@ const MAX_OUTPUT_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 // Function headers
 const FUNCTION_ALLOWLIST_HEADERS_REQUEST = ['content-type', 'agent', 'content-length', 'host'];
 const FUNCTION_ALLOWLIST_HEADERS_RESPONSE = ['content-type', 'content-length'];
+// Message types
+const MESSAGE_TYPE_EMAIL = 'email';
+const MESSAGE_TYPE_SMS = 'sms';
+const MESSAGE_TYPE_PUSH = 'push';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
@@ -237,7 +238,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
 Config::load('errors', __DIR__ . '/config/errors.php');
-Config::load('providers', __DIR__ . '/config/providers.php');
+Config::load('oAuthProviders', __DIR__ . '/config/oAuthProviders.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
@@ -518,6 +519,107 @@ Database::addFilter(
         }
 
         $search = implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'subQueryTargets',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('targets', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY)
+            ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryTopicTargets',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        $targetIds = Authorization::skip(fn () => \array_map(
+            fn ($document) => $document->getAttribute('targetId'),
+            $database
+            ->find('subscribers', [
+                Query::equal('topicInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
+            ])
+        ));
+        if (\count($targetIds) > 0) {
+            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+        }
+        return [];
+    }
+);
+
+Database::addFilter(
+    'providerSearch',
+    function (mixed $value, Document $provider) {
+        $searchValues = [
+            $provider->getId(),
+            $provider->getAttribute('name', ''),
+            $provider->getAttribute('provider', ''),
+            $provider->getAttribute('type', '')
+        ];
+
+        $search = \implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'topicSearch',
+    function (mixed $value, Document $topic) {
+        $searchValues = [
+            $topic->getId(),
+            $topic->getAttribute('name', ''),
+            $topic->getAttribute('description', ''),
+        ];
+
+        $search = \implode(' ', \array_filter($searchValues));
+
+        return $search;
+    },
+    function (mixed $value) {
+        return $value;
+    }
+);
+
+Database::addFilter(
+    'messageSearch',
+    function (mixed $value, Document $message) {
+        $searchValues = [
+            $message->getId(),
+            $message->getAttribute('description', ''),
+            $message->getAttribute('status', ''),
+        ];
+
+        $data = \json_decode($message->getAttribute('data', []), true);
+        $providerType = $message->getAttribute('providerType', '');
+
+        if ($providerType === MESSAGE_TYPE_EMAIL) {
+            $searchValues = \array_merge($searchValues, [$data['subject'], MESSAGE_TYPE_EMAIL]);
+        } elseif ($providerType === MESSAGE_TYPE_SMS) {
+            $searchValues = \array_merge($searchValues, [$data['content'], MESSAGE_TYPE_SMS]);
+        } else {
+            $searchValues = \array_merge($searchValues, [$data['title'], MESSAGE_TYPE_PUSH]);
+        }
+
+        $search = \implode(' ', \array_filter($searchValues));
 
         return $search;
     },
@@ -906,7 +1008,7 @@ App::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
 App::setResource('queueForMessaging', function (Connection $queue) {
-    return new Phone($queue);
+    return new Messaging($queue);
 }, ['queue']);
 App::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
@@ -1122,7 +1224,7 @@ App::setResource('console', function () {
         ],
         'authWhitelistEmails' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
         'authWhitelistIPs' => (!empty(App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', App::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],
-        'authProviders' => [
+        'oAuthProviders' => [
             'githubEnabled' => true,
             'githubSecret' => App::getEnv('_APP_CONSOLE_GITHUB_SECRET', ''),
             'githubAppid' => App::getEnv('_APP_CONSOLE_GITHUB_APP_ID', '')
@@ -1346,21 +1448,6 @@ App::setResource('passwordsDictionary', function ($register) {
     return $register->get('passwordsDictionary');
 }, ['register']);
 
-App::setResource('sms', function () {
-    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    $user = $dsn->getUser();
-    $secret = $dsn->getPassword();
-
-    return match ($dsn->getHost()) {
-        'mock' => new Mock($user, $secret), // used for tests
-        'twilio' => new Twilio($user, $secret),
-        'text-magic' => new TextMagic($user, $secret),
-        'telesign' => new Telesign($user, $secret),
-        'msg91' => new Msg91($user, $secret),
-        'vonage' => new Vonage($user, $secret),
-        default => null
-    };
-});
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('platforms');
