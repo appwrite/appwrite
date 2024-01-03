@@ -565,11 +565,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userId', $userId),
             ]);
-            if (!empty($identitiesWithMatchingEmail)) {
+            if (!empty($identityWithMatchingEmail)) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
+
+            $userWithMatchingEmail = $dbForProject->find('users', [
+                Query::equal('email', [$email]),
+                Query::notEqual('$id', $userId),
+            ]);
+            if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
