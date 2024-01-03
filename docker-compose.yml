@@ -53,7 +53,7 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports: 
+    ports:
       - 9501:80
     networks:
       - appwrite
@@ -88,7 +88,7 @@ services:
       - mariadb
       - redis
       # - clamav
-    entrypoint: 
+    entrypoint:
       - php
       - -e
       - app/http.php
@@ -100,6 +100,7 @@ services:
       - _APP_CONSOLE_WHITELIST_ROOT
       - _APP_CONSOLE_WHITELIST_EMAILS
       - _APP_CONSOLE_WHITELIST_IPS
+      - _APP_CONSOLE_HOSTNAMES
       - _APP_SYSTEM_EMAIL_NAME
       - _APP_SYSTEM_EMAIL_ADDRESS
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
@@ -191,7 +192,7 @@ services:
     container_name: appwrite-realtime
     image: appwrite-dev
     restart: unless-stopped
-    ports: 
+    ports:
       - 9505:80
     labels:
       - "traefik.enable=true"
@@ -299,7 +300,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-uploads:/storage/uploads:rw
       - appwrite-cache:/storage/cache:rw
       - appwrite-functions:/storage/functions:rw
@@ -353,7 +354,7 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
-    volumes: 
+    volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
     depends_on:
@@ -452,7 +453,7 @@ services:
     depends_on:
       - redis
       - mariadb
-    volumes: 
+    volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
       - ./app:/usr/src/code/app
@@ -737,7 +738,7 @@ services:
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
       - _APP_MIXPANEL_TOKEN
-  
+
   appwrite-hamster-scheduler:
     entrypoint: hamster
     <<: *x-logging
@@ -947,7 +948,7 @@ services:
   #     - './debug:/tmp'
   #   ports:
   #     - '3001:80'
-  
+
   graphql-explorer:
     container_name: appwrite-graphql-explorer
     image: appwrite/altair:0.3.0
