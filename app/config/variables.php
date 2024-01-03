@@ -127,7 +127,7 @@ return [
             [
                 'name' => '_APP_CONSOLE_HOSTNAMES',
                 'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
-                'introduction' => '',
+                'introduction' => '1.5.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
