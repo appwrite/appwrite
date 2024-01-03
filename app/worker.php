@@ -13,7 +13,6 @@ use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
-use Appwrite\Event\Phone;
 use Appwrite\Platform\Appwrite;
 use Appwrite\Usage\Stats;
 use Swoole\Runtime;
@@ -130,7 +129,7 @@ Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
 Server::setResource('queueForMessaging', function (Connection $queue) {
-    return new Phone($queue);
+    return new Messaging($queue);
 }, ['queue']);
 Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);

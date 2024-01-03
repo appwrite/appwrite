@@ -99,6 +99,7 @@ jobs:
             Users,
             Webhooks,
             VCS,
+            Messaging,
           ]
 
     steps:

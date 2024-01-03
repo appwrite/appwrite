@@ -9,6 +9,7 @@ use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
+use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Utopia\Database\Validator\Query\Limit;
@@ -98,6 +99,42 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
         ]));
+
+        if ($email) {
+            try {
+                $target = $dbForProject->createDocument('targets', new Document([
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getInternalId(),
+                    'providerType' => 'email',
+                    'identifier' => $email,
+                ]));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+            }
+        }
+
+        if ($phone) {
+            try {
+                $target = $dbForProject->createDocument('targets', new Document([
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getInternalId(),
+                    'providerType' => 'sms',
+                    'identifier' => $phone,
+                ]));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$phone]),
+                ]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+            }
+        }
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
@@ -379,6 +416,98 @@ App::post('/v1/users/scrypt-modified')
             ->dynamic($user, Response::MODEL_USER);
     });
 
+App::post('/v1/users/:userId/targets')
+    ->desc('Create User Target')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createTarget')
+    ->label('sdk.description', '/docs/references/users/create-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('providerType', '', new WhiteList([MESSAGE_TYPE_EMAIL, MESSAGE_TYPE_SMS, MESSAGE_TYPE_PUSH]), 'The target provider type. Can be one of the following: `email`, `sms` or `push`.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->param('name', '', new Text(128), 'Target name. Max length: 128 chars. For example: My Awesome App Galaxy S23.', true)
+    ->inject('queueForEvents')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $userId, string $providerType, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = new Document();
+
+        if ($providerType === MESSAGE_TYPE_PUSH) {
+            $provider = $dbForProject->getDocument('providers', $providerId);
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+        }
+
+        switch ($providerType) {
+            case 'email':
+                $validator = new Email();
+                if (!$validator->isValid($identifier)) {
+                    throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+                }
+                break;
+            case MESSAGE_TYPE_SMS:
+                $validator = new Phone();
+                if (!$validator->isValid($identifier)) {
+                    throw new Exception(Exception::GENERAL_INVALID_PHONE);
+                }
+                break;
+            case MESSAGE_TYPE_PUSH:
+                break;
+            default:
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  $providerType,
+                'userId' => $userId,
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+                'name' => ($name !== '') ? $name : null,
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
 App::get('/v1/users')
     ->desc('List users')
     ->groups(['api', 'users'])
@@ -480,6 +609,38 @@ App::get('/v1/users/:userId/prefs')
         $prefs = $user->getAttribute('prefs', []);
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
+App::get('/v1/users/:userId/targets/:targetId')
+    ->desc('Get User Target')
+    ->groups(['api', 'users'])
+    ->label('scope', 'targets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getTarget')
+    ->label('sdk.description', '/docs/references/users/get-user-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $targetId, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $user->find('$id', $targetId, 'targets');
+
+        if (empty($target)) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $response->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::get('/v1/users/:userId/sessions')
@@ -644,6 +805,53 @@ App::get('/v1/users/:userId/logs')
             'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/users/:userId/targets')
+    ->desc('List User Targets')
+    ->groups(['api', 'users'])
+    ->label('scope', 'targets.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/users/list-user-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Users::ALLOWED_ATTRIBUTES), true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('userId', [$userId]);
+
+         // Get cursor document if there was a cursor query
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = reset($cursor);
+
+        if ($cursor) {
+            $targetId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('targets', $targetId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Target '{$targetId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $response->dynamic(new Document([
+            'targets' => $dbForProject->find('targets', $queries),
+            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_TARGET_LIST);
     });
 
 App::get('/v1/users/identities')
@@ -949,6 +1157,16 @@ App::patch('/v1/users/:userId/email')
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]);
+
+        if ($target instanceof Document && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $oldEmail = $user->getAttribute('email');
+
         $user
             ->setAttribute('email', $email)
             ->setAttribute('emailVerification', false)
@@ -957,6 +1175,15 @@ App::patch('/v1/users/:userId/email')
 
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            /**
+             * @var Document $oldTarget
+             */
+            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -994,13 +1221,32 @@ App::patch('/v1/users/:userId/phone')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
+        $oldPhone = $user->getAttribute('phone');
+
         $user
             ->setAttribute('phone', $number)
             ->setAttribute('phoneVerification', false)
         ;
 
+        $target = $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$number]),
+        ]);
+
+        if ($target instanceof Document && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            /**
+             * @var Document $oldTarget
+             */
+            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -1078,6 +1324,100 @@ App::patch('/v1/users/:userId/prefs')
             ->setParam('userId', $user->getId());
 
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
+    });
+
+App::patch('/v1/users/:userId/targets/:targetId')
+    ->desc('Update User target')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/{response.$id}')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateTarget')
+    ->label('sdk.description', '/docs/references/users/update-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)', true)
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->param('name', '', new Text(128), 'Target name. Max length: 128 chars. For example: My Awesome App Galaxy S23.', true)
+    ->inject('queueForEvents')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $targetId, string $identifier, string $providerId, string $name, Event $queueForEvents, Response $response, Database $dbForProject) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $providerType = $target->getAttribute('providerType');
+
+            switch ($providerType) {
+                case 'email':
+                    $validator = new Email();
+                    if (!$validator->isValid($identifier)) {
+                        throw new Exception(Exception::GENERAL_INVALID_EMAIL);
+                    }
+                    break;
+                case MESSAGE_TYPE_SMS:
+                    $validator = new Phone();
+                    if (!$validator->isValid($identifier)) {
+                        throw new Exception(Exception::GENERAL_INVALID_PHONE);
+                    }
+                    break;
+                case MESSAGE_TYPE_PUSH:
+                    break;
+                default:
+                    throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+            }
+
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        if ($providerId) {
+            $provider = $dbForProject->getDocument('providers', $providerId);
+
+            if ($provider->isEmpty()) {
+                throw new Exception(Exception::PROVIDER_NOT_FOUND);
+            }
+
+            if ($provider->getAttribute('type') !== $target->getAttribute('providerType')) {
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+            }
+
+            $target->setAttribute('providerId', $provider->getId());
+            $target->setAttribute('providerInternalId', $provider->getInternalId());
+        }
+
+        if ($name) {
+            $target->setAttribute('name', $name);
+        }
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::delete('/v1/users/:userId/sessions/:sessionId')
@@ -1210,6 +1550,53 @@ App::delete('/v1/users/:userId')
         $response->noContent();
     });
 
+App::delete('/v1/users/:userId/targets/:targetId')
+    ->desc('Delete user target')
+    ->groups(['api', 'users'])
+    ->label('audits.event', 'target.delete')
+    ->label('audits.resource', 'target/{request.$targetId}')
+    ->label('event', 'users.[userId].targets.[targetId].delete')
+    ->label('scope', 'targets.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteTarget')
+    ->label('sdk.description', '/docs/references/users/delete-target.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('queueForEvents')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, Response $response, Database $dbForProject) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = $dbForProject->getDocument('targets', $targetId);
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('targets', $target->getId());
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response->noContent();
+    });
+
 App::delete('/v1/users/identities/:identityId')
     ->desc('Delete Identity')
     ->groups(['api', 'users'])
@@ -1251,7 +1638,7 @@ App::get('/v1/users/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_USERS)
     ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn ($value) => "oauth-" . $value, \array_keys(Config::getParam('providers', [])))), true), 'Provider Name.', true)
+    ->param('provider', '', new WhiteList(\array_merge(['email', 'anonymous'], \array_map(fn ($value) => "oauth-" . $value, \array_keys(Config::getParam('oAuthProviders', [])))), true), 'Provider Name.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')

@@ -60,8 +60,8 @@ class V13 extends Filter
 
     protected function parseProject($content)
     {
-        $content['providers'] = $content['authProviders'];
-        unset($content['authProviders']);
+        $content['providers'] = $content['oAuthProviders'];
+        unset($content['oAuthProviders']);
 
         return $content;
     }

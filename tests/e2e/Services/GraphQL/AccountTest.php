@@ -6,7 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 
 class AccountTest extends Scope
 {
@@ -123,6 +125,7 @@ class AccountTest extends Scope
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,
