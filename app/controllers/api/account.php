@@ -44,6 +44,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Messaging;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
@@ -3244,4 +3245,41 @@ App::put('/v1/account/targets/:targetId/push')
 
         $response
             ->dynamic($target, Response::MODEL_TARGET);
+    });
+
+App::delete('/v1/account')
+    ->desc('Delete account')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].delete')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.delete')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/account/delete.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->inject('user')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->action(function (Document $user, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('users', $user->getId());
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($user);
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_USER));
+
+        $response->noContent();
     });
