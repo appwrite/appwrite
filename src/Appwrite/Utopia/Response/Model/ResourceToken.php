@@ -34,6 +34,12 @@ class ResourceToken extends Model
                 'default' => '',
                 'example' => '1:1',
             ])
+            ->addRule('resourceType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Resource type.',
+                'default' => '',
+                'example' => 'file',
+            ])
             ->addRule('expire', [
                 'type' => self::TYPE_DATETIME,
                 'description' => 'Token expiration date in ISO 8601 format.',

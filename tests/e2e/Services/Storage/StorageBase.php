@@ -13,6 +13,9 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait StorageBase
 {
+    /**
+     * @group fileTokens
+     */
     public function testCreateBucketFile(): array
     {
         /**
@@ -738,6 +741,25 @@ trait StorageBase
 
         $this->assertNotEquals($imageBefore->getImageBlob(), $imageAfter->getImageBlob());
 
+        return $data;
+    }
+
+    /**
+     * @group fileTokens
+     * @depends testCreateBucketFile
+     */
+    public function testCreateFileToken(array $data): array
+    {
+        $bucketId = $data['bucketId'];
+        $fileId = $data['fileId'];
+
+        $res = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(201, $res['headers']['status-code']);
+        $this->assertEquals('file', $res['body']['resourceType']);
         return $data;
     }
 
