@@ -984,12 +984,11 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
 
         $tokenId = $payload['tokenId'] ?? '';
         $secret = $payload['secret'] ?? '';
-
         if (empty($tokenId) || empty($secret)) {
             return new Document([]);
         }
 
-        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        $token = Authorization::skip(fn() => $dbForProject->getDocument('resource_tokens', $tokenId));
 
         if ($token->isEmpty() || $token->getAttribute('secret') != $secret) {
             return new Document([]);
@@ -1010,9 +1009,9 @@ App::setResource('resourceToken', function ($project, $dbForProject, $request) {
                 'fileInternalId' => $internalIds[1],
             ]);
         }
-        return new Document([]);
     }
-});
+    return new Document([]);
+}, ['project', 'dbForProject', 'request']);
 
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
     /** @var Appwrite\Utopia\Request $request */

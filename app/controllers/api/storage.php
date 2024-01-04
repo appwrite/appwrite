@@ -46,6 +46,7 @@ use Utopia\Swoole\Request;
 use Utopia\Validator\Nullable;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Storage\Compression\Compression;
+use Appwrite\Utopia\Database\Validator\Queries\FileTokens;
 
 App::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -907,7 +908,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
-        if($resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
+        if (!$resourceToken->isEmpty() && $resourceToken->getAttribute('fileInternalId') !== $file->getInternalId()) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -1544,11 +1545,11 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('sdk.description', '/docs/references/storage/create-file-token.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE_TOKEN)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('expire', null, new Nullable(new DatetimeValidator()), 'Token expiry date', true)
-    ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
+    ->param('permissions', [], new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE, [Database::PERMISSION_READ, Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE, Database::PERMISSION_WRITE]), 'An array of permission strings. By default, only the current user is granted all permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -1579,7 +1580,8 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
-        $token = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), new Document([
+
+        $token = $dbForProject->createDocument('resource_tokens', new Document([
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
             'resourceId' => $bucketId . ':' . $fileId,
@@ -1598,7 +1600,7 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($file, Response::MODEL_FILE_TOKEN);
+            ->dynamic($token, Response::MODEL_RESOURCE_TOKEN);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
@@ -1613,7 +1615,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
     ->label('sdk.description', '/docs/references/storage/list-file-tokens.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE_TOKEN_LIST)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN_LIST)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('queries', [], new FileTokens(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', FileTokens::ALLOWED_ATTRIBUTES), true)
@@ -1670,7 +1672,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         $response->dynamic(new Document([
             'tokens' => $dbForProject->find('resource_tokens', $queries),
             'total' => $dbForProject->count('resource_tokens', $filterQueries, APP_LIMIT_COUNT),
-        ]), Response::MODEL_FILE_TOKEN_LIST);
+        ]), Response::MODEL_RESOURCE_TOKEN_LIST);
     });
 
 App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
@@ -1685,7 +1687,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     ->label('sdk.description', '/docs/references/storage/get-file-token.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE_TOKEN)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File ID.')
     ->param('tokenId', '', new UID(), 'File token ID.')
@@ -1724,7 +1726,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
-        $response->dynamic($token, Response::MODEL_FILE_TOKEN);
+        $response->dynamic($token, Response::MODEL_RESOURCE_TOKEN);
     });
 
 // Get token as JWT
@@ -1779,6 +1781,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
+        // calculate maxAge based on expiry date
+        $maxAge = PHP_INT_MAX;
+        $expire = $token->getAttribute('expire');
+        if ($expire != null) {
+            $now = new \DateTime();
+            $expiryDate = new \DateTime($expire);
+            $maxAge = $expiryDate->getTimestamp() - $now->getTimestamp();
+            ;
+        }
+
         $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
@@ -1808,7 +1820,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
     ->label('sdk.description', '/docs/references/storage/update-file.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FILE_TOKEN)
+    ->label('sdk.response.model', Response::MODEL_RESOURCE_TOKEN)
     ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
     ->param('fileId', '', new UID(), 'File unique ID.')
     ->param('tokenId', '', new UID(), 'File token unique ID.')
@@ -1898,7 +1910,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             ->setContext('bucket', $bucket)
         ;
 
-        $response->dynamic($file, Response::MODEL_FILE_TOKEN);
+        $response->dynamic($file, Response::MODEL_RESOURCE_TOKEN);
     });
 
 App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
@@ -1964,7 +1976,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             ->setParam('fileId', $file->getId())
             ->setParam('tokenId', $token->getId())
             ->setContext('bucket', $bucket)
-            ->setPayload($response->output($file, Response::MODEL_FILE_TOKEN))
+            ->setPayload($response->output($file, Response::MODEL_RESOURCE_TOKEN))
         ;
 
         $response->noContent();
