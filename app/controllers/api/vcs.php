@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Utopia\App;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Utopia\Validator\Host;
@@ -1059,7 +1060,7 @@ App::delete('/v1/vcs/installations/:installationId')
         }
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($installation);
 
         $response->noContent();

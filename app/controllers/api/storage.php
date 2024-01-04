@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\Hash\Sha;
 use Appwrite\ClamAV\Network;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -42,7 +42,6 @@ use Utopia\Validator\HexColor;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
-use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
 use Utopia\Storage\Compression\Compression;
 
@@ -137,8 +136,7 @@ App::post('/v1/storage/buckets')
         }
 
         $queueForEvents
-            ->setParam('bucketId', $bucket->getId())
-        ;
+            ->setParam('bucketId', $bucket->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -270,20 +268,19 @@ App::put('/v1/storage/buckets/:bucketId')
         $permissions = Permission::aggregate($permissions);
 
         $bucket = $dbForProject->updateDocument('buckets', $bucket->getId(), $bucket
-                ->setAttribute('name', $name)
-                ->setAttribute('$permissions', $permissions)
-                ->setAttribute('maximumFileSize', $maximumFileSize)
-                ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
-                ->setAttribute('fileSecurity', $fileSecurity)
-                ->setAttribute('enabled', $enabled)
-                ->setAttribute('encryption', $encryption)
-                ->setAttribute('compression', $compression)
-                ->setAttribute('antivirus', $antivirus));
+            ->setAttribute('name', $name)
+            ->setAttribute('$permissions', $permissions)
+            ->setAttribute('maximumFileSize', $maximumFileSize)
+            ->setAttribute('allowedFileExtensions', $allowedFileExtensions)
+            ->setAttribute('fileSecurity', $fileSecurity)
+            ->setAttribute('enabled', $enabled)
+            ->setAttribute('encryption', $encryption)
+            ->setAttribute('compression', $compression)
+            ->setAttribute('antivirus', $antivirus));
         $dbForProject->updateCollection('bucket_' . $bucket->getInternalId(), $permissions, $fileSecurity);
 
         $queueForEvents
-            ->setParam('bucketId', $bucket->getId())
-        ;
+            ->setParam('bucketId', $bucket->getId());
 
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
@@ -319,13 +316,12 @@ App::delete('/v1/storage/buckets/:bucketId')
         }
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($bucket);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
-            ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
-        ;
+            ->setPayload($response->output($bucket, Response::MODEL_BUCKET));
 
         $response->noContent();
     });
@@ -638,7 +634,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     if (!$validator->isValid($bucket->getCreate())) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
-                    $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                 }
             } catch (AuthorizationException) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -685,7 +681,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                     if (!$validator->isValid($bucket->getCreate())) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
-                    $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+                    $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                 }
             } catch (AuthorizationException) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -699,8 +695,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-        ;
+            ->setContext('bucket', $bucket);
 
         $metadata = null; // was causing leaks as it was passed by reference
 
@@ -764,7 +759,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
             if ($fileSecurity && !$valid) {
                 $cursorDocument = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             } else {
-                $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
 
             if ($cursorDocument->isEmpty()) {
@@ -829,7 +824,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -901,7 +896,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1007,8 +1002,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $response
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + 60 * 60 * 24 * 30) . ' GMT')
             ->setContentType($contentType)
-            ->file($data)
-        ;
+            ->file($data);
 
         unset($image);
     });
@@ -1055,7 +1049,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1072,8 +1066,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             ->setContentType($file->getAttribute('mimeType'))
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
             ->addHeader('X-Peak', \memory_get_peak_usage())
-            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"')
-        ;
+            ->addHeader('Content-Disposition', 'attachment; filename="' . $file->getAttribute('name', '') . '"');
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
@@ -1196,7 +1189,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
         }
 
         if ($file->isEmpty()) {
@@ -1223,8 +1216,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-        ;
+            ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
@@ -1357,7 +1349,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         // Read permission should not be required for update
-        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1408,14 +1400,13 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
         } else {
-            $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
+            $file = Authorization::skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         }
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
-            ->setContext('bucket', $bucket)
-        ;
+            ->setContext('bucket', $bucket);
 
         $response->dynamic($file, Response::MODEL_FILE);
     });
@@ -1464,7 +1455,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         // Read permission should not be required for delete
-        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1487,9 +1478,8 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
         if ($deviceDeleted) {
             $queueForDeletes
-                ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                ->setResource('file/' . $fileId)
-            ;
+                ->setType(DeleteType::CacheByResource->value)
+                ->setResource('file/' . $fileId);
 
             if ($fileSecurity && !$valid) {
                 try {
@@ -1498,7 +1488,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
             } else {
-                $deleted = Authorization::skip(fn() => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                $deleted = Authorization::skip(fn () => $dbForProject->deleteDocument('bucket_' . $bucket->getInternalId(), $fileId));
             }
 
             if (!$deleted) {
@@ -1512,8 +1502,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
-            ->setPayload($response->output($file, Response::MODEL_FILE))
-        ;
+            ->setPayload($response->output($file, Response::MODEL_FILE));
 
         $response->noContent();
     });

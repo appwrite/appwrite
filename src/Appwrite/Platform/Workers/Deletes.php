@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Enum\DeleteType;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
@@ -61,47 +62,48 @@ class Deletes extends Action
             throw new Exception('Missing payload');
         }
 
-        $type     = $payload['type'] ?? '';
+        $type     = DeleteType::tryFrom($payload['type'] ?? '');
         $datetime = $payload['datetime'] ?? null;
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
 
-        switch (strval($type)) {
-            case DELETE_TYPE_DOCUMENT:
-                switch ($document->getCollection()) {
-                    case DELETE_TYPE_DATABASES:
+        switch ($type) {
+            case DeleteType::Document:
+                $collection = DeleteType::tryFrom($document->getCollection());
+                switch ($collection) {
+                    case DeleteType::Databases:
                         $this->deleteDatabase($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_COLLECTIONS:
+                    case DeleteType::Collections:
                         $this->deleteCollection($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_PROJECTS:
+                    case DeleteType::Projects:
                         $this->deleteProject($dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $document);
                         break;
-                    case DELETE_TYPE_FUNCTIONS:
+                    case DeleteType::Functions:
                         $this->deleteFunction($dbForConsole, $getProjectDB, $getFunctionsDevice, $getBuildsDevice, $document, $project);
                         break;
-                    case DELETE_TYPE_DEPLOYMENTS:
+                    case DeleteType::Deployments:
                         $this->deleteDeployment($getProjectDB, $getFunctionsDevice, $getBuildsDevice, $document, $project);
                         break;
-                    case DELETE_TYPE_USERS:
+                    case DeleteType::Users:
                         $this->deleteUser($getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_TEAMS:
+                    case DeleteType::Teams:
                         $this->deleteMemberships($getProjectDB, $document, $project);
                         if ($project->getId() === 'console') {
                             $this->deleteProjectsByTeam($dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $document);
                         }
                         break;
-                    case DELETE_TYPE_BUCKETS:
+                    case DeleteType::Buckets:
                         $this->deleteBucket($getProjectDB, $getFilesDevice, $document, $project);
                         break;
-                    case DELETE_TYPE_INSTALLATIONS:
+                    case DeleteType::Installations:
                         $this->deleteInstallation($dbForConsole, $getProjectDB, $document, $project);
                         break;
-                    case DELETE_TYPE_RULES:
+                    case DeleteType::Rules:
                         $this->deleteRule($dbForConsole, $document);
                         break;
                     default:
@@ -114,11 +116,11 @@ class Deletes extends Action
                 }
                 break;
 
-            case DELETE_TYPE_EXECUTIONS:
+            case DeleteType::Executions:
                 $this->deleteExecutionLogs($dbForConsole, $getProjectDB, $datetime);
                 break;
 
-            case DELETE_TYPE_AUDIT:
+            case DeleteType::Audit:
                 if (!empty($datetime)) {
                     $this->deleteAuditLogs($dbForConsole, $getProjectDB, $datetime);
                 }
@@ -127,30 +129,30 @@ class Deletes extends Action
                     $this->deleteAuditLogsByResource($getProjectDB, 'document/' . $document->getId(), $project);
                 }
                 break;
-            case DELETE_TYPE_ABUSE:
+            case DeleteType::Abuse:
                 $this->deleteAbuseLogs($dbForConsole, $getProjectDB, $datetime);
                 break;
 
-            case DELETE_TYPE_REALTIME:
+            case DeleteType::Realtime:
                 $this->deleteRealtimeUsage($dbForConsole, $datetime);
                 break;
 
-            case DELETE_TYPE_SESSIONS:
+            case DeleteType::Sessions:
                 $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
                 break;
-            case DELETE_TYPE_USAGE:
+            case DeleteType::Usage:
                 $this->deleteUsageStats($dbForConsole, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
-            case DELETE_TYPE_CACHE_BY_RESOURCE:
+            case DeleteType::CacheByResource:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource);
                 break;
-            case DELETE_TYPE_CACHE_BY_TIMESTAMP:
+            case DeleteType::CacheByTimestamp:
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
                 break;
-            case DELETE_TYPE_SCHEDULES:
+            case DeleteType::Schedules:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
                 break;
-            case DELETE_TYPE_TOPIC:
+            case DeleteType::Topic:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             default:

@@ -148,28 +148,6 @@ const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
-// Deletion Types
-const DELETE_TYPE_DATABASES = 'databases';
-const DELETE_TYPE_DOCUMENT = 'document';
-const DELETE_TYPE_COLLECTIONS = 'collections';
-const DELETE_TYPE_PROJECTS = 'projects';
-const DELETE_TYPE_FUNCTIONS = 'functions';
-const DELETE_TYPE_DEPLOYMENTS = 'deployments';
-const DELETE_TYPE_USERS = 'users';
-const DELETE_TYPE_TEAMS = 'teams';
-const DELETE_TYPE_EXECUTIONS = 'executions';
-const DELETE_TYPE_AUDIT = 'audit';
-const DELETE_TYPE_ABUSE = 'abuse';
-const DELETE_TYPE_USAGE = 'usage';
-const DELETE_TYPE_REALTIME = 'realtime';
-const DELETE_TYPE_BUCKETS = 'buckets';
-const DELETE_TYPE_INSTALLATIONS = 'installations';
-const DELETE_TYPE_RULES = 'rules';
-const DELETE_TYPE_SESSIONS = 'sessions';
-const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
-const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
-const DELETE_TYPE_SCHEDULES = 'schedules';
-const DELETE_TYPE_TOPIC = 'topic';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

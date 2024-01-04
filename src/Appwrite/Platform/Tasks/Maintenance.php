@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Utopia\App;
@@ -62,7 +63,7 @@ class Maintenance extends Action
     private function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_EXECUTIONS)
+            ->setType(DeleteType::Executions->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
@@ -70,7 +71,7 @@ class Maintenance extends Action
     private function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_ABUSE)
+            ->setType(DeleteType::Abuse->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
@@ -78,7 +79,7 @@ class Maintenance extends Action
     private function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_AUDIT)
+            ->setType(DeleteType::Audit->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
@@ -86,7 +87,7 @@ class Maintenance extends Action
     private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_USAGE)
+            ->setType(DeleteType::Usage->value)
             ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
             ->trigger();
     }
@@ -94,7 +95,7 @@ class Maintenance extends Action
     private function notifyDeleteConnections(Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_REALTIME)
+            ->setType(DeleteType::Realtime->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
             ->trigger();
     }
@@ -102,7 +103,7 @@ class Maintenance extends Action
     private function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
     {
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_SESSIONS)
+            ->setType(DeleteType::Sessions->value)
             ->trigger();
     }
 
@@ -136,7 +137,7 @@ class Maintenance extends Action
     {
 
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
+            ->setType(DeleteType::CacheByTimestamp->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
@@ -145,7 +146,7 @@ class Maintenance extends Action
     {
 
         ($queueForDeletes)
-            ->setType(DELETE_TYPE_SCHEDULES)
+            ->setType(DeleteType::Schedules->value)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }

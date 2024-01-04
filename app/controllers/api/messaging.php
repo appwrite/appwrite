@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
@@ -68,7 +69,7 @@ App::post('/v1/messaging/providers/mailgun')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -149,7 +150,7 @@ App::post('/v1/messaging/providers/sendgrid')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -221,7 +222,7 @@ App::post('/v1/messaging/providers/msg91')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -298,7 +299,7 @@ App::post('/v1/messaging/providers/telesign')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -375,7 +376,7 @@ App::post('/v1/messaging/providers/textmagic')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -452,7 +453,7 @@ App::post('/v1/messaging/providers/twilio')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -529,7 +530,7 @@ App::post('/v1/messaging/providers/vonage')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -1894,7 +1895,7 @@ App::delete('/v1/messaging/topics/:topicId')
         $dbForProject->deleteDocument('topics', $topicId);
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_TOPIC)
+            ->setType(DeleteType::Topic->value)
             ->setDocument($topic);
 
         $queueForEvents

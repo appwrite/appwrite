@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -251,7 +252,7 @@ App::delete('/v1/proxy/rules/:ruleId')
         $dbForConsole->deleteDocument('rules', $rule->getId());
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($rule);
 
         $queueForEvents->setParam('ruleId', $rule->getId());

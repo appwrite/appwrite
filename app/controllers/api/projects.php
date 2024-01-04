@@ -3,6 +3,7 @@
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Validator\Event;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
@@ -873,7 +874,7 @@ App::delete('/v1/projects/:projectId')
         }
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($project);
 
         if (!$dbForConsole->deleteDocument('projects', $projectId)) {

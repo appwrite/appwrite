@@ -4,6 +4,7 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Network\Validator\Email;
@@ -833,9 +834,9 @@ App::get('/v1/users/:userId/targets')
 
         $queries[] = Query::equal('userId', [$userId]);
 
-         // Get cursor document if there was a cursor query
-         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
-         $cursor = reset($cursor);
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
 
         if ($cursor) {
             $targetId = $cursor->getValue();
@@ -1169,8 +1170,7 @@ App::patch('/v1/users/:userId/email')
 
         $user
             ->setAttribute('email', $email)
-            ->setAttribute('emailVerification', false)
-        ;
+            ->setAttribute('emailVerification', false);
 
 
         try {
@@ -1225,8 +1225,7 @@ App::patch('/v1/users/:userId/phone')
 
         $user
             ->setAttribute('phone', $number)
-            ->setAttribute('phoneVerification', false)
-        ;
+            ->setAttribute('phoneVerification', false);
 
         $target = $dbForProject->findOne('targets', [
             Query::equal('identifier', [$number]),
@@ -1540,7 +1539,7 @@ App::delete('/v1/users/:userId')
         $dbForProject->deleteDocument('users', $userId);
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($clone);
 
         $queueForEvents

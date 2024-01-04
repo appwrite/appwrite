@@ -2,6 +2,7 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -1025,7 +1026,7 @@ App::delete('/v1/functions/:functionId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($function);
 
         $queueForEvents->setParam('functionId', $function->getId());
@@ -1423,7 +1424,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
             ->setParam('deploymentId', $deployment->getId());
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setType(DeleteType::Document->value)
             ->setDocument($deployment);
 
         $response->noContent();

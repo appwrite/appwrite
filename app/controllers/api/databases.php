@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Detector\Detector;
+use Appwrite\Enum\DeleteType;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -3606,7 +3607,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $processDocument($collection, $document);
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_AUDIT)
+            ->setType(DeleteType::Audit->value)
             ->setDocument($document);
 
         $queueForEvents
