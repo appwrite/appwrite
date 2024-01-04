@@ -35,6 +35,7 @@ use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Hostname;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;
@@ -259,8 +260,8 @@ App::get('/v1/vcs/github/authorize')
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->label('sdk.hide', true)
-    ->param('success', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
-    ->param('failure', '', fn ($clients) => new Host($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
+    ->param('success', '', fn ($clients) => new Hostname($clients), 'URL to redirect back to console after a successful installation attempt.', true, ['clients'])
+    ->param('failure', '', fn ($clients) => new Hostname($clients), 'URL to redirect back to console after a failed installation attempt.', true, ['clients'])
     ->inject('request')
     ->inject('response')
     ->inject('project')

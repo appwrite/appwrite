@@ -23,6 +23,7 @@ use Utopia\Migration\Sources\NHost;
 use Utopia\Migration\Sources\Supabase;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Host;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -631,7 +632,7 @@ App::get('/v1/migrations/firebase/connect')
     ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
     ->label('sdk.methodType', 'webAuth')
     ->label('sdk.hide', true)
-    ->param('redirect', '', fn ($clients) => new Host($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
+    ->param('redirect', '', fn ($clients) => new Hostname($clients), 'URL to redirect back to your Firebase authorization. Only console hostnames are allowed.', true, ['clients'])
     ->param('projectId', '', new UID(), 'Project ID')
     ->inject('response')
     ->inject('request')

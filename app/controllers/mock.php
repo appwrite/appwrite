@@ -16,6 +16,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Validator\Hostname;
 
 App::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
@@ -24,7 +25,7 @@ App::get('/v1/mock/tests/general/oauth2')
     ->label('docs', false)
     ->label('sdk.mock', true)
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
-    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
+    ->param('redirect_uri', '', new Hostname(['localhost']), 'OAuth2 Redirect URI.') // Important to deny an open redirect attack
     ->param('scope', '', new Text(100), 'OAuth2 scope list.')
     ->param('state', '', new Text(1024), 'OAuth2 state.')
     ->inject('response')
@@ -42,7 +43,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
     ->param('client_id', '', new Text(100), 'OAuth2 Client ID.')
     ->param('client_secret', '', new Text(100), 'OAuth2 scope list.')
     ->param('grant_type', 'authorization_code', new WhiteList(['refresh_token', 'authorization_code']), 'OAuth2 Grant Type.', true)
-    ->param('redirect_uri', '', new Host(['localhost']), 'OAuth2 Redirect URI.', true)
+    ->param('redirect_uri', '', new Hostname(['localhost']), 'OAuth2 Redirect URI.', true)
     ->param('code', '', new Text(100), 'OAuth2 state.', true)
     ->param('refresh_token', '', new Text(100), 'OAuth2 refresh token.', true)
     ->inject('response')
