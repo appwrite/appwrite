@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Messaging;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 
 trait MessagingBase
@@ -161,11 +162,11 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-          'name' => 'Mailgun2',
-          'apiKey' => 'my-apikey',
-          'domain' => 'my-domain',
-          'isEuRegion' => true,
-          'enabled' => false,
+            'name' => 'Mailgun2',
+            'apiKey' => 'my-apikey',
+            'domain' => 'my-domain',
+            'isEuRegion' => true,
+            'enabled' => false,
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
@@ -271,6 +272,32 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, \count($response['body']['topics']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                'equal("total", [0])'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, \count($response['body']['topics']));
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                'greaterThan("total", 0)'
+            ],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, \count($response['body']['topics']));
 
         return $topicId;
     }
