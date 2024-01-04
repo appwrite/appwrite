@@ -193,7 +193,7 @@ class Messaging extends Action
                             $details[] = $response->getDetails();
                             foreach ($details as $detail) {
                                 if ($detail['status'] === 'failure') {
-                                    $deliveryErrors[] = `Failed sending to target {$detail['recipient']} with error: {$detail['error']}`;
+                                    $deliveryErrors[] = "Failed sending to target {$detail['recipient']} with error: {$detail['error']}";
                                 }
 
                                 // Deleting push targets when token has expired.
