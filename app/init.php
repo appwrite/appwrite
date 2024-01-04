@@ -78,6 +78,7 @@ use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\CLI\Console;
+use Utopia\Domains\Validator\PublicDomain;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -231,6 +232,11 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 $register = new Registry();
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+
+$isProduction = App::getEnv('_APP_ENV', App::MODE_TYPE_DEVELOPMENT) === App::MODE_TYPE_PRODUCTION;
+if (!$isProduction) {
+    PublicDomain::allow(['request-catcher']);
+}
 
 /*
  * ENV vars
