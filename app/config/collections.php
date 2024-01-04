@@ -3195,13 +3195,13 @@ $projectCollections = array_merge([
         ],
     ],
 
-    'fileTokens' => [
+    'resource_tokens' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('fileTokens'),
-        'name' => 'File Tokens',
+        '$id' => ID::custom('resource_tokens'),
+        'name' => 'Resource Tokens',
         'attributes' => [
             [
-                '$id' => ID::custom('fileId'),
+                '$id' => ID::custom('resourceId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3212,7 +3212,7 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('fileInternalId'),
+                '$id' => ID::custom('resourceInternalId'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
                 'size' => Database::LENGTH_KEY,
@@ -3223,21 +3223,10 @@ $projectCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('bucketId'),
+                '$id' => ID::custom('resourceType'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
-                'size' => Database::LENGTH_KEY,
-                'signed' => true,
-                'required' => true,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('bucketInternalId'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => Database::LENGTH_KEY,
+                'size' => 100,
                 'signed' => true,
                 'required' => true,
                 'default' => null,
@@ -3268,13 +3257,6 @@ $projectCollections = array_merge([
             ]
         ],
         'indexes' => [
-            [
-                '$id' => '_key_file_id_bucket_id',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['bucketInternalId', 'fileInternalId'],
-                'lengths' => [Database::LENGTH_KEY, Database::LENGTH_KEY],
-                'orders' => [Database::ORDER_ASC, Database::ORDER_ASC],
-            ],
             [
                 '$id' => '_key_expiry_date',
                 'type' => Database::INDEX_KEY,
