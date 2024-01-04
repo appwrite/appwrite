@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\ClamAV\Network;
 use Appwrite\Event\Delete;
@@ -1575,10 +1576,9 @@ App::post('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         $token = $dbForProject->createDocument('bucket_' . $bucket->getInternalId(), new Document([
             '$id' => ID::unique(),
             'secret' => Auth::tokenGenerator(128),
-            'bucketId' => $bucketId,
-            'fileId' => $fileId,
-            'bucketInternalId' => $bucket->getInternalId(),
-            'fileInternalId' => $file->getInternalId(),
+            'resourceId' => $bucketId . ':' . $fileId,
+            'resourceInternalId' => $bucket->getInternalId() . ':' . $file->getInternalId(),
+            'resourceType' => 'file',
             'expire' => $expire,
             '$permissions' => $permissions
         ]));
@@ -1649,7 +1649,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
         if ($cursor) {
             /** @var Query $cursor */
             $tokenId = $cursor->getValue();
-            $cursorDocument = $dbForProject->getDocument('fileTokens', $tokenId);
+            $cursorDocument = $dbForProject->getDocument('resource_tokens', $tokenId);
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "File token '{$tokenId}' for the 'cursor' value not found.");
@@ -1658,12 +1658,12 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens')
             $cursor->setValue($cursorDocument);
         }
 
-        $queries = [...$queries, Query::equal('bucketInternalId', [$bucket->getInternalId()]), Query::equal('fileInternalId', [$file->getInternalId()])];
+        $queries = [...$queries, Query::equal('resourceInternalId', [$bucket->getInternalId() . ':' . $file->getInternalId()]), Query::equal('resourceType', ['file'])];
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $response->dynamic(new Document([
-            'files' => $dbForProject->find('fileTokens', $queries),
-            'total' => $dbForProject->count('fileTokens', $filterQueries, APP_LIMIT_COUNT),
+            'tokens' => $dbForProject->find('resource_tokens', $queries),
+            'total' => $dbForProject->count('resource_tokens', $filterQueries, APP_LIMIT_COUNT),
         ]), Response::MODEL_FILE_TOKEN_LIST);
     });
 
@@ -1712,13 +1712,76 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('fileTokens', $tokenId);
+        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
 
-        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
         $response->dynamic($token, Response::MODEL_FILE_TOKEN);
+    });
+
+// Get token as JWT
+App::get('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId/jwt')
+    ->desc('Get file token jwt')
+    ->groups(['api', 'storage'])
+    ->label('scope', 'files.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('usage.metric', 'fileTokens.{scope}.requests.read')
+    ->label('usage.params', ['bucketId:{request.bucketId}','fileId:{request.fileId}'])
+    ->label('sdk.namespace', 'storage')
+    ->label('sdk.method', 'getFileTokenJWT')
+    ->label('sdk.description', '/docs/references/storage/get-file-token-jwt.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_JWT)
+    ->param('bucketId', '', new UID(), 'Storage bucket unique ID. You can create a new storage bucket using the Storage service [server integration](https://appwrite.io/docs/server/storage#createBucket).')
+    ->param('fileId', '', new UID(), 'File ID.')
+    ->param('tokenId', '', new UID(), 'File token ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $bucketId, string $fileId, string $tokenId, Response $response, Database $dbForProject) {
+        $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+
+        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+
+        if ($bucket->isEmpty() || (!$bucket->getAttribute('enabled') && !$isAPIKey && !$isPrivilegedUser)) {
+            throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+        }
+
+        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
+        $validator = new Authorization(Database::PERMISSION_READ);
+        $valid = $validator->isValid($bucket->getRead());
+        if (!$fileSecurity && !$valid) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
+        if ($fileSecurity && !$valid) {
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+        } else {
+            $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+        }
+
+        if ($file->isEmpty()) {
+            throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+        }
+
+        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
+            throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
+        }
+
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $maxAge, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic(new Document(['jwt' => $jwt->encode([
+            'resourceId' => $token->getAttribute('resourceId'),
+            'tokenId' => $token->getId(),
+            'secret' => $token->getAttribute('secret')
+        ])]), Response::MODEL_JWT);
     });
 
 App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
@@ -1778,9 +1841,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('fileTokens', $tokenId);
+        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
 
-        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
@@ -1820,7 +1883,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             ->setAttribute('expire', $expire)
             ->setAttribute('$permissions', $permissions);
 
-        $token = $dbForProject->updateDocument('fileTokens', $tokenId, $token);
+        $token = $dbForProject->updateDocument('resource_tokens', $tokenId, $token);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
@@ -1883,12 +1946,12 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
-        $token = $dbForProject->getDocument('fileTokens', $tokenId);
-        if ($token->isEmpty() || $token->getAttribute('bucketInternalId') != $bucket->getInternalId() || $token->getAttribute('fileInternalId') != $file->getInternalId()) {
+        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+        if ($token->isEmpty() || $token->getAttribute('resourceInternalId') != $bucket->getInternalId() . ':' . $file->getInternalId()) {
             throw new Exception(Exception::STORAGE_FILE_TOKEN_NOT_FOUND);
         }
 
-        $dbForProject->deleteDocument('fileTokens', $tokenId);
+        $dbForProject->deleteDocument('resource_tokens', $tokenId);
 
         $queueForEvents
             ->setParam('bucketId', $bucket->getId())
@@ -1901,6 +1964,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId/tokens/:tokenId')
         $response->noContent();
     });
 
+/** Storage usage */
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
     ->groups(['api', 'storage', 'usage'])
