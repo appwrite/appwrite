@@ -1887,7 +1887,8 @@ App::patch('/v1/account/password')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $password, string $oldPassword, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
 
         // Check old password only if its an existing user.
         if (!empty($user->getAttribute('passwordUpdate')) && !Auth::passwordVerify($oldPassword, $user->getAttribute('password'), $user->getAttribute('hash'), $user->getAttribute('hashOptions'))) { // Double check user password
@@ -1913,6 +1914,8 @@ App::patch('/v1/account/password')
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
+
+        $hooks->trigger('passwordValidator', [$project, $password, $user]);
 
         $user
             ->setAttribute('password', $newPassword)

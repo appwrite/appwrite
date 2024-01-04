@@ -39,9 +39,10 @@ use Utopia\Validator\Integer;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Hooks\Hooks;
 
 /** TODO: Remove function when we move to using utopia/platform */
-function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents): Document
+function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
 {
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
@@ -70,8 +71,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
-        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
-        $user = $dbForProject->createDocument('users', new Document([
+        $user = new Document([
             '$id' => $userId,
             '$permissions' => [
                 Permission::read(Role::any()),
@@ -97,7 +97,12 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'tokens' => null,
             'memberships' => null,
             'search' => implode(' ', [$userId, $email, $phone, $name]),
-        ]));
+        ]);
+
+        $hooks->trigger('passwordValidator', [$project, $password, $user]);
+
+        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
+        $user = $dbForProject->createDocument('users', $user);
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
@@ -130,8 +135,9 @@ App::post('/v1/users')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -160,8 +166,9 @@ App::post('/v1/users/bcrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('bcrypt', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -190,8 +197,9 @@ App::post('/v1/users/md5')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('md5', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -220,8 +228,9 @@ App::post('/v1/users/argon2')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('argon2', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -251,14 +260,15 @@ App::post('/v1/users/sha')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $passwordVersion, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $options = '{}';
 
         if (!empty($passwordVersion)) {
             $options = '{"version":"' . $passwordVersion . '"}';
         }
 
-        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+        $user = createUser('sha', $options, $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -287,8 +297,9 @@ App::post('/v1/users/phpass')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('phpass', '{}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -322,7 +333,8 @@ App::post('/v1/users/scrypt')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, int $passwordCpu, int $passwordMemory, int $passwordParallel, int $passwordLength, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $options = [
             'salt' => $passwordSalt,
             'costCpu' => $passwordCpu,
@@ -331,7 +343,7 @@ App::post('/v1/users/scrypt')
             'length' => $passwordLength
         ];
 
-        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+        $user = createUser('scrypt', \json_encode($options), $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -363,8 +375,9 @@ App::post('/v1/users/scrypt-modified')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
-        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents);
+    ->inject('hooks')
+    ->action(function (string $userId, string $email, string $password, string $passwordSalt, string $passwordSaltSeparator, string $passwordSignerKey, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+        $user = createUser('scryptMod', '{"signerKey":"' . $passwordSignerKey . '","saltSeparator":"' . $passwordSaltSeparator . '","salt":"' . $passwordSalt . '"}', $userId, $email, $password, null, $name, $project, $dbForProject, $queueForEvents, $hooks);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -846,7 +859,8 @@ App::patch('/v1/users/:userId/password')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $userId, string $password, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -860,6 +874,8 @@ App::patch('/v1/users/:userId/password')
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
+
+        $hooks->trigger('passwordValidator', [$project, $password, $user]);
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
