@@ -173,10 +173,6 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
-// Compression type
-const COMPRESSION_TYPE_NONE = 'none';
-const COMPRESSION_TYPE_GZIP = 'gzip';
-const COMPRESSION_TYPE_ZSTD = 'zstd';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
