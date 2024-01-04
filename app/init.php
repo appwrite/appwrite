@@ -970,6 +970,50 @@ App::setResource('clients', function ($request, $console, $project) {
     return $clients;
 }, ['request', 'console', 'project']);
 
+App::setResource('resourceToken', function ($project, $dbForProject, $request) {
+    $tokenJWT = $request->getParam('token');
+
+    if (!empty($tokenJWT) && !$project->isEmpty()) { // JWT authentication
+        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+
+        try {
+            $payload = $jwt->decode($tokenJWT);
+        } catch (JWTException $error) {
+            return new Document([]);
+        }
+
+        $tokenId = $payload['tokenId'] ?? '';
+        $secret = $payload['secret'] ?? '';
+
+        if (empty($tokenId) || empty($secret)) {
+            return new Document([]);
+        }
+
+        $token = $dbForProject->getDocument('resource_tokens', $tokenId);
+
+        if ($token->isEmpty() || $token->getAttribute('secret') != $secret) {
+            return new Document([]);
+        }
+
+        if ($token->getAttribute('resourceType') === 'file') {
+            $internalIds = explode(':', $token->getAttribute('resourceInternalId'));
+            $ids = explode(':', $token->getAttribute('resourceId'));
+
+            if (count($internalIds) != 2 || count($ids) != 2) {
+                return new Document([]);
+            }
+
+            return new Document([
+                'bucketId' => $ids[0],
+                'fileId' => $ids[1],
+                'bucketInternalId' => $internalIds[0],
+                'fileInternalId' => $internalIds[1],
+            ]);
+        }
+        return new Document([]);
+    }
+});
+
 App::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
     /** @var Appwrite\Utopia\Request $request */
     /** @var Appwrite\Utopia\Response $response */
