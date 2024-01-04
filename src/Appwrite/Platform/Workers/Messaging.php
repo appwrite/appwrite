@@ -49,7 +49,7 @@ class Messaging extends Action
             ->desc('Messaging worker')
             ->inject('message')
             ->inject('dbForProject')
-            ->callback(fn(Message $message, Database $dbForProject) => $this->action($message, $dbForProject));
+            ->callback(fn (Message $message, Database $dbForProject) => $this->action($message, $dbForProject));
     }
 
     /**
@@ -92,7 +92,7 @@ class Messaging extends Action
         if (\count($topicsId) > 0) {
             $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
             foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -100,7 +100,7 @@ class Messaging extends Action
         if (\count($usersId) > 0) {
             $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
             foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($user->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -194,14 +194,6 @@ class Messaging extends Action
                             foreach ($details as $detail) {
                                 if ($detail['status'] === 'failure') {
                                     $deliveryErrors[] = `Failed sending to target {$detail['recipient']} with error: {$detail['error']}`;
-                                }
-
-                                // Deleting push targets when token has expired.
-                                if ($detail['error'] === 'Expired device token.') {
-                                    $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$detail['recipient']])]);
-                                    if ($target instanceof Document && !$target->isEmpty()) {
-                                        $dbForProject->deleteDocument('targets', $target->getId());
-                                    }
                                 }
                             }
                         } catch (\Exception $e) {
