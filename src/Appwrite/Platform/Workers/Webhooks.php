@@ -136,6 +136,8 @@ class Webhooks extends Action
             $dbForConsole->deleteCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
+        } else {
+            $webhook->setAttribute('attempts', 0); //set failed attempts back to 0 on successful request
         }
 
         \curl_close($ch);

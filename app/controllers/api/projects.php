@@ -899,15 +899,15 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
-    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, bool $enabled, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1024,15 +1024,15 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
     ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
-    ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, bool $enabled, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
