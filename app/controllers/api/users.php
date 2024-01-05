@@ -99,7 +99,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'search' => implode(' ', [$userId, $email, $phone, $name]),
         ]);
 
-        $hooks->trigger('passwordValidator', [$project, $password, $user]);
+        $hooks->trigger('passwordValidator', [$project, $password, &$user]);
 
         $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = $dbForProject->createDocument('users', $user);
@@ -875,7 +875,7 @@ App::patch('/v1/users/:userId/password')
             }
         }
 
-        $hooks->trigger('passwordValidator', [$project, $password, $user]);
+        $hooks->trigger('passwordValidator', [$project, $password, &$user]);
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
 
