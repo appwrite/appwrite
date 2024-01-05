@@ -30,7 +30,7 @@ class Retry extends Action
         $queueClient = new Client($queueName, $queue);
 
         if ($queueClient->sumFailedJobs() === 0) {
-            Console::error('Found no jobs to retry, are you sure you have the right queue name?');
+            Console::error('No failed jobs found.');
             return;
         }
 
