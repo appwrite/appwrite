@@ -12,7 +12,7 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const MAX_FAILED_ATTEMPTS = 10;
+    private const MAX_FAILED_ATTEMPTS = 2;
 
     public static function getName(): string
     {
@@ -51,7 +51,7 @@ class Webhooks extends Action
         $user = new Document($payload['user'] ?? []);
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
-            if ($webhook->getAttribute('enabled') === true && array_intersect($webhook->getAttribute('events', []), $events)) {
+            if (array_intersect($webhook->getAttribute('events', []), $events)) {
                 $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole);
             }
         }
@@ -72,7 +72,7 @@ class Webhooks extends Action
      */
     private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole): void
     {
-        if ($webhook->getAttribute('enabled') === false) {
+        if ($webhook->getAttribute('enabled') !== true) {
             return;
         }
 

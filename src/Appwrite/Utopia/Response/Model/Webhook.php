@@ -87,6 +87,12 @@ class Webhook extends Model
                 'description' => 'Webhooks last failed delivery attempt logs.',
                 'default' => '',
                 'example' => 'Failed to connect to remote server.',
+            ])
+            ->addRule('attempts', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Number of consecutive failed webhook attempts.',
+                'default' => 0,
+                'example' => 10,
             ]);
     }
 
