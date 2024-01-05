@@ -236,7 +236,7 @@ App::post('/v1/messaging/providers/msg91')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -313,7 +313,7 @@ App::post('/v1/messaging/providers/telesign')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -390,7 +390,7 @@ App::post('/v1/messaging/providers/textmagic')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -467,7 +467,7 @@ App::post('/v1/messaging/providers/twilio')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -544,7 +544,7 @@ App::post('/v1/messaging/providers/vonage')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -2276,9 +2276,9 @@ App::post('/v1/messaging/messages/email')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
@@ -2367,9 +2367,9 @@ App::post('/v1/messaging/messages/sms')
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('content', '', new Text(64230), 'SMS Content.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -2448,9 +2448,9 @@ App::post('/v1/messaging/messages/push')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('title', '', new Text(256), 'Title for push notification.')
     ->param('body', '', new Text(64230), 'Body for push notification.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
@@ -2694,9 +2694,9 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('subject', null, new Text(998), 'Email Subject.', true)
     ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
@@ -2822,9 +2822,9 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
     ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
@@ -2928,9 +2928,9 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('title', null, new Text(256), 'Title for push notification.', true)
     ->param('body', null, new Text(64230), 'Body for push notification.', true)
