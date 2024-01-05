@@ -119,7 +119,7 @@ App::post('/v1/account')
             }
         }
 
-        $hooks->trigger('passwordValidator', [$project, $password, &$user]);
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
         $password = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
@@ -196,7 +196,8 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -214,6 +215,8 @@ App::post('/v1/account/sessions/email')
         }
 
         $user->setAttributes($profile->getArrayCopy());
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
@@ -1915,7 +1918,7 @@ App::patch('/v1/account/password')
             }
         }
 
-        $hooks->trigger('passwordValidator', [$project, $password, &$user]);
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $user
             ->setAttribute('password', $newPassword)
@@ -1954,7 +1957,9 @@ App::patch('/v1/account/email')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('project')
+    ->inject('hooks')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -1964,6 +1969,8 @@ App::patch('/v1/account/email')
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $email = \strtolower($email);
 
@@ -2023,7 +2030,9 @@ App::patch('/v1/account/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('project')
+    ->inject('hooks')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2033,6 +2042,8 @@ App::patch('/v1/account/phone')
         ) { // Double check user password
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, false]);
 
         $user
             ->setAttribute('phone', $phone)
@@ -2557,7 +2568,8 @@ App::put('/v1/account/recovery')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->inject('hooks')
+    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks) {
         if ($password !== $passwordAgain) {
             throw new Exception(Exception::USER_PASSWORD_MISMATCH);
         }
@@ -2590,6 +2602,8 @@ App::put('/v1/account/recovery')
             $history[] = $newPassword;
             $history = array_slice($history, (count($history) - $historyLimit), $historyLimit);
         }
+
+        $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
                 ->setAttribute('password', $newPassword)
