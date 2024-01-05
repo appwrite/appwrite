@@ -12,7 +12,7 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const MAX_FAILED_ATTEMPTS = 2;
+    private const MAX_FAILED_ATTEMPTS = 10;
 
     public static function getName(): string
     {
