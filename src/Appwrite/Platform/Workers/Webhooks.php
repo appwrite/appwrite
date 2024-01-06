@@ -86,7 +86,7 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
         \curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
         \curl_setopt($ch, CURLOPT_HEADER, 0);
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 0);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
         \curl_setopt($ch, CURLOPT_MAXFILESIZE, 5242880);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
@@ -120,13 +120,27 @@ class Webhooks extends Action
             \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         }
 
-        if (false === \curl_exec($ch)) {
+        $curl_exec_result = \curl_exec($ch);
+
+        if (\curl_error($ch) !== '' || \curl_getinfo($ch, CURLINFO_RESPONSE_CODE) >= 400) {
             $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForConsole->getDocument('webhooks', $webhook->getId());
             $attempts = $webhook->getAttribute('attempts');
-            $logs = \curl_error($ch) . ' in events ' . implode(', ', $events);
+
+            $logs = json_encode([
+                'URL' => $webhook->getAttribute('url'),
+                'Method' => 'POST',
+            ]);
+
+            if (\curl_error($ch) !== '') {
+                $logs['CurlError'] = \curl_error($ch);
+                $logs['Events'] = implode(', ', $events);
+            } else {
+                $logs['Response status code'] = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+                $logs['Response body'] = $curl_exec_result;
+            }
+
             $webhook->setAttribute('logs', $logs);
-            // $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
@@ -137,7 +151,7 @@ class Webhooks extends Action
 
             $this->errors[] = $logs;
         } else {
-            $webhook->setAttribute('attempts', 0); //set failed attempts back to 0 on successful request
+            $webhook->setAttribute('attempts', 0); // Reset attempts on success
         }
 
         \curl_close($ch);
