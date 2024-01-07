@@ -44,6 +44,7 @@ use Appwrite\Hooks\Hooks;
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
 {
+    $plaintextPassword = $password;
     $hashOptionsObject = (\is_string($hashOptions)) ? \json_decode($hashOptions, true) : $hashOptions; // Cast to JSON array
     $passwordHistory = $project->getAttribute('auths', [])['passwordHistory'] ?? 0;
 
@@ -66,11 +67,12 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
             $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
-            if (!$personalDataValidator->isValid($password)) {
+            if (!$personalDataValidator->isValid($plaintextPassword)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
         }
 
+        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = new Document([
             '$id' => $userId,
             '$permissions' => [
@@ -100,10 +102,9 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         ]);
 
         if($hash === 'plaintext') {
-            $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
+            $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
-        $password = (!empty($password)) ? ($hash === 'plaintext' ? Auth::passwordHash($password, $hash, $hashOptionsObject) : $password) : null;
         $user = $dbForProject->createDocument('users', $user);
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
