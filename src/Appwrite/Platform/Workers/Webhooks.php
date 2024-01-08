@@ -2,10 +2,13 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Mail;
+use Appwrite\Template\Template;
 use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
+use Utopia\Locale\Locale;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -28,16 +31,18 @@ class Webhooks extends Action
             ->desc('Webhooks worker')
             ->inject('message')
             ->inject('dbForConsole')
-            ->callback(fn ($message, Database $dbForConsole) => $this->action($message, $dbForConsole));
+            ->inject('queueForMails')
+            ->callback(fn ($message, Database $dbForConsole, Mail $queueForMails) => $this->action($message, $dbForConsole, $queueForMails));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForConsole
+     * @param Mail $queueForMails
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForConsole): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -52,7 +57,7 @@ class Webhooks extends Action
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {
-                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole);
+                $this->execute($events, $webhookPayload, $webhook, $user, $project, $dbForConsole, $queueForMails);
             }
         }
 
@@ -68,9 +73,10 @@ class Webhooks extends Action
      * @param Document $user
      * @param Document $project
      * @param Database $dbForConsole
+     * @param Mail $queueForMails
      * @return void
      */
-    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole): void
+    private function execute(array $events, string $payload, Document $webhook, Document $user, Document $project, Database $dbForConsole, Mail $queueForMails): void
     {
         if ($webhook->getAttribute('enabled') !== true) {
             return;
@@ -146,6 +152,40 @@ class Webhooks extends Action
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
+
+                // send an email to user
+                $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+
+                if (!$locale->getText('emails.sender') || !$locale->getText("emails.webhook.hello") || !$locale->getText("emails.webhook.subject") || !$locale->getText("emails.webhook.body") || !$locale->getText("emails.webhook.footer") || !$locale->getText("emails.webhook.thanks") || !$locale->getText("emails.webhook.signature")) {
+                    $locale->setDefault('en');
+                }
+
+                $subject = $locale->getText("emails.webhook.subject");
+
+                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
+                $message
+                    ->setParam('{{hello}}', $locale->getText("emails.webhook.hello"))
+                    ->setParam('{{body}}', $locale->getText("emails.webhook.body"))
+                    ->setParam('{{footer}}', $locale->getText("emails.webhook.footer"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.webhook.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.webhook.signature"));
+                $body = $message->render();
+
+                $emailVariables = [
+                    'user' => $user->getAttribute('name'),
+                    'project' => $project->getAttribute('name'),
+                    'redirect' => '',
+                    'webhook' => $webhook->getAttribute('name'),
+                    'attempts' => $attempts,
+                    'url' => $webhook->getAttribute('url'),
+                ];
+
+                $queueForMails
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setVariables($emailVariables)
+                    ->setRecipient($user->getAttribute('email'))
+                    ->trigger();
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
