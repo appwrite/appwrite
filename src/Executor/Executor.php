@@ -72,6 +72,7 @@ class Executor
     ) {
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes";
+        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
         $params = [
             'runtimeId' => $runtimeId,
             'source' => $source,
@@ -84,9 +85,8 @@ class Executor
             'cpus' => $this->cpus,
             'memory' => $this->memory,
             'version' => $version,
+            'timeout' => $timeout,
         ];
-
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $response = $this->call(self::METHOD_POST, $route, [ 'x-opr-runtime-id' => $runtimeId ], $params, true, $timeout);
 
@@ -111,7 +111,7 @@ class Executor
         string $projectId,
         callable $callback
     ) {
-        $timeout  = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
+        $timeout = (int) App::getEnv('_APP_FUNCTIONS_BUILD_TIMEOUT', 900);
 
         $runtimeId = "$projectId-$deploymentId-build";
         $route = "/runtimes/{$runtimeId}/logs";
