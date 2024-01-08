@@ -1205,6 +1205,7 @@ $collections = [
             ]
         ],
     ],
+];
 
 $commonCollections = [
     'users' => [
