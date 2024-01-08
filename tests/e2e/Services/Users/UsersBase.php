@@ -3,6 +3,7 @@
 namespace Tests\E2E\Services\Users;
 
 use Appwrite\Tests\Retry;
+use Appwrite\Utopia\Response;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
@@ -22,6 +23,7 @@ trait UsersBase
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
         ], false);
+        $this->assertEquals($user['headers']['status-code'], 201);
 
         // Test empty prefs is object not array
         $bodyString = $user['body'];
@@ -35,6 +37,7 @@ trait UsersBase
         $this->assertEquals($body['email'], 'cristiano.ronaldo@manchester-united.co.uk');
         $this->assertEquals($body['status'], true);
         $this->assertGreaterThan('2000-01-01 00:00:00', $body['registration']);
+        $this->assertEquals($body['labels'], []);
 
         /**
          * Test Create with Custom ID for SUCCESS
@@ -593,6 +596,18 @@ trait UsersBase
         $this->assertCount(1, $response['body']['users']);
         $this->assertEquals($response['body']['users'][0]['$id'], $data['userId']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/users', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'search' => '>',
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 200);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEmpty($response['body']['users']);
+        $this->assertCount(0, $response['body']['users']);
+
         /**
          * Test for FAILURE
          */
@@ -1015,6 +1030,98 @@ trait UsersBase
         $this->assertEquals($response['body']['users'][0]['phone'], $newNumber);
     }
 
+    /**
+     * @return array{}
+     */
+    public function userLabelsProvider()
+    {
+        return [
+            'single label' => [
+                ['admin'],
+                Response::STATUS_CODE_OK,
+                ['admin'],
+            ],
+            'replace with multiple labels' => [
+                ['vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'clear labels' => [
+                [],
+                Response::STATUS_CODE_OK,
+                [],
+            ],
+            'duplicate labels' => [
+                ['vip', 'vip', 'pro'],
+                Response::STATUS_CODE_OK,
+                ['vip', 'pro'],
+            ],
+            'invalid label' => [
+                ['invalid-label'],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too long' => [
+                [\str_repeat('a', 129)],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+            'too many labels' => [
+                [\array_fill(0, 101, 'a')],
+                Response::STATUS_CODE_BAD_REQUEST,
+                [],
+            ],
+        ];
+    }
+
+    /**
+     * @depends testGetUser
+     * @dataProvider userLabelsProvider
+     */
+    public function testUpdateUserLabels(array $labels, int $expectedStatus, array $expectedLabels, array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => $labels,
+        ]);
+
+        $this->assertEquals($expectedStatus, $user['headers']['status-code']);
+        if ($expectedStatus === Response::STATUS_CODE_OK) {
+            $this->assertEquals($user['body']['labels'], $expectedLabels);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testUpdateUserLabelsWithoutLabels(array $data): array
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/' . $data['userId'] . '/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(Response::STATUS_CODE_BAD_REQUEST, $user['headers']['status-code']);
+
+        return $data;
+    }
+
+    public function testUpdateUserLabelsNonExistentUser(): void
+    {
+        $user = $this->client->call(Client::METHOD_PUT, '/users/dne/labels', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'labels' => ['admin'],
+        ]);
+
+        $this->assertEquals(Response::STATUS_CODE_NOT_FOUND, $user['headers']['status-code']);
+    }
+
 
     /**
      * @depends testGetUser
@@ -1115,6 +1222,99 @@ trait UsersBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testCreateUserTarget(array $data): array
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'providerId' => ID::unique(),
+            'name' => 'Sengrid1',
+            'apiKey' => 'my-apikey',
+            'from' => 'from@domain.com',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'providerType' => 'email',
+            'identifier' => 'random-email@mail.org',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
+        $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testUpdateUserTarget(array $data): array
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'random-email1@mail.org',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testListUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, \count($response['body']['targets']));
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testGetUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['$id'], $response['body']['$id']);
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testDeleteUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
     }
 
     /**

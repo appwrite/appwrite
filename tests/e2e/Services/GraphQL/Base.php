@@ -2,6 +2,8 @@
 
 namespace Tests\E2E\Services\GraphQL;
 
+use Utopia\CLI\Console;
+
 trait Base
 {
     // Databases
@@ -107,6 +109,11 @@ trait Base
     public static string $DELETE_USER_SESSIONS = 'delete_user_sessions';
     public static string $DELETE_USER_SESSION = 'delete_user_session';
     public static string $DELETE_USER = 'delete_user';
+    public static string $CREATE_USER_TARGET = 'create_user_target';
+    public static string $LIST_USER_TARGETS = 'list_user_targets';
+    public static string $GET_USER_TARGET = 'get_user_target';
+    public static string $UPDATE_USER_TARGET = 'update_user_target';
+    public static string $DELETE_USER_TARGET = 'delete_user_target';
 
     // Teams
     public static string $GET_TEAM = 'get_team';
@@ -120,7 +127,7 @@ trait Base
     public static string $GET_TEAM_MEMBERSHIP = 'get_team_membership';
     public static string $GET_TEAM_MEMBERSHIPS = 'list_team_memberships';
     public static string $CREATE_TEAM_MEMBERSHIP = 'create_team_membership';
-    public static string $UPDATE_TEAM_MEMBERSHIP_ROLES = 'update_team_membership_roles';
+    public static string $UPDATE_TEAM_MEMBERSHIP = 'update_team_membership';
     public static string $UPDATE_TEAM_MEMBERSHIP_STATUS = 'update_membership_status';
     public static string $DELETE_TEAM_MEMBERSHIP = 'delete_team_membership';
 
@@ -196,6 +203,53 @@ trait Base
     public static string $GET_FAVICON = 'get_favicon';
     public static string $GET_QRCODE = 'get_qrcode';
     public static string $GET_USER_INITIALS = 'get_user_initials';
+
+    // Providers
+    public static string $CREATE_MAILGUN_PROVIDER = 'create_mailgun_provider';
+    public static string $CREATE_SENDGRID_PROVIDER = 'create_sendgrid_provider';
+    public static string $CREATE_TWILIO_PROVIDER = 'create_twilio_provider';
+    public static string $CREATE_TELESIGN_PROVIDER = 'create_telesign_provider';
+    public static string $CREATE_TEXTMAGIC_PROVIDER = 'create_textmagic_provider';
+    public static string $CREATE_MSG91_PROVIDER = 'create_msg91_provider';
+    public static string $CREATE_VONAGE_PROVIDER = 'create_vonage_provider';
+    public static string $CREATE_FCM_PROVIDER = 'create_fcm_provider';
+    public static string $CREATE_APNS_PROVIDER = 'create_apns_provider';
+    public static string $LIST_PROVIDERS = 'list_providers';
+    public static string $GET_PROVIDER = 'get_provider';
+    public static string $UPDATE_MAILGUN_PROVIDER = 'update_mailgun_provider';
+    public static string $UPDATE_SENDGRID_PROVIDER = 'update_sendgrid_provider';
+    public static string $UPDATE_TWILIO_PROVIDER = 'update_twilio_provider';
+    public static string $UPDATE_TELESIGN_PROVIDER = 'update_telesign_provider';
+    public static string $UPDATE_TEXTMAGIC_PROVIDER = 'update_textmagic_provider';
+    public static string $UPDATE_MSG91_PROVIDER = 'update_msg91_provider';
+    public static string $UPDATE_VONAGE_PROVIDER = 'update_vonage_provider';
+    public static string $UPDATE_FCM_PROVIDER = 'update_fcm_provider';
+    public static string $UPDATE_APNS_PROVIDER = 'update_apns_provider';
+    public static string $DELETE_PROVIDER = 'delete_provider';
+
+    // Topics
+    public static string $CREATE_TOPIC = 'create_topic';
+    public static string $LIST_TOPICS = 'list_topics';
+    public static string $GET_TOPIC = 'get_topic';
+    public static string $UPDATE_TOPIC = 'update_topic';
+    public static string $DELETE_TOPIC = 'delete_topic';
+
+    // Subscriptions
+    public static string $CREATE_SUBSCRIBER = 'create_subscriber';
+    public static string $LIST_SUBSCRIBERS = 'list_subscribers';
+    public static string $GET_SUBSCRIBER = 'get_subscriber';
+    public static string $DELETE_SUBSCRIBER = 'delete_subscriber';
+
+    // Messages
+    public static string $CREATE_EMAIL = 'create_email';
+    public static string $CREATE_SMS = 'create_sms';
+    public static string $CREATE_PUSH_NOTIFICATION = 'create_push_notification';
+    public static string $LIST_MESSAGES = 'list_messages';
+    public static string $GET_MESSAGE = 'get_message';
+
+    public static string $UPDATE_EMAIL = 'update_email';
+    public static string $UPDATE_SMS = 'update_sms';
+    public static string $UPDATE_PUSH_NOTIFICATION = 'update_push_notification';
 
     // Complex queries
     public static string $COMPLEX_QUERY = 'complex_query';
@@ -879,6 +933,55 @@ trait Base
                         status
                     }
                 }';
+            case self::$CREATE_USER_TARGET:
+                return 'mutation createUserTarget($userId: String!, $targetId: String!, $providerType: String!, $identifier: String! $providerId: String){
+                    usersCreateTarget(userId: $userId, targetId: $targetId, providerType: $providerType, identifier: $identifier, providerId: $providerId) {
+                        _id
+                        userId
+                        providerType
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$LIST_USER_TARGETS:
+                return 'query listUserTargets($userId: String!) {
+                    usersListTargets(userId: $userId) {
+                        total
+                        targets {
+                            _id
+                            userId
+                            providerType
+                            providerId
+                            identifier
+                        }
+                    }
+                }';
+            case self::$GET_USER_TARGET:
+                return 'query getUserTarget($userId: String!, $targetId: String!) {
+                    usersGetTarget(userId: $userId, targetId: $targetId) {
+                        _id
+                        userId
+                        providerType
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$UPDATE_USER_TARGET:
+                return 'mutation updateUserTarget($userId: String!, $targetId: String!, $providerId: String, $identifier: String){
+                    usersUpdateTarget(userId: $userId, targetId: $targetId, providerId: $providerId, identifier: $identifier) {
+                        _id
+                        userId
+                        providerType
+                        providerId
+                        identifier
+                    }
+                }';
+            case self::$DELETE_USER_TARGET:
+                return 'mutation deleteUserTarget($userId: String!, $targetId: String!){
+                    usersDeleteTarget(userId: $userId, targetId: $targetId) {
+                        status
+                    }
+                }';
             case self::$GET_LOCALE:
                 return 'query getLocale {
                     localeGet {
@@ -1296,9 +1399,9 @@ trait Base
                         roles
                     }
                 }';
-            case self::$UPDATE_TEAM_MEMBERSHIP_ROLES:
-                return 'mutation updateTeamMembershipRoles($teamId: String!, $membershipId: String!, $roles: [String!]!){
-                    teamsUpdateMembershipRoles(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
+            case self::$UPDATE_TEAM_MEMBERSHIP:
+                return 'mutation updateTeamMembership($teamId: String!, $membershipId: String!, $roles: [String!]!){
+                    teamsUpdateMembership(teamId: $teamId, membershipId: $membershipId, roles: $roles) {
                         _id
                         userId
                         teamId
@@ -1368,8 +1471,7 @@ trait Base
                         total
                         deployments {
                             _id
-                            buildStdout
-                            buildStderr
+                            buildLogs
                         }
                     }
                 }';
@@ -1377,14 +1479,15 @@ trait Base
                 return 'query getDeployment($functionId: String!, $deploymentId: String!) {
                     functionsGetDeployment(functionId: $functionId, deploymentId: $deploymentId) {
                         _id
+                        resourceId
                         buildId
-                        buildStdout
-                        buildStderr
+                        buildLogs
+                        status
                     }
                 }';
             case self::$CREATE_FUNCTION:
-                return 'mutation createFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String! $events: [String], $schedule: String, $timeout: Int) {
-                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation createFunction($functionId: String!, $name: String!, $runtime: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int, $entrypoint: String!) {
+                    functionsCreate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, events: $events, schedule: $schedule, timeout: $timeout, entrypoint: $entrypoint) {
                         _id
                         name
                         runtime
@@ -1392,8 +1495,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FUNCTION:
-                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $events: [String], $schedule: String, $timeout: Int) {
-                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, events: $events, schedule: $schedule, timeout: $timeout) {
+                return 'mutation updateFunction($functionId: String!, $name: String!, $execute: [String!]!, $runtime: String!, $entrypoint: String!, $events: [String], $schedule: String, $timeout: Int) {
+                    functionsUpdate(functionId: $functionId, name: $name, execute: $execute, runtime: $runtime, entrypoint: $entrypoint, events: $events, schedule: $schedule, timeout: $timeout) {
                         _id
                         name
                         runtime
@@ -1457,15 +1560,14 @@ trait Base
                     }
                 }';
             case self::$CREATE_DEPLOYMENT:
-                return 'mutation createDeployment($functionId: String!, $entrypoint: String!, $code: InputFile!, $activate: Boolean!) {
-                    functionsCreateDeployment(functionId: $functionId, entrypoint: $entrypoint, code: $code, activate: $activate) {
+                return 'mutation createDeployment($functionId: String!, $code: InputFile!, $activate: Boolean!) {
+                    functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate) {
                         _id
                         buildId
                         entrypoint
                         size
                         status
-                        buildStdout
-                        buildStderr
+                        buildLogs
                     }
                 }';
             case self::$DELETE_DEPLOYMENT:
@@ -1478,8 +1580,10 @@ trait Base
                 return 'query getExecution($functionId: String!$executionId: String!) {
                     functionsGetExecution(functionId: $functionId, executionId: $executionId) {
                         _id
+                        functionId
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$GET_EXECUTIONS:
@@ -1488,17 +1592,21 @@ trait Base
                         total
                         executions {
                             _id
+                            functionId
                             status
-                            stderr
+                            logs
+                            errors
                         }
                     }
                 }';
             case self::$CREATE_EXECUTION:
-                return 'mutation createExecution($functionId: String!, $data: String, $async: Boolean) {
-                    functionsCreateExecution(functionId: $functionId, data: $data, async: $async) {
+                return 'mutation createExecution($functionId: String!, $body: String, $async: Boolean) {
+                    functionsCreateExecution(functionId: $functionId, body: $body, async: $async) {
                         _id
+                        functionId
                         status
-                        stderr
+                        logs
+                        errors
                     }
                 }';
             case self::$DELETE_EXECUTION:
@@ -1679,6 +1787,439 @@ trait Base
                     healthGetAntivirus {
                         version
                         status
+                    }
+                }';
+            case self::$CREATE_MAILGUN_PROVIDER:
+                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!, $isEuRegion: Boolean!) {
+                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from, isEuRegion: $isEuRegion) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_SENDGRID_PROVIDER:
+                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!) {
+                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TWILIO_PROVIDER:
+                return 'mutation createTwilioProvider($providerId: String!, $name: String!, $from: String!, $accountSid: String!, $authToken: String!) {
+                    messagingCreateTwilioProvider(providerId: $providerId, name: $name, from: $from, accountSid: $accountSid, authToken: $authToken) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TELESIGN_PROVIDER:
+                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $password: String!) {
+                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, username: $username, password: $password) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_TEXTMAGIC_PROVIDER:
+                return 'mutation createTextmagicProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $apiKey: String!) {
+                    messagingCreateTextmagicProvider(providerId: $providerId, name: $name, from: $from, username: $username, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_MSG91_PROVIDER:
+                return 'mutation createMsg91Provider($providerId: String!, $name: String!, $from: String!, $senderId: String!, $authKey: String!, $enabled: Boolean) {
+                    messagingCreateMsg91Provider(providerId: $providerId, name: $name, from: $from, senderId: $senderId, authKey: $authKey, enabled: $enabled) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_VONAGE_PROVIDER:
+                return 'mutation createVonageProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingCreateVonageProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_FCM_PROVIDER:
+                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
+                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$CREATE_APNS_PROVIDER:
+                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
+                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$LIST_PROVIDERS:
+                return 'query listProviders {
+                    messagingListProviders {
+                        total
+                        providers {
+                            _id
+                            name
+                            provider
+                            type
+
+                            enabled
+                        }
+                    }
+                }';
+            case self::$GET_PROVIDER:
+                return 'query getProvider($providerId: String!) {
+                    messagingGetProvider(providerId: $providerId) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_MAILGUN_PROVIDER:
+                return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean) {
+                    messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_SENDGRID_PROVIDER:
+                return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
+                    messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TWILIO_PROVIDER:
+                return 'mutation updateTwilioProvider($providerId: String!, $name: String!, $accountSid: String!, $authToken: String!) {
+                    messagingUpdateTwilioProvider(providerId: $providerId, name: $name, accountSid: $accountSid, authToken: $authToken) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TELESIGN_PROVIDER:
+                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
+                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_TEXTMAGIC_PROVIDER:
+                return 'mutation updateTextmagicProvider($providerId: String!, $name: String!, $username: String!, $apiKey: String!) {
+                    messagingUpdateTextmagicProvider(providerId: $providerId, name: $name, username: $username, apiKey: $apiKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_MSG91_PROVIDER:
+                return 'mutation updateMsg91Provider($providerId: String!, $name: String!, $senderId: String!, $authKey: String!) {
+                    messagingUpdateMsg91Provider(providerId: $providerId, name: $name, senderId: $senderId, authKey: $authKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_VONAGE_PROVIDER:
+                return 'mutation updateVonageProvider($providerId: String!, $name: String!, $apiKey: String!, $apiSecret: String!) {
+                    messagingUpdateVonageProvider(providerId: $providerId, name: $name, apiKey: $apiKey, apiSecret: $apiSecret) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_FCM_PROVIDER:
+                return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
+                    messagingUpdateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$UPDATE_APNS_PROVIDER:
+                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
+                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                        _id
+                        name
+                        provider
+                        type
+                        enabled
+                    }
+                }';
+            case self::$DELETE_PROVIDER:
+                return 'mutation deleteProvider($providerId: String!) {
+                    messagingDeleteProvider(providerId: $providerId) {
+                        status
+                    }
+                }';
+            case self::$CREATE_TOPIC:
+                return 'mutation createTopic($topicId: String!, $name: String!, $description: String!) {
+                    messagingCreateTopic(topicId: $topicId, name: $name, description: $description) {
+                        _id
+                        name
+                        description
+                    }
+                }';
+            case self::$LIST_TOPICS:
+                return 'query listTopics {
+                    messagingListTopics {
+                        total
+                        topics {
+                            _id
+                            name
+                            description
+                        }
+                    }
+                }';
+            case self::$GET_TOPIC:
+                return 'query getTopic($topicId: String!) {
+                    messagingGetTopic(topicId: $topicId) {
+                        _id
+                        name
+                        description
+                    }
+                }';
+            case self::$UPDATE_TOPIC:
+                return 'mutation updateTopic($topicId: String!, $name: String!, $description: String!) {
+                    messagingUpdateTopic(topicId: $topicId, name: $name, description: $description) {
+                        _id
+                        name
+                        description
+                    }
+                }';
+            case self::$DELETE_TOPIC:
+                return 'mutation deleteTopic($topicId: String!) {
+                    messagingDeleteTopic(topicId: $topicId) {
+                        status
+                    }
+                }';
+            case self::$CREATE_SUBSCRIBER:
+                return 'mutation createSubscriber($subscriberId: String!, $targetId: String!, $topicId: String!) {
+                    messagingCreateSubscriber(subscriberId: $subscriberId, targetId: $targetId, topicId: $topicId) {
+                        _id
+                        targetId
+                        topicId
+                        userName
+                        target {
+                            _id
+                            userId
+                            name
+                            providerType
+                            identifier
+                        }
+                    }
+                }';
+            case self::$LIST_SUBSCRIBERS:
+                return 'query listSubscribers($topicId: String!) {
+                    messagingListSubscribers(topicId: $topicId) {
+                        total
+                        subscribers {
+                            _id
+                            targetId
+                            topicId
+                            userName
+                            target {
+                                _id
+                                userId
+                                name
+                                providerType
+                                identifier
+                            }
+                        }
+                    }
+                }';
+            case self::$GET_SUBSCRIBER:
+                return 'query getSubscriber($topicId: String!, $subscriberId: String!) {
+                    messagingGetSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
+                        _id
+                        targetId
+                        topicId
+                        userName
+                        target {
+                            _id
+                            userId
+                            name
+                            providerType
+                            identifier
+                        }
+                    }
+                }';
+            case self::$DELETE_SUBSCRIBER:
+                return 'mutation deleteSubscriber($topicId: String!, $subscriberId: String!) {
+                    messagingDeleteSubscriber(topicId: $topicId, subscriberId: $subscriberId) {
+                        status
+                    }
+            }';
+            case self::$CREATE_EMAIL:
+                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $scheduledAt: String) {
+                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$CREATE_SMS:
+                return 'mutation createSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String!, $status: String, $description: String, $scheduledAt: String) {
+                    messagingCreateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$CREATE_PUSH_NOTIFICATION:
+                return 'mutation createPushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $scheduledAt: String) {
+                    messagingCreatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$LIST_MESSAGES:
+                return 'query listMessages {
+                    messagingListMessages {
+                        total
+                        messages {
+                            _id
+                            providerType
+                            topics
+                            users
+                            targets
+                            scheduledAt
+                            deliveredAt
+                            deliveryErrors
+                            deliveredTotal
+                            status
+                            description
+                        }
+                    }
+                }';
+            case self::$GET_MESSAGE:
+                return 'query getMessage($messageId: String!) {
+                    messagingGetMessage(messageId: $messageId) {
+                        _id
+                        providerType
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$UPDATE_EMAIL:
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $scheduledAt: String) {
+                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$UPDATE_SMS:
+                return 'mutation updateSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String, $status: String, $description: String, $scheduledAt: String) {
+                    messagingUpdateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
+                    }
+                }';
+            case self::$UPDATE_PUSH_NOTIFICATION:
+                return 'mutation updatePushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $scheduledAt: String) {
+                    messagingUpdatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                        _id
+                        topics
+                        users
+                        targets
+                        scheduledAt
+                        deliveredAt
+                        deliveryErrors
+                        deliveredTotal
+                        status
+                        description
                     }
                 }';
             case self::$COMPLEX_QUERY:
@@ -1927,5 +2468,14 @@ trait Base
         }
 
         throw new \InvalidArgumentException('Invalid query type');
+    }
+
+    // Function-related methods
+    protected string $stdout = '';
+    protected string $stderr = '';
+
+    protected function packageCode($folder): void
+    {
+        Console::execute('cd ' . realpath(__DIR__ . "/../../../resources/functions") . "/$folder  && tar --exclude code.tar.gz -czf code.tar.gz .", '', $this->stdout, $this->stderr);
     }
 }

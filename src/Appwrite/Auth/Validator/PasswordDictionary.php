@@ -27,7 +27,7 @@ class PasswordDictionary extends Password
      */
     public function getDescription(): string
     {
-        return 'Password must be at least 8 characters and should not be one of the commonly used password.';
+        return 'Password must be between 8 and 265 characters long, and should not be one of the commonly used password.';
     }
 
     /**

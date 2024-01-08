@@ -17,10 +17,7 @@ abstract class Scope extends TestCase
     protected function setUp(): void
     {
         $this->client = new Client();
-
-        $this->client
-            ->setEndpoint($this->endpoint)
-        ;
+        $this->client->setEndpoint($this->endpoint);
     }
 
     protected function tearDown(): void
@@ -45,10 +42,10 @@ abstract class Scope extends TestCase
     {
         sleep(2);
 
-        $resquest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-        $resquest['data'] = json_decode($resquest['data'], true);
+        $request = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+        $request['data'] = json_decode($request['data'], true);
 
-        return $resquest;
+        return $request;
     }
 
     /**
@@ -101,7 +98,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $session = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_console'];
+        $session = $session['cookies']['a_session_console'];
 
         self::$root = [
             '$id' => ID::custom($root['body']['$id']),
@@ -153,7 +150,7 @@ abstract class Scope extends TestCase
             'password' => $password,
         ]);
 
-        $token = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $token = $session['cookies']['a_session_' . $this->getProject()['$id']];
 
         self::$user[$this->getProject()['$id']] = [
             '$id' => ID::custom($user['body']['$id']),

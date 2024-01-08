@@ -2,22 +2,28 @@
 
 namespace Appwrite\Event;
 
-use DateTime;
-use Resque;
-use ResqueScheduler;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Func extends Event
 {
     protected string $jwt = '';
     protected string $type = '';
-    protected string $data = '';
+    protected string $body = '';
+    protected string $path = '';
+    protected string $method = '';
+    protected array $headers = [];
     protected ?Document $function = null;
     protected ?Document $execution = null;
 
-    public function __construct()
+    public function __construct(protected Connection $connection)
     {
-        parent::__construct(Event::FUNCTIONS_QUEUE_NAME, Event::FUNCTIONS_CLASS_NAME);
+        parent::__construct($connection);
+
+        $this
+            ->setQueue(Event::FUNCTIONS_QUEUE_NAME)
+            ->setClass(Event::FUNCTIONS_CLASS_NAME);
     }
 
     /**
@@ -90,14 +96,53 @@ class Func extends Event
     }
 
     /**
-     * Sets custom data for the function event.
+     * Sets custom body for the function event.
      *
-     * @param string $data
+     * @param string $body
      * @return self
      */
-    public function setData(string $data): self
+    public function setBody(string $body): self
     {
-        $this->data = $data;
+        $this->body = $body;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom method for the function event.
+     *
+     * @param string $method
+     * @return self
+     */
+    public function setMethod(string $method): self
+    {
+        $this->method = $method;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom path for the function event.
+     *
+     * @param string $path
+     * @return self
+     */
+    public function setPath(string $path): self
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    /**
+     * Sets custom headers for the function event.
+     *
+     * @param string $headers
+     * @return self
+     */
+    public function setHeaders(array $headers): self
+    {
+        $this->headers = $headers;
 
         return $this;
     }
@@ -143,7 +188,15 @@ class Func extends Event
      */
     public function trigger(): string|bool
     {
-        return Resque::enqueue($this->queue, $this->class, [
+        if ($this->paused) {
+            return false;
+        }
+
+        $client = new Client($this->queue, $this->connection);
+
+        $events = $this->getEvent() ? Event::generateEvents($this->getEvent(), $this->getParams()) : null;
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'function' => $this->function,
@@ -151,28 +204,29 @@ class Func extends Event
             'type' => $this->type,
             'jwt' => $this->jwt,
             'payload' => $this->payload,
-            'data' => $this->data
+            'events' => $events,
+            'body' => $this->body,
+            'path' => $this->path,
+            'headers' => $this->headers,
+            'method' => $this->method,
         ]);
     }
 
     /**
-     * Schedules the function event and schedules it in the functions worker queue.
+     * Generate a function event from a base event
      *
-     * @param \DateTime|int $at
-     * @return void
-     * @throws \Resque_Exception
-     * @throws \ResqueScheduler_InvalidTimestampException
+     * @param Event $event
+     *
+     * @return self
+     *
      */
-    public function schedule(DateTime|int $at): void
+    public function from(Event $event): self
     {
-        ResqueScheduler::enqueueAt($at, $this->queue, $this->class, [
-            'project' => $this->project,
-            'user' => $this->user,
-            'function' => $this->function,
-            'execution' => $this->execution,
-            'type' => $this->type,
-            'payload' => $this->payload,
-            'data' => $this->data
-        ]);
+        $this->project = $event->getProject();
+        $this->user = $event->getUser();
+        $this->payload = $event->getPayload();
+        $this->event = $event->getEvent();
+        $this->params = $event->getParams();
+        return $this;
     }
 }

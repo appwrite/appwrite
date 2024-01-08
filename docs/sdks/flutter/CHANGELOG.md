@@ -1,3 +1,37 @@
+## 11.0.1
+
+* Fix between queries
+
+## 11.0.0
+
+* Parameter `url` is now optional in the `createMembership` endpoint
+
+## 10.0.1
+
+* Added a new `label` function to the `Role` helper class
+* Update internal variable names to prevent name collision
+* Fix: content range header inconsistency in chunked uploads [#648](https://github.com/appwrite/sdk-generator/pull/648)
+
+## 10.0.0
+
+* Support for Appwrite 1.4.0
+* New endpoints for fetching user identities
+* New endpoints for listing locale codes
+* Updated documentation
+* Breaking changes:
+  * The `createFunction` method has a new signature.
+  * The `createExecution` method has a new signature.
+  * The `updateFunction` method has a new signature.
+  * The `createDeployment` method no longer requires an entrypoint.
+  * The `updateFile` method now includes the ability to update the file name.
+  * The `updateMembershipRoles` method has been renamed to `updateMembership`.
+
+## 9.0.1
+
+* Added documentation comments
+* Added unit tests
+* Upgraded dependencies
+
 ## 9.0.0
 
 * Added relationships support
@@ -179,11 +213,11 @@ https://github.com/appwrite/appwrite/blob/master/CHANGES.md
 - Upgraded to Null-safety, minimum Dart SDK required 2.12.0
 - Upgraded all underlying dependencies to null safe version
 - BREAKING Renamed parameter inviteId to membershipId on teams.updateMembershipStatus, teams.deleteMembership
-- [Anonymous login](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateAnonymousSession)
-- [JWT Support](https://appwrite.io/docs/client/account?sdk=flutter#accountCreateJWT)
+- [Anonymous login](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createAnonymousSession)
+- [JWT Support](https://appwrite.io/docs/references/cloud/client-flutter/account?sdk=flutter#createJWT)
 - Fallback Cookies for Flutter Web if 3rd party cookies are blocked
 - Custom User Agent Support
-- [Update membership roles](https://appwrite.io/docs/client/teams?sdk=flutter#teamsUpdateMembershipRoles)
+- [Update membership roles](https://appwrite.io/docs/references/cloud/client-flutter/teams?sdk=flutter#updateMembershipRoles)
 - New awesome image preview features, supports borderRadius, borderColor, borderWidth 
 
 ## 0.5.0-dev.1

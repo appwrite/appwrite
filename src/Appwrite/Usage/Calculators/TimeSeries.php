@@ -8,6 +8,8 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use InfluxDB\Database as InfluxDatabase;
 use DateTime;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Registry\Registry;
 
 class TimeSeries extends Calculator
 {
@@ -31,6 +33,20 @@ class TimeSeries extends Calculator
      * @var callable
      */
     protected $errorHandler;
+
+    /**
+     * Callback to get project DB
+     *
+     * @var callable
+     */
+    protected mixed $getProjectDB;
+
+    /**
+     * Registry
+     *
+     * @var Registry
+     */
+    protected Registry $register;
 
     /**
      * Latest times for metric that was synced to the database
@@ -382,11 +398,13 @@ class TimeSeries extends Calculator
         ]
     ];
 
-    public function __construct(string $region, Database $database, InfluxDatabase $influxDB, callable $errorHandler = null)
+    public function __construct(string $region, Database $database, InfluxDatabase $influxDB, callable $getProjectDB, Registry $register, callable $errorHandler = null)
     {
         parent::__construct($region);
         $this->database = $database;
         $this->influxDB = $influxDB;
+        $this->getProjectDB = $getProjectDB;
+        $this->register = $register;
         $this->errorHandler = $errorHandler;
     }
 
@@ -406,34 +424,39 @@ class TimeSeries extends Calculator
     private function createOrUpdateMetric(string $projectId, string $time, string $period, string $metric, int $value, int $type): void
     {
         $id = \md5("{$time}_{$period}_{$metric}");
-        $this->database->setNamespace('_' . $projectId);
+        $project = $this->database->getDocument('projects', $projectId);
+        $database = call_user_func($this->getProjectDB, $project);
 
-        try {
-            $document = $this->database->getDocument('stats', $id);
-            if ($document->isEmpty()) {
-                $this->database->createDocument('stats', new Document([
-                    '$id' => $id,
-                    'period' => $period,
-                    'time' => $time,
-                    'metric' => $metric,
-                    'value' => $value,
-                    'type' => $type,
-                    'region' => $this->region,
-                ]));
-            } else {
-                $this->database->updateDocument(
-                    'stats',
-                    $document->getId(),
-                    $document->setAttribute('value', $value)
-                );
+        Authorization::skip(function () use ($database, $id, $period, $time, $metric, $value, $type, $projectId) {
+            try {
+                $document = $database->getDocument('stats', $id);
+                if ($document->isEmpty()) {
+                    $database->createDocument('stats', new Document([
+                        '$id' => $id,
+                        'period' => $period,
+                        'time' => $time,
+                        'metric' => $metric,
+                        'value' => $value,
+                        'type' => $type,
+                        'region' => $this->region,
+                    ]));
+                } else {
+                    $database->updateDocument(
+                        'stats',
+                        $document->getId(),
+                        $document->setAttribute('value', $value)
+                    );
+                }
+            } catch (\Exception $e) { // if projects are deleted this might fail
+                if (is_callable($this->errorHandler)) {
+                    call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
+                } else {
+                    throw $e;
+                }
             }
-        } catch (\Exception $e) { // if projects are deleted this might fail
-            if (is_callable($this->errorHandler)) {
-                call_user_func($this->errorHandler, $e, "sync_project_{$projectId}_metric_{$metric}");
-            } else {
-                throw $e;
-            }
-        }
+        });
+
+        $this->register->get('pools')->reclaim();
     }
 
     /**
@@ -469,7 +492,7 @@ class TimeSeries extends Calculator
         $query .= "WHERE \"time\" > '{$start}' ";
         $query .= "AND \"time\" < '{$end}' ";
         $query .= "AND \"metric_type\"='counter' {$filters} ";
-        $query .= "GROUP BY time({$period['key']}), \"projectId\", \"projectInternalId\" {$groupBy} ";
+        $query .= "GROUP BY time({$period['key']}), \"projectId\" {$groupBy} ";
         $query .= "FILL(null)";
 
         try {
@@ -491,11 +514,9 @@ class TimeSeries extends Calculator
                     }
 
                     $value = (!empty($point['value'])) ? $point['value'] : 0;
-                    if (empty($point['projectInternalId'] ?? null)) {
-                        continue;
-                    }
+
                     $this->createOrUpdateMetric(
-                        $point['projectInternalId'],
+                        $point['projectId'],
                         $point['time'],
                         $period['key'],
                         $metricUpdated,

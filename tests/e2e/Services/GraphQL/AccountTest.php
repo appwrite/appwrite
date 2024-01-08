@@ -6,7 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
+use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\DSN\DSN;
 
 class AccountTest extends Scope
 {
@@ -63,7 +65,7 @@ class AccountTest extends Scope
         $this->assertIsArray($session['body']['data']);
         $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
 
-        $cookie = $this->client->parseCookie((string)$session['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $cookie = $session['cookies']['a_session_' . $this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
     }
 
@@ -123,6 +125,7 @@ class AccountTest extends Scope
     public function testCreatePhoneVerification(): array
     {
         $projectId = $this->getProject()['$id'];
+
         $query = $this->getQuery(self::$CREATE_PHONE_VERIFICATION);
         $graphQLPayload = [
             'query' => $query,

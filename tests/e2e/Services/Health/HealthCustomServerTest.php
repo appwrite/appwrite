@@ -29,10 +29,6 @@ class HealthCustomServerTest extends Scope
         $this->assertIsInt($response['body']['ping']);
         $this->assertLessThan(100, $response['body']['ping']);
 
-        /**
-         * Test for FAILURE
-         */
-
         return [];
     }
 
@@ -47,13 +43,9 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('pass', $response['body']['status']);
-        $this->assertIsInt($response['body']['ping']);
-        $this->assertLessThan(100, $response['body']['ping']);
-
-        /**
-         * Test for FAILURE
-         */
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
 
         return [];
     }
@@ -69,13 +61,45 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('pass', $response['body']['status']);
-        $this->assertIsInt($response['body']['ping']);
-        $this->assertLessThan(100, $response['body']['ping']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
 
+        return [];
+    }
+
+    public function testQueueSuccess(): array
+    {
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
+
+        return [];
+    }
+
+    public function testPubSubSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/pubsub', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['statuses'][0]['status']);
+        $this->assertIsInt($response['body']['statuses'][0]['ping']);
+        $this->assertLessThan(100, $response['body']['statuses'][0]['ping']);
 
         return [];
     }
@@ -97,10 +121,6 @@ class HealthCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['localTime']);
         $this->assertLessThan(10, $response['body']['diff']);
 
-        /**
-         * Test for FAILURE
-         */
-
         return [];
     }
 
@@ -121,6 +141,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/webhooks?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -142,6 +167,11 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/logs?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -163,6 +193,198 @@ class HealthCustomServerTest extends Scope
         /**
          * Test for FAILURE
          */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/certificates?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testFunctionsSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/functions', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/functions?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testBuildsSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/builds', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/builds?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testDatabasesSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'database_db_main',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/databases', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => 'database_db_main',
+            'threshold' => '0'
+        ]);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testDeletesSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/deletes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/deletes?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testMailsSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/mails', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/mails?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testMessagingSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/messaging', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/messaging?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
+
+        return [];
+    }
+
+    public function testMigrationsSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/migrations', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertIsInt($response['body']['size']);
+        $this->assertLessThan(100, $response['body']['size']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/queue/migrations?threshold=0', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -182,10 +404,6 @@ class HealthCustomServerTest extends Scope
         $this->assertIsInt($response['body']['ping']);
         $this->assertLessThan(100, $response['body']['ping']);
 
-        /**
-         * Test for FAILURE
-         */
-
         return [];
     }
 
@@ -203,10 +421,6 @@ class HealthCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['status']);
         $this->assertIsString($response['body']['status']);
         $this->assertIsString($response['body']['version']);
-
-        /**
-         * Test for FAILURE
-         */
 
         return [];
     }

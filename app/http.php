@@ -23,6 +23,7 @@ use Appwrite\Utopia\Request;
 use Swoole\Coroutine;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
+use Utopia\Pools\Group;
 
 $http = new Server("0.0.0.0", App::getEnv('PORT', 80));
 
@@ -61,6 +62,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {
+        $pools = $register->get('pools');
+        /** @var Group $pools */
+        App::setResource('pools', fn () => $pools);
+
         // wait for database to be ready
         $attempts = 0;
         $max = 10;
@@ -69,8 +74,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         do {
             try {
                 $attempts++;
-                $db = $register->get('dbPool')->get();
-                $redis = $register->get('redisPool')->get();
+                $dbForConsole = $app->getResource('dbForConsole');
+                /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Exception $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
@@ -81,16 +86,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             }
         } while ($attempts < $max);
 
-        App::setResource('db', fn () => $db);
-        App::setResource('cache', fn () => $redis);
-
-        /** @var Utopia\Database\Database $dbForConsole */
-        $dbForConsole = $app->getResource('dbForConsole');
-
         Console::success('[Setup] - Server database init started...');
-
-        /** @var array $collections */
-        $collections = Config::getParam('collections', []);
 
         try {
             Console::success('[Setup] - Creating database: appwrite...');
@@ -109,7 +105,10 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $adapter->setup();
         }
 
-        foreach ($collections as $key => $collection) {
+        /** @var array $collections */
+        $collections = Config::getParam('collections', []);
+        $consoleCollections = $collections['console'];
+        foreach ($consoleCollections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
             }
@@ -149,7 +148,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists(App::getEnv('_APP_DB_SCHEMA', 'appwrite'), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
@@ -174,7 +173,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $bucket = $dbForConsole->getDocument('buckets', 'default');
 
             Console::success('[Setup] - Creating files collection for default bucket...');
-            $files = $collections['files'] ?? [];
+            $files = $collections['buckets']['files'] ?? [];
             if (empty($files)) {
                 throw new Exception('Files collection is not configured.');
             }
@@ -209,6 +208,8 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection('bucket_' . $bucket->getInternalId(), $attributes, $indexes);
         }
 
+        $pools->reclaim();
+
         Console::success('[Setup] - Server database init completed...');
     });
 
@@ -223,6 +224,9 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
+    App::setResource('swooleRequest', fn () => $swooleRequest);
+    App::setResource('swooleResponse', fn () => $swooleResponse);
+
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
 
@@ -240,11 +244,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
     $app = new App('UTC');
 
-    $db = $register->get('dbPool')->get();
-    $redis = $register->get('redisPool')->get();
-
-    App::setResource('db', fn () => $db);
-    App::setResource('cache', fn () => $redis);
+    $pools = $register->get('pools');
+    App::setResource('pools', fn () => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -264,7 +265,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             }
 
             $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
-            $route = $app->match($request);
+            $route = $app->getRoute();
 
             $log = new Utopia\Logger\Log();
 
@@ -328,13 +329,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->end(\json_encode($output));
     } finally {
-        /** @var PDOPool $dbPool */
-        $dbPool = $register->get('dbPool');
-        $dbPool->put($db);
-
-        /** @var RedisPool $redisPool */
-        $redisPool = $register->get('redisPool');
-        $redisPool->put($redis);
+        $pools->reclaim();
     }
 });
 

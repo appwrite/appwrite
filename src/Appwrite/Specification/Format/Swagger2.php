@@ -293,6 +293,7 @@ class Swagger2 extends Format
                     $validator = $validator->getValidator();
                 }
 
+
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
@@ -342,18 +343,23 @@ class Swagger2 extends Format
                     case 'Utopia\Validator\ArrayList':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
+                    case 'Utopia\Database\Validator\Queries\Documents':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Files':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Users':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
-                    case 'Appwrite\Utopia\Database\Validator\Queries':
+                    case 'Utopia\Database\Validator\Queries':
                         $node['type'] = 'array';
                         $node['collectionFormat'] = 'multi';
                         $node['items'] = [
@@ -414,6 +420,22 @@ class Swagger2 extends Format
                         $node['type'] = $validator->getType();
                         $node['x-example'] = $validator->getList()[0];
 
+                        //Iterate from the blackList. If it matches with the current one, then it is a blackList
+                        // Do not add the enum
+                        $allowed = true;
+                        foreach ($this->enumBlacklist as $blacklist) {
+                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') && $blacklist['method'] == $route->getLabel('sdk.method', '') && $blacklist['parameter'] == $name) {
+                                $allowed = false;
+                                break;
+                            }
+                        }
+
+                        if ($allowed) {
+                            $node['enum'] = $validator->getList();
+                            $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                            $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                        }
+
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
@@ -451,6 +473,13 @@ class Swagger2 extends Format
                         'default' => $node['default'] ?? null,
                         'x-example' => $node['x-example'] ?? null,
                     ];
+
+                    if (isset($node['enum'])) {
+                        /// If the enum flag is Set, add the enum values to the body
+                        $body['schema']['properties'][$name]['enum'] = $node['enum'];
+                        $body['schema']['properties'][$name]['x-enum-name'] = $node['x-enum-name'] ?? null;
+                        $body['schema']['properties'][$name]['x-enum-keys'] = $node['x-enum-keys'] ?? null;
+                    }
 
                     if ($node['x-global'] ?? false) {
                         $body['schema']['properties'][$name]['x-global'] = true;

@@ -8,6 +8,11 @@ use Utopia\Validator;
 class Event extends Validator
 {
     /**
+     * @var string
+     */
+    protected string $message = 'Event is not valid.';
+
+    /**
      * Get Description.
      *
      * Returns validator description
@@ -16,7 +21,7 @@ class Event extends Validator
      */
     public function getDescription(): string
     {
-        return 'Event is not valid.';
+        return $this->message;
     }
 
     /**
