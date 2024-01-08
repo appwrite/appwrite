@@ -9,8 +9,6 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Cache\Cache;
-use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
@@ -217,7 +215,6 @@ App::init()
         /*
         * Appwrite Router
         */
-
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -568,7 +565,6 @@ App::init()
 
         if ($mode !== APP_MODE_ADMIN && $project->getId() !== 'console') {
             $minFactors = $project->getAttribute('minFactors') ?? 2;
-            var_dump($minFactors);
             if (!in_array('mfa', $route->getGroups())) {
                 if ($session && \count($session->getAttribute('factors')) < $minFactors) {
                     throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);

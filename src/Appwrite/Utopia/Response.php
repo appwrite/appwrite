@@ -103,6 +103,7 @@ use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 // Keep last
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\Rule;
 
 /**
  * @method int getStatusCode()
@@ -447,8 +448,6 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
-            // Verification
-            // Recovery
             // Tests (keep last)
             ->setModel(new Mock());
 
