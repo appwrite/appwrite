@@ -84,7 +84,17 @@ trait ProjectCustom
                 'rules.read',
                 'rules.write',
                 'sessions',
-                'account'
+                'account',
+                'targets.read',
+                'targets.write',
+                'providers.read',
+                'providers.write',
+                'messages.read',
+                'messages.write',
+                'topics.write',
+                'topics.read',
+                'subscribers.write',
+                'subscribers.read',
             ],
         ]);
 

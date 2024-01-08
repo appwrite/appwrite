@@ -4,6 +4,7 @@ namespace Appwrite\Utopia\Response\Model;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
+use Utopia\Storage\Compression\Compression;
 
 class Bucket extends Model
 {
@@ -68,7 +69,7 @@ class Bucket extends Model
             ])
             ->addRule('compression', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Compression algorithm choosen for compression. Will be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
+                'description' => 'Compression algorithm choosen for compression. Will be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd).',
                 'default' => '',
                 'example' => 'gzip',
                 'array' => false
