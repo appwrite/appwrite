@@ -101,7 +101,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             'search' => implode(' ', [$userId, $email, $phone, $name]),
         ]);
 
-        if($hash === 'plaintext') {
+        if ($hash === 'plaintext') {
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
