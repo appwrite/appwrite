@@ -65,7 +65,7 @@ class Mails extends Action
             $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
         $bodyTemplate = Template::fromFile($bodyTemplate);
-        $bodyTemplate->setParam('{{body}}', $body);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value);
         }
