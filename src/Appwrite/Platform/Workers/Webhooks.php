@@ -16,6 +16,7 @@ class Webhooks extends Action
 {
     private array $errors = [];
     private const MAX_FAILED_ATTEMPTS = 10;
+    private const MAX_FILE_SIZE = 5242880; // 5 MB
 
     public static function getName(): string
     {
@@ -94,7 +95,7 @@ class Webhooks extends Action
         \curl_setopt($ch, CURLOPT_HEADER, 0);
         \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         \curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        \curl_setopt($ch, CURLOPT_MAXFILESIZE, 5242880);
+        \curl_setopt($ch, CURLOPT_MAXFILESIZE, self::MAX_FILE_SIZE);
         \curl_setopt($ch, CURLOPT_USERAGENT, \sprintf(
             APP_USERAGENT,
             App::getEnv('_APP_VERSION', 'UNKNOWN'),
