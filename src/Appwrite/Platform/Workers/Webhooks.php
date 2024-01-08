@@ -120,24 +120,26 @@ class Webhooks extends Action
             \curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
         }
 
-        $curl_exec_result = \curl_exec($ch);
+        $responseBody = \curl_exec($ch);
+        $curlError = \curl_error($ch);
+        $statusCode = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        \curl_close($ch);
 
-        if (\curl_error($ch) !== '' || \curl_getinfo($ch, CURLINFO_RESPONSE_CODE) >= 400) {
+        if (!empty($curlError) || $statusCode >= 400) {
             $dbForConsole->increaseDocumentAttribute('webhooks', $webhook->getId(), 'attempts', 1);
             $webhook = $dbForConsole->getDocument('webhooks', $webhook->getId());
             $attempts = $webhook->getAttribute('attempts');
 
-            $logs = json_encode([
-                'URL' => $webhook->getAttribute('url'),
-                'Method' => 'POST',
-            ]);
+            $logs = '';
+            $logs .= 'URL: ' . $webhook->getAttribute('url') . "\n";
+            $logs .= 'Method: ' . 'POST' . "\n";
 
-            if (\curl_error($ch) !== '') {
-                $logs['CurlError'] = \curl_error($ch);
-                $logs['Events'] = implode(', ', $events);
+            if (!empty($curlError)) {
+                $logs .= 'CURL Error: ' . $curlError . "\n";
+                $logs .= 'Events: ' . implode(', ', $events) . "\n";
             } else {
-                $logs['Response status code'] = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-                $logs['Response body'] = $curl_exec_result;
+                $logs .= 'Status code: ' . $statusCode . "\n";
+                $logs .= 'Body: ' . "\n" . \mb_strcut($responseBody, 0, 10000) . "\n"; // Limit to 10kb
             }
 
             $webhook->setAttribute('logs', $logs);
@@ -152,8 +154,8 @@ class Webhooks extends Action
             $this->errors[] = $logs;
         } else {
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
+            $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
+            $dbForConsole->deleteCachedDocument('projects', $project->getId());
         }
-
-        \curl_close($ch);
     }
 }
