@@ -43,7 +43,7 @@ abstract class Provider
         return $this->instance->getProvisioningUri();
     }
 
-    static function generateBackupCodes(int $length = 6, int $total = 6): array
+    public static function generateBackupCodes(int $length = 6, int $total = 6): array
     {
         $backups = [];
 
