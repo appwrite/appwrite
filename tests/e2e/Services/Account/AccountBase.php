@@ -10,11 +10,9 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait AccountBase
 {
-    public function testCreateAccount(): array
+    public function testCreateAccount($name = 'User Name', $password = 'password', $email = null): array
     {
-        $email = uniqid() . 'user@localhost.test';
-        $password = 'password';
-        $name = 'User Name';
+        $email ??= uniqid() . 'user@localhost.test';
 
         /**
          * Test for SUCCESS
@@ -1553,5 +1551,64 @@ trait AccountBase
         $data['password'] = 'new-password';
 
         return $data;
+    }
+
+    public function testAccountEmailInjections()
+    {
+        $account = $this->testCreateAccount(name: '<html>test</html>');
+        $data = $this->testCreateAccountSession($account);
+        [
+            'session' => $session,
+            'email' => $email
+        ] = $data;
+
+        /**
+         * Verification
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $lastEmail = $this->getLastEmail();
+        $this->assertStringNotContainsString('<html>test</html>', $lastEmail['html']);
+
+        /**
+         * Recovery
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/recovery', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => $email,
+            'url' => 'http://localhost/recovery',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $lastEmail = $this->getLastEmail();
+        $this->assertStringNotContainsString('<html>test</html>', $lastEmail['html']);
+
+        /**
+         * Magic URL
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => $account['id'],
+            'email' => $email
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $lastEmail = $this->getLastEmail();
+        $this->assertStringNotContainsString('<html>test</html>', $lastEmail['html']);
     }
 }
