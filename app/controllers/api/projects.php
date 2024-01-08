@@ -1704,7 +1704,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));

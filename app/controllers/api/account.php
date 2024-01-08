@@ -1009,7 +1009,8 @@ App::post('/v1/account/sessions/magic-url')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $body)
+            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{redirect}}', $url, escapeHtml: false)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
@@ -1064,11 +1065,10 @@ App::post('/v1/account/sessions/magic-url')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            /* {{user}} ,{{team}} and {{project}} are required in the templates */
             'user' => '',
             'team' => '',
-            'project' => $project->getAttribute('name'),
-            'redirect' => $url
+            'project' => $project->getAttribute('name')
         ];
 
         $queueForMails
@@ -2462,7 +2462,8 @@ App::post('/v1/account/recovery')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $body)
+            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{redirect}}', $url, escapeHtml: false)
             ->setParam('{{hello}}', $locale->getText("emails.recovery.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.recovery.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.recovery.thanks"))
@@ -2517,11 +2518,10 @@ App::post('/v1/account/recovery')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            /* {{user}} ,{{team}} and {{project}} are required in the templates */
             'user' => $profile->getAttribute('name'),
             'team' => '',
-            'project' => $projectName,
-            'redirect' => $url
+            'project' => $projectName
         ];
 
         $queueForMails
@@ -2713,7 +2713,8 @@ App::post('/v1/account/verification')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
         $message
-            ->setParam('{{body}}', $body)
+            ->setParam('{{body}}', $body, escapeHtml: false)
+            ->setParam('{{redirect}}', $url, escapeHtml: false)
             ->setParam('{{hello}}', $locale->getText("emails.verification.hello"))
             ->setParam('{{footer}}', $locale->getText("emails.verification.footer"))
             ->setParam('{{thanks}}', $locale->getText("emails.verification.thanks"))
@@ -2768,11 +2769,10 @@ App::post('/v1/account/verification')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+            /* {{user}} ,{{team}} and {{project}} are required in the templates */
             'user' => $user->getAttribute('name'),
             'team' => '',
-            'project' => $projectName,
-            'redirect' => $url
+            'project' => $projectName
         ];
 
         $queueForMails
