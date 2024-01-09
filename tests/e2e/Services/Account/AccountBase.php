@@ -1554,4 +1554,46 @@ trait AccountBase
 
         return $data;
     }
+
+    public function testDeleteAccount(): void
+     {
+         $email = uniqid() . 'user@localhost.test';
+         $password = 'password';
+         $name = 'User Name';
+
+         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+         ]), [
+             'userId' => ID::unique(),
+             'email' => $email,
+             'password' => $password,
+             'name' => $name,
+         ]);
+
+         $this->assertEquals($response['headers']['status-code'], 201);
+
+         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+         ]), [
+             'email' => $email,
+             'password' => $password,
+         ]);
+
+         $this->assertEquals($response['headers']['status-code'], 201);
+
+         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+         ]));
+
+         $this->assertEquals($response['headers']['status-code'], 204);
+     }
 }
