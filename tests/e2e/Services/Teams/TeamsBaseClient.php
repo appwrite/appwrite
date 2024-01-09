@@ -538,7 +538,7 @@ trait TeamsBaseClient
             'x-appwrite-project' => $this->getProject()['$id'],
         ]), [
             'secret' => $secret,
-            'userId' => ID::custom(''),
+            'userId' => ID::custom('asdf'),
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
