@@ -2174,7 +2174,7 @@ class AccountCustomClientTest extends Scope
      * @depends testGetAccountSessions
      * @depends testGetAccountLogs
      */
-    public function testExchangeTokenForSession(array $data): array
+    public function testCreateSession(array $data): array
     {
         $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['id'] . '/tokens', [
             'content-type' => 'application/json',
