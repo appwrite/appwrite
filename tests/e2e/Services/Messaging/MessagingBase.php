@@ -80,7 +80,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         $providers = [];
@@ -155,7 +154,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {

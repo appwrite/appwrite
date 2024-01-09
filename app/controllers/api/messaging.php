@@ -671,12 +671,11 @@ App::post('/v1/messaging/providers/apns')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
-    ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -697,17 +696,12 @@ App::post('/v1/messaging/providers/apns')
             $credentials['bundleId'] = $bundleId;
         }
 
-        if (!empty($endpoint)) {
-            $credentials['endpoint'] = $endpoint;
-        }
-
         if (
             $enabled === true
             && \array_key_exists('authKey', $credentials)
             && \array_key_exists('authKeyId', $credentials)
             && \array_key_exists('teamId', $credentials)
             && \array_key_exists('bundleId', $credentials)
-            && \array_key_exists('endpoint', $credentials)
         ) {
             $enabled = true;
         } else {
@@ -1565,11 +1559,10 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
-    ->param('endpoint', '', new Text(0), 'APNS endpoint.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, string $endpoint, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1603,10 +1596,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
             $credentials['bundle'] = $bundleId;
         }
 
-        if (!empty($endpoint)) {
-            $credentials['endpoint'] = $endpoint;
-        }
-
         $provider->setAttribute('credentials', $credentials);
 
         if ($enabled === true || $enabled === false) {
@@ -1616,7 +1605,6 @@ App::patch('/v1/messaging/providers/apns/:providerId')
                 && \array_key_exists('authKeyId', $credentials)
                 && \array_key_exists('teamId', $credentials)
                 && \array_key_exists('bundleId', $credentials)
-                && \array_key_exists('endpoint', $credentials)
             ) {
                 $enabled = true;
             } else {

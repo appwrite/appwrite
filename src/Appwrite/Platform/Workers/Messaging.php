@@ -345,7 +345,6 @@ class Messaging extends Action
                 $credentials['authKeyId'],
                 $credentials['teamId'],
                 $credentials['bundleId'],
-                $credentials['endpoint']
             ),
             'fcm' => new FCM($credentials['serviceAccountJSON']),
             default => null
