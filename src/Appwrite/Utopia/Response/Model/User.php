@@ -114,6 +114,12 @@ class User extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('mfa', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Multi factor authentication status.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('prefs', [
                 'type' => Response::MODEL_PREFERENCES,
                 'description' => 'User preferences as a key-value object',

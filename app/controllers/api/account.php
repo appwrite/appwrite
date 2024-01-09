@@ -3216,14 +3216,14 @@ App::patch('/v1/account/mfa')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $user->setAttribute('mfa', $mfa);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -3279,8 +3279,8 @@ App::post('/v1/account/mfa/:provider')
     ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $provider, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $provider, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $otp = match ($provider) {
             'totp' => new TOTP(),
@@ -3313,7 +3313,7 @@ App::post('/v1/account/mfa/:provider')
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($model, Response::MODEL_MFA_PROVIDER);
     });
@@ -3340,11 +3340,10 @@ App::put('/v1/account/mfa/:provider')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
-    ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $success = match ($provider) {
             'totp' => Challenge\TOTP::verify($user, $otp),
@@ -3368,7 +3367,7 @@ App::put('/v1/account/mfa/:provider')
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
-        $events->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -3396,11 +3395,11 @@ App::post('/v1/account/mfa/challenge')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('project')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('messaging')
     ->inject('mails')
     ->inject('locale')
-    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $events, EventPhone $messaging, Mail $mails, Locale $locale) {
+    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, EventPhone $messaging, Mail $mails, Locale $locale) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $challenge = new Document([
@@ -3461,7 +3460,7 @@ App::post('/v1/account/mfa/challenge')
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
-        $events
+        $queueForEvents
             ->setParam('userId', $user->getId())
             ->setParam('challengeId', $challenge->getId());
 
@@ -3491,8 +3490,8 @@ App::put('/v1/account/mfa/challenge')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
