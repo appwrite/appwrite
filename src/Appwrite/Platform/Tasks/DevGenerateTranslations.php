@@ -33,7 +33,7 @@ class DevGenerateTranslations extends Action
 
         Console::info("Started");
 
-        if(!$dryRun && empty($apiKey)) {
+        if (!$dryRun && empty($apiKey)) {
             Console::error("Please specify --api-key='OPEN_AI_API_KEY' or run with --dry-run");
             return;
         }
@@ -53,8 +53,8 @@ class DevGenerateTranslations extends Action
             $fileKeys = \array_keys($fileJson);
 
             foreach ($mainKeys as $key) {
-                if(!(\in_array($key, $fileKeys))) {
-                    if($dryRun) {
+                if (!(\in_array($key, $fileKeys))) {
+                    if ($dryRun) {
                         Console::warning("{$file} missing translation for {$key}");
                     } else {
                         $language = \explode('.', $file)[0];
@@ -62,7 +62,7 @@ class DevGenerateTranslations extends Action
 
                         $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
                         $json[$key] = $translation;
-                        \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|0));
+                        \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
 
                         Console::success("Generated {$key} for {$language}");
                     }
@@ -94,7 +94,7 @@ class DevGenerateTranslations extends Action
 
         $body = \json_decode($response->getBody(), true);
 
-        if($response->getStatusCode() >= 400) {
+        if ($response->getStatusCode() >= 400) {
             throw new Exception($response->getBody() . ' with status code ' . $response->getStatusCode() . ' for language ' . $targetLanguage . ' and message ' . $enTranslation);
         }
 
