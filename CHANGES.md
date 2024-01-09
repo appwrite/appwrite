@@ -1,3 +1,35 @@
+# Version 1.4.13
+
+## Notable changes
+
+* Change enum size validation in update controller [#7164](https://github.com/appwrite/appwrite/pull/7164)
+* Bump console to version 3.2.8 in [#7167](https://github.com/appwrite/appwrite/pull/7167)
+
+## Bug fixes
+
+* Fix error after adding bigger enum [#7162](https://github.com/appwrite/appwrite/pull/7162)
+* Add chunkId to abuse key to prevent rate limit for SDKs [#7154](https://github.com/appwrite/appwrite/pull/7154)
+
+## Miscellaneous
+
+* Fix enum test case [#7163](https://github.com/appwrite/appwrite/pull/7163)
+* Add flag to send logs to logger [#7155](https://github.com/appwrite/appwrite/pull/7155)
+* Add a CI task to validate composer file and lock [#7142](https://github.com/appwrite/appwrite/pull/7142)
+
+# Version 1.4.12
+
+## Miscellaneous
+* Bump console to version 3.2.7 [#7148](https://github.com/appwrite/appwrite/pull/7148)
+* Chore update database to 0.45.2 [#7138](https://github.com/appwrite/appwrite/pull/7138)
+* Implement queue thresholds for the health API [#7123](https://github.com/appwrite/appwrite/pull/7123)
+* Add Authorization::skip to the usage worker [#7124](https://github.com/appwrite/appwrite/pull/7124)
+
+## Bug fixes
+* fix: use queueForDeletes in git installation delete endpoint [#7140](https://github.com/appwrite/appwrite/pull/7140)
+* fix: patch script, make errors silent [#7134](https://github.com/appwrite/appwrite/pull/7134)
+* fix: repositories recreation script [#7133](https://github.com/appwrite/appwrite/pull/7133)
+* fix: Only delete repositories linked to the particular project [#7131](https://github.com/appwrite/appwrite/pull/7131)
+
 # Version 1.4.11
 
 ## Miscellaneous
@@ -452,7 +484,7 @@
 ## Features
 - Added Phone Authentication by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/3357
   - Added Twilio Support
-  - Added TextMagic Support
+  - Added Textmagic Support
   - Added Telesign Support
   - Added Endpoint to create Phone Session (`POST:/v1/account/sessions/phone`)
   - Added Endpoint to confirm Phone Session (`PUT:/v1/account/sessions/phone`)

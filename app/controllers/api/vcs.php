@@ -857,10 +857,10 @@ App::post('/v1/vcs/github/events')
                 $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
                 //find functionId from functions table
-                $repositories = $dbForConsole->find('repositories', [
+                $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
                     Query::equal('providerRepositoryId', [$providerRepositoryId]),
                     Query::limit(100),
-                ]);
+                ]));
 
                 // create new deployment only on push and not when branch is created
                 if (!$providerBranchCreated) {
@@ -877,13 +877,13 @@ App::post('/v1/vcs/github/events')
                     ]);
 
                     foreach ($installations as $installation) {
-                        $repositories = $dbForConsole->find('repositories', [
+                        $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
                             Query::equal('installationInternalId', [$installation->getInternalId()]),
                             Query::limit(1000)
-                        ]);
+                        ]));
 
                         foreach ($repositories as $repository) {
-                            $dbForConsole->deleteDocument('repositories', $repository->getId());
+                            Authorization::skip(fn () => $dbForConsole->deleteDocument('repositories', $repository->getId()));
                         }
 
                         $dbForConsole->deleteDocument('installations', $installation->getId());
@@ -915,10 +915,10 @@ App::post('/v1/vcs/github/events')
                     $providerCommitAuthor = $commitDetails["commitAuthor"] ?? '';
                     $providerCommitMessage = $commitDetails["commitMessage"] ?? '';
 
-                    $repositories = $dbForConsole->find('repositories', [
+                    $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
                         Query::equal('providerRepositoryId', [$providerRepositoryId]),
                         Query::orderDesc('$createdAt')
-                    ]);
+                    ]));
 
                     $createGitDeployments($github, $providerInstallationId, $repositories, $providerBranch, $providerBranchUrl, $providerRepositoryName, $providerRepositoryUrl, $providerRepositoryOwner, $providerCommitHash, $providerCommitAuthor, $providerCommitAuthorUrl, $providerCommitMessage, $providerCommitUrl, $providerPullRequestId, $external, $dbForConsole, $queueForBuilds, $getProjectDB, $request);
                 } elseif ($parsedPayload["action"] == "closed") {
@@ -929,10 +929,10 @@ App::post('/v1/vcs/github/events')
                     $external = $parsedPayload["external"] ?? true;
 
                     if ($external) {
-                        $repositories = $dbForConsole->find('repositories', [
+                        $repositories = Authorization::skip(fn () => $dbForConsole->find('repositories', [
                             Query::equal('providerRepositoryId', [$providerRepositoryId]),
                             Query::orderDesc('$createdAt')
-                        ]);
+                        ]));
 
                         foreach ($repositories as $repository) {
                             $providerPullRequestIds = $repository->getAttribute('providerPullRequestIds', []);
@@ -1046,8 +1046,8 @@ App::delete('/v1/vcs/installations/:installationId')
     ->inject('response')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $installationId, Response $response, Document $project, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $installationId, Response $response, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
         $installation = $dbForConsole->getDocument('installations', $installationId);
 
         if ($installation->isEmpty()) {
@@ -1058,7 +1058,7 @@ App::delete('/v1/vcs/installations/:installationId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove installation from DB');
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($installation);
 
@@ -1092,9 +1092,9 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
             throw new Exception(Exception::INSTALLATION_NOT_FOUND);
         }
 
-        $repository = $dbForConsole->getDocument('repositories', $repositoryId, [
+        $repository = Authorization::skip(fn () => $dbForConsole->getDocument('repositories', $repositoryId, [
             Query::equal('projectInternalId', [$project->getInternalId()])
-        ]);
+        ]));
 
         if ($repository->isEmpty()) {
             throw new Exception(Exception::REPOSITORY_NOT_FOUND);
@@ -1109,7 +1109,7 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         // TODO: Delete from array when PR is closed
 
-        $repository = $dbForConsole->updateDocument('repositories', $repository->getId(), $repository);
+        $repository = Authorization::skip(fn () => $dbForConsole->updateDocument('repositories', $repository->getId(), $repository));
 
         $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
         $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');

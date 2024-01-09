@@ -88,9 +88,9 @@ class V16 extends Filter
 
     protected function parseProject(array $content)
     {
-        foreach ($content['providers'] ?? [] as $i => $provider) {
-            $content['providers'][$i]['name'] = \ucfirst($provider['key']);
-            unset($content['providers'][$i]['key']);
+        foreach ($content['oAuthProviders'] ?? [] as $i => $provider) {
+            $content['oAuthProviders'][$i]['name'] = \ucfirst($provider['key']);
+            unset($content['oAuthProviders'][$i]['key']);
         }
 
         $content['domains'] = [];

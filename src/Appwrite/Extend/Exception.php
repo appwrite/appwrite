@@ -55,6 +55,8 @@ class Exception extends \Exception
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
+    public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
+    public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -84,6 +86,10 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
+    public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
+    public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
+    public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -227,12 +233,40 @@ class Exception extends \Exception
     public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     /** Realtime */
-    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
-    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
-    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
+    public const REALTIME_MESSAGE_FORMAT_INVALID    = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES         = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
+
+    /** Health */
+    public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
+
+    /** Provider */
+    public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
+    public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
+    public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
+    public const PROVIDER_INTERNAL_UPDATE_DISABLED  = 'provider_internal_update_disabled';
+
+    /** Topic */
+    public const TOPIC_NOT_FOUND                    = 'topic_not_found';
+    public const TOPIC_ALREADY_EXISTS               = 'topic_already_exists';
+
+    /** Subscriber */
+    public const SUBSCRIBER_NOT_FOUND               = 'subscriber_not_found';
+    public const SUBSCRIBER_ALREADY_EXISTS          = 'subscriber_already_exists';
+
+    /** Message */
+    public const MESSAGE_NOT_FOUND                  = 'message_not_found';
+    public const MESSAGE_MISSING_TARGET             = 'message_missing_target';
+    public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
+    public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
+    public const MESSAGE_TARGET_NOT_EMAIL           = 'message_target_not_email';
+    public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
+    public const MESSAGE_TARGET_NOT_PUSH            = 'message_target_not_push';
+
 
     protected string $type = '';
     protected array $errors = [];
+    protected bool $publish = true;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
@@ -242,6 +276,7 @@ class Exception extends \Exception
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];
             $this->message = $this->errors[$type]['description'];
+            $this->publish = $this->errors[$type]['publish'] ?? true;
         }
 
         $this->message = $message ?? $this->message;
@@ -270,5 +305,15 @@ class Exception extends \Exception
     public function setType(string $type): void
     {
         $this->type = $type;
+    }
+
+    /**
+     * Check whether the log is publishable for the exception.
+     *
+     * @return bool
+     */
+    public function isPublishable(): bool
+    {
+        return $this->publish;
     }
 }

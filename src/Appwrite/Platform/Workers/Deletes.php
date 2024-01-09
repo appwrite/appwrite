@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Auth\Auth;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
@@ -149,6 +150,9 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
                 break;
+            case DELETE_TYPE_TOPIC:
+                $this->deleteTopic($project, $getProjectDB, $document);
+                break;
             default:
                 Console::error('No delete operation for type: ' . $type);
                 break;
@@ -191,6 +195,25 @@ class Deletes extends Action
                 }
             }
         );
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $topic
+     * @throws Exception
+     */
+    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    {
+        if ($topic->isEmpty()) {
+            Console::error('Failed to delete subscribers. Topic not found');
+            return;
+        }
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('subscribers', [
+            Query::equal('topicInternalId', [$topic->getInternalId()])
+        ], $dbForProject);
     }
 
     /**
@@ -533,6 +556,11 @@ class Deletes extends Action
         $this->deleteByGroup('identities', [
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
+
+        // Delete targets
+        $this->deleteByGroup('targets', [
+            Query::equal('userInternalId', [$userInternalId])
+        ], $dbForProject);
     }
 
     /**
@@ -730,14 +758,15 @@ class Deletes extends Action
          */
         Console::info("Deleting VCS repositories and comments linked to function " . $functionId);
         $this->deleteByGroup('repositories', [
+            Query::equal('projectInternalId', [$project->getInternalId()]),
             Query::equal('resourceInternalId', [$functionInternalId]),
             Query::equal('resourceType', ['function']),
         ], $dbForConsole, function (Document $document) use ($dbForConsole) {
             $providerRepositoryId = $document->getAttribute('providerRepositoryId', '');
-            $projectId = $document->getAttribute('projectId', '');
+            $projectInternalId = $document->getAttribute('projectInternalId', '');
             $this->deleteByGroup('vcsComments', [
                 Query::equal('providerRepositoryId', [$providerRepositoryId]),
-                Query::equal('projectId', [$projectId]),
+                Query::equal('projectInternalId', [$projectInternalId]),
             ], $dbForConsole);
         });
 
