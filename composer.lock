@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c207e62c309b58f4ac0d00dc508a5fc2",
+    "content-hash": "1b3fd261ed93452413b8e6ba77dbab55",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1353,16 +1353,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.31.1",
+            "version": "0.33.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68"
+                "reference": "e3ff6b933082d57b48e7c4267bb605c0bf2250fd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68",
-                "reference": "e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/e3ff6b933082d57b48e7c4267bb605c0bf2250fd",
+                "reference": "e3ff6b933082d57b48e7c4267bb605c0bf2250fd",
                 "shasum": ""
             },
             "require": {
@@ -1392,9 +1392,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.31.1"
+                "source": "https://github.com/utopia-php/http/tree/0.33.0"
             },
-            "time": "2023-12-08T18:47:29+00:00"
+            "time": "2024-01-08T13:30:27+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -5133,5 +5133,5 @@
     "platform-overrides": {
         "php": "8.0"
     },
-    "plugin-api-version": "2.2.0"
+    "plugin-api-version": "2.6.0"
 }
