@@ -1556,7 +1556,7 @@ trait AccountBase
     }
 
     public function testDeleteAccount(): void
-     {
+    {
          $email = uniqid() . 'user@localhost.test';
          $password = 'password';
          $name = 'User Name';
@@ -1595,5 +1595,5 @@ trait AccountBase
          ]));
 
          $this->assertEquals($response['headers']['status-code'], 204);
-     }
+    }
 }
