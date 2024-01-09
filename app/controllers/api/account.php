@@ -876,7 +876,7 @@ App::get('/v1/account/identities')
     });
 
 App::delete('/v1/account/identities/:identityId')
-    ->desc('Delete Identity')
+    ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].identities.[identityId].delete')
@@ -893,7 +893,8 @@ App::delete('/v1/account/identities/:identityId')
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $identityId, Response $response, Database $dbForProject) {
+    ->inject('queueForEvents')
+    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 
@@ -902,6 +903,11 @@ App::delete('/v1/account/identities/:identityId')
         }
 
         $dbForProject->deleteDocument('identities', $identityId);
+
+        $queueForEvents
+            ->setParam('userId', $identity->getAttribute('userId'))
+            ->setParam('identityId', $identity->getId())
+            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
     });
