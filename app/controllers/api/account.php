@@ -45,6 +45,7 @@ use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Event\Messaging;
+use Utopia\Validator\Boolean;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -308,7 +309,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
-    ->label('scope', 'public')
+    ->label('scope', 'sessions')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Session')
@@ -322,10 +323,11 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->param('token', false, new Boolean(), 'Include token credentials in the final redirect, useful for server-side integrations, or when cookies are not available.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->action(function (string $provider, string $success, string $failure, array $scopes, bool $token, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
 
         $protocol = $request->getProtocol();
 
@@ -362,7 +364,11 @@ App::get('/v1/account/sessions/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
-        $oauth2 = new $className($appId, $appSecret, $callback, ['success' => $success, 'failure' => $failure], $scopes);
+        $oauth2 = new $className($appId, $appSecret, $callback, [
+            'success' => $success,
+            'failure' => $failure,
+            'token' => $token,
+        ], $scopes);
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -749,28 +755,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $dbForProject->updateDocument('identities', $identity->getId(), $identity);
         }
 
-        // Create session token, verify user account and update OAuth2 ID and Access Token
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-        $sessionSecret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-        $session = new Document(array_merge([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'provider' => $provider,
-            'providerUid' => $oauth2ID,
-            'providerAccessToken' => $accessToken,
-            'providerRefreshToken' => $refreshToken,
-            'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
-            'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
-            'userAgent' => $request->getUserAgent('UNKNOWN'),
-            'ip' => $request->getIP(),
-            'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-        ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
-
         if (empty($user->getAttribute('email'))) {
             $user->setAttribute('email', $oauth2->getUserEmail($accessToken));
         }
@@ -779,81 +763,109 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $user->setAttribute('name', $oauth2->getUserName($accessToken));
         }
 
-        $user
-            ->setAttribute('status', true)
-        ;
-
-        Authorization::setRole(Role::user($user->getId())->toString());
+        $user->setAttribute('status', true);
 
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
-        $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $session->setAttribute('expire', $expire);
-
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION))
-        ;
-
-        if (!Config::getParam('domainVerification')) {
-            $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
-        }
-
-        // Add token for server platforms
-        $tokenSecret = Auth::tokenGenerator();
-
-        $token = new Document([
-            '$id' => ID::unique(),
-            'userId' => $user->getId(),
-            'userInternalId' => $user->getInternalId(),
-            'type' => Auth::TOKEN_TYPE_OAUTH2,
-            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
-            'expire' => $expire,
-            'userAgent' => 'UNKNOWN',
-            'ip' => $request->getIP(),
-        ]);
-
         Authorization::setRole(Role::user($user->getId())->toString());
 
-        $token = $dbForProject->createDocument('tokens', $token
-            ->setAttribute('$permissions', [
+        $state['success'] = URLParser::parse($state['success']);
+        $query = URLParser::parseQuery($state['success']['query']);
+
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $secret = Auth::tokenGenerator();
+        
+        // If the `token` param is set, we will return the token in the query string
+        if ($state['token']) {
+            $token = new Document([
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'type' => Auth::TOKEN_TYPE_OAUTH2,
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'expire' => $expire,
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+            ]);
+    
+            Authorization::setRole(Role::user($user->getId())->toString());
+    
+            $token = $dbForProject->createDocument('tokens', $token
+                ->setAttribute('$permissions', [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ]));
+
+            $queueForEvents
+                ->setEvent('users.[userId].tokens.[tokenId].create')
+                ->setParam('userId', $user->getId())
+                ->setParam('tokenId', $token->getId())
+            ;
+
+            $query['secret'] = $secret;
+            $query['userId'] = $user->getId();
+
+        // If the `token` param is not set, we persist the session in a cookie
+        } else {
+            $detector = new Detector($request->getUserAgent('UNKNOWN'));
+            $record = $geodb->get($request->getIP());
+            
+            $session = new Document(array_merge([
+                '$id' => ID::unique(),
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'provider' => $provider,
+                'providerUid' => $oauth2ID,
+                'providerAccessToken' => $accessToken,
+                'providerRefreshToken' => $refreshToken,
+                'providerAccessTokenExpiry' => DateTime::addSeconds(new \DateTime(), (int)$accessTokenExpiry),
+                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+                'userAgent' => $request->getUserAgent('UNKNOWN'),
+                'ip' => $request->getIP(),
+                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
+
+            $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
                 Permission::read(Role::user($user->getId())),
                 Permission::update(Role::user($user->getId())),
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+            $session->setAttribute('expire', $expire);
 
-        $state['success'] = URLParser::parse($state['success']);
-        $query = URLParser::parseQuery($state['success']['query']);
-        if ($state['success']['path'] == $oauthDefaultSuccess) {
-            // TODO: Deprecate and remove this case
-            $query['project'] = $project->getId();
-            $query['domain'] = Config::getParam('cookieDomain');
-            $query['key'] = Auth::$cookieName;
-            $query['secret'] = $sessionSecret;
-        } else {
-            $query['secret'] = $tokenSecret;
-            $query['userId'] = $user->getId();
+            if (!Config::getParam('domainVerification')) {
+                $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
+            }
+
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setParam('sessionId', $session->getId())
+                ->setPayload($response->output($session, Response::MODEL_SESSION))
+            ;
+            
+            // TODO: Remove this deprecated, undocumented workaround
+            if ($state['success']['path'] == $oauthDefaultSuccess) {
+                $query['project'] = $project->getId();
+                $query['domain'] = Config::getParam('cookieDomain');
+                $query['key'] = Auth::$cookieName;
+                $query['secret'] = $secret;
+            }
+
+            $response
+                ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
 
-
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->addHeader('Pragma', 'no-cache')
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $sessionSecret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->redirect($state['success'])
         ;
     });
