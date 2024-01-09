@@ -145,9 +145,9 @@ class UsageTest extends Scope
 
         $res = $res['body'];
         $this->assertEquals('90d', $res['range']);
-        $this->assertEquals(90, count($res['usersTotal']));
-        $this->assertEquals(90, count($res['sessionsTotal']));
-        $this->assertEquals((self::CREATE / 2), $res['usersTotal'][array_key_last($res['usersTotal'])]['value']);
+        $this->assertEquals(90, count($res['users']));
+        $this->assertEquals(90, count($res['sessions']));
+        $this->assertEquals((self::CREATE / 2), $res['users'][array_key_last($res['users'])]['value']);
 
         return [
             'projectId' => $projectId,
