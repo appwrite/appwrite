@@ -26,7 +26,6 @@ class Tasks extends Service
             ->addAction(Usage::getName(), new Usage())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(SSL::getName(), new SSL())
-            ->addAction(Hamster::getName(), new Hamster())
             ->addAction(Doctor::getName(), new Doctor())
             ->addAction(Install::getName(), new Install())
             ->addAction(Upgrade::getName(), new Upgrade())
