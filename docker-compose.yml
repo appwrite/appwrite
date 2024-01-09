@@ -299,6 +299,8 @@ services:
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_DOMAIN
+      - _APP_OPTIONS_FORCE_HTTPS
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes

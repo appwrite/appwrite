@@ -163,22 +163,26 @@ class Webhooks extends Action
 
                 $subject = $locale->getText("emails.webhook.subject");
 
-                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
+                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook.tpl');
                 $message
-                    ->setParam('{{hello}}', $locale->getText("emails.webhook.hello"))
-                    ->setParam('{{body}}', $locale->getText("emails.webhook.body"))
-                    ->setParam('{{footer}}', $locale->getText("emails.webhook.footer"))
-                    ->setParam('{{thanks}}', $locale->getText("emails.webhook.thanks"))
-                    ->setParam('{{signature}}', $locale->getText("emails.webhook.signature"));
+                    ->setParam('{{subject}}', $subject)
+                    ->setParam('{{message}}', $locale->getText("emails.webhook.body"));
                 $body = $message->render();
 
+                $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $hostname = App::getEnv('_APP_DOMAIN');
+                $projectId = $project->getId();
+                $webhookId = $webhook->getId();
+
                 $emailVariables = [
+                    'subject' => $subject,
                     'user' => $user->getAttribute('name'),
                     'project' => $project->getAttribute('name'),
-                    'redirect' => '',
+                    'link' => $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId",
                     'webhook' => $webhook->getAttribute('name'),
                     'attempts' => $attempts,
                     'url' => $webhook->getAttribute('url'),
+                    'error' => $curlError ??  \mb_strcut($responseBody, 0, 10000),
                 ];
 
                 $queueForMails
