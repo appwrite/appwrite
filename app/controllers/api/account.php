@@ -775,7 +775,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $secret = Auth::tokenGenerator();
-        
+
         // If the `token` param is set, we will return the token in the query string
         if ($state['token']) {
             $token = new Document([
@@ -788,9 +788,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
             ]);
-    
+
             Authorization::setRole(Role::user($user->getId())->toString());
-    
+
             $token = $dbForProject->createDocument('tokens', $token
                 ->setAttribute('$permissions', [
                     Permission::read(Role::user($user->getId())),
@@ -811,7 +811,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            
+
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
@@ -844,7 +844,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setParam('sessionId', $session->getId())
                 ->setPayload($response->output($session, Response::MODEL_SESSION))
             ;
-            
+
             // TODO: Remove this deprecated, undocumented workaround
             if ($state['success']['path'] == $oauthDefaultSuccess) {
                 $query['project'] = $project->getId();
