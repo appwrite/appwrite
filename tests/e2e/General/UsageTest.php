@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\General;
 
+use Appwrite\Tests\Retry;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -101,6 +102,7 @@ class UsageTest extends Scope
     /**
      * @depends testPrepareUsersStats
      */
+    #[Retry(count: 1)]
     public function testUsersStats(array $data): array
     {
         sleep(self::WAIT);
