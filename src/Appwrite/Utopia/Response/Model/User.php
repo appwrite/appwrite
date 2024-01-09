@@ -120,6 +120,12 @@ class User extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('totp', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'TOTP status.',
+                'default' => false,
+                'example' => true,
+            ])
             ->addRule('prefs', [
                 'type' => Response::MODEL_PREFERENCES,
                 'description' => 'User preferences as a key-value object',
