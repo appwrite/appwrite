@@ -157,7 +157,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['{"method":"cursorAsc","attribute":"$id","values":[]}']
+            'queries' => [
+                '{ "method": "cursorAsc", "attribute":"$id" }'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);

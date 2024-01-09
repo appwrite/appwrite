@@ -290,7 +290,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                'equal("total", [0])'
+                Query::equal('total', [0])->toString(),
             ],
         ]);
 
@@ -303,7 +303,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                'greaterThan("total", 0)'
+                Query::greaterThan('total', 0)->toString(),
             ],
         ]);
 
@@ -555,7 +555,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                '{"method":"cursorAsc","attribute":"$id","values":[]}'
+                '{ "method": "cursorAsc", "attribute": "$id" }'
             ]
         ]);
 
