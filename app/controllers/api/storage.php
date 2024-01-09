@@ -458,7 +458,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $idValidator = new UID();
-            if (!$idValidator->isValid($request->getHeader('x-appwrite-id'))) {
+            if (!$idValidator->isValid($fileId)) {
                 throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
             }
 
