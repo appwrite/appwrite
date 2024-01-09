@@ -13,22 +13,23 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Messaging\Adapters\SMS as SMSAdapter;
-use Utopia\Messaging\Adapters\SMS\Mock;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\Textmagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
-use Utopia\Messaging\Adapters\Push as PushAdapter;
-use Utopia\Messaging\Adapters\Push\APNS;
-use Utopia\Messaging\Adapters\Push\FCM;
-use Utopia\Messaging\Adapters\Email as EmailAdapter;
-use Utopia\Messaging\Adapters\Email\Mailgun;
-use Utopia\Messaging\Adapters\Email\SendGrid;
+use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\Mailgun;
+use Utopia\Messaging\Adapter\Email\Sendgrid;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push\FCM;
+use Utopia\Messaging\Adapter\SMS as SMSAdapter;
+use Utopia\Messaging\Adapter\SMS\Mock;
+use Utopia\Messaging\Adapter\SMS\Msg91;
+use Utopia\Messaging\Adapter\SMS\Telesign;
+use Utopia\Messaging\Adapter\SMS\Textmagic;
+use Utopia\Messaging\Adapter\SMS\Twilio;
+use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Response;
 
 use function Swoole\Coroutine\batch;
 
@@ -62,7 +63,7 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            Console::error('Payload arg not found');
+            Console::error('Payload not found.');
             return;
         }
 
@@ -84,14 +85,14 @@ class Messaging extends Action
         $usersId = $message->getAttribute('users', []);
 
         /**
-        * @var Document[] $recipients
-        */
+         * @var Document[] $recipients
+         */
         $recipients = [];
 
         if (\count($topicsId) > 0) {
             $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
             foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -99,7 +100,7 @@ class Messaging extends Action
         if (\count($usersId) > 0) {
             $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
             foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), fn (Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
@@ -115,14 +116,16 @@ class Messaging extends Action
         ]);
 
         /**
-        * @var array<string, array<string>> $identifiersByProviderId
-        */
+         * @var array<string, array<string>> $identifiersByProviderId
+         */
         $identifiersByProviderId = [];
 
         /**
-        * @var Document[] $providers
-        */
-        $providers = [];
+         * @var Document[] $providers
+         */
+        $providers = [
+            $primaryProvider->getId() => $primaryProvider
+        ];
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
 
@@ -139,29 +142,28 @@ class Messaging extends Action
         }
 
         /**
-        * @var array[] $results
-        */
+         * @var array[] $results
+         */
         $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
             return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
-                $provider = new Document();
-
-                if ($primaryProvider->getId() === $providerId) {
-                    $provider = $primaryProvider;
+                if (\array_key_exists($providerId, $providers)) {
+                    $provider = $providers[$providerId];
                 } else {
                     $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
 
                     if ($provider->isEmpty()) {
                         $provider = $primaryProvider;
+                    } else {
+                        $providers[$providerId] = $provider;
                     }
                 }
 
-                $providers[] = $provider;
                 $identifiers = $identifiersByProviderId[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
                     MESSAGE_TYPE_SMS => $this->sms($provider),
                     MESSAGE_TYPE_PUSH => $this->push($provider),
-                    MESSAGE_TYPE_EMAIL  => $this->email($provider),
+                    MESSAGE_TYPE_EMAIL => $this->email($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
@@ -169,8 +171,8 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                $results = batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
-                    return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $dbForProject) {
+                    return function () use ($batch, $message, $provider, $adapter, $batchIndex, $dbForProject) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -179,13 +181,29 @@ class Messaging extends Action
                         $data = match ($provider->getAttribute('type')) {
                             MESSAGE_TYPE_SMS => $this->buildSMSMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($messageData, $provider),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
                         try {
-                            $adapter->send($data);
-                            $deliveredTotal += \count($batch);
+                            $response = new Response($provider->getAttribute('type'));
+                            $response->fromArray($adapter->send($data));
+
+                            $deliveredTotal += $response->getDeliveredTo();
+                            $details[] = $response->getDetails();
+                            foreach ($details as $detail) {
+                                if ($detail['status'] === 'failure') {
+                                    $deliveryErrors[] = "Failed sending to target {$detail['recipient']} with error: {$detail['error']}";
+                                }
+
+                                // Deleting push targets when token has expired.
+                                if ($detail['error'] === 'Expired device token.') {
+                                    $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$detail['recipient']])]);
+                                    if ($target instanceof Document && !$target->isEmpty()) {
+                                        $dbForProject->deleteDocument('targets', $target->getId());
+                                    }
+                                }
+                            }
                         } catch (\Exception $e) {
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
@@ -197,8 +215,6 @@ class Messaging extends Action
                         }
                     };
                 }, $batches));
-
-                return $results;
             };
         }, \array_keys($identifiersByProviderId)));
 
@@ -313,7 +329,7 @@ class Messaging extends Action
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
             'telesign' => new Telesign($credentials['username'], $credentials['password']),
-            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey']),
+            'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
             default => null
         };
@@ -323,6 +339,7 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials');
         return match ($provider->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
                 $credentials['authKey'],
                 $credentials['authKeyId'],
@@ -330,7 +347,7 @@ class Messaging extends Action
                 $credentials['bundleId'],
                 $credentials['endpoint']
             ),
-            'fcm' => new FCM($credentials['serverKey']),
+            'fcm' => new FCM($credentials['serviceAccountJSON']),
             default => null
         };
     }
@@ -339,21 +356,51 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials');
         return match ($provider->getAttribute('provider')) {
+            'mock' => new Mock('username', 'password'),
             'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain'], $credentials['isEuRegion']),
-            'sendgrid' => new SendGrid($credentials['apiKey']),
+            'sendgrid' => new Sendgrid($credentials['apiKey']),
             default => null
         };
     }
 
-    private function buildEmailMessage(Document $message, Document $provider): Email
+    private function buildEmailMessage(Database $dbForProject, Document $message, Document $provider): Email
     {
-        $from = $provider['options']['from'];
-        $to = $message['to'];
-        $subject = $message['data']['subject'];
-        $content = $message['data']['content'];
-        $html = $message['data']['html'];
+        $fromName = $provider['options']['fromName'];
+        $fromEmail = $provider['options']['fromEmail'];
+        $replyToEmail = null;
+        $replyToName = null;
 
-        return new Email($to, $subject, $content, $from, null, $html);
+        if (isset($provider['options']['replyToName']) && isset($provider['options']['replyToEmail'])) {
+            $replyToName = $provider['options']['replyToName'];
+            $replyToEmail = $provider['options']['replyToEmail'];
+        }
+
+        $data = $message['data'] ?? [];
+        $ccTargets = $data['cc'] ?? [];
+        $bccTargets = $data['bcc'] ?? [];
+        $cc = [];
+        $bcc = [];
+
+        if (\count($ccTargets) > 0) {
+            $ccTargets = $dbForProject->find('targets', [Query::equal('identifier', $ccTargets)]);
+            foreach ($ccTargets as $ccTarget) {
+                $cc[] = ['email' => $ccTarget['identifier']];
+            }
+        }
+
+        if (\count($bccTargets) > 0) {
+            $bccTargets = $dbForProject->find('targets', [Query::equal('identifier', $bccTargets)]);
+            foreach ($bccTargets as $bccTarget) {
+                $bcc[] = ['email' => $bccTarget['identifier']];
+            }
+        }
+
+        $to = $message['to'];
+        $subject = $data['subject'];
+        $content = $data['content'];
+        $html = $data['html'];
+
+        return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, null, $html);
     }
 
     private function buildSMSMessage(Document $message, Document $provider): SMS

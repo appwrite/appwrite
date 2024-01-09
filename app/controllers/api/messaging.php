@@ -31,6 +31,7 @@ use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use MaxMind\Db\Reader;
@@ -54,21 +55,28 @@ App::post('/v1/messaging/providers/mailgun')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
-        $options = [];
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+        ];
 
-        if (!empty($from)) {
-            $options ['from'] = $from;
+        if (!empty($replyToName) && !empty($replyToEmail)) {
+            $options['replyToName'] = $replyToName;
+            $options['replyToEmail'] = $replyToEmail;
         }
 
         $credentials = [];
@@ -137,19 +145,26 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('from', '', new Email(), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
-        $options = [];
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+        ];
 
-        if (!empty($from)) {
-            $options ['from'] = $from;
+        if (!empty($replyToName) && !empty($replyToEmail)) {
+            $options['replyToName'] = $replyToName;
+            $options['replyToEmail'] = $replyToEmail;
         }
 
         $credentials = [];
@@ -221,7 +236,7 @@ App::post('/v1/messaging/providers/msg91')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -298,7 +313,7 @@ App::post('/v1/messaging/providers/telesign')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -375,7 +390,7 @@ App::post('/v1/messaging/providers/textmagic')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -452,7 +467,7 @@ App::post('/v1/messaging/providers/twilio')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -529,7 +544,7 @@ App::post('/v1/messaging/providers/vonage')
         $options = [];
 
         if (!empty($from)) {
-            $options ['from'] = $from;
+            $options['from'] = $from;
         }
 
         $credentials = [];
@@ -593,21 +608,21 @@ App::post('/v1/messaging/providers/fcm')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('serverKey', '', new Text(0), 'FCM server key.', true)
+    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $serverKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?array $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
 
-        if (!empty($serverKey)) {
-            $credentials['serverKey'] = $serverKey;
+        if (!\is_null($serviceAccountJSON)) {
+            $credentials['serviceAccountJSON'] = $serviceAccountJSON;
         }
 
-        if ($enabled === true && \array_key_exists('serverKey', $credentials)) {
+        if ($enabled === true && \array_key_exists('serviceAccountJSON', $credentials)) {
             $enabled = true;
         } else {
             $enabled = false;
@@ -888,15 +903,18 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
-    ->param('from', '', new Email(), 'Sender email address.', true)
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
+    ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?bool $isEuRegion, string $from, string $apiKey, string $domain, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -912,11 +930,25 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
         }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        $provider->setAttribute('options', $options);
 
         $credentials = $provider->getAttribute('credentials');
 
@@ -976,11 +1008,14 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
-    ->param('from', '', new Email(), 'Sender email address.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -996,11 +1031,25 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($from)) {
-            $provider->setAttribute('options', [
-                'from' => $from,
-            ]);
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
         }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        $provider->setAttribute('options', $options);
 
         if (!empty($apiKey)) {
             $provider->setAttribute('credentials', [
@@ -1451,11 +1500,11 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('serverKey', '', new Text(0), 'FCM Server Key.', true)
+    ->param('serviceAccountJSON', null, new JSON(), 'FCM service account JSON.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $serverKey, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, ?array $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1471,12 +1520,12 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
             $provider->setAttribute('name', $name);
         }
 
-        if (!empty($serverKey)) {
-            $provider->setAttribute('credentials', ['serverKey' => $serverKey]);
+        if (!\is_null($serviceAccountJSON)) {
+            $provider->setAttribute('credentials', ['serviceAccountJSON' => $serviceAccountJSON]);
         }
 
         if ($enabled === true || $enabled === false) {
-            if ($enabled === true && \array_key_exists('serverKey', $provider->getAttribute('credentials'))) {
+            if ($enabled === true && \array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
                 $enabled = true;
             } else {
                 $enabled = false;
@@ -2227,9 +2276,11 @@ App::post('/v1/messaging/messages/email')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('subject', '', new Text(998), 'Email Subject.')
     ->param('content', '', new Text(64230), 'Email Content.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
+    ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
@@ -2239,22 +2290,32 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $mergedTargets = \array_merge($targets, $cc, $bcc);
 
-            if ($targetDocument->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        if (!empty($mergedTargets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $mergedTargets),
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                Query::limit(\count($mergedTargets)),
+            ]);
+
+            if (\count($foundTargets) !== \count($mergedTargets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
             }
 
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_EMAIL) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL . ' ' . $targetDocument->getId());
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 
@@ -2269,6 +2330,8 @@ App::post('/v1/messaging/messages/email')
                 'subject' => $subject,
                 'content' => $content,
                 'html' => $html,
+                'cc' => $cc,
+                'bcc' => $bcc,
             ],
             'status' => $status,
         ]));
@@ -2304,9 +2367,9 @@ App::post('/v1/messaging/messages/sms')
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('content', '', new Text(64230), 'SMS Content.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -2316,21 +2379,27 @@ App::post('/v1/messaging/messages/sms')
     ->inject('queueForMessaging')
     ->inject('response')
     ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $foundTargets = $dbForProject->find('targets', [
+            Query::equal('$id', $targets),
+            Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+            Query::limit(\count($targets)),
+        ]);
 
-            if ($targetDocument->isEmpty()) {
+        if (\count($foundTargets) !== \count($targets)) {
+            throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+        }
+
+        foreach ($foundTargets as $target) {
+            if ($target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-            }
-
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_SMS) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS . ' ' . $targetDocument->getId());
             }
         }
 
@@ -2379,9 +2448,9 @@ App::post('/v1/messaging/messages/push')
     ->param('messageId', '', new CustomId(), 'Message ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('title', '', new Text(256), 'Title for push notification.')
     ->param('body', '', new Text(64230), 'Body for push notification.')
-    ->param('topics', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', [], new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
+    ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
@@ -2398,21 +2467,27 @@ App::post('/v1/messaging/messages/push')
     ->inject('queueForMessaging')
     ->inject('response')
     ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
-        $messageId = $messageId == 'unique()' ? ID::unique() : $messageId;
+        $messageId = $messageId == 'unique()'
+            ? ID::unique()
+            : $messageId;
 
         if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        foreach ($targets as $target) {
-            $targetDocument = $dbForProject->getDocument('targets', $target);
+        $foundTargets = $dbForProject->find('targets', [
+            Query::equal('$id', $targets),
+            Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+            Query::limit(\count($targets)),
+        ]);
 
-            if ($targetDocument->isEmpty()) {
+        if (\count($foundTargets) !== \count($targets)) {
+            throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+        }
+
+        foreach ($foundTargets as $target) {
+            if ($target->isEmpty()) {
                 throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-            }
-
-            if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH . ' ' . $targetDocument->getId());
             }
         }
 
@@ -2619,21 +2694,23 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY)), 'List of Targets IDs.', true)
-    ->param('subject', '', new Text(998), 'Email Subject.', true)
-    ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
-    ->param('html', false, new Boolean(), 'Is content of type HTML', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('subject', null, new Text(998), 'Email Subject.', true)
+    ->param('description', null, new Text(256), 'Description for Message.', true)
+    ->param('content', null, new Text(64230), 'Email Content.', true)
+    ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('html', null, new Boolean(), 'Is content of type HTML', true)
+    ->param('cc', null, new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
+    ->param('bcc', null, new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $subject, string $description, string $content, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $description, ?string $content, ?string $status, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2644,7 +2721,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
-        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
+        if (!\is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
         }
 
@@ -2656,43 +2733,57 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('users', $users);
         }
 
-        if (!\is_null($targets)) {
-            foreach ($targets as $target) {
-                $targetDocument = $dbForProject->getDocument('targets', $target);
+        if (!\is_null($targets) || !\is_null($cc) || !\is_null($bcc)) {
+            $mergedTargets = \array_merge(...\array_filter([$targets, $cc, $bcc]));
 
-                if ($targetDocument->isEmpty()) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $mergedTargets),
+                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                Query::limit(\count($mergedTargets)),
+            ]);
+            if (\count($foundTargets) !== \count($mergedTargets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
+            }
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
                     throw new Exception(Exception::USER_TARGET_NOT_FOUND);
                 }
-
-                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_EMAIL) {
-                    throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL . ' ' . $targetDocument->getId());
-                }
             }
-
-            $message->setAttribute('targets', $targets);
         }
 
         $data = $message->getAttribute('data');
 
-        if (!empty($subject)) {
+        if (!\is_null($targets)) {
+            $message->setAttribute('targets', $targets);
+        }
+
+        if (!\is_null($subject)) {
             $data['subject'] = $subject;
         }
 
-        if (!empty($content)) {
+        if (!\is_null($content)) {
             $data['content'] = $content;
         }
 
-        if (!empty($html)) {
+        if (!\is_null($html)) {
             $data['html'] = $html;
+        }
+
+        if (!\is_null($cc)) {
+            $data['cc'] = $cc;
+        }
+
+        if (!\is_null($bcc)) {
+            $data['bcc'] = $bcc;
         }
 
         $message->setAttribute('data', $data);
 
-        if (!empty($description)) {
+        if (!\is_null($description)) {
             $message->setAttribute('description', $description);
         }
 
-        if (!empty($status)) {
+        if (!\is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
@@ -2731,19 +2822,19 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
-    ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('content', '', new Text(64230), 'Email Content.', true)
-    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('description', null, new Text(256), 'Description for Message.', true)
+    ->param('content', null, new Text(64230), 'Email Content.', true)
+    ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $content, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $content, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2767,15 +2858,19 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (!\is_null($targets)) {
-            foreach ($targets as $target) {
-                $targetDocument = $dbForProject->getDocument('targets', $target);
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+                Query::limit(\count($targets)),
+            ]);
 
-                if ($targetDocument->isEmpty()) {
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+            }
+
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
                     throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-                }
-
-                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_SMS) {
-                    throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS . ' ' . $targetDocument->getId());
                 }
             }
 
@@ -2784,17 +2879,17 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         $data = $message->getAttribute('data');
 
-        if (!empty($content)) {
+        if (!\is_null($content)) {
             $data['content'] = $content;
         }
 
         $message->setAttribute('data', $data);
 
-        if (!empty($status)) {
+        if (!\is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
-        if (!empty($description)) {
+        if (!\is_null($description)) {
             $message->setAttribute('description', $description);
         }
 
@@ -2833,27 +2928,27 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
     ->param('messageId', '', new UID(), 'Message ID.')
-    ->param('topics', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Topic IDs.', true)
-    ->param('users', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of User IDs.', true)
-    ->param('targets', null, new ArrayList(new Text(Database::LENGTH_KEY), 1), 'List of Targets IDs.', true)
-    ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('title', '', new Text(256), 'Title for push notification.', true)
-    ->param('body', '', new Text(64230), 'Body for push notification.', true)
+    ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
+    ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
+    ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
+    ->param('description', null, new Text(256), 'Description for Message.', true)
+    ->param('title', null, new Text(256), 'Title for push notification.', true)
+    ->param('body', null, new Text(64230), 'Body for push notification.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
-    ->param('action', '', new Text(256), 'Action for push notification.', true)
-    ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
-    ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
-    ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
-    ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
-    ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
-    ->param('status', '', new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('action', null, new Text(256), 'Action for push notification.', true)
+    ->param('icon', null, new Text(256), 'Icon for push notification. Available only for Android and Web platforms.', true)
+    ->param('sound', null, new Text(256), 'Sound for push notification. Available only for Android and iOS platforms.', true)
+    ->param('color', null, new Text(256), 'Color for push notification. Available only for Android platforms.', true)
+    ->param('tag', null, new Text(256), 'Tag for push notification. Available only for Android platforms.', true)
+    ->param('badge', null, new Integer(), 'Badge for push notification. Available only for iOS platforms.', true)
+    ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft, cancelled, or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, string $description, string $title, string $body, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2877,15 +2972,19 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($targets)) {
-            foreach ($targets as $target) {
-                $targetDocument = $dbForProject->getDocument('targets', $target);
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::limit(\count($targets)),
+            ]);
 
-                if ($targetDocument->isEmpty()) {
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+            }
+
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
                     throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-                }
-
-                if ($targetDocument->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
-                    throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH . ' ' . $targetDocument->getId());
                 }
             }
 
@@ -2894,53 +2993,53 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $pushData = $message->getAttribute('data');
 
-        if ($title) {
+        if (!\is_null($title)) {
             $pushData['title'] = $title;
         }
 
-        if ($body) {
+        if (!\is_null($body)) {
             $pushData['body'] = $body;
         }
 
-        if (!is_null($data)) {
+        if (!\is_null($data)) {
             $pushData['data'] = $data;
         }
 
-        if ($action) {
+        if (!\is_null($action)) {
             $pushData['action'] = $action;
         }
 
-        if ($icon) {
+        if (!\is_null($icon)) {
             $pushData['icon'] = $icon;
         }
 
-        if ($sound) {
+        if (!\is_null($sound)) {
             $pushData['sound'] = $sound;
         }
 
-        if ($color) {
+        if (!\is_null($color)) {
             $pushData['color'] = $color;
         }
 
-        if ($tag) {
+        if (!\is_null($tag)) {
             $pushData['tag'] = $tag;
         }
 
-        if ($badge) {
+        if (!\is_null($badge)) {
             $pushData['badge'] = $badge;
         }
 
         $message->setAttribute('data', $pushData);
 
-        if (!empty($status)) {
+        if (!\is_null($status)) {
             $message->setAttribute('status', $status);
         }
 
-        if (!empty($description)) {
+        if (!\is_null($description)) {
             $message->setAttribute('description', $description);
         }
 
-        if (!is_null($scheduledAt)) {
+        if (!\is_null($scheduledAt)) {
             $message->setAttribute('scheduledAt', $scheduledAt);
         }
 

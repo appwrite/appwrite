@@ -60,7 +60,8 @@ class UsersTest extends Scope
                 'name' => 'Mailgun1',
                 'apiKey' => 'api-key',
                 'domain' => 'domain',
-                'from' => 'from@domain.com',
+                'fromName' => 'sender name',
+                'fromEmail' => 'from@domain.com',
                 'isEuRegion' => false,
             ],
         ];
