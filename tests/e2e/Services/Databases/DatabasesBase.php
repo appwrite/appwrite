@@ -469,7 +469,7 @@ trait DatabasesBase
                 Query::equal('type', ['string'])->toString(),
                 Query::limit(2)->toString(),
                 Query::cursorAfter(new Document(['$id' => 'title']))->toString()
-        ],
+            ],
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, \count($response['body']['attributes']));
