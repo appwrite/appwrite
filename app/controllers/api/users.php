@@ -1422,7 +1422,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::post('v1/users/:userId/sessions')
+App::post('/v1/users/:userId/sessions')
     ->desc('Create session')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].sessions.create')
