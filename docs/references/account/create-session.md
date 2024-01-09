@@ -1,0 +1,1 @@
+Use this endpoint to complete creating the session with a custom session token. Both the **userId** and **secret** arguments will be returned in the response body when sending your request to the [POST /users/:userId/sessions](https://appwrite.io/docs/references/cloud/server-nodejs/users#createToken) endpoint.
