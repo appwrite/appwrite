@@ -90,12 +90,12 @@ class DevGenerateTranslations extends Action
                     'content' => $enTranslation
                 ]
             ]
-        ]);
+        ], [], 60);
 
         $body = \json_decode($response->getBody(), true);
 
         if($response->getStatusCode() >= 400) {
-            throw new Exception($response->getBody());
+            throw new Exception($response->getBody() . ' with status code ' . $response->getStatusCode() . ' for language ' . $targetLanguage . ' and message ' . $enTranslation);
         }
 
         return $body['choices'][0]['message']['content'];
