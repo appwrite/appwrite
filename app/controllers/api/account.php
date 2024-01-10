@@ -949,7 +949,7 @@ App::post('/v1/account/sessions/magic-url')
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-        if($securityPhrase === true) {
+        if ($securityPhrase === true) {
             $securityPhrase = SecurityPhrase::generate();
         }
 
@@ -1062,12 +1062,12 @@ App::post('/v1/account/sessions/magic-url')
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
 
-        if(!empty($securityPhrase)) {
+        if (!empty($securityPhrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
         } else {
             $message->setParam('{{securityPhrase}}', '');
         }
-        
+
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -1146,7 +1146,7 @@ App::post('/v1/account/sessions/magic-url')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
 
-        if(!empty($securityPhrase)) {
+        if (!empty($securityPhrase)) {
             $token->setAttribute('securityPhrase', $securityPhrase);
         }
 
