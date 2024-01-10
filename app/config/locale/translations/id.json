@@ -228,5 +228,15 @@
     "continents.eu": "Eropa",
     "continents.na": "Amerika Utara",
     "continents.oc": "Oseania",
-    "continents.sa": "Amerika Selatan"
+    "continents.sa": "Amerika Selatan",
+    "emails.magicSession.optionButton": "Klik tombol di bawah ini untuk masuk ke akun {{project}} Anda dengan aman. Ini akan kedaluwarsa dalam 1 jam.",
+    "emails.magicSession.buttonText": "Masuk ke {{project}}",
+    "emails.magicSession.optionUrl": "Jika tombol di atas tidak muncul, gunakan link berikut:",
+    "emails.magicSession.clientInfo": "Tanda masuk ini diminta menggunakan {{agentClient}} di {{agentDevice}} {{agentOs}}. Jika Anda tidak meminta untuk masuk, Anda dapat mengabaikan email ini dengan aman.",
+    "emails.certificate.subject": "Kegagalan sertifikat untuk %s",
+    "emails.certificate.hello": "Halo",
+    "emails.certificate.body": "Sertifikat untuk domain Anda '{{domain}}' tidak dapat dibuat. Ini adalah percobaan ke-{{attempt}}, dan kegagalan disebabkan oleh: {{error}}",
+    "emails.certificate.footer": "Sertifikat sebelumnya Anda akan berlaku selama 30 hari sejak kegagalan pertama. Kami sangat menyarankan untuk menyelidiki kasus ini, jika tidak domain Anda akan berakhir tanpa komunikasi SSL yang valid.",
+    "emails.certificate.thanks": "Terima kasih",
+    "emails.certificate.signature": "tim {{project}}"
 }

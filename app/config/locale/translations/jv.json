@@ -228,5 +228,15 @@
     "continents.eu": "Eropa",
     "continents.na": "Amérika Lor",
     "continents.oc": "Oseania",
-    "continents.sa": "Amérika Kidul"
+    "continents.sa": "Amérika Kidul",
+    "emails.magicSession.optionButton": "Klik tombol ing ngisor iki kanggo mlebu kanthi aman ing akun {{project}} panjenengan. Bakal kadaluwarsa sajroning 1 jam.",
+    "emails.magicSession.buttonText": "Mlebu ing {{project}}",
+    "emails.magicSession.optionUrl": "Yen tombol ing ndhuwur ora katon, gunakna tautan ing ngisor iki:",
+    "emails.magicSession.clientInfo": "Penandatanganan iki dijaluk nganggo {{agentClient}} ing {{agentDevice}} {{agentOs}}. Yen panjenengan ora njaluk penandatanganan, panjenengan bisa ngabaikan email iki kanthi aman.",
+    "emails.certificate.subject": "Gagal sertifikat kanggo %s",
+    "emails.certificate.hello": "Halo",
+    "emails.certificate.body": "Sertifikat kanggo domain panjenengan '{{domain}}' ora bisa digawe. Iki nyoba nomer {{attempt}}, lan gagal amarga: {{error}}",
+    "emails.certificate.footer": "Sertifikat sadurunge bakal tetep sah sajrone 30 dina wiwit kagagalan pisanan. Kita menehi saran sing kuat supaya panjenengan nyelidiki kasus iki, manawa-mawa domain panjenengan bakal pungkasan tanpa komunikasi SSL sing sah.",
+    "emails.certificate.thanks": "Matur nuwun",
+    "emails.certificate.signature": "tim {{project}}"
 }
