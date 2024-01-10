@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "92b527993518d6b893e3d226064edac0",
+    "content-hash": "359b1e3bd27ac7362c6f8d145e64ae36",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2272,26 +2272,28 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "64eca3faf02a79831f219d4f3ae05cd278a88b4b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/64eca3faf02a79831f219d4f3ae05cd278a88b4b",
+                "reference": "64eca3faf02a79831f219d4f3ae05cd278a88b4b",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
+                "ext-openssl": "*",
                 "php": ">=8.0.0"
             },
             "require-dev": {
-                "laravel/pint": "^1.2",
+                "laravel/pint": "1.13.*",
                 "phpmailer/phpmailer": "6.8.*",
-                "phpunit/phpunit": "9.6.*"
+                "phpstan/phpstan": "1.10.*",
+                "phpunit/phpunit": "9.6.10"
             },
             "type": "library",
             "autoload": {
@@ -2314,9 +2316,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.8.0"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-12-15T06:44:08+00:00"
         },
         {
             "name": "utopia-php/migration",
