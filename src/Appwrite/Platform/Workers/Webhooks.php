@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\View;
 use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
@@ -152,46 +153,32 @@ class Webhooks extends Action
             $webhook->setAttribute('logs', $logs);
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
-                $webhook->setAttribute('enabled', false);
-
-                // send an email to user
-                $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
-
-                if (!$locale->getText('emails.sender') || !$locale->getText("emails.webhook.hello") || !$locale->getText("emails.webhook.subject") || !$locale->getText("emails.webhook.body") || !$locale->getText("emails.webhook.footer") || !$locale->getText("emails.webhook.thanks") || !$locale->getText("emails.webhook.signature")) {
-                    $locale->setDefault('en');
-                }
-
-                $subject = $locale->getText("emails.webhook.subject");
-
                 $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $hostname = App::getEnv('_APP_DOMAIN');
                 $projectId = $project->getId();
                 $webhookId = $webhook->getId();
 
-                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook.tpl');
-                $message
-                    ->setParam('{{subject}}', $subject)
-                    ->setParam('{{message}}', $locale->getText("emails.webhook.body"))
-                    ->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId")
-                    ->setParam('{{buttonText}}', $locale->getText("emails.webhook.buttonText"))
-                    ->setParam('{{optionUrl}}', $locale->getText("emails.webhook.optionUrl"));
-                $body = $message->render();
+                $template = __DIR__ . '/../../../../app/config/locale/templates/email-webhook.phtml';
+                $template = new View($template);
 
-                $emailVariables = [
-                    'subject' => $subject,
-                    'user' => $user->getAttribute('name'),
-                    'project' => $project->getAttribute('name'),
-                    'link' => $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId",
-                    'webhook' => $webhook->getAttribute('name'),
-                    'attempts' => $attempts,
-                    'url' => $webhook->getAttribute('url'),
-                    'error' => $curlError ??  \mb_strcut($responseBody, 0, 10000),
-                ];
+                $template->setParam('user', $user->getAttribute('name'));
+                $template->setParam('webhook', $webhook->getAttribute('name'));
+                $template->setParam('project', $project->getAttribute('name'));
+                $template->setParam('url', $webhook->getAttribute('url'));
+                $template->setParam('error', $curlError ??  'The server returned ' . $statusCode . ' status code');
+                $template->setParam('redirect', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
+                $template->setParam('attempts', $attempts);
+
+                $subject = 'Your webhook has been paused';
+                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+
+                $body
+                    ->setParam('{{subject}}', $subject)
+                    ->setParam('{{body}}', $template->render());
 
                 $queueForMails
                     ->setSubject($subject)
-                    ->setBody($body)
-                    ->setVariables($emailVariables)
+                    ->setBody($body->render())
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
             }
