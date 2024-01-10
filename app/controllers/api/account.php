@@ -8,6 +8,7 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Auth\SecurityPhrase;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -949,7 +950,7 @@ App::post('/v1/account/sessions/magic-url')
         }
 
         if($securityPhrase === true) {
-            $securityPhrase = 'Golden Fox'; // TODO: Random phrase
+            $securityPhrase = SecurityPhrase::generate();
         }
 
         $roles = Authorization::getRoles();
