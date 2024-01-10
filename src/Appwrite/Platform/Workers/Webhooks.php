@@ -163,16 +163,19 @@ class Webhooks extends Action
 
                 $subject = $locale->getText("emails.webhook.subject");
 
-                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook.tpl');
-                $message
-                    ->setParam('{{subject}}', $subject)
-                    ->setParam('{{message}}', $locale->getText("emails.webhook.body"));
-                $body = $message->render();
-
                 $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $hostname = App::getEnv('_APP_DOMAIN');
                 $projectId = $project->getId();
                 $webhookId = $webhook->getId();
+
+                $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook.tpl');
+                $message
+                    ->setParam('{{subject}}', $subject)
+                    ->setParam('{{message}}', $locale->getText("emails.webhook.body"))
+                    ->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId")
+                    ->setParam('{{buttonText}}', $locale->getText("emails.webhook.buttonText"))
+                    ->setParam('{{optionUrl}}', $locale->getText("emails.webhook.optionUrl"));
+                $body = $message->render();
 
                 $emailVariables = [
                     'subject' => $subject,
