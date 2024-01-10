@@ -1035,7 +1035,6 @@ App::post('/v1/account/sessions/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $loginSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        $body = $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
@@ -1046,7 +1045,6 @@ App::post('/v1/account/sessions/magic-url')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
-            ->setParam('{{body}}', $body)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
             ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
             ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
@@ -1108,10 +1106,11 @@ App::post('/v1/account/sessions/magic-url')
             'user' => '',
             'team' => '',
             'project' => $project->getAttribute('name'),
+            'projectBold' => '<strong>' . $project->getAttribute('name') . '</strong>',
             'redirect' => $url,
-            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
+            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
+            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>'
         ];
 
         $queueForMails
