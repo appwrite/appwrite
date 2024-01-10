@@ -79,9 +79,9 @@ class AccountCustomServerTest extends Scope
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals('Login', $lastEmail['subject']);
+        $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
-        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
         $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 
