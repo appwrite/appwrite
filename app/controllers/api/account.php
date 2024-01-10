@@ -165,6 +165,55 @@ App::post('/v1/account')
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
+App::delete('/v1/account')
+    ->desc('Delete account')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].delete')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.delete')
+    ->label('audits.resource', 'user/{request.userId}')
+    ->label('usage.metric', 'users.{scope}.requests.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/account/delete.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->inject('requestTimestamp')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+
+        $clone = clone $user;
+
+        $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->deleteDocument('users', $user->getId()));
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone);
+
+        $queueForEvents
+            ->setParam('userId', $clone->getId())
+            ->setPayload($response->output($clone, Response::MODEL_ACCOUNT));
+
+        if (!Config::getParam('domainVerification')) {
+            $response->addHeader('X-Fallback-Cookies', \json_encode([]));
+        }
+
+        $protocol = $request->getProtocol();
+        $response
+            ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+        ;
+
+        $response->noContent();
+    });
+
+
 App::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create email session')
@@ -2133,20 +2182,15 @@ App::patch('/v1/account/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->inject('queueForDeletes')
-    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $clone = clone $user;
+        $user->setAttribute('status', false);
 
-        $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->deleteDocument('users', $user->getId()));
-
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone);
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents
-            ->setParam('userId', $clone->getId())
-            ->setPayload($response->output($clone, Response::MODEL_ACCOUNT));
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -2158,7 +2202,7 @@ App::patch('/v1/account/status')
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
-        $response->dynamic($clone, Response::MODEL_ACCOUNT);
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
 App::delete('/v1/account/sessions/:sessionId')
