@@ -144,6 +144,8 @@ App::post('/v1/account')
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
+                'mfa' => false,
+                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
@@ -676,6 +678,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => DateTime::now(),
                         'reset' => false,
                         'name' => $name,
+                        'mfa' => false,
+                        'totp' => false,
                         'prefs' => new \stdClass(),
                         'sessions' => null,
                         'tokens' => null,
@@ -990,6 +994,8 @@ App::post('/v1/account/sessions/magic-url')
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
+                'mfa' => false,
+                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
@@ -1592,6 +1598,8 @@ App::post('/v1/account/sessions/anonymous')
             'registration' => DateTime::now(),
             'reset' => false,
             'name' => null,
+            'mfa' => false,
+            'totp' => false,
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
@@ -3292,18 +3300,15 @@ App::post('/v1/account/mfa/:provider')
 
         $backups = Provider::generateBackupCodes();
 
-    switch ($provider) {
-        case 'totp':
-            if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
-            }
-            $user
-                ->setAttribute('totp', true)
-                ->setAttribute('totpVerification', false)
-                ->setAttribute('totpBackup', $backups)
-                ->setAttribute('totpSecret', $otp->getSecret());
-            break;
-    }
+        if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
+        }
+
+        $user
+            ->setAttribute('totp', true)
+            ->setAttribute('totpVerification', false)
+            ->setAttribute('totpBackup', $backups)
+            ->setAttribute('totpSecret', $otp->getSecret());
 
         $model = new Document();
         $model
@@ -3350,26 +3355,76 @@ App::put('/v1/account/mfa/:provider')
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    switch ($provider) {
-        case 'totp':
-            if (!$user->getAttribute('totp')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-            } elseif ($user->getAttribute('totpVerification')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
-            }
-            $user->setAttribute('totpVerification', true);
-            break;
-    }
+        if (!$user->getAttribute('totp')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+        } elseif ($user->getAttribute('totpVerification')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+        }
+
+        $user->setAttribute('totpVerification', true);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
 
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
+    });
+
+App::delete('/v1/account/mfa/:provider')
+    ->desc('Delete Authenticator')
+    ->groups(['api', 'account', 'mfa'])
+    ->label('event', 'users.[userId].delete.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deleteAuthenticator')
+    ->label('sdk.description', '/docs/references/account/delete-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('otp', '', new Text(256), 'Valid verification token.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $success = match ($provider) {
+            'totp' => Challenge\TOTP::verify($user, $otp),
+            default => false
+        };
+
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        if (!$user->getAttribute('totp')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+        }
+
+        $user
+            ->setAttribute('totp', false)
+            ->setAttribute('totpVerification', false)
+            ->setAttribute('totpSecret', null)
+            ->setAttribute('totpBackup', null);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->noContent();
     });
 
 App::post('/v1/account/mfa/challenge')
@@ -3507,9 +3562,9 @@ App::put('/v1/account/mfa/challenge')
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->deleteCachedDocument('users', $user->getId());
