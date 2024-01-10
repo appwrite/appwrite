@@ -27,7 +27,7 @@ use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
@@ -841,7 +841,7 @@ App::get('/v1/account/identities')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('identities', $queries);
-        $total = $dbForProject->count('identities', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('identities', $filterQueries, $dbForProject->getLimitCount());
 
         $response->dynamic(new Document([
             'identities' => $results,
@@ -1763,7 +1763,7 @@ App::get('/v1/account/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new EventAudit($dbForProject);

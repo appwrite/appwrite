@@ -10,7 +10,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Exception\Duplicate;
@@ -190,7 +190,7 @@ App::get('/v1/storage/buckets')
 
         $response->dynamic(new Document([
             'buckets' => $dbForProject->find('buckets', $queries),
-            'total' => $dbForProject->count('buckets', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('buckets', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_BUCKET_LIST);
     });
 
@@ -778,10 +778,10 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         if ($fileSecurity && !$valid) {
             $files = $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries);
-            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, $dbForProject->getLimitCount());
         } else {
             $files = Authorization::skip(fn () => $dbForProject->find('bucket_' . $bucket->getInternalId(), $queries));
-            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, APP_LIMIT_COUNT));
+            $total = Authorization::skip(fn () => $dbForProject->count('bucket_' . $bucket->getInternalId(), $filterQueries, $dbForProject->getLimitCount()));
         }
 
         $response->dynamic(new Document([

@@ -10,7 +10,7 @@ use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Appwrite\Event\Func;
 

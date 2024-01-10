@@ -8,7 +8,7 @@ use Appwrite\Utopia\Response\Model\Platform;
 use Exception;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;

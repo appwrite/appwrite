@@ -7,6 +7,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Template\Template;
+use Appwrite\Utopia\Database\Database;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
@@ -16,7 +17,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
@@ -265,7 +265,7 @@ App::get('/v1/projects')
 
         $response->dynamic(new Document([
             'projects' => $dbForConsole->find('projects', $queries),
-            'total' => $dbForConsole->count('projects', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForConsole->count('projects', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_PROJECT_LIST);
     });
 

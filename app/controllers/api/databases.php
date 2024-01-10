@@ -18,7 +18,7 @@ use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -516,7 +516,7 @@ App::get('/v1/databases')
 
         $response->dynamic(new Document([
             'databases' => $dbForProject->find('databases', $queries),
-            'total' => $dbForProject->count('databases', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('databases', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_DATABASE_LIST);
     });
 
@@ -573,7 +573,7 @@ App::get('/v1/databases/:databaseId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
@@ -846,7 +846,7 @@ App::get('/v1/databases/:databaseId/collections')
 
         $response->dynamic(new Document([
             'collections' => $dbForProject->find('database_' . $database->getInternalId(), $queries),
-            'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('database_' . $database->getInternalId(), $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_COLLECTION_LIST);
     });
 
@@ -923,7 +923,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
@@ -1735,7 +1735,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
         $filters = Query::groupByType($queries)['filters'];
 
         $attributes = $dbForProject->find('attributes', $queries);
-        $total = $dbForProject->count('attributes', $filters, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('attributes', $filters, $dbForProject->getLimitCount());
 
         $response->dynamic(new Document([
             'attributes' => $attributes,
@@ -2598,7 +2598,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         $filterQueries = Query::groupByType($queries)['filters'];
         $response->dynamic(new Document([
-            'total' => $dbForProject->count('indexes', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('indexes', $filterQueries, $dbForProject->getLimitCount()),
             'indexes' => $dbForProject->find('indexes', $queries),
         ]), Response::MODEL_INDEX_LIST);
     });
@@ -3013,7 +3013,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         try {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
-            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, APP_LIMIT_COUNT);
+            $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $filters, $dbForProject->getLimitCount());
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
@@ -3217,7 +3217,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);

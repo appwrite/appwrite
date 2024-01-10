@@ -7,7 +7,6 @@ use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Document;
 

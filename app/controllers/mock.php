@@ -8,7 +8,7 @@ use Utopia\Validator\Host;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\Database\Helpers\ID;

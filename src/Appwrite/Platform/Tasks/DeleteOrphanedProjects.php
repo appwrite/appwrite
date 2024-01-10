@@ -9,10 +9,10 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Boolean;
+use Appwrite\Utopia\Database\Database;
 
 class DeleteOrphanedProjects extends Action
 {

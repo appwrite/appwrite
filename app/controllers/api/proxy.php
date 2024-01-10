@@ -8,7 +8,7 @@ use Appwrite\Network\Validator\CNAME;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
@@ -189,7 +189,7 @@ App::get('/v1/proxy/rules')
 
         $response->dynamic(new Document([
             'rules' => $rules,
-            'total' => $dbForConsole->count('rules', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForConsole->count('rules', $filterQueries, $dbForProject->getLimitCount()),
         ]), Response::MODEL_PROXY_RULE_LIST);
     });
 

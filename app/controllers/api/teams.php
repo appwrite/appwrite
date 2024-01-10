@@ -23,7 +23,7 @@ use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
-use Utopia\Database\Database;
+use Appwrite\Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate;
@@ -172,7 +172,7 @@ App::get('/v1/teams')
         $filterQueries = Query::groupByType($queries)['filters'];
 
         $results = $dbForProject->find('teams', $queries);
-        $total = $dbForProject->count('teams', $filterQueries, APP_LIMIT_COUNT);
+        $total = $dbForProject->count('teams', $filterQueries, $dbForProject->getLimitCount());
 
         $response->dynamic(new Document([
             'teams' => $results,
@@ -722,7 +722,7 @@ App::get('/v1/teams/:teamId/memberships')
         $total = $dbForProject->count(
             collection: 'memberships',
             queries: $filterQueries,
-            max: APP_LIMIT_COUNT
+            max: $dbForProject->getLimitCount()
         );
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
@@ -1086,7 +1086,7 @@ App::get('/v1/teams/:teamId/logs')
 
         $queries = Query::parseQueries($queries);
         $grouped = Query::groupByType($queries);
-        $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
+        $limit = $grouped['limit'] ?? $dbForProject->getLimitCount();
         $offset = $grouped['offset'] ?? 0;
 
         $audit = new Audit($dbForProject);
