@@ -238,5 +238,6 @@
     "emails.certificate.body": "Certificaat voor uw domein '{{domain}}' kon niet worden gegenereerd. Dit is poging nr. {{attempt}}, en de fout werd veroorzaakt door: {{error}}",
     "emails.certificate.footer": "Ваш папярэдні сертыфікат будзе дзейнічаць 30 дзён з моманту першай няўдачы. Мы вельмі рэкамендуем разабрацца ў гэтай сітуацыі, інакш ваш дамен застанецца без дзейнага сертыфіката SSL забеспячэння.",
     "emails.certificate.thanks": "The country code BE stands for Belgium, where there are two main languages spoken: Dutch and French. Since you did not specify the language, I will provide the translation in both:\n\nDutch: Dank je\nFrench: Merci",
-    "emails.certificate.signature": "{{project}} équipe"
+    "emails.certificate.signature": "{{project}} équipe",
+    "emails.magicSession.securityPhrase": "La phrase de sécurité pour cet e-mail est {{phrase}}. Vous pouvez faire confiance à cet e-mail si cette phrase correspond à celle affichée lors de la connexion."
 }

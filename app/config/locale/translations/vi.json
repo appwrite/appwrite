@@ -238,5 +238,6 @@
     "emails.certificate.body": "Chứng chỉ cho tên miền của bạn '{{domain}}' không thể được tạo ra. Đây là lần thử thứ {{attempt}}, và sự cố xảy ra do: {{error}}",
     "emails.certificate.footer": "Chứng chỉ trước đây của bạn sẽ còn hiệu lực trong 30 ngày kể từ lần thất bại đầu tiên. Chúng tôi rất khuyến nghị bạn điều tra vụ việc này, nếu không miền của bạn sẽ kết thúc mà không có một sự giao tiếp SSL hợp lệ.",
     "emails.certificate.thanks": "Cảm ơn",
-    "emails.certificate.signature": "đội {{project}}"
+    "emails.certificate.signature": "đội {{project}}",
+    "emails.magicSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin cậy email này nếu cụm từ này khớp với cụm từ được hiển thị khi đăng nhập."
 }

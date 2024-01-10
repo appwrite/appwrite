@@ -238,5 +238,6 @@
     "emails.certificate.body": "آپ کے ڈومین '{{domain}}' کے لئے سرٹیفکیٹ تیار نہیں کیا جا سکا۔ یہ کوشش نمبر {{attempt}} ہے، اور ناکامی کی وجہ یہ رہی: {{error}}",
     "emails.certificate.footer": "آپ کا پچھلا سرٹیفیکیٹ پہلی ناکامی کے بعد سے 30 دن کے لیے درست ہوگا۔ ہم آپ کو شدید تاکید کرتے ہیں کہ اس معاملے کی تحقیق کریں، بصورت دیگر آپ کا ڈومین بغیر کسی درست SSL مواصلات کے رہ جائے گا۔",
     "emails.certificate.thanks": "شکریہ",
-    "emails.certificate.signature": "ٹیم {{project}}"
+    "emails.certificate.signature": "ٹیم {{project}}",
+    "emails.magicSession.securityPhrase": "اس ای میل کے لئے سیکیورٹی جملہ ہے {{phrase}}۔ آپ اس ای میل پر یقین کر سکتے ہیں اگر یہ جملہ سائن ان کے دوران دکھایا گیا جملہ سے میل کھاتا ہے۔"
 }

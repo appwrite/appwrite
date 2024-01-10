@@ -238,5 +238,6 @@
     "emails.certificate.body": "Níorbh fhéidir teastas a chruthú do do réimse '{{domain}}'. Is é seo iarracht uimh. {{attempt}}, agus ba é an locht a bhí air: {{error}}",
     "emails.certificate.footer": "Beidh do theastas roimhe seo bailí ar feadh 30 lá ón gcéad theip. Molaimid go mór cás seo a fhiosrú, murach sin rachaidh do réimse gan cumarsáid SSL bailí.",
     "emails.certificate.thanks": "Go raibh maith agat",
-    "emails.certificate.signature": "foireann {{project}}"
+    "emails.certificate.signature": "foireann {{project}}",
+    "emails.magicSession.securityPhrase": "Tá frása slándála don ríomhphost seo {{phrase}}. Is féidir leat muinín a bheith agat sa ríomhphost seo má chomhchroíonn an frása seo leis an bhfrása a thaispeánadh ag lóistín isteach."
 }

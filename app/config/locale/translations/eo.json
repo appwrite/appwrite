@@ -238,5 +238,6 @@
     "emails.certificate.body": "Atestilo por via retejo '{{domain}}' ne povis esti generita. Tio estas provo numero {{attempt}}, kaj la malsukceso estis kaŭzita de: {{error}}",
     "emails.certificate.footer": "Via antaŭa atestilo estos valida dum 30 tagoj ekde la unua malsukceso. Ni tre rekomendas esplori ĉi tiun kazon, alie via domajno finiĝos sen valida SSL-komunikado.",
     "emails.certificate.thanks": "Dankon",
-    "emails.certificate.signature": "teamo de {{project}}"
+    "emails.certificate.signature": "teamo de {{project}}",
+    "emails.magicSession.securityPhrase": "Sekureca frazo por tiu ĉi retpoŝto estas {{phrase}}. Vi povas konfidi tiun ĉi retpoŝton se tiu frazo kongruas kun la frazo montrita dum ensaluto."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "Az Ön '{{domain}}' domainjához a tanúsítvány nem generálható. Ez a {{attempt}}. kísérlet, és a következő hiba okozta: {{error}}",
     "emails.certificate.footer": "Az előző tanúsítvány 30 napig lesz érvényes az első hiba óta. Nagyon ajánljuk, hogy vizsgálja meg ezt az esetet, különben a domainje érvényes SSL kommunikáció nélkül marad.",
     "emails.certificate.thanks": "Köszönöm",
-    "emails.certificate.signature": "{{project}} csapat"
+    "emails.certificate.signature": "{{project}} csapat",
+    "emails.magicSession.securityPhrase": "A biztonsági kifejezés erre az e-mailre: {{phrase}}. E-mailünk megbízható, ha a megadott kifejezés megegyezik a bejelentkezéskor megjelenő kifejezéssel."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "无法为您的域名“{{domain}}”生成证书。这是第{{attempt}}次尝试，失败的原因是：{{error}}。",
     "emails.certificate.footer": "您之前的证书自首次失败之日起将有效期30天。我们强烈建议调查此案件，否则您的域名将没有有效的SSL通信。",
     "emails.certificate.thanks": "谢谢",
-    "emails.certificate.signature": "{{project}} 团队"
+    "emails.certificate.signature": "{{project}} 团队",
+    "emails.magicSession.securityPhrase": "此电子邮件的安全短语为{{phrase}}。如果此短语与登录时显示的短语相匹配，您可以信任此电子邮件。"
 }

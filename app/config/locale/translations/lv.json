@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifikāts jūsu domēnam '{{domain}}' nevarēja tikt ģenerēts. Tā ir mēģinājuma nr. {{attempt}}, un neizdošanās iemesls bija: {{error}}",
     "emails.certificate.footer": "Jūsu iepriekšējais sertifikāts būs derīgs 30 dienas no pirmās neveiksmes. Mēs ļoti iesakām izmeklēt šo gadījumu, citādi jūsu domēns paliks bez derīga SSL saziņas.",
     "emails.certificate.thanks": "Paldies",
-    "emails.certificate.signature": "{{project}} komanda"
+    "emails.certificate.signature": "{{project}} komanda",
+    "emails.magicSession.securityPhrase": "Šī e-pasta drošības frāze ir {{phrase}}. Jūs varat uzticēties šim e-pastam, ja šī frāze atbilst frāzei, kas tika parādīta pierakstoties."
 }

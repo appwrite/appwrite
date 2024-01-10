@@ -238,5 +238,6 @@
     "emails.magicSession.optionButton": "Cliquez sur le bouton ci-dessous pour vous connecter en toute sécurité à votre compte {{project}}. Il expirera dans 1 heure.",
     "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
     "emails.magicSession.optionUrl": "Si le bouton ci-dessus ne s'affiche pas, utilisez le lien suivant :",
-    "emails.magicSession.clientInfo": "Cette connexion a été demandée en utilisant {{agentClient}} sur {{agentDevice}} {{agentOs}}. Si vous n'avez pas demandé cette connexion, vous pouvez ignorer cet email en toute sécurité."
+    "emails.magicSession.clientInfo": "Cette connexion a été demandée en utilisant {{agentClient}} sur {{agentDevice}} {{agentOs}}. Si vous n'avez pas demandé cette connexion, vous pouvez ignorer cet email en toute sécurité.",
+    "emails.magicSession.securityPhrase": "La phrase de sécurité pour cet e-mail est {{phrase}}. Vous pouvez avoir confiance en cet e-mail si cette phrase correspond à celle affichée lors de la connexion."
 }

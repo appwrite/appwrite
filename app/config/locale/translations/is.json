@@ -238,5 +238,6 @@
     "emails.certificate.body": "Vottorð fyrir léninu þínu '{{domain}}' gat ekki verið búið til. Þetta er tilraun nr. {{attempt}}, og mistökin voru af völdum: {{error}}",
     "emails.certificate.footer": "Fyrri vottorðið þitt verður gilt í 30 daga frá fyrstu mistökum. Við mælum eindregið með því að rannsaka þetta tilvik, ella mun lén þitt enda án gildrar SSL-samskipta.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}} liðið"
+    "emails.certificate.signature": "{{project}} liðið",
+    "emails.magicSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puede confiar en este correo electrónico si esta frase coincide con la frase mostrada al iniciar sesión."
 }
