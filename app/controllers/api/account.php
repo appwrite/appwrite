@@ -6,6 +6,7 @@ use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Phone as EventPhone;
@@ -1578,10 +1579,10 @@ App::post('/v1/account/sessions/anonymous')
         Authorization::setRole(Role::user($user->getId())->toString());
 
         $session = $dbForProject->createDocument('sessions', $session-> setAttribute('$permissions', [
-                Permission::read(Role::user($user->getId())),
-                Permission::update(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
-            ]));
+            Permission::read(Role::user($user->getId())),
+            Permission::update(Role::user($user->getId())),
+            Permission::delete(Role::user($user->getId())),
+        ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
@@ -1649,13 +1650,13 @@ App::post('/v1/account/jwt')
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic(new Document(['jwt' => $jwt->encode([
-            // 'uid'    => 1,
-            // 'aud'    => 'http://site.com',
-            // 'scopes' => ['user'],
-            // 'iss'    => 'http://api.mysite.com',
-            'userId' => $user->getId(),
-            'sessionId' => $current->getId(),
-        ])]), Response::MODEL_JWT);
+                // 'uid'    => 1,
+                // 'aud'    => 'http://site.com',
+                // 'scopes' => ['user'],
+                // 'iss'    => 'http://api.mysite.com',
+                'userId' => $user->getId(),
+                'sessionId' => $current->getId(),
+            ])]), Response::MODEL_JWT);
     });
 
 App::get('/v1/account')
@@ -2132,15 +2133,20 @@ App::patch('/v1/account/status')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('queueForDeletes')
+    ->action(function (?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
 
-        $user->setAttribute('status', false);
+        $clone = clone $user;
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->deleteDocument('users', $user->getId()));
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone);
 
         $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_ACCOUNT));
+            ->setParam('userId', $clone->getId())
+            ->setPayload($response->output($clone, Response::MODEL_ACCOUNT));
 
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([]));
@@ -2152,7 +2158,7 @@ App::patch('/v1/account/status')
             ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
 
-        $response->dynamic($user, Response::MODEL_ACCOUNT);
+        $response->dynamic($clone, Response::MODEL_ACCOUNT);
     });
 
 App::delete('/v1/account/sessions/:sessionId')
@@ -2359,7 +2365,7 @@ App::delete('/v1/account/sessions')
                 $session->setAttribute('current', true);
                 $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
-                 // If current session delete the cookies too
+                // If current session delete the cookies too
                 $response
                     ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
@@ -2618,12 +2624,12 @@ App::put('/v1/account/recovery')
         }
 
         $profile = $dbForProject->updateDocument('users', $profile->getId(), $profile
-                ->setAttribute('password', $newPassword)
-                ->setAttribute('passwordHistory', $history)
-                ->setAttribute('passwordUpdate', DateTime::now())
-                ->setAttribute('hash', Auth::DEFAULT_ALGO)
-                ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
-                ->setAttribute('emailVerification', true));
+            ->setAttribute('password', $newPassword)
+            ->setAttribute('passwordHistory', $history)
+            ->setAttribute('passwordUpdate', DateTime::now())
+            ->setAttribute('hash', Auth::DEFAULT_ALGO)
+            ->setAttribute('hashOptions', Auth::DEFAULT_ALGO_OPTIONS)
+            ->setAttribute('emailVerification', true));
 
         $user->setAttributes($profile->getArrayCopy());
 

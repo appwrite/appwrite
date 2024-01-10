@@ -103,6 +103,7 @@ RUN chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
     chmod +x /usr/local/bin/patch-delete-project-collections && \
+    chmod +x /usr/local/bin/patch-delete-console-users && \
     chmod +x /usr/local/bin/delete-orphaned-projects && \
     chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/calc-users-stats && \
