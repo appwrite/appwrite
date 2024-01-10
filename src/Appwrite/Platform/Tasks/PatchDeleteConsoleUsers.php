@@ -44,7 +44,6 @@ class PatchDeleteConsoleUsers extends Action
                     ->setType(DELETE_TYPE_DOCUMENT)
                     ->setDocument($clone)
                     ->trigger();
-
             } catch (\Throwable $th) {
                 Console::error("Unexpected error occurred with User ID {$clone->getId()}");
                 Console::error('[Error] Type: ' . get_class($th));
