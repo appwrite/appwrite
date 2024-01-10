@@ -1002,7 +1002,7 @@ App::post('/v1/account/sessions/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $loginSecret = Auth::tokenGenerator();
+        $loginSecret = Auth::tokenGenerator(32);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -1039,11 +1039,19 @@ App::post('/v1/account/sessions/magic-url')
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $agentOs = $detector->getOS();
+        $agentClient = $detector->getClient();
+        $agentDevice = $detector->getDevice();
+
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
             ->setParam('{{body}}', $body)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
+            ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
         $body = $message->render();
@@ -1100,7 +1108,10 @@ App::post('/v1/account/sessions/magic-url')
             'user' => '',
             'team' => '',
             'project' => $project->getAttribute('name'),
-            'redirect' => $url
+            'redirect' => $url,
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
         ];
 
         $queueForMails
