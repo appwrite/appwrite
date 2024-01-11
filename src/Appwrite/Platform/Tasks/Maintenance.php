@@ -61,7 +61,7 @@ class Maintenance extends Action
 
     private function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_EXECUTIONS)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
@@ -69,7 +69,7 @@ class Maintenance extends Action
 
     private function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_ABUSE)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
@@ -77,7 +77,7 @@ class Maintenance extends Action
 
     private function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
@@ -85,7 +85,7 @@ class Maintenance extends Action
 
     private function notifyDeleteUsageStats(int $usageStatsRetentionHourly, Delete $queueForDeletes): void
     {
-        ($queueFor)
+        $queueForDeletes
             ->setType(DELETE_TYPE_USAGE)
             ->setUsageRetentionHourlyDateTime(DateTime::addSeconds(new \DateTime(), -1 * $usageStatsRetentionHourly))
             ->trigger();
@@ -93,7 +93,7 @@ class Maintenance extends Action
 
     private function notifyDeleteConnections(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_REALTIME)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -60))
             ->trigger();
@@ -101,7 +101,7 @@ class Maintenance extends Action
 
     private function notifyDeleteExpiredSessions(Delete $queueForDeletes): void
     {
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_SESSIONS)
             ->trigger();
     }
