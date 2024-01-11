@@ -774,10 +774,10 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-        $secret = Auth::tokenGenerator();
-
+        
         // If the `token` param is set, we will return the token in the query string
         if ($state['token']) {
+            $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_OAUTH2);
             $token = new Document([
                 '$id' => ID::unique(),
                 'userId' => $user->getId(),
@@ -811,6 +811,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
+            $secret = Auth::tokenGenerator();
 
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
@@ -1049,7 +1050,7 @@ App::post('/v1/account/tokens/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $tokenSecret = Auth::tokenGenerator(32);
+        $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([

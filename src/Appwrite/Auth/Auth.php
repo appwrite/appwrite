@@ -77,6 +77,14 @@ class Auth
     public const TOKEN_EXPIRATION_UNIVERSAL = 60 * 15;        /* 15 minutes */
 
     /**
+     * Token Lengths.
+     */
+    public const TOKEN_LENGTH_MAGIC_URL = 32;
+    public const TOKEN_LENGTH_OAUTH2 = 32;
+    public const TOKEN_LENGTH_SESSION = 128;
+
+
+    /**
      * @var string
      */
     public static $cookieName = 'a_session';
@@ -301,7 +309,7 @@ class Auth
      *
      * @return string
      */
-    public static function tokenGenerator(int $length = 128): string
+    public static function tokenGenerator(int $length = Auth::TOKEN_LENGTH_SESSION): string
     {
         return \bin2hex(\random_bytes($length));
     }
