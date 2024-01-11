@@ -228,5 +228,15 @@
     "continents.eu": "Európa",
     "continents.na": "Severná Amerika",
     "continents.oc": "Oceánia",
-    "continents.sa": "Južná Amerika"
+    "continents.sa": "Južná Amerika",
+    "emails.magicSession.optionButton": "Kliknite na tlačidlo nižšie, aby ste sa bezpečne prihlásili do vášho účtu {{project}}. Platnosť vyprší za 1 hodinu.",
+    "emails.magicSession.buttonText": "Prihláste sa do {{project}}",
+    "emails.magicSession.optionUrl": "Ak sa tlačidlo vyššie nezobrazuje, použite nasledujúci odkaz:",
+    "emails.magicSession.clientInfo": "Toto prihlásenie bolo požadované pomocou {{agentClient}} na {{agentDevice}} {{agentOs}}. Ak ste si nepožiadali o prihlásenie, tento e-mail môžete bezpečne ignorovať.",
+    "emails.certificate.subject": "Certifikačná chyba pre %s",
+    "emails.certificate.hello": "Ahoj",
+    "emails.certificate.body": "Certifikát pre váš domén '{{domain}}' sa nepodarilo vygenerať. Ide o pokus č. {{attempt}}, a dôvod zlyhania bol: {{error}}",
+    "emails.certificate.footer": "Váš predchádzajúci certifikát bude platný 30 dní od prvého zlyhania. Dôrazne odporúčame vyšetrenie tohto prípadu, inak váš doménový názov zostane bez platnej SSL komunikácie.",
+    "emails.certificate.thanks": "Ďakujem",
+    "emails.certificate.signature": "tím {{project}}"
 }
