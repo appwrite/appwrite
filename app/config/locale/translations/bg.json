@@ -231,7 +231,6 @@
     "continents.sa": "Южна Америка",
     "emails.magicSession.optionButton": "Натиснете бутона по-долу, за да се впишете сигурно във вашия {{project}} акаунт. Той ще изтече след 1 час.",
     "emails.magicSession.buttonText": "Влезте в {{project}}",
-    "emails.magicSession.optionUrl": "Ако горният бутон не се показва, използвайте следния линк:",
     "emails.magicSession.clientInfo": "Този вход беше заявен чрез {{agentClient}} на {{agentDevice}} {{agentOs}}. Ако не сте поискали входа, можете безопасно да игнорирате този имейл.",
     "emails.certificate.subject": "Сертификатен провал за %s",
     "emails.certificate.hello": "Здравейте",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Предишният ви сертификат ще бъде валиден за 30 дни от първия неуспех. Настоятелно препоръчваме да разследвате този случай, в противен случай вашият домейн ще остане без валидно SSL комуникация.",
     "emails.certificate.thanks": "Благодаря",
     "emails.certificate.signature": "екип на {{project}}",
-    "emails.magicSession.securityPhrase": "Фразата за сигурност на този имейл е {{phrase}}. Можете да се доверите на този имейл, ако тази фраза съвпада с фразата, показана по време на вписването."
+    "emails.magicSession.securityPhrase": "Фразата за сигурност на този имейл е {{phrase}}. Можете да се доверите на този имейл, ако тази фраза съвпада с фразата, показана по време на вписването.",
+    "emails.magicSession.optionUrl": "Ако не можете да го подпишете, използвайки бутона по-горе, моля посетете следния линк:"
 }

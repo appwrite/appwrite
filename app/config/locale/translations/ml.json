@@ -231,7 +231,6 @@
     "continents.sa": "തെക്കേ അമേരിക്ക",
     "emails.magicSession.optionButton": "ಕೆಳಗಿನ ಬಟನ್ ಒತ್ತಿ ನಿಮ್ಮ {{project}} ಖಾತೆಗೆ ಸುರಕ್ಷಿತವಾಗಿ ಸೈನ್ ಇನ್ ಮಾಡಿ. ಇದು 1 ಗಂಟೆಯಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುವುದು.",
     "emails.magicSession.buttonText": "Se connecter à {{project}}",
-    "emails.magicSession.optionUrl": "Raha bokotra eo ambony tsy miseho, ampiasao ny rohy manaraka:",
     "emails.magicSession.clientInfo": "I'm sorry, but there appears to be some confusion. The country code \"ml\" stands for Mali, where the official language is French. However, many local languages such as Bambara are also widely spoken. Please specify if you would like the translation in French or any other specific local language.",
     "emails.certificate.subject": "Tsy fahombiazan'ny fahaizana ho an'ny %s",
     "emails.certificate.hello": "Bonjour",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Ny zom-pokotaninao teo aloha dia hanan-kery mandritra ny 30 andro manomboka amin'ny tsy fahombiazana voalohany. Izahay dia manoro hevitra mafy ny hanaovana fikarohana momba ity tranga ity, raha tsy izany ny sehatra misy anao dia ho tonga amin'ny toerana tsy misy fifandraisana SSL manan-kery.",
     "emails.certificate.thanks": "Merci",
     "emails.certificate.signature": "{{project}} ekipi",
-    "emails.magicSession.securityPhrase": "ഈ ഇമെയിലിന്റെ സുരക്ഷാ വാചകം {{phrase}} ആണ്. സൈൻ ഇൻ ചെയ്യുമ്പോൾ കാണിച്ച വാചകവുമായി ഈ വാചകം ഒത്തുപോകുന്നെങ്കിൽ ഈ ഇമെയിലിനെ വിശ്വസിക്കാം."
+    "emails.magicSession.securityPhrase": "ഈ ഇമെയിലിന്റെ സുരക്ഷാ വാചകം {{phrase}} ആണ്. സൈൻ ഇൻ ചെയ്യുമ്പോൾ കാണിച്ച വാചകവുമായി ഈ വാചകം ഒത്തുപോകുന്നെങ്കിൽ ഈ ഇമെയിലിനെ വിശ്വസിക്കാം.",
+    "emails.magicSession.optionUrl": "Raha tsy afaka manasonia amin'ny bokotra etsy ambony ianao, azafady mba tsidiho ny rohy manaraka:"
 }

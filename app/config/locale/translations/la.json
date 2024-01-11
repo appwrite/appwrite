@@ -231,7 +231,6 @@
     "continents.sa": "America del Sur",
     "emails.magicSession.optionButton": "Preme el boton infra pro signar securmente in tu conto de {{project}}. Illo expirara in 1 hora.",
     "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
-    "emails.magicSession.optionUrl": "Si el botón de arriba no se muestra, utilice el siguiente enlace:",
     "emails.magicSession.clientInfo": "Esta conexión fue solicitada usando {{agentClient}} en {{agentDevice}} {{agentOs}}. Si usted no solicitó la conexión, puede ignorar este correo electrónico de forma segura.",
     "emails.certificate.subject": "Fracaso del certificado para %s",
     "emails.certificate.hello": "There seems to be a misunderstanding. The country code \"LA\" refers to Laos, and the primary language used there is Lao. However, without specific instructions to translate into Lao, I cannot proceed with the translation. If Lao is indeed the intended language, please confirm, and I will provide you with the translation.",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Su certificado anterior será válido por 30 días desde el primer fallo. Recomendamos encarecidamente investigar este caso, de lo contrario su dominio quedará sin una comunicación SSL válida.",
     "emails.certificate.thanks": "Gracias",
     "emails.certificate.signature": "{{project}} equipo",
-    "emails.magicSession.securityPhrase": "La locución de seguridat pro iste correo es {{phrase}}. Podes confiar en iste correo si esta locución coincidit con la locución amostrada durante el ingreso."
+    "emails.magicSession.securityPhrase": "La locución de seguridat pro iste correo es {{phrase}}. Podes confiar en iste correo si esta locución coincidit con la locución amostrada durante el ingreso.",
+    "emails.magicSession.optionUrl": "Si no puede firmar utilizando el botón de arriba, por favor visite el siguiente enlace:"
 }

@@ -231,7 +231,6 @@
     "continents.sa": "दक्षिण अमेरिका",
     "emails.magicSession.optionButton": "खालील बटणावर क्लिक करा आणि आपल्या {{project}} खात्यात सुरक्षितपणे साइन इन करा. हे १ तासात समाप्त होईल.",
     "emails.magicSession.buttonText": "{{project}} मध्ये साइन इन करा",
-    "emails.magicSession.optionUrl": "वरील बटण दिसत नसेल तर, खालील लिंक वापरा:",
     "emails.magicSession.clientInfo": "ही साइन इन विनंती केली गेली {{agentClient}} वरून {{agentDevice}} {{agentOs}} वापरून. जर आपणास ही साइन इन विनंती केली नसेल तर आपण हा ईमेल सुरक्षितपणे दुर्लक्षित करू शकता.",
     "emails.certificate.subject": "%s साठी प्रमाणपत्र अयशस्वी",
     "emails.certificate.hello": "नमस्कार",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "तुमचे मागील प्रमाणपत्र पहिल्या अपयशापासून ३० दिवसांपर्यंत वैध राहील. आम्ही आपल्याला विशेषतः सूचित करतो की, या प्रकरणाची चौकशी करा, अन्यथा तुमचे डोमेन वैध SSL संवादाशिवाय राहील.",
     "emails.certificate.thanks": "धन्यवाद",
     "emails.certificate.signature": "{{project}} संघ",
-    "emails.magicSession.securityPhrase": "या ईमेलसाठी सुरक्षा वाक्य हे {{phrase}} आहे. साइन इन केल्यावेळी दाखवलेले वाक्य जर हे वाक्याशी जुळत असेल तर तुम्ही या ईमेलवर विश्वास ठेवू शकता."
+    "emails.magicSession.securityPhrase": "या ईमेलसाठी सुरक्षा वाक्य हे {{phrase}} आहे. साइन इन केल्यावेळी दाखवलेले वाक्य जर हे वाक्याशी जुळत असेल तर तुम्ही या ईमेलवर विश्वास ठेवू शकता.",
+    "emails.magicSession.optionUrl": "वरील बटणावरून साइन इन करण्यात आपल्याला अडचण येत असल्यास, कृपया खालील दुव्याला भेट द्या:"
 }

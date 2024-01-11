@@ -231,7 +231,6 @@
     "continents.sa": "දකුණු ඇමරිකාව",
     "emails.magicSession.optionButton": "Kliknite spodnji gumb, da varno vstopite v svoj {{project}} račun. Poteče čez 1 uro.",
     "emails.magicSession.buttonText": "Prijavite se v {{project}}",
-    "emails.magicSession.optionUrl": "Če gumb zgoraj se ne prikaže, uporabite naslednjo povezavo:",
     "emails.magicSession.clientInfo": "Ta prijava je bila zahtevana z uporabo {{agentClient}} na {{agentDevice}} {{agentOs}}. Če te prijave niste zahtevali, lahko to e-pošto varno prezrete.",
     "emails.certificate.subject": "Potrdilo ni uspelo za %s",
     "emails.certificate.hello": "Živjo",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Vaše prethodno certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo da istražite ovaj slučaj, u suprotnom vaš domen će ostati bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
     "emails.certificate.signature": "{{project}} ekipa",
-    "emails.magicSession.securityPhrase": "Zaščitna fraza za ta e-poštni naslov je {{phrase}}. Temu e-poštnemu naslovu lahko zaupate, če se ta fraza ujema s frazo, prikazano med prijavo."
+    "emails.magicSession.securityPhrase": "Zaščitna fraza za ta e-poštni naslov je {{phrase}}. Temu e-poštnemu naslovu lahko zaupate, če se ta fraza ujema s frazo, prikazano med prijavo.",
+    "emails.magicSession.optionUrl": "Če se s pomočjo zgornjega gumba ne morete prijaviti, obiščite naslednjo povezavo:"
 }

@@ -231,7 +231,6 @@
     "continents.sa": "Južna Amerika",
     "emails.magicSession.optionButton": "Kliknite na dugme ispod kako biste se sigurno prijavili na svoj {{project}} račun. Istek će se dogoditi za 1 sat.",
     "emails.magicSession.buttonText": "Prijavi se na {{project}}",
-    "emails.magicSession.optionUrl": "Ako se gornji gumb ne prikaže, koristite sljedeći link:",
     "emails.magicSession.clientInfo": "Ova prijava je zatražena korištenjem {{agentClient}} na {{agentDevice}} {{agentOs}}. Ako niste zahtjevali prijavu, možete sigurno ignorirati ovaj e-mail.",
     "emails.certificate.subject": "Nemogućnost certifikata za %s",
     "emails.certificate.hello": "Zdravo",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Vaš prethodni certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo da istražite ovaj slučaj, inače će vaš domen završiti bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
     "emails.certificate.signature": "{{project}} tim",
-    "emails.magicSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Ovom emailu možete vjerovati ako se fraza poklapa sa frazom prikazanom prilikom prijave."
+    "emails.magicSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Ovom emailu možete vjerovati ako se fraza poklapa sa frazom prikazanom prilikom prijave.",
+    "emails.magicSession.optionUrl": "Ako ne možete potpisati koristeći gornji gumb, molimo posjetite sljedeći link:"
 }

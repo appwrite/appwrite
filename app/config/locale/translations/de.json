@@ -231,7 +231,6 @@
     "continents.sa": "Südamerika",
     "emails.magicSession.optionButton": "Klicken Sie auf den unten stehenden Button, um sicher in Ihr {{project}}-Konto einzuloggen. Er verfällt in 1 Stunde.",
     "emails.magicSession.buttonText": "Melden Sie sich bei {{project}} an",
-    "emails.magicSession.optionUrl": "Wenn die obige Schaltfläche nicht angezeigt wird, verwenden Sie folgenden Link:",
     "emails.magicSession.clientInfo": "Dieser Anmeldeversuch wurde über {{agentClient}} auf {{agentDevice}} {{agentOs}} angefordert. Wenn Sie die Anmeldung nicht angefordert haben, können Sie diese E-Mail getrost ignorieren.",
     "emails.certificate.subject": "Zertifikatsfehler für %s",
     "emails.certificate.hello": "Hallo",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "Ihr vorheriges Zertifikat ist ab dem ersten Fehler 30 Tage lang gültig. Wir empfehlen dringend, diesen Fall zu untersuchen, sonst wird Ihre Domain ohne gültige SSL-Kommunikation enden.",
     "emails.certificate.thanks": "Danke",
     "emails.certificate.signature": "{{project}} Team",
-    "emails.magicSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wurde."
+    "emails.magicSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wurde.",
+    "emails.magicSession.optionUrl": "Wenn Sie es nicht über den obenstehenden Button signieren können, besuchen Sie bitte den folgenden Link:"
 }

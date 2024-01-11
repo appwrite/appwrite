@@ -231,7 +231,6 @@
     "continents.sa": "דרום אמריקה",
     "emails.magicSession.optionButton": "לחץ על הכפתור למטה כדי להיכנס לחשבון {{project}} שלך באופן מאובטח. תוקף הכניסה יפוג תוך שעה.",
     "emails.magicSession.buttonText": "היכנס ל-{{project}}",
-    "emails.magicSession.optionUrl": "אם הכפתור למעלה לא מופיע, השתמש בקישור הבא:",
     "emails.magicSession.clientInfo": "ההתחברות הזו נעשתה באמצעות {{agentClient}} על {{agentDevice}} {{agentOs}}. אם לא ביקשת את ההתחברות הזו, באפשרותך להתעלם בבטחה מהאימייל הזה.",
     "emails.certificate.subject": "תקלת תעודה עבור %s",
     "emails.certificate.hello": "שלום",
@@ -239,5 +238,6 @@
     "emails.certificate.footer": "תעודתך הקודמת תהיה בתוקף ל-30 ימים מהכשל הראשון. אנו ממליצים בחום לבדוק את המקרה הזה, אחרת הדומיין שלך יישאר ללא אמצעי תקשורת SSL תקף.",
     "emails.certificate.thanks": "תודה",
     "emails.certificate.signature": "צוות {{project}}",
-    "emails.magicSession.securityPhrase": "משפט הביטחון עבור הודעת הדוא\"ל הזו הוא {{phrase}}. תוכל לסמוך על הודעת הדוא\"ל הזו אם המשפט הזה תואם למשפט שהוצג בעת ההתחברות."
+    "emails.magicSession.securityPhrase": "משפט הביטחון עבור הודעת הדוא\"ל הזו הוא {{phrase}}. תוכל לסמוך על הודעת הדוא\"ל הזו אם המשפט הזה תואם למשפט שהוצג בעת ההתחברות.",
+    "emails.magicSession.optionUrl": "אם אתה לא יכול לחתום באמצעות הכפתור שלמעלה, אנא בקר בקישור הבא:"
 }

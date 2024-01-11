@@ -52,6 +52,12 @@ class DevGenerateTranslations extends Action
             $fileJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
             $fileKeys = \array_keys($fileJson);
 
+            // Trick to clear specific key from all translation files:
+            // $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
+            // unset($json['emails.magicSession.optionUrl']);
+            // \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
+            // continue;
+
             foreach ($mainKeys as $key) {
                 if (!(\in_array($key, $fileKeys))) {
                     if ($dryRun) {
