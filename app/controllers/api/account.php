@@ -1389,10 +1389,10 @@ App::post('/v1/account/sessions/phone')
         $messageContent
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
 
-        $message = $message->setParam('{{token}}', $messageContent->render(true, Template::FILTER_ESCAPE));
         $message = $message->render();
-
 
         $messageDoc = new Document([
             '$id' => $token->getId(),
@@ -3122,8 +3122,8 @@ App::post('/v1/account/verification/phone')
             ->setParam('{{project}}', $project->getAttribute('name'))
             ->setParam('{{secret}}', $secret);
         $messageContent = \strip_tags($messageContent->render());
-
         $message = $message->setParam('{{token}}', $messageContent);
+
         $message = $message->render();
 
         $messageDoc = new Document([
