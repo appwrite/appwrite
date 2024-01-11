@@ -37,7 +37,7 @@ class Messaging extends Action
 {
     public static function getName(): string
     {
-        return "messaging";
+        return 'messaging';
     }
 
     /**
@@ -67,10 +67,13 @@ class Messaging extends Action
             return;
         }
 
-        if (!\is_null($payload['message']) && !\is_null($payload['recipients'])) {
-            if ($payload['providerType'] === MESSAGE_TYPE_SMS) {
-                $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
-            }
+        if (
+            !\is_null($payload['message'])
+            && !\is_null($payload['recipients'])
+            && $payload['providerType'] === MESSAGE_TYPE_SMS
+        ) {
+            // Message was triggered internally
+            $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
         } else {
             $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
@@ -80,84 +83,103 @@ class Messaging extends Action
 
     private function processMessage(Database $dbForProject, Document $message): void
     {
-        $topicsId = $message->getAttribute('topics', []);
-        $targetsId = $message->getAttribute('targets', []);
-        $usersId = $message->getAttribute('users', []);
+        $topicIds = $message->getAttribute('topics', []);
+        $targetIds = $message->getAttribute('targets', []);
+        $userIds = $message->getAttribute('users', []);
 
         /**
-         * @var Document[] $recipients
+         * @var array<Document> $recipients
          */
         $recipients = [];
 
-        if (\count($topicsId) > 0) {
-            $topics = $dbForProject->find('topics', [Query::equal('$id', $topicsId)]);
+        if (\count($topicIds) > 0) {
+            $topics = $dbForProject->find('topics', [
+                Query::equal('$id', $topicIds),
+                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
+            ]);
             foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) =>
+                    $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
 
-        if (\count($usersId) > 0) {
-            $users = $dbForProject->find('users', [Query::equal('$id', $usersId)]);
+        if (\count($userIds) > 0) {
+            $users = $dbForProject->find('users', [
+                Query::equal('$id', $userIds),
+                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
+            ]);
             foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) => $target->getAttribute('providerType') === $message->getAttribute('providerType'));
+                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) =>
+                    $target->getAttribute('providerType') === $message->getAttribute('providerType'));
                 $recipients = \array_merge($recipients, $targets);
             }
         }
 
-        if (\count($targetsId) > 0) {
-            $targets = $dbForProject->find('targets', [Query::equal('$id', $targetsId)]);
+        if (\count($targetIds) > 0) {
+            $targets = $dbForProject->find('targets', [
+                Query::equal('$id', $targetIds),
+                Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
+            ]);
             $recipients = \array_merge($recipients, $targets);
         }
-        $primaryProvider = $dbForProject->findOne('providers', [
+
+        $fallback = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
 
         /**
-         * @var array<string, array<string>> $identifiersByProviderId
+         * @var array<string, array<string>> $identifiers
          */
-        $identifiersByProviderId = [];
+        $identifiers = [];
 
         /**
          * @var Document[] $providers
          */
         $providers = [
-            $primaryProvider->getId() => $primaryProvider
+            $fallback->getId() => $fallback
         ];
+
         foreach ($recipients as $recipient) {
             $providerId = $recipient->getAttribute('providerId');
 
-            if (!$providerId && $primaryProvider instanceof Document && !$primaryProvider->isEmpty()) {
-                $providerId = $primaryProvider->getId();
+            if (
+                !$providerId
+                && $fallback instanceof Document
+                && !$fallback->isEmpty()
+                && $fallback->getAttribute('enabled')
+            ) {
+                $providerId = $fallback->getId();
             }
 
             if ($providerId) {
-                if (!isset($identifiersByProviderId[$providerId])) {
-                    $identifiersByProviderId[$providerId] = [];
+                if (!\array_key_exists($providerId, $identifiers)) {
+                    $identifiers[$providerId] = [];
                 }
-                $identifiersByProviderId[$providerId][] = $recipient->getAttribute('identifier');
+                $identifiers[$providerId][] = $recipient->getAttribute('identifier');
             }
         }
 
         /**
-         * @var array[] $results
+         * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
-            return function () use ($providerId, $identifiersByProviderId, $providers, $primaryProvider, $message, $dbForProject) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject) {
+            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
-                    $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
+                    $provider = $dbForProject->getDocument('providers', $providerId);
 
-                    if ($provider->isEmpty()) {
-                        $provider = $primaryProvider;
+                    if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
+                        $provider = $fallback;
                     } else {
                         $providers[$providerId] = $provider;
                     }
                 }
 
-                $identifiers = $identifiersByProviderId[$providerId];
+                $identifiers = $identifiers[$providerId];
+
                 $adapter = match ($provider->getAttribute('type')) {
                     MESSAGE_TYPE_SMS => $this->sms($provider),
                     MESSAGE_TYPE_PUSH => $this->push($provider),
@@ -196,7 +218,10 @@ class Messaging extends Action
 
                                 // Deleting push targets when token has expired.
                                 if ($detail['error'] === 'Expired device token.') {
-                                    $target = $dbForProject->findOne('targets', [Query::equal('identifier', [$detail['recipient']])]);
+                                    $target = $dbForProject->findOne('targets', [
+                                        Query::equal('identifier', [$detail['recipient']])
+                                    ]);
+
                                     if ($target instanceof Document && !$target->isEmpty()) {
                                         $dbForProject->deleteDocument('targets', $target->getId());
                                     }
@@ -206,6 +231,7 @@ class Messaging extends Action
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
                             $batchIndex++;
+
                             return [
                                 'deliveredTotal' => $deliveredTotal,
                                 'deliveryErrors' => $deliveryErrors,
@@ -214,7 +240,7 @@ class Messaging extends Action
                     };
                 }, $batches));
             };
-        }, \array_keys($identifiersByProviderId)));
+        }, \array_keys($identifiers)));
 
         $results = array_merge(...$results);
 
@@ -229,6 +255,7 @@ class Messaging extends Action
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
+            // TODO: Does this make sense? Only some of the messages might have failed, but we mark the whole message as failed.
             $message->setAttribute('status', 'failed');
         } else {
             $message->setAttribute('status', 'sent');
@@ -249,15 +276,14 @@ class Messaging extends Action
     private function processInternalSMSMessage(Document $message, array $recipients): void
     {
         if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
-            Console::info('Skipped SMS processing. No Phone configuration has been set.');
+            Console::info('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
             return;
         }
 
-        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-        $host = $smsDSN->getHost();
-        $password = $smsDSN->getPassword();
-        $user = $smsDSN->getUser();
-
+        $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $host = $dsn->getHost();
+        $password = $dsn->getPassword();
+        $user = $dsn->getUser();
         $from = App::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
