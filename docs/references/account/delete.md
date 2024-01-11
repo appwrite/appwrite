@@ -1,0 +1,1 @@
+Delete the currently logged in user account, thereby releasing it's ID. Since ID is released and can be reused, all user-related resources like documents or storage files should be deleted before user deletion.
