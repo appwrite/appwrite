@@ -67,7 +67,8 @@ class Mails extends Action
         $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value);
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
