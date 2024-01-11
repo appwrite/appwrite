@@ -1513,13 +1513,64 @@ App::post('/v1/users/:userId/tokens')
     ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration in seconds from now.', true)
     ->inject('request')
     ->inject('response')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
+        if ($user !== false && !$user->isEmpty()) {
+            $user->setAttributes($user->getArrayCopy());
+        } else {
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+            if ($limit !== 0) {
+                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                if ($total >= $limit) {
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
+                }
+            }
+
+            if ($userId !== 'unique()') {
+                $existingUser = $dbForProject->findOne('users', [
+                    Query::equal('$id', [$userId]),
+                ]);
+
+                if ($existingUser !== false && !$existingUser->isEmpty()) {
+                    throw new Exception(Exception::USER_ALREADY_EXISTS);
+                }
+            }
+
+            $userId = $userId === 'unique()' ? ID::unique() : $userId;
+
+
+            $user->setAttributes([
+                '$id' => $userId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'email' => null,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'passwordUpdate' => null,
+                'registration' => DateTime::now(),
+                'reset' => false,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId]),
+                'accessedAt' => DateTime::now(),
+            ]);
+
+            $user->removeAttribute('$internalId');
+            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $secret = Auth::tokenGenerator($length);
