@@ -68,7 +68,7 @@ class Mails extends Action
         $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
             // TODO: hotfix for redirect param
-            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== '{{redirect}}');
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
