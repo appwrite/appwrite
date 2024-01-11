@@ -563,8 +563,12 @@ App::init()
             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
         }
 
-        if ($mode !== APP_MODE_ADMIN && $project->getId() !== 'console') {
-            $minFactors = $project->getAttribute('minFactors') ?? 2;
+        if ($mode !== APP_MODE_ADMIN) {
+            $minFactors = $project->getAttribute('minFactors') ?? 1;
+            $mfaEnabled = $user->getAttribute('mfa', false);
+            if ($mfaEnabled && $minFactors === 1) {
+                $minFactors = 2;
+            }
             if (!in_array('mfa', $route->getGroups())) {
                 if ($session && \count($session->getAttribute('factors')) < $minFactors) {
                     throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);

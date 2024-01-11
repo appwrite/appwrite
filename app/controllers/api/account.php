@@ -3346,9 +3346,10 @@ App::put('/v1/account/mfa/:provider')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
+    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $success = match ($provider) {
             'totp' => Challenge\TOTP::verify($user, $otp),
@@ -3368,6 +3369,11 @@ App::put('/v1/account/mfa/:provider')
         $user->setAttribute('totpVerification', true);
 
         $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3451,10 +3457,10 @@ App::post('/v1/account/mfa/challenge')
     ->inject('user')
     ->inject('project')
     ->inject('queueForEvents')
-    ->inject('messaging')
-    ->inject('mails')
+    ->inject('queueForMessaging')
+    ->inject('queueForMails')
     ->inject('locale')
-    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, EventPhone $messaging, Mail $mails, Locale $locale) {
+    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $challenge = new Document([
