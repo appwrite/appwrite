@@ -608,7 +608,7 @@ trait MessagingBase
             'name' => 'Sendgrid-provider',
             'apiKey' => $apiKey,
             'fromName' => $fromName,
-            'fromEmail' => $fromEmail
+            'fromEmail' => $fromEmail,
             'enabled' => true,
         ]);
 
@@ -765,7 +765,8 @@ trait MessagingBase
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'from' => $from
+            'from' => $from,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
@@ -926,6 +927,7 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'FCM-1',
             'serviceAccountJSON' => $serviceAccountJSON,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);

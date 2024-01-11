@@ -216,54 +216,6 @@ App::post('/v1/projects')
             }
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
-        $emailProvider = new Document([
-            '$id' => ID::custom('mock-email-provider'),
-            'name' => 'mock',
-            'provider' => 'mock',
-            'type' => MESSAGE_TYPE_EMAIL,
-            'enabled' => true,
-            'credentials' => [
-                'username' => 'username',
-                'password' => 'password'
-            ],
-            'options' => [
-                'from' => 'sender-email'
-            ],
-        ]);
-        $smsProvider = new Document([
-            '$id' => ID::custom('mock-sms-provider'),
-            'name' => 'mock',
-            'provider' => 'mock',
-            'type' => MESSAGE_TYPE_SMS,
-            'enabled' => true,
-            'credentials' => [
-                'username' => 'username',
-                'password' => 'password'
-            ],
-            'options' => [
-                'from' => 'sender-email'
-            ],
-        ]);
-        $pushProvider = new Document([
-            '$id' => ID::custom('mock-push-provider'),
-            'name' => 'mock',
-            'provider' => 'mock',
-            'type' => MESSAGE_TYPE_PUSH,
-            'enabled' => true,
-            'credentials' => [
-                'username' => 'username',
-                'password' => 'password'
-            ],
-            'options' => [
-                'from' => 'sender-email'
-            ],
-        ]);
-        $dbForProject->createDocument('providers', $emailProvider);
-
-
-        $dbForProject->createDocument('providers', $smsProvider);
-
-        $dbForProject->createDocument('providers', $pushProvider);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
