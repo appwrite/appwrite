@@ -1065,7 +1065,7 @@ App::post('/v1/account/sessions/magic-url')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}} and {{project}} are required in the templates */
+            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
             'user' => '',
             'team' => '',
             'redirect' => $url,
@@ -2510,7 +2510,7 @@ App::post('/v1/account/recovery')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}} and {{project}} are required in the templates */
+            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
             'user' => $profile->getAttribute('name'),
             'team' => '',
             'redirect' => $url,
@@ -2762,7 +2762,7 @@ App::post('/v1/account/verification')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}} and {{project}} are required in the templates */
+            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
             'user' => $user->getAttribute('name'),
             'team' => '',
             'redirect' => $url,
