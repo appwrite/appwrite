@@ -72,7 +72,7 @@ class Template extends View
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
         } elseif (!empty($this->content)) {
-            $template = $this->print($this->content);
+            $template = $this->print($this->content, self::FILTER_NL2P);
         } else {
             throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
