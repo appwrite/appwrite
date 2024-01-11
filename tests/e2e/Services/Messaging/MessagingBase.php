@@ -245,6 +245,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('my-app', $response['body']['name']);
+        $this->assertEquals('', $response['body']['description']);
 
         return $response['body'];
     }

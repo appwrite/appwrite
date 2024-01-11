@@ -1696,11 +1696,8 @@ App::post('/v1/messaging/topics')
         $topic = new Document([
             '$id' => $topicId,
             'name' => $name,
+            'description' => $description
         ]);
-
-        if ($description) {
-            $topic->setAttribute('description', $description);
-        }
 
         try {
             $topic = $dbForProject->createDocument('topics', $topic);
