@@ -231,12 +231,13 @@
     "continents.sa": "Sør-Amerika",
     "emails.magicSession.optionButton": "Klikk på knappen nedenfor for å logge inn på din {{project}}-konto på en sikker måte. Den vil utløpe om 1 time.",
     "emails.magicSession.buttonText": "Logg inn på {{project}}",
-    "emails.magicSession.optionUrl": "Hvis knappen over ikke vises, bruk følgende lenke:",
     "emails.magicSession.clientInfo": "Dette innloggingen ble forespurt ved hjelp av {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke ba om innloggingen, kan du trygt se bort fra denne e-posten.",
     "emails.certificate.subject": "Sertifikatfeil for %s",
     "emails.certificate.hello": "Hei",
     "emails.certificate.body": "Sertifikatet for domenet ditt '{{domain}}' kunne ikke genereres. Dette er forsøk nr. {{attempt}}, og feilen ble forårsaket av: {{error}}",
     "emails.certificate.footer": "Ditt forrige sertifikat vil være gyldig i 30 dager fra den første feilen. Vi anbefaler sterkt at du undersøker denne saken, ellers vil domenet ditt ende opp uten en gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}}-laget"
+    "emails.certificate.signature": "{{project}}-laget",
+    "emails.magicSession.securityPhrase": "Sikkerhetsfrasen for denne e-posten er {{phrase}}. Du kan stole på denne e-posten hvis denne frasen stemmer overens med frasen som ble vist under innlogging.",
+    "emails.magicSession.optionUrl": "Hvis du ikke klarer å logge inn ved å bruke knappen ovenfor, vennligst besøk følgende lenke:"
 }

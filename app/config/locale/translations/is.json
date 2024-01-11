@@ -231,12 +231,13 @@
     "continents.sa": "Suður Ameríka",
     "emails.magicSession.optionButton": "Smelltu á hnappinn hér fyrir neðan til að skrá þig örugglega inn á {{project}} reikninginn þinn. Hann rennur út eftir 1 klukkustund.",
     "emails.magicSession.buttonText": "Skráðu þig inn á {{project}}",
-    "emails.magicSession.optionUrl": "Ef takkinn að ofan birtist ekki skal nota eftirfarandi hlekk:",
     "emails.magicSession.clientInfo": "Þessi innskráning var óskað eftir með {{agentClient}} á {{agentDevice}} {{agentOs}}. Ef þú baðst ekki um innskráninguna geturðu hundsað þennan tölvupóst örugglega.",
     "emails.certificate.subject": "Vottorðabilun fyrir %s",
     "emails.certificate.hello": "Halló",
     "emails.certificate.body": "Vottorð fyrir léninu þínu '{{domain}}' gat ekki verið búið til. Þetta er tilraun nr. {{attempt}}, og mistökin voru af völdum: {{error}}",
     "emails.certificate.footer": "Fyrri vottorðið þitt verður gilt í 30 daga frá fyrstu mistökum. Við mælum eindregið með því að rannsaka þetta tilvik, ella mun lén þitt enda án gildrar SSL-samskipta.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}} liðið"
+    "emails.certificate.signature": "{{project}} liðið",
+    "emails.magicSession.securityPhrase": "Öryggisfrasi fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þessi frasi passar við frasann sem birtist við innskráningu.",
+    "emails.magicSession.optionUrl": "Ef þú getur ekki skráð þig inn með hnappnum hér að ofan, vinsamlegast heimsækðu eftirfarandi tengil:"
 }

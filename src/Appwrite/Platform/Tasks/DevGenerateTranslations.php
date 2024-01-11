@@ -22,7 +22,7 @@ class DevGenerateTranslations extends Action
     {
         $this
             ->desc('Generate translations in all languages')
-            ->param('dry-run', true, new Boolean(true), 'If action should do a dry run. Dry run does not write into files', true)
+            ->param('dry-run', 'true', new Boolean(true), 'If action should do a dry run. Dry run does not write into files', true)
             ->param('api-key', '', new Text(256), 'Open AI API key. Only used during non-dry runs to generate translations.', true)
             ->callback(fn ($dryRun, $apiKey) => $this->action($dryRun, $apiKey));
     }
@@ -51,6 +51,12 @@ class DevGenerateTranslations extends Action
         foreach ($files as $file) {
             $fileJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
             $fileKeys = \array_keys($fileJson);
+
+            // Trick to clear specific key from all translation files:
+            // $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
+            // unset($json['emails.magicSession.optionUrl']);
+            // \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
+            // continue;
 
             foreach ($mainKeys as $key) {
                 if (!(\in_array($key, $fileKeys))) {
