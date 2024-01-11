@@ -263,6 +263,9 @@ class Exception extends \Exception
     public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
     public const MESSAGE_TARGET_NOT_PUSH            = 'message_target_not_push';
 
+    /** Schedules */
+    public const SCHEDULE_NOT_FOUND                 = 'schedule_not_found';
+
 
     protected string $type = '';
     protected array $errors = [];
