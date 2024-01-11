@@ -10,6 +10,7 @@ use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -34,17 +35,19 @@ class Webhooks extends Action
             ->inject('message')
             ->inject('dbForConsole')
             ->inject('queueForMails')
-            ->callback(fn ($message, Database $dbForConsole, Mail $queueForMails) => $this->action($message, $dbForConsole, $queueForMails));
+            ->inject('log')
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForConsole
      * @param Mail $queueForMails
+     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -56,6 +59,8 @@ class Webhooks extends Action
         $webhookPayload = json_encode($payload['payload']);
         $project = new Document($payload['project']);
         $user = new Document($payload['user'] ?? []);
+
+        $log->addTag('projectId', $project->getId());
 
         foreach ($project->getAttribute('webhooks', []) as $webhook) {
             if (array_intersect($webhook->getAttribute('events', []), $events)) {

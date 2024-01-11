@@ -224,7 +224,6 @@
     "countries.zw": "Zimbabve",
     "emails.magicSession.optionButton": "Aşağıdaki düyməyə basaraq {{project}} hesabınıza təhlükəsiz şəkildə daxil olun. Bu, 1 saat sonra müddəti bitəcək.",
     "emails.magicSession.buttonText": "{{project}} layihəsinə daxil olun",
-    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düymə görsənmirsə, aşağıdaki keçidi istifadə edin:",
     "emails.magicSession.clientInfo": "Bu giriş, {{agentClient}} vasitəsi ilə {{agentDevice}} {{agentOs}} istifadə edərək tələb olunmuşdur. Əgər siz girişi tələb etməmisinizsə, bu e-poçtu təhlükəsiz şəkildə yoksayabilirsiniz.",
     "emails.certificate.subject": "%s üçün sertifikat xətası",
     "emails.certificate.hello": "Salam",
@@ -238,5 +237,7 @@
     "continents.eu": "Avropa",
     "continents.na": "Şimali Amerika",
     "continents.oc": "Okeaniya",
-    "continents.sa": "Cənubi Amerika"
+    "continents.sa": "Cənubi Amerika",
+    "emails.magicSession.securityPhrase": "Bu e-poçt üçün təhlükəsizlik ifadəsi {{phrase}}-dir. Əgər bu ifadə daxil olarkən göstərilən ifadə ilə üst-üstə düşürsə, bu e-poçta etibar edə bilərsiniz.",
+    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düyməni istifadə edərək daxil ola bilmirsizsə, zəhmət olmasa aşağıdakı linkə daxil olun:"
 }

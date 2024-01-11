@@ -231,12 +231,13 @@
     "continents.sa": "ସାଉଥ ଆମେରିକା",
     "emails.magicSession.optionButton": "Kliknite na gumb ispod kako biste se sigurno prijavili na svoj {{project}} račun. Istječe za 1 sat.",
     "emails.magicSession.buttonText": "Inicia sesión en {{project}}",
-    "emails.magicSession.optionUrl": "Ako gumb iznad ne prikazuje, upotrijebite sljedeći link:",
     "emails.magicSession.clientInfo": "Tento přihlašovací požadavek byl zaznamenán pomocí {{agentClient}} na {{agentDevice}} {{agentOs}}. Pokud jste o přihlášení nepožádali, můžete tento e-mail bezpečně ignorovat.",
     "emails.certificate.subject": "شهادة الفشل لـ %s",
     "emails.certificate.hello": "Hola",
     "emails.certificate.body": "Sertifika jūsų domenui \"{{domain}}\" negalėjo būti sugeneruotas. Tai bandymas Nr. {{attempt}}, ir nesėkmę sukėlė: {{error}}",
     "emails.certificate.footer": "Vaš prethodni certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo istraživanje ovog slučaja, inače će vaš domen ostati bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "\n\nTack",
-    "emails.certificate.signature": "{{project}} команда"
+    "emails.certificate.signature": "{{project}} команда",
+    "emails.magicSession.securityPhrase": "Frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se essa frase coincidir com a frase mostrada durante o acesso.",
+    "emails.magicSession.optionUrl": "אם אתם לא מצליחים להיכנס באמצעות הכפתור שמעל, אנא בקרו בקישור הבא:"
 }

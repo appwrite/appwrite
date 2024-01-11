@@ -231,12 +231,13 @@
     "continents.sa": "남아메리카",
     "emails.magicSession.optionButton": "아래 버튼을 클릭하여 안전하게 {{project}} 계정에 로그인하세요. 1시간 후에 만료됩니다.",
     "emails.magicSession.buttonText": "{{project}}에 로그인하세요",
-    "emails.magicSession.optionUrl": "위의 버튼이 보이지 않으면 다음 링크를 사용하세요:",
     "emails.magicSession.clientInfo": "이 로그인은 {{agentClient}}을(를) 사용하여 {{agentDevice}} {{agentOs}}에서 요청되었습니다. 로그인을 요청하지 않았다면, 이 이메일을 안전하게 무시하셔도 됩니다.",
     "emails.certificate.subject": "%s 인증서 오류",
     "emails.certificate.hello": "안녕하세요",
     "emails.certificate.body": "'{{domain}}' 도메인에 대한 인증서를 생성할 수 없었습니다. 이것은 시도 번호 {{attempt}}이며, 다음과 같은 이유로 실패하였습니다: {{error}}",
     "emails.certificate.footer": "이전 인증서는 첫 실패로부터 30일 동안 유효할 것입니다. 이 문제를 조사할 것을 강력히 권장합니다, 그렇지 않으면 도메인이 유효한 SSL 통신 없이 남게 될 것입니다.",
     "emails.certificate.thanks": "감사합니다",
-    "emails.certificate.signature": "{{project}} 팀"
+    "emails.certificate.signature": "{{project}} 팀",
+    "emails.magicSession.securityPhrase": "이 이메일의 보안 구절은 {{phrase}}입니다. 로그인할 때 표시되는 구절과 일치한다면 이 이메일을 신뢰할 수 있습니다.",
+    "emails.magicSession.optionUrl": "위의 버튼을 사용하여 로그인할 수 없다면, 다음 링크를 방문해 주세요:"
 }

@@ -231,12 +231,13 @@
     "continents.sa": "Amerika e Jugut",
     "emails.magicSession.optionButton": "Klikoni butonin më poshtë për të hyrë në mënyrë të sigurt në llogarinë tuaj {{project}}. Do të skadojë në 1 orë.",
     "emails.magicSession.buttonText": "Kyçu në {{project}}",
-    "emails.magicSession.optionUrl": "Nëse butoni më lart nuk shfaqet, përdorni lidhjen e mëposhtme:",
     "emails.magicSession.clientInfo": "Ky hyrje është kërkuar duke përdorur {{agentClient}} në {{agentDevice}} {{agentOs}}. Nëse nuk e keni kërkuar hyrjen, mund ta injoroni këtë email pa pasur shqetësim.",
     "emails.certificate.subject": "Dështim i certifikatës për %s",
     "emails.certificate.hello": "Përshëndetje",
     "emails.certificate.body": "Certifikata për domain-in tuaj '{{domain}}' nuk mund të gjenerohej. Ky është përpjekja nr. {{attempt}}, dhe dështimi u shkaktua nga: {{error}}",
     "emails.certificate.footer": "Certifikata juaj e mëparshme do të jetë e vlefshme për 30 ditë që nga dështimi i parë. Ju rekomandojmë fuqishëm të hetoni këtë rast, përndryshe domeni juaj do të mbetet pa një komunikim të vlefshëm SSL.",
     "emails.certificate.thanks": "Faleminderit",
-    "emails.certificate.signature": "ekipi i {{project}}"
+    "emails.certificate.signature": "ekipi i {{project}}",
+    "emails.magicSession.securityPhrase": "Fjalia e sigurisë për këtë email është {{phrase}}. Mund të besoni këtë email nëse kjo fjali përputhet me fjalën e shfaqur gjatë hyrjes në sistem.",
+    "emails.magicSession.optionUrl": "Nëse nuk mund të hyni duke përdorur butonin më sipër, ju lutem vizitoni lidhjen e mëposhtme:"
 }
