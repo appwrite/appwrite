@@ -231,7 +231,6 @@
     "continents.sa": "Паўднёвая Амерыка",
     "emails.magicSession.optionButton": "Клікніце кнопку ніжэй, каб бяспечна ўвайсці ў свой рахунак {{project}}. Ён скончыцца праз 1 гадзіну.",
     "emails.magicSession.buttonText": "Aanmelden bij {{project}}",
-    "emails.magicSession.optionUrl": "Als de knop hierboven niet weergegeven wordt, gebruik dan de volgende link:",
     "emails.magicSession.clientInfo": "Als u niet om de aanmelding heeft gevraagd, kunt u deze e-mail gerust negeren.",
     "emails.certificate.subject": "The country code BE refers to Belgium, which has three official languages: Dutch, French, and German. Please specify which language you would like the translation in.",
     "emails.certificate.hello": "To provide you with the correct translation, I need to clarify the country code \"be\" you mentioned. It might refer to Belgium, which has three official languages: Dutch, French, and German. \n\nPlease specify which language you would like me to translate \"Hello\" into: Dutch, French, or German.",
@@ -239,5 +238,7 @@
     "emails.certificate.footer": "Ваш папярэдні сертыфікат будзе дзейнічаць 30 дзён з моманту першай няўдачы. Мы вельмі рэкамендуем разабрацца ў гэтай сітуацыі, інакш ваш дамен застанецца без дзейнага сертыфіката SSL забеспячэння.",
     "emails.certificate.thanks": "The country code BE stands for Belgium, where there are two main languages spoken: Dutch and French. Since you did not specify the language, I will provide the translation in both:\n\nDutch: Dank je\nFrench: Merci",
     "emails.certificate.signature": "{{project}} équipe",
-    "sms.verification.body": "The country code for Belgium (BE) is \"be,\" but the official languages are Dutch, French, and German. Since you did not specify which language, here is the translation in all three:\n\nDutch: {{secret}} is uw verificatiecode voor {{project}}.\nFrench: {{secret}} est votre code de vérification pour {{project}}.\nGerman: {{secret}} ist Ihr Verifizierungscode für {{project}}."
+    "sms.verification.body": "{{secret}} ist Ihr Verifizierungscode für {{project}}.",
+    "emails.magicSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die getoond wordt bij het aanmelden.",
+    "emails.magicSession.optionUrl": "Si vous n'arrivez pas à vous connecter en utilisant le bouton ci-dessus, veuillez visiter le lien suivant :"
 }

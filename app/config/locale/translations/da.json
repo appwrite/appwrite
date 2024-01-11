@@ -231,7 +231,6 @@
     "continents.sa": "Sydamerica",
     "emails.magicSession.optionButton": "Klik på knappen nedenfor for sikkert at logge ind på din {{project}} konto. Den udløber om 1 time.",
     "emails.magicSession.buttonText": "Log ind på {{project}}",
-    "emails.magicSession.optionUrl": "Hvis knappen herover ikke vises, skal du bruge følgende link:",
     "emails.magicSession.clientInfo": "Denne log ind blev anmodet ved hjælp af {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke anmodede om log ind, kan du trygt ignorere denne e-mail.",
     "emails.certificate.subject": "Certifikatfejl for %s",
     "emails.certificate.hello": "Hej",
@@ -239,5 +238,7 @@
     "emails.certificate.footer": "Dit tidligere certifikat vil være gyldigt i 30 dage fra den første fejl. Vi anbefaler kraftigt at undersøge denne sag, ellers vil dit domæne ende uden en gyldig SSL-kommunikation.",
     "emails.certificate.thanks": "Tak",
     "emails.certificate.signature": "{{project}} hold",
-    "sms.verification.body": "{{secret}} er din {{project}} bekræftelseskode."
+    "sms.verification.body": "{{secret}} er din {{project}} bekræftelseskode.",
+    "emails.magicSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher den viste frase under log ind.",
+    "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:"
 }

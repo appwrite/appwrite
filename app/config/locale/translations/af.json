@@ -231,7 +231,6 @@
     "continents.sa": "Suid-Amerika",
     "emails.magicSession.optionButton": "Klik op die knoppie hieronder om veilig aan te meld by jou {{project}} rekening. Dit sal oor 1 uur verval.",
     "emails.magicSession.buttonText": "Meld aan by {{project}}",
-    "emails.magicSession.optionUrl": "As die knoppie hierbo nie verskyn nie, gebruik die volgende skakel:",
     "emails.magicSession.clientInfo": "Hierdie teken-in is aangevra met behulp van {{agentClient}} op {{agentDevice}} {{agentOs}}. As jy nie die teken-in versoek het nie, kan jy hierdie e-pos veilig ignoreer.",
     "emails.certificate.subject": "Sertifikaatfout vir %s",
     "emails.certificate.hello": "Hallo",
@@ -239,5 +238,7 @@
     "emails.certificate.footer": "U vorige sertifikaat sal geldig wees vir 30 dae vanaf die eerste mislukking. Ons beveel ten sterkste aan dat u hierdie geval ondersoek, anders sal u domein sonder 'n geldige SSL-kommunikasie eindig.",
     "emails.certificate.thanks": "Dankie",
     "emails.certificate.signature": "{{project}} span",
-    "sms.verification.body": "{{secret}} is jou {{project}} verifikasiekode."
+    "sms.verification.body": "{{secret}} is jou {{project}} verifikasiekode.",
+    "emails.magicSession.securityPhrase": "Die sekuriteitsfrase vir hierdie e-pos is {{phrase}}. Jy kan hierdie e-pos vertrou as hierdie frase ooreenstem met die frase wat tydens aanmelding getoon is.",
+    "emails.magicSession.optionUrl": "As u nie met die knoppie hierbo kan aanmeld nie, besoek asseblief die volgende skakel:"
 }

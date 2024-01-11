@@ -231,7 +231,6 @@
     "continents.sa": "Dienvidamerika",
     "emails.magicSession.optionButton": "Noklikšķiniet uz zemāk esošās pogas, lai droši pieteiktos savā {{project}} kontā. Tas beigsies pēc 1 stundas.",
     "emails.magicSession.buttonText": "Pierakstieties {{project}}",
-    "emails.magicSession.optionUrl": "Ja poga augstāk neparādās, izmantojiet šo saiti:",
     "emails.magicSession.clientInfo": "Šī autorizācija tika pieprasīta, izmantojot {{agentClient}} ierīcē {{agentDevice}} operētājsistēmā {{agentOs}}. Ja jūs neesat pieprasījis autorizāciju, šo e-pastu varat droši ignorēt.",
     "emails.certificate.subject": "Sertifikāta kļūme %s",
     "emails.certificate.hello": "Sveiki",
@@ -239,5 +238,7 @@
     "emails.certificate.footer": "Jūsu iepriekšējais sertifikāts būs derīgs 30 dienas no pirmās neveiksmes. Mēs ļoti iesakām izmeklēt šo gadījumu, citādi jūsu domēns paliks bez derīga SSL saziņas.",
     "emails.certificate.thanks": "Paldies",
     "emails.certificate.signature": "{{project}} komanda",
-    "sms.verification.body": "{{secret}} ir jūsu {{project}} verifikācijas kods."
+    "sms.verification.body": "{{secret}} ir jūsu {{project}} verifikācijas kods.",
+    "emails.magicSession.securityPhrase": "Drošības frāze šim e-pastam ir {{phrase}}. Šim e-pastam var uzticēties, ja šī frāze sakrīt ar frāzi, kas parādās, piesakoties sistēmā.",
+    "emails.magicSession.optionUrl": "Ja nevarat pierakstīties, izmantojot iepriekš minēto pogu, lūdzu, apmeklējiet sekojošo saiti:"
 }
