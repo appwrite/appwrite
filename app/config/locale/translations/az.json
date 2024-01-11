@@ -238,5 +238,6 @@
     "continents.eu": "Avropa",
     "continents.na": "Şimali Amerika",
     "continents.oc": "Okeaniya",
-    "continents.sa": "Cənubi Amerika"
+    "continents.sa": "Cənubi Amerika",
+    "sms.verification.body": "{{secret}} sizin {{project}} təsdiqləmə kodunuzdur."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "El certificat per al vostre domini '{{domain}}' no s'ha pogut generar. Aquest és l'intent núm. {{attempt}}, i el fracàs ha estat causat per: {{error}}",
     "emails.certificate.footer": "El vostre certificat anterior serà vàlid durant 30 dies des de la primera fallada. Us recomanem encaridament que investigueu aquest cas, d'altra manera el vostre domini quedarà sense una comunicació SSL vàlida.",
     "emails.certificate.thanks": "Gràcies",
-    "emails.certificate.signature": "equip {{project}}"
+    "emails.certificate.signature": "equip {{project}}",
+    "sms.verification.body": "El {{secret}} és el vostre codi de verificació del {{project}}."
 }

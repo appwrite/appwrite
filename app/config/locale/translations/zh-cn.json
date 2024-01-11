@@ -238,5 +238,6 @@
     "emails.certificate.body": "无法为您的域名“{{domain}}”生成证书。这是第{{attempt}}次尝试，失败的原因是：{{error}}。",
     "emails.certificate.footer": "您之前的证书自首次失败之日起将有效期30天。我们强烈建议调查此案件，否则您的域名将没有有效的SSL通信。",
     "emails.certificate.thanks": "谢谢",
-    "emails.certificate.signature": "{{project}} 团队"
+    "emails.certificate.signature": "{{project}} 团队",
+    "sms.verification.body": "{{secret}} 是您的 {{project}} 验证码。"
 }

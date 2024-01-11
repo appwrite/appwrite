@@ -238,5 +238,6 @@
     "emails.certificate.body": "Сертифікат для вашого домену '{{domain}}' не може бути створений. Це спроба № {{attempt}}, а причина збою: {{error}}",
     "emails.certificate.footer": "Ваш попередній сертифікат буде дійсний протягом 30 днів з моменту першої помилки. Ми настійно рекомендуємо розслідувати цей випадок, інакше ваш домен залишиться без дійсного SSL-шифрування.",
     "emails.certificate.thanks": "Дякую",
-    "emails.certificate.signature": "команда {{project}}"
+    "emails.certificate.signature": "команда {{project}}",
+    "sms.verification.body": "{{secret}} є вашим кодом підтвердження для {{project}}."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "Certificaat voor uw domein '{{domain}}' kon niet worden gegenereerd. Dit is poging nr. {{attempt}}, en de mislukking werd veroorzaakt door: {{error}}",
     "emails.certificate.footer": "Uw vorige certificaat zal 30 dagen geldig zijn vanaf de eerste fout. We raden u ten zeerste aan dit geval te onderzoeken, anders zal uw domein eindigen zonder een geldige SSL-communicatie.",
     "emails.certificate.thanks": "Dank je",
-    "emails.certificate.signature": "{{project}} team"
+    "emails.certificate.signature": "{{project}} team",
+    "sms.verification.body": "{{secret}} is uw {{project}} verificatiecode."
 }

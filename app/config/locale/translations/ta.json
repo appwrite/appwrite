@@ -238,5 +238,6 @@
     "emails.certificate.body": "உங்கள் டொமைன் '{{domain}}' க்கான சான்றிதழ் உருவாக்க முடியவில்லை. இது முயற்சியின் எண் {{attempt}}, மற்றும் தோல்விக்கு காரணமாக இருந்தது: {{error}}",
     "emails.certificate.footer": "உங்களுடைய முந்தைய சான்றிதழ் முதல் தவறு ஏற்பட்ட நாளிலிருந்து 30 நாட்கள் வரை செல்லுபடியாகும். இந்த வழக்கை ஆராய்வதை நாங்கள் மிகவும் பரிந்துரைக்கிறோம், இல்லையெனில் உங்களுடைய டொமைன் செல்லுபடியான SSL தகவல் தொடர்பை இழந்துவிடும்.",
     "emails.certificate.thanks": "நன்றி",
-    "emails.certificate.signature": "{{project}} குழு"
+    "emails.certificate.signature": "{{project}} குழு",
+    "sms.verification.body": "{{secret}} உங்கள் {{project}} சரிபார்ப்பு குறியீடு ஆகும்."
 }

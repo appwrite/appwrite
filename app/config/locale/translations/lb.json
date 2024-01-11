@@ -238,5 +238,6 @@
     "emails.certificate.body": "De Certificat fir äre Domain '{{domain}}' konnt net erstallt ginn. Dat ass den Versuch Nummer {{attempt}}, an de Feeler gouf verursaacht duerch: {{error}}",
     "emails.certificate.footer": "Äert viregt Zertifikat wäert fir 30 Deeg gëlteg sinn zënter dem éischten Ausfall. Mir recommandéieren Iech staark, dëse Fall z'ënnersichen, soss wäert Är Domain ouni eng valabel SSL-Kommunikatioun enden.",
     "emails.certificate.thanks": "Merci",
-    "emails.certificate.signature": "Équipe {{project}}"
+    "emails.certificate.signature": "Équipe {{project}}",
+    "sms.verification.body": "{{secret}} ass äre {{project}} Verifikatiounscode."
 }

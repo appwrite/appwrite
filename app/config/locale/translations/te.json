@@ -238,5 +238,6 @@
     "emails.certificate.body": "మీ డొమైన్ '{{domain}}' కోసం సర్టిఫికెట్ జారీ చేయలేకపోయాము. ఇది {{attempt}} ప్రయత్నం, మరియు విఫలం కారణం ఇది: {{error}}",
     "emails.certificate.footer": "మీ మునుపటి సర్టిఫికెట్‌ మొదటి వైఫల్యం నుండి 30 రోజుల వరకు చెల్లుబాటు అవుతుంది. ఈ కేసును పరిశోధించడం మాకు ఎంతో ముఖ్యంగా సిఫార్సు ఉంది, లేకపోతే మీ డొమేన్ చెల్లుబాటు అయిన SSL కమ్యూనికేషన్ లేకుండా మిగిలిపోతుంది.",
     "emails.certificate.thanks": "ధన్యవాదాలు",
-    "emails.certificate.signature": "{{project}} జట్టు"
+    "emails.certificate.signature": "{{project}} జట్టు",
+    "sms.verification.body": "{{secret}} మీ {{project}} ధృవీకరణ కోడ్."
 }

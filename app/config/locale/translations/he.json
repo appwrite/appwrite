@@ -238,5 +238,6 @@
     "emails.certificate.body": "תעודה עבור הדומיין '{{domain}}' לא ניתנה ליצירה. זו ניסיונות מספר {{attempt}}, והכישלון נגרם על ידי: {{error}}",
     "emails.certificate.footer": "תעודתך הקודמת תהיה בתוקף ל-30 ימים מהכשל הראשון. אנו ממליצים בחום לבדוק את המקרה הזה, אחרת הדומיין שלך יישאר ללא אמצעי תקשורת SSL תקף.",
     "emails.certificate.thanks": "תודה",
-    "emails.certificate.signature": "צוות {{project}}"
+    "emails.certificate.signature": "צוות {{project}}",
+    "sms.verification.body": "{{secret}} הוא קוד האימות שלך ל-{{project}}."
 }

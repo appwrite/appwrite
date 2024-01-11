@@ -238,5 +238,6 @@
     "emails.certificate.body": "आपके डोमेन '{{domain}}' के लिए प्रमाणपत्र उत्पन्न नहीं किया जा सका। यह प्रयास संख्या {{attempt}} है, और असफलता का कारण था: {{error}}",
     "emails.certificate.footer": "आपका पिछला प्रमाणपत्र पहली असफलता के बाद 30 दिनों के लिए मान्य होगा। हम इस मामले की जांच करने की दृढ़ता से सिफारिश करते हैं, अन्यथा आपका डोमेन वैध SSL संचार के बिना छूट जाएगा।",
     "emails.certificate.thanks": "धन्यवाद",
-    "emails.certificate.signature": "{{project}} टीम"
+    "emails.certificate.signature": "{{project}} टीम",
+    "sms.verification.body": "{{secret}} आपके {{project}} सत्यापन कोड है।"
 }

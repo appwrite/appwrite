@@ -238,5 +238,6 @@
     "emails.certificate.body": "Сертификатът за вашия домейн '{{domain}}' не може да бъде генериран. Това е опит номер {{attempt}}, а причината за неуспеха е: {{error}}",
     "emails.certificate.footer": "Предишният ви сертификат ще бъде валиден за 30 дни от първия неуспех. Настоятелно препоръчваме да разследвате този случай, в противен случай вашият домейн ще остане без валидно SSL комуникация.",
     "emails.certificate.thanks": "Благодаря",
-    "emails.certificate.signature": "екип на {{project}}"
+    "emails.certificate.signature": "екип на {{project}}",
+    "sms.verification.body": "{{secret}} е вашият код за верификация за {{project}}."
 }

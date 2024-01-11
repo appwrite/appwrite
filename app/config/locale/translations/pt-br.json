@@ -238,5 +238,6 @@
     "emails.certificate.body": "O certificado para o seu domínio '{{domain}}' não pôde ser gerado. Esta é a tentativa nº {{attempt}}, e a falha foi causada por: {{error}}",
     "emails.certificate.footer": "Seu certificado anterior será válido por 30 dias desde a primeira falha. Recomendamos fortemente que você investigue este caso, caso contrário, seu domínio ficará sem uma comunicação SSL válida.",
     "emails.certificate.thanks": "Obrigado",
-    "emails.certificate.signature": "equipe {{project}}"
+    "emails.certificate.signature": "equipe {{project}}",
+    "sms.verification.body": "{{secret}} é o seu código de verificação do {{project}}."
 }

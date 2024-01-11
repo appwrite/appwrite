@@ -238,5 +238,6 @@
     "emails.certificate.body": "Vaš certifikat za domeno '{{domain}}' ni bilo mogoče ustvariti. To je poskus št. {{attempt}} in napako je povzročilo: {{error}}",
     "emails.certificate.footer": "Vaše prethodno certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo da istražite ovaj slučaj, u suprotnom vaš domen će ostati bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
-    "emails.certificate.signature": "{{project}} ekipa"
+    "emails.certificate.signature": "{{project}} ekipa",
+    "sms.verification.body": "{{secret}} je vaša {{project}} koda za preverjanje."
 }

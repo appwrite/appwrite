@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifikat untuk domain Anda '{{domain}}' tidak dapat dibuat. Ini adalah percobaan ke-{{attempt}}, dan kegagalan disebabkan oleh: {{error}}",
     "emails.certificate.footer": "Sertifikat sebelumnya Anda akan berlaku selama 30 hari sejak kegagalan pertama. Kami sangat menyarankan untuk menyelidiki kasus ini, jika tidak domain Anda akan berakhir tanpa komunikasi SSL yang valid.",
     "emails.certificate.thanks": "Terima kasih",
-    "emails.certificate.signature": "tim {{project}}"
+    "emails.certificate.signature": "tim {{project}}",
+    "sms.verification.body": "{{secret}} adalah kode verifikasi {{project}} Anda."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "Certifikát pro váš doménu '{{domain}}' se nepodařilo vygenerovat. Jedná se o pokus č. {{attempt}} a selhání bylo způsobeno: {{error}}",
     "emails.certificate.footer": "Vaše předchozí certifikát bude platný 30 dní od prvního selhání. Důrazně doporučujeme vyšetřovat tento případ, jinak váš doménový server skončí bez platné komunikace SSL.",
     "emails.certificate.thanks": "Děkuji",
-    "emails.certificate.signature": "tým {{project}}"
+    "emails.certificate.signature": "tým {{project}}",
+    "sms.verification.body": "{{secret}} je váš ověřovací kód pro {{project}}."
 }

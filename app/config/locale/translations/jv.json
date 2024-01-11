@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifikat kanggo domain panjenengan '{{domain}}' ora bisa digawe. Iki nyoba nomer {{attempt}}, lan gagal amarga: {{error}}",
     "emails.certificate.footer": "Sertifikat sadurunge bakal tetep sah sajrone 30 dina wiwit kagagalan pisanan. Kita menehi saran sing kuat supaya panjenengan nyelidiki kasus iki, manawa-mawa domain panjenengan bakal pungkasan tanpa komunikasi SSL sing sah.",
     "emails.certificate.thanks": "Matur nuwun",
-    "emails.certificate.signature": "tim {{project}}"
+    "emails.certificate.signature": "tim {{project}}",
+    "sms.verification.body": "{{secret}} iku kode verifikasi {{project}} panjenengan."
 }

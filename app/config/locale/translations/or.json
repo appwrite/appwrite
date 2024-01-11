@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifika jūsų domenui \"{{domain}}\" negalėjo būti sugeneruotas. Tai bandymas Nr. {{attempt}}, ir nesėkmę sukėlė: {{error}}",
     "emails.certificate.footer": "Vaš prethodni certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo istraživanje ovog slučaja, inače će vaš domen ostati bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "\n\nTack",
-    "emails.certificate.signature": "{{project}} команда"
+    "emails.certificate.signature": "{{project}} команда",
+    "sms.verification.body": "{{secret}} est votre code de vérification pour {{project}}."
 }

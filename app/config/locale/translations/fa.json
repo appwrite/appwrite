@@ -238,5 +238,6 @@
     "emails.certificate.body": "گواهی برای دامنه شما '{{domain}}' نتوانست تولید شود. این تلاش شماره {{attempt}} بود، و شکست به علت: {{error}} اتفاق افتاد.",
     "emails.certificate.footer": "گواهی قبلی شما از زمان اولین شکست، به مدت 30 روز معتبر خواهد بود. ما به شدت توصیه می‌کنیم که این مورد را بررسی کنید، در غیر این صورت دامنه شما بدون ارتباط SSL معتبر باقی خواهد ماند.",
     "emails.certificate.thanks": "متشکرم",
-    "emails.certificate.signature": "تیم {{project}}"
+    "emails.certificate.signature": "تیم {{project}}",
+    "sms.verification.body": "{{secret}} کد تایید {{project}} شما است."
 }

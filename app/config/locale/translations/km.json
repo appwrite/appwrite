@@ -238,5 +238,6 @@
     "emails.certificate.body": "សញ្ញាបត្រសម្រាប់ដែន '{{domain}}' របស់អ្នកមិនអាចបង្កើតបានទេ។ នេះគឺជាការព្យាយាមលេខ {{attempt}} ហើយភាពបរាជ័យត្រូវបានបង្កដោយ: {{error}}",
     "emails.certificate.footer": "វិញ្ញាបនបត្រមុនរបស់អ្នកនឹងនៅមានសុពលភាពរយៈពេល 30 ថ្ងៃចាប់ពីការបរាជ័យលើកដំបូង។ យើងខ្ញុំណែនាំយ៉ាងខ្លាំងអោយស្រាវជ្រាវលើករណីនេះ, បើមិនដូច្នេះទេដីមែនរបស់អ្នកនឹងបញ្ចប់ដោយគ្មានការតភ្ជាប់ SSL មានសុពលភាព។",
     "emails.certificate.thanks": "អរគុណ",
-    "emails.certificate.signature": "ក្រុម {{project}}"
+    "emails.certificate.signature": "ក្រុម {{project}}",
+    "sms.verification.body": "{{secret}} ជាលេខកូដផ្ទៀងផ្ទាត់សម្រាប់{{project}}របស់អ្នក។"
 }

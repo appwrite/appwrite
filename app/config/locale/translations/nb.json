@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifikatet for domenet ditt '{{domain}}' kunne ikke genereres. Dette er forsøk nr. {{attempt}}, og feilen ble forårsaket av: {{error}}",
     "emails.certificate.footer": "Ditt forrige sertifikat vil være gyldig i 30 dager fra den første feilen. Vi anbefaler sterkt at du undersøker denne saken, ellers vil domenet ditt ende opp uten en gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}}-laget"
+    "emails.certificate.signature": "{{project}}-laget",
+    "sms.verification.body": "{{secret}} er din {{project}} bekreftelseskode."
 }

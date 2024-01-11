@@ -238,5 +238,6 @@
     "emails.certificate.body": "Le certificat pour votre domaine '{{domain}}' n'a pas pu être généré. C'est la tentative n° {{attempt}}, et l'échec a été causé par : {{error}}",
     "emails.certificate.footer": "Votre certificat précédent sera valable pendant 30 jours après le premier échec. Nous vous recommandons vivement d'enquêter sur ce cas, sinon votre domaine se retrouvera sans communication SSL valide.",
     "emails.certificate.thanks": "Merci",
-    "emails.certificate.signature": "équipe {{project}}"
+    "emails.certificate.signature": "équipe {{project}}",
+    "sms.verification.body": "{{secret}} mooy sa koodu vérificationu {{project}} bi."
 }
