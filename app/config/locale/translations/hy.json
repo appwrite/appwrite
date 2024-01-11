@@ -238,6 +238,5 @@
     "emails.certificate.body": "Ձեր '{{domain}}' տիրույթի համար գերծանգը չի ստացվել։ Սա արդեն {{attempt}} փորձն է, և ձախողումը հետևանք է՝ {{error}}։",
     "emails.certificate.footer": "Ձեր նախորդ վկայագիրը կմնա վավերական 30 օրվա ընթացքում առաջին ձախողումից հետո: Մենք խորհրդանշում ենք հետաքրքրել այս դեպքը, հակառակ դեպքում Ձեր տիրույթը կմնա առանց վավերական SSL կապի:",
     "emails.certificate.thanks": "Շնորհակալ եմ",
-    "emails.certificate.signature": "{{project}} թիմ",
-    "emails.magicSession.securityPhrase": "اس email کے لیے حفاظتی جملہ ہے {{phrase}}۔ اگر یہ جملہ سائن ان کے دوران دکھایا گیا جملہ کے مطابق ہوتا ہے تو آپ اس email پر یقین کرسکتے ہیں۔"
+    "emails.certificate.signature": "{{project}} թիմ"
 }

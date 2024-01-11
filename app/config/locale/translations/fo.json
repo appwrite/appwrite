@@ -238,6 +238,5 @@
     "emails.certificate.body": "Váttan fyri títt øki '{{domain}}' kundi ikki verða framleidd. Hetta er roynd nr. {{attempt}}, og feilurin var orsakaður av: {{error}}",
     "emails.certificate.footer": "Títt fyrra prógv verður gildaði í 30 dagar frá fyrstu miseydnaðu royndini. Vit mæla staðiliga til at kanna hesa støðuna, annars endar tín domæni uttan gildað SSL samskifti.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}} bólkur",
-    "emails.magicSession.securityPhrase": "\"Fréttarorðið fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þetta orð samsvarar því sem birtist þegar skráð er inn.\""
+    "emails.certificate.signature": "{{project}} bólkur"
 }

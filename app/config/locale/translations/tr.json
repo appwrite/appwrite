@@ -238,6 +238,5 @@
     "emails.magicSession.optionButton": "Aşağıdaki butona tıklayarak {{project}} hesabınıza güvenli bir şekilde giriş yapın. Bu bağlantı bir saat sonra geçerliliğini yitirecektir.",
     "emails.magicSession.buttonText": "{{project}}'a giriş yapın",
     "emails.magicSession.optionUrl": "Yukarıdaki buton gözükmezse, aşağıdaki bağlantıyı kullanın:",
-    "emails.magicSession.clientInfo": "Bu oturum açma işlemi, {{agentClient}} kullanılarak {{agentDevice}} {{agentOs}} üzerinde istendi. Eğer oturum açma işlemini siz talep etmediyseniz, bu e-postayı güvenle yok sayabilirsiniz.",
-    "emails.magicSession.securityPhrase": "Bu e-posta için güvenlik cümlesi {{phrase}}. Eğer bu cümle giriş sırasında görünen cümleyle uyumluysa bu e-postaya güvenebilirsiniz."
+    "emails.magicSession.clientInfo": "Bu oturum açma işlemi, {{agentClient}} kullanılarak {{agentDevice}} {{agentOs}} üzerinde istendi. Eğer oturum açma işlemini siz talep etmediyseniz, bu e-postayı güvenle yok sayabilirsiniz."
 }

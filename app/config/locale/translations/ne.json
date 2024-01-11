@@ -238,6 +238,5 @@
     "emails.certificate.body": "दर्ता गर्नु भएको डोमेन '{{domain}}' को प्रमाणपत्र उत्पन्न गर्न सकिएन। यो प्रयास नं. {{attempt}} हो, र यस असफलताको कारण यस्तो थियो: {{error}}",
     "emails.certificate.footer": "Votre certificat précédent sera valide pendant 30 jours depuis le premier échec. Nous recommandons fortement d'enquêter sur ce cas, sinon votre domaine se retrouvera sans communication SSL valide.",
     "emails.certificate.thanks": "धन्यवाद",
-    "emails.certificate.signature": "équipe {{project}}",
-    "emails.magicSession.securityPhrase": "यस ईमेलका लागि सुरक्षा उक्ति {{phrase}} हो । यदि यो वाक्य साइन इन गर्दा देखाई भएको वाक्यसँग मेल मिलाउँछ भने तपाईं यस ईमेलमा भरोसा गर्न सक्नुहुनेछ।"
+    "emails.certificate.signature": "équipe {{project}}"
 }

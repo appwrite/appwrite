@@ -22,7 +22,7 @@ class DevGenerateTranslations extends Action
     {
         $this
             ->desc('Generate translations in all languages')
-            ->param('dry-run', 'true', new Boolean(true), 'If action should do a dry run. Dry run does not write into files', true)
+            ->param('dry-run', true, new Boolean(true), 'If action should do a dry run. Dry run does not write into files', true)
             ->param('api-key', '', new Text(256), 'Open AI API key. Only used during non-dry runs to generate translations.', true)
             ->callback(fn ($dryRun, $apiKey) => $this->action($dryRun, $apiKey));
     }

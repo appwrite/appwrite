@@ -238,6 +238,5 @@
     "emails.certificate.body": "Potrdilo za vaše domeno '{{domain}}' ni bilo mogoče ustvariti. To je poskus št. {{attempt}}, napako pa je povzročilo: {{error}}",
     "emails.certificate.footer": "Vaše prejšnje potrdilo bo veljavno 30 dni od prve napake. Močno priporočamo, da to zadevo preučite, saj bo sicer vaše domeno brez veljavne SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
-    "emails.certificate.signature": "{{project}} ekipa",
-    "emails.magicSession.securityPhrase": "Varnostna fraza za ta e-poštni naslov je {{phrase}}. Pošiljatelju lahko zaupate, če se ta fraza ujema s frazo, ki je prikazana med prijavo."
+    "emails.certificate.signature": "{{project}} ekipa"
 }

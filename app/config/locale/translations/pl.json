@@ -238,6 +238,5 @@
     "emails.certificate.body": "Certyfikat dla Twojej domeny '{{domain}}' nie mógł zostać wygenerowany. To jest próba nr {{attempt}}, a przyczyną niepowodzenia było: {{error}}",
     "emails.certificate.footer": "Twój poprzedni certyfikat będzie ważny przez 30 dni od pierwszej awarii. Zalecamy dokładne zbadanie tej sprawy, w przeciwnym razie Twój domena zostanie bez ważnego certyfikatu SSL.",
     "emails.certificate.thanks": "Dziękuję",
-    "emails.certificate.signature": "zespół {{project}}",
-    "emails.magicSession.securityPhrase": "Fraza zabezpieczająca dla tego e-maila to {{phrase}}. Możesz zaufać temu e-mailowi, jeśli ta fraza pasuje do frazy pokazanej podczas logowania."
+    "emails.certificate.signature": "zespół {{project}}"
 }

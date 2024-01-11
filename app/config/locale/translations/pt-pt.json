@@ -238,6 +238,5 @@
     "emails.certificate.body": "Não foi possível gerar certificado para o seu domínio '{{domain}}'. Esta é a tentativa nº {{attempt}}, e a falha foi causada por: {{error}}",
     "emails.certificate.footer": "O seu certificado anterior será válido por 30 dias desde a primeira falha. Recomendamos vivamente que investigue este caso, caso contrário, o seu domínio ficará sem uma comunicação SSL válida.",
     "emails.certificate.thanks": "Obrigado",
-    "emails.certificate.signature": "equipa {{project}}",
-    "emails.magicSession.securityPhrase": "A frase de segurança para este email é {{phrase}}. Pode confiar neste email se esta frase coincidir com a frase mostrada durante o início de sessão."
+    "emails.certificate.signature": "equipa {{project}}"
 }

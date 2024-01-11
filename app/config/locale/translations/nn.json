@@ -238,6 +238,5 @@
     "emails.certificate.body": "Sertifikat for domenet ditt '{{domain}}' kunne ikke genereres. Dette er forsøk nr. {{attempt}}, og mislykkelsen ble forårsaket av: {{error}}",
     "emails.certificate.footer": "Ditt førre sertifikat vil vere gyldig i 30 dagar etter den første feilen. Vi rår sterkt til å undersøke denne saka, elles vil domenet ditt ende opp utan ein gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "The country code \"nn\" provided is not sufficient to determine the target language as it does not correspond to an official ISO 3166-1 alpha-2 country code. Please provide more context or the specific target language you need the translation for.",
-    "emails.certificate.signature": "{{project}} lag",
-    "emails.magicSession.securityPhrase": "Sikkerhetsfrasen for denne e-posten er {{phrase}}. Du kan stole på denne e-posten hvis denne frasen samsvarer med frasen som vises under påloggingen."
+    "emails.certificate.signature": "{{project}} lag"
 }

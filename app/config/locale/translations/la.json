@@ -238,6 +238,5 @@
     "emails.certificate.body": "El certificado para su dominio '{{domain}}' no pudo ser generado. Este es el intento número {{attempt}}, y el fallo fue causado por: {{error}}.",
     "emails.certificate.footer": "Su certificado anterior será válido por 30 días desde el primer fallo. Recomendamos encarecidamente investigar este caso, de lo contrario su dominio quedará sin una comunicación SSL válida.",
     "emails.certificate.thanks": "Gracias",
-    "emails.certificate.signature": "{{project}} equipo",
-    "emails.magicSession.securityPhrase": "Sermo ad securitatem huius epistulae est {{phrase}}. Si idem est sermo qui apparuit dum tu signasti, epistulam fidem habere potes."
+    "emails.certificate.signature": "{{project}} equipo"
 }

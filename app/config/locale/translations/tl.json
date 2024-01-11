@@ -238,6 +238,5 @@
     "emails.certificate.body": "Sertipiko para sa iyong domain na '{{domain}}' ay hindi nabuo. Ito ay tangka bilang {{attempt}}, at ang kabiguan ay dulot ng: {{error}}",
     "emails.certificate.footer": "Ang iyong naunang sertipiko ay magiging balido sa loob ng 30 araw simula ng unang kabiguan. Mataas ang inirerekomenda namin na imbestigahan ang kasong ito, kung hindi ay magtatapos ang iyong domain na walang balidong SSL na komunikasyon.",
     "emails.certificate.thanks": "Salamat",
-    "emails.certificate.signature": "{{project}} koponan",
-    "emails.magicSession.securityPhrase": "Ang parirala sa seguridad para sa email na ito ay {{phrase}}. Maaari mong pagkatiwalaan ang email na ito kung ang pariralang ito ay katulad ng paralang ipinakita habang nagsisign in."
+    "emails.certificate.signature": "{{project}} koponan"
 }

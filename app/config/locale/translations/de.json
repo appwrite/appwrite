@@ -238,6 +238,5 @@
     "emails.certificate.body": "Das Zertifikat für Ihre Domain \"{{domain}}\" konnte nicht erstellt werden. Dies ist der {{attempt}}. Versuch, und der Fehler wurde verursacht durch: {{error}}",
     "emails.certificate.footer": "Ihr vorheriges Zertifikat ist ab dem ersten Fehler 30 Tage lang gültig. Wir empfehlen dringend, diesen Fall zu untersuchen, sonst wird Ihre Domain ohne gültige SSL-Kommunikation enden.",
     "emails.certificate.thanks": "Danke",
-    "emails.certificate.signature": "{{project}} Team",
-    "emails.magicSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn die Phrase mit der während der Anmeldung angezeigten Phrase übereinstimmt."
+    "emails.certificate.signature": "{{project}} Team"
 }

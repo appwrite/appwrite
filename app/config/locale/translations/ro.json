@@ -238,6 +238,5 @@
     "emails.certificate.body": "Certificatul pentru domeniul dumneavoastră '{{domain}}' nu a putut fi generat. Aceasta este încercarea nr. {{attempt}}, iar eșecul a fost provocat de: {{error}}",
     "emails.certificate.footer": "Certificatul dumneavoastră anterior va fi valid pentru 30 de zile de la prima defecțiune. Vă recomandăm insistent să investigați acest caz, altfel domeniul dumneavoastră va rămâne fără o comunicare SSL validă.",
     "emails.certificate.thanks": "Mulțumesc",
-    "emails.certificate.signature": "echipa {{project}}",
-    "emails.magicSession.securityPhrase": "Fraza de securitate pentru acest email este {{phrase}}. Puteți avea încredere în acest email dacă această frază se potrivește cu fraza afișată în timpul autentificării."
+    "emails.certificate.signature": "echipa {{project}}"
 }

@@ -238,6 +238,5 @@
     "emails.certificate.body": "شهادة لنطاق '{{domain}}' الخاص بك لا يمكن إنشاؤها. هذه هي المحاولة رقم {{attempt}}، وكان سبب الفشل: {{error}}",
     "emails.certificate.footer": "سيكون شهادتك السابقة صالحة لمدة 30 يوماً منذ الفشل الأول. نوصي بشدة بالتحقيق في هذه الحالة، وإلا سينتهي مجالك بدون اتصال SSL صالح.",
     "emails.certificate.thanks": "شكرا",
-    "emails.certificate.signature": "فريق {{project}}",
-    "emails.magicSession.securityPhrase": "العبارة الأمانية لهذا البريد الإلكتروني هي {{phrase}}. يمكنك الوثوق بهذا البريد الإلكتروني إذا تطابقت هذه العبارة مع العبارة المعروضة أثناء تسجيل الدخول."
+    "emails.certificate.signature": "فريق {{project}}"
 }

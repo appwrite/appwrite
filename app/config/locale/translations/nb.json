@@ -238,6 +238,5 @@
     "emails.certificate.body": "Sertifikatet for domenet ditt '{{domain}}' kunne ikke genereres. Dette er forsøk nr. {{attempt}}, og feilen ble forårsaket av: {{error}}",
     "emails.certificate.footer": "Ditt forrige sertifikat vil være gyldig i 30 dager fra den første feilen. Vi anbefaler sterkt at du undersøker denne saken, ellers vil domenet ditt ende opp uten en gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}}-laget",
-    "emails.magicSession.securityPhrase": "Sikkerhetsfrasen for denne e-posten er {{phrase}}. Du kan stole på denne e-posten hvis denne frasen stemmer overens med frasen som vises under påloggingen."
+    "emails.certificate.signature": "{{project}}-laget"
 }
