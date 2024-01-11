@@ -1368,7 +1368,12 @@ App::post('/v1/account/sessions/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+
+        $message = $message->setParam('{{token}}', $messageContent->render(true, Template::FILTER_ESCAPE));
         $message = $message->render();
 
 
@@ -3095,7 +3100,12 @@ App::post('/v1/account/verification/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+
+        $message = $message->setParam('{{token}}', $messageContent->render(true, Template::FILTER_ESCAPE));
         $message = $message->render();
 
         $messageDoc = new Document([

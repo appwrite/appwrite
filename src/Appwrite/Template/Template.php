@@ -63,7 +63,7 @@ class Template extends View
      *
      * @throws Exception
      */
-    public function render($minify = true): string
+    public function render($minify = true, string $filter = self::FILTER_NL2P): string
     {
         if ($this->rendered) { // Don't render any template
             return '';
@@ -72,7 +72,7 @@ class Template extends View
         if (\is_readable($this->path)) {
             $template = \file_get_contents($this->path); // Include template file
         } elseif (!empty($this->content)) {
-            $template = $this->print($this->content, self::FILTER_NL2P);
+            $template = $this->print($this->content, $filter);
         } else {
             throw new Exception('"' . $this->path . '" template is not readable or not found');
         }
