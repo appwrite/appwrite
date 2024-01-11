@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "ధన్యవాదాలు",
     "emails.certificate.signature": "{{project}} జట్టు",
     "emails.magicSession.securityPhrase": "ఈ ఇమెయిల్ కోసం భద్రతా పదబంధం {{phrase}}. మీరు సైన్ ఇన్ సమయంలో చూపబడిన పదబంధంతో ఈ పదబంధం సరిపోలుతుంది అయితే ఈ ఇమెయిల్ నమ్మవచ్చు.",
-    "emails.magicSession.optionUrl": "మీరు పైన ఉన్న బటన్ ఉపయోగించి సంతకం చేయలేకపోతే, దయచేసి కింది లింక్‌ను సందర్శించండి:"
+    "emails.magicSession.optionUrl": "పైన ఉన్న బటన్‌ను ఉపయోగించి సైన్ ఇన్ చేయలేకపోతే, దయచేసి క్రింది లింక్‌ను సందర్శించండి:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Благодаря",
     "emails.certificate.signature": "екип на {{project}}",
     "emails.magicSession.securityPhrase": "Фразата за сигурност на този имейл е {{phrase}}. Можете да се доверите на този имейл, ако тази фраза съвпада с фразата, показана по време на вписването.",
-    "emails.magicSession.optionUrl": "Ако не можете да го подпишете, използвайки бутона по-горе, моля посетете следния линк:"
+    "emails.magicSession.optionUrl": "Ако не можете да влезете чрез горния бутон, моля, посетете следния линк:"
 }

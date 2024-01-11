@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Gràcies",
     "emails.certificate.signature": "equip {{project}}",
     "emails.magicSession.securityPhrase": "La frase de seguretat d'aquest correu electrònic és {{phrase}}. Podeu confiar en aquest correu si aquesta frase coincideix amb la frase mostrada durant l'inici de sessió.",
-    "emails.magicSession.optionUrl": "Si no podeu signar-lo fent servir el botó anterior, visiteu l'enllaç següent:"
+    "emails.magicSession.optionUrl": "Si no podeu iniciar sessió utilitzant el botó de dalt, visiteu l'enllaç següent:"
 }

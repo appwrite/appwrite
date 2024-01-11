@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Dank je",
     "emails.certificate.signature": "{{project}} team",
     "emails.magicSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die getoond werd tijdens het aanmelden.",
-    "emails.magicSession.optionUrl": "Als u het niet kunt ondertekenen met de bovenstaande knop, bezoek dan de volgende link:"
+    "emails.magicSession.optionUrl": "Als u zich niet kunt aanmelden via de bovenstaande knop, bezoekt u dan de volgende link:"
 }

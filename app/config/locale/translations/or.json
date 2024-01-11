@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "\n\nTack",
     "emails.certificate.signature": "{{project}} команда",
     "emails.magicSession.securityPhrase": "Frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se essa frase coincidir com a frase mostrada durante o acesso.",
-    "emails.magicSession.optionUrl": "Yadi aap upar diye gaye button ka upayog kar ke sign in nahi kar pa rahe hain, toh kripaya nimnadiy gaye link par jaayein:"
+    "emails.magicSession.optionUrl": "אם אתם לא מצליחים להיכנס באמצעות הכפתור שמעל, אנא בקרו בקישור הבא:"
 }

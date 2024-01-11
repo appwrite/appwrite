@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Matur nuwun",
     "emails.certificate.signature": "tim {{project}}",
     "emails.magicSession.securityPhrase": "Frasa keamanan kanggo email iki yaiku {{phrase}}. Sampeyan bisa percaya marang email iki yen frasa iki cocog karo frasa sing ditampilake nalika mlebu.",
-    "emails.magicSession.optionUrl": "Yen sampeyan ora bisa nandatangani nggunakake tombol sing ana ing ndhuwur, monggo bukak pranala ing ngisor iki:"
+    "emails.magicSession.optionUrl": "Yen sampeyan ora bisa mlebu nganggo tombol ing ndhuwur, monggo ngunjungi pranala ing ngisor iki:"
 }

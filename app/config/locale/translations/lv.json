@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Paldies",
     "emails.certificate.signature": "{{project}} komanda",
     "emails.magicSession.securityPhrase": "Drošības frāze šim e-pastam ir {{phrase}}. Šim e-pastam var uzticēties, ja šī frāze sakrīt ar frāzi, kas parādās, piesakoties sistēmā.",
-    "emails.magicSession.optionUrl": "Ja nevarat parakstīt, izmantojot augstāk esošo pogu, lūdzu, apmeklējiet sekojošo saiti:"
+    "emails.magicSession.optionUrl": "Ja nevarat pierakstīties, izmantojot iepriekš minēto pogu, lūdzu, apmeklējiet sekojošo saiti:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "谢谢",
     "emails.certificate.signature": "{{project}} 团队",
     "emails.magicSession.securityPhrase": "此电子邮件的安全短语是{{phrase}}。如果此短语与登录时显示的短语相匹配，则您可以信任此电子邮件。",
-    "emails.magicSession.optionUrl": "如果您无法使用上面的按钮签名，请访问以下链接："
+    "emails.magicSession.optionUrl": "如果您无法使用上面的按钮登录，请访问以下链接："
 }

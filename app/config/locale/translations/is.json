@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} liðið",
     "emails.magicSession.securityPhrase": "Öryggisfrasi fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þessi frasi passar við frasann sem birtist við innskráningu.",
-    "emails.magicSession.optionUrl": "Ef þú getur ekki ritað undir með því að nota takkann hér að ofan, vinsamlegast heimsækðu eftirfarandi slóð:"
+    "emails.magicSession.optionUrl": "Ef þú getur ekki skráð þig inn með hnappnum hér að ofan, vinsamlegast heimsækðu eftirfarandi tengil:"
 }

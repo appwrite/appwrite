@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Terima kasih",
     "emails.certificate.signature": "pasukan {{project}}",
     "emails.magicSession.securityPhrase": "Frasa keselamatan untuk emel ini adalah {{phrase}}. Anda boleh mempercayai emel ini jika frasa ini sepadan dengan frasa yang ditunjukkan semasa log masuk.",
-    "emails.magicSession.optionUrl": "Jika anda tidak dapat menandatangani menggunakan butang di atas, sila kunjungi pautan berikut:"
+    "emails.magicSession.optionUrl": "Jika anda tidak dapat log masuk menggunakan butang di atas, sila kunjungi pautan berikut:"
 }

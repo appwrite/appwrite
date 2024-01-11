@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Kiitos",
     "emails.certificate.signature": "{{project}} tiimi",
     "emails.magicSession.securityPhrase": "Tämän sähköpostin turvalause on {{phrase}}. Voit luottaa tähän sähköpostiin, jos tämä lause vastaa kirjautumisen yhteydessä näytettyä lausetta.",
-    "emails.magicSession.optionUrl": "Jos et pysty allekirjoittamaan sitä yllä olevan painikkeen avulla, ole hyvä ja käy seuraavassa linkissä:"
+    "emails.magicSession.optionUrl": "Jos et pysty kirjautumaan sisään yllä olevaa painiketta käyttäen, käy seuraavassa linkissä:"
 }

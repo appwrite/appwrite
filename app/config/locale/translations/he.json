@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "תודה",
     "emails.certificate.signature": "צוות {{project}}",
     "emails.magicSession.securityPhrase": "משפט הביטחון עבור הודעת הדוא\"ל הזו הוא {{phrase}}. תוכל לסמוך על הודעת הדוא\"ל הזו אם המשפט הזה תואם למשפט שהוצג בעת ההתחברות.",
-    "emails.magicSession.optionUrl": "אם אתה לא יכול לחתום באמצעות הכפתור שלמעלה, אנא בקר בקישור הבא:"
+    "emails.magicSession.optionUrl": "אם אינך יכול להיכנס באמצעות הכפתור למעלה, בקר בקישור הבא:"
 }

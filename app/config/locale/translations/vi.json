@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Cảm ơn",
     "emails.certificate.signature": "đội {{project}}",
     "emails.magicSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin tưởng email này nếu cụm từ này khớp với cụm từ hiển thị khi đăng nhập.",
-    "emails.magicSession.optionUrl": "Nếu bạn không thể ký bằng cách sử dụng nút ở trên, vui lòng truy cập đường link sau:"
+    "emails.magicSession.optionUrl": "Nếu bạn không thể đăng nhập bằng cách sử dụng nút ở trên, vui lòng truy cập liên kết sau:"
 }

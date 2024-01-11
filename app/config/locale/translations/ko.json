@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "감사합니다",
     "emails.certificate.signature": "{{project}} 팀",
     "emails.magicSession.securityPhrase": "이 이메일의 보안 구절은 {{phrase}}입니다. 로그인할 때 표시되는 구절과 일치한다면 이 이메일을 신뢰할 수 있습니다.",
-    "emails.magicSession.optionUrl": "위의 버튼을 사용하여 서명할 수 없다면, 다음 링크를 방문해 주세요:"
+    "emails.magicSession.optionUrl": "위의 버튼을 사용하여 로그인할 수 없다면, 다음 링크를 방문해 주세요:"
 }

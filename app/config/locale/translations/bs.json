@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Hvala",
     "emails.certificate.signature": "{{project}} tim",
     "emails.magicSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Ovom emailu možete vjerovati ako se fraza poklapa sa frazom prikazanom prilikom prijave.",
-    "emails.magicSession.optionUrl": "Ako ne možete potpisati koristeći gornji gumb, molimo posjetite sljedeći link:"
+    "emails.magicSession.optionUrl": "Ako ne možete da se prijavite koristeći gornje dugme, molimo posetite sledeći link:"
 }

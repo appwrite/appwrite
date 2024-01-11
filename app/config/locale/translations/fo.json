@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} bólkur",
     "emails.magicSession.securityPhrase": "Trygdarorðið fyri hesa teldupostadressuna er {{phrase}}. Tú kanst líta á hesa teldupostadressu, um hetta orðið samsvarar við orðið víst tá tú ritaði inn.",
-    "emails.magicSession.optionUrl": "Um tú ert ófør/ur at undirrita tað við at nýta knøttin omanfyri, vitja vinarliga hesa leinkjuna:"
+    "emails.magicSession.optionUrl": "Um tú ikki fært innritað við at brúka knøttin omanfyri, vinarliga vitja hesa leinkjuna:"
 }

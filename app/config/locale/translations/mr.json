@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "धन्यवाद",
     "emails.certificate.signature": "{{project}} संघ",
     "emails.magicSession.securityPhrase": "या ईमेलसाठी सुरक्षा वाक्य हे {{phrase}} आहे. साइन इन केल्यावेळी दाखवलेले वाक्य जर हे वाक्याशी जुळत असेल तर तुम्ही या ईमेलवर विश्वास ठेवू शकता.",
-    "emails.magicSession.optionUrl": "वरील बटणावरून साइन इन करण्यात आपल्याला अडचण येत असल्यास, कृपया खालील दुव्याला भेट द्या:"
+    "emails.magicSession.optionUrl": "जर आपण वरील बटणाचा वापर करून साइन इन करू शकत नसाल, तर कृपया खालील दुवा भेट द्या:"
 }

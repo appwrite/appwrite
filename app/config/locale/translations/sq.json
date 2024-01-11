@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Faleminderit",
     "emails.certificate.signature": "ekipi i {{project}}",
     "emails.magicSession.securityPhrase": "Fjalia e sigurisë për këtë email është {{phrase}}. Mund të besoni këtë email nëse kjo fjali përputhet me fjalën e shfaqur gjatë hyrjes në sistem.",
-    "emails.magicSession.optionUrl": "Nëse nuk mund të nënshkruani duke përdorur butonin e mësipërm, ju lutem vizitoni lidhjen e mëposhtme:"
+    "emails.magicSession.optionUrl": "Nëse nuk mund të hyni duke përdorur butonin më sipër, ju lutem vizitoni lidhjen e mëposhtme:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Merci",
     "emails.certificate.signature": "Équipe {{project}}",
     "emails.magicSession.securityPhrase": "D'Sécherheetsphrase fir dësen E-Mail ass {{phrase}}. Dir kënnt dësem E-Mail vertrauen, wann dës Phrase mat der Phrase iwwereneestëmmt, déi beim Umellen ugewise ginn ass.",
-    "emails.magicSession.optionUrl": "Wann Dir net fäeg sidd et mat dem uewe genannten Knäppchen z'ënnerschreiwen, besicht w.e.g. de folgende Link:"
+    "emails.magicSession.optionUrl": "Wann Dir Iech net kënnt umellen andeems Dir op de Knäppchen uewendriwwer klickt, besicht w.e.g. de folgenden Link:"
 }

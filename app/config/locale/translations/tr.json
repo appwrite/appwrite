@@ -239,5 +239,5 @@
     "emails.magicSession.buttonText": "{{project}}'a giriş yapın",
     "emails.magicSession.clientInfo": "Bu oturum açma işlemi, {{agentClient}} kullanılarak {{agentDevice}} {{agentOs}} üzerinde istendi. Eğer oturum açma işlemini siz talep etmediyseniz, bu e-postayı güvenle yok sayabilirsiniz.",
     "emails.magicSession.securityPhrase": "Bu e-postanın güvenlik ifadesi {{phrase}}'dir. Bu ifade, giriş sırasında gösterilen ifadeyle eşleşiyorsa bu e-postaya güvenebilirsiniz.",
-    "emails.magicSession.optionUrl": "Yukarıdaki butonu kullanarak imzalayamıyorsanız, lütfen aşağıdaki bağlantıyı ziyaret edin:"
+    "emails.magicSession.optionUrl": "Yukarıdaki butonu kullanarak giriş yapamıyorsanız, lütfen aşağıdaki bağlantıyı ziyaret edin:"
 }

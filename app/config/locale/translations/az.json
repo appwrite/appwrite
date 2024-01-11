@@ -239,5 +239,5 @@
     "continents.oc": "Okeaniya",
     "continents.sa": "Cənubi Amerika",
     "emails.magicSession.securityPhrase": "Bu e-poçt üçün təhlükəsizlik ifadəsi {{phrase}}-dir. Əgər bu ifadə daxil olarkən göstərilən ifadə ilə üst-üstə düşürsə, bu e-poçta etibar edə bilərsiniz.",
-    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düymə vasitəsilə imzalaya bilmirsəniz, zəhmət olmasa aşağıdakı linkə daxil olun:"
+    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düyməni istifadə edərək daxil ola bilmirsizsə, zəhmət olmasa aşağıdakı linkə daxil olun:"
 }

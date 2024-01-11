@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Köszönöm",
     "emails.certificate.signature": "{{project}} csapat",
     "emails.magicSession.securityPhrase": "Az e-mailhez tartozó biztonsági kifejezés: {{phrase}}. Megbízhat ebben az e-mailben, ha ez a kifejezés megegyezik a bejelentkezéskor megjelenített kifejezéssel.",
-    "emails.magicSession.optionUrl": "Amennyiben nem tudja aláírni a fenti gomb segítségével, kérjük, látogasson el a következő linkre:"
+    "emails.magicSession.optionUrl": "Amennyiben az előző gomb használatával nem tud bejelentkezni, kérjük látogassa meg a következő linket:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Mulțumesc",
     "emails.certificate.signature": "echipa {{project}}",
     "emails.magicSession.securityPhrase": "Frază de securitate pentru acest e-mail este {{phrase}}. Puteți avea încredere în acest e-mail dacă fraza se potrivește cu fraza afișată în timpul autentificării.",
-    "emails.magicSession.optionUrl": "Dacă nu puteți semna folosind butonul de mai sus, vă rugăm să vizitați următorul link:"
+    "emails.magicSession.optionUrl": "Dacă nu puteți să vă autentificați folosind butonul de mai sus, vă rugăm să vizitați următorul link:"
 }

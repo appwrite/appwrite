@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "ಧನ್ಯವಾದಗಳು",
     "emails.certificate.signature": "ತಂಡ",
     "emails.magicSession.securityPhrase": "ಈ ಇಮೇಲ್‌ಗಾಗಿ ಭದ್ರತಾ ಪದ ಇದೆ {{phrase}}. ಸೈನ್ ಇನ್ ಮಾಡುವಾಗ ತೋರಿದ ಪದವು ಈ ಪದವು ಹೊಂದಿಕೆಯಾಗಿದ್ದರೆ ನೀವು ಈ ಇಮೇಲ್‌ಅನ್ನು ನಂಬಬಹುದು.",
-    "emails.magicSession.optionUrl": "ಮೇಲಿನ ಬಟನ್‌ ಬಳಸಿ ನೀವು ಅದನ್ನು ಸಹಿ ಮಾಡಲು ಅಸಮರ್ಥರಾದರೆ, ದಯವಿಟ್ಟು ಈ ಕೆಳಗಿನ ಲಿಂಕ್ ಭೇಟಿ ನೀಡಿ:"
+    "emails.magicSession.optionUrl": "ಮೇಲಿನ ಬಟನ್ ಬಳಸಿ ನೀವು ಸೈನ್ ಇನ್ ಮಾಡಲು ಅಸಮರ್ಥರಾಗಿದ್ದರೆ, ದಯವಿಟ್ಟು ಈ ಕೆಳಗಿನ ಲಿಂಕ್ ಭೇಟಿಯನ್ನು ಕೊಡಿ:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "The country code BE stands for Belgium, where there are two main languages spoken: Dutch and French. Since you did not specify the language, I will provide the translation in both:\n\nDutch: Dank je\nFrench: Merci",
     "emails.certificate.signature": "{{project}} équipe",
     "emails.magicSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die getoond wordt bij het aanmelden.",
-    "emails.magicSession.optionUrl": "Als je het niet kunt ondertekenen met de knop hierboven, bezoek dan de volgende link:"
+    "emails.magicSession.optionUrl": "Si vous n'arrivez pas à vous connecter en utilisant le bouton ci-dessus, veuillez visiter le lien suivant :"
 }

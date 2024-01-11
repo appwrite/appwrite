@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "The country code \"nn\" provided is not sufficient to determine the target language as it does not correspond to an official ISO 3166-1 alpha-2 country code. Please provide more context or the specific target language you need the translation for.",
     "emails.certificate.signature": "{{project}} lag",
     "emails.magicSession.securityPhrase": "For the country code \"nn\", there is no officially designated language. The country code \"NN\" is typically used as a placeholder in documentation for a country that is not specified. Please provide a valid country code or specify the target language for the translation.",
-    "emails.magicSession.optionUrl": "Beklager, men jeg kan ikke fullføre forespørselen din, ettersom \"nn\" ikke er en gyldig landskode og det er ikke angitt et språk som tilsvarer denne koden. Vennligst oppgi en gyldig landskode eller et språk for oversettelse."
+    "emails.magicSession.optionUrl": "Dersom du ikkje klarer å logge inn ved å bruke knappen over, kan du gå til følgjande lenke:"
 }

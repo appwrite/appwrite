@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Tack",
     "emails.certificate.signature": "equipo {{project}}",
     "emails.magicSession.securityPhrase": "Frasen för säkerhet i detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med den fras som visas vid inloggning.",
-    "emails.magicSession.optionUrl": "Om du inte kan signera genom att använda knappen ovan, vänligen besök följande länk:"
+    "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón de arriba, por favor visita el siguiente enlace:"
 }

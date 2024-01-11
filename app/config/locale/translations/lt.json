@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Ačiū",
     "emails.certificate.signature": "{{project}} komanda",
     "emails.magicSession.securityPhrase": "Šio el. laiško saugumo frazė yra {{phrase}}. Šiam el. laiškui galite pasitikėti, jei ši frazė atitinka prisijungimo metu rodytą frazę.",
-    "emails.magicSession.optionUrl": "Jei negalite pasirašyti naudodamiesi aukščiau esančiu mygtuku, prašome apsilankyti toliau nurodytoje nuorodoje:"
+    "emails.magicSession.optionUrl": "Jei negalite prisijungti naudodami aukščiau esantį mygtuką, apsilankykite šioje nuorodoje:"
 }

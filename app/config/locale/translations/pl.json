@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Dziękuję",
     "emails.certificate.signature": "zespół {{project}}",
     "emails.magicSession.securityPhrase": "Hasło bezpieczeństwa dla tego e-maila to {{phrase}}. Możesz ufać temu e-mailowi, jeśli hasło to jest zgodne z hasłem wyświetlonym podczas logowania.",
-    "emails.magicSession.optionUrl": "Jeśli nie możesz się podpisać za pomocą powyższego przycisku, odwiedź następujący link:"
+    "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "ありがとう",
     "emails.certificate.signature": "{{project}} チーム",
     "emails.magicSession.securityPhrase": "このメールのセキュリティフレーズは{{phrase}}です。サインイン時に表示されたフレーズと一致する場合、このメールは信頼できます。",
-    "emails.magicSession.optionUrl": "上記のボタンを使用して署名できない場合は、次のリンクにアクセスしてください："
+    "emails.magicSession.optionUrl": "上記のボタンを使用してサインインすることができない場合は、次のリンクにアクセスしてください："
 }

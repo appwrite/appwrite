@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Merci",
     "emails.certificate.signature": "{{project}} ekipi",
     "emails.magicSession.securityPhrase": "ഈ ഇമെയിലിന്റെ സുരക്ഷാ വാചകം {{phrase}} ആണ്. സൈൻ ഇൻ ചെയ്യുമ്പോൾ കാണിച്ച വാചകവുമായി ഈ വാചകം ഒത്തുപോകുന്നെങ്കിൽ ഈ ഇമെയിലിനെ വിശ്വസിക്കാം.",
-    "emails.magicSession.optionUrl": "Raha tsy afaka manasonia amin'ny bokotra etsy ambony ianao, azafady mba tsidiho ny rohy manaraka:"
+    "emails.magicSession.optionUrl": "Raha toa ka tsy afaka miditra ianao amin'ny alàlan'ny bokotra etsy ambony, azafady mba tsidiho ity rohy manaraka ity:"
 }

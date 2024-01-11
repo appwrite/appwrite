@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "ขอบคุณ",
     "emails.certificate.signature": "ทีม {{project}}",
     "emails.magicSession.securityPhrase": "วลีรักษาความปลอดภัยสำหรับอีเมลนี้คือ {{phrase}} คุณสามารถเชื่อถืออีเมลนี้ได้หากวลีนี้ตรงกับวลีที่แสดงในระหว่างการเข้าสู่ระบบ",
-    "emails.magicSession.optionUrl": "หากคุณไม่สามารถเซ็นชื่อโดยใช้ปุ่มด้านบนได้ กรุณาเยี่ยมชมลิงก์ต่อไปนี้:"
+    "emails.magicSession.optionUrl": "หากคุณไม่สามารถเข้าสู่ระบบโดยใช้ปุ่มด้านบน โปรดเยี่ยมชมลิงก์ต่อไปนี้:"
 }

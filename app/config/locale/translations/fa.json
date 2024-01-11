@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "متشکرم",
     "emails.certificate.signature": "تیم {{project}}",
     "emails.magicSession.securityPhrase": "عبارت امنیتی برای این ایمیل {{phrase}} است. اگر این عبارت با عبارت نشان داده شده در هنگام ورود به سیستم مطابقت داشت، می‌توانید به این ایمیل اعتماد کنید.",
-    "emails.magicSession.optionUrl": "اگر قادر به امضا کردن با استفاده از دکمه بالا نیستید، لطفاً از لینک زیر دیدن کنید:"
+    "emails.magicSession.optionUrl": "اگر قادر به ورود با استفاده از دکمه بالا نیستید، لطفاً از لینک زیر دیدن فرمایید:"
 }

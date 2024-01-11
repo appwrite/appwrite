@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "धन्यवाद",
     "emails.certificate.signature": "تیم {{project}}",
     "emails.magicSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo electrónico si esta frase coincide con la frase mostrada durante el inicio de sesión.",
-    "emails.magicSession.optionUrl": "अगर रउआ उपर बटन के इस्तेमाल क के हस्ताक्षर ना कर पाइब, त कृपया निम्नलिखित लिंक पर जाईं:"
+    "emails.magicSession.optionUrl": "Yadi aap uppar diye gaye button ka upayog karke sign in nahi kar pa rahe hain, toh kripaya is link ka anusaran karein:"
 }

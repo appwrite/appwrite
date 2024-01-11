@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Dankie",
     "emails.certificate.signature": "{{project}} span",
     "emails.magicSession.securityPhrase": "Die sekuriteitsfrase vir hierdie e-pos is {{phrase}}. Jy kan hierdie e-pos vertrou as hierdie frase ooreenstem met die frase wat tydens aanmelding getoon is.",
-    "emails.magicSession.optionUrl": "As jy dit nie kan onderteken deur die knoppie hierbo te gebruik nie, besoek asseblief die volgende skakel:"
+    "emails.magicSession.optionUrl": "As u nie met die knoppie hierbo kan aanmeld nie, besoek asseblief die volgende skakel:"
 }

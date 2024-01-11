@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Salamat",
     "emails.certificate.signature": "{{project}} koponan",
     "emails.magicSession.securityPhrase": "Ang pariralang pangseguridad para sa email na ito ay {{phrase}}. Maaari mong pagkatiwalaan ang email na ito kung ang pariralang ito ay tumutugma sa pariralang ipinakita noong nag-sign in ka.",
-    "emails.magicSession.optionUrl": "Kung hindi mo magagamit ang pindutan sa itaas para lumagda, mangyaring bisitahin ang sumusunod na link:"
+    "emails.magicSession.optionUrl": "Kung hindi ka makapag-sign in gamit ang pindutan sa itaas, mangyaring bisitahin ang sumusunod na link:"
 }

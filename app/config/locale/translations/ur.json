@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "شکریہ",
     "emails.certificate.signature": "ٹیم {{project}}",
     "emails.magicSession.securityPhrase": "اس ای میل کے لئے سیکیورٹی جملہ {{phrase}} ہے۔ اگر یہ جملہ سائن ان کے دوران دکھائے گئے جملے سے میل کھاتا ہے تو آپ اس ای میل پر بھروسہ کرسکتے ہیں۔",
-    "emails.magicSession.optionUrl": "اگر آپ اوپر دیے گئے بٹن کا استعمال کرکے اس پر دستخط نہیں کر سکتے تو براہ کرم مندرجہ ذیل لنک پر جائیں:"
+    "emails.magicSession.optionUrl": "اگر آپ اوپر دیے گئے بٹن کا استعمال کرکے سائن ان نہیں کر سکتے تو براہ کرم مندرجہ ذیل لنک پر جائیں:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Dankon",
     "emails.certificate.signature": "teamo de {{project}}",
     "emails.magicSession.securityPhrase": "La sekureca frazo por ĉi tiu retpoŝto estas {{phrase}}. Vi povas fidi ĉi tiun retpoŝton se ĉi tiu frazo kongruas kun la frazo montrita dum ensaluto.",
-    "emails.magicSession.optionUrl": "Se vi ne povas subskribi per la supre menciita butono, bonvolu viziti la jenan ligilon:"
+    "emails.magicSession.optionUrl": "Se vi ne povas ensaluti per la supra butono, bonvolu viziti la jenan ligilon:"
 }

@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "شكرا",
     "emails.certificate.signature": "فريق {{project}}",
     "emails.magicSession.securityPhrase": "العبارة الأمنية لهذا البريد الإلكتروني هي {{phrase}}. يمكنك الوثوق بهذا البريد الإلكتروني إذا كانت هذه العبارة متطابقة مع العبارة المعروضة أثناء تسجيل الدخول.",
-    "emails.magicSession.optionUrl": "إذا لم تتمكن من التوقيع باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:"
+    "emails.magicSession.optionUrl": "إذا لم تتمكن من تسجيل الدخول باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:"
 }

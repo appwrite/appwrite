@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Tak",
     "emails.certificate.signature": "{{project}} hold",
     "emails.magicSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher den viste frase under log ind.",
-    "emails.magicSession.optionUrl": "Hvis du ikke kan underskrive ved hjælp af knappen ovenfor, besøg venligst følgende link:"
+    "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:"
 }

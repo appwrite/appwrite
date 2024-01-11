@@ -239,5 +239,5 @@
     "emails.certificate.thanks": "Gracias",
     "emails.certificate.signature": "{{project}} equipo",
     "emails.magicSession.securityPhrase": "La locución de seguridat pro iste correo es {{phrase}}. Podes confiar en iste correo si esta locución coincidit con la locución amostrada durante el ingreso.",
-    "emails.magicSession.optionUrl": "Si no puede firmar utilizando el botón de arriba, por favor visite el siguiente enlace:"
+    "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón de arriba, por favor visita el siguiente enlace:"
 }
