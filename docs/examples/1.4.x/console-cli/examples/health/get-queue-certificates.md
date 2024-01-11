@@ -1,1 +1,2 @@
-appwrite health getQueueCertificates
+appwrite health getQueueCertificates \
+

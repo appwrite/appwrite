@@ -19,6 +19,8 @@ use Appwrite\Platform\Tasks\VolumeSync;
 use Appwrite\Platform\Tasks\CalcTierStats;
 use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
+use Appwrite\Platform\Tasks\DevGenerateTranslations;
+use Appwrite\Platform\Tasks\GetMigrationStats;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
 use Appwrite\Platform\Tasks\ScheduleMessage;
 
@@ -46,6 +48,8 @@ class Tasks extends Service
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
+            ->addAction(GetMigrationStats::getName(), new GetMigrationStats())
+            ->addAction(DevGenerateTranslations::getName(), new DevGenerateTranslations())
 
         ;
     }

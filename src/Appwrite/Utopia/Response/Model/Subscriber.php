@@ -49,6 +49,12 @@ class Subscriber extends Model
                     'userId' => '5e5ea5c16897e',
                 ],
             ])
+            ->addRule('userId', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Topic ID.',
+                'default' => '',
+                'example' => '5e5ea5c16897e',
+            ])
             ->addRule('userName', [
                 'type' => self::TYPE_STRING,
                 'description' => 'User Name.',
@@ -60,6 +66,12 @@ class Subscriber extends Model
                 'description' => 'Topic ID.',
                 'default' => '',
                 'example' => '259125845563242502',
+            ])
+            ->addRule('providerType', [
+                'type' => self::TYPE_STRING,
+                'description' => 'The target provider type. Can be one of the following: `email`, `sms` or `push`.',
+                'default' => '',
+                'example' => MESSAGE_TYPE_EMAIL,
             ]);
     }
 

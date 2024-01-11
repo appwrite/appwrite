@@ -98,7 +98,7 @@ class Message extends Model
                 'type' => self::TYPE_STRING,
                 'description' => 'Status of delivery.',
                 'default' => 'processing',
-                'example' => 'Message status can be one of the following: processing, sent, failed.',
+                'example' => 'Message status can be one of the following: processing, sent, cancelled, failed.',
             ])
             ->addRule('description', [
                 'type' => self::TYPE_STRING,

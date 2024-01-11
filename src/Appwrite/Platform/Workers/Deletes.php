@@ -556,6 +556,11 @@ class Deletes extends Action
         $this->deleteByGroup('identities', [
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
+
+        // Delete targets
+        $this->deleteByGroup('targets', [
+            Query::equal('userInternalId', [$userInternalId])
+        ], $dbForProject);
     }
 
     /**

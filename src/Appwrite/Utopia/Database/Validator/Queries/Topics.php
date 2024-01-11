@@ -7,6 +7,7 @@ class Topics extends Base
     public const ALLOWED_ATTRIBUTES = [
         'name',
         'description',
+        'total'
     ];
 
     /**

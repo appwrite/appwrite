@@ -6,7 +6,9 @@ class Subscribers extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
         'targetId',
-        'topicId'
+        'topicId',
+        'userId',
+        'providerType'
     ];
 
     /**

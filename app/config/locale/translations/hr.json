@@ -228,5 +228,15 @@
     "continents.eu": "Europa",
     "continents.na": "Sjeverna Amerika",
     "continents.oc": "Oceanija",
-    "continents.sa": "Južna Amerika"
+    "continents.sa": "Južna Amerika",
+    "emails.magicSession.optionButton": "Kliknite gumb ispod kako biste sigurno prijavili u svoj {{project}} račun. Istek će za 1 sat.",
+    "emails.magicSession.buttonText": "Prijavite se u {{project}}",
+    "emails.magicSession.optionUrl": "Ako gumb iznad se ne prikazuje, upotrijebite sljedeći link:",
+    "emails.magicSession.clientInfo": "Ova se prijava zatražila koristeći {{agentClient}} na uređaju {{agentDevice}} {{agentOs}}. Ako niste zatražili prijavu, možete slobodno zanemariti ovaj e-mail.",
+    "emails.certificate.subject": "Nepostojanje certifikata za %s",
+    "emails.certificate.hello": "Pozdrav",
+    "emails.certificate.body": "Certifikat za vašu domenu '{{domain}}' nije mogao biti generiran. Ovo je pokušaj br. {{attempt}}, a neuspjeh je uzrokovan: {{error}}",
+    "emails.certificate.footer": "Vaš prethodni certifikat bit će važeći 30 dana od prvog neuspjeha. Visoko preporučujemo istraživanje ovog slučaja, inače će vaša domena završiti bez važeće SSL komunikacije.",
+    "emails.certificate.thanks": "Hvala",
+    "emails.certificate.signature": "tim {{project}}"
 }

@@ -219,6 +219,7 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+        'publish' => false,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
@@ -785,7 +786,15 @@ return [
         'code' => 400,
     ],
 
-    /** Provider Errors */
+    /** Health */
+    Exception::QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+        'description' => 'Queue size threshold hit.',
+        'code' => 503,
+        'publish' => false
+    ],
+
+    /** Providers */
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,
         'description' => 'Provider with the requested ID could not be found.',
@@ -802,7 +811,7 @@ return [
         'code' => 400,
     ],
 
-    /** Topic Errors */
+    /** Topics */
     Exception::TOPIC_NOT_FOUND => [
         'name' => Exception::TOPIC_NOT_FOUND,
         'description' => 'Topic with the request ID could not be found.',
@@ -814,7 +823,7 @@ return [
         'code' => 409,
     ],
 
-    /** Subscriber Errors */
+    /** Subscribers */
     Exception::SUBSCRIBER_NOT_FOUND => [
         'name' => Exception::SUBSCRIBER_NOT_FOUND,
         'description' => 'Subscriber with the request ID could not be found.',
@@ -826,7 +835,7 @@ return [
         'code' => 409,
     ],
 
-    /** Message Errors */
+    /** Messages */
     Exception::MESSAGE_NOT_FOUND => [
         'name' => Exception::MESSAGE_NOT_FOUND,
         'description' => 'Message with the requested ID could not be found.',
@@ -845,6 +854,21 @@ return [
     Exception::MESSAGE_ALREADY_SCHEDULED => [
         'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
         'description' => 'Message with the requested ID has already been scheduled for delivery.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_EMAIL => [
+        'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
+        'description' => 'Message with the target ID is not an email target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_SMS => [
+        'name' => Exception::MESSAGE_TARGET_NOT_SMS,
+        'description' => 'Message with the target ID is not an SMS target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_PUSH => [
+        'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
+        'description' => 'Message with the target ID is not a push target:',
         'code' => 400,
     ],
 

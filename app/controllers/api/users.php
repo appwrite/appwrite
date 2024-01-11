@@ -1397,6 +1397,10 @@ App::patch('/v1/users/:userId/targets/:targetId')
                 throw new Exception(Exception::PROVIDER_NOT_FOUND);
             }
 
+            if ($provider->getAttribute('type') !== $target->getAttribute('providerType')) {
+                throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+            }
+
             $target->setAttribute('providerId', $provider->getId());
             $target->setAttribute('providerInternalId', $provider->getInternalId());
         }
@@ -1594,7 +1598,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
     });
 
 App::delete('/v1/users/identities/:identityId')
-    ->desc('Delete Identity')
+    ->desc('Delete identity')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].identities.[identityId].delete')
     ->label('scope', 'users.write')
@@ -1610,7 +1614,8 @@ App::delete('/v1/users/identities/:identityId')
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $identityId, Response $response, Database $dbForProject) {
+    ->inject('queueForEvents')
+    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 
@@ -1619,6 +1624,11 @@ App::delete('/v1/users/identities/:identityId')
         }
 
         $dbForProject->deleteDocument('identities', $identityId);
+
+        $queueForEvents
+            ->setParam('userId', $identity->getAttribute('userId'))
+            ->setParam('identityId', $identity->getId())
+            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
     });

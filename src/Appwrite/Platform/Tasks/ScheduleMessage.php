@@ -58,21 +58,19 @@ class ScheduleMessage extends Action
             if ($latestDocument !== null) {
                 $paginationQueries[] = Query::cursorAfter($latestDocument);
             }
-            try{
-
-
-            $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
+            try {
+                $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                 Query::lessThanEqual('schedule', DateTime::formatTz(DateTime::now())),
                 Query::equal('resourceType', ['message']),
                 Query::equal('active', [true]),
-            ]));
+                ]));
             } catch (\Exception $e) {
                 var_dump($e->getTraceAsString());
             }
 
             $sum = count($results);
             $total = $total + $sum;
-            foreach($results as $schedule) {
+            foreach ($results as $schedule) {
                 $schedules[$schedule->getId()] = $schedule;
             }
 
@@ -145,11 +143,11 @@ class ScheduleMessage extends Action
                                 ->trigger();
                             $schedule->setAttribute('active', false);
                             $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-                            
+
                             $queueForDeletes
                                 ->setType(DELETE_TYPE_SCHEDULES)
                                 ->setDocument($schedule);
-                            
+
                             $queue->reclaim();
                             unset($schedules[$schedule->getId()]);
                         });

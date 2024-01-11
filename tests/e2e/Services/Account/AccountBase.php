@@ -94,6 +94,36 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        $shortPassword = 'short';
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'shortpass@appwrite.io',
+            'password' => $shortPassword
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $longPassword = '';
+        for ($i = 0; $i < 257; $i++) { // 256 is the limit
+            $longPassword .= 'p';
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'longpass@appwrite.io',
+            'password' => $longPassword,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         return [
             'id' => $id,
             'email' => $email,
@@ -126,7 +156,7 @@ trait AccountBase
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         // apiKey is only available in custom client test
         $apiKey = $this->getProject()['apiKey'];
@@ -993,7 +1023,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1059,7 +1089,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1141,7 +1171,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $data['session'] = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         return $data;
     }
@@ -1329,9 +1359,9 @@ trait AccountBase
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals('Login', $lastEmail['subject']);
+        $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
-        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
         $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 
@@ -1417,7 +1447,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['userId']);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
