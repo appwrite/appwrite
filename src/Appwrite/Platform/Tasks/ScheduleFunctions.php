@@ -23,7 +23,7 @@ class ScheduleFunctions extends ScheduleBase
 
     public static function getSupportedResource(): string
     {
-        return 'message';
+        return 'function';
     }
 
     protected function enqueueResources(Group $pools, Database $dbForConsole): void
@@ -73,11 +73,11 @@ class ScheduleFunctions extends ScheduleBase
 
                 foreach ($scheduleKeys as $scheduleKey) {
                     // Ensure schedule was not deleted
-                    if (!isset($schedules[$scheduleKey])) {
+                    if (!\array_key_exists($scheduleKey, $this->schedules)) {
                         return;
                     }
 
-                    $schedule = $schedules[$scheduleKey];
+                    $schedule = $this->schedules[$scheduleKey];
 
                     $queueForFunctions = new Func($connection);
 
@@ -95,7 +95,10 @@ class ScheduleFunctions extends ScheduleBase
         }
 
         $timerEnd = \microtime(true);
-        $this->lastEnqueueUpdate = $timerStart;
+
+        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
+        //$this->lastEnqueueUpdate = $timerStart;
+
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }
 }
