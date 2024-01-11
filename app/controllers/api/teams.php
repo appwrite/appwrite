@@ -557,7 +557,6 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
                     ->setParam('{{body}}', $body, escapeHtml: false)
-                    ->setParam('{{redirect}}', $url, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
@@ -616,6 +615,7 @@ App::post('/v1/teams/:teamId/memberships')
                     /* {{user}} ,{{team}} and {{project}} are required in the templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
+                    'redirect' => $url,
                     'project' => $projectName
                 ];
 
