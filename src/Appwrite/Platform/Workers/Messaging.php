@@ -151,7 +151,7 @@ class Messaging extends Action
                 } else {
                     $provider = $dbForProject->getDocument('providers', $providerId);
 
-                    if ($provider->isEmpty()) {
+                    if ($provider->isEmpty() || !$provider->getAttribute('enabled', false)) {
                         $provider = $primaryProvider;
                     } else {
                         $providers[$providerId] = $provider;
