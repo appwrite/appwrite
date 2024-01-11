@@ -238,5 +238,6 @@
     "continents.eu": "Avropa",
     "continents.na": "Şimali Amerika",
     "continents.oc": "Okeaniya",
-    "continents.sa": "Cənubi Amerika"
+    "continents.sa": "Cənubi Amerika",
+    "emails.magicSession.securityPhrase": "Bu e-poçt üçün təhlükəsizlik ifadəsi {{phrase}}-dir. Əgər bu ifadə daxil olarkən göstərilən ifadə ilə üst-üstə düşürsə, bu e-poçta etibar edə bilərsiniz."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "Certifikat za vaš domen '{{domain}}' nije mogao biti generisan. Ovo je pokušaj br. {{attempt}}, a greška je uzrokovana: {{error}}",
     "emails.certificate.footer": "Vaš prethodni certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo da istražite ovaj slučaj, inače će vaš domen završiti bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
-    "emails.certificate.signature": "{{project}} tim"
+    "emails.certificate.signature": "{{project}} tim",
+    "emails.magicSession.securityPhrase": "Sigurnosna fraza za ovaj email je {{phrase}}. Ovom emailu možete vjerovati ako se fraza poklapa sa frazom prikazanom prilikom prijave."
 }

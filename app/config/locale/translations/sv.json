@@ -238,5 +238,6 @@
     "emails.certificate.body": "Certifikatet för din domän '{{domain}}' kunde inte skapas. Detta är försök nr {{attempt}}, och felet orsakades av: {{error}}",
     "emails.certificate.footer": "Ditt tidigare certifikat kommer att vara giltigt i 30 dagar från det första felet. Vi rekommenderar starkt att du undersöker detta fall, annars kommer din domän att sluta utan en giltig SSL-kommunikation.",
     "emails.certificate.thanks": "Tack",
-    "emails.certificate.signature": "equipo {{project}}"
+    "emails.certificate.signature": "equipo {{project}}",
+    "emails.magicSession.securityPhrase": "Frasen för säkerhet i detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med den fras som visas vid inloggning."
 }

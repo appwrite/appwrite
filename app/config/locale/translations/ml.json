@@ -238,5 +238,6 @@
     "emails.certificate.body": "നിങ്ങളുടെ ഡൊമെയ്‌ൻ '{{domain}}'നായുള്ള സർട്ടിഫിക്കറ്റ് ഉണ്ടാക്കാൻ കഴിയിച്ചില്ല. ഇത് ശ്രമമായ {{attempt}} ആണ്, പരാജയത്തിനു കാരണം: {{error}}",
     "emails.certificate.footer": "Ny zom-pokotaninao teo aloha dia hanan-kery mandritra ny 30 andro manomboka amin'ny tsy fahombiazana voalohany. Izahay dia manoro hevitra mafy ny hanaovana fikarohana momba ity tranga ity, raha tsy izany ny sehatra misy anao dia ho tonga amin'ny toerana tsy misy fifandraisana SSL manan-kery.",
     "emails.certificate.thanks": "Merci",
-    "emails.certificate.signature": "{{project}} ekipi"
+    "emails.certificate.signature": "{{project}} ekipi",
+    "emails.magicSession.securityPhrase": "ഈ ഇമെയിലിന്റെ സുരക്ഷാ വാചകം {{phrase}} ആണ്. സൈൻ ഇൻ ചെയ്യുമ്പോൾ കാണിച്ച വാചകവുമായി ഈ വാചകം ഒത്തുപോകുന്നെങ്കിൽ ഈ ഇമെയിലിനെ വിശ്വസിക്കാം."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "Sertifikat kanggo domain panjenengan '{{domain}}' ora bisa digawe. Iki nyoba nomer {{attempt}}, lan gagal amarga: {{error}}",
     "emails.certificate.footer": "Sertifikat sadurunge bakal tetep sah sajrone 30 dina wiwit kagagalan pisanan. Kita menehi saran sing kuat supaya panjenengan nyelidiki kasus iki, manawa-mawa domain panjenengan bakal pungkasan tanpa komunikasi SSL sing sah.",
     "emails.certificate.thanks": "Matur nuwun",
-    "emails.certificate.signature": "tim {{project}}"
+    "emails.certificate.signature": "tim {{project}}",
+    "emails.magicSession.securityPhrase": "Frasa keamanan kanggo email iki yaiku {{phrase}}. Sampeyan bisa percaya marang email iki yen frasa iki cocog karo frasa sing ditampilake nalika mlebu."
 }

@@ -238,5 +238,6 @@
     "emails.certificate.body": "ドメイン「{{domain}}」の証明書を生成できませんでした。これは試行回数{{attempt}}で、原因は以下のエラーです: {{error}}",
     "emails.certificate.footer": "以前の証明書は最初の失敗から30日間有効です。この問題を調査することを強く推奨します。さもなければ、ドメインは有効なSSL通信なしで終わってしまいます。",
     "emails.certificate.thanks": "ありがとう",
-    "emails.certificate.signature": "{{project}} チーム"
+    "emails.certificate.signature": "{{project}} チーム",
+    "emails.magicSession.securityPhrase": "このメールのセキュリティフレーズは{{phrase}}です。サインイン時に表示されたフレーズと一致する場合、このメールは信頼できます。"
 }

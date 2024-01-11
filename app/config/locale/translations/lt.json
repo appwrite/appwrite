@@ -238,5 +238,6 @@
     "emails.certificate.body": "Jūsų domeno '{{domain}}' sertifikato sukurti nepavyko. Tai bandymas Nr. {{attempt}}, ir nepavykimo priežastis: {{error}}",
     "emails.certificate.footer": "Jūsų ankstesnis sertifikatas bus galiojantis 30 dienų nuo pirmojo nesėkmingo bandymo. Mes primygtinai rekomenduojame ištirti šią situaciją, kitaip jūsų domenas liks be galiojančio SSL ryšio.",
     "emails.certificate.thanks": "Ačiū",
-    "emails.certificate.signature": "{{project}} komanda"
+    "emails.certificate.signature": "{{project}} komanda",
+    "emails.magicSession.securityPhrase": "Šio el. laiško saugumo frazė yra {{phrase}}. Šiam el. laiškui galite pasitikėti, jei ši frazė atitinka prisijungimo metu rodytą frazę."
 }
