@@ -228,5 +228,15 @@
     "continents.eu": "Evropa",
     "continents.na": "Severna Amerika",
     "continents.oc": "Oceanija",
-    "continents.sa": "Južna Amerika"
+    "continents.sa": "Južna Amerika",
+    "emails.magicSession.optionButton": "Kliknite spodnji gumb, da se varno prijavite v svoj {{project}} račun. Poteče čez 1 uro.",
+    "emails.magicSession.buttonText": "Vpišite se v {{project}}",
+    "emails.magicSession.optionUrl": "Če zgornji gumb ne prikaže, uporabite naslednjo povezavo:",
+    "emails.magicSession.clientInfo": "Ta prijava je bila zahtevana z uporabo {{agentClient}} na {{agentDevice}} {{agentOs}}. Če te prijave niste zahtevali, lahko to e-pošto varno prezrete.",
+    "emails.certificate.subject": "Napaka potrdila za %s",
+    "emails.certificate.hello": "Živijo",
+    "emails.certificate.body": "Potrdilo za vaše domeno '{{domain}}' ni bilo mogoče ustvariti. To je poskus št. {{attempt}}, napako pa je povzročilo: {{error}}",
+    "emails.certificate.footer": "Vaše prejšnje potrdilo bo veljavno 30 dni od prve napake. Močno priporočamo, da to zadevo preučite, saj bo sicer vaše domeno brez veljavne SSL komunikacije.",
+    "emails.certificate.thanks": "Hvala",
+    "emails.certificate.signature": "{{project}} ekipa"
 }

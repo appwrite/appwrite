@@ -228,5 +228,15 @@
     "continents.eu": "यूरोप",
     "continents.na": "उत्तरी अमेरिका",
     "continents.oc": "ओशिनिया",
-    "continents.sa": "दक्षिण अमेरिका"
+    "continents.sa": "दक्षिण अमेरिका",
+    "emails.magicSession.optionButton": "नीचे दिए गए बटन पर क्लिक करके अपने {{project}} खाते में सुरक्षित रूप से साइन इन करें। यह 1 घंटे में समाप्त हो जाएगा।",
+    "emails.magicSession.buttonText": "{{project}} में साइन इन करें",
+    "emails.magicSession.optionUrl": "यदि ऊपर दिया गया बटन नहीं दिख रहा है, तो निम्नलिखित लिंक का उपयोग करें:",
+    "emails.magicSession.clientInfo": "यह साइन इन {{agentClient}} का उपयोग करके {{agentDevice}} {{agentOs}} पर किया गया था। यदि आपने साइन इन का अनुरोध नहीं किया है, तो आप इस ईमेल को सुरक्षित रूप से अनदेखा कर सकते हैं।",
+    "emails.certificate.subject": "%s के लिए प्रमाणपत्र विफलता",
+    "emails.certificate.hello": "नमस्ते",
+    "emails.certificate.body": "आपके डोमेन '{{domain}}' के लिए प्रमाणपत्र उत्पन्न नहीं किया जा सका। यह प्रयास संख्या {{attempt}} है, और असफलता का कारण था: {{error}}",
+    "emails.certificate.footer": "आपका पिछला प्रमाणपत्र पहली असफलता के बाद 30 दिनों के लिए मान्य होगा। हम इस मामले की जांच करने की दृढ़ता से सिफारिश करते हैं, अन्यथा आपका डोमेन वैध SSL संचार के बिना छूट जाएगा।",
+    "emails.certificate.thanks": "धन्यवाद",
+    "emails.certificate.signature": "{{project}} टीम"
 }

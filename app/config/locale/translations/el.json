@@ -25,7 +25,7 @@
     "emails.invitation.hello": "Γεια σου",
     "emails.invitation.body": "Αυτό το email στάλθηκε επειδή ο/η {{owner}} θέλει να σας προσκαλέσει να γίνετε μέλος της ομάδας {{team}} του {{project}}.",
     "emails.invitation.footer": "Εάν δεν ενδιαφέρεστε, μπορείτε να αγνοήσετε αυτό το μήνυμα.",
-    "emails.invitation.thanks":  "Ευχαριστούμε",
+    "emails.invitation.thanks": "Ευχαριστούμε",
     "emails.invitation.signature": "Η ομάδα του {{project}}",
     "locale.country.unknown": "Άγνωστο",
     "countries.af": "Αφγανιστάν",
@@ -228,5 +228,15 @@
     "continents.eu": "Ευρώπη",
     "continents.na": "Βόρεια Αμερική",
     "continents.oc": "Ωκεανία",
-    "continents.sa": "Νότια Αμερική"
+    "continents.sa": "Νότια Αμερική",
+    "emails.magicSession.optionButton": "Κάντε κλικ στο κουμπί παρακάτω για να συνδεθείτε με ασφάλεια στον λογαριασμό σας στο {{project}}. Θα λήξει σε 1 ώρα.",
+    "emails.magicSession.buttonText": "Συνδεθείτε στο {{project}}",
+    "emails.magicSession.optionUrl": "Εάν το παραπάνω κουμπί δεν εμφανίζεται, χρησιμοποιήστε τον ακόλουθο σύνδεσμο:",
+    "emails.magicSession.clientInfo": "Η σύνδεση αυτή ζητήθηκε χρησιμοποιώντας το {{agentClient}} στο {{agentDevice}} {{agentOs}}. Εάν δεν ζητήσατε τη σύνδεση, μπορείτε να αγνοήσετε με ασφάλεια αυτό το email.",
+    "emails.certificate.subject": "Αποτυχία πιστοποιητικού για το %s",
+    "emails.certificate.hello": "Γεια",
+    "emails.certificate.body": "Το πιστοποιητικό για τον τομέα σας '{{domain}}' δεν μπόρεσε να δημιουργηθεί. Αυτή είναι η προσπάθεια αρ. {{attempt}}, και η αποτυχία προκλήθηκε από: {{error}}",
+    "emails.certificate.footer": "Το προηγούμενο πιστοποιητικό σας θα είναι έγκυρο για 30 ημέρες από την πρώτη αποτυχία. Σας προτείνουμε ανεπιφύλακτα να ερευνήσετε αυτή την υπόθεση, διαφορετικά το domain σας θα καταλήξει χωρίς έγκυρη SSL επικοινωνία.",
+    "emails.certificate.thanks": "Ευχαριστώ",
+    "emails.certificate.signature": "ομάδα του {{project}}"
 }

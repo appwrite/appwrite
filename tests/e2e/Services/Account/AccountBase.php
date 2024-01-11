@@ -94,6 +94,36 @@ trait AccountBase
 
         $this->assertEquals($response['headers']['status-code'], 400);
 
+        $shortPassword = 'short';
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'shortpass@appwrite.io',
+            'password' => $shortPassword
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
+        $longPassword = '';
+        for ($i = 0; $i < 257; $i++) { // 256 is the limit
+            $longPassword .= 'p';
+        }
+
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'longpass@appwrite.io',
+            'password' => $longPassword,
+        ]);
+
+        $this->assertEquals($response['headers']['status-code'], 400);
+
         return [
             'id' => $id,
             'email' => $email,
@@ -1329,9 +1359,9 @@ trait AccountBase
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals('Login', $lastEmail['subject']);
+        $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
-        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 256);
+        $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
         $expireTime = strpos($lastEmail['text'], 'expire=' . urlencode($response['body']['expire']), 0);
 

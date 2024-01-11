@@ -23,14 +23,16 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
             ],
             'Mailgun' => [
                 'providerId' => ID::unique(),
                 'name' => 'Mailgun1',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender Name',
+                'fromEmail' => 'sender-email@my-domain.com',
                 'isEuRegion' => false,
             ],
             'Twilio' => [
@@ -71,7 +73,12 @@ class MessagingTest extends Scope
             'Fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
-                'serverKey' => 'my-serverkey',
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    "project_id" => "test-project",
+                    "private_key_id" => "test-private-key-id",
+                    "private_key" => "test-private-key",
+                ]
             ],
             'Apns' => [
                 'providerId' => ID::unique(),
@@ -97,6 +104,7 @@ class MessagingTest extends Scope
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
+
             \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
@@ -155,7 +163,12 @@ class MessagingTest extends Scope
             'Fcm' => [
                 'providerId' => $providers[7]['_id'],
                 'name' => 'FCM2',
-                'serverKey' => 'my-serverkey',
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    'project_id' => 'test-project',
+                    'private_key_id' => 'test-project-id',
+                    'private_key' => "test-private-key",
+                ]
             ],
             'Apns' => [
                 'providerId' => $providers[8]['_id'],
@@ -374,7 +387,8 @@ class MessagingTest extends Scope
                 'providerId' => ID::unique(),
                 'name' => 'Sengrid1',
                 'apiKey' => 'my-apikey',
-                'from' => 'sender-email@my-domain.com',
+                'fromName' => 'Sender',
+                'fromEmail' => 'sender-email@my-domain.com',
             ]
         ];
         $query = $this->getQuery(self::$CREATE_SENDGRID_PROVIDER);
@@ -543,7 +557,8 @@ class MessagingTest extends Scope
 
         $emailDSN = new DSN(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'));
         $to = $emailDSN->getParam('to');
-        $from = $emailDSN->getParam('from');
+        $fromName = $emailDSN->getParam('fromName');
+        $fromEmail = $emailDSN->getParam('fromEmail');
         $isEuRegion = $emailDSN->getParam('isEuRegion');
         $apiKey = $emailDSN->getPassword();
         $domain = $emailDSN->getUser();
@@ -560,7 +575,8 @@ class MessagingTest extends Scope
                 'name' => 'Mailgun1',
                 'apiKey' => $apiKey,
                 'domain' => $domain,
-                'from' => $from,
+                'fromName' => $fromName,
+                'fromEmail' => $fromEmail,
                 'isEuRegion' => filter_var($isEuRegion, FILTER_VALIDATE_BOOLEAN),
             ],
         ];
@@ -956,9 +972,9 @@ class MessagingTest extends Scope
 
         $pushDSN = new DSN(App::getEnv('_APP_MESSAGE_PUSH_TEST_DSN'));
         $to = $pushDSN->getParam('to');
-        $serverKey = $pushDSN->getPassword();
+        $serviceAccountJSON = $pushDSN->getParam('serviceAccountJSON');
 
-        if (empty($to) || empty($serverKey)) {
+        if (empty($to) || empty($serviceAccountJSON)) {
             $this->markTestSkipped('Push provider not configured');
         }
 
@@ -968,7 +984,12 @@ class MessagingTest extends Scope
             'variables' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
-                'serverKey' => $serverKey,
+                'serviceAccountJSON' => [
+                    'type' => 'service_account',
+                    "project_id" => "test-project",
+                    "private_key_id" => "test-private-key-id",
+                    "private_key" => "test-private-key",
+                ]
             ],
         ];
         $provider = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
