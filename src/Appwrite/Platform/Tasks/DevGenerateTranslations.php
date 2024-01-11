@@ -79,7 +79,7 @@ class DevGenerateTranslations extends Action
             'content-type' => Client::CONTENT_TYPE_APPLICATION_JSON,
             'Authorization' => 'Bearer ' . $this->apiKey
         ], Client::METHOD_POST, [
-            'model' => 'gpt-3.5-turbo-1106', // https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
+            'model' => 'gpt-4-1106-preview', // https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
             'messages' => [
                 [
                     'role' => 'system',
