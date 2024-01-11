@@ -149,7 +149,7 @@ class Messaging extends Action
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
-                    $provider = $dbForProject->getDocument('providers', $providerId, [Query::equal('enabled', [true])]);
+                    $provider = $dbForProject->getDocument('providers', $providerId);
 
                     if ($provider->isEmpty()) {
                         $provider = $primaryProvider;
