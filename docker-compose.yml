@@ -690,10 +690,10 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
-  appwrite-schedule:
-    entrypoint: schedule
+  appwrite-scheduler-functions:
+    entrypoint: schedule-functions
     <<: *x-logging
-    container_name: appwrite-schedule
+    container_name: appwrite-scheduler-functions
     image: appwrite-dev
     networks:
       - appwrite
@@ -717,10 +717,10 @@ services:
       - _APP_DB_USER
       - _APP_DB_PASS
 
-  appwrite-schedule-message:
-    entrypoint: schedule-message
+  appwrite-scheduler-messages:
+    entrypoint: schedule-messages
     <<: *x-logging
-    container_name: appwrite-schedule-message
+    container_name: appwrite-scheduler-messages
     image: appwrite-dev
     networks:
       - appwrite
