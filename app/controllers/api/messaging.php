@@ -2347,6 +2347,7 @@ App::post('/v1/messaging/messages/email')
             $schedule = $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
+                'resourceCollection' => 'messages',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -2446,6 +2447,7 @@ App::post('/v1/messaging/messages/sms')
             $schedule = $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
+                'resourceCollection' => 'messages',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -2557,6 +2559,7 @@ App::post('/v1/messaging/messages/push')
             $schedule = $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'),
                 'resourceType' => 'message',
+                'resourceCollection' => 'messages',
                 'resourceId' => $message->getId(),
                 'resourceInternalId' => $message->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -2824,6 +2827,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2942,6 +2946,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3100,6 +3105,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
