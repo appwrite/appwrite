@@ -228,5 +228,15 @@
     "continents.eu": "Europa",
     "continents.na": "América do Norte",
     "continents.oc": "Oceânia",
-    "continents.sa": "América do Sul"
+    "continents.sa": "América do Sul",
+    "emails.magicSession.optionButton": "Clique no botão abaixo para iniciar sessão na sua conta {{project}} de forma segura. Irá expirar em 1 hora.",
+    "emails.magicSession.buttonText": "Inicie sessão no {{project}}",
+    "emails.magicSession.optionUrl": "Se o botão acima não aparecer, utilize o seguinte link:",
+    "emails.magicSession.clientInfo": "Este início de sessão foi solicitado usando o {{agentClient}} no {{agentDevice}} {{agentOs}}. Se não foi você quem solicitou o início de sessão, pode ignorar este e-mail com segurança.",
+    "emails.certificate.subject": "Falha no certificado para %s",
+    "emails.certificate.hello": "Olá",
+    "emails.certificate.body": "Não foi possível gerar certificado para o seu domínio '{{domain}}'. Esta é a tentativa nº {{attempt}}, e a falha foi causada por: {{error}}",
+    "emails.certificate.footer": "O seu certificado anterior será válido por 30 dias desde a primeira falha. Recomendamos vivamente que investigue este caso, caso contrário, o seu domínio ficará sem uma comunicação SSL válida.",
+    "emails.certificate.thanks": "Obrigado",
+    "emails.certificate.signature": "equipa {{project}}"
 }

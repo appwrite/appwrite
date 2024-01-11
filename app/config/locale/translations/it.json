@@ -228,5 +228,15 @@
     "continents.eu": "Europa",
     "continents.na": "Nord America",
     "continents.oc": "Oceania",
-    "continents.sa": "Sud America"
+    "continents.sa": "Sud America",
+    "emails.magicSession.optionButton": "Fai clic sul pulsante qui sotto per accedere in modo sicuro al tuo account {{project}}. Scadrà tra 1 ora.",
+    "emails.magicSession.buttonText": "Accedi a {{project}}",
+    "emails.magicSession.optionUrl": "Se il pulsante sopra non appare, utilizza il seguente link:",
+    "emails.magicSession.clientInfo": "Questo accesso è stato richiesto utilizzando {{agentClient}} su {{agentDevice}} {{agentOs}}. Se non hai richiesto l'accesso, puoi tranquillamente ignorare questa email.",
+    "emails.certificate.subject": "Certificato non valido per %s",
+    "emails.certificate.hello": "Ciao",
+    "emails.certificate.body": "Il certificato per il tuo dominio '{{domain}}' non ha potuto essere generato. Questo è il tentativo n. {{attempt}}, e l'errore è stato causato da: {{error}}",
+    "emails.certificate.footer": "Il tuo certificato precedente sarà valido per 30 giorni dalla prima mancata riuscita. Consigliamo vivamente di indagare su questo caso, altrimenti il tuo dominio si troverà senza una valida comunicazione SSL.",
+    "emails.certificate.thanks": "Grazie",
+    "emails.certificate.signature": "team {{project}}"
 }

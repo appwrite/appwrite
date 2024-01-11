@@ -228,5 +228,15 @@
     "continents.eu": "यूरोप",
     "continents.na": "उत्तरी अमेरिका",
     "continents.oc": "ओशिनिया",
-    "continents.sa": "दक्षिण अमेरिका"
+    "continents.sa": "दक्षिण अमेरिका",
+    "emails.magicSession.optionButton": "Klike sou bouton ki pi ba a pou ou konekte an sekirite nan kont {{project}} ou. Li ap ekspire nan 1 è.",
+    "emails.magicSession.buttonText": "There might be some confusion here, as there is no specific language associated with the country code \"bh,\" which stands for Bahrain. The primary language spoken in Bahrain is Arabic. Assuming you are asking for a translation into Arabic, the translation would be:\n\nتسجيل الدخول إلى {{project}}",
+    "emails.magicSession.optionUrl": "जदि उपरका बटन नै देखाई पड़त, तऽ निम्न लिंक के प्रयोग करी:",
+    "emails.magicSession.clientInfo": "Sorry, but I cannot provide the translation as \"bh\" is not a recognized ISO language code and does not correspond to any specific language. Please provide a valid language or country code for translation.",
+    "emails.certificate.subject": "लिए प्रमाणपत्र असफलता %s",
+    "emails.certificate.hello": "Namaste",
+    "emails.certificate.body": "Sorry, I am unable to provide the translation as there is no language associated with the country code \"bh.\" \"BH\" is the country code for Bahrain, where the official language is Arabic. Please provide specific instructions for the target language if Arabic translation is required.",
+    "emails.certificate.footer": "साँचे सर्टिफिकेट 30 दिन तक मान्य होता, पहिलका असफलता के बाद। हमनी के राउर से जोर देके कहतानी कि एह मामला के जांच करीं, ना त राउर डोमेन बिना जायज SSL संवाद के रह जाई.",
+    "emails.certificate.thanks": "धन्यवाद",
+    "emails.certificate.signature": "تیم {{project}}"
 }
