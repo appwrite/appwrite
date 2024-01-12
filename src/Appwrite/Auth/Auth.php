@@ -74,7 +74,7 @@ class Auth
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
     public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
-    public const TOKEN_EXPIRATION_UNIVERSAL = 60 * 15;        /* 15 minutes */
+    public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
 
     /**
      * Token Lengths.
