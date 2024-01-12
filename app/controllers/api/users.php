@@ -1437,7 +1437,7 @@ App::post('/v1/users/:userId/sessions')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_SESSION)
-    ->param('userId', '', new UID(), 'User ID.')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
@@ -1472,7 +1472,6 @@ App::post('/v1/users/:userId/sessions')
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
-
 
             $user->setAttributes([
                 '$id' => $userId,
@@ -1558,7 +1557,7 @@ App::post('/v1/users/:userId/tokens')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
-    ->param('userId', '', new UID(), 'User ID.')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('length', 6, new Range(4, 128), 'Token length in chars.', true)
     ->param('expire', Auth::TOKEN_EXPIRATION_UNIVERSAL, new Range(1, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration in seconds from now.', true)
     ->inject('request')
