@@ -148,7 +148,7 @@
         </style>
     </head>
 
-    <body>
+    <body style="background-color: #ffffff; margin: 0; padding: 0;>
         <div class="main" style="max-width: 650px; margin: 0 auto">
             <table>
                 <tr>
