@@ -24,12 +24,15 @@ class DevGenerateTranslations extends Action
             ->desc('Generate translations in all languages')
             ->param('dry-run', 'true', new Boolean(true), 'If action should do a dry run. Dry run does not write into files', true)
             ->param('api-key', '', new Text(256), 'Open AI API key. Only used during non-dry runs to generate translations.', true)
-            ->callback(fn ($dryRun, $apiKey) => $this->action($dryRun, $apiKey));
+            ->param('language', '', new Text(256), 'Specific language to translate. If left empty, all languages will be done.', true)
+            ->param('all', 'false', new Boolean(true), 'If action should generate all keys in non-english translation files.', true)
+            ->callback(fn ($dryRun, $apiKey, $language, $all) => $this->action($dryRun, $apiKey, $language, $all));
     }
 
-    public function action(bool|string $dryRun, string $apiKey): void
+    public function action(mixed $dryRun, string $apiKey, string $language, mixed $all): void
     {
         $dryRun = \strval($dryRun) === 'true';
+        $all = \strval($all) === 'true';
 
         Console::info("Started");
 
@@ -49,6 +52,12 @@ class DevGenerateTranslations extends Action
         $files = array_diff(scandir($dir), array('.', '..', $mainFile));
 
         foreach ($files as $file) {
+            if(!empty($language)) {
+                if($file !== $language . '.json') {
+                    continue;
+                }
+            }
+
             $fileJson = \json_decode(\file_get_contents($dir . '/' . $file), true);
             $fileKeys = \array_keys($fileJson);
 
@@ -61,8 +70,12 @@ class DevGenerateTranslations extends Action
             $missingKeys = [];
 
             foreach ($mainKeys as $key) {
-                if (!(\in_array($key, $fileKeys))) {
+                if($all) {
                     $missingKeys[] = $key;
+                } else {
+                    if (!(\in_array($key, $fileKeys))) {
+                        $missingKeys[] = $key;
+                    }
                 }
             }
 
@@ -72,20 +85,30 @@ class DevGenerateTranslations extends Action
                     Console::warning("{$file} missing translation for: {$keys}");
                 } else {
                     $language = \explode('.', $file)[0];
-                    $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
 
                     foreach ($missingKeys as $missingKey) {
-                        $translation = $this->generateTranslation($language, $mainJson[$key]);
+                        $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
 
-                        // This puts new key at beginning to prevent merge conflict issue and ending comma
-                        $newPair = [];
-                        $newPair[$missingKey] = $translation;
-                        $json = \array_merge($newPair, $json);
+                        $translation = $this->generateTranslationHuggingFace($language, $mainJson[$missingKey]);
+
+                        if($all) {
+                            $json[$missingKey] = $translation;
+                        } else {
+                            // This puts new key at beginning to prevent merge conflict issue and ending comma
+                            $newPair = [];
+                            $newPair[$missingKey] = $translation;
+
+                            if(isset($json[$missingKey])) {
+                                unset($json[$missingKey]);
+                            }
+
+                            $json = \array_merge($newPair, $json);   
+                        }
+
+                        \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
+
+                        Console::success("Generated {$missingKey} for {$language}");
                     }
-
-                    \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
-
-                    Console::success("Generated {$key} for {$language}");
                 }
             }
         }
@@ -93,7 +116,45 @@ class DevGenerateTranslations extends Action
         Console::info("Done");
     }
 
-    private function generateTranslation(string $targetLanguage, string $enTranslation): string
+    private function generateTranslationHuggingFace(string $targetLanguage, string $enTranslation): string
+    {
+        $placeholders = [];
+
+        $id = 0;
+        $pattern = '/{{\w+}}/';
+
+        $enTranslation = preg_replace_callback($pattern, function ($match) use (&$id, &$placeholders) {
+            $placeholders[$id] = $match[0];
+            $key = "<m id={$id} />";
+            $id++;
+            return $key;
+        }, $enTranslation);
+
+        $response = Client::fetch('https://eqiq6qexj1g813kr.us-east-1.aws.endpoints.huggingface.cloud', [
+            'content-type' => Client::CONTENT_TYPE_APPLICATION_JSON,
+            'Authorization' => 'Bearer ' . $this->apiKey
+        ], Client::METHOD_POST, [
+            'inputs' => '<2' . $targetLanguage . '> ' . $enTranslation,
+        ], [], 60);
+
+        $body = \json_decode($response->getBody(), true);
+
+        if ($response->getStatusCode() >= 400) {
+            throw new Exception($response->getBody() . ' with status code ' . $response->getStatusCode() . ' for language ' . $targetLanguage . ' and message ' . $enTranslation);
+        }
+
+        $targetTranslation = $body[0]['generated_text'];
+
+        $id = 0;
+        foreach ($placeholders as $placeholder) {
+            $targetTranslation = \str_replace("<m id={$id} />", $placeholder, $targetTranslation);
+            $id++;
+        }
+
+        return $targetTranslation;
+    }
+
+    private function generateTranslationDeepL(string $targetLanguage, string $enTranslation): string
     {
         $placeholders = [];
 
