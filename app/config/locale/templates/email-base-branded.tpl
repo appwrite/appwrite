@@ -11,6 +11,7 @@
                 color: #616b7c;
                 font-size: 15px;
                 font-family: "Inter", sans-serif;
+                line-height: 1.5;
             }
 
             table {
@@ -32,6 +33,7 @@
 
             .main a {
                 color: currentColor;
+                word-break: break-all;
             }
 
             h1,
@@ -62,7 +64,7 @@
                 max-width: 650px;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
-                word-break: break-all;
+                word-break: break-word;
                 margin: 0 auto;
             "
         >

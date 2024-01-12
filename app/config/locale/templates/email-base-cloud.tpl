@@ -226,7 +226,7 @@
                 </tr>
             </table>
             <p style="text-align: center" align="center">
-                &copy; 2023 Appwrite | 251 Little Falls Drive, Wilmington 19808,
+                &copy; {{year}} Appwrite | 251 Little Falls Drive, Wilmington 19808,
                 Delaware, United States
             </p>
         </div>
