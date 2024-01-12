@@ -1283,7 +1283,6 @@ trait AccountBase
             'userId' => $id,
             'secret' => $recovery,
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1299,7 +1298,6 @@ trait AccountBase
             'userId' => ID::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1312,23 +1310,9 @@ trait AccountBase
             'userId' => $id,
             'secret' => 'sdasdasdasd',
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $id,
-            'secret' => $recovery,
-            'password' => $newPassowrd . 'x',
-            'passwordAgain' => $newPassowrd,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
