@@ -3346,9 +3346,9 @@ App::post('/v1/account/mfa/:provider')
 
         $backups = Provider::generateBackupCodes();
 
-        if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
-        }
+    if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
+    }
 
         $user
             ->setAttribute('totp', true)
@@ -3402,15 +3402,15 @@ App::put('/v1/account/mfa/:provider')
             default => false
         };
 
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
 
-        if (!$user->getAttribute('totp')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-        } elseif ($user->getAttribute('totpVerification')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
-        }
+    if (!$user->getAttribute('totp')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+    } elseif ($user->getAttribute('totpVerification')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+    }
 
         $user->setAttribute('totpVerification', true);
 
@@ -3458,13 +3458,13 @@ App::delete('/v1/account/mfa/:provider')
             default => false
         };
 
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
 
-        if (!$user->getAttribute('totp')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-        }
+    if (!$user->getAttribute('totp')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+    }
 
         $user
             ->setAttribute('totp', false)
@@ -3614,9 +3614,9 @@ App::put('/v1/account/mfa/challenge')
             default => false
         };
 
-        if (!$success) {
-            throw new Exception(Exception::USER_INVALID_TOKEN);
-        }
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->deleteCachedDocument('users', $user->getId());
