@@ -58,20 +58,34 @@ class DevGenerateTranslations extends Action
             // \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
             // continue;
 
+            $missingKeys = [];
+
             foreach ($mainKeys as $key) {
                 if (!(\in_array($key, $fileKeys))) {
-                    if ($dryRun) {
-                        Console::warning("{$file} missing translation for {$key}");
-                    } else {
-                        $language = \explode('.', $file)[0];
+                    $missingKeys[] = $key;
+                }
+            }
+
+            if (\count($missingKeys) > 0) {
+                if ($dryRun) {
+                    $keys = \implode(', ', $missingKeys);
+                    Console::warning("{$file} missing translation for: {$keys}");
+                } else {
+                    $language = \explode('.', $file)[0];
+                    $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
+
+                    foreach ($missingKeys as $missingKey) {
                         $translation = $this->generateTranslation($language, $mainJson[$key]);
 
-                        $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
-                        $json[$key] = $translation;
-                        \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
-
-                        Console::success("Generated {$key} for {$language}");
+                        // This puts new key at beginning to prevent merge conflict issue and ending comma
+                        $newPair = [];
+                        $newPair[$missingKey] = $translation;
+                        $json = \array_merge($newPair, $json);
                     }
+
+                    \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
+
+                    Console::success("Generated {$key} for {$language}");
                 }
             }
         }
@@ -81,21 +95,24 @@ class DevGenerateTranslations extends Action
 
     private function generateTranslation(string $targetLanguage, string $enTranslation): string
     {
-        $response = Client::fetch('https://api.openai.com/v1/chat/completions', [
+        $placeholders = [];
+
+        $id = 0;
+        $pattern = '/{{\w+}}/';
+
+        $enTranslation = preg_replace_callback($pattern, function ($match) use (&$id, &$placeholders) {
+            $placeholders[$id] = $match[0];
+            $key = "<m id={$id} />";
+            $id++;
+            return $key;
+        }, $enTranslation);
+
+        $response = Client::fetch('https://api-free.deepl.com/v2/translate', [
             'content-type' => Client::CONTENT_TYPE_APPLICATION_JSON,
-            'Authorization' => 'Bearer ' . $this->apiKey
+            'Authorization' => 'DeepL-Auth-Key ' . $this->apiKey
         ], Client::METHOD_POST, [
-            'model' => 'gpt-4-1106-preview', // https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => "Please translate the message user provides from English language to target language. Target language is language of country with country code {$targetLanguage}. Do not translate text inside {{ and }} placeholders. Provide only translated text."
-                ],
-                [
-                    'role' => 'user',
-                    'content' => $enTranslation
-                ]
-            ]
+            'target_lang' => $targetLanguage,
+            'text' => [$enTranslation]
         ], [], 60);
 
         $body = \json_decode($response->getBody(), true);
@@ -104,6 +121,14 @@ class DevGenerateTranslations extends Action
             throw new Exception($response->getBody() . ' with status code ' . $response->getStatusCode() . ' for language ' . $targetLanguage . ' and message ' . $enTranslation);
         }
 
-        return $body['choices'][0]['message']['content'];
+        $targetTranslation = $body['translations'][0]['text'];
+
+        $id = 0;
+        foreach ($placeholders as $placeholder) {
+            $targetTranslation = \str_replace("<m id={$id} />", $placeholder, $targetTranslation);
+            $id++;
+        }
+
+        return $targetTranslation;
     }
 }
