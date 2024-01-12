@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Ditt tidigare certifikat kommer att vara giltigt i 30 dagar från det första felet. Vi rekommenderar starkt att du undersöker detta fall, annars kommer din domän att sluta utan en giltig SSL-kommunikation.",
     "emails.certificate.thanks": "Tack",
     "emails.certificate.signature": "equipo {{project}}",
+    "sms.verification.body": "{{secret}} är din {{project}} verifieringskod.",
     "emails.magicSession.securityPhrase": "Frasen för säkerhet i detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med den fras som visas vid inloggning.",
     "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón de arriba, por favor visita el siguiente enlace:"
 }

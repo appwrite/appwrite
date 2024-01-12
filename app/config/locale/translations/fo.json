@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Títt fyrra prógv verður gildaði í 30 dagar frá fyrstu miseydnaðu royndini. Vit mæla staðiliga til at kanna hesa støðuna, annars endar tín domæni uttan gildað SSL samskifti.",
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} bólkur",
+    "sms.verification.body": "{{secret}} er tín {{project}} váttanarkodi.",
     "emails.magicSession.securityPhrase": "Trygdarorðið fyri hesa teldupostadressuna er {{phrase}}. Tú kanst líta á hesa teldupostadressu, um hetta orðið samsvarar við orðið víst tá tú ritaði inn.",
     "emails.magicSession.optionUrl": "Um tú ikki fært innritað við at brúka knøttin omanfyri, vinarliga vitja hesa leinkjuna:"
 }

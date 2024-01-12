@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Dit tidligere certifikat vil være gyldigt i 30 dage fra den første fejl. Vi anbefaler kraftigt at undersøge denne sag, ellers vil dit domæne ende uden en gyldig SSL-kommunikation.",
     "emails.certificate.thanks": "Tak",
     "emails.certificate.signature": "{{project}} hold",
+    "sms.verification.body": "{{secret}} er din {{project}} bekræftelseskode.",
     "emails.magicSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher den viste frase under log ind.",
     "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:"
 }

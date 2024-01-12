@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Certifikata juaj e mëparshme do të jetë e vlefshme për 30 ditë që nga dështimi i parë. Ju rekomandojmë fuqishëm të hetoni këtë rast, përndryshe domeni juaj do të mbetet pa një komunikim të vlefshëm SSL.",
     "emails.certificate.thanks": "Faleminderit",
     "emails.certificate.signature": "ekipi i {{project}}",
+    "sms.verification.body": "{{secret}} është kodi juaj i verifikimit për {{project}}.",
     "emails.magicSession.securityPhrase": "Fjalia e sigurisë për këtë email është {{phrase}}. Mund të besoni këtë email nëse kjo fjali përputhet me fjalën e shfaqur gjatë hyrjes në sistem.",
     "emails.magicSession.optionUrl": "Nëse nuk mund të hyni duke përdorur butonin më sipër, ju lutem vizitoni lidhjen e mëposhtme:"
 }

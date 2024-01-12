@@ -238,6 +238,7 @@
     "emails.certificate.footer": "سابقه سند توهان جي پهلي ناكامي کان 30 ڏينهن لاءِ موزون آهي. اسان توهان کي پوري قائلي سان گهڻي سفارش ڪنداسين ته هن ڪيس کي تحقيق ڪريو، نه ته توهان جو ڊومين بغير موزون SSL مواصلتي جي حالت ۾ ختم ٿي ويندو.",
     "emails.certificate.thanks": "شكرا",
     "emails.certificate.signature": "I believe there has been a misunderstanding. The country code \"sd\" refers to Sudan, and the official languages of Sudan are Arabic and English. If you are requesting a translation into Arabic, the phrase \"project team\" would be \"فريق المشروع\". If you need a translation into a different language, please provide the correct language or country code.",
+    "sms.verification.body": "وڊو is your {{project}} جي تصديق ڪوڊ.",
     "emails.magicSession.securityPhrase": "محفوظ جملو آهي هن اي ميل لاءِ {{phrase}}. توهان هن اي ميل تي اعتماد ڪري سگهو ٿا جيڪڏهن اهو جملو توهان کي سائن ان ڪرڻ وقت داخل ٿيل جملي سان ملي ويسي.",
     "emails.magicSession.optionUrl": "You have provided \"sd\" as the country code; however, \"sd\" is not a valid ISO 3166-1 alpha-2 country code. If you meant \"sd\" to refer to the Sindhi language code, the translation would be:\n\n\"جيڪڏھن توھان مٿي واريل بٽڪَ جي مدد سان سائن ان ڪرڻ ۾ ناڪام آھيو، ته مھرباني ڪري هيٺيان ديئل لنڪ جو ڏورو قدم چونڊو:\""
 }

@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Uw vorige certificaat zal 30 dagen geldig zijn vanaf de eerste fout. We raden u ten zeerste aan dit geval te onderzoeken, anders zal uw domein eindigen zonder een geldige SSL-communicatie.",
     "emails.certificate.thanks": "Dank je",
     "emails.certificate.signature": "{{project}} team",
+    "sms.verification.body": "{{secret}} is uw {{project}} verificatiecode.",
     "emails.magicSession.securityPhrase": "De beveiligingszin voor deze e-mail is {{phrase}}. U kunt deze e-mail vertrouwen als deze zin overeenkomt met de zin die getoond werd tijdens het aanmelden.",
     "emails.magicSession.optionUrl": "Als u zich niet kunt aanmelden via de bovenstaande knop, bezoekt u dan de volgende link:"
 }

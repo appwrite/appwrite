@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Fyrri vottorðið þitt verður gilt í 30 daga frá fyrstu mistökum. Við mælum eindregið með því að rannsaka þetta tilvik, ella mun lén þitt enda án gildrar SSL-samskipta.",
     "emails.certificate.thanks": "Takk",
     "emails.certificate.signature": "{{project}} liðið",
+    "sms.verification.body": "{{secret}} er staðfestingarkóði {{project}} þíns.",
     "emails.magicSession.securityPhrase": "Öryggisfrasi fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þessi frasi passar við frasann sem birtist við innskráningu.",
     "emails.magicSession.optionUrl": "Ef þú getur ekki skráð þig inn með hnappnum hér að ofan, vinsamlegast heimsækðu eftirfarandi tengil:"
 }

@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Sertifikat sadurunge bakal tetep sah sajrone 30 dina wiwit kagagalan pisanan. Kita menehi saran sing kuat supaya panjenengan nyelidiki kasus iki, manawa-mawa domain panjenengan bakal pungkasan tanpa komunikasi SSL sing sah.",
     "emails.certificate.thanks": "Matur nuwun",
     "emails.certificate.signature": "tim {{project}}",
+    "sms.verification.body": "{{secret}} iku kode verifikasi {{project}} panjenengan.",
     "emails.magicSession.securityPhrase": "Frasa keamanan kanggo email iki yaiku {{phrase}}. Sampeyan bisa percaya marang email iki yen frasa iki cocog karo frasa sing ditampilake nalika mlebu.",
     "emails.magicSession.optionUrl": "Yen sampeyan ora bisa mlebu nganggo tombol ing ndhuwur, monggo ngunjungi pranala ing ngisor iki:"
 }

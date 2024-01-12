@@ -238,6 +238,7 @@
     "emails.certificate.footer": "以前の証明書は最初の失敗から30日間有効です。この問題を調査することを強く推奨します。さもなければ、ドメインは有効なSSL通信なしで終わってしまいます。",
     "emails.certificate.thanks": "ありがとう",
     "emails.certificate.signature": "{{project}} チーム",
+    "sms.verification.body": "{{secret}} はあなたの {{project}} 認証コードです。",
     "emails.magicSession.securityPhrase": "このメールのセキュリティフレーズは{{phrase}}です。サインイン時に表示されたフレーズと一致する場合、このメールは信頼できます。",
     "emails.magicSession.optionUrl": "上記のボタンを使用してサインインすることができない場合は、次のリンクにアクセスしてください："
 }

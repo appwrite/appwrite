@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Az előző tanúsítvány 30 napig lesz érvényes az első hiba óta. Nagyon ajánljuk, hogy vizsgálja meg ezt az esetet, különben a domainje érvényes SSL kommunikáció nélkül marad.",
     "emails.certificate.thanks": "Köszönöm",
     "emails.certificate.signature": "{{project}} csapat",
+    "sms.verification.body": "{{secret}} a(z) {{project}} megerősítő kódja.",
     "emails.magicSession.securityPhrase": "Az e-mailhez tartozó biztonsági kifejezés: {{phrase}}. Megbízhat ebben az e-mailben, ha ez a kifejezés megegyezik a bejelentkezéskor megjelenített kifejezéssel.",
     "emails.magicSession.optionUrl": "Amennyiben az előző gomb használatával nem tud bejelentkezni, kérjük látogassa meg a következő linket:"
 }

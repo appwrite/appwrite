@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Votre certificat précédent sera valable pendant 30 jours après le premier échec. Nous vous recommandons vivement d'enquêter sur ce cas, sinon votre domaine se retrouvera sans communication SSL valide.",
     "emails.certificate.thanks": "Merci",
     "emails.certificate.signature": "équipe {{project}}",
+    "sms.verification.body": "{{secret}} mooy sa koodu vérificationu {{project}} bi.",
     "emails.magicSession.securityPhrase": "La phrase de sécurité pour ce courriel est {{phrase}}. Vous pouvez faire confiance à ce courriel si cette phrase correspond à la phrase affichée lors de la connexion.",
     "emails.magicSession.optionUrl": "Si vous ne pouvez pas vous connecter en utilisant le bouton ci-dessus, veuillez visiter le lien suivant :"
 }

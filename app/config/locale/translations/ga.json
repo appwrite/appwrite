@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Beidh do theastas roimhe seo bailí ar feadh 30 lá ón gcéad theip. Molaimid go mór cás seo a fhiosrú, murach sin rachaidh do réimse gan cumarsáid SSL bailí.",
     "emails.certificate.thanks": "Go raibh maith agat",
     "emails.certificate.signature": "foireann {{project}}",
+    "sms.verification.body": "Is é {{secret}} do chód fíoraithe {{project}}.",
     "emails.magicSession.securityPhrase": "Is é an abairt slándála don ríomhphost seo ná {{phrase}}. Is féidir muinín a bheith agat as an ríomhphost seo má mheaitseálann an abairt seo leis an abairt a taispeántar le linn sínithe isteach.",
     "emails.magicSession.optionUrl": "Mura bhfuil tú in ann síniú isteach ag baint úsáid as an gcnaipe thuas, téigh chuig an nasc seo a leanas:"
 }

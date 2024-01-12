@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Chứng chỉ trước đây của bạn sẽ còn hiệu lực trong 30 ngày kể từ lần thất bại đầu tiên. Chúng tôi rất khuyến nghị bạn điều tra vụ việc này, nếu không miền của bạn sẽ kết thúc mà không có một sự giao tiếp SSL hợp lệ.",
     "emails.certificate.thanks": "Cảm ơn",
     "emails.certificate.signature": "đội {{project}}",
+    "sms.verification.body": "{{secret}} là mã xác minh {{project}} của bạn.",
     "emails.magicSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin tưởng email này nếu cụm từ này khớp với cụm từ hiển thị khi đăng nhập.",
     "emails.magicSession.optionUrl": "Nếu bạn không thể đăng nhập bằng cách sử dụng nút ở trên, vui lòng truy cập liên kết sau:"
 }

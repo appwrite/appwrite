@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Vaš prethodni certifikat će biti važeći 30 dana od prvog neuspeha. Visoko preporučujemo istraživanje ovog slučaja, inače će vaš domen ostati bez važeće SSL komunikacije.",
     "emails.certificate.thanks": "\n\nTack",
     "emails.certificate.signature": "{{project}} команда",
+    "sms.verification.body": "{{secret}} est votre code de vérification pour {{project}}.",
     "emails.magicSession.securityPhrase": "Frase de segurança para este e-mail é {{phrase}}. Você pode confiar neste e-mail se essa frase coincidir com a frase mostrada durante o acesso.",
     "emails.magicSession.optionUrl": "אם אתם לא מצליחים להיכנס באמצעות הכפתור שמעל, אנא בקרו בקישור הבא:"
 }

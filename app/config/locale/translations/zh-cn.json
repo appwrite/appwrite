@@ -238,6 +238,7 @@
     "emails.certificate.footer": "您之前的证书自首次失败之日起将有效期30天。我们强烈建议调查此案件，否则您的域名将没有有效的SSL通信。",
     "emails.certificate.thanks": "谢谢",
     "emails.certificate.signature": "{{project}} 团队",
+    "sms.verification.body": "{{secret}} 是您的 {{project}} 验证码。",
     "emails.magicSession.securityPhrase": "此电子邮件的安全短语是{{phrase}}。如果此短语与登录时显示的短语相匹配，则您可以信任此电子邮件。",
     "emails.magicSession.optionUrl": "如果您无法使用上面的按钮登录，请访问以下链接："
 }

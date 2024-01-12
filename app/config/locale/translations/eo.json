@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Via antaŭa atestilo estos valida dum 30 tagoj ekde la unua malsukceso. Ni tre rekomendas esplori ĉi tiun kazon, alie via domajno finiĝos sen valida SSL-komunikado.",
     "emails.certificate.thanks": "Dankon",
     "emails.certificate.signature": "teamo de {{project}}",
+    "sms.verification.body": "{{secret}} estas via {{project}} kontrolo-kodo.",
     "emails.magicSession.securityPhrase": "La sekureca frazo por ĉi tiu retpoŝto estas {{phrase}}. Vi povas fidi ĉi tiun retpoŝton se ĉi tiu frazo kongruas kun la frazo montrita dum ensaluto.",
     "emails.magicSession.optionUrl": "Se vi ne povas ensaluti per la supra butono, bonvolu viziti la jenan ligilon:"
 }

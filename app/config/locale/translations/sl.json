@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Vaše prejšnje potrdilo bo veljavno 30 dni od prve napake. Močno priporočamo, da to zadevo preučite, saj bo sicer vaše domeno brez veljavne SSL komunikacije.",
     "emails.certificate.thanks": "Hvala",
     "emails.certificate.signature": "{{project}} ekipa",
+    "sms.verification.body": "{{secret}} je vaša koda za preverjanje {{project}}.",
     "emails.magicSession.securityPhrase": "Varnostni stavek za to e-pošto je {{phrase}}. Temu e-poštu lahko zaupate, če se ta stavek ujema s stavkom, prikazanim ob prijavi.",
     "emails.magicSession.optionUrl": "Če se ne morete prijaviti s pomočjo zgornjega gumba, prosimo obiščite naslednjo povezavo:"
 }
