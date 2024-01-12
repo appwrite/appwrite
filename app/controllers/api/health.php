@@ -14,6 +14,7 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
 
@@ -387,6 +388,24 @@ App::get('/v1/health/queue/logs')
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
     }, ['response']);
+
+App::get('/v1/health/certificate')
+    ->desc('Get status of certificate for a domain to check whether it is still valid or expired.')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getCertificate')
+    ->label('sdk.description', '/docs/references/health/get-certificate.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->param('domain', null, new Domain(), 'Domain name')
+    ->inject('response')
+    ->action(function (string $domain, Response $response) {
+        
+    });
+
 
 App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
