@@ -777,7 +777,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-        
+
         // If the `token` param is set, we will return the token in the query string
         if ($state['token']) {
             $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_OAUTH2);

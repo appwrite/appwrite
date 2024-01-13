@@ -155,10 +155,10 @@ class OpenAPI3 extends Format
             if (empty($routeSecurity)) {
                 if (!$route->getLabel('sdk.hideServer', false)) {
                     $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                } 
+                }
                 if (!$route->getLabel('sdk.hideClient', false)) {
                     $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                } 
+                }
             }
 
             $temp = [
