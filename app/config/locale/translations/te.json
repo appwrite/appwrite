@@ -231,12 +231,14 @@
     "continents.sa": "దక్షిణ అమెరికా",
     "emails.magicSession.optionButton": "కింది బటన్ ను నొక్కి భద్రతగా మీ {{project}} ఖాతాలో సైన్ ఇన్ చేయండి. ఇది 1 గంటలో గడువు తీరుతుంది.",
     "emails.magicSession.buttonText": "{{project}}లో సైన్ ఇన్ చేయండి",
-    "emails.magicSession.optionUrl": "పైన ఉన్న బటన్ కనిపించకపోతే, కింది లింక్‌‌ని వాడండి:",
     "emails.magicSession.clientInfo": "ఈ సైన్ ఇన్ అభ్యర్థనను {{agentClient}} ఉపయోగించి {{agentDevice}} {{agentOs}} పై అభ్యర్థించారు. మీరు ఈ సైన్ ఇన్ అభ్యర్థనను చేయలేదనుకుంటే, ఈ ఈమెయిల్‌ను సురక్షితంగా పట్టించుకోకుండా ఉండవచ్చు.",
     "emails.certificate.subject": "%s కోసం సర్టిఫికేట్ విఫలం",
     "emails.certificate.hello": "హలో",
     "emails.certificate.body": "మీ డొమైన్ '{{domain}}' కోసం సర్టిఫికెట్ జారీ చేయలేకపోయాము. ఇది {{attempt}} ప్రయత్నం, మరియు విఫలం కారణం ఇది: {{error}}",
     "emails.certificate.footer": "మీ మునుపటి సర్టిఫికెట్‌ మొదటి వైఫల్యం నుండి 30 రోజుల వరకు చెల్లుబాటు అవుతుంది. ఈ కేసును పరిశోధించడం మాకు ఎంతో ముఖ్యంగా సిఫార్సు ఉంది, లేకపోతే మీ డొమేన్ చెల్లుబాటు అయిన SSL కమ్యూనికేషన్ లేకుండా మిగిలిపోతుంది.",
     "emails.certificate.thanks": "ధన్యవాదాలు",
-    "emails.certificate.signature": "{{project}} జట్టు"
+    "emails.certificate.signature": "{{project}} జట్టు",
+    "sms.verification.body": "{{secret}} మీ {{project}} ధృవీకరణ కోడ్.",
+    "emails.magicSession.securityPhrase": "ఈ ఇమెయిల్ కోసం భద్రతా పదబంధం {{phrase}}. మీరు సైన్ ఇన్ సమయంలో చూపబడిన పదబంధంతో ఈ పదబంధం సరిపోలుతుంది అయితే ఈ ఇమెయిల్ నమ్మవచ్చు.",
+    "emails.magicSession.optionUrl": "పైన ఉన్న బటన్‌ను ఉపయోగించి సైన్ ఇన్ చేయలేకపోతే, దయచేసి క్రింది లింక్‌ను సందర్శించండి:"
 }

@@ -231,12 +231,14 @@
     "continents.sa": "દક્ષિણ અમેરિકા",
     "emails.magicSession.optionButton": "નીચે આપેલ બટન પર ક્લિક કરો તમારા {{project}} ખાતામાં સુરક્ષિત રીતે સાઇન ઈન કરવા માટે. તે 1 કલાકમાં સમાપ્ત થઈ જશે.",
     "emails.magicSession.buttonText": "સાઇન ઇન કરો {{project}}",
-    "emails.magicSession.optionUrl": "જો ઉપરનું બટન દેખાતું નથી, તો નીચેની લિંકનો ઉપયોગ કરો:",
     "emails.magicSession.clientInfo": "આ સાઇન ઇન વિનંતી {{agentClient}} નો ઉપયોગ કરીને {{agentDevice}} {{agentOs}} પર કરવામાં આવી હતી. જો તમે સાઇન ઇનની વિનંતી કરી ન હોય, તો આ ઇમેઇલને સલામત રીતે અવગણી શકો છો.",
     "emails.certificate.subject": "પ્રમાણપત્ર નિષ્ફળતા %s માટે",
     "emails.certificate.hello": "હેલો",
     "emails.certificate.body": "તમારા ડોમેન '{{domain}}' માટેનું પ્રમાણપત્ર બનાવી શકાયું નથી. આ પ્રયાસ નંબર {{attempt}} છે, અને ભૂલ આવા કારણે થયું છે: {{error}}",
     "emails.certificate.footer": "તમારું અગાઉનું પ્રમાણપત્ર પ્રથમ નિષ્ફળતા થી ૩૦ દિવસ સુધી માન્ય રહેશે. અમે આ કેસની તપાસ કરવાની દૃઢપણે ભલામણ કરીએ છીએ, નહીં તો તમારું ડોમેન માન્ય SSL સંવાદ વિનાનું રહી જશે.",
     "emails.certificate.thanks": "Dhanyavad",
-    "emails.certificate.signature": "પ્રોજેક્ટ ટીમ"
+    "emails.certificate.signature": "પ્રોજેક્ટ ટીમ",
+    "sms.verification.body": "{{secret}} તમારા {{project}} ચકાસણી કોડ છે.",
+    "emails.magicSession.securityPhrase": "આ ઇમેઇલ માટેનું સુરક્ષા વાક્ય {{phrase}} છે. જો આ વાક્ય સાઇન ઇન દરમિયાન દર્શાવેલા વાક્ય સાથે મેળ ખાય તો તમે આ ઇમેઇલ પર વિશ્વાસ કરી શકો છો.",
+    "emails.magicSession.optionUrl": "જો તમે ઉપરની બટનનો ઉપયોગ કરીને સાઇન ઇન કરી શકતા નથી, કૃપા કરીને નીચેની લિંક પર જાઓ:"
 }

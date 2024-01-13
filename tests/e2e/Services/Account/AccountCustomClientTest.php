@@ -1158,7 +1158,6 @@ class AccountCustomClientTest extends Scope
             'userId' => $id,
             'secret' => $recovery,
             'password' => $newPassword,
-            'passwordAgain' => $newPassword,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1174,7 +1173,6 @@ class AccountCustomClientTest extends Scope
             'userId' => ID::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassword,
-            'passwordAgain' => $newPassword,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1187,23 +1185,9 @@ class AccountCustomClientTest extends Scope
             'userId' => $id,
             'secret' => 'sdasdasdasd',
             'password' => $newPassword,
-            'passwordAgain' => $newPassword,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $id,
-            'secret' => $recovery,
-            'password' => $newPassword . 'x',
-            'passwordAgain' => $newPassword,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1991,7 +1975,7 @@ class AccountCustomClientTest extends Scope
     public function testCreateSessionWithPhone(array $data): array
     {
         $id = $data['id'] ?? '';
-        $token = $data['token'] ?? '';
+        $token = explode(" ", $data['token'])[0] ?? '';
         $number = $data['number'] ?? '';
 
         /**
@@ -2341,6 +2325,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['securityPhrase']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
@@ -2348,6 +2333,7 @@ class AccountCustomClientTest extends Scope
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
@@ -2399,6 +2385,23 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'securityPhrase' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['securityPhrase']);
+
+        $lastEmail = $this->getLastEmail();
+        $this->assertStringContainsStringIgnoringCase($response['body']['securityPhrase'], $lastEmail['text']);
 
         $data['token'] = $token;
         $data['id'] = $userId;
