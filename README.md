@@ -1,3 +1,5 @@
+[![RepoRater](https://repo-rater.eddiehub.io/api/badge?owner=appwrite&name=appwrite)](https://repo-rater.eddiehub.io/rate?owner=appwrite&name=appwrite)
+
 > Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
 
 <br />
@@ -9,7 +11,6 @@
     <br />
     <br />
 </p>
-
 
 <!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
