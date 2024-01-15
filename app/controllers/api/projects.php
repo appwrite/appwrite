@@ -1639,46 +1639,50 @@ App::post('/v1/projects/:projectId/smtp/tests')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
     ->label('sdk.method', 'createSmtpTest')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('email', false, new Email(), 'Email')
+    ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
+    ->param('senderName', App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
+    ->param('senderEmail', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name')
+    ->param('port', 587, new Integer(), 'SMTP server port', true)
+    ->param('username', '', new Text(0, 0), 'SMTP server username', true)
+    ->param('password', '', new Text(0, 0), 'SMTP server password', true)
+    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->inject('queueForMails')
-    ->action(function (string $projectId, string $email, Response $response, Database $dbForConsole, Mail $queueForMails) {
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole, Mail $queueForMails) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $smtp = $project->getAttribute('smtp', []);
-        $smtpEnabled = $smtp['enabled'] ?? false;
+        $subject = 'Custom SMTP email from Appwrite';
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-test.tpl');
+        $body = $message->render();
 
-        if (!$smtpEnabled) {
-            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+        foreach($emails as $email)
+        {
+            $queueForMails
+                ->setSmtpHost($host)
+                ->setSmtpPort($port)
+                ->setSmtpUsername($username)
+                ->setSmtpPassword($password)
+                ->setSmtpSecure($secure)
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName)
+                ->setRecipient($email)
+                ->setName('')
+                ->setBody($body)
+                ->setVariables([])
+                ->setSubject($subject)
+                ->trigger();
         }
-
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
-
-        $subject = 'SMTP test email from Appwrite';
-        $body = 'You\'re good to go. If you see this email all your SMTP settings are set correctly.';
-
-        $queueForMails
-            ->setSmtpHost($smtp['host'] ?? '')
-            ->setSmtpPort($smtp['port'] ?? '')
-            ->setSmtpUsername($smtp['username'] ?? '')
-            ->setSmtpPassword($smtp['password'] ?? '')
-            ->setSmtpSecure($smtp['secure'] ?? '')
-            ->setSmtpSenderEmail($senderEmail)
-            ->setSmtpSenderName($senderName)
-            ->setSubject($subject)
-            ->setBody($body)
-            ->setRecipient($email)
-            ->trigger();
 
         return $response->noContent();
     });

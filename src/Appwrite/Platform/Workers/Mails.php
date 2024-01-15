@@ -88,7 +88,25 @@ class Mails extends Action
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
-        $mail->AltBody = \strip_tags($body);
+
+        $mail->AltBody = $body;
+        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
+        $mail->AltBody = \strip_tags($mail->AltBody);
+        $mail->AltBody = \trim($mail->AltBody);
+
+        $replyTo = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+
+        if(!empty($smtp)) {
+            if (!empty($smtp['replyTo'])) {
+                $replyTo = $smtp['replyTo'];
+            }
+            if (!empty($smtp['senderName'])) {
+                $replyToName = $smtp['senderName'];
+            }
+        }
+
+        $mail->addReplyTo($replyTo, $replyToName);
 
         try {
             $mail->send();
@@ -122,10 +140,6 @@ class Mails extends Action
         $mail->CharSet = 'UTF-8';
 
         $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
-
-        if (!empty($smtp['replyTo'])) {
-            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
-        }
 
         $mail->isHTML();
 
