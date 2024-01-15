@@ -7,6 +7,7 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Database\Database;
@@ -48,23 +49,24 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
+            ->inject('log')
             ->inject('dbForProject')
-            ->callback(fn(Message $message, Database $dbForProject) => $this->action($message, $dbForProject));
+            ->callback(fn(Message $message, Log $log, Database $dbForProject) => $this->action($message, $log, $dbForProject));
     }
 
     /**
      * @param Message $message
+     * @param Log $log
      * @param Database $dbForProject
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject): void
+    public function action(Message $message, Log $log, Database $dbForProject): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            Console::error('Payload not found.');
-            return;
+            throw new \Exception('Payload not found.');
         }
 
         if (
@@ -73,7 +75,7 @@ class Messaging extends Action
             && $payload['providerType'] === MESSAGE_TYPE_SMS
         ) {
             // Message was triggered internally
-            $this->processInternalSMSMessage(new Document($payload['message']), $payload['recipients']);
+            $this->processInternalSMSMessage($log, new Document($payload['message']), $payload['recipients']);
         } else {
             $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
@@ -282,17 +284,19 @@ class Messaging extends Action
         $dbForProject->updateDocument('messages', $message->getId(), $message);
     }
 
-    private function processInternalSMSMessage(Document $message, array $recipients): void
+    private function processInternalSMSMessage(Log $log, Document $message, array $recipients): void
     {
         if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
-            Console::info('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
-            return;
+            throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
         }
 
-        $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-        $host = $dsn->getHost();
-        $password = $dsn->getPassword();
-        $user = $dsn->getUser();
+        $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
+        $host = $smsDSN->getHost();
+        $password = $smsDSN->getPassword();
+        $user = $smsDSN->getUser();
+
+        $log->addTag('type', $host);
+
         $from = App::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
@@ -344,7 +348,7 @@ class Messaging extends Action
                 try {
                     $adapter->send($data);
                 } catch (\Exception $e) {
-                    Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage());
+                    Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage()); // TODO: Find a way to log into Sentry
                 }
             };
         }, $batches));

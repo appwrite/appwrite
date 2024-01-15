@@ -238,5 +238,7 @@
     "emails.magicSession.optionButton": "點擊下方按鈕安全登入您的{{project}}帳號。該按鈕將於1小時後失效。",
     "emails.magicSession.buttonText": "登入 {{project}}",
     "emails.magicSession.optionUrl": "如果上面的按鈕沒有顯示，請使用以下鏈接：",
-    "emails.magicSession.clientInfo": "這次的登入是透過{{agentClient}}在{{agentDevice}} {{agentOs}}上請求的。如果您沒有請求這次登入，您可以放心地忽略這封電子郵件。"
+    "emails.magicSession.clientInfo": "這次的登入是透過{{agentClient}}在{{agentDevice}} {{agentOs}}上請求的。如果您沒有請求這次登入，您可以放心地忽略這封電子郵件。",
+    "sms.verification.body": "{{secret}} 是您的 {{project}} 驗證碼。",
+    "emails.magicSession.securityPhrase": "這封電子郵件的安全密語是{{phrase}}。如果此密語與登入時顯示的密語相符，您就可以信任此郵件。"
 }

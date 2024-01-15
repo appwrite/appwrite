@@ -1271,8 +1271,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_PASSWORD_RECOVERY:
-                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!, $passwordAgain: String!) {
-                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
+                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!) {
+                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password) {
                         userId
                         secret
                         expire

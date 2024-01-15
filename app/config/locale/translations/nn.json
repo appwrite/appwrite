@@ -231,12 +231,14 @@
     "continents.sa": "Sør-Amerika",
     "emails.magicSession.optionButton": "Klikk på knappen under for å trygt logge inn på din {{project}}-konto. Den vil utløpe om 1 time.",
     "emails.magicSession.buttonText": "Innlogging til {{project}}",
-    "emails.magicSession.optionUrl": "Beklager, men du har ikke oppgitt et gyldig landskode. \"nn\" er ikke en gyldig ISO-landskode. Vennligst oppgi en gyldig to-bokstavs landskode slik at jeg kan oversette meldingen til riktig språk.",
     "emails.magicSession.clientInfo": "Denne innloggingen ble forespurt ved hjelp av {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke ba om innloggingen, kan du trygt se bort fra denne e-posten.",
     "emails.certificate.subject": "Unfortunately, the country code \"nn\" is ambiguous, as it doesn't correspond to a recognized ISO 3166-1 alpha-2 country code. However, “nn” often refers to “Nynorsk,” one of the written standards of the Norwegian language. If you intended to translate the sentence into Nynorsk (Norwegian), here is the translation:\n\n\"Seritifikatsvikt for %s\"",
     "emails.certificate.hello": "In order to translate the message to the target language corresponding to the country code \"nn,\" I need to clarify that \"nn\" is not a valid ISO country code. However, if you intended \"nn\" to stand for Nynorsk, which is one of the written standards of the Norwegian language (not to be confused with a country code), then the translation would be:\n\nHallo",
     "emails.certificate.body": "Sertifikat for domenet ditt '{{domain}}' kunne ikke genereres. Dette er forsøk nr. {{attempt}}, og mislykkelsen ble forårsaket av: {{error}}",
     "emails.certificate.footer": "Ditt førre sertifikat vil vere gyldig i 30 dagar etter den første feilen. Vi rår sterkt til å undersøke denne saka, elles vil domenet ditt ende opp utan ein gyldig SSL-kommunikasjon.",
     "emails.certificate.thanks": "The country code \"nn\" provided is not sufficient to determine the target language as it does not correspond to an official ISO 3166-1 alpha-2 country code. Please provide more context or the specific target language you need the translation for.",
-    "emails.certificate.signature": "{{project}} lag"
+    "emails.certificate.signature": "{{project}} lag",
+    "sms.verification.body": "Hemmelig er din prosjekt verifiseringskode.",
+    "emails.magicSession.securityPhrase": "For the country code \"nn\", there is no officially designated language. The country code \"NN\" is typically used as a placeholder in documentation for a country that is not specified. Please provide a valid country code or specify the target language for the translation.",
+    "emails.magicSession.optionUrl": "Dersom du ikkje klarer å logge inn ved å bruke knappen over, kan du gå til følgjande lenke:"
 }
