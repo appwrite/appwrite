@@ -124,10 +124,20 @@ class Messaging extends Action
             $recipients = \array_merge($recipients, $targets);
         }
 
+        if (empty($recipients)) {
+            Console::error('No valid recipients found.');
+            return;
+        }
+
         $fallback = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
+
+        if ($fallback === false) {
+            Console::error('No fallback provider found.');
+            return;
+        }
 
         /**
          * @var array<string, array<string>> $identifiers
