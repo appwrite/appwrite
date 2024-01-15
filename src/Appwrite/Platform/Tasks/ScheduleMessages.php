@@ -50,6 +50,14 @@ class ScheduleMessages extends ScheduleBase
                     ->setProject($schedule['project'])
                     ->trigger();
 
+                $dbForConsole->updateDocument(
+                    'schedules',
+                    $schedule['$id'],
+                    $dbForConsole
+                        ->getDocument('schedules', $schedule['$id'])
+                        ->setAttribute('active', false)
+                );
+
                 $queueForDeletes
                     ->setType(DELETE_TYPE_SCHEDULES)
                     ->setDocument($schedule)

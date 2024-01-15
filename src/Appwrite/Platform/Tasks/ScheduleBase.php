@@ -70,6 +70,7 @@ abstract class ScheduleBase extends Action
             );
 
             return [
+                '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
                 'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),

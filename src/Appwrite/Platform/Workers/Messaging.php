@@ -134,7 +134,7 @@ class Messaging extends Action
             Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
         ]);
 
-        if ($fallback === false) {
+        if ($fallback === false || $fallback->isEmpty()) {
             Console::error('No fallback provider found.');
             return;
         }
