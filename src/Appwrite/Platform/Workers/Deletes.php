@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -163,9 +164,13 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @param Document|null $document
      * @return void
      * @throws Authorization
-     * @throws Throwable
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws DatabaseException
      */
     private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime, ?Document $document = null): void
     {
@@ -173,7 +178,7 @@ class Deletes extends Action
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', [$document ?? $document->getAttribute('resourceType')]),
+                Query::equal('resourceType', [$document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
