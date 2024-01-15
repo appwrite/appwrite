@@ -265,7 +265,6 @@ class Messaging extends Action
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
-            // TODO: Does this make sense? Only some of the messages might have failed, but we mark the whole message as failed.
             $message->setAttribute('status', 'failed');
         } else {
             $message->setAttribute('status', 'sent');
