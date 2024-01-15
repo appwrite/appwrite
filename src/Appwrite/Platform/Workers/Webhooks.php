@@ -158,6 +158,8 @@ class Webhooks extends Action
             $webhook->setAttribute('logs', $logs);
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
+                $webhook->setAttribute('enabled', false);
+
                 $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $hostname = App::getEnv('_APP_DOMAIN');
                 $projectId = $project->getId();
@@ -174,12 +176,13 @@ class Webhooks extends Action
                 $template->setParam('redirect', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
                 $template->setParam('attempts', $attempts);
 
-                $subject = 'Your webhook has been paused';
-                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+                $subject = 'Webhook deliveries have been paused';
+                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-cloud.tpl');
 
                 $body
                     ->setParam('{{subject}}', $subject)
-                    ->setParam('{{body}}', $template->render());
+                    ->setParam('{{message}}', $template->render())
+                    ->setParam('{{year}}', date("Y"));
 
                 $queueForMails
                     ->setSubject($subject)
