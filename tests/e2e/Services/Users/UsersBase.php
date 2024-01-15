@@ -23,6 +23,7 @@ trait UsersBase
             'password' => 'password',
             'name' => 'Cristiano Ronaldo',
         ], false);
+        $this->assertEquals($user['headers']['status-code'], 201);
 
         // Test empty prefs is object not array
         $bodyString = $user['body'];
@@ -1221,6 +1222,99 @@ trait UsersBase
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
+    }
+
+    /**
+     * @depends testGetUser
+     */
+    public function testCreateUserTarget(array $data): array
+    {
+        $provider = $this->client->call(Client::METHOD_POST, '/messaging/providers/sendgrid', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'providerId' => ID::unique(),
+            'name' => 'Sengrid1',
+            'apiKey' => 'my-apikey',
+            'from' => 'from@domain.com',
+        ]);
+        $this->assertEquals(201, $provider['headers']['status-code']);
+        $response = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'targetId' => ID::unique(),
+            'providerId' => $provider['body']['$id'],
+            'providerType' => 'email',
+            'identifier' => 'random-email@mail.org',
+        ]);
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals($provider['body']['$id'], $response['body']['providerId']);
+        $this->assertEquals('random-email@mail.org', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testCreateUserTarget
+     */
+    public function testUpdateUserTarget(array $data): array
+    {
+        $response = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'identifier' => 'random-email1@mail.org',
+        ]);
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('random-email1@mail.org', $response['body']['identifier']);
+        return $response['body'];
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testListUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(2, \count($response['body']['targets']));
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testGetUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($data['$id'], $response['body']['$id']);
+    }
+
+    /**
+     * @depends testUpdateUserTarget
+     */
+    public function testDeleteUserTarget(array $data)
+    {
+        $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $data['userId'] . '/targets/' . $data['$id'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(1, $response['body']['total']);
     }
 
     /**

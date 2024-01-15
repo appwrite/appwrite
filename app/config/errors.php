@@ -103,6 +103,16 @@ return [
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
     ],
+    Exception::GENERAL_INVALID_EMAIL => [
+        'name' => Exception::GENERAL_INVALID_EMAIL,
+        'description' => 'Value must be a valid email address.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_INVALID_PHONE => [
+        'name' => Exception::GENERAL_INVALID_PHONE,
+        'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
@@ -209,6 +219,7 @@ return [
         'name' => Exception::USER_AUTH_METHOD_UNSUPPORTED,
         'description' => 'The requested authentication method is either disabled or unsupported. Please check the supported authentication methods in the Appwrite console.',
         'code' => 501,
+        'publish' => false,
     ],
     Exception::USER_PHONE_ALREADY_EXISTS => [
         'name' => Exception::USER_PHONE_ALREADY_EXISTS,
@@ -249,6 +260,16 @@ return [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
         'description' => 'User phone is already verified',
         'code' => 409
+    ],
+    Exception::USER_TARGET_NOT_FOUND => [
+        'name' => Exception::USER_TARGET_NOT_FOUND,
+        'description' => 'The target could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::USER_TARGET_ALREADY_EXISTS,
+        'description' => 'A target with the same ID already exists.',
+        'code' => 409,
     ],
 
     /** Teams */
@@ -764,4 +785,91 @@ return [
         'description' => 'An error occurred on the provider\'s side. Please try again later.',
         'code' => 400,
     ],
+
+    /** Health */
+    Exception::QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+        'description' => 'Queue size threshold hit.',
+        'code' => 503,
+        'publish' => false
+    ],
+
+    /** Providers */
+    Exception::PROVIDER_NOT_FOUND => [
+        'name' => Exception::PROVIDER_NOT_FOUND,
+        'description' => 'Provider with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_ALREADY_EXISTS => [
+        'name' => Exception::PROVIDER_ALREADY_EXISTS,
+        'description' => 'Provider with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::PROVIDER_INCORRECT_TYPE => [
+        'name' => Exception::PROVIDER_INCORRECT_TYPE,
+        'description' => 'Provider with the requested ID is of incorrect type: ',
+        'code' => 400,
+    ],
+
+    /** Topics */
+    Exception::TOPIC_NOT_FOUND => [
+        'name' => Exception::TOPIC_NOT_FOUND,
+        'description' => 'Topic with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOPIC_ALREADY_EXISTS => [
+        'name' => Exception::TOPIC_ALREADY_EXISTS,
+        'description' => 'Topic with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Subscribers */
+    Exception::SUBSCRIBER_NOT_FOUND => [
+        'name' => Exception::SUBSCRIBER_NOT_FOUND,
+        'description' => 'Subscriber with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SUBSCRIBER_ALREADY_EXISTS => [
+        'name' => Exception::SUBSCRIBER_ALREADY_EXISTS,
+        'description' => 'Subscriber with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Messages */
+    Exception::MESSAGE_NOT_FOUND => [
+        'name' => Exception::MESSAGE_NOT_FOUND,
+        'description' => 'Message with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MESSAGE_MISSING_TARGET => [
+        'name' => Exception::MESSAGE_MISSING_TARGET,
+        'description' => 'Message with the requested ID is missing a target (Topics or Users or Targets).',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SENT => [
+        'name' => Exception::MESSAGE_ALREADY_SENT,
+        'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SCHEDULED => [
+        'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
+        'description' => 'Message with the requested ID has already been scheduled for delivery.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_EMAIL => [
+        'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
+        'description' => 'Message with the target ID is not an email target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_SMS => [
+        'name' => Exception::MESSAGE_TARGET_NOT_SMS,
+        'description' => 'Message with the target ID is not an SMS target:',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_PUSH => [
+        'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
+        'description' => 'Message with the target ID is not a push target:',
+        'code' => 400,
+    ],
+
 ];

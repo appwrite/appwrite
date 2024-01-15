@@ -8,11 +8,12 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Auth\SecurityPhrase;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
 use Utopia\Validator\URL;
+use Utopia\Validator\Boolean;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
@@ -45,6 +46,7 @@ use Utopia\Validator\WhiteList;
 use Appwrite\Auth\Validator\PasswordHistory;
 use Appwrite\Auth\Validator\PasswordDictionary;
 use Appwrite\Auth\Validator\PersonalData;
+use Appwrite\Event\Messaging;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -69,7 +71,7 @@ App::post('/v1/account')
     ->label('abuse-limit', 10)
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->param('name', '', new Text(128), 'User name. Max length: 128 chars.', true)
     ->inject('request')
     ->inject('response')
@@ -148,7 +150,22 @@ App::post('/v1/account')
                 'accessedAt' => DateTime::now(),
             ]);
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+            try {
+                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getInternalId(),
+                    'providerType' => MESSAGE_TYPE_EMAIL,
+                    'identifier' => $email,
+                ])));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$email]),
+                ]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -299,7 +316,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('sdk.methodType', 'webAuth')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('providers'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
@@ -311,14 +328,14 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $protocol = $request->getProtocol();
 
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         if (!$providerEnabled) {
             throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
         }
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
             $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
@@ -358,7 +375,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('scope', 'public')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -391,7 +408,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->label('origin', '*')
     ->label('docs', false)
     ->param('projectId', '', new Text(1024), 'Project ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'Login state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -430,7 +447,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('docs', false)
     ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('usage.params', ['provider:{request.provider}'])
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'OAuth2 provider.')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
     ->param('error', '', new Text(2048, 0), 'Error code returned from the OAuth2 provider.', true)
@@ -448,9 +465,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
         $validateURL = new URL();
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
-        $providerEnabled = $project->getAttribute('authProviders', [])[$provider . 'Enabled'] ?? false;
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -458,7 +475,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $providers = Config::getParam('providers');
+        $providers = Config::getParam('oAuthProviders');
         $providerName = $providers[$provider]['name'] ?? '';
 
         /** @var Appwrite\Auth\OAuth2 $oauth2 */
@@ -550,11 +567,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userId', $userId),
             ]);
-            if (!empty($identitiesWithMatchingEmail)) {
+            if (!empty($identityWithMatchingEmail)) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
+
+            $userWithMatchingEmail = $dbForProject->find('users', [
+                Query::equal('email', [$email]),
+                Query::notEqual('$id', $userId),
+            ]);
+            if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
@@ -656,7 +681,18 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::any()),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
+                        'userId' => $userDoc->getId(),
+                        'userInternalId' => $userDoc->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_EMAIL,
+                        'identifier' => $email,
+                    ]));
                 } catch (Duplicate) {
                     $failureRedirect(Exception::USER_ALREADY_EXISTS);
                 }
@@ -842,7 +878,7 @@ App::get('/v1/account/identities')
     });
 
 App::delete('/v1/account/identities/:identityId')
-    ->desc('Delete Identity')
+    ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].identities.[identityId].delete')
@@ -859,7 +895,8 @@ App::delete('/v1/account/identities/:identityId')
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $identityId, Response $response, Database $dbForProject) {
+    ->inject('queueForEvents')
+    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 
@@ -868,6 +905,11 @@ App::delete('/v1/account/identities/:identityId')
         }
 
         $dbForProject->deleteDocument('identities', $identityId);
+
+        $queueForEvents
+            ->setParam('userId', $identity->getAttribute('userId'))
+            ->setParam('identityId', $identity->getId())
+            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
     });
@@ -892,6 +934,7 @@ App::post('/v1/account/sessions/magic-url')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -900,10 +943,14 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+        }
+
+        if ($securityPhrase === true) {
+            $securityPhrase = SecurityPhrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -962,7 +1009,7 @@ App::post('/v1/account/sessions/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $loginSecret = Auth::tokenGenerator();
+        $loginSecret = Auth::tokenGenerator(32);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -999,13 +1046,28 @@ App::post('/v1/account/sessions/magic-url')
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $agentOs = $detector->getOS();
+        $agentClient = $detector->getClient();
+        $agentDevice = $detector->getDevice();
+
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
             ->setParam('{{body}}', $body)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
+            ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
+
+        if (!empty($securityPhrase)) {
+            $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
+        } else {
+            $message->setParam('{{securityPhrase}}', '');
+        }
+
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -1060,7 +1122,11 @@ App::post('/v1/account/sessions/magic-url')
             'user' => '',
             'team' => '',
             'project' => $project->getAttribute('name'),
-            'redirect' => $url
+            'redirect' => $url,
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1079,6 +1145,10 @@ App::post('/v1/account/sessions/magic-url')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+
+        if (!empty($securityPhrase)) {
+            $token->setAttribute('securityPhrase', $securityPhrase);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1235,8 +1305,7 @@ App::post('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Locale $locale) {
-
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -1286,6 +1355,21 @@ App::post('/v1/account/sessions/phone')
 
             $user->removeAttribute('$internalId');
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            try {
+                $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                    'userId' => $user->getId(),
+                    'userInternalId' => $user->getInternalId(),
+                    'providerType' => MESSAGE_TYPE_SMS,
+                    'identifier' => $phone,
+                ])));
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+            } catch (Duplicate) {
+                $existingTarget = $dbForProject->findOne('targets', [
+                    Query::equal('identifier', [$phone]),
+                ]);
+                $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         }
 
         $secret = Auth::codeGenerator();
@@ -1320,12 +1404,27 @@ App::post('/v1/account/sessions/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
+
         $message = $message->render();
 
+        $messageDoc = new Document([
+            '$id' => $token->getId(),
+            'data' => [
+                'content' => $message,
+            ],
+        ]);
+
         $queueForMessaging
-            ->setRecipient($phone)
-            ->setMessage($message)
+            ->setMessage($messageDoc)
+            ->setRecipients([$phone])
+            ->setProviderType(MESSAGE_TYPE_SMS)
+            ->setProject($project)
             ->trigger();
 
         $queueForEvents->setPayload(
@@ -1642,6 +1741,81 @@ App::post('/v1/account/jwt')
             'userId' => $user->getId(),
             'sessionId' => $current->getId(),
         ])]), Response::MODEL_JWT);
+    });
+
+App::post('/v1/account/targets/push')
+    ->desc('Create Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $providerId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                ],
+                'providerId' => $providerId ?? null,
+                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerType' =>  MESSAGE_TYPE_PUSH,
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'identifier' => $identifier,
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
     });
 
 App::get('/v1/account')
@@ -1969,6 +2143,7 @@ App::patch('/v1/account/email')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $oldEmail = $user->getAttribute('email');
         $email = \strtolower($email);
 
         // Makes sure this email is not already used in another identity
@@ -1993,8 +2168,25 @@ App::patch('/v1/account/email')
                 ->setAttribute('passwordUpdate', DateTime::now());
         }
 
+        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$email]),
+        ]));
+
+        if ($target instanceof Document && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            /**
+             * @var Document $oldTarget
+             */
+            $oldTarget = $user->find('identifier', $oldEmail, 'targets');
+
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -2039,6 +2231,16 @@ App::patch('/v1/account/phone')
             throw new Exception(Exception::USER_INVALID_CREDENTIALS);
         }
 
+        $target = Authorization::skip(fn () => $dbForProject->findOne('targets', [
+            Query::equal('identifier', [$phone]),
+        ]));
+
+        if ($target instanceof Document && !$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $oldPhone = $user->getAttribute('phone');
+
         $user
             ->setAttribute('phone', $phone)
             ->setAttribute('phoneVerification', false) // After this user needs to confirm phone number again
@@ -2054,6 +2256,15 @@ App::patch('/v1/account/phone')
 
         try {
             $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+            /**
+             * @var Document $oldTarget
+             */
+            $oldTarget = $user->find('identifier', $oldPhone, 'targets');
+
+            if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
+                Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
+            }
+            $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -2264,8 +2475,8 @@ App::patch('/v1/account/sessions/:sessionId')
                 $provider = $session->getAttribute('provider');
                 $refreshToken = $session->getAttribute('providerRefreshToken');
 
-                $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-                $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+                $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+                $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
                 $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
@@ -2562,18 +2773,13 @@ App::put('/v1/account/recovery')
     ->label('abuse-key', 'url:{url},userId:{param-userId}')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
-    ->param('password', '', new Password(), 'New user password. Must be at least 8 chars.')
-    ->param('passwordAgain', '', new Password(), 'Repeat new user password. Must be at least 8 chars.')
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
-        if ($password !== $passwordAgain) {
-            throw new Exception(Exception::USER_PASSWORD_MISMATCH);
-        }
-
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -2877,10 +3083,9 @@ App::post('/v1/account/verification/phone')
     ->inject('queueForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, EventPhone $queueForMessaging, Document $project, Locale $locale) {
-
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            throw new Exception(Exception::GENERAL_PHONE_DISABLED);
+            throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
         if (empty($user->getAttribute('phone'))) {
@@ -2926,14 +3131,28 @@ App::post('/v1/account/verification/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
+
         $message = $message->render();
 
+        $messageDoc = new Document([
+            '$id' => $verification->getId(),
+            'data' => [
+                'content' => $message,
+            ],
+        ]);
+
         $queueForMessaging
-            ->setRecipient($user->getAttribute('phone'))
-            ->setMessage($message)
-            ->trigger()
-        ;
+            ->setMessage($messageDoc)
+            ->setRecipients([$user->getAttribute('phone')])
+            ->setProviderType(MESSAGE_TYPE_SMS)
+            ->setProject($project)
+            ->trigger();
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3009,4 +3228,62 @@ App::put('/v1/account/verification/phone')
         ;
 
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
+    });
+
+App::put('/v1/account/targets/:targetId/push')
+    ->desc('Update Account\'s push target')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->label('docs', false)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
     });

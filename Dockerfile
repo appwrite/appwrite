@@ -71,6 +71,9 @@ RUN mkdir -p /storage/uploads && \
     chown -Rf www-data.www-data /storage/functions && chmod -Rf 0755 /storage/functions && \
     chown -Rf www-data.www-data /storage/debug && chmod -Rf 0755 /storage/debug
 
+# Development Executables
+RUN chmod +x /usr/local/bin/dev-generate-translations
+
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
@@ -94,7 +97,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
-    chmod +x /usr/local/bin/worker-migrations
+    chmod +x /usr/local/bin/worker-migrations && \
+    chmod +x /usr/local/bin/worker-hamster
 
 # Cloud Executabless
 RUN chmod +x /usr/local/bin/hamster && \
@@ -105,7 +109,8 @@ RUN chmod +x /usr/local/bin/hamster && \
     chmod +x /usr/local/bin/delete-orphaned-projects && \
     chmod +x /usr/local/bin/clear-card-cache && \
     chmod +x /usr/local/bin/calc-users-stats && \
-    chmod +x /usr/local/bin/calc-tier-stats
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/get-migration-stats
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/

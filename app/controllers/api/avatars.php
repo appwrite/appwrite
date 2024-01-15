@@ -84,8 +84,8 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         $accessTokenExpiry = $gitHubSession->getAttribute('providerAccessTokenExpiry');
         $refreshToken = $gitHubSession->getAttribute('providerRefreshToken');
 
-        $appId = $project->getAttribute('authProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('authProviders', [])[$provider . 'Secret'] ?? '{}';
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 

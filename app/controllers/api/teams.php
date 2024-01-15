@@ -6,7 +6,7 @@ use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Event\Phone as EventPhone;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -388,7 +388,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -628,6 +628,10 @@ App::post('/v1/teams/:teamId/memberships')
                     ->trigger()
                 ;
             } elseif (!empty($phone)) {
+                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
                 $customTemplate = $project->getAttribute('templates', [])['sms.invitation-' . $locale->default] ?? [];
@@ -638,9 +642,18 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
+                $messageDoc = new Document([
+                    '$id' => ID::unique(),
+                    'data' => [
+                        'content' => $message,
+                    ],
+                ]);
+
                 $queueForMessaging
-                    ->setRecipient($phone)
-                    ->setMessage($message)
+                    ->setMessage($messageDoc)
+                    ->setRecipients([$phone])
+                    ->setProviderType('SMS')
+                    ->setProject($project)
                     ->trigger();
             }
         }
