@@ -613,7 +613,9 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-        ]));
+        ]), [
+            'identity' => true
+        ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);

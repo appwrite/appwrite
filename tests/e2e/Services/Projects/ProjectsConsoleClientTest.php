@@ -691,7 +691,7 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'duration' => 60, // Set session duration to 2 minutes
+            'duration' => 60, // Set session duration to 1 minute
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

@@ -351,11 +351,10 @@ class Auth
      *
      * @param array  $sessions
      * @param string $secret
-     * @param string $expires
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret, int $expires)
+    public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) {
             /** @var Document $session */
@@ -363,7 +362,7 @@ class Auth
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getAttribute('expire')), $expires)) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
