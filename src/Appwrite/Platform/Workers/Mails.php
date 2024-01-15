@@ -97,7 +97,7 @@ class Mails extends Action
         $replyTo = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
         $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
-        if(!empty($smtp)) {
+        if (!empty($smtp)) {
             if (!empty($smtp['replyTo'])) {
                 $replyTo = $smtp['replyTo'];
             }

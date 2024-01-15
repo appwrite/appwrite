@@ -1665,8 +1665,7 @@ App::post('/v1/projects/:projectId/smtp/tests')
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-test.tpl');
         $body = $message->render();
 
-        foreach($emails as $email)
-        {
+        foreach ($emails as $email) {
             $queueForMails
                 ->setSmtpHost($host)
                 ->setSmtpPort($port)

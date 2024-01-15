@@ -32,7 +32,7 @@ abstract class Scope extends TestCase
         $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
-            if($limit === 1) {
+            if ($limit === 1) {
                 return end($emails);
             } else {
                 $lastEmails = array_slice($emails, -1 * $limit);
