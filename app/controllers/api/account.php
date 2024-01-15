@@ -8,10 +8,12 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
+use Appwrite\Auth\SecurityPhrase;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
 use Utopia\Validator\URL;
+use Utopia\Validator\Boolean;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Template\Template;
 use Appwrite\URL\URL as URLParser;
@@ -932,6 +934,7 @@ App::post('/v1/account/sessions/magic-url')
     ->param('userId', '', new CustomId(), 'Unique Id. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -940,10 +943,14 @@ App::post('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+        }
+
+        if ($securityPhrase === true) {
+            $securityPhrase = SecurityPhrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -1002,7 +1009,7 @@ App::post('/v1/account/sessions/magic-url')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $loginSecret = Auth::tokenGenerator();
+        $loginSecret = Auth::tokenGenerator(32);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM));
 
         $token = new Document([
@@ -1039,13 +1046,28 @@ App::post('/v1/account/sessions/magic-url')
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $agentOs = $detector->getOS();
+        $agentClient = $detector->getClient();
+        $agentDevice = $detector->getDevice();
+
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
             ->setParam('{{body}}', $body)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.magicSession.footer"))
+            ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
+            ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
+            ->setParam('{{optionUrl}}', $locale->getText("emails.magicSession.optionUrl"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.magicSession.clientInfo"))
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
+
+        if (!empty($securityPhrase)) {
+            $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
+        } else {
+            $message->setParam('{{securityPhrase}}', '');
+        }
+
         $body = $message->render();
 
         $smtp = $project->getAttribute('smtp', []);
@@ -1100,7 +1122,11 @@ App::post('/v1/account/sessions/magic-url')
             'user' => '',
             'team' => '',
             'project' => $project->getAttribute('name'),
-            'redirect' => $url
+            'redirect' => $url,
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1119,6 +1145,10 @@ App::post('/v1/account/sessions/magic-url')
 
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $loginSecret : '');
+
+        if (!empty($securityPhrase)) {
+            $token->setAttribute('securityPhrase', $securityPhrase);
+        }
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1374,9 +1404,14 @@ App::post('/v1/account/sessions/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
-        $message = $message->render();
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
 
+        $message = $message->render();
 
         $messageDoc = new Document([
             '$id' => $token->getId(),
@@ -2739,17 +2774,12 @@ App::put('/v1/account/recovery')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
-    ->param('passwordAgain', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Repeat new user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
-        if ($password !== $passwordAgain) {
-            throw new Exception(Exception::USER_PASSWORD_MISMATCH);
-        }
-
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3101,7 +3131,13 @@ App::post('/v1/account/verification/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
+
         $message = $message->render();
 
         $messageDoc = new Document([
