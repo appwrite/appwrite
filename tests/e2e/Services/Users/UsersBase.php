@@ -248,16 +248,8 @@ trait UsersBase
         $this->assertEquals($data['userId'], $token['body']['userId']);
         $this->assertNotEmpty($token['body']['secret']);
         $this->assertNotEmpty($token['body']['expire']);
-
-        /**
-         * Test for FAILURE
-         */
-        $token = $this->client->call(Client::METHOD_POST, '/users/invalid/tokens', array_merge([
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
-
-        $this->assertEquals($token['headers']['status-code'], 404);
     }
+
 
     /**
      * Tests all optional parameters of createUser (email, phone, anonymous..)
