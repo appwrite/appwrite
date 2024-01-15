@@ -238,6 +238,7 @@
     "emails.certificate.footer": "El vostre certificat anterior serà vàlid durant 30 dies des de la primera fallada. Us recomanem encaridament que investigueu aquest cas, d'altra manera el vostre domini quedarà sense una comunicació SSL vàlida.",
     "emails.certificate.thanks": "Gràcies",
     "emails.certificate.signature": "equip {{project}}",
+    "sms.verification.body": "El {{secret}} és el vostre codi de verificació del {{project}}.",
     "emails.magicSession.securityPhrase": "La frase de seguretat d'aquest correu electrònic és {{phrase}}. Podeu confiar en aquest correu si aquesta frase coincideix amb la frase mostrada durant l'inici de sessió.",
     "emails.magicSession.optionUrl": "Si no podeu iniciar sessió utilitzant el botó de dalt, visiteu l'enllaç següent:"
 }

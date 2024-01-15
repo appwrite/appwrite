@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Twój poprzedni certyfikat będzie ważny przez 30 dni od pierwszej awarii. Zalecamy dokładne zbadanie tej sprawy, w przeciwnym razie Twój domena zostanie bez ważnego certyfikatu SSL.",
     "emails.certificate.thanks": "Dziękuję",
     "emails.certificate.signature": "zespół {{project}}",
+    "sms.verification.body": "{{secret}} jest twoim kodem weryfikacyjnym do {{project}}.",
     "emails.magicSession.securityPhrase": "Hasło bezpieczeństwa dla tego e-maila to {{phrase}}. Możesz ufać temu e-mailowi, jeśli hasło to jest zgodne z hasłem wyświetlonym podczas logowania.",
     "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:"
 }

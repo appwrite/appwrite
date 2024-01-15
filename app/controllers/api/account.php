@@ -1404,9 +1404,14 @@ App::post('/v1/account/sessions/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
-        $message = $message->render();
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
 
+        $message = $message->render();
 
         $messageDoc = new Document([
             '$id' => $token->getId(),
@@ -2769,17 +2774,12 @@ App::put('/v1/account/recovery')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('secret', '', new Text(256), 'Valid reset token.')
     ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
-    ->param('passwordAgain', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'Repeat new user password. Must be between 8 and 256 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, string $password, string $passwordAgain, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
-        if ($password !== $passwordAgain) {
-            throw new Exception(Exception::USER_PASSWORD_MISMATCH);
-        }
-
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3131,7 +3131,13 @@ App::post('/v1/account/verification/phone')
             $message = $customTemplate['message'] ?? $message;
         }
 
-        $message = $message->setParam('{{token}}', $secret);
+        $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+        $messageContent
+            ->setParam('{{project}}', $project->getAttribute('name'))
+            ->setParam('{{secret}}', $secret);
+        $messageContent = \strip_tags($messageContent->render());
+        $message = $message->setParam('{{token}}', $messageContent);
+
         $message = $message->render();
 
         $messageDoc = new Document([

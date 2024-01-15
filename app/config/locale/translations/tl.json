@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Ang iyong naunang sertipiko ay magiging balido sa loob ng 30 araw simula ng unang kabiguan. Mataas ang inirerekomenda namin na imbestigahan ang kasong ito, kung hindi ay magtatapos ang iyong domain na walang balidong SSL na komunikasyon.",
     "emails.certificate.thanks": "Salamat",
     "emails.certificate.signature": "{{project}} koponan",
+    "sms.verification.body": "{{secret}} ay ang iyong {{project}} verification code.",
     "emails.magicSession.securityPhrase": "Ang pariralang pangseguridad para sa email na ito ay {{phrase}}. Maaari mong pagkatiwalaan ang email na ito kung ang pariralang ito ay tumutugma sa pariralang ipinakita noong nag-sign in ka.",
     "emails.magicSession.optionUrl": "Kung hindi ka makapag-sign in gamit ang pindutan sa itaas, mangyaring bisitahin ang sumusunod na link:"
 }

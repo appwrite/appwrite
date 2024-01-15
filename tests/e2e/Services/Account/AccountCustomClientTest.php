@@ -804,7 +804,7 @@ class AccountCustomClientTest extends Scope
     public function testCreateSessionWithPhone(array $data): array
     {
         $id = $data['id'] ?? '';
-        $token = $data['token'] ?? '';
+        $token = explode(" ", $data['token'])[0] ?? '';
         $number = $data['number'] ?? '';
 
         /**

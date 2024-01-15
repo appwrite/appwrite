@@ -2272,16 +2272,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.8.0",
+            "version": "0.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "64eca3faf02a79831f219d4f3ae05cd278a88b4b"
+                "reference": "bfb5014d3a8752901e50da1ae21bf309a6af5006"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/64eca3faf02a79831f219d4f3ae05cd278a88b4b",
-                "reference": "64eca3faf02a79831f219d4f3ae05cd278a88b4b",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/bfb5014d3a8752901e50da1ae21bf309a6af5006",
+                "reference": "bfb5014d3a8752901e50da1ae21bf309a6af5006",
                 "shasum": ""
             },
             "require": {
@@ -2316,9 +2316,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.8.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.8.1"
             },
-            "time": "2023-12-15T06:44:08+00:00"
+            "time": "2024-01-10T23:55:03+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -3770,16 +3770,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.7.3",
+            "version": "1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419"
+                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
-                "reference": "3219c6ee25c9ea71e3d9bbaf39c67c9ebd499419",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/fad452781b3d774e3337b0c0b245dd8e5a4455fc",
+                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc",
                 "shasum": ""
             },
             "require": {
@@ -3822,9 +3822,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.7.3"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.0"
             },
-            "time": "2023-08-12T11:01:26+00:00"
+            "time": "2024-01-11T11:49:22+00:00"
         },
         {
             "name": "phpspec/prophecy",

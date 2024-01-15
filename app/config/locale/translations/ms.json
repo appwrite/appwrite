@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Sijil sebelum ini anda akan sah selama 30 hari selepas kegagalan pertama. Kami sangat mengesyorkan untuk menyiasat kes ini, jika tidak domain anda akan berakhir tanpa komunikasi SSL yang sah.",
     "emails.certificate.thanks": "Terima kasih",
     "emails.certificate.signature": "pasukan {{project}}",
+    "sms.verification.body": "{{secret}} adalah kod pengesahan {{project}} anda.",
     "emails.magicSession.securityPhrase": "Frasa keselamatan untuk emel ini adalah {{phrase}}. Anda boleh mempercayai emel ini jika frasa ini sepadan dengan frasa yang ditunjukkan semasa log masuk.",
     "emails.magicSession.optionUrl": "Jika anda tidak dapat log masuk menggunakan butang di atas, sila kunjungi pautan berikut:"
 }

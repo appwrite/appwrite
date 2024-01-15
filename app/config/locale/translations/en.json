@@ -36,6 +36,7 @@
     "emails.certificate.footer": "Your previous certificate will be valid for 30 days since the first failure. We highly recommend investigating this case, otherwise your domain will end up without a valid SSL communication.",
     "emails.certificate.thanks": "Thanks",
     "emails.certificate.signature": "{{project}} team",
+    "sms.verification.body": "{{secret}} is your {{project}} verification code.",
     "locale.country.unknown": "Unknown",
     "countries.af": "Afghanistan",
     "countries.ao": "Angola",

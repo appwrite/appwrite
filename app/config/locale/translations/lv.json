@@ -238,6 +238,7 @@
     "emails.certificate.footer": "Jūsu iepriekšējais sertifikāts būs derīgs 30 dienas no pirmās neveiksmes. Mēs ļoti iesakām izmeklēt šo gadījumu, citādi jūsu domēns paliks bez derīga SSL saziņas.",
     "emails.certificate.thanks": "Paldies",
     "emails.certificate.signature": "{{project}} komanda",
+    "sms.verification.body": "{{secret}} ir jūsu {{project}} verifikācijas kods.",
     "emails.magicSession.securityPhrase": "Drošības frāze šim e-pastam ir {{phrase}}. Šim e-pastam var uzticēties, ja šī frāze sakrīt ar frāzi, kas parādās, piesakoties sistēmā.",
     "emails.magicSession.optionUrl": "Ja nevarat pierakstīties, izmantojot iepriekš minēto pogu, lūdzu, apmeklējiet sekojošo saiti:"
 }
