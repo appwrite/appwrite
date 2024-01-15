@@ -170,7 +170,8 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
-const DELETE_TYPE_TOPIC = 'topic';
+const DELETE_TYPE_TARGETS = 'targets';
+const DELETE_TYPE_TOPICS = 'topics';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

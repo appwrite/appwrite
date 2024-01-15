@@ -1944,7 +1944,7 @@ App::delete('/v1/messaging/topics/:topicId')
         $dbForProject->deleteDocument('topics', $topicId);
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_TOPIC)
+            ->setType(DELETE_TYPE_TOPICS)
             ->setDocument($topic);
 
         $queueForEvents

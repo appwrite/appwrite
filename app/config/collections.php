@@ -1961,6 +1961,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('expired'),
+                'type' => Database::VAR_BOOLEAN,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => false,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [

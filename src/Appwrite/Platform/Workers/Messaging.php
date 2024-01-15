@@ -232,9 +232,11 @@ class Messaging extends Action
                                         Query::equal('identifier', [$detail['recipient']])
                                     ]);
 
-                                    if ($target instanceof Document && !$target->isEmpty()) {
-                                        $dbForProject->deleteDocument('targets', $target->getId());
-                                    }
+                                    $dbForProject->updateDocument(
+                                        'targets',
+                                        $target->getId(),
+                                        $target->setAttribute('expired', true)
+                                    );
                                 }
                             }
                         } catch (\Exception $e) {

@@ -151,7 +151,10 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
                 break;
-            case DELETE_TYPE_TOPIC:
+            case DELETE_TYPE_TARGETS:
+                $this->deleteTargets($project, $getProjectDB, $document);
+                break;
+            case DELETE_TYPE_TOPICS:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             default:
@@ -178,7 +181,6 @@ class Deletes extends Action
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', [$document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -213,23 +215,37 @@ class Deletes extends Action
         );
     }
 
+    private function deleteTargets(Document $project, callable $getProjectDB, Document $target)
+    {
+        $this->deleteByGroup(
+            'targets',
+            [
+                Query::equal('expired', [true])
+            ],
+            $getProjectDB($project)
+        );
+    }
+
     /**
      * @param Document $project
      * @param callable $getProjectDB
      * @param Document $topic
      * @throws Exception
      */
-    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
             return;
         }
-        $dbForProject = $getProjectDB($project);
 
-        $this->deleteByGroup('subscribers', [
-            Query::equal('topicInternalId', [$topic->getInternalId()])
-        ], $dbForProject);
+        $this->deleteByGroup(
+            'subscribers',
+            [
+                Query::equal('topicInternalId', [$topic->getInternalId()])
+            ],
+            $getProjectDB($project)
+        );
     }
 
     /**
