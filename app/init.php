@@ -545,15 +545,16 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetId'),
-            $database
-            ->find('subscribers', [
+            fn ($document) => $document->getAttribute('targetInternalId'),
+            $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+            return $database->find('targets', [
+                Query::equal('$internalId', $targetIds)
+            ]);
         }
         return [];
     }
