@@ -302,8 +302,8 @@ class Hamster extends Action
             /**
              * Workaround to combine network.inbound+network.outbound as network.
              */
-            $statsPerProject["usage_network_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
-            $statsPerProject["usage_network_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
+            $statsPerProject["usage_bandwidth_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
+            $statsPerProject["usage_bandwidth_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
             unset($statsPerProject["usage_outbound_24h"]);
             unset($statsPerProject["usage_inbound_24h"]);
             unset($statsPerProject["usage_outbound_infinity"]);
