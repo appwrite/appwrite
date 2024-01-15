@@ -579,25 +579,45 @@ class ProjectsConsoleClientTest extends Scope
 
     /**
      * @group smtpAndTemplates
-     * @depends testUpdateProjectSMTP
+     * @depends testCreateProject
      */
     public function testCreateProjectSMTPTests($data): array
     {
         $id = $data['projectId'];
-        $email = 'mailer@appwrite.io';
         $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'email' => $email,
+            'emails' => [ 'testuser@appwrite.io', 'testusertwo@appwrite.io' ],
+            'senderEmail' => 'custommailer@appwrite.io',
+            'senderName' => 'Custom Mailer',
+            'replyTo' => 'reply@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => '',
+            'password' => '',
         ]);
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
-        $lastEmail = $this->getLastEmail();
-var_dump($lastEmail);
-        $this->assertEquals($email, $lastEmail['to'][0]['address']);
-        $this->assertEquals('SMTP test email from Appwrite', $lastEmail['subject']);
+        $emails = $this->getLastEmail(2);
+        $this->assertCount(2, $emails);
+        $this->assertEquals('custommailer@appwrite.io', $emails[0]['from'][0]['address']);
+        $this->assertEquals('Custom Mailer', $emails[0]['from'][0]['name']);
+        $this->assertEquals('reply@appwrite.io', $emails[0]['replyTo'][0]['address']);
+        $this->assertEquals('Custom Mailer', $emails[0]['replyTo'][0]['name']);
+        $this->assertEquals('Custom SMTP email from Appwrite', $emails[0]['subject']);
+        $this->assertStringContainsStringIgnoringCase('good to go', $emails[0]['text']);
+        $this->assertStringContainsStringIgnoringCase('good to go', $emails[0]['html']);
+
+        $to = [
+            $emails[0]['to'][0]['address'],
+            $emails[1]['to'][0]['address']
+        ];
+        \sort($to);
+
+        $this->assertEquals('testuser@appwrite.io', $to[0]);
+        $this->assertEquals('testusertwo@appwrite.io', $to[1]);
 
         return $data;
     }
@@ -1686,7 +1706,6 @@ var_dump($lastEmail);
 
         foreach ($response['body'] as $key => $value) {
             if (\preg_match($pattern, $key)) {
-                \var_dump('Matched key: ' . $key);
                 $matches[$key] = $value;
             }
         }
