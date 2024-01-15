@@ -213,12 +213,14 @@ class AuthTest extends TestCase
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime1),
             ]),
         ];
 
@@ -230,19 +232,21 @@ class AuthTest extends TestCase
                 'secret' => $hash,
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
             new Document([
                 '$id' => ID::custom('token2'),
                 'secret' => 'secret2',
                 'provider' => Auth::SESSION_PROVIDER_EMAIL,
                 'providerUid' => 'test@example.com',
+                'expire' => DateTime::addSeconds(new \DateTime(), $expireTime2),
             ]),
         ];
 
-        $this->assertEquals(Auth::sessionVerify($tokens1, $secret, $expireTime1), 'token1');
-        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret', $expireTime1), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, $secret, $expireTime2), false);
-        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret', $expireTime2), false);
+        $this->assertEquals(Auth::sessionVerify($tokens1, $secret), 'token1');
+        $this->assertEquals(Auth::sessionVerify($tokens1, 'false-secret'), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, $secret), false);
+        $this->assertEquals(Auth::sessionVerify($tokens2, 'false-secret'), false);
     }
 
     public function testTokenVerify(): void
