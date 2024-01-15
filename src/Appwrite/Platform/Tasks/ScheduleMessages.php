@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Delete;
 use Swoole\Timer;
+use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -53,9 +54,7 @@ class ScheduleMessages extends ScheduleBase
                 $dbForConsole->updateDocument(
                     'schedules',
                     $schedule['$id'],
-                    $dbForConsole
-                        ->getDocument('schedules', $schedule['$id'])
-                        ->setAttribute('active', false)
+                    new Document(['active' => false])
                 );
 
                 $queueForDeletes
