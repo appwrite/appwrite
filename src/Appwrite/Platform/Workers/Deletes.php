@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
@@ -47,14 +48,15 @@ class Deletes extends Action
             ->inject('getFunctionsDevice')
             ->inject('getBuildsDevice')
             ->inject('getCacheDevice')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
+            ->inject('log')
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $log));
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -69,7 +71,10 @@ class Deletes extends Action
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
 
-        switch (strval($type)) {
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
+
+        switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_DATABASES:
@@ -158,7 +163,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             default:
-                Console::error('No delete operation for type: ' . $type);
+                throw new \Exception('No delete operation for type: ' . \strval($type));
                 break;
         }
     }

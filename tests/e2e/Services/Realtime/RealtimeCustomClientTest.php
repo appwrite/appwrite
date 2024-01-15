@@ -617,7 +617,6 @@ class RealtimeCustomClientTest extends Scope
             'userId' => $userId,
             'secret' => $recovery,
             'password' => 'test-recovery',
-            'passwordAgain' => 'test-recovery',
         ]);
 
         $response = json_decode($client->receive(), true);

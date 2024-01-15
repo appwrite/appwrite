@@ -1283,7 +1283,6 @@ trait AccountBase
             'userId' => $id,
             'secret' => $recovery,
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -1299,7 +1298,6 @@ trait AccountBase
             'userId' => ID::custom('ewewe'),
             'secret' => $recovery,
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(404, $response['headers']['status-code']);
@@ -1312,23 +1310,9 @@ trait AccountBase
             'userId' => $id,
             'secret' => 'sdasdasdasd',
             'password' => $newPassowrd,
-            'passwordAgain' => $newPassowrd,
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_PUT, '/account/recovery', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => $id,
-            'secret' => $recovery,
-            'password' => $newPassowrd . 'x',
-            'passwordAgain' => $newPassowrd,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
@@ -1353,6 +1337,7 @@ trait AccountBase
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
+        $this->assertEmpty($response['body']['securityPhrase']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
@@ -1360,6 +1345,7 @@ trait AccountBase
         $lastEmail = $this->getLastEmail();
         $this->assertEquals($email, $lastEmail['to'][0]['address']);
         $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertStringNotContainsStringIgnoringCase('security phrase', $lastEmail['text']);
 
         $token = substr($lastEmail['text'], strpos($lastEmail['text'], '&secret=', 0) + 8, 64);
 
@@ -1411,6 +1397,23 @@ trait AccountBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/magic-url', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => $email,
+            'securityPhrase' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['securityPhrase']);
+
+        $lastEmail = $this->getLastEmail();
+        $this->assertStringContainsStringIgnoringCase($response['body']['securityPhrase'], $lastEmail['text']);
 
         $data['token'] = $token;
         $data['id'] = $userId;
