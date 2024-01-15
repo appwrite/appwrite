@@ -232,7 +232,6 @@ App::post('/v1/account/sessions/email')
         $user->setAttributes($profile->getArrayCopy());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
@@ -248,6 +247,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -291,7 +291,6 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $queueForEvents
@@ -753,7 +752,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
         $session = new Document(array_merge([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
@@ -767,6 +765,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         if (empty($user->getAttribute('email'))) {
@@ -792,8 +791,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ]));
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $session->setAttribute('expire', $expire);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1208,7 +1205,6 @@ App::put('/v1/account/sessions/magic-url')
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1219,6 +1215,7 @@ App::put('/v1/account/sessions/magic-url')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1272,8 +1269,7 @@ App::put('/v1/account/sessions/magic-url')
 
         $session
             ->setAttribute('current', true)
-            ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire);
+            ->setAttribute('countryName', $countryName);
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
@@ -1488,7 +1484,6 @@ App::put('/v1/account/sessions/phone')
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1499,6 +1494,7 @@ App::put('/v1/account/sessions/phone')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1553,7 +1549,6 @@ App::put('/v1/account/sessions/phone')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1654,6 +1649,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1690,7 +1686,6 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
         ;
 
         $response->dynamic($session, Response::MODEL_SESSION);
@@ -1890,8 +1885,6 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
-            $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
-
             $sessions[$key] = $session;
         }
 
@@ -1997,7 +1990,6 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -2429,7 +2421,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update OAuth session (refresh tokens)')
+    ->desc('Renew session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -2446,72 +2438,80 @@ App::patch('/v1/account/sessions/:sessionId')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
-    ->inject('request')
+    ->param('identity', false, new Boolean(), 'Refresh OAuth2 identity. If enabled and session was created using an OAuth provider, the access token of the identity will be refreshed', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('locale')
     ->inject('queueForEvents')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $queueForEvents) {
+    ->action(function (?string $sessionId, bool $identity, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
+
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
             : $sessionId;
-
         $sessions = $user->getAttribute('sessions', []);
 
+        $session = null;
         foreach ($sessions as $key => $session) {/** @var Document $session */
-            if ($sessionId == $session->getId()) {
-                // Comment below would skip re-generation if token is still valid
-                // We decided to not include this because developer can get expiration date from the session
-                // I kept code in comment because it might become relevant in the future
-
-                // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
-                // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
-                //     return $response->noContent();
-                // }
-
-                $provider = $session->getAttribute('provider');
-                $refreshToken = $session->getAttribute('providerRefreshToken');
-
-                $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-                $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
-                $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
-                if (!\class_exists($className)) {
-                    throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
-                }
-
-                $oauth2 = new $className($appId, $appSecret, '', [], []);
-
-                $oauth2->refreshTokens($refreshToken);
-
-                $session
-                    ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-                    ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
-
-                $dbForProject->updateDocument('sessions', $sessionId, $session);
-
-                $dbForProject->deleteCachedDocument('users', $user->getId());
-
-                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-
-                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
-
-                $queueForEvents
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
-
-                return $response->dynamic($session, Response::MODEL_SESSION);
+            if ($sessionId === $session->getId()) {
+                $session = $session;
+                break;
             }
         }
 
-        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        if ($session === null) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
+        // Extend session
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
+
+        // Refresh OAuth access token
+        if ($identity) {
+            // Comment below would skip re-generation if token is still valid
+            // We decided to not include this because developer can get expiration date from the session
+            // I kept code in comment because it might become relevant in the future
+
+            // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
+            // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
+            //     return $response->noContent();
+            // }
+
+            $provider = $session->getAttribute('provider');
+            $refreshToken = $session->getAttribute('providerRefreshToken');
+
+            $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+
+            $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+
+            if (!\class_exists($className)) {
+                throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+            }
+
+            $oauth2 = new $className($appId, $appSecret, '', [], []);
+
+            $oauth2->refreshTokens($refreshToken);
+
+            $session
+                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+        }
+
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION))
+        ;
+
+        return $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::delete('/v1/account/sessions')
@@ -2554,7 +2554,6 @@ App::delete('/v1/account/sessions')
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                  // If current session delete the cookies too
                 $response
