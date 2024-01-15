@@ -192,11 +192,22 @@ class Deletes extends Action
                     return;
                 }
 
-                $function = $getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
+                $resource = $getProjectDB($project)->getDocument(
+                    $document->getAttribute('resourceCollection'),
+                    $document->getAttribute('resourceId')
+                );
 
-                if ($function->isEmpty()) {
+                $delete = true;
+
+                switch ($document->getAttribute('resourceType')) {
+                    case 'function':
+                        $delete = $resource->isEmpty();
+                        break;
+                }
+
+                if ($delete) {
                     $dbForConsole->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleting schedule for ' . $document->getAttribute('resourceType') . ' ' . $document->getAttribute('resourceId'));
                 }
             }
         );
