@@ -765,6 +765,61 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(401, $response['headers']['status-code']);
 
+        // Set session duration to 15s
+        $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'duration' => 15, // seconds
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(15, $response['body']['authDuration']);
+
+        // Create session
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+        ]), [
+            'email' => $userEmail,
+            'password' => 'password',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $sessionCookie = $response['headers']['set-cookie'];
+
+        // Wait 10 seconds, ensure valid session, extend session
+        \sleep(10);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_PATCH, '/account/sessions/current', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        // Wait 20 seconds, ensure non-valid session
+        \sleep(20);
+
+        $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'Cookie' => $sessionCookie,
+        ]));
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
         // Return project back to normal
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/duration', array_merge([
             'content-type' => 'application/json',

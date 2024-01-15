@@ -2442,7 +2442,6 @@ App::patch('/v1/account/sessions/:sessionId')
     ->inject('queueForEvents')
     ->action(function (?string $sessionId, bool $identity, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
 
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
