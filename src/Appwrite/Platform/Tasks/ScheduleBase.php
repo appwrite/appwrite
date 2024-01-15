@@ -178,8 +178,10 @@ abstract class ScheduleBase extends Action
                 Console::log("Sync tick: {$total} schedules were updated in " . ($timerEnd - $timerStart) . " seconds");
             });
 
-            Timer::tick(static::ENQUEUE_TIMER * 1000, fn() =>
-                $this->enqueueResources($pools, $dbForConsole));
+            Timer::tick(
+                static::ENQUEUE_TIMER * 1000,
+                fn() => $this->enqueueResources($pools, $dbForConsole)
+            );
 
             $this->enqueueResources($pools, $dbForConsole);
         });

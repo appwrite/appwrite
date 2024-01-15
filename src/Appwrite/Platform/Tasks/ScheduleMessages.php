@@ -16,7 +16,7 @@ use function Swoole\Coroutine\run;
 
 class ScheduleMessages extends ScheduleBase
 {
-    public const UPDATE_TIMER = 3; // seconds
+    public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
 
     public static function getName(): string
@@ -32,6 +32,13 @@ class ScheduleMessages extends ScheduleBase
     protected function enqueueResources(Group $pools, Database $dbForConsole): void
     {
         foreach ($this->schedules as $schedule) {
+            $now = DateTime::now();
+            $scheduledAt = DateTime::formatTz($schedule['scheduledAt']);
+
+            if ($scheduledAt > $now) {
+                continue;
+            }
+
             \go(function () use ($schedule, $pools, $dbForConsole) {
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
@@ -50,7 +57,7 @@ class ScheduleMessages extends ScheduleBase
 
                 $queue->reclaim();
 
-                unset($this->schedules[$schedule->getId()]);
+                unset($this->schedules[$schedule['resourceId']]);
             });
         }
     }
