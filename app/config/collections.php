@@ -4246,13 +4246,6 @@ $consoleCollections = array_merge([
                 'lengths' => [],
                 'orders' => [],
             ],
-            [
-                '$id' => ID::custom('_key_schedule_resourceType_active_resourceUpdatedAt'),
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['schedule', 'resourceType', 'active', 'resourceUpdatedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ]
         ],
     ],
 
