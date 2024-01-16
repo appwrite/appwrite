@@ -26,6 +26,7 @@ use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
+use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -38,6 +39,7 @@ use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
+use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -253,6 +255,9 @@ App::init()
                 case version_compare($requestFormat, '1.4.0', '<'):
                     Request::setFilter(new RequestV16());
                     break;
+                case version_compare($requestFormat, '1.5.0', '<'):
+                    Request::setFilter(new RequestV17());
+                    break;
                 default:
                     Request::setFilter(null);
             }
@@ -393,6 +398,9 @@ App::init()
                     break;
                 case version_compare($responseFormat, '1.4.0', '<'):
                     Response::setFilter(new ResponseV16());
+                    break;
+                case version_compare($responseFormat, '1.5.0', '<'):
+                    Response::setFilter(new ResponseV17());
                     break;
                 default:
                     Response::setFilter(null);
