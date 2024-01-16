@@ -9,7 +9,6 @@ use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
-use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -159,6 +158,17 @@ class Webhooks extends Action
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
+                
+                $teamId = $project->getAttribute('teamId');
+                // Find all 'userId' for this teamId from memberships collection by using query in find method
+
+                $users = $dbForConsole->find('users');
+                $userDetails = array_map(function ($user) {
+                    return [
+                        'name' => $user->getAttribute('name'),
+                        'email' => $user->getAttribute('email')
+                    ];
+                }, $users);
 
                 $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $hostname = App::getEnv('_APP_DOMAIN');
@@ -168,7 +178,7 @@ class Webhooks extends Action
                 $template = __DIR__ . '/../../../../app/config/locale/templates/email-webhook.phtml';
                 $template = new View($template);
 
-                $template->setParam('user', $user->getAttribute('name'));
+                // $template->setParam('user', $user->getAttribute('name'));
                 $template->setParam('webhook', $webhook->getAttribute('name'));
                 $template->setParam('project', $project->getAttribute('name'));
                 $template->setParam('url', $webhook->getAttribute('url'));
@@ -186,9 +196,13 @@ class Webhooks extends Action
 
                 $queueForMails
                     ->setSubject($subject)
-                    ->setBody($body->render())
-                    ->setRecipient($user->getAttribute('email'))
-                    ->trigger();
+                    ->setBody($body->render());
+
+                foreach ($userEmails as $userEmail) {
+                    $queueForMails
+                        ->setRecipient($userEmail)
+                        ->trigger();
+                }
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
