@@ -9,6 +9,7 @@ use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
 use Utopia\Database\Database;
+use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -158,36 +159,34 @@ class Webhooks extends Action
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
-                
-                $teamId = $project->getAttribute('teamId');
-                // Find all 'userId' for this teamId from memberships collection by using query in find method
 
-                $users = $dbForConsole->find('users');
-                $userDetails = array_map(function ($user) {
-                    return [
-                        'name' => $user->getAttribute('name'),
-                        'email' => $user->getAttribute('email')
-                    ];
-                }, $users);
+                $memberships = $dbForConsole->find('memberships', [
+                    Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+                    Query::limit(APP_LIMIT_SUBQUERY)
+                ]);
+
+                $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
+
+                $users = $dbForConsole->find('users', [
+                    Query::equal('$id', $userIds),
+                ]);
 
                 $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
                 $hostname = App::getEnv('_APP_DOMAIN');
                 $projectId = $project->getId();
                 $webhookId = $webhook->getId();
 
-                $template = __DIR__ . '/../../../../app/config/locale/templates/email-webhook.phtml';
-                $template = new View($template);
+                $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
 
-                // $template->setParam('user', $user->getAttribute('name'));
-                $template->setParam('webhook', $webhook->getAttribute('name'));
-                $template->setParam('project', $project->getAttribute('name'));
-                $template->setParam('url', $webhook->getAttribute('url'));
-                $template->setParam('error', $curlError ??  'The server returned ' . $statusCode . ' status code');
-                $template->setParam('redirect', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
-                $template->setParam('attempts', $attempts);
+                $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
+                $template->setParam('{{project}}', $project->getAttribute('name'));
+                $template->setParam('{{url}}', $webhook->getAttribute('url'));
+                $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
+                $template->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
+                $template->setParam('{{attempts}}', $attempts);
 
                 $subject = 'Webhook deliveries have been paused';
-                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-branded.tpl');
+                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
                 $body
                     ->setParam('{{subject}}', $subject)
@@ -198,9 +197,11 @@ class Webhooks extends Action
                     ->setSubject($subject)
                     ->setBody($body->render());
 
-                foreach ($userEmails as $userEmail) {
+                foreach ($users as $user) {
                     $queueForMails
-                        ->setRecipient($userEmail)
+                        ->setVariables(['user' => $user->getAttribute('name', '')])
+                        ->setName($user->getAttribute('name', ''))
+                        ->setRecipient($user->getAttribute('email'))
                         ->trigger();
                 }
             }
