@@ -177,7 +177,7 @@ class Webhooks extends Action
                 $template->setParam('attempts', $attempts);
 
                 $subject = 'Webhook deliveries have been paused';
-                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-cloud.tpl');
+                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-branded.tpl');
 
                 $body
                     ->setParam('{{subject}}', $subject)
