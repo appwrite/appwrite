@@ -127,8 +127,12 @@ class Messaging extends Action
         }
 
         if (empty($recipients)) {
-            Console::error('No valid recipients found.');
-            return;
+            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+                'status' => 'failed',
+                'deliveryErrors' => ['No valid recipients found.']
+            ]));
+
+            throw new \Exception('No valid recipients found.');
         }
 
         $fallback = $dbForProject->findOne('providers', [
@@ -137,8 +141,12 @@ class Messaging extends Action
         ]);
 
         if ($fallback === false || $fallback->isEmpty()) {
-            Console::error('No fallback provider found.');
-            return;
+            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+                'status' => 'failed',
+                'deliveryErrors' => ['No fallback provider found.']
+            ]));
+
+            throw new \Exception('No fallback provider found.');
         }
 
         /**
