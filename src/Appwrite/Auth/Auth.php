@@ -80,8 +80,8 @@ class Auth
      * Token Lengths.
      */
     public const TOKEN_LENGTH_MAGIC_URL = 64;
-    public const TOKEN_LENGTH_VERIFICATION = 64;
-    public const TOKEN_LENGTH_RECOVERY = 64;
+    public const TOKEN_LENGTH_VERIFICATION = 256;
+    public const TOKEN_LENGTH_RECOVERY = 256;
     public const TOKEN_LENGTH_OAUTH2 = 64;
     public const TOKEN_LENGTH_SESSION = 256;
 
