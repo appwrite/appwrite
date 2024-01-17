@@ -432,7 +432,7 @@ class Hamster extends Action
                 $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
 
                 if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
-                    $statsPerUser['billing-plan'] = $billingPlan;
+                    $statsPerUser['billing_plan'] = $billingPlan;
                 }
 
                 if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
