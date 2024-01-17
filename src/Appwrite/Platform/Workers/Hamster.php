@@ -371,7 +371,7 @@ class Hamster extends Action
             $billingPlan = $membership->getAttribute('billingPlan', null);
             $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
 
-            if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
+            if (!empty($billingPlan) && is_null($billingPlanDowngrade)) {
                 $statsPerOrganization['billing_plan'] = $billingPlan;
             }
 
