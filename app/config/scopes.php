@@ -1,11 +1,14 @@
 <?php
 
 return [ // List of publicly visible scopes
-    'account' => [
-        'description' => 'Access to make actions on behalf of a user account',
+    'accounts.read' => [
+        'description' => 'Access to read your active user account',
     ],
-    'sessions' => [
-        'description' => 'Access to create new user sessions',
+    'accounts.write' => [
+        'description' => 'Access to create, update, and delete your active user account',
+    ],
+    'sessions.write' => [
+        'description' => 'Access to create, update, and delete user sessions',
     ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
