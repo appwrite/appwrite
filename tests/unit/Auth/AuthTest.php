@@ -189,7 +189,7 @@ class AuthTest extends TestCase
 
     public function testTokenGenerator(): void
     {
-        $this->assertEquals(\strlen(Auth::tokenGenerator()), 128);
+        $this->assertEquals(\strlen(Auth::tokenGenerator()), 256);
         $this->assertEquals(\strlen(Auth::tokenGenerator(5)), 5);
     }
 
