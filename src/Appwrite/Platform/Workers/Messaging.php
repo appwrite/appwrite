@@ -97,7 +97,7 @@ class Messaging extends Action
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->find('topics', [
                 Query::equal('$id', $topicIds),
-                Query::limit($topicIds)
+                Query::limit(\count($topicIds)),
             ]);
             foreach ($topics as $topic) {
                 $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) =>
@@ -109,7 +109,7 @@ class Messaging extends Action
         if (\count($userIds) > 0) {
             $users = $dbForProject->find('users', [
                 Query::equal('$id', $userIds),
-                Query::limit($userIds)
+                Query::limit(\count($userIds)),
             ]);
             foreach ($users as $user) {
                 $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) =>
@@ -121,14 +121,18 @@ class Messaging extends Action
         if (\count($targetIds) > 0) {
             $targets = $dbForProject->find('targets', [
                 Query::equal('$id', $targetIds),
-                Query::limit($targetIds)
+                Query::limit(\count($targetIds)),
             ]);
             $recipients = \array_merge($recipients, $targets);
         }
 
         if (empty($recipients)) {
-            Console::error('No valid recipients found.');
-            return;
+            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+                'status' => 'failed',
+                'deliveryErrors' => ['No valid recipients found.']
+            ]));
+
+            throw new \Exception('No valid recipients found.');
         }
 
         $fallback = $dbForProject->findOne('providers', [
@@ -137,8 +141,12 @@ class Messaging extends Action
         ]);
 
         if ($fallback === false || $fallback->isEmpty()) {
-            Console::error('No fallback provider found.');
-            return;
+            $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
+                'status' => 'failed',
+                'deliveryErrors' => ['No fallback provider found.']
+            ]));
+
+            throw new \Exception('No fallback provider found.');
         }
 
         /**
