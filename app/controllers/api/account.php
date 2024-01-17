@@ -2849,7 +2849,6 @@ App::post('/v1/account/verification')
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
         $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
-        var_dump($verificationSecret);
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -2995,7 +2994,6 @@ App::put('/v1/account/verification')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
-        var_dump($secret);
 
         $profile = Authorization::skip(fn() => $dbForProject->getDocument('users', $userId));
 
