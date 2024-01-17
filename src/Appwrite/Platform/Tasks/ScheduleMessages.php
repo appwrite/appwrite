@@ -34,7 +34,7 @@ class ScheduleMessages extends ScheduleBase
     {
         foreach ($this->schedules as $schedule) {
             $now = DateTime::now();
-            $scheduledAt = DateTime::formatTz($schedule['scheduledAt']);
+            $scheduledAt = DateTime::formatTz($schedule['schedule']);
 
             if ($scheduledAt > $now) {
                 continue;
