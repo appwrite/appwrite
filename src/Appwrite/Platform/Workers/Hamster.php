@@ -277,7 +277,7 @@ class Hamster extends Action
                         $limit = $periodValue['limit'];
                         $period = $periodValue['period'];
 
-                        $requestDocs = $dbForProject->find('stats_v2', [
+                        $requestDocs = $dbForProject->find('stats', [
                             Query::equal('period', [$period]),
                             Query::equal('metric', [$metric]),
                             Query::limit($limit),
@@ -302,8 +302,8 @@ class Hamster extends Action
             /**
              * Workaround to combine network.inbound+network.outbound as network.
              */
-            $statsPerProject["usage_bandwidth_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
-            $statsPerProject["usage_bandwidth_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
+            $statsPerProject["usage_network_infinity"]  = $statsPerProject["usage_inbound_infinity"] + $statsPerProject["usage_outbound_infinity"];
+            $statsPerProject["usage_network_24h"]  = $statsPerProject["usage_inbound_24h"] + $statsPerProject["usage_outbound_24h"];
             unset($statsPerProject["usage_outbound_24h"]);
             unset($statsPerProject["usage_inbound_24h"]);
             unset($statsPerProject["usage_outbound_infinity"]);
@@ -368,6 +368,19 @@ class Hamster extends Action
                 throw new \Exception('Membership not found. Skipping organization : ' . $organization->getId());
             }
 
+            $billingPlan = $membership->getAttribute('billingPlan', null);
+            $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
+
+            if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
+                $statsPerOrganization['billing-plan'] = $billingPlan;
+            }
+
+            if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
+                $billingStartDate = $membership->getAttribute('billingStartDate', null);
+                $statsPerOrganization['billing-start-plan-date'] = $billingStartDate;
+            }
+
+
             $userId = $membership->getAttribute('userId', null);
             if ($userId) {
                 $user = $dbForConsole->getDocument('users', $userId);
@@ -409,6 +422,24 @@ class Hamster extends Action
 
         try {
             $statsPerUser = [];
+
+            $membership = $dbForConsole->findOne('teams', [
+                Query::equal('userInternalId', [$user->getInternalId()])
+            ]);
+
+            if (!empty($membership) || !$membership->isEmpty()) {
+                $billingPlan = $membership->getAttribute('billingPlan', null);
+                $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
+
+                if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
+                    $statsPerUser['billing-plan'] = $billingPlan;
+                }
+
+                if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
+                    $billingStartDate = $membership->getAttribute('billingStartDate', null);
+                    $statsPerUser['billing-start-plan-date'] = $billingStartDate;
+                }
+            }
 
             $statsPerUser['time'] = $user->getAttribute('$time');
 
