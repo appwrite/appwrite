@@ -234,7 +234,6 @@ App::post('/v1/account/sessions/email')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $secret = Auth::tokenGenerator();
         $session = new Document(array_merge(
             [
@@ -279,6 +278,8 @@ App::post('/v1/account/sessions/email')
                 ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
             ;
         }
+
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -750,7 +751,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $session = new Document(array_merge([
             '$id' => ID::unique(),
             'userId' => $user->getId(),
@@ -812,6 +812,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $state['success']['query'] = URLParser::unparseQuery($query);
             $state['success'] = URLParser::unparse($state['success']);
         }
+
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1203,7 +1205,6 @@ App::put('/v1/account/sessions/magic-url')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1257,6 +1258,7 @@ App::put('/v1/account/sessions/magic-url')
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $protocol = $request->getProtocol();
 
         $response
@@ -1482,7 +1484,6 @@ App::put('/v1/account/sessions/phone')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -1535,6 +1536,7 @@ App::put('/v1/account/sessions/phone')
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $protocol = $request->getProtocol();
 
         $response
@@ -1636,7 +1638,6 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1673,6 +1674,8 @@ App::post('/v1/account/sessions/anonymous')
         if (!Config::getParam('domainVerification')) {
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
+
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
@@ -2448,9 +2451,9 @@ App::patch('/v1/account/sessions/:sessionId')
         $sessions = $user->getAttribute('sessions', []);
 
         $session = null;
-        foreach ($sessions as $key => $session) {/** @var Document $session */
-            if ($sessionId === $session->getId()) {
-                $session = $session;
+        foreach ($sessions as $key => $loopSession) {
+            if ($sessionId === $loopSession->getId()) {
+                $session = $loopSession;
                 break;
             }
         }
