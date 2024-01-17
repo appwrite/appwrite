@@ -240,7 +240,7 @@ App::post('/v1/account/sessions/email')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-        $secret = Auth::tokenGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $session = new Document(array_merge(
             [
                 '$id' => ID::unique(),
@@ -814,7 +814,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
-            $secret = Auth::tokenGenerator();
+            $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
             $session = new Document(array_merge([
                 '$id' => ID::unique(),
@@ -1228,7 +1228,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
     $record = $geodb->get($request->getIP());
-    $sessionSecret = Auth::tokenGenerator();
+    $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
     $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
     $session = new Document(array_merge(
@@ -1615,7 +1615,7 @@ App::post('/v1/account/sessions/anonymous')
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $secret = Auth::tokenGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
@@ -2606,7 +2606,7 @@ App::post('/v1/account/recovery')
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_RECOVERY);
 
-        $secret = Auth::tokenGenerator();
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_RECOVERY);
         $recovery = new Document([
             '$id' => ID::unique(),
             'userId' => $profile->getId(),
@@ -2850,7 +2850,7 @@ App::post('/v1/account/verification')
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $verificationSecret = Auth::tokenGenerator();
+        $verificationSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_VERIFICATION);
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([

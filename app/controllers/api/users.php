@@ -1447,58 +1447,8 @@ App::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
-
-        if ($user !== false && !$user->isEmpty()) {
-            $user->setAttributes($user->getArrayCopy());
-        } else {
-            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-            if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-                if ($total >= $limit) {
-                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
-                }
-            }
-
-            if ($userId !== 'unique()') {
-                $existingUser = $dbForProject->findOne('users', [
-                    Query::equal('$id', [$userId]),
-                ]);
-
-                if ($existingUser !== false && !$existingUser->isEmpty()) {
-                    throw new Exception(Exception::USER_ALREADY_EXISTS);
-                }
-            }
-
-            $userId = $userId === 'unique()' ? ID::unique() : $userId;
-
-            $user->setAttributes([
-                '$id' => $userId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'email' => null,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => null,
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                'passwordUpdate' => null,
-                'registration' => DateTime::now(),
-                'reset' => false,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId]),
-                'accessedAt' => DateTime::now(),
-            ]);
-
-            $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        if ($user === false || $user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $secret = Auth::codeGenerator();
@@ -1557,69 +1507,18 @@ App::post('/v1/users/:userId/tokens')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOKEN)
-    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('userId', '', new UID(), 'User ID.')
     ->param('length', 6, new Range(4, 128), 'Token length in characters. The default length is 6 characters', true)
     ->param('expire', Auth::TOKEN_EXPIRATION_GENERIC, new Range(60, Auth::TOKEN_EXPIRATION_LOGIN_LONG), 'Token expiration period in seconds. The default expiration is 15 minutes.', true)
     ->inject('request')
     ->inject('response')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user !== false && !$user->isEmpty()) {
-            $user->setAttributes($user->getArrayCopy());
-        } else {
-            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
-
-            if ($limit !== 0) {
-                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
-
-                if ($total >= $limit) {
-                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
-                }
-            }
-
-            if ($userId !== 'unique()') {
-                $existingUser = $dbForProject->findOne('users', [
-                    Query::equal('$id', [$userId]),
-                ]);
-
-                if ($existingUser !== false && !$existingUser->isEmpty()) {
-                    throw new Exception(Exception::USER_ALREADY_EXISTS);
-                }
-            }
-
-            $userId = $userId === 'unique()' ? ID::unique() : $userId;
-
-
-            $user->setAttributes([
-                '$id' => $userId,
-                '$permissions' => [
-                    Permission::read(Role::any()),
-                    Permission::update(Role::user($userId)),
-                    Permission::delete(Role::user($userId)),
-                ],
-                'email' => null,
-                'emailVerification' => false,
-                'status' => true,
-                'password' => null,
-                'hash' => Auth::DEFAULT_ALGO,
-                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
-                'passwordUpdate' => null,
-                'registration' => DateTime::now(),
-                'reset' => false,
-                'prefs' => new \stdClass(),
-                'sessions' => null,
-                'tokens' => null,
-                'memberships' => null,
-                'search' => implode(' ', [$userId]),
-                'accessedAt' => DateTime::now(),
-            ]);
-
-            $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        if ($user === false || $user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
         }
 
         $secret = Auth::tokenGenerator($length);

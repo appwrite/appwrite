@@ -239,15 +239,53 @@ trait UsersBase
          * Test for SUCCESS
          */
         $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'expire' => 60,
-        ]);
+        ], $this->getHeaders()));
 
         $this->assertEquals(201, $token['headers']['status-code']);
         $this->assertEquals($data['userId'], $token['body']['userId']);
         $this->assertNotEmpty($token['body']['secret']);
         $this->assertNotEmpty($token['body']['expire']);
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'length' => 15,
+            'expire' => 60,
+        ]);
+
+        $this->assertEquals(201, $token['headers']['status-code']);
+        $this->assertEquals($data['userId'], $token['body']['userId']);
+        $this->assertEquals(15, strlen($token['body']['secret']));
+        $this->assertNotEmpty($token['body']['expire']);
+
+        /**
+         * Test for FAILURE
+         */
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'length' => 1,
+            'expire' => 1,
+        ]);
+
+        $this->assertEquals(400, $token['headers']['status-code']);
+        $this->assertArrayNotHasKey('userId', $token['body']);
+        $this->assertArrayNotHasKey('secret', $token['body']);
+
+        $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'expire' => 999999999999999,
+        ]);
+
+        $this->assertEquals(400, $token['headers']['status-code']);
+        $this->assertArrayNotHasKey('userId', $token['body']);
+        $this->assertArrayNotHasKey('secret', $token['body']);
     }
 
 

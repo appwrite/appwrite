@@ -79,10 +79,11 @@ class Auth
     /**
      * Token Lengths.
      */
-    public const TOKEN_LENGTH_MAGIC_URL = 32;
-    public const TOKEN_LENGTH_OAUTH2 = 32;
-    public const TOKEN_LENGTH_SESSION = 128;
-
+    public const TOKEN_LENGTH_MAGIC_URL = 64;
+    public const TOKEN_LENGTH_VERIFICATION = 64;
+    public const TOKEN_LENGTH_RECOVERY = 64;
+    public const TOKEN_LENGTH_OAUTH2 = 64;
+    public const TOKEN_LENGTH_SESSION = 256;
 
     /**
      * @var string
@@ -305,13 +306,20 @@ class Auth
      *
      * Generate random password string
      *
-     * @param int $length
+     * @param int $length Length of returned token
      *
      * @return string
      */
-    public static function tokenGenerator(int $length = Auth::TOKEN_LENGTH_SESSION): string
+    public static function tokenGenerator(int $length = 256): string
     {
-        return \bin2hex(\random_bytes($length));
+        if ($length <= 0) {
+            throw new \Exception('Token length must be greater than 0');
+        }
+
+        $bytesLength = (int) ceil($length / 2);
+        $token = \bin2hex(\random_bytes($bytesLength));
+
+        return substr($token, 0, $length);
     }
 
     /**
