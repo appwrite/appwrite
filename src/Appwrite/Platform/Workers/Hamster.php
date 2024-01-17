@@ -437,7 +437,7 @@ class Hamster extends Action
 
                 if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
                     $billingStartDate = $membership->getAttribute('billingStartDate', null);
-                    $statsPerUser['billing-start-plan-date'] = $billingStartDate;
+                    $statsPerUser['billing_start_date'] = $billingStartDate;
                 }
             }
 
