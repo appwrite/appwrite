@@ -123,6 +123,8 @@ class Messaging extends Action
                 Query::equal('$id', $targetIds),
                 Query::limit(\count($targetIds)),
             ]);
+            $targets = \array_filter($targets, fn(Document $target) =>
+                $target->getAttribute('providerType') === $message->getAttribute('providerType'));
             $recipients = \array_merge($recipients, $targets);
         }
 
