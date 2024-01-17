@@ -1,35 +1,40 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!doctype html>
 <html>
     <head>
-        <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=DM+Sans:wght@500;600&display=swap"
-            rel="stylesheet"
-        />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
         <style>
-            .main a {
-                color: currentColor;
-            }
-            .main {
+            body {
                 padding: 32px;
                 line-height: 1.5;
                 color: #616b7c;
                 font-size: 15px;
                 font-weight: 400;
                 font-family: "Inter", sans-serif;
+                background-color: #ffffff;
+                margin: 0;
+                padding: 0;
+            }
+            a {
+                color: currentColor;
+                word-break: break-all;
             }
             table {
                 width: 100%;
-                border-spacing: 0;
+                border-spacing: 0 !important;
             }
-            table,
-            tr,
-            th,
-            td {
+            table, tr, th, td {
                 margin: 0;
                 padding: 0;
             }
             td {
                 vertical-align: top;
+            }
+            .main {
+                max-width: 650px;
+                margin: 0 auto;
+                margin-top: 32px;
             }
             h1 {
                 font-size: 22px;
@@ -42,8 +47,7 @@
                 font-weight: 600;
                 color: #373b4d;
             }
-            h3,
-            td h3 {
+            h3 {
                 font-size: 14px;
                 font-weight: 500;
                 color: #373b4d;
@@ -63,7 +67,9 @@
                 border: none;
                 border-top: 1px solid #e8e9f0;
             }
-            .main a.button {
+        </style>
+        <style>
+            a.button {
                 display: inline-block;
                 background: #fd366e;
                 color: #ffffff;
@@ -80,50 +86,14 @@
                 margin-right: 24px;
                 margin-top: 8px;
             }
-            .main a.button:hover,
-            .main a.button:focus {
+            a.button:hover,
+            a.button:focus {
                 opacity: 0.8;
             }
-            .main a.button.is-reverse {
-                background: #fff;
-                color: #fd366e;
-            }
-            .fs12 {
-                font-size: 12px;
-            }
-            .ta-right {
-                text-align: right !important;
-            }
-            .ta-left {
-                text-align: left !important;
-            }
-            .ff-dmsans {
-                font-family: "DM Sans", sans-serif !important;
-            }
-            .ff-inter {
-                font-family: "Inter", sans-serif !important;
-            }
-            .w500 {
-                font-weight: 500 !important;
-            }
-            .w400 {
-                font-weight: 400 !important;
-            }
-            .w600 {
-                font-weight: 600 !important;
-            }
-            .tc-accent {
-                color: #da1a5b;
-            }
-            .pt-16 {
-                padding-top: 16px !important;
-            }
-            .pt-32 {
-                padding-top: 32px !important;
-            }
-            .divider {
-                padding-top: 32px;
-                border-bottom: solid 1px #d8d8db;
+            @media only screen and (max-width: 600px) {
+                .button {
+                    width: 100%;
+                }
             }
             .social-icon {
                 border-radius: 6px;
@@ -135,21 +105,14 @@
                 align-items: center; 
                 justify-content: center;
             }
-
             .social-icon > img {
                 margin: auto;
-            }
-
-            @media only screen and (max-width: 600px) {
-                .button {
-                    width: 100%;
-                }
             }
         </style>
     </head>
 
-    <body style="background-color: #ffffff; margin: 0; padding: 0;>
-        <div class="main" style="max-width: 650px; margin: 0 auto">
+    <body>
+        <div class="main">
             <table>
                 <tr>
                     <td>
@@ -169,9 +132,11 @@
                 </tr>
             </table>
 
-            <table style="margin-top: 40px">
+            <table style="margin-top: 32px">
                 <tr>
-                    <td>{{message}}</td>
+                    <td>
+{{body}}
+                    </td>
                 </tr>
             </table>
 

@@ -606,9 +606,11 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('Custom Mailer', $emails[0]['from'][0]['name']);
         $this->assertEquals('reply@appwrite.io', $emails[0]['replyTo'][0]['address']);
         $this->assertEquals('Custom Mailer', $emails[0]['replyTo'][0]['name']);
-        $this->assertEquals('Custom SMTP email from Appwrite', $emails[0]['subject']);
-        $this->assertStringContainsStringIgnoringCase('good to go', $emails[0]['text']);
-        $this->assertStringContainsStringIgnoringCase('good to go', $emails[0]['html']);
+        $this->assertEquals('Custom SMTP email sample', $emails[0]['subject']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['text']);
+        $this->assertStringContainsStringIgnoringCase('working correctly', $emails[0]['html']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['text']);
+        $this->assertStringContainsStringIgnoringCase('251 Little Falls Drive', $emails[0]['html']);
 
         $to = [
             $emails[0]['to'][0]['address'],

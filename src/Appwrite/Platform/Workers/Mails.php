@@ -63,7 +63,15 @@ class Mails extends Action
         $name = $payload['name'];
         $body = $payload['body'];
 
-        $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
+        $variables['subject'] = $subject;
+        $variables['year'] = date("Y");
+
+        $bodyTemplate = $payload['bodyTemplate'];
+        if (empty($bodyTemplate)) {
+            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
+        }
+
+        $bodyTemplate = Template::fromFile($bodyTemplate);
         $bodyTemplate->setParam('{{body}}', $body);
         foreach ($variables as $key => $value) {
             $bodyTemplate->setParam('{{' . $key . '}}', $value);
@@ -101,12 +109,8 @@ class Mails extends Action
         $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
 
         if (!empty($smtp)) {
-            if (!empty($smtp['replyTo'])) {
-                $replyTo = $smtp['replyTo'];
-            }
-            if (!empty($smtp['senderName'])) {
-                $replyToName = $smtp['senderName'];
-            }
+            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
+            $replyToName = $smtp['senderName'];
         }
 
         $mail->addReplyTo($replyTo, $replyToName);

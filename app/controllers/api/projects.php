@@ -1661,9 +1661,13 @@ App::post('/v1/projects/:projectId/smtp/tests')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $subject = 'Custom SMTP email from Appwrite';
-        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-test.tpl');
-        $body = $message->render();
+        $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
+
+        $subject = 'Custom SMTP email sample';
+        $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
+        $template
+            ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
 
         foreach ($emails as $email) {
             $queueForMails
@@ -1677,7 +1681,8 @@ App::post('/v1/projects/:projectId/smtp/tests')
                 ->setSmtpSenderName($senderName)
                 ->setRecipient($email)
                 ->setName('')
-                ->setBody($body)
+                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setBody($template->render())
                 ->setVariables([])
                 ->setSubject($subject)
                 ->trigger();
