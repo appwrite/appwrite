@@ -621,6 +621,38 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals('testuser@appwrite.io', $to[0]);
         $this->assertEquals('testusertwo@appwrite.io', $to[1]);
 
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io' ],
+            'senderEmail' => 'custommailer@appwrite.io',
+            'senderName' => 'Custom Mailer',
+            'replyTo' => 'reply@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => '',
+            'password' => '',
+        ]);
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/projects/' . $id . '/smtp/tests', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'emails' => [ 'u1@appwrite.io', 'u2@appwrite.io', 'u3@appwrite.io', 'u4@appwrite.io', 'u5@appwrite.io', 'u6@appwrite.io', 'u7@appwrite.io', 'u8@appwrite.io', 'u9@appwrite.io', 'u10@appwrite.io', 'u11@appwrite.io' ],
+            'senderEmail' => 'custommailer@appwrite.io',
+            'senderName' => 'Custom Mailer',
+            'replyTo' => 'reply@appwrite.io',
+            'host' => 'maildev',
+            'port' => 1025,
+            'username' => '',
+            'password' => '',
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         return $data;
     }
 
