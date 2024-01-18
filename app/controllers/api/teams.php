@@ -745,6 +745,7 @@ App::get('/v1/teams/:teamId/memberships')
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
+                ->setAttribute('mfa', $user->getAttribute('mfa'))
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'))
