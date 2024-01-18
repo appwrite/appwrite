@@ -1367,84 +1367,6 @@ $commonCollections = [
         ],
     ],
 
-    'cache' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'cache',
-        'name' => 'Cache',
-        'attributes' => [
-            [
-                '$id' => 'resource',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'resourceType',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('mimeType'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255, // https://tools.ietf.org/html/rfc4288#section-4.2
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'accessedAt',
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => 'signature',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => '_key_accessedAt',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['accessedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_resource',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resource'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-        ],
-    ],
  ];
 
 $projectCollections = array_merge([
@@ -1502,7 +1424,6 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
     'attributes' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('attributes'),
@@ -1700,7 +1621,6 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
     'indexes' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('indexes'),
@@ -1838,7 +1758,6 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
     'functions' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('functions'),
@@ -2196,7 +2115,6 @@ $projectCollections = array_merge([
             ]
         ],
     ],
-
     'deployments' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('deployments'),
@@ -2584,7 +2502,6 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
     'builds' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('builds'),
@@ -2733,7 +2650,6 @@ $projectCollections = array_merge([
             ]
         ],
     ],
-
     'executions' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('executions'),
@@ -2950,7 +2866,6 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
     'variables' => [
         '$collection' => Database::METADATA,
         '$id' => 'variables',
@@ -3068,7 +2983,84 @@ $projectCollections = array_merge([
             ],
         ],
     ],
-
+    'cache' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'cache',
+        'name' => 'Cache',
+        'attributes' => [
+            [
+                '$id' => 'resource',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'resourceType',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('mimeType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255, // https://tools.ietf.org/html/rfc4288#section-4.2
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'accessedAt',
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => 'signature',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_accessedAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resource'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
     'migrations' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('migrations'),
