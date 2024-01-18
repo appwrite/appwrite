@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Challenge;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -1420,6 +1421,131 @@ App::patch('/v1/users/:userId/targets/:targetId')
 
         $response
             ->dynamic($target, Response::MODEL_TARGET);
+    });
+
+App::patch('/v1/users/:userId/mfa')
+    ->desc('Update MFA')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateMfa')
+    ->label('sdk.description', '/docs/references/users/update-user-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, bool $mfa, Response $response, Database $dbForProject, Event $queueForEvents) {
+
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $user->setAttribute('mfa', $mfa);
+
+        $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_USER);
+    });
+
+App::get('/v1/users/:userId/providers')
+    ->desc('List Providers')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'listProviders')
+    ->label('sdk.description', '/docs/references/users/list-providers.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDERS)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $providers = new Document([
+            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
+            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+        ]);
+
+        $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
+    });
+
+App::delete('/v1/users/:userId/mfa/:provider')
+    ->desc('Delete Authenticator')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].delete.mfa')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'deleteAuthenticator')
+    ->label('sdk.description', '/docs/references/users/delete-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('otp', '', new Text(256), 'Valid verification token.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $success = match ($provider) {
+            'totp' => Challenge\TOTP::verify($user, $otp),
+            default => false
+        };
+
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+    if (!$user->getAttribute('totp')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+    }
+
+        $user
+            ->setAttribute('totp', false)
+            ->setAttribute('totpVerification', false)
+            ->setAttribute('totpSecret', null)
+            ->setAttribute('totpBackup', null);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->noContent();
     });
 
 App::post('/v1/users/:userId/sessions')

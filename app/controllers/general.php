@@ -566,7 +566,11 @@ App::init()
         if ($mode !== APP_MODE_ADMIN) {
             $minFactors = $project->getAttribute('minFactors') ?? 1;
             $mfaEnabled = $user->getAttribute('mfa', false);
-            if ($mfaEnabled && $minFactors === 1) {
+            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
+            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+            if ($mfaEnabled && $hasMoreFactors && $minFactors === 1) {
                 $minFactors = 2;
             }
             if (!in_array('mfa', $route->getGroups())) {
