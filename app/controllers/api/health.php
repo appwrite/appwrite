@@ -16,6 +16,22 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
+
+const QUEUE_NAMES = [
+    'Database' => Event::DATABASE_QUEUE_NAME,
+    'Delete' => Event::DELETE_QUEUE_NAME,
+    'Audit' => Event::AUDITS_QUEUE_NAME,
+    'Mail' => Event::MAILS_QUEUE_NAME,
+    'Function' => Event::FUNCTIONS_QUEUE_NAME,
+    'Usage' => Event::USAGE_QUEUE_NAME,
+    'Webhook' => Event::WEBHOOK_QUEUE_NAME,
+    'Certificate' => Event::CERTIFICATES_QUEUE_NAME,
+    'Build' => Event::BUILDS_QUEUE_NAME,
+    'Messaging' => Event::MESSAGING_QUEUE_NAME,
+    'Migration' => Event::MIGRATIONS_QUEUE_NAME,
+    'Hamster' => Event::HAMSTER_QUEUE_NAME,
+];
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -685,6 +701,27 @@ App::get('/v1/health/anti-virus')
         }
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
+    });
+
+App::get('/v1/health/queue/failed/:queueName')
+    ->desc('Get number of failed queue jobs')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getFailedJobs')
+    ->param('queueName', '', new WhiteList(array_keys(QUEUE_NAMES)), 'The name of the queue')
+    ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_FAILED_JOBS)
+    ->inject('response')
+    ->inject('queue')
+    ->action(function (string $queueName, Response $response, Connection $queue) {
+        $client = new Client(QUEUE_NAMES[$queueName], $queue);
+        $failed = $client->sumFailedJobs(); //TODO: Replace with countFailedJobs() when new version is ready
+
+        $response->dynamic(new Document([ 'failed' => $failed]), Response::MODEL_HEALTH_FAILED_JOBS);
     });
 
 App::get('/v1/health/stats') // Currently only used internally
