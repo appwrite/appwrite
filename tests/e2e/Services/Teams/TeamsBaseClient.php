@@ -413,6 +413,7 @@ trait TeamsBaseClient
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]));
 
+        $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(true, $response['body']['emailVerification']);
 
 

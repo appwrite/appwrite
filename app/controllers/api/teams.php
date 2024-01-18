@@ -962,6 +962,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+            'factors' => ['email'],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
