@@ -1991,20 +1991,27 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
+        $userId = $user->getId();
+
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
+                Permission::read(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
-            'userId' => $user->getId(),
+            'userId' => $userId,
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
-            'search' => "{$target->getAttribute('providerType')} "
+            'search' => implode(' ', [
+                $subscriberId,
+                $targetId,
+                $userId,
+                $target->getAttribute('providerType'),
+            ]),
         ]);
 
         try {
