@@ -166,6 +166,12 @@ class Session extends Model
                 'default' => 1,
                 'example' => 1,
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Secret used to authenticate the user. Only included if the request was made with an API key',
+                'default' => '',
+                'example' => '5e5bb8c16897e',
+            ])
         ;
     }
 

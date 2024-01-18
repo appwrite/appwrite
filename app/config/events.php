@@ -58,6 +58,14 @@ return [
                 '$description' => 'This event triggers when a user\'s target is deleted.',
             ],
         ],
+        'tokens' => [
+            '$model' => Response::MODEL_TOKEN,
+            '$resource' => true,
+            '$description' => 'This event triggers on any user\'s token event.',
+            'create' => [
+                '$description' => 'This event triggers when a user\'s token is created.',
+            ],
+        ],
         'create' => [
             '$description' => 'This event triggers when a user is created.'
         ],

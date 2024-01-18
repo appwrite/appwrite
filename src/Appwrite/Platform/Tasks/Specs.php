@@ -82,6 +82,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ]
             ],
             APP_PLATFORM_SERVER => [
                 'Project' => [
@@ -106,6 +112,24 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'ForwardedFor' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-For',
+                    'description' => 'The IP address of the client that made the request',
+                    'in' => 'header',
+                ],
+                'ForwardedUserAgent' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-User-Agent',
+                    'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
             ],
@@ -173,6 +197,7 @@ class Specs extends Action
 
                     if (empty($routeSecurity)) {
                         $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlaforms[] = APP_PLATFORM_SERVER;
                     }
 
                     if (!$route->getLabel('docs', true)) {

@@ -52,6 +52,8 @@ class Auth
     public const TOKEN_TYPE_INVITE = 4;
     public const TOKEN_TYPE_MAGIC_URL = 5;
     public const TOKEN_TYPE_PHONE = 6;
+    public const TOKEN_TYPE_OAUTH2 = 7;
+    public const TOKEN_TYPE_GENERIC = 8;
 
     /**
      * Session Providers.
@@ -60,6 +62,9 @@ class Auth
     public const SESSION_PROVIDER_ANONYMOUS = 'anonymous';
     public const SESSION_PROVIDER_MAGIC_URL = 'magic-url';
     public const SESSION_PROVIDER_PHONE = 'phone';
+    public const SESSION_PROVIDER_OAUTH2 = 'oauth2';
+    public const SESSION_PROVIDER_TOKEN = 'token';
+    public const SESSION_PROVIDER_SERVER = 'server';
 
     /**
      * Token Expiration times.
@@ -69,6 +74,16 @@ class Auth
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
     public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
+
+    /**
+     * Token Lengths.
+     */
+    public const TOKEN_LENGTH_MAGIC_URL = 64;
+    public const TOKEN_LENGTH_VERIFICATION = 256;
+    public const TOKEN_LENGTH_RECOVERY = 256;
+    public const TOKEN_LENGTH_OAUTH2 = 64;
+    public const TOKEN_LENGTH_SESSION = 256;
 
     /**
      * @var string
@@ -115,6 +130,27 @@ class Auth
             'id' => $id,
             'secret' => $secret,
         ]));
+    }
+
+    /**
+     * Token type to session provider mapping.
+     */
+    public static function getSessionProviderByTokenType(int $type): string
+    {
+        switch ($type) {
+            case Auth::TOKEN_TYPE_VERIFICATION:
+            case Auth::TOKEN_TYPE_RECOVERY:
+            case Auth::TOKEN_TYPE_INVITE:
+                return Auth::SESSION_PROVIDER_EMAIL;
+            case Auth::TOKEN_TYPE_MAGIC_URL:
+                return Auth::SESSION_PROVIDER_MAGIC_URL;
+            case Auth::TOKEN_TYPE_PHONE:
+                return Auth::SESSION_PROVIDER_PHONE;
+            case Auth::TOKEN_TYPE_OAUTH2:
+                return Auth::SESSION_PROVIDER_OAUTH2;
+            default:
+                return Auth::SESSION_PROVIDER_TOKEN;
+        }
     }
 
     /**
@@ -270,13 +306,20 @@ class Auth
      *
      * Generate random password string
      *
-     * @param int $length
+     * @param int $length Length of returned token
      *
      * @return string
      */
-    public static function tokenGenerator(int $length = 128): string
+    public static function tokenGenerator(int $length = 256): string
     {
-        return \bin2hex(\random_bytes($length));
+        if ($length <= 0) {
+            throw new \Exception('Token length must be greater than 0');
+        }
+
+        $bytesLength = (int) ceil($length / 2);
+        $token = \bin2hex(\random_bytes($bytesLength));
+
+        return substr($token, 0, $length);
     }
 
     /**
@@ -303,48 +346,23 @@ class Auth
      * Verify token and check that its not expired.
      *
      * @param array<Document> $tokens
-     * @param int $type
+     * @param int $type Type of token to verify, if null will verify any type
      * @param string $secret
      *
-     * @return bool|string
+     * @return false|Document
      */
-    public static function tokenVerify(array $tokens, int $type, string $secret)
+    public static function tokenVerify(array $tokens, int $type = null, string $secret): false|Document
     {
         foreach ($tokens as $token) {
             if (
-                $token->isSet('type') &&
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
-                $token->getAttribute('type') == $type &&
+                $token->isSet('type') &&
+                ($type === null ||  $token->getAttribute('type') === $type) &&
                 $token->getAttribute('secret') === self::hash($secret) &&
                 DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
             ) {
-                return (string)$token->getId();
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Verify phone token and check that its not expired.
-     *
-     * @param array<Document> $tokens
-     * @param string $secret
-     * @return string|false
-     */
-    public static function phoneTokenVerify(array $tokens, string $secret)
-    {
-        foreach ($tokens as $token) {
-            if (
-                $token->isSet('type') &&
-                $token->isSet('secret') &&
-                $token->isSet('expire') &&
-                $token->getAttribute('type') == Auth::TOKEN_TYPE_PHONE &&
-                $token->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz($token->getAttribute('expire')) >= DateTime::formatTz(DateTime::now())
-            ) {
-                return (string) $token->getId();
+                return $token;
             }
         }
 
