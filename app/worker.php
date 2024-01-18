@@ -240,7 +240,10 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log) use ($queueName) {
+    ->inject('pools')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools) use ($queueName) {
+        $pools->reclaim();
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {

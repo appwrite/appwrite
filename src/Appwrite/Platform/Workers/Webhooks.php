@@ -49,6 +49,7 @@ class Webhooks extends Action
      */
     public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Log $log): void
     {
+        $this->errors = [];
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
