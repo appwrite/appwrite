@@ -159,51 +159,7 @@ class Webhooks extends Action
 
             if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
                 $webhook->setAttribute('enabled', false);
-
-                $memberships = $dbForConsole->find('memberships', [
-                    Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
-                    Query::limit(APP_LIMIT_SUBQUERY)
-                ]);
-
-                $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
-
-                $users = $dbForConsole->find('users', [
-                    Query::equal('$id', $userIds),
-                ]);
-
-                $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-                $hostname = App::getEnv('_APP_DOMAIN');
-                $projectId = $project->getId();
-                $webhookId = $webhook->getId();
-
-                $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
-
-                $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
-                $template->setParam('{{project}}', $project->getAttribute('name'));
-                $template->setParam('{{url}}', $webhook->getAttribute('url'));
-                $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-                $template->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
-                $template->setParam('{{attempts}}', $attempts);
-
-                $subject = 'Webhook deliveries have been paused';
-                $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
-
-                $body
-                    ->setParam('{{subject}}', $subject)
-                    ->setParam('{{message}}', $template->render())
-                    ->setParam('{{year}}', date("Y"));
-
-                $queueForMails
-                    ->setSubject($subject)
-                    ->setBody($body->render());
-
-                foreach ($users as $user) {
-                    $queueForMails
-                        ->setVariables(['user' => $user->getAttribute('name', '')])
-                        ->setName($user->getAttribute('name', ''))
-                        ->setRecipient($user->getAttribute('email'))
-                        ->trigger();
-                }
+                $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
@@ -214,6 +170,63 @@ class Webhooks extends Action
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
             $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        }
+    }
+
+    /**
+     * @param int $attempts
+     * @param mixed $statusCode
+     * @param Document $webhook
+     * @param Document $project
+     * @param Database $dbForConsole
+     * @param Mail $queueForMails
+     * @return void
+     */
+    public function sendEmailAlert(int $attempts, mixed $statusCode, Document $webhook, Document $project, Database $dbForConsole, Mail $queueForMails): void
+    {
+        $memberships = $dbForConsole->find('memberships', [
+            Query::equal('teamInternalId', [$project->getAttribute('teamInternalId')]),
+            Query::limit(APP_LIMIT_SUBQUERY)
+        ]);
+
+        $userIds = array_column(\array_map(fn ($membership) => $membership->getArrayCopy(), $memberships), 'userId');
+
+        $users = $dbForConsole->find('users', [
+            Query::equal('$id', $userIds),
+        ]);
+
+        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = App::getEnv('_APP_DOMAIN');
+        $projectId = $project->getId();
+        $webhookId = $webhook->getId();
+
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
+
+        $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
+        $template->setParam('{{project}}', $project->getAttribute('name'));
+        $template->setParam('{{url}}', $webhook->getAttribute('url'));
+        $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
+        $template->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{attempts}}', $attempts);
+
+        $subject = 'Webhook deliveries have been paused';
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{message}}', $template->render())
+            ->setParam('{{year}}', date("Y"));
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setBody($body->render());
+
+        foreach ($users as $user) {
+            $queueForMails
+                ->setVariables(['user' => $user->getAttribute('name', '')])
+                ->setName($user->getAttribute('name', ''))
+                ->setRecipient($user->getAttribute('email'))
+                ->trigger();
         }
     }
 }

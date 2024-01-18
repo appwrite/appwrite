@@ -84,7 +84,7 @@ class Webhook extends Model
             ])
             ->addRule('logs', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Webhooks last failed delivery attempt logs.',
+                'description' => 'Webhook error logs from the most recent failure.',
                 'default' => '',
                 'example' => 'Failed to connect to remote server.',
             ])
