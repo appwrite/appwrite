@@ -1110,7 +1110,17 @@ trait WebhooksBase
         $webhook = $this->getLastRequest();
         $this->assertEquals($webhook['data']['name'], 'Collection1');
 
-        sleep(5);
+        sleep(10);
+
+        // verify that enabled is now false
+        $webhook = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/webhooks/' . $webhookId, array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => 'console',
+        ]));
+
+        $this->assertEquals($webhook['body']['enabled'], false);
 
         /**
          * Test for FAILURE
