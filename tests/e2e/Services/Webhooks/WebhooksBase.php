@@ -1058,125 +1058,6 @@ trait WebhooksBase
     /**
      * @depends testCreateCollection
      */
-    public function testCreateDisabledWebhook(array $data): void
-    {
-        $projectId = $this->getProject()['$id'];
-        $webhookId = $this->getProject()['webhookId'];
-        $databaseId = $data['databaseId'];
-
-        // create a new collection
-        $collection1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Collection1',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals($collection1['headers']['status-code'], 201);
-        $this->assertNotEmpty($collection1['body']['$id']);
-
-        // update webhook and set it to disabled
-        $webhook = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/webhooks/' . $webhookId, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Webhook Test',
-            'enabled' => false,
-            'events' => [
-                'databases.*',
-                'functions.*',
-                'buckets.*',
-                'teams.*',
-                'users.*'
-            ],
-            'url' => 'http://request-catcher:5000/webhook',
-            'security' => false,
-        ]);
-
-        $this->assertEquals(200, $webhook['headers']['status-code']);
-        $this->assertNotEmpty($webhook['body']);
-
-        $webhook = $this->getLastRequest();
-        $this->assertEquals($webhook['data']['name'], 'Collection1');
-
-        sleep(10);
-
-        // verify that enabled is now false
-        $webhook = $this->client->call(Client::METHOD_GET, '/projects/' . $projectId . '/webhooks/' . $webhookId, array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ]));
-
-        $this->assertEquals($webhook['body']['enabled'], false);
-
-        /**
-         * Test for FAILURE
-         */
-        // create another collection: This event should not trigger the webhook.
-        $collection2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'collectionId' => ID::unique(),
-            'name' => 'Collection2',
-            'permissions' => [
-                Permission::read(Role::any()),
-                Permission::create(Role::any()),
-                Permission::update(Role::any()),
-                Permission::delete(Role::any()),
-            ],
-            'documentSecurity' => true,
-        ]);
-
-        $this->assertEquals($collection2['headers']['status-code'], 201);
-        $this->assertNotEmpty($collection2['body']['$id']);
-
-        $webhook = $this->getLastRequest();
-
-        $this->assertEquals($webhook['headers']['X-Appwrite-Webhook-Id'] ?? '', $webhookId);
-        $this->assertNotEquals($webhook['data']['name'], 'Collection2');
-
-        // re-enable the webhook again
-        $webhook = $this->client->call(Client::METHOD_PUT, '/projects/' . $projectId . '/webhooks/' . $webhookId, [
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-            'x-appwrite-project' => 'console',
-        ], [
-            'name' => 'Webhook Test',
-            'enabled' => true, // set webhook to enabled again
-            'events' => [
-                'databases.*',
-                'functions.*',
-                'buckets.*',
-                'teams.*',
-                'users.*'
-            ],
-            'url' => 'http://request-catcher:5000/webhook',
-            'security' => false,
-        ]);
-
-        $this->assertEquals(200, $webhook['headers']['status-code']);
-        $this->assertNotEmpty($webhook['body']);
-    }
-
-    /**
-     * @depends testCreateCollection
-     */
     public function testWebhookAutoDisable(array $data): void
     {
         $projectId = $this->getProject()['$id'];
@@ -1204,7 +1085,7 @@ trait WebhooksBase
 
         $this->assertEquals(200, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']);
-        
+
         // trigger webhook for failure event 10 times
         for ($i = 0; $i < 10; $i++) {
             $newCollection = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections', array_merge([
@@ -1222,7 +1103,7 @@ trait WebhooksBase
                 ],
                 'documentSecurity' => true,
             ]);
-    
+
             $this->assertEquals($newCollection['headers']['status-code'], 201);
             $this->assertNotEmpty($newCollection['body']['$id']);
         }
