@@ -1366,7 +1366,6 @@ $commonCollections = [
             ],
         ],
     ],
-
  ];
 
 $projectCollections = array_merge([
@@ -1424,6 +1423,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'attributes' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('attributes'),
@@ -1621,6 +1621,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'indexes' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('indexes'),
@@ -1758,6 +1759,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'functions' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('functions'),
@@ -1943,6 +1945,17 @@ $projectCollections = array_merge([
                 'filters' => ['subQueryVariables'],
             ],
             [
+                '$id' => ID::custom('varsProject'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['subQueryProjectVariables'],
+            ],
+            [
                 '$id' => ID::custom('events'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -2115,6 +2128,7 @@ $projectCollections = array_merge([
             ]
         ],
     ],
+
     'deployments' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('deployments'),
@@ -2502,6 +2516,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'builds' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('builds'),
@@ -2650,6 +2665,7 @@ $projectCollections = array_merge([
             ]
         ],
     ],
+
     'executions' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('executions'),
@@ -2866,6 +2882,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'cache' => [
         '$collection' => Database::METADATA,
         '$id' => 'cache',
@@ -2944,6 +2961,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'variables' => [
         '$collection' => Database::METADATA,
         '$id' => 'variables',
@@ -3061,6 +3079,7 @@ $projectCollections = array_merge([
             ],
         ],
     ],
+
     'migrations' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('migrations'),
