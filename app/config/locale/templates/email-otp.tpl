@@ -1,8 +1,8 @@
 <p>{{hello}}</p>
 
-<p>{{optionOtp}}</p>
+<p>{{description}}</p>
 
-<h3>{{otp}}</h3>
+<p>{{otp}}</p>
 
 <p>{{clientInfo}}</p>
 
