@@ -2325,30 +2325,35 @@ App::post('/v1/messaging/messages/email')
             'status' => $status,
         ]));
 
-        if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
-        } elseif (!\is_null($scheduledAt)) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
-                'resourceType' => 'message',
-                'resourceCollection' => 'messages',
-                'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
-                'resourceUpdatedAt' => DateTime::now(),
-                'projectId' => $project->getId(),
-                'schedule'  => $message->getAttribute('scheduledAt'),
-                'active' => $status === 'processing',
-            ]));
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
 
-            $message->setAttribute('scheduleId', $schedule->getId());
+                $message->setAttribute('scheduleId', $schedule->getId());
 
-            $dbForProject->updateDocument(
-                'messages',
-                $message->getId(),
-                $message
-            );
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
@@ -2427,25 +2432,35 @@ App::post('/v1/messaging/messages/sms')
             'status' => $status,
         ]));
 
-        if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
-        } elseif ($status === 'processing' && $scheduledAt !== null) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
-                'resourceType' => 'message',
-                'resourceCollection' => 'messages',
-                'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
-                'resourceUpdatedAt' => DateTime::now(),
-                'projectId' => $project->getId(),
-                'schedule'  => $message->getAttribute('scheduledAt'),
-                'active' => $status === 'processing',
-            ]));
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
 
-            $message->setAttribute('scheduleId', $schedule->getId());
-            $dbForProject->updateDocument('messages', $message->getId(), $message);
+                $message->setAttribute('scheduleId', $schedule->getId());
+
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
@@ -2541,25 +2556,35 @@ App::post('/v1/messaging/messages/push')
             'status' => $status,
         ]));
 
-        if ($status === MessageStatus::PROCESSING) {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
-        } elseif ($status === 'processing' && $scheduledAt !== null) {
-            $schedule = $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'),
-                'resourceType' => 'message',
-                'resourceCollection' => 'messages',
-                'resourceId' => $message->getId(),
-                'resourceInternalId' => $message->getInternalId(),
-                'resourceUpdatedAt' => DateTime::now(),
-                'projectId' => $project->getId(),
-                'schedule'  => $message->getAttribute('scheduledAt'),
-                'active' => $status === 'processing',
-            ]));
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
 
-            $message->setAttribute('scheduleId', $schedule->getId());
-            $dbForProject->updateDocument('messages', $message->getId(), $message);
+                $message->setAttribute('scheduleId', $schedule->getId());
+
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
