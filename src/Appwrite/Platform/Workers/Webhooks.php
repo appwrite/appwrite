@@ -4,7 +4,6 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Mail;
 use Appwrite\Template\Template;
-use Appwrite\Utopia\View;
 use Exception;
 use Utopia\App;
 use Utopia\Database\Document;
@@ -196,8 +195,6 @@ class Webhooks extends Action
             Query::equal('$id', $userIds),
         ]);
 
-        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = App::getEnv('_APP_DOMAIN');
         $projectId = $project->getId();
         $webhookId = $webhook->getId();
 
@@ -207,7 +204,7 @@ class Webhooks extends Action
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{redirect}}', $protocol . '://' . $hostname . "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{redirect}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
         $subject = 'Webhook deliveries have been paused';
