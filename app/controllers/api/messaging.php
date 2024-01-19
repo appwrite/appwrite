@@ -2287,6 +2287,10 @@ App::post('/v1/messaging/messages/email')
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
+        }
+
         $mergedTargets = \array_merge($targets, $cc, $bcc);
 
         if (!empty($mergedTargets)) {
@@ -2399,6 +2403,10 @@ App::post('/v1/messaging/messages/sms')
 
         if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
         if (!empty($targets)) {
@@ -2514,6 +2522,10 @@ App::post('/v1/messaging/messages/push')
 
         if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
         if (!empty($targets)) {

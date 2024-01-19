@@ -4,6 +4,7 @@
  * List of server wide error codes and their respective messages.
  */
 
+use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
 
 return [
@@ -871,10 +872,14 @@ return [
         'description' => 'Message with the target ID is not a push target.',
         'code' => 400,
     ],
+    Exception::MESSAGE_MISSING_SCHEDULE => [
+        'name' => Exception::MESSAGE_MISSING_SCHEDULE,
+        'description' => 'Message can not have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
+        'code' => 400,
+    ],
     Exception::SCHEDULE_NOT_FOUND => [
         'name' => Exception::SCHEDULE_NOT_FOUND,
         'description' => 'Schedule with the requested ID could not be found.',
         'code' => 404,
     ],
-
 ];
