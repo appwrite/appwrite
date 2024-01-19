@@ -54,6 +54,7 @@ class Auth
     public const TOKEN_TYPE_PHONE = 6;
     public const TOKEN_TYPE_OAUTH2 = 7;
     public const TOKEN_TYPE_GENERIC = 8;
+    public const TOKEN_TYPE_EMAIL = 9; // OTP
 
     /**
      * Session Providers.
@@ -73,7 +74,7 @@ class Auth
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
-    public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
     public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
 
     /**

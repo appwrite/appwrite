@@ -17,6 +17,13 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateMagicURLToken',
         'enabled' => true,
     ],
+    'email' => [
+        'name' => 'Email (OTP)',
+        'key' => 'email',
+        'icon' => '/images/users/email.png',
+        'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailToken',
+        'enabled' => true,
+    ],
     'anonymous' => [
         'name' => 'Anonymous',
         'key' => 'anonymous',
