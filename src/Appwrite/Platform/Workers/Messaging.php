@@ -134,7 +134,8 @@ class Messaging extends Action
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
 
-            throw new \Exception('No valid recipients found.');
+            Console::warning('No valid recipients found.');
+            return;
         }
 
         $fallback = $dbForProject->findOne('providers', [
@@ -148,7 +149,8 @@ class Messaging extends Action
                 'deliveryErrors' => ['No fallback provider found.']
             ]));
 
-            throw new \Exception('No fallback provider found.');
+            Console::warning('No fallback provider found.');
+            return;
         }
 
         /**
