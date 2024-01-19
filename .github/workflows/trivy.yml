@@ -13,7 +13,6 @@ jobs:
       with:
         submodules: recursive
 
-
     - name: Build the Docker image
       run: docker build . -t appwrite_image:latest
 
