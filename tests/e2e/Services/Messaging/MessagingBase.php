@@ -640,10 +640,11 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]), [
             'providerId' => ID::unique(),
-            'name' => 'Mailgun-provider',
+            'name' => 'Sendgrid-provider',
             'apiKey' => $apiKey,
             'fromName' => $fromName,
-            'fromEmail' => $fromEmail
+            'fromEmail' => $fromEmail,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
@@ -675,13 +676,17 @@ trait MessagingBase
 
         $this->assertEquals(201, $user['headers']['status-code']);
 
+        // Get target
+        $target = $user['body']['targets'][0];
+
+
         // Create Subscriber
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'subscriberId' => ID::unique(),
-            'targetId' => $user['body']['targets'][0]['$id'],
+            'targetId' => $target['$id'],
         ]);
 
         $this->assertEquals(201, $subscriber['headers']['status-code']);
@@ -795,7 +800,8 @@ trait MessagingBase
             'name' => 'Msg91Sender',
             'senderId' => $senderId,
             'authKey' => $authKey,
-            'from' => $from
+            'from' => $from,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);
@@ -956,6 +962,7 @@ trait MessagingBase
             'providerId' => ID::unique(),
             'name' => 'FCM-1',
             'serviceAccountJSON' => $serviceAccountJSON,
+            'enabled' => true,
         ]);
 
         $this->assertEquals(201, $provider['headers']['status-code']);

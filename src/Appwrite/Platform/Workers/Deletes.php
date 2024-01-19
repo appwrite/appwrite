@@ -20,6 +20,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -153,7 +154,7 @@ class Deletes extends Action
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_SCHEDULES:
-                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
+                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
                 break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
@@ -171,17 +172,21 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @param Document|null $document
      * @return void
      * @throws Authorization
-     * @throws Throwable
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws DatabaseException
      */
-    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime, ?Document $document = null): void
     {
         $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', [$document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -195,11 +200,22 @@ class Deletes extends Action
                     return;
                 }
 
-                $function = $getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
+                $resource = $getProjectDB($project)->getDocument(
+                    $document->getAttribute('resourceCollection'),
+                    $document->getAttribute('resourceId')
+                );
 
-                if ($function->isEmpty()) {
+                $delete = true;
+
+                switch ($document->getAttribute('resourceType')) {
+                    case 'function':
+                        $delete = $resource->isEmpty();
+                        break;
+                }
+
+                if ($delete) {
                     $dbForConsole->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleting schedule for ' . $document->getAttribute('resourceType') . ' ' . $document->getAttribute('resourceId'));
                 }
             }
         );
