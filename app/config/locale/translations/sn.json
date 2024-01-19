@@ -231,12 +231,14 @@
     "continents.sa": "South America",
     "emails.magicSession.optionButton": "Cliquez sur le bouton ci-dessous pour vous connecter de manière sécurisée à votre compte {{project}}. Il expirera dans 1 heure.",
     "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
-    "emails.magicSession.optionUrl": "Si le bouton ci-dessus ne s'affiche pas, utilisez le lien suivant :",
     "emails.magicSession.clientInfo": "Cette connexion a été demandée en utilisant {{agentClient}} sur {{agentDevice}} {{agentOs}}. Si vous n'avez pas demandé cette connexion, vous pouvez ignorer cet e-mail en toute sécurité.",
     "emails.certificate.subject": "Échec du certificat pour %s",
     "emails.certificate.hello": "Bonjour",
     "emails.certificate.body": "Le certificat pour votre domaine '{{domain}}' n'a pas pu être généré. C'est la tentative n° {{attempt}}, et l'échec a été causé par : {{error}}",
     "emails.certificate.footer": "Votre certificat précédent sera valable pendant 30 jours après le premier échec. Nous vous recommandons vivement d'enquêter sur ce cas, sinon votre domaine se retrouvera sans communication SSL valide.",
     "emails.certificate.thanks": "Merci",
-    "emails.certificate.signature": "équipe {{project}}"
+    "emails.certificate.signature": "équipe {{project}}",
+    "sms.verification.body": "{{secret}} mooy sa koodu vérificationu {{project}} bi.",
+    "emails.magicSession.securityPhrase": "La phrase de sécurité pour ce courriel est {{phrase}}. Vous pouvez faire confiance à ce courriel si cette phrase correspond à la phrase affichée lors de la connexion.",
+    "emails.magicSession.optionUrl": "Si vous ne pouvez pas vous connecter en utilisant le bouton ci-dessus, veuillez visiter le lien suivant :"
 }

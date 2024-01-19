@@ -1,1 +1,0 @@
-Use this endpoint to complete creating a session with SMS. Use the **userId** from the [createPhoneSession](https://appwrite.io/docs/references/cloud/client-web/account#createPhoneSession) endpoint and the **secret** received via SMS to successfully update and confirm the phone session.

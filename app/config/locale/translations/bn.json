@@ -231,12 +231,14 @@
     "continents.sa": "দক্ষিণ আমেরিকা",
     "emails.magicSession.optionButton": "নীচের বোতামে ক্লিক করুন আপনার {{project}} অ্যাকাউন্টে নিরাপদে সাইন ইন করতে। এটি ১ ঘন্টা পরে মেয়াদ উত্তীর্ণ হবে।",
     "emails.magicSession.buttonText": "{{project}}-এ সাইন ইন করুন",
-    "emails.magicSession.optionUrl": "উপরের বোতামটি যদি না দেখায়, তাহলে নিম্নলিখিত লিংকটি ব্যবহার করুন:",
     "emails.magicSession.clientInfo": "এই সাইন ইনটি {{agentClient}} ব্যবহার করে {{agentDevice}} {{agentOs}}-এ অনুরোধ করা হয়েছিল। যদি আপনি সাইন ইনের অনুরোধ করেননি, আপনি নিরাপদে এই ইমেইলটি উপেক্ষা করতে পারেন।",
     "emails.certificate.subject": "%s-এর জন্য শংসাপত্র ব্যর্থতা",
     "emails.certificate.hello": "হ্যালো",
     "emails.certificate.body": "আপনার ডোমেইন '{{domain}}' এর জন্য সার্টিফিকেট জেনারেট করা যায়নি। এটি প্রচেষ্টা নম্বর {{attempt}}, এবং ব্যর্থতার কারণ হচ্ছে: {{error}}",
     "emails.certificate.footer": "আপনার আগের সার্টিফিকেটটি প্রথম বিফলতার পর থেকে ৩০ দিনের জন্য বৈধ থাকবে। আমরা এই মামলাটি অনুসন্ধান করার জন্য প্রবলভাবে অনুরোধ করছি, নতুবা আপনার ডোমেইনটি বৈধ SSL যোগাযোগ ছাড়া চলে যাবে।",
     "emails.certificate.thanks": "ধন্যবাদ",
-    "emails.certificate.signature": "{{project}} টিম"
+    "emails.certificate.signature": "{{project}} টিম",
+    "sms.verification.body": "{{secret}} আপনার {{project}} যাচাইকরণ কোড।",
+    "emails.magicSession.securityPhrase": "এই ইমেলের জন্য নিরাপত্তা বাক্যটি হল {{phrase}}। সাইন-ইনের সময় দেখানো বাক্যটির সাথে এই বাক্যটি মিলে গেলে আপনি এই ইমেইলকে বিশ্বাস করতে পারেন।",
+    "emails.magicSession.optionUrl": "উপরের বোতামটি ব্যবহার করে আপনি যদি সাইন ইন করতে অক্ষম হন, অনুগ্রহ করে নিম্নলিখিত লিঙ্কটি দেখুন:"
 }

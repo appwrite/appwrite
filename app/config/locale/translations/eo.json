@@ -231,12 +231,14 @@
     "settings.inspire": "\"La arto esti saĝa estas la arto scii kion preteratenti.\"",
     "emails.magicSession.optionButton": "Alklaku la suban butonon por sekure ensaluti al via {{project}}-konto. Ĝi eksvalidiĝos post 1 horo.",
     "emails.magicSession.buttonText": "Ensalutu al {{project}}",
-    "emails.magicSession.optionUrl": "Se la supra butono ne aperas, uzu la jenan ligilon:",
     "emails.magicSession.clientInfo": "Ĉi tiu ensaluto estis petita per {{agentClient}} en {{agentDevice}} {{agentOs}}. Se vi ne petis la ensaluton, vi povas sekure ignori ĉi tiun retpoŝton.",
     "emails.certificate.subject": "Atestilo malsukceso por %s",
     "emails.certificate.hello": "Saluton",
     "emails.certificate.body": "Atestilo por via retejo '{{domain}}' ne povis esti generita. Tio estas provo numero {{attempt}}, kaj la malsukceso estis kaŭzita de: {{error}}",
     "emails.certificate.footer": "Via antaŭa atestilo estos valida dum 30 tagoj ekde la unua malsukceso. Ni tre rekomendas esplori ĉi tiun kazon, alie via domajno finiĝos sen valida SSL-komunikado.",
     "emails.certificate.thanks": "Dankon",
-    "emails.certificate.signature": "teamo de {{project}}"
+    "emails.certificate.signature": "teamo de {{project}}",
+    "sms.verification.body": "{{secret}} estas via {{project}} kontrolo-kodo.",
+    "emails.magicSession.securityPhrase": "La sekureca frazo por ĉi tiu retpoŝto estas {{phrase}}. Vi povas fidi ĉi tiun retpoŝton se ĉi tiu frazo kongruas kun la frazo montrita dum ensaluto.",
+    "emails.magicSession.optionUrl": "Se vi ne povas ensaluti per la supra butono, bonvolu viziti la jenan ligilon:"
 }

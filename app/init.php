@@ -74,6 +74,7 @@ use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -88,17 +89,17 @@ const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
-const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USERS = 10_000;
 const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
-const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
-const APP_LIMIT_ENCRYPTION = 20000000; //20MB
-const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
+const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
+const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1000000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
@@ -114,8 +115,8 @@ const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
-const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
-const APP_DATABASE_TIMEOUT_MILLISECONDS = 15000;
+const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -170,6 +171,7 @@ const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
+const DELETE_TYPE_TARGET = 'target';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -544,15 +546,16 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetId'),
-            $database
-            ->find('subscribers', [
+            fn ($document) => $document->getAttribute('targetInternalId'),
+            $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+            return $database->find('targets', [
+                Query::equal('$internalId', $targetIds)
+            ]);
         }
         return [];
     }
@@ -1044,6 +1047,21 @@ App::setResource('clients', function ($request, $console, $project) {
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
 
+    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $validator = new Hostname();
+    foreach ($hostnames as $hostname) {
+        $hostname = trim($hostname);
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
+
     /**
      * Get All verified client URLs for both console and current projects
      * + Filter for duplicated entries
@@ -1095,9 +1113,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    );
 
-    // Get fallback session from clients who block 3rd-party cookies
+    // Get session from header for SSR clients
+    if (empty($session['id']) && empty($session['secret'])) {
+        $sessionHeader = $request->getHeader('x-appwrite-session', '');
+
+        if (!empty($sessionHeader)) {
+            $session = Auth::decodeSession($sessionHeader);
+        }
+    }
+
+    // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
     }

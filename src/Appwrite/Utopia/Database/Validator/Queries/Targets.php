@@ -8,6 +8,7 @@ class Targets extends Base
         'userId',
         'providerId',
         'identifier',
+        'providerType',
     ];
 
     /**
