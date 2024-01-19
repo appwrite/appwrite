@@ -119,11 +119,9 @@ class Deletes extends Action
                         break;
                 }
                 break;
-
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($dbForConsole, $getProjectDB, $datetime);
                 break;
-
             case DELETE_TYPE_AUDIT:
                 if (!empty($datetime)) {
                     $this->deleteAuditLogs($dbForConsole, $getProjectDB, $datetime);
@@ -136,11 +134,9 @@ class Deletes extends Action
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($dbForConsole, $getProjectDB, $datetime);
                 break;
-
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForConsole, $datetime);
                 break;
-
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
                 break;
@@ -156,18 +152,17 @@ class Deletes extends Action
             case DELETE_TYPE_SCHEDULES:
                 $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
                 break;
-            case DELETE_TYPE_TARGETS:
-                $this->deleteTargets($project, $getProjectDB, $document);
-                break;
-            case DELETE_TYPE_TOPICS:
+            case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
                 $this->deleteTarget($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_EXPIRED_TARGETS:
+                $this->deleteExpiredTargets($project, $getProjectDB);
+                break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
-                break;
         }
     }
 
@@ -223,17 +218,6 @@ class Deletes extends Action
         );
     }
 
-    private function deleteTargets(Document $project, callable $getProjectDB, Document $target)
-    {
-        $this->deleteByGroup(
-            'targets',
-            [
-                Query::equal('expired', [true])
-            ],
-            $getProjectDB($project)
-        );
-    }
-
     /**
      * @param Document $project
      * @param callable $getProjectDB
@@ -262,7 +246,7 @@ class Deletes extends Action
      * @param Document $target
      * @throws Exception
      */
-    protected function deleteTarget(Document $project, callable $getProjectDB, Document $target)
+    private function deleteTarget(Document $project, callable $getProjectDB, Document $target)
     {
         /** @var Database */
         $dbForProject = $getProjectDB($project);
@@ -281,6 +265,27 @@ class Deletes extends Action
                 if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
                     $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', min: 0);
                 }
+            }
+        );
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $target
+     * @return void
+     * @throws Exception
+     */
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB)
+    {
+        $this->deleteByGroup(
+            'targets',
+            [
+                Query::equal('expired', [true])
+            ],
+            $getProjectDB($project),
+            function (Document $target) use ($getProjectDB, $project) {
+                $this->deleteTarget($project, $getProjectDB, $target);
             }
         );
     }

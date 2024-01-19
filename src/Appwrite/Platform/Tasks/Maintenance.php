@@ -56,7 +56,7 @@ class Maintenance extends Action
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
-            $this->notifyDeleteTargets($schedulesDeletionRetention, $queueForDeletes);
+            $this->notifyDeleteTargets($queueForDeletes);
         }, $interval);
     }
 
@@ -149,11 +149,10 @@ class Maintenance extends Action
             ->trigger();
     }
 
-    private function notifyDeleteTargets($interval, Delete $queueForDeletes): void
+    private function notifyDeleteTargets(Delete $queueForDeletes): void
     {
         $queueForDeletes
-            ->setType(DELETE_TYPE_TARGETS)
-            ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+            ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
     }
 }
