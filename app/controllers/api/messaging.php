@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Enum\MessageStatus;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
@@ -2267,7 +2268,7 @@ App::post('/v1/messaging/messages/email')
     ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2280,7 +2281,7 @@ App::post('/v1/messaging/messages/email')
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
@@ -2321,7 +2322,7 @@ App::post('/v1/messaging/messages/email')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->setProject($project)
@@ -2356,7 +2357,7 @@ App::post('/v1/messaging/messages/sms')
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2368,23 +2369,25 @@ App::post('/v1/messaging/messages/sms')
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        $foundTargets = $dbForProject->find('targets', [
-            Query::equal('$id', $targets),
-            Query::equal('providerType', [MESSAGE_TYPE_SMS]),
-            Query::limit(\count($targets)),
-        ]);
+        if (!empty($targets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+                Query::limit(\count($targets)),
+            ]);
 
-        if (\count($foundTargets) !== \count($targets)) {
-            throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
-        }
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+            }
 
-        foreach ($foundTargets as $target) {
-            if ($target->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 
@@ -2401,7 +2404,7 @@ App::post('/v1/messaging/messages/sms')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->setProject($project)
@@ -2444,7 +2447,7 @@ App::post('/v1/messaging/messages/push')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
@@ -2456,23 +2459,25 @@ App::post('/v1/messaging/messages/push')
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        $foundTargets = $dbForProject->find('targets', [
-            Query::equal('$id', $targets),
-            Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-            Query::limit(\count($targets)),
-        ]);
+        if (!empty($targets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::limit(\count($targets)),
+            ]);
 
-        if (\count($foundTargets) !== \count($targets)) {
-            throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
-        }
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+            }
 
-        foreach ($foundTargets as $target) {
-            if ($target->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 
@@ -2498,7 +2503,7 @@ App::post('/v1/messaging/messages/push')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->setProject($project)
@@ -2685,7 +2690,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('subject', null, new Text(998), 'Email Subject.', true)
     ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
-    ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', null, new Boolean(), 'Is content of type HTML', true)
     ->param('cc', null, new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', null, new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
@@ -2702,7 +2707,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
+        if ($message->getAttribute('status') === MessageStatus::SENT) {
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
@@ -2721,17 +2726,19 @@ App::patch('/v1/messaging/messages/email/:messageId')
         if (!\is_null($targets) || !\is_null($cc) || !\is_null($bcc)) {
             $mergedTargets = \array_merge(...\array_filter([$targets, $cc, $bcc]));
 
-            $foundTargets = $dbForProject->find('targets', [
-                Query::equal('$id', $mergedTargets),
-                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
-                Query::limit(\count($mergedTargets)),
-            ]);
-            if (\count($foundTargets) !== \count($mergedTargets)) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
-            }
-            foreach ($foundTargets as $target) {
-                if ($target->isEmpty()) {
-                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+            if (!empty($mergedTargets)) {
+                $foundTargets = $dbForProject->find('targets', [
+                    Query::equal('$id', $mergedTargets),
+                    Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
+                    Query::limit(\count($mergedTargets)),
+                ]);
+                if (\count($foundTargets) !== \count($mergedTargets)) {
+                    throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
+                }
+                foreach ($foundTargets as $target) {
+                    if ($target->isEmpty()) {
+                        throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                    }
                 }
             }
         }
@@ -2778,7 +2785,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->setProject($project)
