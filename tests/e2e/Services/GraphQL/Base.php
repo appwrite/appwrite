@@ -1271,8 +1271,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_PASSWORD_RECOVERY:
-                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!, $passwordAgain: String!) {
-                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
+                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!) {
+                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password) {
                         userId
                         secret
                         expire
@@ -1870,8 +1870,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_APNS_PROVIDER:
-                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider
@@ -1984,8 +1984,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_APNS_PROVIDER:
-                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider

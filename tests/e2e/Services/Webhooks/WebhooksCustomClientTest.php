@@ -824,7 +824,6 @@ class WebhooksCustomClientTest extends Scope
             'userId' => $id,
             'secret' => $secret,
             'password' => $password,
-            'passwordAgain' => $password,
         ]);
 
         $recoveryId = $recovery['body']['$id'];

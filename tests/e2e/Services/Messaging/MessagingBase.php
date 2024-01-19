@@ -80,7 +80,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         $providers = [];
@@ -155,7 +154,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
@@ -245,6 +243,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('my-app', $response['body']['name']);
+        $this->assertEquals('', $response['body']['description']);
 
         return $response['body'];
     }

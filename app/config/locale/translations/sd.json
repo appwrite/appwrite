@@ -228,5 +228,17 @@
     "continents.eu": "يورپ",
     "continents.na": "اتر آمريڪا",
     "continents.oc": "اوشينيا",
-    "continents.sa": "ڏکڻ آمريڪا"
+    "continents.sa": "ڏکڻ آمريڪا",
+    "emails.magicSession.optionButton": "محفوظ طريقہ سے اپنے {{project}} اکاؤنٹ میں داخل ہونے کے لئے نيچے دئے گئے بٹن پر کلک کریں۔ یہ ایک گھنٹے ميں ختم ہو جائے گا۔",
+    "emails.magicSession.buttonText": "It seems that you're referring to a country code \"sd\" which typically represents Sudan. The official languages in Sudan are Arabic and English. Without specific instruction for Arabic, I will provide the translation in Arabic:\n\nتسجيل الدخول إلى {{project}}",
+    "emails.magicSession.clientInfo": "هن وقت جي لاڳ ان جي درخواست {{agentClient}} تي ڪئي وئي آهي {{agentDevice}} {{agentOs}} تي. جيڪڏهن توهان کي لاڳ ان جي درخواست نه جي آهي، توهان اهو ایميل نظر انداز ڪري سگهو ٿا.",
+    "emails.certificate.subject": "شهادة فشل ل %s",
+    "emails.certificate.hello": "مرحبا",
+    "emails.certificate.body": "I'm sorry, but there is no country code \"sd.\" If you meant Sudan, the country code is \"SD,\" not lowercase, but the official languages of Sudan are Arabic and English. If you need a translation into Arabic, here is the message:\n\nشهادة لنطاق '{{domain}}' الخاص بك لم تتمكن من التوليد. هذه هي المحاولة رقم {{attempt}}، وكان الفشل بسبب: {{error}}",
+    "emails.certificate.footer": "سابقه سند توهان جي پهلي ناكامي کان 30 ڏينهن لاءِ موزون آهي. اسان توهان کي پوري قائلي سان گهڻي سفارش ڪنداسين ته هن ڪيس کي تحقيق ڪريو، نه ته توهان جو ڊومين بغير موزون SSL مواصلتي جي حالت ۾ ختم ٿي ويندو.",
+    "emails.certificate.thanks": "شكرا",
+    "emails.certificate.signature": "I believe there has been a misunderstanding. The country code \"sd\" refers to Sudan, and the official languages of Sudan are Arabic and English. If you are requesting a translation into Arabic, the phrase \"project team\" would be \"فريق المشروع\". If you need a translation into a different language, please provide the correct language or country code.",
+    "sms.verification.body": "وڊو is your {{project}} جي تصديق ڪوڊ.",
+    "emails.magicSession.securityPhrase": "محفوظ جملو آهي هن اي ميل لاءِ {{phrase}}. توهان هن اي ميل تي اعتماد ڪري سگهو ٿا جيڪڏهن اهو جملو توهان کي سائن ان ڪرڻ وقت داخل ٿيل جملي سان ملي ويسي.",
+    "emails.magicSession.optionUrl": "You have provided \"sd\" as the country code; however, \"sd\" is not a valid ISO 3166-1 alpha-2 country code. If you meant \"sd\" to refer to the Sindhi language code, the translation would be:\n\n\"جيڪڏھن توھان مٿي واريل بٽڪَ جي مدد سان سائن ان ڪرڻ ۾ ناڪام آھيو، ته مھرباني ڪري هيٺيان ديئل لنڪ جو ڏورو قدم چونڊو:\""
 }
