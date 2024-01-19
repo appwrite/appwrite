@@ -99,26 +99,33 @@ class Schema
                 /** @var Route $route */
 
                 $namespace = $route->getLabel('sdk.namespace', '');
-                $method = $route->getLabel('sdk.method', '');
-                $name = $namespace . \ucfirst($method);
+                $methods = $route->getLabel('sdk.method', '');
 
-                if (empty($name)) {
-                    continue;
+                if (!\is_array($methods)) {
+                    $methods = [$methods];
                 }
 
-                foreach (Mapper::route($utopia, $route, $complexity) as $field) {
-                    switch ($route->getMethod()) {
-                        case 'GET':
-                            $queries[$name] = $field;
-                            break;
-                        case 'POST':
-                        case 'PUT':
-                        case 'PATCH':
-                        case 'DELETE':
-                            $mutations[$name] = $field;
-                            break;
-                        default:
-                            throw new \Exception("Unsupported method: {$route->getMethod()}");
+                foreach ($methods as $method) {
+                    $name = $namespace . \ucfirst($method);
+
+                    if (empty($name)) {
+                        continue;
+                    }
+
+                    foreach (Mapper::route($utopia, $route, $complexity) as $field) {
+                        switch ($route->getMethod()) {
+                            case 'GET':
+                                $queries[$name] = $field;
+                                break;
+                            case 'POST':
+                            case 'PUT':
+                            case 'PATCH':
+                            case 'DELETE':
+                                $mutations[$name] = $field;
+                                break;
+                            default:
+                                throw new \Exception("Unsupported method: {$route->getMethod()}");
+                        }
                     }
                 }
             }

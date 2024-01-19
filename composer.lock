@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0922b311842c222911fce1ae3e3b352e",
+    "content-hash": "b493981ce1e062708a4f86b0ceff315c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1964,16 +1964,16 @@
         },
         {
             "name": "utopia-php/domains",
-            "version": "0.3.2",
+            "version": "0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/domains.git",
-                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb"
+                "reference": "bf07f60326f8389f378ddf6fcde86217e5cfe18c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/domains/zipball/aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
-                "reference": "aaa8c9a96c69ccb397997b1f4f2299c66f77eefb",
+                "url": "https://api.github.com/repos/utopia-php/domains/zipball/bf07f60326f8389f378ddf6fcde86217e5cfe18c",
+                "reference": "bf07f60326f8389f378ddf6fcde86217e5cfe18c",
                 "shasum": ""
             },
             "require": {
@@ -2018,9 +2018,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/domains/issues",
-                "source": "https://github.com/utopia-php/domains/tree/0.3.2"
+                "source": "https://github.com/utopia-php/domains/tree/0.5.0"
             },
-            "time": "2023-07-19T16:39:24+00:00"
+            "time": "2024-01-03T22:04:27+00:00"
         },
         {
             "name": "utopia-php/dsn",
@@ -2071,16 +2071,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.31.1",
+            "version": "0.32.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68"
+                "reference": "ad6f7e6d6b38cf5bed4e3af9a1394c59d4bb9225"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68",
-                "reference": "e50d2d16f4bc31319043f3f6d3dbea36c6fd6b68",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/ad6f7e6d6b38cf5bed4e3af9a1394c59d4bb9225",
+                "reference": "ad6f7e6d6b38cf5bed4e3af9a1394c59d4bb9225",
                 "shasum": ""
             },
             "require": {
@@ -2110,9 +2110,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.31.1"
+                "source": "https://github.com/utopia-php/http/tree/0.32.0"
             },
-            "time": "2023-12-08T18:47:29+00:00"
+            "time": "2023-12-26T14:18:36+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -3140,16 +3140,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.0",
+            "version": "0.36.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "3a10f1f895ed71120442ff71eb6adec3fd6b4e8a"
+                "reference": "ca4700bfbbb8bcf1c0d5a49fc5efc38da98d0992"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/3a10f1f895ed71120442ff71eb6adec3fd6b4e8a",
-                "reference": "3a10f1f895ed71120442ff71eb6adec3fd6b4e8a",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/ca4700bfbbb8bcf1c0d5a49fc5efc38da98d0992",
+                "reference": "ca4700bfbbb8bcf1c0d5a49fc5efc38da98d0992",
                 "shasum": ""
             },
             "require": {
@@ -3185,9 +3185,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.0"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.1"
             },
-            "time": "2023-11-20T10:03:06+00:00"
+            "time": "2024-01-18T06:24:47+00:00"
         },
         {
             "name": "doctrine/deprecations",

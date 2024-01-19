@@ -189,8 +189,8 @@ class AuthTest extends TestCase
 
     public function testTokenGenerator(): void
     {
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator()), 256);
-        $this->assertEquals(\mb_strlen(Auth::tokenGenerator(5)), 10);
+        $this->assertEquals(\strlen(Auth::tokenGenerator()), 256);
+        $this->assertEquals(\strlen(Auth::tokenGenerator(5)), 5);
     }
 
     public function testCodeGenerator(): void
@@ -294,7 +294,8 @@ class AuthTest extends TestCase
             ]),
         ];
 
-        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), 'token1');
+        $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, $secret), $tokens1[0]);
+        $this->assertEquals(Auth::tokenVerify($tokens1, null, $secret), $tokens1[0]);
         $this->assertEquals(Auth::tokenVerify($tokens1, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
         $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, $secret), false);
         $this->assertEquals(Auth::tokenVerify($tokens2, Auth::TOKEN_TYPE_RECOVERY, 'false-secret'), false);
