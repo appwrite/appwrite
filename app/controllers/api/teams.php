@@ -474,6 +474,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'phone' => empty($phone) ? null : $phone,
                     'emailVerification' => false,
                     'status' => true,
+                    // TODO: Set password empty?
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
