@@ -60,13 +60,10 @@ class Mails extends Action
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
         $variables = $payload['variables'];
+        $variables['protocol'] = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $variables['hostname'] = App::getEnv('_APP_DOMAIN');
         $name = $payload['name'];
         $body = $payload['body'];
-
-        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = App::getEnv('_APP_DOMAIN');
-
-        $body = str_replace(['{{protocol}}', '{{hostname}}'], [$protocol, $hostname], $body);
 
         $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
         $bodyTemplate->setParam('{{body}}', $body);
