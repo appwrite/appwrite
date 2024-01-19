@@ -431,14 +431,20 @@ class Messaging extends Action
         $bcc = [];
 
         if (\count($ccTargets) > 0) {
-            $ccTargets = $dbForProject->find('targets', [Query::equal('identifier', $ccTargets)]);
+            $ccTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $ccTargets),
+                Query::limit(\count($ccTargets)),
+            ]);
             foreach ($ccTargets as $ccTarget) {
                 $cc[] = ['email' => $ccTarget['identifier']];
             }
         }
 
         if (\count($bccTargets) > 0) {
-            $bccTargets = $dbForProject->find('targets', [Query::equal('identifier', $bccTargets)]);
+            $bccTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $bccTargets),
+                Query::limit(\count($bccTargets)),
+            ]);
             foreach ($bccTargets as $bccTarget) {
                 $bcc[] = ['email' => $bccTarget['identifier']];
             }
