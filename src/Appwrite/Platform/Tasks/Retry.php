@@ -12,24 +12,33 @@ class Retry extends Action
 {
     public static function getName(): string
     {
-        return 'retry';
+        return 'retry-jobs';
     }
 
 
     public function __construct()
     {
         $this
-            ->desc('Retry Queue')
+            ->desc('Retry failed jobs from a specific queue identified by the name parameter')
             ->param('name', '', new Text(128), 'Queue name')
             ->inject('queue')
-            ->callback(fn ($queueName, $queue) => $this->action($queueName, $queue));
+            ->callback(fn ($name, $queue) => $this->action($name, $queue));
     }
 
-    public function action(string $queueName, Connection $queue): void
+    /**
+     * @param string $name The name of the queue to retry jobs from
+     * @param Connection $queue
+     */
+    public function action(string $name, Connection $queue): void
     {
-        $queueClient = new Client($queueName, $queue);
+        if (!$name) {
+            Console::error('Missing required parameter $name');
+            return;
+        }
 
-        if ($queueClient->sumFailedJobs() === 0) {
+        $queueClient = new Client($name, $queue);
+
+        if ($queueClient->countFailedJobs() === 0) {
             Console::error('No failed jobs found.');
             return;
         }
