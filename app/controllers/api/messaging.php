@@ -1931,7 +1931,7 @@ App::delete('/v1/messaging/topics/:topicId')
         $dbForProject->deleteDocument('topics', $topicId);
 
         $queueForDeletes
-            ->setType(DELETE_TYPE_TOPICS)
+            ->setType(DELETE_TYPE_TOPIC)
             ->setDocument($topic);
 
         $queueForEvents
