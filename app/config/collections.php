@@ -1832,6 +1832,17 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
+            [
+                '$id' => ID::custom('search'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -1875,7 +1886,14 @@ $commonCollections = [
                 'attributes' => ['topicInternalId'],
                 'lengths' => [],
                 'orders' => [],
-            ]
+            ],
+            [
+                '$id' => ID::custom('_fulltext_search'),
+                'type' => Database::INDEX_FULLTEXT,
+                'attributes' => ['search'],
+                'lengths' => [],
+                'orders' => [],
+            ],
         ],
     ],
 

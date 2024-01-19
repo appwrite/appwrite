@@ -80,7 +80,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         $providers = [];
@@ -155,7 +154,6 @@ trait MessagingBase
                 'authKeyId' => 'my-authkeyid',
                 'teamId' => 'my-teamid',
                 'bundleId' => 'my-bundleid',
-                'endpoint' => 'my-endpoint',
             ],
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
@@ -245,6 +243,7 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('my-app', $response['body']['name']);
+        $this->assertEquals('', $response['body']['description']);
 
         return $response['body'];
     }
@@ -419,6 +418,12 @@ trait MessagingBase
      */
     public function testListSubscribers(array $data)
     {
+        $subscriberId = $data['subscriberId'];
+        $targetId = $data['targetId'];
+        $userId = $data['userId'];
+        $providerType = $data['providerType'];
+        $identifier = $data['identifier'];
+
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -427,10 +432,40 @@ trait MessagingBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(1, $response['body']['total']);
-        $this->assertEquals($data['userId'], $response['body']['subscribers'][0]['target']['userId']);
-        $this->assertEquals($data['providerType'], $response['body']['subscribers'][0]['target']['providerType']);
-        $this->assertEquals($data['identifier'], $response['body']['subscribers'][0]['target']['identifier']);
+        $this->assertEquals($userId, $response['body']['subscribers'][0]['target']['userId']);
+        $this->assertEquals($providerType, $response['body']['subscribers'][0]['target']['providerType']);
+        $this->assertEquals($identifier, $response['body']['subscribers'][0]['target']['identifier']);
         $this->assertEquals(\count($response['body']['subscribers']), $response['body']['total']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'search' => 'DOES_NOT_EXIST',
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
+        $searches = [
+            $subscriberId,
+            $targetId,
+            $userId,
+            $providerType
+        ];
+        foreach ($searches as $search) {
+            $response = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $data['topicId'] . '/subscribers', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ]), [
+                'search' => $search,
+            ]);
+
+            $this->assertEquals(200, $response['headers']['status-code']);
+            $this->assertEquals(1, $response['body']['total']);
+        }
 
         return $data;
     }

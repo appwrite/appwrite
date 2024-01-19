@@ -1870,8 +1870,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_APNS_PROVIDER:
-                return 'mutation createAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingCreateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation createAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingCreateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider
@@ -1984,8 +1984,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_APNS_PROVIDER:
-                return 'mutation updateAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingUpdateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation updateAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingUpdateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider

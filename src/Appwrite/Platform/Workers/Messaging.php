@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
@@ -130,11 +131,12 @@ class Messaging extends Action
 
         if (empty($recipients)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
-                'status' => 'failed',
+                'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.']
             ]));
 
-            throw new \Exception('No valid recipients found.');
+            Console::warning('No valid recipients found.');
+            return;
         }
 
         $fallback = $dbForProject->findOne('providers', [
@@ -144,11 +146,12 @@ class Messaging extends Action
 
         if ($fallback === false || $fallback->isEmpty()) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
-                'status' => 'failed',
+                'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No fallback provider found.']
             ]));
 
-            throw new \Exception('No fallback provider found.');
+            Console::warning('No fallback provider found.');
+            return;
         }
 
         /**
@@ -279,9 +282,9 @@ class Messaging extends Action
         $message->setAttribute('deliveryErrors', $deliveryErrors);
 
         if (\count($message->getAttribute('deliveryErrors')) > 0) {
-            $message->setAttribute('status', 'failed');
+            $message->setAttribute('status', MessageStatus::FAILED);
         } else {
-            $message->setAttribute('status', 'sent');
+            $message->setAttribute('status', MessageStatus::SENT);
         }
 
         $message->removeAttribute('to');
@@ -394,7 +397,6 @@ class Messaging extends Action
                 $credentials['authKeyId'],
                 $credentials['teamId'],
                 $credentials['bundleId'],
-                $credentials['endpoint']
             ),
             'fcm' => new FCM($credentials['serviceAccountJSON']),
             default => null

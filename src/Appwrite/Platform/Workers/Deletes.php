@@ -162,6 +162,9 @@ class Deletes extends Action
             case DELETE_TYPE_TOPICS:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
+            case DELETE_TYPE_TARGET:
+                $this->deleteTarget($project, $getProjectDB, $document);
+                break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
                 break;
@@ -250,6 +253,35 @@ class Deletes extends Action
                 Query::equal('topicInternalId', [$topic->getInternalId()])
             ],
             $getProjectDB($project)
+        );
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $target
+     * @throws Exception
+     */
+    protected function deleteTarget(Document $project, callable $getProjectDB, Document $target)
+    {
+        /** @var Database */
+        $dbForProject = $getProjectDB($project);
+
+        // Delete subscribers and decrement topic counts
+        $this->deleteByGroup(
+            'subscribers',
+            [
+                Query::equal('targetInternalId', [$target->getInternalId()])
+            ],
+            $dbForProject,
+            function (Document $subscriber) use ($dbForProject) {
+                $topicId = $subscriber->getAttribute('topicId');
+                $topicInternalId = $subscriber->getAttribute('topicInternalId');
+                $topic = $dbForProject->getDocument('topics', $topicId);
+                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
+                    $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', min: 0);
+                }
+            }
         );
     }
 
@@ -595,9 +627,16 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete targets
-        $this->deleteByGroup('targets', [
-            Query::equal('userInternalId', [$userInternalId])
-        ], $dbForProject);
+        $this->listByGroup(
+            'targets',
+            [
+                Query::equal('userInternalId', [$userInternalId])
+            ],
+            $dbForProject,
+            function (Document $target) use ($getProjectDB, $project) {
+                $this->deleteTarget($project, $getProjectDB, $target);
+            }
+        );
     }
 
     /**
