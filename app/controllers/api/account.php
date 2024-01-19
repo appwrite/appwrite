@@ -1718,7 +1718,7 @@ App::post('/v1/account/jwt')
 App::post('/v1/account/targets/push')
     ->desc('Create Account\'s push target')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('scope', 'account')
     ->label('audits.event', 'target.create')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].create')
@@ -1728,10 +1728,9 @@ App::post('/v1/account/targets/push')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->label('docs', false)
     ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.')
     ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
     ->inject('queueForEvents')
     ->inject('user')
     ->inject('request')
@@ -1741,10 +1740,6 @@ App::post('/v1/account/targets/push')
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
-
-        if ($provider->isEmpty()) {
-            throw new Exception(Exception::PROVIDER_NOT_FOUND);
-        }
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -1768,8 +1763,8 @@ App::post('/v1/account/targets/push')
                     Permission::read(Role::user($user->getId())),
                     Permission::update(Role::user($user->getId())),
                 ],
-                'providerId' => $providerId ?? null,
-                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerId' => !empty($providerId) ? $providerId : null,
+                'providerInternalId' => !empty($providerId) ? $provider->getInternalId() : null,
                 'providerType' =>  MESSAGE_TYPE_PUSH,
                 'userId' => $user->getId(),
                 'userInternalId' => $user->getInternalId(),
@@ -3204,7 +3199,7 @@ App::put('/v1/account/verification/phone')
 App::put('/v1/account/targets/:targetId/push')
     ->desc('Update Account\'s push target')
     ->groups(['api', 'account'])
-    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('scope', 'account')
     ->label('audits.event', 'target.update')
     ->label('audits.resource', 'target/response.$id')
     ->label('event', 'users.[userId].targets.[targetId].update')

@@ -2,10 +2,10 @@
 
 namespace Tests\E2E\Services\Messaging;
 
+use Appwrite\Enum\MessageStatus;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
-use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 
 trait MessagingBase
@@ -617,6 +617,47 @@ trait MessagingBase
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    public function testCreateDraftEmail()
+    {
+        // Create User
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
+
+        $user = $response['body'];
+
+        $this->assertEquals(1, \count($user['targets']));
+        $targetId = $user['targets'][0]['$id'];
+
+        // Create Email
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'targets' => [$targetId],
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $message = $response['body'];
+        $this->assertEquals(MessageStatus::DRAFT, $message['status']);
+
+        return $message;
+    }
+
     public function testSendEmail()
     {
         if (empty(App::getEnv('_APP_MESSAGE_EMAIL_TEST_DSN'))) {
@@ -1100,5 +1141,59 @@ trait MessagingBase
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
+    }
+
+    /**
+     * @depends testCreateDraftEmail
+     */
+    public function testListTargets(array $message)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/does_not_exist/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $targetList = $response['body'];
+        $this->assertEquals(1, $targetList['total']);
+        $this->assertEquals(1, count($targetList['targets']));
+        $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
+
+        // Test for empty targets
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $message = $response['body'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $targetList = $response['body'];
+        $this->assertEquals(0, $targetList['total']);
+        $this->assertEquals(0, count($targetList['targets']));
     }
 }

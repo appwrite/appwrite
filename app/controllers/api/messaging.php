@@ -14,6 +14,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
+use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -2740,6 +2741,65 @@ App::get('/v1/messaging/messages/:messageId/logs')
             'total' => $audit->countLogsByResource($resource),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
+    });
+
+App::get('/v1/messaging/messages/:messageId/targets')
+    ->desc('List message targets')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/messaging/list-message-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $targetIDs = $message->getAttribute('targets');
+
+        if (empty($targetIDs)) {
+            $response->dynamic(new Document([
+                'targets' => [],
+                'total' => 0,
+            ]), Response::MODEL_TARGET_LIST);
+            return;
+        }
+
+        $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('$id', $targetIDs);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $targetId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('targets', $targetId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Target '{$targetId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $response->dynamic(new Document([
+            'targets' => $dbForProject->find('targets', $queries),
+            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_TARGET_LIST);
     });
 
 App::get('/v1/messaging/messages/:messageId')
