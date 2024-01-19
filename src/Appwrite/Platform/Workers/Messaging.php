@@ -247,11 +247,13 @@ class Messaging extends Action
                                         Query::equal('identifier', [$detail['recipient']])
                                     ]);
 
-                                    $dbForProject->updateDocument(
-                                        'targets',
-                                        $target->getId(),
-                                        $target->setAttribute('expired', true)
-                                    );
+                                    if ($target instanceof Document && !$target->isEmpty()) {
+                                        $dbForProject->updateDocument(
+                                            'targets',
+                                            $target->getId(),
+                                            $target->setAttribute('expired', true)
+                                        );
+                                    }
                                 }
                             }
                         } catch (\Exception $e) {
