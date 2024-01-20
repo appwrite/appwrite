@@ -1,220 +1,220 @@
-> Great news! Appwrite Cloud is now in public beta! Sign up at [cloud.appwrite.io](https://cloud.appwrite.io) for a hassle-free, hosted experience. Join us in the Cloud today! ☁️🎉
-
-<br />
-<p align="center">
-    <a href="https://appwrite.io" target="_blank"><img src="./public/images/banner.png" alt="Appwrite Logo"></a>
-    <br />
-    <br />
-    <b>Appwrite is a backend platform for developing Web, Mobile, and Flutter applications. Built with the open source community and optimized for developer experience in the coding languages you love.</b>
-    <br />
-    <br />
+<div class="Box-sc-g0xbh4-0 bJMeLZ js-snippet-clipboard-copy-unpositioned" data-hpc="true"><article class="markdown-body entry-content container-lg" itemprop="text"><blockquote>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">好消息！</font><font style="vertical-align: inherit;">Appwrite Cloud 现已推出公开测试版！</font></font><a href="https://cloud.appwrite.io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在cloud.appwrite.io</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">注册，</font><font style="vertical-align: inherit;">获得无忧的托管体验。</font><font style="vertical-align: inherit;">今天就加入我们的云端吧！</font><font style="vertical-align: inherit;">☁️🎉</font></font></p>
+</blockquote>
+<br>
+<p align="center" dir="auto">
+    <a href="https://appwrite.io" rel="nofollow"><img src="/appwrite/appwrite/raw/main/public/images/banner.png" alt="应用写入徽标" style="max-width: 100%;"></a>
+    <br>
+    <br>
+    <b><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite 是一个用于开发 Web、移动和 Flutter 应用程序的后端平台。</font><font style="vertical-align: inherit;">由开源社区构建，并针对您喜欢的编码语言的开发人员体验进行了优化。</font></font></b>
+    <br>
+    <br>
 </p>
 
+<p dir="auto"><a href="https://appwrite.io/company/careers" rel="nofollow"><img src="https://camo.githubusercontent.com/caf3b8bcf01dc0d699d50cfb7558020b425bab6c99fed616347680b650de1500/68747470733a2f2f696d672e736869656c64732e696f2f7374617469632f76313f6c6162656c3d5765277265266d6573736167653d486972696e6726636f6c6f723d626c7565267374796c653d666c61742d737175617265" alt="我们正在招聘" data-canonical-src="https://img.shields.io/static/v1?label=We're&amp;message=Hiring&amp;color=blue&amp;style=flat-square" style="max-width: 100%;"></a>
+<a href="https://hacktoberfest.appwrite.io" rel="nofollow"><img src="https://camo.githubusercontent.com/845e10b4255b43f88b64e5ce727c5094a0fe0b61083c0cd9290b171cb9ae2308/68747470733a2f2f696d672e736869656c64732e696f2f7374617469632f76313f6c6162656c3d6861636b746f62657266657374266d6573736167653d726561647926636f6c6f723d313931313230267374796c653d666c61742d737175617265" alt="黑客啤酒节" data-canonical-src="https://img.shields.io/static/v1?label=hacktoberfest&amp;message=ready&amp;color=191120&amp;style=flat-square" style="max-width: 100%;"></a>
+<a href="https://appwrite.io/discord?r=Github" rel="nofollow"><img src="https://camo.githubusercontent.com/1f5c0a086be8146765d2db33671f67775e639932505ed4eb757aded6e10b5129/68747470733a2f2f696d672e736869656c64732e696f2f646973636f72642f3536343136303733303834353135313234343f6c6162656c3d646973636f7264267374796c653d666c61742d737175617265" alt="不和谐" data-canonical-src="https://img.shields.io/discord/564160730845151244?label=discord&amp;style=flat-square" style="max-width: 100%;"></a>
+<a href="https://github.com/appwrite/appwrite/actions"><img src="https://camo.githubusercontent.com/5c9dd0825b92a9899749ee2672339d96795cefbd932b557ac3c0ff22b098bb5a/68747470733a2f2f696d672e736869656c64732e696f2f6769746875622f616374696f6e732f776f726b666c6f772f7374617475732f61707077726974652f61707077726974652f74657374732e796d6c3f6272616e63683d6d6173746572266c6162656c3d7465737473267374796c653d666c61742d737175617265" alt="构建状态" data-canonical-src="https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&amp;label=tests&amp;style=flat-square" style="max-width: 100%;"></a>
+<a href="https://twitter.com/appwrite" rel="nofollow"><img src="https://camo.githubusercontent.com/2b978041f470de4cbb972c915aa7622ef3e256402f00b06ac6a204e5ff5b4844/68747470733a2f2f696d672e736869656c64732e696f2f747769747465722f666f6c6c6f772f61707077726974653f636f6c6f723d303061636565266c6162656c3d74776974746572267374796c653d666c61742d737175617265" alt="推特账户" data-canonical-src="https://img.shields.io/twitter/follow/appwrite?color=00acee&amp;label=twitter&amp;style=flat-square" style="max-width: 100%;"></a></p>
 
-<!-- [![Build Status](https://img.shields.io/travis/com/appwrite/appwrite?style=flat-square)](https://travis-ci.com/appwrite/appwrite) -->
 
-[![We're Hiring](https://img.shields.io/static/v1?label=We're&message=Hiring&color=blue&style=flat-square)](https://appwrite.io/company/careers)
-[![Hacktoberfest](https://img.shields.io/static/v1?label=hacktoberfest&message=ready&color=191120&style=flat-square)](https://hacktoberfest.appwrite.io)
-[![Discord](https://img.shields.io/discord/564160730845151244?label=discord&style=flat-square)](https://appwrite.io/discord?r=Github)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/appwrite/appwrite/tests.yml?branch=master&label=tests&style=flat-square)](https://github.com/appwrite/appwrite/actions)
-[![Twitter Account](https://img.shields.io/twitter/follow/appwrite?color=00acee&label=twitter&style=flat-square)](https://twitter.com/appwrite)
 
-<!-- [![Docker Pulls](https://img.shields.io/docker/pulls/appwrite/appwrite?color=f02e65&style=flat-square)](https://hub.docker.com/r/appwrite/appwrite) -->
-<!-- [![Translate](https://img.shields.io/badge/translate-f02e65?style=flat-square)](docs/tutorials/add-translations.md) -->
-<!-- [![Swag Store](https://img.shields.io/badge/swag%20store-f02e65?style=flat-square)](https://store.appwrite.io) -->
-
-English | [简体中文](README-CN.md)
-
-[**Announcing Appwrite Cloud Public Beta! Sign up today!**](https://cloud.appwrite.io)
-
-Appwrite is an end-to-end backend server for Web, Mobile, Native, or Backend apps packaged as a set of Docker<nobr> microservices. Appwrite abstracts the complexity and repetitiveness required to build a modern backend API from scratch and allows you to build secure apps faster.
-
-Using Appwrite, you can easily integrate your app with user authentication and multiple sign-in methods, a database for storing and querying users and team data, storage and file management, image manipulation, Cloud Functions, and [more services](https://appwrite.io/docs).
-
-<p align="center">
-    <br />
-    <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-top-post-badge&utm_medium=badge&utm_souce=badge-appwrite-2" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=360315&theme=light&period=daily" alt="Appwrite - 100&#0037;&#0032;open&#0032;source&#0032;alternative&#0032;for&#0032;Firebase | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
-    <br />
-    <br />
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">英语 |</font></font><a href="/appwrite/appwrite/blob/main/README-CN.md"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">简体中文</font></font></a></p>
+<p dir="auto"><a href="https://cloud.appwrite.io" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">宣布 Appwrite Cloud 公共测试版！</font><font style="vertical-align: inherit;">今天就报名吧！</font></font></strong></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite 是一个端到端后端服务器，适用于打包为一组 Docker 微服务的 Web、移动、本机或后端应用程序。</font><font style="vertical-align: inherit;">Appwrite 抽象了从头开始构建现代后端 API 所需的复杂性和重复性，并允许您更快地构建安全的应用程序。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">使用Appwrite，您可以轻松地将您的应用程序与用户身份验证和多种登录方法、用于存储和查询用户和团队数据的数据库、存储和文件管理、图像处理、云功能以及更多服务</font></font><a href="https://appwrite.io/docs" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">集成</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<p align="center" dir="auto">
+    <br>
+    <a href="https://www.producthunt.com/posts/appwrite-2?utm_source=badge-top-post-badge&amp;utm_medium=badge&amp;utm_souce=badge-appwrite-2" rel="nofollow"><img src="https://camo.githubusercontent.com/dfd151b2df24698a6ec3fe8ecdd4f73fb96374900e61dd490b2a5b53d53931b7/68747470733a2f2f6170692e70726f6475637468756e742e636f6d2f776964676574732f656d6265642d696d6167652f76312f746f702d706f73742d62616467652e7376673f706f73745f69643d333630333135267468656d653d6c6967687426706572696f643d6461696c79" alt="Appwrite - Firebase 的 100% 开源替代方案 |  产品搜寻" style="width: 250px; height: 54px; max-width: 100%;" width="250" height="54" data-canonical-src="https://api.producthunt.com/widgets/embed-image/v1/top-post-badge.svg?post_id=360315&amp;theme=light&amp;period=daily"></a>
+    <br>
+    <br>
 </p>
-
-![Appwrite](public/images/github.png)
-
-Find out more at: [https://appwrite.io](https://appwrite.io)
-
-Table of Contents:
-
-- [Installation](#installation)
-  - [Unix](#unix)
-  - [Windows](#windows)
-    - [CMD](#cmd)
-    - [PowerShell](#powershell)
-  - [Upgrade from an Older Version](#upgrade-from-an-older-version)
-- [One-Click Setups](#one-click-setups)
-- [Getting Started](#getting-started)
-  - [Services](#services)
-  - [SDKs](#sdks)
-    - [Client](#client)
-    - [Server](#server)
-    - [Community](#community)
-- [Architecture](#architecture)
-- [Contributing](#contributing)
-- [Security](#security)
-- [Follow Us](#follow-us)
-- [License](#license)
-
-## Installation
-
-Appwrite is designed to run in a containerized environment. Running your server is as easy as running one command from your terminal. You can either run Appwrite on your localhost using docker-compose or on any other container orchestration tool, such as [Kubernetes](https://kubernetes.io/docs/home/), [Docker Swarm](https://docs.docker.com/engine/swarm/), or [Rancher](https://rancher.com/docs/).
-
-The easiest way to start running your Appwrite server is by running our docker-compose file. Before running the installation command, make sure you have [Docker](https://www.docker.com/products/docker-desktop) installed on your machine:
-
-### Unix
-
-```bash
-docker run -it --rm \
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="/appwrite/appwrite/blob/main/public/images/github.png"><img src="/appwrite/appwrite/raw/main/public/images/github.png" alt="应用程序写入" style="max-width: 100%;"></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">了解更多信息：https: </font></font><a href="https://appwrite.io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">//appwrite.io</font></font></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">目录：</font></font></p>
+<ul dir="auto">
+<li><a href="#installation"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装</font></font></a>
+<ul dir="auto">
+<li><a href="#unix"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Unix</font></font></a></li>
+<li><a href="#windows"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">视窗</font></font></a>
+<ul dir="auto">
+<li><a href="#cmd"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">指令管理系统</font></font></a></li>
+<li><a href="#powershell"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">电源外壳</font></font></a></li>
+</ul>
+</li>
+<li><a href="#upgrade-from-an-older-version"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">从旧版本升级</font></font></a></li>
+</ul>
+</li>
+<li><a href="#one-click-setups"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">一键设置</font></font></a></li>
+<li><a href="#getting-started"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">入门</font></font></a>
+<ul dir="auto">
+<li><a href="#services"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">服务</font></font></a></li>
+<li><a href="#sdks"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">软件开发工具包</font></font></a>
+<ul dir="auto">
+<li><a href="#client"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">客户</font></font></a></li>
+<li><a href="#server"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">服务器</font></font></a></li>
+<li><a href="#community"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">社区</font></font></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#architecture"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">建筑学</font></font></a></li>
+<li><a href="#contributing"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献</font></font></a></li>
+<li><a href="#security"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安全</font></font></a></li>
+<li><a href="#follow-us"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">跟着我们</font></font></a></li>
+<li><a href="#license"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">执照</font></font></a></li>
+</ul>
+<h2 tabindex="-1" dir="auto"><a id="user-content-installation" class="anchor" aria-hidden="true" tabindex="-1" href="#installation"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite 设计为在容器化环境中运行。</font><font style="vertical-align: inherit;">运行服务器就像从终端运行一个命令一样简单。</font><font style="vertical-align: inherit;">您可以使用 docker-compose 在本地主机上运行 Appwrite，也可以在任何其他容器编排工具（例如</font></font><a href="https://kubernetes.io/docs/home/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Kubernetes</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">、</font></font><a href="https://docs.docker.com/engine/swarm/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker Swarm</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">或</font></font><a href="https://rancher.com/docs/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Rancher</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> ）上运行 Appwrite 。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">开始运行 Appwrite 服务器的最简单方法是运行我们的 docker-compose 文件。</font><font style="vertical-align: inherit;">在运行安装命令之前，请确保您</font><font style="vertical-align: inherit;">的计算机上安装了</font></font><a href="https://www.docker.com/products/docker-desktop" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker ：</font></font></a><font style="vertical-align: inherit;"></font></p>
+<h3 tabindex="-1" dir="auto"><a id="user-content-unix" class="anchor" aria-hidden="true" tabindex="-1" href="#unix"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Unix</font></font></h3>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto"><pre>docker run -it --rm \
     --volume /var/run/docker.sock:/var/run/docker.sock \
-    --volume "$(pwd)"/appwrite:/usr/src/code/appwrite:rw \
-    --entrypoint="install" \
-    appwrite/appwrite:1.4.13
-```
-
-### Windows
-
-#### CMD
-
-```cmd
-docker run -it --rm ^
+    --volume <span class="pl-s"><span class="pl-pds">"</span><span class="pl-s"><span class="pl-pds">$(</span>pwd<span class="pl-pds">)</span></span><span class="pl-pds">"</span></span>/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint=<span class="pl-s"><span class="pl-pds">"</span>install<span class="pl-pds">"</span></span> \
+    appwrite/appwrite:1.4.13</pre><div class="zeroclipboard-container">
+    <clipboard-copy aria-label="Copy" class="ClipboardButton btn btn-invisible js-clipboard-copy m-2 p-0 tooltipped-no-delay d-flex flex-justify-center flex-items-center" data-copy-feedback="Copied!" data-tooltip-direction="w" value="docker run -it --rm \
+    --volume /var/run/docker.sock:/var/run/docker.sock \
+    --volume &quot;$(pwd)&quot;/appwrite:/usr/src/code/appwrite:rw \
+    --entrypoint=&quot;install&quot; \
+    appwrite/appwrite:1.4.13" tabindex="0" role="button">
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-copy js-clipboard-copy-icon">
+    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+</svg>
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none">
+    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+</svg>
+    </clipboard-copy>
+  </div></div>
+<h3 tabindex="-1" dir="auto"><a id="user-content-windows" class="anchor" aria-hidden="true" tabindex="-1" href="#windows"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">视窗</font></font></h3>
+<h4 tabindex="-1" dir="auto"><a id="user-content-cmd" class="anchor" aria-hidden="true" tabindex="-1" href="#cmd"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">指令管理系统</font></font></h4>
+<div class="highlight highlight-source-batchfile notranslate position-relative overflow-auto" dir="auto"><pre>docker run -it --rm <span class="pl-cce">^</span>
+    --volume //var/run/docker.sock:/var/run/docker.sock <span class="pl-cce">^</span>
+    --volume <span class="pl-s"><span class="pl-pds">"</span><span class="pl-smi">%cd%</span><span class="pl-pds">"</span></span>/appwrite:/usr/src/code/appwrite:rw <span class="pl-cce">^</span>
+    --entrypoint=<span class="pl-s"><span class="pl-pds">"</span>install<span class="pl-pds">"</span></span> <span class="pl-cce">^</span>
+    appwrite/appwrite:1.4.13</pre><div class="zeroclipboard-container">
+    <clipboard-copy aria-label="Copy" class="ClipboardButton btn btn-invisible js-clipboard-copy m-2 p-0 tooltipped-no-delay d-flex flex-justify-center flex-items-center" data-copy-feedback="Copied!" data-tooltip-direction="w" value="docker run -it --rm ^
     --volume //var/run/docker.sock:/var/run/docker.sock ^
-    --volume "%cd%"/appwrite:/usr/src/code/appwrite:rw ^
-    --entrypoint="install" ^
-    appwrite/appwrite:1.4.13
-```
-
-#### PowerShell
-
-```powershell
-docker run -it --rm `
+    --volume &quot;%cd%&quot;/appwrite:/usr/src/code/appwrite:rw ^
+    --entrypoint=&quot;install&quot; ^
+    appwrite/appwrite:1.4.13" tabindex="0" role="button">
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-copy js-clipboard-copy-icon">
+    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+</svg>
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none">
+    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+</svg>
+    </clipboard-copy>
+  </div></div>
+<h4 tabindex="-1" dir="auto"><a id="user-content-powershell" class="anchor" aria-hidden="true" tabindex="-1" href="#powershell"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">电源外壳</font></font></h4>
+<div class="highlight highlight-source-powershell notranslate position-relative overflow-auto" dir="auto"><pre>docker run <span class="pl-k">-</span>it <span class="pl-k">--</span>rm <span class="pl-k">`</span>
+    <span class="pl-k">--</span>volume <span class="pl-k">/</span><span class="pl-k">var</span><span class="pl-k">/</span>run<span class="pl-k">/</span>docker.sock:<span class="pl-k">/</span><span class="pl-k">var</span><span class="pl-k">/</span>run<span class="pl-k">/</span>docker.sock <span class="pl-k">`</span>
+    <span class="pl-k">--</span>volume <span class="pl-smi">${pwd}</span><span class="pl-k">/</span>appwrite:<span class="pl-k">/</span>usr<span class="pl-k">/</span>src<span class="pl-k">/</span>code<span class="pl-k">/</span>appwrite:rw <span class="pl-k">`</span>
+    <span class="pl-k">--</span>entrypoint<span class="pl-k">=</span><span class="pl-s"><span class="pl-pds">"</span>install<span class="pl-pds">"</span></span> <span class="pl-k">`</span>
+    appwrite<span class="pl-k">/</span>appwrite:<span class="pl-c1">1.4</span>.<span class="pl-c1">13</span></pre><div class="zeroclipboard-container">
+    <clipboard-copy aria-label="Copy" class="ClipboardButton btn btn-invisible js-clipboard-copy m-2 p-0 tooltipped-no-delay d-flex flex-justify-center flex-items-center" data-copy-feedback="Copied!" data-tooltip-direction="w" value="docker run -it --rm `
     --volume /var/run/docker.sock:/var/run/docker.sock `
     --volume ${pwd}/appwrite:/usr/src/code/appwrite:rw `
-    --entrypoint="install" `
-    appwrite/appwrite:1.4.13
-```
-
-Once the Docker installation is complete, go to http://localhost to access the Appwrite console from your browser. Please note that on non-Linux native hosts, the server might take a few minutes to start after completing the installation.
-
-For advanced production and custom installation, check out our Docker [environment variables](https://appwrite.io/docs/environment-variables) docs. You can also use our public [docker-compose.yml](https://appwrite.io/install/compose) and [.env](https://appwrite.io/install/env) files to manually set up an environment.
-
-### Upgrade from an Older Version
-
-If you are upgrading your Appwrite server from an older version, you should use the Appwrite migration tool once your setup is completed. For more information regarding this, check out the [Installation Docs](https://appwrite.io/docs/installation).
-
-## One-Click Setups
-
-In addition to running Appwrite locally, you can also launch Appwrite using a pre-configured setup. This allows you to get up and running quickly with Appwrite without installing Docker on your local machine.
-
-Choose from one of the providers below:
-
+    --entrypoint=&quot;install&quot; `
+    appwrite/appwrite:1.4.13" tabindex="0" role="button">
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-copy js-clipboard-copy-icon">
+    <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"></path><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"></path>
+</svg>
+      <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-check js-clipboard-check-icon color-fg-success d-none">
+    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"></path>
+</svg>
+    </clipboard-copy>
+  </div></div>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Docker 安装完成后，请转至</font></font><a href="http://localhost" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">http://localhost</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">从浏览器访问 Appwrite 控制台。</font><font style="vertical-align: inherit;">请注意，在非 Linux 本机主机上，服务器可能需要几分钟才能完成安装后启动。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">对于高级生产和自定义安装，请查看我们的 Docker</font></font><a href="https://appwrite.io/docs/environment-variables" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">环境变量</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">文档。</font><font style="vertical-align: inherit;">您还可以使用我们的公共</font></font><a href="https://appwrite.io/install/compose" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">docker-compose.yml</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">和</font></font><a href="https://appwrite.io/install/env" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">.env</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">文件手动设置环境。</font></font></p>
+<h3 tabindex="-1" dir="auto"><a id="user-content-upgrade-from-an-older-version" class="anchor" aria-hidden="true" tabindex="-1" href="#upgrade-from-an-older-version"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">从旧版本升级</font></font></h3>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果您要从旧版本升级 Appwrite 服务器，则应在设置完成后使用 Appwrite 迁移工具。</font><font style="vertical-align: inherit;">有关这方面的更多信息，请查看</font></font><a href="https://appwrite.io/docs/installation" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安装文档</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-one-click-setups" class="anchor" aria-hidden="true" tabindex="-1" href="#one-click-setups"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">一键设置</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">除了在本地运行 Appwrite 之外，您还可以使用预配置的设置启动 Appwrite。</font><font style="vertical-align: inherit;">这使您可以使用 Appwrite 快速启动并运行，而无需在本地计算机上安装 Docker。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">从以下提供商之一中选择：</font></font></p>
 <table border="0">
-  <tr>
+  <tbody><tr>
     <td align="center" width="100" height="100">
-      <a href="https://marketplace.digitalocean.com/apps/appwrite">
-        <img width="50" height="39" src="public/images/integrations/digitalocean-logo.svg" alt="DigitalOcean Logo" />
-          <br /><sub><b>DigitalOcean</b></sub></a>
-        </a>
+      <a href="https://marketplace.digitalocean.com/apps/appwrite" rel="nofollow">
+        <img width="50" height="39" src="/appwrite/appwrite/raw/main/public/images/integrations/digitalocean-logo.svg" alt="数字海洋标志" style="max-width: 100%;">
+          <br><sub><b><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">数字海洋</font></font></b></sub></a>
+        
     </td>
     <td align="center" width="100" height="100">
-      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod">
-        <img width="50" height="39" src="public/images/integrations/gitpod-logo.svg" alt="Gitpod Logo" />
-          <br /><sub><b>Gitpod</b></sub></a>    
-      </a>
+      <a href="https://gitpod.io/#https://github.com/appwrite/integration-for-gitpod" rel="nofollow">
+        <img width="50" height="39" src="/appwrite/appwrite/raw/main/public/images/integrations/gitpod-logo.svg" alt="吉波德标志" style="max-width: 100%;">
+          <br><sub><b><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">吉特波德</font></font></b></sub></a>    
+      
     </td>
     <td align="center" width="100" height="100">
-      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/">
-        <img width="50" height="39" src="public/images/integrations/akamai-logo.svg" alt="Akamai Logo" />
-          <br /><sub><b>Akamai Compute</b></sub></a>    
-      </a>
+      <a href="https://www.linode.com/marketplace/apps/appwrite/appwrite/" rel="nofollow">
+        <img width="50" height="39" src="/appwrite/appwrite/raw/main/public/images/integrations/akamai-logo.svg" alt="阿卡迈标志" style="max-width: 100%;">
+          <br><sub><b><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">阿卡迈计算</font></font></b></sub></a>    
+      
     </td>
   </tr>
-</table>
-
-## Getting Started
-
-Getting started with Appwrite is as easy as creating a new project, choosing your platform, and integrating its SDK into your code. You can easily get started with your platform of choice by reading one of our Getting Started tutorials.
-
-- [Getting Started for Web](https://appwrite.io/docs/getting-started-for-web)
-- [Getting Started for Flutter](https://appwrite.io/docs/getting-started-for-flutter)
-- [Getting Started for Apple](https://appwrite.io/docs/getting-started-for-apple)
-- [Getting Started for Android](https://appwrite.io/docs/getting-started-for-android)
-- [Getting Started for Server](https://appwrite.io/docs/getting-started-for-server)
-- [Getting Started for CLI](https://appwrite.io/docs/command-line)
-
-### Services
-
-- [**Account**](https://appwrite.io/docs/references/cloud/client-web/account) - Manage current user authentication and account. Track and manage the user sessions, devices, sign-in methods, and security logs.
-- [**Users**](https://appwrite.io/docs/server/users) - Manage and list all project users when building backend integrations with Server SDKs.
-- [**Teams**](https://appwrite.io/docs/references/cloud/client-web/teams) - Manage and group users in teams. Manage memberships, invites, and user roles within a team.
-- [**Databases**](https://appwrite.io/docs/references/cloud/client-web/databases) - Manage databases, collections, and documents. Read, create, update, and delete documents and filter lists of document collections using advanced filters.
-- [**Storage**](https://appwrite.io/docs/references/cloud/client-web/storage) - Manage storage files. Read, create, delete, and preview files. Manipulate the preview of your files to perfectly fit your app. All files are scanned by ClamAV and stored in a secure and encrypted way.
-- [**Functions**](https://appwrite.io/docs/server/functions) - Customize your Appwrite server by executing your custom code in a secure, isolated environment. You can trigger your code on any Appwrite system event either manually or using a CRON schedule.
-- [**Realtime**](https://appwrite.io/docs/realtime) - Listen to real-time events for any of your Appwrite services including users, storage, functions, databases, and more.
-- [**Locale**](https://appwrite.io/docs/references/cloud/client-web/locale) - Track your user's location and manage your app locale-based data.
-- [**Avatars**](https://appwrite.io/docs/references/cloud/client-web/avatars) - Manage your users' avatars, countries' flags, browser icons, and credit card symbols. Generate QR codes from links or plaintext strings.
-
-For the complete API documentation, visit [https://appwrite.io/docs](https://appwrite.io/docs). For more tutorials, news and announcements check out our [blog](https://medium.com/appwrite-io) and [Discord Server](https://discord.gg/GSeTUeA).
-
-### SDKs
-
-Below is a list of currently supported platforms and languages. If you would like to help us add support to your platform of choice, you can go over to our [SDK Generator](https://github.com/appwrite/sdk-generator) project and view our [contribution guide](https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md).
-
-#### Client
-
-- ✅ &nbsp; [Web](https://github.com/appwrite/sdk-for-web) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Flutter](https://github.com/appwrite/sdk-for-flutter) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Android](https://github.com/appwrite/sdk-for-android) (Maintained by the Appwrite Team)
-
-#### Server
-
-- ✅ &nbsp; [NodeJS](https://github.com/appwrite/sdk-for-node) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [PHP](https://github.com/appwrite/sdk-for-php) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Dart](https://github.com/appwrite/sdk-for-dart) - (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Deno](https://github.com/appwrite/sdk-for-deno) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Ruby](https://github.com/appwrite/sdk-for-ruby) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Python](https://github.com/appwrite/sdk-for-python) (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Kotlin](https://github.com/appwrite/sdk-for-kotlin) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [Apple](https://github.com/appwrite/sdk-for-apple) - **Beta** (Maintained by the Appwrite Team)
-- ✅ &nbsp; [.NET](https://github.com/appwrite/sdk-for-dotnet) - **Experimental** (Maintained by the Appwrite Team)
-
-#### Community
-
-- ✅ &nbsp; [Appcelerator Titanium](https://github.com/m1ga/ti.appwrite) (Maintained by [Michael Gangolf](https://github.com/m1ga/))
-- ✅ &nbsp; [Godot Engine](https://github.com/GodotNuts/appwrite-sdk) (Maintained by [fenix-hub @GodotNuts](https://github.com/fenix-hub))
-
-Looking for more SDKs? - Help us by contributing a pull request to our [SDK Generator](https://github.com/appwrite/sdk-generator)!
-
-## Architecture
-
-![Appwrite Architecture](docs/specs/overview.drawio.svg)
-
-Appwrite uses a microservices architecture that was designed for easy scaling and delegation of responsibilities. In addition, Appwrite supports multiple APIs, such as REST, WebSocket, and GraphQL to allow you to interact with your resources by leveraging your existing knowledge and protocols of choice.
-
-The Appwrite API layer was designed to be extremely fast by leveraging in-memory caching and delegating any heavy-lifting tasks to the Appwrite background workers. The background workers also allow you to precisely control your compute capacity and costs using a message queue to handle the load. You can learn more about our architecture in the [contribution guide](CONTRIBUTING.md#architecture-1).
-
-## Contributing
-
-All code contributions, including those of people having commit access, must go through a pull request and be approved by a core developer before being merged. This is to ensure a proper review of all the code.
-
-We truly ❤️ pull requests! If you wish to help, you can learn more about how you can contribute to this project in the [contribution guide](CONTRIBUTING.md).
-
-## Security
-
-For security issues, kindly email us at [security@appwrite.io](mailto:security@appwrite.io) instead of posting a public issue on GitHub.
-
-## Follow Us
-
-Join our growing community around the world! Check out our official [Blog](https://medium.com/appwrite-io). Follow us on [Twitter](https://twitter.com/appwrite), [Facebook Page](https://www.facebook.com/appwrite.io), [Facebook Group](https://www.facebook.com/groups/appwrite.developers/), [Dev Community](https://dev.to/appwrite) or join our live [Discord server](https://discord.gg/GSeTUeA) for more help, ideas, and discussions.
-
-## License
-
-This repository is available under the [BSD 3-Clause License](./LICENSE).
+</tbody></table>
+<h2 tabindex="-1" dir="auto"><a id="user-content-getting-started" class="anchor" aria-hidden="true" tabindex="-1" href="#getting-started"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">入门</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite 入门非常简单，只需创建一个新项目、选择您的平台并将其 SDK 集成到您的代码中即可。</font><font style="vertical-align: inherit;">通过阅读我们的入门教程之一，您可以轻松开始使用您选择的平台。</font></font></p>
+<ul dir="auto">
+<li><a href="https://appwrite.io/docs/getting-started-for-web" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">网络入门</font></font></a></li>
+<li><a href="https://appwrite.io/docs/getting-started-for-flutter" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Flutter 入门</font></font></a></li>
+<li><a href="https://appwrite.io/docs/getting-started-for-apple" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">苹果入门</font></font></a></li>
+<li><a href="https://appwrite.io/docs/getting-started-for-android" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Android 入门</font></font></a></li>
+<li><a href="https://appwrite.io/docs/getting-started-for-server" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">服务器入门</font></font></a></li>
+<li><a href="https://appwrite.io/docs/command-line" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">CLI 入门</font></font></a></li>
+</ul>
+<h3 tabindex="-1" dir="auto"><a id="user-content-services" class="anchor" aria-hidden="true" tabindex="-1" href="#services"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">服务</font></font></h3>
+<ul dir="auto">
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/account" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">帐户</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 管理当前用户身份验证和帐户。</font><font style="vertical-align: inherit;">跟踪和管理用户会话、设备、登录方法和安全日志。</font></font></li>
+<li><a href="https://appwrite.io/docs/server/users" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">用户</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 在构建与服务器 SDK 的后端集成时管理和列出所有项目用户。</font></font></li>
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/teams" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">团队</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 管理和分组团队中的用户。</font><font style="vertical-align: inherit;">管理团队内的成员资格、邀请和用户角色。</font></font></li>
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/databases" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">数据库</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 管理数据库、集合和文档。</font><font style="vertical-align: inherit;">读取、创建、更新和删除文档，并使用高级过滤器过滤文档集合列表。</font></font></li>
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/storage" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">存储</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 管理存储文件。</font><font style="vertical-align: inherit;">读取、创建、删除和预览文件。</font><font style="vertical-align: inherit;">操纵文件的预览以完美适合您的应用程序。</font><font style="vertical-align: inherit;">所有文件均由 ClamAV 扫描并以安全加密的方式存储。</font></font></li>
+<li><a href="https://appwrite.io/docs/server/functions" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">功能</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 通过在安全、隔离的环境中执行自定义代码来自定义您的 Appwrite 服务器。</font><font style="vertical-align: inherit;">您可以手动或使用 CRON 计划在任何 Appwrite 系统事件上触发代码。</font></font></li>
+<li><a href="https://appwrite.io/docs/realtime" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">实时</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 监听任何 Appwrite 服务的实时事件，包括用户、存储、函数、数据库等。</font></font></li>
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/locale" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">区域设置</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 跟踪用户的位置并管理应用程序基于区域设置的数据。</font></font></li>
+<li><a href="https://appwrite.io/docs/references/cloud/client-web/avatars" rel="nofollow"><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">头像</font></font></strong></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 管理用户的头像、国家国旗、浏览器图标和信用卡符号。</font><font style="vertical-align: inherit;">从链接或纯文本字符串生成 QR 码。</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">有关完整的 API 文档，请访问</font></font><a href="https://appwrite.io/docs" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">https://appwrite.io/docs</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font><font style="vertical-align: inherit;">如需更多教程、新闻和公告，请查看我们的</font></font><a href="https://medium.com/appwrite-io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">博客</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">和</font></font><a href="https://discord.gg/GSeTUeA" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Discord Server</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<h3 tabindex="-1" dir="auto"><a id="user-content-sdks" class="anchor" aria-hidden="true" tabindex="-1" href="#sdks"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">软件开发工具包</font></font></h3>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">以下是当前支持的平台和语言的列表。</font><font style="vertical-align: inherit;">如果您想帮助我们为您选择的平台添加支持，您可以转到我们的</font></font><a href="https://github.com/appwrite/sdk-generator"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">SDK Generator</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">项目并查看我们的</font></font><a href="https://github.com/appwrite/sdk-generator/blob/master/CONTRIBUTING.md"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献指南</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font></p>
+<h4 tabindex="-1" dir="auto"><a id="user-content-client" class="anchor" aria-hidden="true" tabindex="-1" href="#client"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">客户</font></font></h4>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-web"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Web</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-flutter"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Flutter</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-apple"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Apple</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> - </font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Beta</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-android"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Android</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由Appwrite团队维护）</font></font></li>
+</ul>
+<h4 tabindex="-1" dir="auto"><a id="user-content-server" class="anchor" aria-hidden="true" tabindex="-1" href="#server"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">服务器</font></font></h4>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-node"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">NodeJS</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-php"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">PHP</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-dart"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Dart</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> -（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-deno"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Deno</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> - </font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Beta</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-ruby"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Ruby</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-python"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Python</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-kotlin"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Kotlin</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> - </font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Beta</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-apple"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Apple</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> - </font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Beta</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/appwrite/sdk-for-dotnet"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">.NET</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;"> -</font></font><strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">实验性</font></font></strong><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">（由 Appwrite 团队维护）</font></font></li>
+</ul>
+<h4 tabindex="-1" dir="auto"><a id="user-content-community" class="anchor" aria-hidden="true" tabindex="-1" href="#community"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">社区</font></font></h4>
+<ul dir="auto">
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/m1ga/ti.appwrite"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appcelerator Titanium （由</font></font></a><font style="vertical-align: inherit;"></font><a href="https://github.com/m1ga/"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Michael Gangolf</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">维护</font><font style="vertical-align: inherit;">）</font></font></li>
+<li><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">✅ &nbsp;  </font></font><a href="https://github.com/GodotNuts/appwrite-sdk"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Godot 引擎（由</font></font></a><font style="vertical-align: inherit;"></font><a href="https://github.com/fenix-hub"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">fenix-hub @GodotNuts</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">维护</font><font style="vertical-align: inherit;">）</font></font></li>
+</ul>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">正在寻找更多 SDK？</font></font><a href="https://github.com/appwrite/sdk-generator"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">- 通过向我们的SDK 生成器</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献拉取请求来帮助我们</font><font style="vertical-align: inherit;">！</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-architecture" class="anchor" aria-hidden="true" tabindex="-1" href="#architecture"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">建筑学</font></font></h2>
+<p dir="auto"><a target="_blank" rel="noopener noreferrer" href="/appwrite/appwrite/blob/main/docs/specs/overview.drawio.svg"><img src="/appwrite/appwrite/raw/main/docs/specs/overview.drawio.svg" alt="应用写入架构" style="max-width: 100%;"></a></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite 使用微服务架构，旨在轻松扩展和职责委派。</font><font style="vertical-align: inherit;">此外，Appwrite 支持多种 API，例如 REST、WebSocket 和 GraphQL，允许您利用现有知识和选择的协议与资源进行交互。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Appwrite API 层旨在通过利用内存缓存并将任何繁重的任务委托给 Appwrite 后台工作人员来实现极快的速度。</font><font style="vertical-align: inherit;">后台工作人员还允许您使用消息队列来处理负载来精确控制计算容量和成本。</font></font><a href="/appwrite/appwrite/blob/main/CONTRIBUTING.md#architecture-1"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">您可以在贡献指南</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">中了解有关我们架构的更多信息</font><font style="vertical-align: inherit;">。</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-contributing" class="anchor" aria-hidden="true" tabindex="-1" href="#contributing"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">贡献</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">所有代码贡献，包括具有提交访问权限的人员的代码贡献，在合并之前都必须经过拉取请求并得到核心开发人员的批准。</font><font style="vertical-align: inherit;">这是为了确保对所有代码进行正确的审查。</font></font></p>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">我们真的❤️拉请求！</font></font><a href="/appwrite/appwrite/blob/main/CONTRIBUTING.md"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">如果您希望提供帮助，您可以在贡献指南</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">中详细了解如何为该项目做出贡献</font><font style="vertical-align: inherit;">。</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-security" class="anchor" aria-hidden="true" tabindex="-1" href="#security"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">安全</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">对于安全问题，请发送电子邮件至</font></font><a href="mailto:security@appwrite.io"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">security@appwrite.io</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">，而不是在 GitHub 上发布公共问题。</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-follow-us" class="anchor" aria-hidden="true" tabindex="-1" href="#follow-us"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">跟着我们</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">加入我们在世界各地不断壮大的社区！</font><font style="vertical-align: inherit;">查看我们的官方</font></font><a href="https://medium.com/appwrite-io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">博客</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">。</font></font><a href="https://twitter.com/appwrite" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">在Twitter</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">、</font></font><a href="https://www.facebook.com/appwrite.io" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Facebook 页面</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">、</font></font><a href="https://www.facebook.com/groups/appwrite.developers/" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Facebook 群组</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">、</font></font><a href="https://dev.to/appwrite" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">开发社区</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">上关注我们</font><font style="vertical-align: inherit;">，或加入我们的实时</font></font><a href="https://discord.gg/GSeTUeA" rel="nofollow"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">Discord 服务器</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">以获得更多帮助、想法和讨论。</font></font></p>
+<h2 tabindex="-1" dir="auto"><a id="user-content-license" class="anchor" aria-hidden="true" tabindex="-1" href="#license"><svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">执照</font></font></h2>
+<p dir="auto"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">该存储库可在</font></font><a href="/appwrite/appwrite/blob/main/LICENSE"><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">BSD 3-Clause License</font></font></a><font style="vertical-align: inherit;"><font style="vertical-align: inherit;">下使用。</font></font></p>
+</article></div>
