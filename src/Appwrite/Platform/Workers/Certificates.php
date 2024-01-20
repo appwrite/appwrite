@@ -22,7 +22,6 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -425,18 +424,13 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         // Send mail to administratore mail
-
-        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
-
-        $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
-        $template->setParam('{{project}}', $project->getAttribute('name'));
-        $template->setParam('{{url}}', $webhook->getAttribute('url'));
-        $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{redirect}}', "/console/project-$projectId/settings/webhooks/$webhookId");
-        $template->setParam('{{attempts}}', $attempts);
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
+        $template->setParam('{{domain}}', $domain);
+        $template->setParam('{{error}}', \nl2br($errorMessage));
+        $template->setParam('{{attempts}}', $attempt);
 
         // TODO: Use setbodyTemplate once #7307 is merged
-        $subject = 'Webhook deliveries have been paused';
+        $subject = 'Certificate failed to generate';
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $body
@@ -446,47 +440,9 @@ class Certificates extends Action
 
         $queueForMails
             ->setSubject($subject)
-            ->setBody($body->render());
-
-        foreach ($users as $user) {
-            $queueForMails
-                ->setVariables(['user' => $user->getAttribute('name', '')])
-                ->setName($user->getAttribute('name', ''))
-                ->setRecipient($user->getAttribute('email'))
-                ->trigger();
-        }
-
-        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
-        if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
-            $locale->setDefault('en');
-        }
-
-        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
-
-        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
-        $message
-            ->setParam('{{body}}', $locale->getText("emails.certificate.body"))
-            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
-            ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
-            ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
-            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"));
-        $body = $message->render();
-
-        $emailVariables = [
-            'direction' => $locale->getText('settings.direction'),
-            'domain' => $domain,
-            'error' => '<br><pre>' . $errorMessage . '</pre>',
-            'attempt' => $attempt,
-            'project' => 'Console',
-            'redirect' => 'https://' . $domain,
-        ];
-
-        $queueForMails
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
-            ->setSubject($subject)
-            ->setBody($body)
-            ->setVariables($emailVariables)
+            ->setBody($body->render())
             ->setName('Appwrite Administrator')
+            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->trigger();
     }
 
