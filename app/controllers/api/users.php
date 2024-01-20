@@ -1160,21 +1160,23 @@ App::patch('/v1/users/:userId/email')
 
         $email = \strtolower($email);
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
-        ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-        }
+        if (\strlen($email) !== 0) {
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+                Query::notEqual('userId', $user->getId()),
+            ]);
+            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$email]),
-        ]);
+            $target = $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$email]),
+            ]);
 
-        if ($target instanceof Document && !$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            if ($target instanceof Document && !$target->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
         }
 
         $oldEmail = $user->getAttribute('email');
@@ -1184,7 +1186,6 @@ App::patch('/v1/users/:userId/email')
             ->setAttribute('emailVerification', false)
         ;
 
-
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
@@ -1193,7 +1194,11 @@ App::patch('/v1/users/:userId/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+                if (\strlen($email) !== 0) {
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+                } else {
+                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                }
             }
             $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -1240,12 +1245,14 @@ App::patch('/v1/users/:userId/phone')
             ->setAttribute('phoneVerification', false)
         ;
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$number]),
-        ]);
+        if (\strlen($number) !== 0) {
+            $target = $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$number]),
+            ]);
 
-        if ($target instanceof Document && !$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            if ($target instanceof Document && !$target->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
         }
 
         try {
@@ -1256,7 +1263,11 @@ App::patch('/v1/users/:userId/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+                if (\strlen($number) !== 0) {
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+                } else {
+                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                }
             }
             $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
