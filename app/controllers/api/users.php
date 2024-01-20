@@ -1199,6 +1199,16 @@ App::patch('/v1/users/:userId/email')
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
                 }
+            } else {
+                if (\strlen($email) !== 0) {
+                    $target = $dbForProject->createDocument('targets', new Document([
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
+                        'providerType' => 'email',
+                        'identifier' => $email,
+                    ]));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                }
             }
             $dbForProject->deleteCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -1267,6 +1277,16 @@ App::patch('/v1/users/:userId/phone')
                     $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
                 } else {
                     $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                }
+            } else {
+                if (\strlen($number) !== 0) {
+                    $target = $dbForProject->createDocument('targets', new Document([
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
+                        'providerType' => 'sms',
+                        'identifier' => $number,
+                    ]));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
                 }
             }
             $dbForProject->deleteCachedDocument('users', $user->getId());
