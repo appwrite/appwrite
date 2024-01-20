@@ -742,6 +742,32 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['name'], 'Cristiano Ronaldo');
+
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/name', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'name' => '',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['name'], '');
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['name'], '');
+
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/name', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -809,6 +835,32 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['email'], 'cristiano.ronaldo@manchester-united.co.uk');
+
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/email', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'email' => '',
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['email'], '');
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['email'], '');
+
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/email', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -876,6 +928,37 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
+         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+         ], [
+            'email' => 'users.service@updated.com',
+            'password' => 'password'
+         ]);
+
+        $this->assertEquals($session['headers']['status-code'], 201);
+
+         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+         ], $this->getHeaders()), [
+            'password' => '',
+         ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertNotEmpty($user['body']['$id']);
+        $this->assertEmpty($user['body']['password']);
+
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], [
+            'email' => 'users.service@updated.com',
+            'password' => 'password'
+        ]);
+
+        $this->assertEquals($session['headers']['status-code'], 401);
+
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -885,6 +968,7 @@ trait UsersBase
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
+        $this->assertNotEmpty($user['body']['password']);
 
         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
@@ -1022,6 +1106,25 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
+        $updatedNumber = "";
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/phone', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'number' => $updatedNumber,
+        ]);
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
+        $user = $this->client->call(Client::METHOD_GET, '/users/' . $data['userId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals($user['headers']['status-code'], 200);
+        $this->assertEquals($user['body']['phone'], $updatedNumber);
+
         $updatedNumber = "+910000000000"; //dummy number
         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/phone', array_merge([
             'content-type' => 'application/json',

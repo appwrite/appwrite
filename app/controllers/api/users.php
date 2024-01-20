@@ -1033,7 +1033,7 @@ App::patch('/v1/users/:userId/name')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->param('name', '', new Text(128, 0), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1071,7 +1071,7 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1089,6 +1089,16 @@ App::patch('/v1/users/:userId/password')
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
+        }
+
+        if (\strlen($password) === 0) {
+            $user
+                ->setAttribute('password', '')
+                ->setAttribute('passwordUpdate', DateTime::now());
+
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $queueForEvents->setParam('userId', $user->getId());
+            $response->dynamic($user, Response::MODEL_USER);
         }
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
@@ -1136,7 +1146,7 @@ App::patch('/v1/users/:userId/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new Email(allowEmpty: true), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1211,7 +1221,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('number', '', new Phone(), 'User phone number.')
+    ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

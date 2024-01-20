@@ -11,6 +11,13 @@ use Utopia\Validator;
  */
 class Password extends Validator
 {
+    protected bool $allowEmpty;
+
+    public function __construct(bool $allowEmpty = false)
+    {
+        $this->allowEmpty = $allowEmpty;
+    }
+
     /**
      * Get Description.
      *
@@ -34,6 +41,10 @@ class Password extends Validator
     {
         if (!\is_string($value)) {
             return false;
+        }
+
+        if ($this->allowEmpty && \strlen($value) === 0) {
+            return true;
         }
 
         if (\strlen($value) < 8) {
