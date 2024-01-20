@@ -1,0 +1,1 @@
+<p>Custom mail</p>

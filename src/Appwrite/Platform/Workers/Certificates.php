@@ -426,6 +426,36 @@ class Certificates extends Action
 
         // Send mail to administratore mail
 
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-webhook-failed.tpl');
+
+        $template->setParam('{{webhook}}', $webhook->getAttribute('name'));
+        $template->setParam('{{project}}', $project->getAttribute('name'));
+        $template->setParam('{{url}}', $webhook->getAttribute('url'));
+        $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
+        $template->setParam('{{redirect}}', "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{attempts}}', $attempts);
+
+        // TODO: Use setbodyTemplate once #7307 is merged
+        $subject = 'Webhook deliveries have been paused';
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
+
+        $body
+            ->setParam('{{subject}}', $subject)
+            ->setParam('{{message}}', $template->render())
+            ->setParam('{{year}}', date("Y"));
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setBody($body->render());
+
+        foreach ($users as $user) {
+            $queueForMails
+                ->setVariables(['user' => $user->getAttribute('name', '')])
+                ->setName($user->getAttribute('name', ''))
+                ->setRecipient($user->getAttribute('email'))
+                ->trigger();
+        }
+
         $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
         if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
             $locale->setDefault('en');
