@@ -12,6 +12,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Validator\JSON;
 
 trait DatabasesBase
 {
@@ -381,17 +382,6 @@ trait DatabasesBase
             'twoWayKey' => 'movie'
         ]);
 
-        $strings = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/string', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'strings',
-            'size' => 512,
-            'required' => false,
-            'array' => true,
-        ]);
-
         $integers = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes/integer', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -400,8 +390,8 @@ trait DatabasesBase
             'key' => 'integers',
             'required' => false,
             'array' => true,
-            'min' => 1,
-            'max' => 999,
+            'min' => 10,
+            'max' => 99,
         ]);
 
         $this->assertEquals(202, $title['headers']['status-code']);
@@ -454,13 +444,6 @@ trait DatabasesBase
         $this->assertEquals($relationship['body']['twoWay'], true);
         $this->assertEquals($relationship['body']['twoWayKey'], 'movie');
 
-        $this->assertEquals(202, $strings['headers']['status-code']);
-        $this->assertEquals($strings['body']['key'], 'strings');
-        $this->assertEquals($strings['body']['type'], 'string');
-        $this->assertEquals($strings['body']['size'], 512);
-        $this->assertEquals($strings['body']['required'], false);
-        $this->assertEquals($strings['body']['array'], true);
-
         $this->assertEquals(202, $integers['headers']['status-code']);
         $this->assertEquals($integers['body']['key'], 'integers');
         $this->assertEquals($integers['body']['type'], 'integer');
@@ -478,7 +461,7 @@ trait DatabasesBase
         ]));
 
         $this->assertIsArray($movies['body']['attributes']);
-        $this->assertCount(10, $movies['body']['attributes']);
+        $this->assertCount(9, $movies['body']['attributes']);
         $this->assertEquals($movies['body']['attributes'][0]['key'], $title['body']['key']);
         $this->assertEquals($movies['body']['attributes'][1]['key'], $description['body']['key']);
         $this->assertEquals($movies['body']['attributes'][2]['key'], $tagline['body']['key']);
@@ -487,8 +470,7 @@ trait DatabasesBase
         $this->assertEquals($movies['body']['attributes'][5]['key'], $actors['body']['key']);
         $this->assertEquals($movies['body']['attributes'][6]['key'], $datetime['body']['key']);
         $this->assertEquals($movies['body']['attributes'][7]['key'], $relationship['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][8]['key'], $strings['body']['key']);
-        $this->assertEquals($movies['body']['attributes'][9]['key'], $integers['body']['key']);
+        $this->assertEquals($movies['body']['attributes'][8]['key'], $integers['body']['key']);
 
         return $data;
     }
@@ -1398,10 +1380,48 @@ trait DatabasesBase
         ]), [
             'key' => 'ft',
             'type' => 'fulltext',
-            'attributes' => ['strings'],
+            'attributes' => ['actors'],
         ]);
+
         $this->assertEquals(400, $fulltextArray['headers']['status-code']);
-        $this->assertStringContainsString('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+        $this->assertEquals('"Fulltext" index is forbidden on array attributes', $fulltextArray['body']['message']);
+
+        $actorsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'index-actors',
+            'type' => 'key',
+            'attributes' => ['actors'],
+        ]);
+
+        $this->assertEquals(202, $actorsArray['headers']['status-code']);
+
+        $twoLevelsArray = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'index-ip-actors',
+            'type' => 'key',
+            'attributes' => ['releaseYear', 'actors'], // 2 levels
+        ]);
+
+        $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+
+        $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'index-unknown',
+            'type' => 'key',
+            'attributes' => ['Unknown'],
+        ]);
+
+        $this->assertEquals(400, $unknown['headers']['status-code']);
+        $this->assertEquals('Unknown attribute: Unknown', $unknown['body']['message']);
 
         return $data;
     }
@@ -1477,7 +1497,8 @@ trait DatabasesBase
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
                     'Samuel Jackson',
-                ]
+                ],
+                'integers' => [50,60]
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -1500,6 +1521,7 @@ trait DatabasesBase
                     'Tom Holland',
                     'Zendaya Maree Stoermer',
                 ],
+                'integers' => [50]
             ],
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -1550,6 +1572,8 @@ trait DatabasesBase
         $this->assertEquals($document2['body']['actors'][1], 'Zendaya Maree Stoermer');
         $this->assertEquals($document2['body']['actors'][2], 'Samuel Jackson');
         $this->assertEquals($document2['body']['birthDay'], null);
+        $this->assertEquals($document2['body']['integers'][0], 50);
+        $this->assertEquals($document2['body']['integers'][1], 60);
 
         $this->assertEquals(201, $document3['headers']['status-code']);
         $this->assertEquals($data['moviesId'], $document3['body']['$collectionId']);
@@ -2015,6 +2039,18 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                Query::contains('title', ['spi'])->toString(), // like query
+            ],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(2, $documents['body']['total']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
                 Query::equal('releaseYear', [1944])->toString(),
             ],
         ]);
@@ -2062,10 +2098,36 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
-                Query::equal('actors', ['Tom Holland'])->toString(),
+                Query::contains('actors', ['Tom Holland', 'Samuel Jackson'])->toString(),
             ],
         ]);
+
         $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(3, $documents['body']['total']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::contains('actors', ['Tom'])->toString(), // Full-match not like
+            ],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(0, $documents['body']['total']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::greaterThan('birthDay', '16/01/2024 12:00:00AM')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
+        $this->assertEquals('Invalid query: Query value is invalid for attribute "birthDay"', $documents['body']['message']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -2080,6 +2142,18 @@ trait DatabasesBase
         $this->assertEquals('1975-06-12T12:12:55.000+00:00', $documents['body']['documents'][0]['birthDay']);
         $this->assertEquals('1975-06-12T18:12:55.000+00:00', $documents['body']['documents'][1]['birthDay']);
         $this->assertCount(2, $documents['body']['documents']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
+                Query::isNull('integers')->toString(),
+            ],
+        ]);
+
+        $this->assertEquals(200, $documents['headers']['status-code']);
+        $this->assertEquals(1, $documents['body']['total']);
 
         /**
          * Test for Failure
@@ -2116,7 +2190,7 @@ trait DatabasesBase
             ],
         ]);
 
-        // Todo: Not sure what to do we with Query length Test VS old
+        // Todo: Not sure what to do we with Query length Test VS old? JSON validator will fails if query string will be truncated?
         //$this->assertEquals(400, $documents['headers']['status-code']);
 
         $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
@@ -2128,7 +2202,7 @@ trait DatabasesBase
             ],
         ]);
         $this->assertEquals(400, $documents['headers']['status-code']);
-        $this->assertEquals('Searching by attribute "actors" requires a fulltext index.', $documents['body']['message']);
+        $this->assertEquals('Invalid query: Cannot query search on attribute "actors" because it is an array.', $documents['body']['message']);
 
         return [];
     }

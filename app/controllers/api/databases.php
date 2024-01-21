@@ -2503,7 +2503,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             'lengths' => $lengths,
             'orders' => $orders,
         ]);
-var_dump($collection->getAttribute('attributes'));
+
         $validator = new IndexValidator(
             $collection->getAttribute('attributes'),
             $dbForProject->getAdapter()->getMaxIndexLength()
