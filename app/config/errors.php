@@ -795,6 +795,12 @@ return [
         'publish' => false
     ],
 
+    Exception::CERTIFICATE_EXPIRED => [
+        'name' => Exception::CERTIFICATE_EXPIRED,
+        'description' => 'Certificate expired.',
+        'code' => 404,
+    ],
+
     /** Providers */
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,

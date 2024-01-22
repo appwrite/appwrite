@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -16,6 +17,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 
 App::get('/v1/health')
@@ -400,7 +402,7 @@ App::get('/v1/health/certificate')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
-    ->param('domain', null, new Domain(), 'Domain name')
+    ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
         $get = stream_context_create(array("ssl" => array("capture_peer_cert" => true)));
@@ -409,6 +411,10 @@ App::get('/v1/health/certificate')
         $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
         $sslExpiration = $certificateInfo['validTo_time_t'];
         $status = ($sslExpiration < time()) ? 'fail' : 'pass';
+
+        if ($status == 'fail') {
+            throw new Exception(Exception::CERTIFICATE_EXPIRED, 'The certificate of the domain has expired.');
+        }
         $response->dynamic(new Document([
             'name' => 'certificate',
             'status' => $status,
