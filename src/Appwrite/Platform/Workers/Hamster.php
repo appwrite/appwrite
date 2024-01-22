@@ -367,19 +367,19 @@ class Hamster extends Action
                 throw new \Exception('Membership not found. Skipping organization : ' . $organization->getId());
             }
 
-            $billingPlan = $membership->getAttribute('billingPlan', null);
-            $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
+            $billingPlan = $organization->getAttribute('billingPlan', null);
+            $billingPlanDowngrade = $organization->getAttribute('billingPlanDowngrade', null);
 
             if (!empty($billingPlan) && is_null($billingPlanDowngrade)) {
                 $statsPerOrganization['billing_plan'] = $billingPlan;
             }
 
             if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
-                $billingStartDate = $membership->getAttribute('billingStartDate', null);
+                $billingStartDate = $organization->getAttribute('billingStartDate', null);
                 $statsPerOrganization['billing_start_date'] = $billingStartDate;
             }
 
-            $statsPerOrganization['marked_for_deletion'] = $membership->getAttribute('markedForDeletion', 0);
+            $statsPerOrganization['marked_for_deletion'] = $organization->getAttribute('markedForDeletion', 0);
             $statsPerOrganization['billing_plan_downgrade'] = $billingPlanDowngrade;
 
             $userId = $membership->getAttribute('userId', null);
@@ -424,20 +424,20 @@ class Hamster extends Action
         try {
             $statsPerUser = [];
 
-            $membership = $dbForConsole->findOne('teams', [
+            $organization = $dbForConsole->findOne('teams', [
                 Query::equal('userInternalId', [$user->getInternalId()])
             ]);
 
-            if (!empty($membership) || !$membership->isEmpty()) {
-                $billingPlan = $membership->getAttribute('billingPlan', null);
-                $billingPlanDowngrade = $membership->getAttribute('billingPlanDowngrade', null);
+            if (!empty($organization) || !$organization->isEmpty()) {
+                $billingPlan = $organization->getAttribute('billingPlan', null);
+                $billingPlanDowngrade = $organization->getAttribute('billingPlanDowngrade', null);
 
                 if (!empty($billingPlan) && is_null($billingPlanDowngrade)) {
                     $statsPerUser['billing_plan'] = $billingPlan;
                 }
 
                 if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
-                    $billingStartDate = $membership->getAttribute('billingStartDate', null);
+                    $billingStartDate = $organization->getAttribute('billingStartDate', null);
                     $statsPerUser['billing_start_date'] = $billingStartDate;
                 }
             }
