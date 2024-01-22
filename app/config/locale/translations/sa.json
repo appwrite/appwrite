@@ -240,5 +240,12 @@
     "emails.certificate.signature": "فريق {{project}}",
     "sms.verification.body": "سري هو رمز التحقق الخاص بمشروعك.",
     "emails.magicSession.securityPhrase": "العبارة الأمنية لهذا البريد الإلكتروني هي {{phrase}}. يمكنك الوثوق بهذا البريد الإلكتروني إذا كانت هذه العبارة متطابقة مع العبارة المعروضة أثناء تسجيل الدخول.",
-    "emails.magicSession.optionUrl": "إذا لم تتمكن من تسجيل الدخول باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:"
+    "emails.magicSession.optionUrl": "إذا لم تتمكن من تسجيل الدخول باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:",
+    "emails.otpSession.subject": "प्रवेशनम्",
+    "emails.otpSession.hello": "नमस्ते।",
+    "emails.otpSession.description": "प्रविष्ट कुरु अनुसृत विश्वासनीयकोडम् यदा पृच्छ्यसे भवतः {{projectBold}} खातायां सुरक्षितरूपेण प्रवेशे। एषः पन्द्रह मिनितेषु समाप्तिं गच्छति।",
+    "emails.otpSession.clientInfo": "एष प्रवेशनं प्रार्थितं {{agentClient}} नाम प्रतिनिधौ {{agentDevice}} {{agentOs}} इत्यस्मिन्। यदि त्वमेव प्रवेशनं न प्रार्थितवानसि, तर्हि त्वमनेन ईपत्रेण उपेक्षितुं शक्नोसि।",
+    "emails.otpSession.securityPhrase": "अस्य ईमेलस्य सुरक्षा वाक्यं {{phrase}} अस्ति। यदि अयं वाक्यः प्रवेशकाले दृष्टवाक्येन साम्यं याति तर्हि अस्माकं ईमेलं विश्वसनीयम् अस्ति।",
+    "emails.otpSession.thanks": "धन्यवादाः",
+    "emails.otpSession.signature": "कार्यक्रमस्य समूहः"
 }

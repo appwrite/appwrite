@@ -240,5 +240,12 @@
     "emails.certificate.signature": "tim {{project}}",
     "sms.verification.body": "{{secret}} iku kode verifikasi {{project}} panjenengan.",
     "emails.magicSession.securityPhrase": "Frasa keamanan kanggo email iki yaiku {{phrase}}. Sampeyan bisa percaya marang email iki yen frasa iki cocog karo frasa sing ditampilake nalika mlebu.",
-    "emails.magicSession.optionUrl": "Yen sampeyan ora bisa mlebu nganggo tombol ing ndhuwur, monggo ngunjungi pranala ing ngisor iki:"
+    "emails.magicSession.optionUrl": "Yen sampeyan ora bisa mlebu nganggo tombol ing ndhuwur, monggo ngunjungi pranala ing ngisor iki:",
+    "emails.otpSession.subject": "{{project}} Mlebu",
+    "emails.otpSession.hello": "Halo,",
+    "emails.otpSession.description": "Lebokna kode verifikasi ing ngisor iki nalika dijaluk kanggo mlebu sing aman menyang akun {{projectBold}} panjenengan. Kode iki bakal kadaluwarsa sajrone 15 menit.",
+    "emails.otpSession.clientInfo": "Tandha mlebu iki dijaluk nganggo {{agentClient}} ing {{agentDevice}} {{agentOs}}. Yen panjenengan ora njaluk tandha mlebu, panjenengan bisa nglirwakake email iki kanthi aman.",
+    "emails.otpSession.securityPhrase": "Tembung keamanan kanggo email iki yaiku {{phrase}}. Sampeyan bisa percaya email iki menawa tembung kasebut cocog karo tembung sing ditampilake nalika mlebu.",
+    "emails.otpSession.thanks": "Matur nuwun,",
+    "emails.otpSession.signature": "tim {{project}}"
 }

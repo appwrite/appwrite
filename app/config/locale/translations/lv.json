@@ -240,5 +240,12 @@
     "emails.certificate.signature": "{{project}} komanda",
     "sms.verification.body": "{{secret}} ir jūsu {{project}} verifikācijas kods.",
     "emails.magicSession.securityPhrase": "Drošības frāze šim e-pastam ir {{phrase}}. Šim e-pastam var uzticēties, ja šī frāze sakrīt ar frāzi, kas parādās, piesakoties sistēmā.",
-    "emails.magicSession.optionUrl": "Ja nevarat pierakstīties, izmantojot iepriekš minēto pogu, lūdzu, apmeklējiet sekojošo saiti:"
+    "emails.magicSession.optionUrl": "Ja nevarat pierakstīties, izmantojot iepriekš minēto pogu, lūdzu, apmeklējiet sekojošo saiti:",
+    "emails.otpSession.subject": "{{project}} Pieteikšanās",
+    "emails.otpSession.hello": "Sveiki,",
+    "emails.otpSession.description": "Ievadiet šo verifikācijas kodu, kad tiek pieprasīts, lai droši pierakstītos savā {{projectBold}} kontā. Tas beigsies pēc 15 minūtēm.",
+    "emails.otpSession.clientInfo": "Šo pierakstīšanos pieprasīja, izmantojot {{agentClient}} ierīcē {{agentDevice}} {{agentOs}}. Ja neesat pieprasījis pierakstīšanos, šo e-pastu droši var ignorēt.",
+    "emails.otpSession.securityPhrase": "Drošības frāze šim e-pastam ir {{phrase}}. Šim e-pastam var uzticēties, ja šī frāze sakrīt ar frāzi, kas parādīta pieslēdzoties.",
+    "emails.otpSession.thanks": "Paldies,",
+    "emails.otpSession.signature": "{{project}} komanda"
 }

@@ -240,5 +240,12 @@
     "emails.certificate.signature": "{{project}} ekipa",
     "sms.verification.body": "{{secret}} je vaša koda za preverjanje {{project}}.",
     "emails.magicSession.securityPhrase": "Varnostni stavek za to e-pošto je {{phrase}}. Temu e-poštu lahko zaupate, če se ta stavek ujema s stavkom, prikazanim ob prijavi.",
-    "emails.magicSession.optionUrl": "Če se ne morete prijaviti s pomočjo zgornjega gumba, prosimo obiščite naslednjo povezavo:"
+    "emails.magicSession.optionUrl": "Če se ne morete prijaviti s pomočjo zgornjega gumba, prosimo obiščite naslednjo povezavo:",
+    "emails.otpSession.subject": "Prijavite se v {{project}}",
+    "emails.otpSession.hello": "Živijo,",
+    "emails.otpSession.description": "Vnesite naslednjo preverovalno kodo, ko boste pozvani, da se varno prijavite v svoj račun {{projectBold}}. Koda bo potekla čez 15 minut.",
+    "emails.otpSession.clientInfo": "Za to prijavo je bila uporabljena {{agentClient}} na {{agentDevice}} {{agentOs}}. Če niste zahtevali prijave, lahko to e-pošto varno prezrete.",
+    "emails.otpSession.securityPhrase": "Varnostni stavek za to e-pošto je {{phrase}}. Temu e-sporočilu lahko zaupate, če se ta stavek ujema s stavkom, ki je prikazan ob prijavi.",
+    "emails.otpSession.thanks": "Hvala,",
+    "emails.otpSession.signature": "ekipa {{project}}"
 }
