@@ -344,7 +344,6 @@ class Hamster extends Action
     /**
      * @param Document $organization
      * @param Database $dbForConsole
-     * @throws \Utopia\Database\Exception
      */
     private function getStatsForOrganization(Document $organization, Database $dbForConsole): void
     {
@@ -380,6 +379,8 @@ class Hamster extends Action
                 $statsPerOrganization['billing_start_date'] = $billingStartDate;
             }
 
+            $statsPerOrganization['marked_for_deletion'] = $membership->getAttribute('markedForDeletion', 0);
+            $statsPerOrganization['billing_plan_downgrade'] = $billingPlanDowngrade;
 
             $userId = $membership->getAttribute('userId', null);
             if ($userId) {
