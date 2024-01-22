@@ -1148,7 +1148,7 @@ trait UsersBase
          * Test for FAILURE
          */
 
-        $errorType = "user_phone_already_exists";
+        $errorType = "user_target_already_exists";
         $user1Id = "user1";
         $statusCodeForUserPhoneAlredyExists = 409;
 
@@ -1442,7 +1442,7 @@ trait UsersBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(2, \count($response['body']['targets']));
+        $this->assertEquals(3, \count($response['body']['targets']));
     }
 
     /**
@@ -1476,7 +1476,7 @@ trait UsersBase
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
     }
 
     /**
