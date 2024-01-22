@@ -70,7 +70,7 @@ class MessagingTest extends Scope
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
-            'Fcm' => [
+            'FCM' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
@@ -80,7 +80,7 @@ class MessagingTest extends Scope
                     "private_key" => "test-private-key",
                 ]
             ],
-            'Apns' => [
+            'APNS' => [
                 'providerId' => ID::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
@@ -159,7 +159,7 @@ class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'Fcm' => [
+            'FCM' => [
                 'providerId' => $providers[7]['_id'],
                 'name' => 'FCM2',
                 'serviceAccountJSON' => [
@@ -169,7 +169,7 @@ class MessagingTest extends Scope
                     'private_key' => "test-private-key",
                 ]
             ],
-            'Apns' => [
+            'APNS' => [
                 'providerId' => $providers[8]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
@@ -998,7 +998,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $provider['headers']['status-code']);
 
-        $providerId = $provider['body']['data']['messagingCreateFcmProvider']['_id'];
+        $providerId = $provider['body']['data']['messagingCreateFCMProvider']['_id'];
 
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [

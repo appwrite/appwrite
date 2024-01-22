@@ -29,7 +29,7 @@ class Mails extends Action
             ->inject('message')
             ->inject('register')
             ->inject('log')
-            ->callback(fn(Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
+            ->callback(fn (Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
     }
 
     /**
@@ -57,9 +57,13 @@ class Mails extends Action
 
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
+        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = App::getEnv('_APP_DOMAIN');
+
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
         $variables = $payload['variables'];
+        $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
 

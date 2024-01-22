@@ -5,7 +5,15 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600&display=swap">
         <style>
-            body {
+            @media (max-width:500px) {
+                .mobile-full-width {
+                    width: 100%;
+                }
+            }
+            .main a {
+                color: currentColor;
+            }
+            .main {
                 padding: 32px;
                 line-height: 1.5;
                 color: #616b7c;
