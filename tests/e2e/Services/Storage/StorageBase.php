@@ -473,6 +473,14 @@ trait StorageBase
         $this->assertEquals(201, $fileJfif['headers']['status-code']);
         $this->assertNotEmpty($fileJfif['body']['$id']);
 
+
+        // shmuel
+        $data = file_get_contents(__DIR__ . '/../../../resources/disk-a/preview-test.jfif');
+        $image = new \Imagick();
+        $image->readImageBlob($data);
+        // End
+
+
         // TEST preview JXL
         $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileJfif['body']['$id'] . '/preview', array_merge([
             'content-type' => 'application/json',
