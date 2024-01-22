@@ -839,6 +839,17 @@ $commonCollections = [
                 'array' => true,
                 'filters' => ['json'],
             ],
+            [
+                '$id' => ID::custom('expire'),
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => true,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
         ],
         'indexes' => [
             [

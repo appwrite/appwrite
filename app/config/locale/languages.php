@@ -654,8 +654,13 @@ return [
         "nativeName" => "پښتو"
     ],
     [
-        "code" => "pt",
+        "code" => "pt-pt",
         "name" => "Portuguese",
+        "nativeName" => "Português"
+    ],
+    [
+        "code" => "pt-br",
+        "name" => "Portuguese (Brazilian)",
         "nativeName" => "Português"
     ],
     [
@@ -919,9 +924,14 @@ return [
         "nativeName" => "Cuengh / Tôô / 壮语"
     ],
     [
-        "code" => "zh",
-        "name" => "Chinese",
-        "nativeName" => "中文"
+        "code" => "zh-cn",
+        "name" => "Chinese (Simplified)",
+        "nativeName" => "中国人"
+    ],
+    [
+        "code" => "zh-tw",
+        "name" => "Chinese (Traditional)",
+        "nativeName" => "中國人"
     ],
     [
         "code" => "zu",

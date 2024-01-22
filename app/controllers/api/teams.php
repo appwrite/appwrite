@@ -964,6 +964,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'ip' => $request->getIP(),
             'factors' => ['email'],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session

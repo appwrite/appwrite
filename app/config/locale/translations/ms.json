@@ -240,5 +240,12 @@
     "emails.certificate.signature": "pasukan {{project}}",
     "sms.verification.body": "{{secret}} adalah kod pengesahan {{project}} anda.",
     "emails.magicSession.securityPhrase": "Frasa keselamatan untuk emel ini adalah {{phrase}}. Anda boleh mempercayai emel ini jika frasa ini sepadan dengan frasa yang ditunjukkan semasa log masuk.",
-    "emails.magicSession.optionUrl": "Jika anda tidak dapat log masuk menggunakan butang di atas, sila kunjungi pautan berikut:"
+    "emails.magicSession.optionUrl": "Jika anda tidak dapat log masuk menggunakan butang di atas, sila kunjungi pautan berikut:",
+    "emails.otpSession.subject": "Log Masuk {{project}}",
+    "emails.otpSession.hello": "Halo,",
+    "emails.otpSession.description": "Masukkan kod pengesahan berikut apabila diminta untuk log masuk ke akaun {{project}} anda dengan selamat. Ia akan luput dalam masa 15 minit.",
+    "emails.otpSession.clientInfo": "Penandaan masuk ini telah diminta menggunakan {{agentClient}} pada {{agentDevice}} {{agentOs}}. Jika anda tidak meminta penandaan masuk, anda boleh mengabaikan emel ini dengan selamat.",
+    "emails.otpSession.securityPhrase": "Frasa keselamatan untuk email ini adalah {{phrase}}. Anda boleh mempercayai email ini jika frasa ini sepadan dengan frasa yang ditunjukkan semasa log masuk.",
+    "emails.otpSession.thanks": "Terima kasih,",
+    "emails.otpSession.signature": "pasukan {{project}}"
 }
