@@ -218,6 +218,16 @@ class Hamster extends Action
                 }
             }
 
+            /** Add billing information to the project */
+            $organization = $dbForConsole->findOne('teams', [
+                Query::equal('$internalId', [$teamInternalId])
+            ]);
+
+            /** Add billing information */
+            $billing = $this->getBillingDetails($organization);
+            $statsPerProject['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerProject['billing_start_date'] = $billing['billing_start_date'] ?? null;
+            
             /** Get Domains */
             $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -362,31 +372,21 @@ class Hamster extends Action
             $membership = $dbForConsole->findOne('memberships', [
                 Query::equal('teamInternalId', [$organization->getInternalId()]),
             ]);
-
             if (!$membership || $membership->isEmpty()) {
                 throw new \Exception('Membership not found. Skipping organization : ' . $organization->getId());
             }
-
-            $billingPlan = $organization->getAttribute('billingPlan', null);
-            $billingPlanDowngrade = $organization->getAttribute('billingPlanDowngrade', null);
-
-            if (!empty($billingPlan) && is_null($billingPlanDowngrade)) {
-                $statsPerOrganization['billing_plan'] = $billingPlan;
-            }
-
-            if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
-                $billingStartDate = $organization->getAttribute('billingStartDate', null);
-                $statsPerOrganization['billing_start_date'] = $billingStartDate;
-            }
-
-            $statsPerOrganization['marked_for_deletion'] = $organization->getAttribute('markedForDeletion', 0);
-            $statsPerOrganization['billing_plan_downgrade'] = $billingPlanDowngrade;
-
             $userId = $membership->getAttribute('userId', null);
             if ($userId) {
                 $user = $dbForConsole->getDocument('users', $userId);
                 $statsPerOrganization['email'] = $user->getAttribute('email', null);
             }
+
+            /** Add billing information */
+            $billing = $this->getBillingDetails($organization);
+            $statsPerOrganization['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerOrganization['billing_start_date'] = $billing['billing_start_date'] ?? null;
+            $statsPerOrganization['marked_for_deletion'] = $billing['markedForDeletion'] ?? 0;
+            $statsPerOrganization['billing_plan_downgrade'] = $billing['billing_plan_downgrade'] ?? null;
 
             /** Organization Creation Date */
             $statsPerOrganization['created'] = $organization->getAttribute('$createdAt');
@@ -428,19 +428,10 @@ class Hamster extends Action
                 Query::equal('userInternalId', [$user->getInternalId()])
             ]);
 
-            if (!empty($organization) && !$organization->isEmpty()) {
-                $billingPlan = $organization->getAttribute('billingPlan', null);
-                $billingPlanDowngrade = $organization->getAttribute('billingPlanDowngrade', null);
-
-                if (!empty($billingPlan) && is_null($billingPlanDowngrade)) {
-                    $statsPerUser['billing_plan'] = $billingPlan;
-                }
-
-                if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
-                    $billingStartDate = $organization->getAttribute('billingStartDate', null);
-                    $statsPerUser['billing_start_date'] = $billingStartDate;
-                }
-            }
+            /** Add billing information */
+            $billing = $this->getBillingDetails($organization);
+            $statsPerUser['billing_plan'] = $billing['billing_plan'] ?? null;
+            $statsPerUser['billing_start_date'] = $billing['billing_start_date'] ?? null;
 
             $statsPerUser['time'] = $user->getAttribute('$time');
 
@@ -477,5 +468,29 @@ class Hamster extends Action
         } catch (\Exception $e) {
             Console::error($e->getMessage());
         }
+    }
+
+    private function getBillingDetails(Document $team): array 
+    {
+        $billing = [];
+
+        if (!empty($team) && !$team->isEmpty()) {
+            $billingPlan = $team->getAttribute('billingPlan', null);
+            $billingPlanDowngrade = $team->getAttribute('billingPlanDowngrade', null);
+
+            if (!empty($billingPlan) && empty($billingPlanDowngrade)) {
+                $billing['billing_plan'] = $billingPlan;
+            }
+
+            if (in_array($billingPlan, ['tier-1', 'tier-2'])) {
+                $billingStartDate = $team->getAttribute('billingStartDate', null);
+                $billing['billing_start_date'] = $billingStartDate;
+            }
+
+            $billing['marked_for_deletion'] = $team->getAttribute('markedForDeletion', 0);
+            $billing['billing_plan_downgrade'] = $billingPlanDowngrade;
+        }
+
+        return $billing;
     }
 }
