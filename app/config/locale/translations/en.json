@@ -11,7 +11,7 @@
     "emails.verification.signature": "{{project}} team",
     "emails.magicSession.subject": "{{project}} Login",
     "emails.magicSession.hello": "Hello,",
-    "emails.magicSession.optionButton": "Click the button below to securely sign in to your {{project}} account. This link is valid for 1 hour.",
+    "emails.magicSession.optionButton": "Click the button below to securely sign in to your {{project}} account. This link will expire in 1 hour.",
     "emails.magicSession.buttonText": "Sign in to {{project}}",
     "emails.magicSession.optionUrl": "If you are unable to sign in using the button above, please visit the following link:",
     "emails.magicSession.clientInfo": "This sign in was requested using {{agentClient}} on {{agentDevice}} {{agentOs}}. If you didn't request the sign in, you can safely ignore this email.",
