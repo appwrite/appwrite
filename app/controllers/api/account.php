@@ -2394,7 +2394,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Renew session')
+    ->desc('Update (or renew) a session')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.write')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -2424,9 +2424,9 @@ App::patch('/v1/account/sessions/:sessionId')
         $sessions = $user->getAttribute('sessions', []);
 
         $session = null;
-        foreach ($sessions as $key => $loopSession) {
-            if ($sessionId === $loopSession->getId()) {
-                $session = $loopSession;
+        foreach ($sessions as $key => $value) {
+            if ($sessionId === $value->getId()) {
+                $session = $value;
                 break;
             }
         }
