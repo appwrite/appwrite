@@ -474,6 +474,7 @@ App::post('/v1/teams/:teamId/memberships')
                     'phone' => empty($phone) ? null : $phone,
                     'emailVerification' => false,
                     'status' => true,
+                    // TODO: Set password empty?
                     'password' => Auth::passwordHash(Auth::passwordGenerator(), Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS),
                     'hash' => Auth::DEFAULT_ALGO,
                     'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
@@ -653,7 +654,6 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
                     ->setProviderType('SMS')
-                    ->setProject($project)
                     ->trigger();
             }
         }
@@ -962,6 +962,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session

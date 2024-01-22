@@ -1271,8 +1271,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_PASSWORD_RECOVERY:
-                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!, $passwordAgain: String!) {
-                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password, passwordAgain: $passwordAgain) {
+                return 'mutation confirmPasswordRecovery($userId: String!, $secret: String!, $password: String!) {
+                    accountUpdateRecovery(userId: $userId, secret: $secret, password: $password) {
                         userId
                         secret
                         expire
@@ -1790,8 +1790,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_MAILGUN_PROVIDER:
-                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $from: String!, $isEuRegion: Boolean!) {
-                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, from: $from, isEuRegion: $isEuRegion) {
+                return 'mutation createMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $fromName: String!, $fromEmail: String!, $isEuRegion: Boolean!, $replyToName: String, $replyToEmail: String) {
+                    messagingCreateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, fromName: $fromName, fromEmail: $fromEmail, isEuRegion: $isEuRegion, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider
@@ -1800,8 +1800,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_SENDGRID_PROVIDER:
-                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $from: String!, $apiKey: String!) {
-                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, from: $from, apiKey: $apiKey) {
+                return 'mutation createSendgridProvider($providerId: String!, $name: String!, $fromName: String!, $fromEmail: String!, $apiKey: String!, $replyToName: String, $replyToEmail: String) {
+                    messagingCreateSendgridProvider(providerId: $providerId, name: $name, fromName: $fromName, fromEmail: $fromEmail, apiKey: $apiKey, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider
@@ -1860,8 +1860,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_FCM_PROVIDER:
-                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
-                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                return 'mutation createFCMProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
+                    messagingCreateFCMProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
                         name
                         provider
@@ -1870,8 +1870,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_APNS_PROVIDER:
-                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation createAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingCreateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider
@@ -1904,8 +1904,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_MAILGUN_PROVIDER:
-                return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean) {
-                    messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled) {
+                return 'mutation updateMailgunProvider($providerId: String!, $name: String!, $domain: String!, $apiKey: String!, $isEuRegion: Boolean, $enabled: Boolean, $fromName: String, $fromEmail: String) {
+                    messagingUpdateMailgunProvider(providerId: $providerId, name: $name, domain: $domain, apiKey: $apiKey, isEuRegion: $isEuRegion, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
                         _id
                         name
                         provider
@@ -1914,8 +1914,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_SENDGRID_PROVIDER:
-                return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!) {
-                    messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey) {
+                return 'mutation messagingUpdateSendgridProvider($providerId: String!, $name: String!, $apiKey: String!, $enabled: Boolean, $fromName: String, $fromEmail: String) {
+                    messagingUpdateSendgridProvider(providerId: $providerId, name: $name, apiKey: $apiKey, enabled: $enabled, fromName: $fromName, fromEmail: $fromEmail) {
                         _id
                         name
                         provider
@@ -1974,8 +1974,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FCM_PROVIDER:
-                return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serverKey: String!) {
-                    messagingUpdateFcmProvider(providerId: $providerId, name: $name, serverKey: $serverKey) {
+                return 'mutation updateFCMProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
+                    messagingUpdateFCMProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
                         name
                         provider
@@ -1984,8 +1984,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_APNS_PROVIDER:
-                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!, $endpoint: String!) {
-                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId, endpoint: $endpoint) {
+                return 'mutation updateAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingUpdateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider
@@ -2098,8 +2098,8 @@ trait Base
                     }
             }';
             case self::$CREATE_EMAIL:
-                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $scheduledAt: String) {
-                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, scheduledAt: $scheduledAt) {
+                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2178,8 +2178,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_EMAIL:
-                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $scheduledAt: String) {
-                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, scheduledAt: $scheduledAt) {
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users

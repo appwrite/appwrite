@@ -5,16 +5,12 @@ namespace Appwrite\Utopia\Database\Validator\Queries;
 class Messages extends Base
 {
     public const ALLOWED_ATTRIBUTES = [
-        'topics',
-        'users',
-        'targets',
-        'providerId',
+        'scheduledAt',
         'deliveredAt',
-        'deliveredTo',
-        'deliveryErrors',
+        'deliveredTotal',
         'status',
         'description',
-        'data'
+        'providerType',
     ];
 
     /**
