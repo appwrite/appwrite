@@ -468,7 +468,7 @@ class Hamster extends Action
         }
     }
 
-    private function getBillingDetails(Document $team): array 
+    private function getBillingDetails(Document $team): array
     {
         $billing = [];
 
