@@ -57,11 +57,13 @@ class Mails extends Action
 
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
+        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = App::getEnv('_APP_DOMAIN');
+
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
         $variables = $payload['variables'];
-        $variables['protocol'] = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $variables['hostname'] = App::getEnv('_APP_DOMAIN');
+        $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
 
