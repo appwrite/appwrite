@@ -2437,13 +2437,12 @@ App::patch('/v1/account/sessions/:sessionId')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
-    ->param('identity', false, new Boolean(), 'Refresh OAuth2 identity. If enabled and session was created using an OAuth provider, the access token of the identity will be refreshed', true)
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (?string $sessionId, bool $identity, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
 
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -2467,40 +2466,29 @@ App::patch('/v1/account/sessions/:sessionId')
         $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
-        if ($identity) {
-            // Comment below would skip re-generation if token is still valid
-            // We decided to not include this because developer can get expiration date from the session
-            // I kept code in comment because it might become relevant in the future
+        $provider = $session->getAttribute('provider');
+        $refreshToken = $session->getAttribute('providerRefreshToken');
 
-            // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
-            // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
-            //     return $response->noContent();
-            // }
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
-            $provider = $session->getAttribute('provider');
-            $refreshToken = $session->getAttribute('providerRefreshToken');
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-            $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
-            $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
-            if (!\class_exists($className)) {
-                throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
-            }
-
-            $oauth2 = new $className($appId, $appSecret, '', [], []);
-
-            $oauth2->refreshTokens($refreshToken);
-
-            $session
-                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+        if (!\class_exists($className)) {
+            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
         }
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session);
+        $oauth2 = new $className($appId, $appSecret, '', [], []);
 
+        $oauth2->refreshTokens($refreshToken);
+
+        $session
+            ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+            ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+            ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+
+        // Save changes
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForEvents
