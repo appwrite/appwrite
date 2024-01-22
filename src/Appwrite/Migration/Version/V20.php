@@ -73,6 +73,22 @@ class V20 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
+                case 'schedules':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'schedules' from {$id}: {$th->getMessage()}");
+                    }
+                case 'webhooks':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
+                    }
                 default:
                     break;
             }
@@ -95,12 +111,9 @@ class V20 extends Migration
                  * Bump version number.
                  */
                 $document->setAttribute('version', '1.5.0');
-
-                /**
-                 * Rename providers to oAuthProviders
-                 */
-                $document->setAttribute('oAuthProviders', $document->getAttribute('providers'));
-                $document->removeAttribute('providers');
+                break;
+            case 'schedules':
+                $document->setAttribute('resourceCollection', 'functions');
                 break;
         }
         return $document;
