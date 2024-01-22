@@ -67,11 +67,11 @@ class DevGenerateTranslations extends Action
                         $language = \explode('.', $file)[0];
                         $translation = $this->generateTranslation($language, $mainJson[$key]);
 
-                        if(!empty($translation)) {
+                        if (!empty($translation)) {
                             $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
                             $json[$key] = $translation;
                             \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
-    
+
                             Console::success("Generated {$key} for {$language}");
                         }
                     }
@@ -86,12 +86,12 @@ class DevGenerateTranslations extends Action
     {
         $list = Config::getParam('locale-languages');
         foreach ($list as $language) {
-            if($language['code'] === $targetLanguage) {
+            if ($language['code'] === $targetLanguage) {
                 $languageObject = $language;
             }
         }
 
-        if(!isset($languageObject)) {
+        if (!isset($languageObject)) {
             Console::error("{$targetLanguage} language not found");
             return '';
         }
@@ -125,8 +125,8 @@ class DevGenerateTranslations extends Action
 
         $failureDetectors = [ 'sorry', 'confusion', 'country code', 'misunderstanding', 'correct', 'clarify', 'specific', 'cannot', 'unable', 'language', 'appears' ];
 
-        foreach($failureDetectors as $detector) {
-            if(\str_contains($answer, $detector)) {
+        foreach ($failureDetectors as $detector) {
+            if (\str_contains($answer, $detector)) {
                 Console::error("Translation of '{$enTranslation}' for {$targetLanguage} is incorrect: {$answer}");
             }
         }
