@@ -8,7 +8,7 @@ use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Validator\Text;
 
-class Retry extends Action
+class RetryJobs extends Action
 {
     public static function getName(): string
     {
