@@ -240,5 +240,12 @@
     "emails.certificate.signature": "{{project}} hold",
     "sms.verification.body": "{{secret}} er din {{project}} bekræftelseskode.",
     "emails.magicSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher den viste frase under log ind.",
-    "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:"
+    "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:",
+    "emails.otpSession.subject": "{{project}} Login",
+    "emails.otpSession.hello": "Hej,",
+    "emails.otpSession.description": "Indtast følgende bekræftelseskode, når du bliver bedt om det, for sikkert at logge ind på din {{project}} konto. Den udløber om 15 minutter.",
+    "emails.otpSession.clientInfo": "Denne indlogning blev anmodet om ved hjælp af {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke har anmodet om indlogningen, kan du trygt ignorere denne e-mail.",
+    "emails.otpSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher frasen vist under login.",
+    "emails.otpSession.thanks": "Tak,",
+    "emails.otpSession.signature": "{{project}} team"
 }
