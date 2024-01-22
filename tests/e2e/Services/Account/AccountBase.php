@@ -219,7 +219,7 @@ trait AccountBase
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
-        $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
         $this->assertStringContainsStringIgnoringCase($securityPhrase, $lastEmail['text']);
 
