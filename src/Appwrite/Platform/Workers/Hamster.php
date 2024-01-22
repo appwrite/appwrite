@@ -226,7 +226,7 @@ class Hamster extends Action
             $billing = $this->getBillingDetails($organization);
             $statsPerProject['billing_plan'] = $billing['billing_plan'] ?? null;
             $statsPerProject['billing_start_date'] = $billing['billing_start_date'] ?? null;
-            
+
             /** Get Domains */
             $statsPerProject['custom_domains'] = $dbForConsole->count('rules', [
                 Query::equal('projectInternalId', [$project->getInternalId()]),
@@ -429,6 +429,7 @@ class Hamster extends Action
                 Query::equal('userInternalId', [$user->getInternalId()])
             ]);
 
+
             $billing = $this->getBillingDetails($organization);
             $statsPerUser['billing_plan'] = $billing['billing_plan'] ?? null;
             $statsPerUser['billing_start_date'] = $billing['billing_start_date'] ?? null;
@@ -468,7 +469,7 @@ class Hamster extends Action
         }
     }
 
-    private function getBillingDetails(Document $team): array
+    private function getBillingDetails(bool|Document $team): array
     {
         $billing = [];
 
