@@ -17,9 +17,9 @@ return [
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateMagicURLToken',
         'enabled' => true,
     ],
-    'email' => [
+    'email-otp' => [
         'name' => 'Email (OTP)',
-        'key' => 'email',
+        'key' => 'emailOtp',
         'icon' => '/images/users/email.png',
         'docs' => 'https://appwrite.io/docs/references/cloud/client-web/account#accountCreateEmailToken',
         'enabled' => true,
