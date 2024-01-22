@@ -79,6 +79,7 @@ use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\CLI\Console;
+use Utopia\Domains\Validator\PublicDomain;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -89,17 +90,17 @@ const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
-const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USERS = 10_000;
 const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
-const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
-const APP_LIMIT_ENCRYPTION = 20000000; //20MB
-const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
+const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
+const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1000000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
@@ -115,8 +116,8 @@ const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
-const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
-const APP_DATABASE_TIMEOUT_MILLISECONDS = 15000;
+const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -171,6 +172,7 @@ const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
+const DELETE_TYPE_TARGET = 'target';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -228,6 +230,12 @@ const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
 $register = new Registry();
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
+
+if (!App::isProduction()) {
+    // Allow specific domains to skip public domain validation in dev environment
+    // Useful for existing tests involving webhooks
+    PublicDomain::allow(['request-catcher']);
+}
 
 /*
  * ENV vars
@@ -559,15 +567,16 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetId'),
-            $database
-            ->find('subscribers', [
+            fn ($document) => $document->getAttribute('targetInternalId'),
+            $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+            return $database->find('targets', [
+                Query::equal('$internalId', $targetIds)
+            ]);
         }
         return [];
     }

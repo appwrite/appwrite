@@ -654,7 +654,6 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
                     ->setProviderType('SMS')
-                    ->setProject($project)
                     ->trigger();
             }
         }

@@ -6,6 +6,11 @@
             rel="stylesheet"
         />
         <style>
+            @media (max-width:500px) {
+                .mobile-full-width {
+                    width: 100%;
+                }
+            }
             .main a {
                 color: currentColor;
             }
@@ -169,7 +174,7 @@
                 </tr>
             </table>
 
-            <table style="margin-top: 40px">
+            <table style="margin-top: 32px">
                 <tr>
                     <td>{{message}}</td>
                 </tr>

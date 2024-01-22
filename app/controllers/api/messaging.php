@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
+use Appwrite\Enum\MessageStatus;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
@@ -13,6 +14,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
 use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
+use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use Utopia\App;
@@ -35,6 +37,7 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
 use MaxMind\Db\Reader;
+use Utopia\Database\DateTime;
 use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
@@ -601,7 +604,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createFcmProvider')
+    ->label('sdk.method', 'createFCMProvider')
     ->label('sdk.description', '/docs/references/messaging/create-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -660,7 +663,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createApnsProvider')
+    ->label('sdk.method', 'createAPNSProvider')
     ->label('sdk.description', '/docs/references/messaging/create-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1486,7 +1489,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateFcmProvider')
+    ->label('sdk.method', 'updateFCMProvider')
     ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1547,7 +1550,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateApnsProvider')
+    ->label('sdk.method', 'updateAPNSProvider')
     ->label('sdk.description', '/docs/references/messaging/update-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1976,19 +1979,27 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
+        $userId = $user->getId();
+
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($user->getId())),
-                Permission::delete(Role::user($user->getId())),
+                Permission::read(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
-            'userId' => $user->getId(),
+            'userId' => $userId,
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
+            'search' => implode(' ', [
+                $subscriberId,
+                $targetId,
+                $userId,
+                $target->getAttribute('providerType'),
+            ]),
         ]);
 
         try {
@@ -2253,7 +2264,7 @@ App::post('/v1/messaging/messages/email')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createEmailMessage')
+    ->label('sdk.method', 'createEmail')
     ->label('sdk.description', '/docs/references/messaging/create-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2267,21 +2278,26 @@ App::post('/v1/messaging/messages/email')
     ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('description', '', new Text(256), 'Description for message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
         $mergedTargets = \array_merge($targets, $cc, $bcc);
@@ -2311,6 +2327,7 @@ App::post('/v1/messaging/messages/email')
             'users' => $users,
             'targets' => $targets,
             'description' => $description,
+            'scheduledAt' => $scheduledAt,
             'data' => [
                 'subject' => $subject,
                 'content' => $content,
@@ -2321,11 +2338,35 @@ App::post('/v1/messaging/messages/email')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->setProject($project)
-                ->trigger();
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
@@ -2345,7 +2386,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMSMessage')
+    ->label('sdk.method', 'createSMS')
     ->label('sdk.description', '/docs/references/messaging/create-sms.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2356,35 +2397,42 @@ App::post('/v1/messaging/messages/sms')
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('description', '', new Text(256), 'Description for Message.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        $foundTargets = $dbForProject->find('targets', [
-            Query::equal('$id', $targets),
-            Query::equal('providerType', [MESSAGE_TYPE_SMS]),
-            Query::limit(\count($targets)),
-        ]);
-
-        if (\count($foundTargets) !== \count($targets)) {
-            throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        foreach ($foundTargets as $target) {
-            if ($target->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        if (!empty($targets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
+                Query::limit(\count($targets)),
+            ]);
+
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
+            }
+
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 
@@ -2401,11 +2449,35 @@ App::post('/v1/messaging/messages/sms')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->setProject($project)
-                ->trigger();
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
@@ -2425,7 +2497,7 @@ App::post('/v1/messaging/messages/push')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createPushMessage')
+    ->label('sdk.method', 'createPush')
     ->label('sdk.description', '/docs/references/messaging/create-push-notification.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2444,35 +2516,42 @@ App::post('/v1/messaging/messages/push')
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
     ->param('tag', '', new Text(256), 'Tag for push notification. Available only for Android Platform.', true)
     ->param('badge', '', new Text(256), 'Badge for push notification. Available only for IOS Platform.', true)
-    ->param('status', 'processing', new WhiteList(['draft', 'canceled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
 
-        if (\count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
+        if ($status !== MessageStatus::DRAFT && \count($topics) === 0 && \count($users) === 0 && \count($targets) === 0) {
             throw new Exception(Exception::MESSAGE_MISSING_TARGET);
         }
 
-        $foundTargets = $dbForProject->find('targets', [
-            Query::equal('$id', $targets),
-            Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-            Query::limit(\count($targets)),
-        ]);
-
-        if (\count($foundTargets) !== \count($targets)) {
-            throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+        if ($status === MessageStatus::SCHEDULED && \is_null($scheduledAt)) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
         }
 
-        foreach ($foundTargets as $target) {
-            if ($target->isEmpty()) {
-                throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        if (!empty($targets)) {
+            $foundTargets = $dbForProject->find('targets', [
+                Query::equal('$id', $targets),
+                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
+                Query::limit(\count($targets)),
+            ]);
+
+            if (\count($foundTargets) !== \count($targets)) {
+                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
+            }
+
+            foreach ($foundTargets as $target) {
+                if ($target->isEmpty()) {
+                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+                }
             }
         }
 
@@ -2498,11 +2577,35 @@ App::post('/v1/messaging/messages/push')
             'status' => $status,
         ]));
 
-        if ($status === 'processing') {
-            $queueForMessaging
-                ->setMessageId($message->getId())
-                ->setProject($project)
-                ->trigger();
+        switch ($status) {
+            case MessageStatus::PROCESSING:
+                $queueForMessaging
+                    ->setMessageId($message->getId())
+                    ->trigger();
+                break;
+            case MessageStatus::SCHEDULED:
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => true,
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+
+                $dbForProject->updateDocument(
+                    'messages',
+                    $message->getId(),
+                    $message
+                );
+                break;
+            default:
+                break;
         }
 
         $queueForEvents
@@ -2524,7 +2627,7 @@ App::get('/v1/messaging/messages')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE_LIST)
-    ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Providers::ALLOWED_ATTRIBUTES), true)
+    ->param('queries', [], new Messages(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Messages::ALLOWED_ATTRIBUTES), true)
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
@@ -2640,6 +2743,65 @@ App::get('/v1/messaging/messages/:messageId/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
+App::get('/v1/messaging/messages/:messageId/targets')
+    ->desc('List message targets')
+    ->groups(['api', 'messaging'])
+    ->label('scope', 'messages.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'listTargets')
+    ->label('sdk.description', '/docs/references/messaging/list-message-targets.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET_LIST)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('geodb')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        $targetIDs = $message->getAttribute('targets');
+
+        if (empty($targetIDs)) {
+            $response->dynamic(new Document([
+                'targets' => [],
+                'total' => 0,
+            ]), Response::MODEL_TARGET_LIST);
+            return;
+        }
+
+        $queries = Query::parseQueries($queries);
+
+        $queries[] = Query::equal('$id', $targetIDs);
+
+        // Get cursor document if there was a cursor query
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            $targetId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('targets', $targetId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Target '{$targetId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $response->dynamic(new Document([
+            'targets' => $dbForProject->find('targets', $queries),
+            'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_TARGET_LIST);
+    });
+
 App::get('/v1/messaging/messages/:messageId')
     ->desc('Get a message')
     ->groups(['api', 'messaging'])
@@ -2685,24 +2847,25 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('subject', null, new Text(998), 'Email Subject.', true)
     ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
-    ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
+    ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', null, new Boolean(), 'Is content of type HTML', true)
     ->param('cc', null, new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', null, new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $description, ?string $content, ?string $status, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $description, ?string $content, ?string $status, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
+        if ($message->getAttribute('status') === MessageStatus::SENT) {
             throw new Exception(Exception::MESSAGE_ALREADY_SENT);
         }
 
@@ -2718,29 +2881,11 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('users', $users);
         }
 
-        if (!\is_null($targets) || !\is_null($cc) || !\is_null($bcc)) {
-            $mergedTargets = \array_merge(...\array_filter([$targets, $cc, $bcc]));
-
-            $foundTargets = $dbForProject->find('targets', [
-                Query::equal('$id', $mergedTargets),
-                Query::equal('providerType', [MESSAGE_TYPE_EMAIL]),
-                Query::limit(\count($mergedTargets)),
-            ]);
-            if (\count($foundTargets) !== \count($mergedTargets)) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_EMAIL);
-            }
-            foreach ($foundTargets as $target) {
-                if ($target->isEmpty()) {
-                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-                }
-            }
-        }
-
-        $data = $message->getAttribute('data');
-
         if (!\is_null($targets)) {
             $message->setAttribute('targets', $targets);
         }
+
+        $data = $message->getAttribute('data');
 
         if (!\is_null($subject)) {
             $data['subject'] = $subject;
@@ -2772,16 +2917,44 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $message->setAttribute('status', $status);
         }
 
-        if (!is_null($scheduledAt)) {
-            $message->setAttribute('scheduledAt', $scheduledAt);
+        if (!\is_null($scheduledAt)) {
+            if (\is_null($message->getAttribute(('scheduleId')))) {
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => $status === 'processing',
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+            } else {
+                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+                if ($schedule->isEmpty()) {
+                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+                }
+
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $scheduledAt)
+                    ->setAttribute('active', $status === 'processing');
+
+                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            }
+
+            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
         }
 
@@ -2816,10 +2989,11 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $content, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $content, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2843,22 +3017,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
         }
 
         if (!\is_null($targets)) {
-            $foundTargets = $dbForProject->find('targets', [
-                Query::equal('$id', $targets),
-                Query::equal('providerType', [MESSAGE_TYPE_SMS]),
-                Query::limit(\count($targets)),
-            ]);
-
-            if (\count($foundTargets) !== \count($targets)) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_SMS);
-            }
-
-            foreach ($foundTargets as $target) {
-                if ($target->isEmpty()) {
-                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-                }
-            }
-
             $message->setAttribute('targets', $targets);
         }
 
@@ -2878,16 +3036,44 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             $message->setAttribute('description', $description);
         }
 
-        if (!is_null($scheduledAt)) {
-            $message->setAttribute('scheduledAt', $scheduledAt);
+        if (!\is_null($scheduledAt)) {
+            if (\is_null($message->getAttribute(('scheduleId')))) {
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => $status === 'processing',
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+            } else {
+                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+                if ($schedule->isEmpty()) {
+                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+                }
+
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $scheduledAt)
+                    ->setAttribute('active', $status === 'processing');
+
+                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            }
+
+            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
         }
 
@@ -2930,10 +3116,11 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
+    ->inject('dbForConsole')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2957,22 +3144,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($targets)) {
-            $foundTargets = $dbForProject->find('targets', [
-                Query::equal('$id', $targets),
-                Query::equal('providerType', [MESSAGE_TYPE_PUSH]),
-                Query::limit(\count($targets)),
-            ]);
-
-            if (\count($foundTargets) !== \count($targets)) {
-                throw new Exception(Exception::MESSAGE_TARGET_NOT_PUSH);
-            }
-
-            foreach ($foundTargets as $target) {
-                if ($target->isEmpty()) {
-                    throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-                }
-            }
-
             $message->setAttribute('targets', $targets);
         }
 
@@ -3025,15 +3196,43 @@ App::patch('/v1/messaging/messages/push/:messageId')
         }
 
         if (!\is_null($scheduledAt)) {
-            $message->setAttribute('scheduledAt', $scheduledAt);
+            if (\is_null($message->getAttribute(('scheduleId')))) {
+                $schedule = $dbForConsole->createDocument('schedules', new Document([
+                    'region' => App::getEnv('_APP_REGION', 'default'),
+                    'resourceType' => 'message',
+                    'resourceCollection' => 'messages',
+                    'resourceId' => $message->getId(),
+                    'resourceInternalId' => $message->getInternalId(),
+                    'resourceUpdatedAt' => DateTime::now(),
+                    'projectId' => $project->getId(),
+                    'schedule'  => $scheduledAt,
+                    'active' => $status === 'processing',
+                ]));
+
+                $message->setAttribute('scheduleId', $schedule->getId());
+            } else {
+                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+
+                if ($schedule->isEmpty()) {
+                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+                }
+
+                $schedule
+                    ->setAttribute('resourceUpdatedAt', DateTime::now())
+                    ->setAttribute('schedule', $scheduledAt)
+                    ->setAttribute('active', $status === 'processing');
+
+                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+            }
+
+            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing') {
+        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
             $queueForMessaging
                 ->setMessageId($message->getId())
-                ->setProject($project)
                 ->trigger();
         }
 

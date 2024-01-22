@@ -4,6 +4,7 @@
  * List of server wide error codes and their respective messages.
  */
 
+use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
 
 return [
@@ -812,7 +813,7 @@ return [
     ],
     Exception::PROVIDER_INCORRECT_TYPE => [
         'name' => Exception::PROVIDER_INCORRECT_TYPE,
-        'description' => 'Provider with the requested ID is of incorrect type: ',
+        'description' => 'Provider with the requested ID is of the incorrect type.',
         'code' => 400,
     ],
 
@@ -863,18 +864,27 @@ return [
     ],
     Exception::MESSAGE_TARGET_NOT_EMAIL => [
         'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
-        'description' => 'Message with the target ID is not an email target:',
+        'description' => 'Message with the target ID is not an email target.',
         'code' => 400,
     ],
     Exception::MESSAGE_TARGET_NOT_SMS => [
         'name' => Exception::MESSAGE_TARGET_NOT_SMS,
-        'description' => 'Message with the target ID is not an SMS target:',
+        'description' => 'Message with the target ID is not an SMS target.',
         'code' => 400,
     ],
     Exception::MESSAGE_TARGET_NOT_PUSH => [
         'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
-        'description' => 'Message with the target ID is not a push target:',
+        'description' => 'Message with the target ID is not a push target.',
         'code' => 400,
     ],
-
+    Exception::MESSAGE_MISSING_SCHEDULE => [
+        'name' => Exception::MESSAGE_MISSING_SCHEDULE,
+        'description' => 'Message can not have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
+        'code' => 400,
+    ],
+    Exception::SCHEDULE_NOT_FOUND => [
+        'name' => Exception::SCHEDULE_NOT_FOUND,
+        'description' => 'Schedule with the requested ID could not be found.',
+        'code' => 404,
+    ],
 ];
