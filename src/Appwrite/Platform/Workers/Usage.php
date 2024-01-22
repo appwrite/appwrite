@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -19,7 +20,7 @@ class Usage extends Action
     ];
 
     protected const INFINITY_PERIOD = '_inf_';
-
+    protected const DEBUG_PROJECT_ID = 85293;
     public static function getName(): string
     {
         return 'usage';
@@ -50,7 +51,6 @@ class Usage extends Action
     public function action(Message $message, callable $getProjectDB): void
     {
         $payload = $message->getPayload() ?? [];
-
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
@@ -69,6 +69,16 @@ class Usage extends Action
                 metrics:  $payload['metrics'],
                 getProjectDB: $getProjectDB
             );
+        }
+        if ($project->getInternalId() == self::DEBUG_PROJECT_ID) {
+            var_dump([
+                'type' => 'payload',
+                'project' => $project->getInternalId(),
+                'database' => $project['database'] ?? '',
+                $payload['metrics']
+            ]);
+
+            var_dump('==========================');
         }
 
         self::$stats[$projectId]['project'] = $project;
