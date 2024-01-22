@@ -204,7 +204,7 @@ class Webhooks extends Action
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{redirect}}', "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
         $subject = 'Webhook deliveries have been paused';
