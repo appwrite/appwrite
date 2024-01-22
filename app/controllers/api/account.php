@@ -236,10 +236,8 @@ App::post('/v1/account/sessions/email')
         $user->setAttributes($profile->getArrayCopy());
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
         $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
         $session = new Document(array_merge(
             [
@@ -252,6 +250,7 @@ App::post('/v1/account/sessions/email')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -283,6 +282,8 @@ App::post('/v1/account/sessions/email')
             ;
         }
 
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -294,7 +295,6 @@ App::post('/v1/account/sessions/email')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
             ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
         ;
 
@@ -596,8 +596,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         $sessions = $user->getAttribute('sessions', []);
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         if ($current) { // Delete current session of new one.
             $currentDocument = $dbForProject->getDocument('sessions', $current);
@@ -829,6 +828,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -866,6 +866,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
+
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $response
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
@@ -1091,7 +1093,6 @@ App::post('/v1/account/tokens/magic-url')
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $tokenSecret, 'expire' => $expire, 'project' => $project->getId()]);
         $url = Template::unParseURL($url);
 
-        $body = $locale->getText("emails.magicSession.body");
         $subject = $locale->getText("emails.magicSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.magicSession-' . $locale->default] ?? [];
 
@@ -1102,7 +1103,6 @@ App::post('/v1/account/tokens/magic-url')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
-            ->setParam('{{body}}', $body)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
             ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
             ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
@@ -1172,9 +1172,237 @@ App::post('/v1/account/tokens/magic-url')
             'team' => '',
             'project' => $project->getAttribute('name'),
             'redirect' => $url,
-            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
-            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
-            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
+            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
+            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
+            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
+        ];
+
+        $queueForMails
+            ->setSubject($subject)
+            ->setBody($body)
+            ->setVariables($emailVariables)
+            ->setRecipient($email)
+            ->trigger();
+
+        $queueForEvents->setPayload(
+            $response->output(
+                $token->setAttribute('secret', $tokenSecret),
+                Response::MODEL_TOKEN
+            )
+        );
+
+        // Hide secret for clients
+        $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
+
+        if (!empty($securityPhrase)) {
+            $token->setAttribute('securityPhrase', $securityPhrase);
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN)
+        ;
+    });
+
+App::post('/v1/account/tokens/email')
+    ->desc('Create email token (OTP)')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('auth.type', 'email')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createEmailToken')
+    ->label('sdk.description', '/docs/references/account/create-token-email.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TOKEN)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},email:{param-email}')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('email', '', new Email(), 'User email.')
+    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('locale')
+    ->inject('queueForEvents')
+    ->inject('queueForMails')
+    ->action(function (string $userId, string $email, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+            throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+        }
+
+        if ($securityPhrase === true) {
+            $securityPhrase = SecurityPhrase::generate();
+        }
+
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
+        $result = $dbForProject->findOne('users', [Query::equal('email', [$email])]);
+        if ($result !== false && !$result->isEmpty()) {
+            $user->setAttributes($result->getArrayCopy());
+        } else {
+            $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
+
+            if ($limit !== 0) {
+                $total = $dbForProject->count('users', max: APP_LIMIT_USERS);
+
+                if ($total >= $limit) {
+                    throw new Exception(Exception::USER_COUNT_EXCEEDED);
+                }
+            }
+
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+            ]);
+            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
+
+            $userId = $userId === 'unique()' ? ID::unique() : $userId;
+
+            $user->setAttributes([
+                '$id' => $userId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($userId)),
+                    Permission::delete(Role::user($userId)),
+                ],
+                'email' => $email,
+                'emailVerification' => false,
+                'status' => true,
+                'password' => null,
+                'hash' => Auth::DEFAULT_ALGO,
+                'hashOptions' => Auth::DEFAULT_ALGO_OPTIONS,
+                'passwordUpdate' => null,
+                'registration' => DateTime::now(),
+                'reset' => false,
+                'prefs' => new \stdClass(),
+                'sessions' => null,
+                'tokens' => null,
+                'memberships' => null,
+                'search' => implode(' ', [$userId, $email]),
+                'accessedAt' => DateTime::now(),
+            ]);
+
+            $user->removeAttribute('$internalId');
+            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+        }
+
+        $tokenSecret = Auth::codeGenerator(6);
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
+
+        $token = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'type' => Auth::TOKEN_TYPE_EMAIL,
+            'secret' => Auth::hash($tokenSecret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        Authorization::setRole(Role::user($user->getId())->toString());
+
+        $token = $dbForProject->createDocument('tokens', $token
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $subject = $locale->getText("emails.otpSession.subject");
+        $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
+
+        $detector = new Detector($request->getUserAgent('UNKNOWN'));
+        $agentOs = $detector->getOS();
+        $agentClient = $detector->getClient();
+        $agentDevice = $detector->getDevice();
+
+        $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-otp.tpl');
+        $message
+            ->setParam('{{hello}}', $locale->getText("emails.otpSession.hello"))
+            ->setParam('{{description}}', $locale->getText("emails.otpSession.description"))
+            ->setParam('{{clientInfo}}', $locale->getText("emails.otpSession.clientInfo"))
+            ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
+
+        if (!empty($securityPhrase)) {
+            $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
+        } else {
+            $message->setParam('{{securityPhrase}}', '');
+        }
+
+        $body = $message->render();
+
+        $smtp = $project->getAttribute('smtp', []);
+        $smtpEnabled = $smtp['enabled'] ?? false;
+
+        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $replyTo = "";
+
+        if ($smtpEnabled) {
+            if (!empty($smtp['senderEmail'])) {
+                $senderEmail = $smtp['senderEmail'];
+            }
+            if (!empty($smtp['senderName'])) {
+                $senderName = $smtp['senderName'];
+            }
+            if (!empty($smtp['replyTo'])) {
+                $replyTo = $smtp['replyTo'];
+            }
+
+            $queueForMails
+                ->setSmtpHost($smtp['host'] ?? '')
+                ->setSmtpPort($smtp['port'] ?? '')
+                ->setSmtpUsername($smtp['username'] ?? '')
+                ->setSmtpPassword($smtp['password'] ?? '')
+                ->setSmtpSecure($smtp['secure'] ?? '');
+
+            if (!empty($customTemplate)) {
+                if (!empty($customTemplate['senderEmail'])) {
+                    $senderEmail = $customTemplate['senderEmail'];
+                }
+                if (!empty($customTemplate['senderName'])) {
+                    $senderName = $customTemplate['senderName'];
+                }
+                if (!empty($customTemplate['replyTo'])) {
+                    $replyTo = $customTemplate['replyTo'];
+                }
+
+                $body = $customTemplate['message'] ?? '';
+                $subject = $customTemplate['subject'] ?? $subject;
+            }
+
+            $queueForMails
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName);
+        }
+
+        $emailVariables = [
+            'direction' => $locale->getText('settings.direction'),
+            /* {{user}} ,{{team}}, {{project}} and {{otp}} are required in the templates */
+            'user' => '',
+            'team' => '',
+            'project' => $project->getAttribute('name'),
+            'otp' => $tokenSecret,
+            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
+            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
+            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
             'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
         ];
 
@@ -1229,7 +1457,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
     $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
-    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
     $session = new Document(array_merge(
         [
@@ -1241,6 +1468,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
         $detector->getClient(),
@@ -1282,6 +1510,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
     }
 
+    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
     $protocol = $request->getProtocol();
 
     $response
@@ -1458,7 +1687,7 @@ App::post('/v1/account/tokens/phone')
         }
 
         $secret = Auth::codeGenerator();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_OTP));
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -1613,7 +1842,6 @@ App::post('/v1/account/sessions/anonymous')
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $record = $geodb->get($request->getIP());
         $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
         $session = new Document(array_merge(
             [
@@ -1625,6 +1853,7 @@ App::post('/v1/account/sessions/anonymous')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
             $detector->getOS(),
             $detector->getClient(),
@@ -1650,6 +1879,8 @@ App::post('/v1/account/sessions/anonymous')
             $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
@@ -1661,7 +1892,6 @@ App::post('/v1/account/sessions/anonymous')
         $session
             ->setAttribute('current', true)
             ->setAttribute('countryName', $countryName)
-            ->setAttribute('expire', $expire)
             ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? Auth::encodeSession($user->getId(), $secret) : '')
         ;
 
@@ -1849,16 +2079,13 @@ App::get('/v1/account/sessions')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $current = Auth::sessionVerify($sessions, Auth::$secret, $authDuration);
+        $current = Auth::sessionVerify($sessions, Auth::$secret);
 
         foreach ($sessions as $key => $session) {/** @var Document $session */
             $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
-            $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
-
             $sessions[$key] = $session;
         }
 
@@ -1952,9 +2179,8 @@ App::get('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
@@ -1964,7 +2190,6 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
-                    ->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)))
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -2346,9 +2571,8 @@ App::delete('/v1/account/sessions/:sessionId')
     ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Document $project) {
 
         $protocol = $request->getProtocol();
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
             : $sessionId;
 
         $sessions = $user->getAttribute('sessions', []);
@@ -2396,7 +2620,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update OAuth session (refresh tokens)')
+    ->desc('Update (or renew) a session')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.write')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -2413,72 +2637,63 @@ App::patch('/v1/account/sessions/:sessionId')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->param('sessionId', '', new UID(), 'Session ID. Use the string \'current\' to update the current device session.')
-    ->inject('request')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('project')
-    ->inject('locale')
     ->inject('queueForEvents')
-    ->action(function (?string $sessionId, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Event $queueForEvents) {
-        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $sessionId = ($sessionId === 'current')
-            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration)
-            : $sessionId;
+    ->action(function (?string $sessionId, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents) {
 
+        $sessionId = ($sessionId === 'current')
+            ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
+            : $sessionId;
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
-            if ($sessionId == $session->getId()) {
-                // Comment below would skip re-generation if token is still valid
-                // We decided to not include this because developer can get expiration date from the session
-                // I kept code in comment because it might become relevant in the future
-
-                // $expireAt = (int) $session->getAttribute('providerAccessTokenExpiry');
-                // if(\time() < $expireAt - 5) { // 5 seconds time-sync and networking gap, to be safe
-                //     return $response->noContent();
-                // }
-
-                $provider = $session->getAttribute('provider');
-                $refreshToken = $session->getAttribute('providerRefreshToken');
-
-                $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-                $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
-                $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
-
-                if (!\class_exists($className)) {
-                    throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
-                }
-
-                $oauth2 = new $className($appId, $appSecret, '', [], []);
-
-                $oauth2->refreshTokens($refreshToken);
-
-                $session
-                    ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-                    ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                    ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
-
-                $dbForProject->updateDocument('sessions', $sessionId, $session);
-
-                $dbForProject->deleteCachedDocument('users', $user->getId());
-
-                $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-
-                $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $authDuration)));
-
-                $queueForEvents
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
-
-                return $response->dynamic($session, Response::MODEL_SESSION);
+        $session = null;
+        foreach ($sessions as $key => $value) {
+            if ($sessionId === $value->getId()) {
+                $session = $value;
+                break;
             }
         }
 
-        throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        if ($session === null) {
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND);
+        }
+
+        // Extend session
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
+
+        // Refresh OAuth access token
+        $provider = $session->getAttribute('provider', '');
+        $refreshToken = $session->getAttribute('providerRefreshToken', '');
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+
+        if (!empty($provider) && \class_exists($className)) {
+            $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+
+            $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $oauth2->refreshTokens($refreshToken);
+
+            $session
+                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
+        }
+
+        // Save changes
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
+        $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('sessionId', $session->getId())
+            ->setPayload($response->output($session, Response::MODEL_SESSION))
+        ;
+
+        return $response->dynamic($session, Response::MODEL_SESSION);
     });
 
 App::delete('/v1/account/sessions')
@@ -2521,7 +2736,6 @@ App::delete('/v1/account/sessions')
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
-                $session->setAttribute('expire', DateTime::addSeconds(new \DateTime($session->getCreatedAt()), Auth::TOKEN_EXPIRATION_LOGIN_LONG));
 
                  // If current session delete the cookies too
                 $response

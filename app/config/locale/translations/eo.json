@@ -240,5 +240,12 @@
     "emails.certificate.signature": "teamo de {{project}}",
     "sms.verification.body": "{{secret}} estas via {{project}} kontrolo-kodo.",
     "emails.magicSession.securityPhrase": "La sekureca frazo por ĉi tiu retpoŝto estas {{phrase}}. Vi povas fidi ĉi tiun retpoŝton se ĉi tiu frazo kongruas kun la frazo montrita dum ensaluto.",
-    "emails.magicSession.optionUrl": "Se vi ne povas ensaluti per la supra butono, bonvolu viziti la jenan ligilon:"
+    "emails.magicSession.optionUrl": "Se vi ne povas ensaluti per la supra butono, bonvolu viziti la jenan ligilon:",
+    "emails.otpSession.subject": "{{project}} Ensaluto",
+    "emails.otpSession.hello": "Saluton,",
+    "emails.otpSession.description": "Enigu la jenan kontrolkodon kiam oni petos ĝin por sekure ensaluti en vian {{project}} konton. Ĝi eksvalidiĝos post 15 minutoj.",
+    "emails.otpSession.clientInfo": "Ĉi tiu ensaluto estis petita per {{agentClient}} en {{agentDevice}} {{agentOs}}. Se vi ne petis la ensaluton, vi povas sekure ignori ĉi tiun retpoŝton.",
+    "emails.otpSession.securityPhrase": "Sekureca frazo por ĉi tiu retpoŝto estas {{phrase}}. Vi povas fidi ĉi tiun retpoŝton se tiu ĉi frazo kongruas kun la frazo montrita dum ensaluto.",
+    "emails.otpSession.thanks": "Dankon,",
+    "emails.otpSession.signature": "teamo de {{project}}"
 }
