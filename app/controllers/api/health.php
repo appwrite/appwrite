@@ -403,9 +403,18 @@ App::get('/v1/health/certificate')
     ->param('domain', null, new Domain(), 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
-        
-    });
-
+        $get = stream_context_create(array("ssl" => array("capture_peer_cert" => TRUE)));
+        $read = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $get);
+        $certificate = stream_context_get_params($read);
+        $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
+        $sslExpiration = $certificateInfo['validTo_time_t'];
+        $status = ($sslExpiration < time()) ? 'fail' : 'pass';
+        $response->dynamic(new Document([
+            'name' => 'certificate',
+            'status' => $status,
+            'ping' => 0
+        ]), Response::MODEL_HEALTH_STATUS);
+    }, ['response']);
 
 App::get('/v1/health/queue/certificates')
     ->desc('Get certificates queue')
