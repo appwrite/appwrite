@@ -45,7 +45,7 @@ class V17Test extends TestCase
     /**
      * @dataProvider createUpdateRecoveryProvider
      */
-    public function testCreateExecution(array $content, array $expected): void
+    public function testUpdateRecovery(array $content, array $expected): void
     {
         $model = 'account.updateRecovery';
 
