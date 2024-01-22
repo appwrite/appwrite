@@ -73,6 +73,7 @@ class V20 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
+                    break;
                 case 'schedules':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
@@ -80,6 +81,7 @@ class V20 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'schedules' from {$id}: {$th->getMessage()}");
                     }
+                    break;
                 case 'webhooks':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
@@ -89,6 +91,7 @@ class V20 extends Migration
                     } catch (\Throwable $th) {
                         Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
                     }
+                    break;
                 default:
                     break;
             }
