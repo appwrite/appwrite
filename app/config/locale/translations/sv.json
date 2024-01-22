@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón de arriba, por favor visita el siguiente enlace:",
     "emails.otpSession.subject": "{{project}} Inloggning",
     "emails.otpSession.hello": "Hej,",
-    "emails.otpSession.description": "Ange följande verifieringskod när du uppmanas att säkert logga in på ditt {{projectBold}}-konto. Den kommer att löpa ut om 15 minuter.",
+    "emails.otpSession.description": "Ange följande verifieringskod när du uppmanas att säkert logga in på ditt {{project}}-konto. Den kommer att löpa ut om 15 minuter.",
     "emails.otpSession.clientInfo": "Den här inloggningsbegäran gjordes med {{agentClient}} på {{agentDevice}} {{agentOs}}. Om du inte har begärt inloggningen kan du ignorera detta e-postmeddelande.",
     "emails.otpSession.securityPhrase": "Säkerhetsfrasen för detta e-postmeddelande är {{phrase}}. Du kan lita på detta e-postmeddelande om frasen stämmer överens med frasen som visades vid inloggningen.",
     "emails.otpSession.thanks": "Tack,",

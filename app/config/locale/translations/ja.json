@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "上記のボタンを使用してサインインすることができない場合は、次のリンクにアクセスしてください：",
     "emails.otpSession.subject": "プロジェクト ログイン",
     "emails.otpSession.hello": "こんにちは。",
-    "emails.otpSession.description": "以下の確認コードを入力して、{{projectBold}}アカウントに安全にサインインしてください。このコードは15分後に失効します。",
+    "emails.otpSession.description": "以下の確認コードを入力して、{{project}}アカウントに安全にサインインしてください。このコードは15分後に失効します。",
     "emails.otpSession.clientInfo": "このサインインは、{{agentClient}} を使い {{agentDevice}} {{agentOs}} で要求されました。サインインを要求していない場合、このメールを無視しても安全です。",
     "emails.otpSession.securityPhrase": "このメールのセキュリティフレーズは{{phrase}}です。サインイン時に表示されたフレーズと一致する場合、このメールを信頼できます。",
     "emails.otpSession.thanks": "ありがとうございます。",

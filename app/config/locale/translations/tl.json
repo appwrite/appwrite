@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Kung hindi ka makapag-sign in gamit ang pindutan sa itaas, mangyaring bisitahin ang sumusunod na link:",
     "emails.otpSession.subject": "{{project}} Pag-login",
     "emails.otpSession.hello": "Kamusta,",
-    "emails.otpSession.description": "Ilagay ang sumusunod na verification code kapag hiningi para ligtas na makapag-sign in sa iyong {{projectBold}} account. Ito ay mag-eexpire sa loob ng 15 minuto.",
+    "emails.otpSession.description": "Ilagay ang sumusunod na verification code kapag hiningi para ligtas na makapag-sign in sa iyong {{project}} account. Ito ay mag-eexpire sa loob ng 15 minuto.",
     "emails.otpSession.clientInfo": "Ang pag-sign in na ito ay hiniling gamit ang {{agentClient}} sa {{agentDevice}} {{agentOs}}. Kung hindi ikaw ang humiling ng pag-sign in, maaari mong ligtas na balewalain ang email na ito.",
     "emails.otpSession.securityPhrase": "Ang security phrase para sa email na ito ay {{phrase}}. Maaari mong pagkatiwalaan ang email na ito kung ang phrase na ito ay tugma sa phrase na ipinakita noong nag-sign in.",
     "emails.otpSession.thanks": "Salamat,",

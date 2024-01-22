@@ -243,7 +243,7 @@
     "emails.magicSession.securityPhrase": "Bu e-postanın güvenlik ifadesi {{phrase}}'dir. Bu ifade, giriş sırasında gösterilen ifadeyle eşleşiyorsa bu e-postaya güvenebilirsiniz.",
     "emails.otpSession.subject": "{{project}} Giriş",
     "emails.otpSession.hello": "Merhaba,",
-    "emails.otpSession.description": "İstendiğinde {{projectBold}} hesabınıza güvenli bir şekilde giriş yapmak için aşağıdaki doğrulama kodunu girin. Bu kod 15 dakika içinde geçerliliğini yitirecektir.",
+    "emails.otpSession.description": "İstendiğinde {{project}} hesabınıza güvenli bir şekilde giriş yapmak için aşağıdaki doğrulama kodunu girin. Bu kod 15 dakika içinde geçerliliğini yitirecektir.",
     "emails.otpSession.clientInfo": "Bu oturum açma işlemi, {{agentDevice}} {{agentOs}} üzerinde {{agentClient}} kullanılarak talep edildi. Eğer oturum açma isteğinde bulunmadıysanız, bu e-postayı güvenle yok sayabilirsiniz.",
     "emails.otpSession.securityPhrase": "Bu e-postanın güvenlik ifadesi {{phrase}}. Giriş sırasında gösterilen ifade ile bu ifade eşleşiyorsa bu e-postaya güvenebilirsiniz.",
     "emails.otpSession.thanks": "Teşekkürler,",

@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "As u nie met die knoppie hierbo kan aanmeld nie, besoek asseblief die volgende skakel:",
     "emails.otpSession.subject": "{{project}} Aanteken",
     "emails.otpSession.hello": "Hallo,",
-    "emails.otpSession.description": "Voer die volgende verifikasiekode in wanneer daar versoek word om veilig aan te meld by jou {{projectBold}} rekening. Dit sal verval oor 15 minute.",
+    "emails.otpSession.description": "Voer die volgende verifikasiekode in wanneer daar versoek word om veilig aan te meld by jou {{project}} rekening. Dit sal verval oor 15 minute.",
     "emails.otpSession.clientInfo": "Hierdie aanmelding is versoek met behulp van {{agentClient}} op {{agentDevice}} {{agentOs}}. As jy nie die aanmelding versoek het nie, kan jy hierdie e-pos veilig ignoreer.",
     "emails.otpSession.securityPhrase": "Die veiligheidsfrase vir hierdie e-pos is {{phrase}}. Jy kan hierdie e-pos vertrou as hierdie frase ooreenstem met die frase wat gewys is tydens aanmelding.",
     "emails.otpSession.thanks": "Dankie,",

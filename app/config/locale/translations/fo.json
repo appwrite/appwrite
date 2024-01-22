@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Um tú ikki fært innritað við at brúka knøttin omanfyri, vinarliga vitja hesa leinkjuna:",
     "emails.otpSession.subject": "{{project}} Ritarinn",
     "emails.otpSession.hello": "Hallo,",
-    "emails.otpSession.description": "Skriva hesa váttanarkotu tá tú verður biðin um tað, fyri at rita trygt inn á tín {{projectBold}} konto. Hon gongur út um 15 minuttir.",
+    "emails.otpSession.description": "Skriva hesa váttanarkotu tá tú verður biðin um tað, fyri at rita trygt inn á tín {{project}} konto. Hon gongur út um 15 minuttir.",
     "emails.otpSession.clientInfo": "Hendan innritað varð umbidin við {{agentClient}} á {{agentDevice}} {{agentOs}}. Um tú ikki hevur umbiðið innritingina, kanst tú trygt ignorera hesa teldupostin.",
     "emails.otpSession.securityPhrase": "Trygdarorðið fyri hesa teldupostin er {{phrase}}. Tú kanst líta á hesa teldupostin um hetta orðið passar við orðið víst tá tú ritaði inn.",
     "emails.otpSession.thanks": "Takk,",

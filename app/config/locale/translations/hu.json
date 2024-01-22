@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Amennyiben az előző gomb használatával nem tud bejelentkezni, kérjük látogassa meg a következő linket:",
     "emails.otpSession.subject": "{{project}} Bejelentkezés",
     "emails.otpSession.hello": "Szia,",
-    "emails.otpSession.description": "Adja meg a következő megerősítő kódot, amikor arra kéri a rendszer, hogy biztonságosan bejelentkezhessen a {{projectBold}} fiókjába. A kód 15 perc múlva lejár.",
+    "emails.otpSession.description": "Adja meg a következő megerősítő kódot, amikor arra kéri a rendszer, hogy biztonságosan bejelentkezhessen a {{project}} fiókjába. A kód 15 perc múlva lejár.",
     "emails.otpSession.clientInfo": "Ez a bejelentkezés a(z) {{agentClient}} használatával lett kérve a(z) {{agentDevice}} {{agentOs}} eszközön. Ha Ön nem kérte a bejelentkezést, nyugodtan figyelmen kívül hagyhatja ezt az e-mailt.",
     "emails.otpSession.securityPhrase": "Az e-mailhez tartozó biztonsági kód: {{phrase}}. Ennek az e-mailnek megbízhat, ha a megjelenített kód megegyezik a bejelentkezéskor megjelenő kóddal.",
     "emails.otpSession.thanks": "Köszönöm,",

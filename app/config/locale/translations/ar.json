@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "إذا لم تتمكن من تسجيل الدخول باستخدام الزر أعلاه، يرجى زيارة الرابط التالي:",
     "emails.otpSession.subject": "تسجيل دخول {{project}}",
     "emails.otpSession.hello": "مرحبا،",
-    "emails.otpSession.description": "أدخل رمز التحقق التالي عندما يُطلب منك لتسجيل الدخول بأمان إلى حساب {{projectBold}} الخاص بك. سينتهي صلاحيته في غضون 15 دقيقة.",
+    "emails.otpSession.description": "أدخل رمز التحقق التالي عندما يُطلب منك لتسجيل الدخول بأمان إلى حساب {{project}} الخاص بك. سينتهي صلاحيته في غضون 15 دقيقة.",
     "emails.otpSession.clientInfo": "تم طلب هذا الدخول باستخدام {{agentClient}} على جهاز {{agentDevice}} {{agentOs}}. إذا لم تطلب الدخول، يمكنك تجاهل هذا البريد الإلكتروني بأمان.",
     "emails.otpSession.securityPhrase": "عبارة الأمان لهذا البريد الإلكتروني هي {{phrase}}. يمكنك الوثوق بهذا البريد الإلكتروني إذا كانت هذه العبارة تتطابق مع العبارة المعروضة أثناء تسجيل الدخول.",
     "emails.otpSession.thanks": "شكرًا،",

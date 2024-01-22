@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Jika anda tidak dapat log masuk menggunakan butang di atas, sila kunjungi pautan berikut:",
     "emails.otpSession.subject": "Log Masuk {{project}}",
     "emails.otpSession.hello": "Halo,",
-    "emails.otpSession.description": "Masukkan kod pengesahan berikut apabila diminta untuk log masuk ke akaun {{projectBold}} anda dengan selamat. Ia akan luput dalam masa 15 minit.",
+    "emails.otpSession.description": "Masukkan kod pengesahan berikut apabila diminta untuk log masuk ke akaun {{project}} anda dengan selamat. Ia akan luput dalam masa 15 minit.",
     "emails.otpSession.clientInfo": "Penandaan masuk ini telah diminta menggunakan {{agentClient}} pada {{agentDevice}} {{agentOs}}. Jika anda tidak meminta penandaan masuk, anda boleh mengabaikan emel ini dengan selamat.",
     "emails.otpSession.securityPhrase": "Frasa keselamatan untuk email ini adalah {{phrase}}. Anda boleh mempercayai email ini jika frasa ini sepadan dengan frasa yang ditunjukkan semasa log masuk.",
     "emails.otpSession.thanks": "Terima kasih,",

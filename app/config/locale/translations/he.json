@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "אם אינך יכול להיכנס באמצעות הכפתור למעלה, בקר בקישור הבא:",
     "emails.otpSession.subject": "התחברות למערכת {{project}}",
     "emails.otpSession.hello": "שלום,",
-    "emails.otpSession.description": "הזן את קוד האימות הבא כאשר תתבקש כדי להיכנס לחשבון {{projectBold}} שלך באופן מאובטח. הוא יפוג בעוד 15 דקות.",
+    "emails.otpSession.description": "הזן את קוד האימות הבא כאשר תתבקש כדי להיכנס לחשבון {{project}} שלך באופן מאובטח. הוא יפוג בעוד 15 דקות.",
     "emails.otpSession.clientInfo": "ההתחברות הזו בוקשה באמצעות {{agentClient}} על {{agentDevice}} {{agentOs}}. אם לא ביקשת את ההתחברות, באפשרותך להתעלם בבטחה ממייל זה.",
     "emails.otpSession.securityPhrase": "משפט האבטחה למייל זה הוא {{phrase}}. אתה יכול לסמוך על המייל הזה אם המשפט הזה תואם את המשפט שהוצג במהלך הכניסה למערכת.",
     "emails.otpSession.thanks": "תודה,",

@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "ಮೇಲಿನ ಬಟನ್ ಬಳಸಿ ನೀವು ಸೈನ್ ಇನ್ ಮಾಡಲು ಅಸಮರ್ಥರಾಗಿದ್ದರೆ, ದಯವಿಟ್ಟು ಈ ಕೆಳಗಿನ ಲಿಂಕ್ ಭೇಟಿಯನ್ನು ಕೊಡಿ:",
     "emails.otpSession.subject": "{{project}} ಲಾಗಿನ್",
     "emails.otpSession.hello": "ಹಲೋ,",
-    "emails.otpSession.description": "ನಿಮ್ಮ {{projectBold}} ಖಾತೆಗೆ ಭದ್ರವಾಗಿ ಸೈನ್ ಇನ್ ಮಾಡಲು ಕೇಳಿದಾಗ ಕೆಳಗಿನ ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ. ಇದು 15 ನಿಮಿಷಗಳಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ.",
+    "emails.otpSession.description": "ನಿಮ್ಮ {{project}} ಖಾತೆಗೆ ಭದ್ರವಾಗಿ ಸೈನ್ ಇನ್ ಮಾಡಲು ಕೇಳಿದಾಗ ಕೆಳಗಿನ ದೃಢೀಕರಣ ಕೋಡ್ ನಮೂದಿಸಿ. ಇದು 15 ನಿಮಿಷಗಳಲ್ಲಿ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ.",
     "emails.otpSession.clientInfo": "ಈ ಸೈನ್ ಇನ್ ಅನ್ನು {{agentClient}} ಬಳಸಿ {{agentDevice}} {{agentOs}}ನಲ್ಲಿ ಕೋರಿಕೆ ಮಾಡಲಾಗಿದೆ. ನೀವು ಸೈನ್ ಇನ್ ಅನ್ನು ಕೋರಿಕೆ ಮಾಡಿರದಿದ್ದರೆ, ಈ ಇಮೇಲ್ ಅನ್ನು ನೀವು ನಿರಾಳವಾಗಿ ಅಲಕ್ಷ್ಯ ಮಾಡಬಹುದು.",
     "emails.otpSession.securityPhrase": "ಈ ಇಮೇಲ್‌ಗೆ ಭದ್ರತಾ ಪದವು {{phrase}}. ನೀವು ಸೈನ್ ಇನ್ ಮಾಡುವಾಗ ತೋರಿಸಿದ ಪದವು ಇದರೊಂದಿಗೆ ಹೊಂದಿಕೊಂಡರೆ ಈ ಇಮೇಲನ್ನು ನೀವು ನಂಬಬಹುದು.",
     "emails.otpSession.thanks": "ಧನ್ಯವಾದಗಳು,",

@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Ak sa vám nedarí prihlásiť sa pomocou vyššie uvedeného tlačidla, prosím navštívte nasledujúci odkaz:",
     "emails.otpSession.subject": "Prihlásenie do projektu {{project}}",
     "emails.otpSession.hello": "Dobrý deň,",
-    "emails.otpSession.description": "Zadajte nasledovný overovací kód, keď budete vyzvaní, aby ste sa bezpečne prihlásili na svoj účet {{projectBold}}. Platnosť kódu vyprší za 15 minút.",
+    "emails.otpSession.description": "Zadajte nasledovný overovací kód, keď budete vyzvaní, aby ste sa bezpečne prihlásili na svoj účet {{project}}. Platnosť kódu vyprší za 15 minút.",
     "emails.otpSession.clientInfo": "Toto prihlásenie bolo vyžiadané pomocou {{agentClient}} na {{agentDevice}} {{agentOs}}. Ak ste prihlásenie nevyžiadali, tento e-mail môžete bezpečne ignorovať.",
     "emails.otpSession.securityPhrase": "Bezpečnostná fráza pre tento e-mail je {{phrase}}. Tento e-mail môžete dôverovať, ak táto fráza zodpovedá fráze zobrazenej počas prihlasovania.",
     "emails.otpSession.thanks": "Ďakujem,",

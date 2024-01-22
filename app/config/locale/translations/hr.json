@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Ako se ne možete prijaviti koristeći gornji gumb, posjetite sljedeću poveznicu:",
     "emails.otpSession.subject": "Prijava na {{project}}",
     "emails.otpSession.hello": "Zdravo,",
-    "emails.otpSession.description": "Unesite sljedeći verifikacijski kod kada budete pozvani kako biste se sigurno prijavili na svoj {{projectBold}} račun. Istjeći će za 15 minuta.",
+    "emails.otpSession.description": "Unesite sljedeći verifikacijski kod kada budete pozvani kako biste se sigurno prijavili na svoj {{project}} račun. Istjeći će za 15 minuta.",
     "emails.otpSession.clientInfo": "Ova prijava je zatražena pomoću {{agentClient}} na {{agentDevice}} {{agentOs}}. Ako niste zatražili prijavu, ovaj e-mail možete sigurno zanemariti.",
     "emails.otpSession.securityPhrase": "Sigurnosna fraza za ovaj e-mail je {{phrase}}. Možete vjerovati ovom e-mailu ako se ova fraza podudara s frazom prikazanom prilikom prijave.",
     "emails.otpSession.thanks": "Hvala,",

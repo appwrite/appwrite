@@ -243,7 +243,7 @@
     "emails.magicSession.optionUrl": "Mura bhfuil tú in ann síniú isteach ag baint úsáid as an gcnaipe thuas, téigh chuig an nasc seo a leanas:",
     "emails.otpSession.subject": "Login {{project}}",
     "emails.otpSession.hello": "Dia dhuit,",
-    "emails.otpSession.description": "Iontráil an cód fíoraithe seo a leanas nuair a iarrtar ort chun síní isteach go slán ar do chuntas {{projectBold}}. Rachaidh sé in éag i gceann 15 nóiméad.",
+    "emails.otpSession.description": "Iontráil an cód fíoraithe seo a leanas nuair a iarrtar ort chun síní isteach go slán ar do chuntas {{project}}. Rachaidh sé in éag i gceann 15 nóiméad.",
     "emails.otpSession.clientInfo": "Rinneadh an iarratas seo chun síniú isteach ag baint úsáide as {{agentClient}} ar {{agentDevice}} {{agentOs}}. Mura ndearna tú an iarratas chun síniú isteach, is féidir leat an ríomhphost seo a neamhaird go sábháilte.",
     "emails.otpSession.securityPhrase": "Frása slándála don ríomhphost seo ná {{phrase}}. Is féidir muinín a bheith agat as an ríomhphost seo má mheaitseálann an frása seo leis an bhfrása a taispeántar le linn síniú isteach.",
     "emails.otpSession.thanks": "Go raibh maith agat,",
