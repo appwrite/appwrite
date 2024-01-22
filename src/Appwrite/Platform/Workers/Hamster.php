@@ -428,7 +428,7 @@ class Hamster extends Action
                 Query::equal('userInternalId', [$user->getInternalId()])
             ]);
 
-            if (!empty($organization) || !$organization->isEmpty()) {
+            if (!empty($organization) && !$organization->isEmpty()) {
                 $billingPlan = $organization->getAttribute('billingPlan', null);
                 $billingPlanDowngrade = $organization->getAttribute('billingPlanDowngrade', null);
 
