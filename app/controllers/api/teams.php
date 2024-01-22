@@ -962,6 +962,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
