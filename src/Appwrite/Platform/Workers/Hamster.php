@@ -223,7 +223,6 @@ class Hamster extends Action
                 Query::equal('$internalId', [$teamInternalId])
             ]);
 
-            /** Add billing information */
             $billing = $this->getBillingDetails($organization);
             $statsPerProject['billing_plan'] = $billing['billing_plan'] ?? null;
             $statsPerProject['billing_start_date'] = $billing['billing_start_date'] ?? null;
@@ -367,7 +366,6 @@ class Hamster extends Action
             /** Organization name */
             $statsPerOrganization['name'] = $organization->getAttribute('name');
 
-
             /** Get Email and of the organization owner */
             $membership = $dbForConsole->findOne('memberships', [
                 Query::equal('teamInternalId', [$organization->getInternalId()]),
@@ -424,16 +422,16 @@ class Hamster extends Action
         try {
             $statsPerUser = [];
 
+            $statsPerUser['time'] = $user->getAttribute('$time');
+
+            /** Add billing information */
             $organization = $dbForConsole->findOne('teams', [
                 Query::equal('userInternalId', [$user->getInternalId()])
             ]);
 
-            /** Add billing information */
             $billing = $this->getBillingDetails($organization);
             $statsPerUser['billing_plan'] = $billing['billing_plan'] ?? null;
             $statsPerUser['billing_start_date'] = $billing['billing_start_date'] ?? null;
-
-            $statsPerUser['time'] = $user->getAttribute('$time');
 
             /** Organization name */
             $statsPerUser['name'] = $user->getAttribute('name');
