@@ -22,16 +22,16 @@ class Workers extends Service
         $this->type = self::TYPE_WORKER;
         $this
             ->addAction(Audits::getName(), new Audits())
-            ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Mails::getName(), new Mails())
-            ->addAction(Messaging::getName(), new Messaging())
+            ->addAction(Builds::getName(), new Builds())
             ->addAction(Certificates::getName(), new Certificates())
             ->addAction(Databases::getName(), new Databases())
-            ->addAction(Functions::getName(), new Functions())
-            ->addAction(Builds::getName(), new Builds())
             ->addAction(Deletes::getName(), new Deletes())
-            ->addAction(Migrations::getName(), new Migrations())
+            ->addAction(Functions::getName(), new Functions())
             ->addAction(Hamster::getName(), new Hamster())
+            ->addAction(Mails::getName(), new Mails())
+            ->addAction(Messaging::getName(), new Messaging())
+            ->addAction(Migrations::getName(), new Migrations())
+            ->addAction(Webhooks::getName(), new Webhooks())
 
         ;
     }
