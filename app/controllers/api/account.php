@@ -828,6 +828,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+                'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
             $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
@@ -1230,7 +1231,6 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $detector = new Detector($request->getUserAgent('UNKNOWN'));
     $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
-    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
 
     $session = new Document(array_merge(
         [
@@ -1242,6 +1242,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
         $detector->getOS(),
         $detector->getClient(),
@@ -1283,6 +1284,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $response->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $sessionSecret)]));
     }
 
+    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
     $protocol = $request->getProtocol();
 
     $response
@@ -2438,26 +2440,22 @@ App::patch('/v1/account/sessions/:sessionId')
         $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
-        $provider = $session->getAttribute('provider');
-        $refreshToken = $session->getAttribute('providerRefreshToken');
-
-        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
-        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
-
+        $provider = $session->getAttribute('provider', '');
+        $refreshToken = $session->getAttribute('providerRefreshToken', '');
         $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
 
-        if (!\class_exists($className)) {
-            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+        if (!empty($provider) && \class_exists($className)) {
+            $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+            $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+
+            $oauth2 = new $className($appId, $appSecret, '', [], []);
+            $oauth2->refreshTokens($refreshToken);
+
+            $session
+                ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
+                ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
         }
-
-        $oauth2 = new $className($appId, $appSecret, '', [], []);
-
-        $oauth2->refreshTokens($refreshToken);
-
-        $session
-            ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
-            ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-            ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
         // Save changes
         $dbForProject->updateDocument('sessions', $sessionId, $session);
