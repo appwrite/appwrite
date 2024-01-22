@@ -153,7 +153,7 @@ trait AccountBase
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
-        $this->assertEquals($this->getProject()['name'] . ' Login', $lastEmail['subject']);
+        $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
 
         // FInd 6 concurrent digits in email text - OTP
         preg_match_all("/\b\d{6}\b/", $lastEmail['text'], $matches);
