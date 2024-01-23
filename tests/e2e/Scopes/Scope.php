@@ -25,14 +25,19 @@ abstract class Scope extends TestCase
         $this->client = null;
     }
 
-    protected function getLastEmail(): array
+    protected function getLastEmail(int $limit = 1): array
     {
         sleep(3);
 
         $emails = json_decode(file_get_contents('http://maildev:1080/email'), true);
 
         if ($emails && is_array($emails)) {
-            return end($emails);
+            if ($limit === 1) {
+                return end($emails);
+            } else {
+                $lastEmails = array_slice($emails, -1 * $limit);
+                return $lastEmails;
+            }
         }
 
         return [];
