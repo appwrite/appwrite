@@ -407,6 +407,9 @@ App::get('/v1/health/certificate')
     ->action(function (string $domain, Response $response) {
         $get = stream_context_create(array("ssl" => array("capture_peer_cert" => true)));
         $read = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $get);
+        if (!$read) {
+            throw new Exception(Exception::INVALID_HOST, 'The domain is not valid.');
+        }
         $certificate = stream_context_get_params($read);
         $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
         $sslExpiration = $certificateInfo['validTo_time_t'];
@@ -415,6 +418,7 @@ App::get('/v1/health/certificate')
         if ($status == 'fail') {
             throw new Exception(Exception::CERTIFICATE_EXPIRED, 'The certificate of the domain has expired.');
         }
+
         $response->dynamic(new Document([
             'name' => 'certificate',
             'status' => $status,

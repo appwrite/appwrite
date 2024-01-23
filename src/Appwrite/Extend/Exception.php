@@ -240,6 +240,7 @@ class Exception extends \Exception
     /** Health */
     public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
     public const CERTIFICATE_EXPIRED                 = 'certificate_expired';
+    public const INVALID_HOST                        = 'invalid_host';
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';

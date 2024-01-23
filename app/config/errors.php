@@ -801,6 +801,12 @@ return [
         'code' => 404,
     ],
 
+    Exception::INVALID_HOST => [
+        'name' => Exception::INVALID_HOST,
+        'description' => 'Host not found.',
+        'code' => 404,
+    ],
+
     /** Providers */
     Exception::PROVIDER_NOT_FOUND => [
         'name' => Exception::PROVIDER_NOT_FOUND,
