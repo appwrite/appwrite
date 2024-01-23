@@ -405,6 +405,11 @@ App::get('/v1/health/certificate')
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
+        // Extract domain from URL if provided
+        if (filter_var($domain, FILTER_VALIDATE_URL)) {
+            $domain = parse_url($domain, PHP_URL_HOST);
+        }
+
         $get = stream_context_create(array("ssl" => array("capture_peer_cert" => true)));
         $read = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $get);
         if (!$read) {

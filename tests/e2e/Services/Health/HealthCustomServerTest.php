@@ -450,6 +450,16 @@ class HealthCustomServerTest extends Scope
         $this->assertIsString($response['body']['status']);
         $this->assertEquals('pass', $response['body']['status']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['status']);
+        $this->assertIsString($response['body']['status']);
+        $this->assertEquals('pass', $response['body']['status']);
+
         /**
          * Test for FAILURE
          */
@@ -461,13 +471,6 @@ class HealthCustomServerTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=doesnotexist.com', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), []);
-
-        $this->assertEquals(404, $response['headers']['status-code']);
-
-        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
