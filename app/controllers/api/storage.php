@@ -976,7 +976,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 break;
         }
 
-        $image = new Image($source);
+        try {
+            $image = new Image($source);
+        } catch (ImagickException $e) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
+        }
 
         $image->crop((int) $width, (int) $height, $gravity);
 
