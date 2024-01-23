@@ -1,0 +1,1 @@
+Get status of certificate for a domain to check whether it is still valid or expired.
