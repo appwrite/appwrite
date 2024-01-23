@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f4d494d258630f4b7e9427becf73cd7b",
+    "content-hash": "577d31a631d293cfa0ab47cf5308badd",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2028,16 +2028,16 @@
         },
         {
             "name": "utopia-php/dsn",
-            "version": "0.1.0",
+            "version": "0.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/dsn.git",
-                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea"
+                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
-                "reference": "17a5935eab1b89fb4b95600db50a1b6d5faa6cea",
+                "url": "https://api.github.com/repos/utopia-php/dsn/zipball/c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
+                "reference": "c11f37a12c3f6aaf9fea97ca7cb363dcc93668d7",
                 "shasum": ""
             },
             "require": {
@@ -2069,9 +2069,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/dsn/issues",
-                "source": "https://github.com/utopia-php/dsn/tree/0.1.0"
+                "source": "https://github.com/utopia-php/dsn/tree/0.2.0"
             },
-            "time": "2022-10-26T10:06:20+00:00"
+            "time": "2023-11-02T12:01:43+00:00"
         },
         {
             "name": "utopia-php/framework",

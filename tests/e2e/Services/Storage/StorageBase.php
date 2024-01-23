@@ -473,71 +473,63 @@ trait StorageBase
         $this->assertEquals(201, $fileJfif['headers']['status-code']);
         $this->assertNotEmpty($fileJfif['body']['$id']);
 
+        // TEST preview JXL
+        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileJfif['body']['$id'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
 
-//        // shmuel
-//        $data = file_get_contents(__DIR__ . '/../../../resources/disk-a/preview-test.jfif');
-//        $image = new \Imagick();
-//        $image->readImageBlob($data);
-//        // End
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
+        $this->assertNotEmpty($preview['body']);
 
-//
-//        // TEST preview JXL
-//        $preview = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileJfif['body']['$id'] . '/preview', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//        ], $this->getHeaders()));
-//
-//        $this->assertEquals(200, $preview['headers']['status-code']);
-//        $this->assertEquals('image/jpeg', $preview['headers']['content-type']);
-//        $this->assertNotEmpty($preview['body']);
-//
-//        //new image preview features
-//        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//        ], $this->getHeaders()), [
-//            'width' => 300,
-//            'height' => 100,
-//            'borderRadius' => '50',
-//            'opacity' => '0.5',
-//            'output' => 'png',
-//            'rotation' => '45',
-//        ]);
-//
-//        $this->assertEquals(200, $file3['headers']['status-code']);
-//        $this->assertEquals('image/png', $file3['headers']['content-type']);
-//        $this->assertNotEmpty($file3['body']);
-//
-//        $image = new \Imagick();
-//        $image->readImageBlob($file3['body']);
-//        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
-//
-//        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-//        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-//        $this->assertEquals('PNG', $image->getImageFormat());
-//
-//        $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//        ], $this->getHeaders()), [
-//            'width' => 200,
-//            'height' => 80,
-//            'borderWidth' => '5',
-//            'borderColor' => 'ff0000',
-//            'output' => 'jpg',
-//        ]);
-//
-//        $this->assertEquals(200, $file4['headers']['status-code']);
-//        $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
-//        $this->assertNotEmpty($file4['body']);
-//
-//        $image = new \Imagick();
-//        $image->readImageBlob($file4['body']);
-//        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
-//
-//        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
-//        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
-//        $this->assertEquals('JPEG', $image->getImageFormat());
+        //new image preview features
+        $file3 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 300,
+            'height' => 100,
+            'borderRadius' => '50',
+            'opacity' => '0.5',
+            'output' => 'png',
+            'rotation' => '45',
+        ]);
+
+        $this->assertEquals(200, $file3['headers']['status-code']);
+        $this->assertEquals('image/png', $file3['headers']['content-type']);
+        $this->assertNotEmpty($file3['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($file3['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.png');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('PNG', $image->getImageFormat());
+
+        $file4 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/preview', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'width' => 200,
+            'height' => 80,
+            'borderWidth' => '5',
+            'borderColor' => 'ff0000',
+            'output' => 'jpg',
+        ]);
+
+        $this->assertEquals(200, $file4['headers']['status-code']);
+        $this->assertEquals('image/jpeg', $file4['headers']['content-type']);
+        $this->assertNotEmpty($file4['body']);
+
+        $image = new \Imagick();
+        $image->readImageBlob($file4['body']);
+        $original = new \Imagick(__DIR__ . '/../../../resources/logo-after.jpg');
+
+        $this->assertEquals($image->getImageWidth(), $original->getImageWidth());
+        $this->assertEquals($image->getImageHeight(), $original->getImageHeight());
+        $this->assertEquals('JPEG', $image->getImageFormat());
 
         $file5 = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $data['fileId'] . '/download', array_merge([
             'content-type' => 'application/json',
