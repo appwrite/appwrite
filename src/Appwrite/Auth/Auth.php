@@ -54,6 +54,7 @@ class Auth
     public const TOKEN_TYPE_PHONE = 6;
     public const TOKEN_TYPE_OAUTH2 = 7;
     public const TOKEN_TYPE_GENERIC = 8;
+    public const TOKEN_TYPE_EMAIL = 9; // OTP
 
     /**
      * Session Providers.
@@ -73,7 +74,7 @@ class Auth
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
-    public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
     public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
 
     /**
@@ -375,11 +376,10 @@ class Auth
      *
      * @param array  $sessions
      * @param string $secret
-     * @param string $expires
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret, int $expires)
+    public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) {
             /** @var Document $session */
@@ -387,7 +387,7 @@ class Auth
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $expires)) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
