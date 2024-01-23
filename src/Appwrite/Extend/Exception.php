@@ -238,12 +238,14 @@ class Exception extends \Exception
 
     protected string $type = '';
     protected array $errors = [];
-    protected bool $publish = true;
+    protected bool $publish;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
+
+        $this->publish = !isset($code) ? true : $code >= 500 || $code === 0;
 
         if (isset($this->errors[$type])) {
             $this->code = $this->errors[$type]['code'];

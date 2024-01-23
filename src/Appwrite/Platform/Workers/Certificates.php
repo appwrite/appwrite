@@ -23,6 +23,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
@@ -45,7 +46,8 @@ class Certificates extends Action
             ->inject('queueForMails')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->callback(fn(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions));
+            ->inject('log')
+            ->callback(fn(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -58,7 +60,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions): void
+    public function action(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -70,7 +72,7 @@ class Certificates extends Action
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
     }
 
     /**
@@ -84,7 +86,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -138,11 +140,11 @@ class Certificates extends Action
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-                $this->validateDomain($domain, $isMainDomain);
+                $this->validateDomain($domain, $isMainDomain, $log);
             }
 
             // If certificate exists already, double-check expiry date. Skip if job is forced
-            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get())) {
+            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get(), $log)) {
                 throw new Exception('Renew isn\'t required.');
             }
 
@@ -167,6 +169,7 @@ class Certificates extends Action
             $success = true;
         } catch (Throwable $e) {
             $logs = $e->getMessage();
+            $finalException = $e;
 
             // Set exception as log in certificate document
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
@@ -186,6 +189,10 @@ class Certificates extends Action
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
+        }
+
+        if (isset($finalException)) {
+            throw $finalException;
         }
     }
 
@@ -247,7 +254,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain): void
+    private function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
     {
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
@@ -267,8 +274,15 @@ class Certificates extends Action
             }
 
             // Verify domain with DNS records
+            $validationStart = \microtime(true);
             $validator = new CNAME($target->get());
             if (!$validator->isValid($domain->get())) {
+                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
+                $log->addTag('dnsDomain', $domain->get());
+
+                $error = $validator->getDnsResponse();
+                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+
                 throw new Exception('Failed to verify domain DNS records.');
             }
         } else {
@@ -284,7 +298,7 @@ class Certificates extends Action
      * @return bool True, if certificate needs to be renewed
      * @throws Exception
      */
-    private function isRenewRequired(string $domain): bool
+    private function isRenewRequired(string $domain, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -294,12 +308,15 @@ class Certificates extends Action
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
+                $log->addTag('certificateDomain', $domain);
                 throw new Exception('Unable to read certificate file (cert.pem).');
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
+                $log->addTag('certificateDomain', $domain);
+                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }

@@ -7,6 +7,11 @@ use Utopia\Validator;
 class CNAME extends Validator
 {
     /**
+     * @var mixed
+     */
+    protected mixed $dnsResponse;
+
+    /**
      * @var string
      */
     protected $target;
@@ -28,6 +33,14 @@ class CNAME extends Validator
     }
 
     /**
+     * @return mixed
+     */
+    public function getDnsResponse(): mixed
+    {
+        return $this->dnsResponse;
+    }
+
+    /**
      * Check if CNAME record target value matches selected target
      *
      * @param mixed $domain
@@ -42,6 +55,7 @@ class CNAME extends Validator
 
         try {
             $records = \dns_get_record($domain, DNS_CNAME);
+            $this->dnsResponse = $records;
         } catch (\Throwable $th) {
             return false;
         }
