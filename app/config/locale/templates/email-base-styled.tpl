@@ -126,7 +126,7 @@
                     <td>
                         <img
                             height="32px"
-                            src="https://appwrite.io/assets/logotype/white.png"
+                            src="https://cloud.appwrite.io/images/mails/logo.png"
                         />
                     </td>
                 </tr>
@@ -168,7 +168,7 @@
                             class="social-icon"
                             title="Twitter"
                         >
-                            <img src="https://appwrite.io/email/x.png" height="24" width="24" />
+                            <img src="https://cloud.appwrite.io/images/mails/x.png" height="24" width="24" />
                         </a>
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
@@ -176,7 +176,7 @@
                             href="https://appwrite.io/discord"
                             class="social-icon"
                         >
-                            <img src="https://appwrite.io/email/discord.png" height="24" width="24" />
+                            <img src="https://cloud.appwrite.io/images/mails/discord.png" height="24" width="24" />
                         </a>
                     </td>
                     <td style="padding-left: 4px; padding-right: 4px">
@@ -184,7 +184,7 @@
                             href="https://github.com/appwrite/appwrite"
                             class="social-icon"
                         >
-                            <img src="https://appwrite.io/email/github.png" height="24" width="24" />
+                            <img src="https://cloud.appwrite.io/images/mails/github.png" height="24" width="24" />
                         </a>
                     </td>
                 </tr>
