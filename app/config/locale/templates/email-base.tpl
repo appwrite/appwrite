@@ -10,6 +10,7 @@
     <style>
         a { color:currentColor; word-break: break-all; }
         body {
+            background-color: #ffffff;
             padding: 32px;
             color: #616B7C;
             font-size: 15px;

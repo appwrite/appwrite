@@ -234,5 +234,12 @@
     "emails.magicSession.clientInfo": "To logowanie zostało zażądane przy użyciu {{agentClient}} na {{agentDevice}} {{agentOs}}. Jeśli nie zażądałeś logowania, możesz zignorować tę wiadomość e-mail.",
     "sms.verification.body": "{{secret}} jest twoim kodem weryfikacyjnym do {{project}}.",
     "emails.magicSession.securityPhrase": "Hasło bezpieczeństwa dla tego e-maila to {{phrase}}. Możesz ufać temu e-mailowi, jeśli hasło to jest zgodne z hasłem wyświetlonym podczas logowania.",
-    "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:"
+    "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:",
+    "emails.otpSession.subject": "Login do {{project}}",
+    "emails.otpSession.hello": "Cześć,",
+    "emails.otpSession.description": "Wpisz poniższy kod weryfikacyjny, gdy zostaniesz o to poproszony, aby bezpiecznie zalogować się na swoje konto {{project}}. Kod wygaśnie za 15 minut.",
+    "emails.otpSession.clientInfo": "To logowanie zostało zażądane przy użyciu {{agentClient}} na {{agentDevice}} {{agentOs}}. Jeśli nie zażądałeś logowania, możesz bezpiecznie zignorować tę wiadomość e-mail.",
+    "emails.otpSession.securityPhrase": "Hasłem zabezpieczającym dla tego e-maila jest {{phrase}}. Możesz zaufać temu e-mailowi, jeśli hasło zgadza się z hasłem wyświetlonym podczas logowania.",
+    "emails.otpSession.thanks": "Dzięki,",
+    "emails.otpSession.signature": "team {{project}}"
 }

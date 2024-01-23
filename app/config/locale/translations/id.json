@@ -234,5 +234,12 @@
     "emails.magicSession.clientInfo": "Tanda masuk ini diminta menggunakan {{agentClient}} di {{agentDevice}} {{agentOs}}. Jika Anda tidak meminta untuk masuk, Anda dapat mengabaikan email ini dengan aman.",
     "sms.verification.body": "{{secret}} adalah kode verifikasi {{project}} Anda.",
     "emails.magicSession.securityPhrase": "Frasa keamanan untuk email ini adalah {{phrase}}. Anda dapat mempercayai email ini jika frasa tersebut cocok dengan frasa yang ditampilkan saat masuk.",
-    "emails.magicSession.optionUrl": "Jika Anda tidak dapat masuk menggunakan tombol di atas, silakan kunjungi tautan berikut:"
+    "emails.magicSession.optionUrl": "Jika Anda tidak dapat masuk menggunakan tombol di atas, silakan kunjungi tautan berikut:",
+    "emails.otpSession.subject": "Login {{project}}",
+    "emails.otpSession.hello": "Halo,",
+    "emails.otpSession.description": "Masukkan kode verifikasi berikut saat diminta untuk masuk ke akun {{project}} Anda dengan aman. Kode ini akan kedaluwarsa dalam waktu 15 menit.",
+    "emails.otpSession.clientInfo": "Tanda masuk ini diminta menggunakan {{agentClient}} pada {{agentDevice}} {{agentOs}}. Jika Anda tidak meminta tanda masuk, Anda dapat mengabaikan email ini dengan aman.",
+    "emails.otpSession.securityPhrase": "Frasa keamanan untuk email ini adalah {{phrase}}. Anda dapat mempercayai email ini jika frasa tersebut cocok dengan frasa yang ditampilkan saat masuk.",
+    "emails.otpSession.thanks": "Terima kasih,",
+    "emails.otpSession.signature": "tim {{project}}"
 }

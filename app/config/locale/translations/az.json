@@ -234,5 +234,12 @@
     "continents.sa": "Cənubi Amerika",
     "sms.verification.body": "{{secret}} sizin {{project}} təsdiqləmə kodunuzdur.",
     "emails.magicSession.securityPhrase": "Bu e-poçt üçün təhlükəsizlik ifadəsi {{phrase}}-dir. Əgər bu ifadə daxil olarkən göstərilən ifadə ilə üst-üstə düşürsə, bu e-poçta etibar edə bilərsiniz.",
-    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düyməni istifadə edərək daxil ola bilmirsizsə, zəhmət olmasa aşağıdakı linkə daxil olun:"
+    "emails.magicSession.optionUrl": "Əgər yuxarıdakı düyməni istifadə edərək daxil ola bilmirsizsə, zəhmət olmasa aşağıdakı linkə daxil olun:",
+    "emails.otpSession.subject": "{{project}} Giriş",
+    "emails.otpSession.hello": "Salam,",
+    "emails.otpSession.description": "İstifadəçi tələb olunan zaman {{project}} hesabınıza təhlükəsiz daxil olmaq üçün aşağıdakı təsdiqləmə kodunu daxil edin. Bu kod 15 dəqiqə sonra etibarsız olacaq.",
+    "emails.otpSession.clientInfo": "Bu giriş {{agentClient}} vasitəsilə {{agentDevice}} {{agentOs}} istifadə edərək istənildi. Əgər siz giriş istəməmisinizsə, bu e-poçtu laqeyd qoya bilərsiniz.",
+    "emails.otpSession.securityPhrase": "Bu e-poçtun təhlükəsizlik ifadəsi {{phrase}}-dir. Əgər bu ifadə daxil olarkən göstərilən ifadə ilə üst-üstə düşürsə, bu e-poçta etibar edə bilərsiniz.",
+    "emails.otpSession.thanks": "Sağ olun,",
+    "emails.otpSession.signature": "{{project}} komandası"
 }
