@@ -118,6 +118,25 @@ class V20 extends Migration
             case 'schedules':
                 $document->setAttribute('resourceCollection', 'functions');
                 break;
+            case 'users':
+                if ($document->getAttribute('email', '') !== '') {
+                    $document->setAttribute('targets', [
+                        'userId' => $document->getId(),
+                        'userInternalId' => $document->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_EMAIL,
+                        'identifier' => $document->getAttribute('email'),
+                    ]);
+                }
+
+                if ($document->getAttribute('phone', '') !== '') {
+                    $document->setAttribute('targets', [
+                        'userId' => $document->getId(),
+                        'userInternalId' => $document->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_SMS,
+                        'identifier' => $document->getAttribute('phone'),
+                    ]);
+                }
+                break;
         }
         return $document;
     }
