@@ -322,9 +322,15 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
             }
 
+            $maxLength = $attribute->getAttribute('size', 0);
             foreach ($elements as $element) {
-                if (\strlen($element) === 0) {
+                $length = \strlen($element);
+                if ($length === 0) {
                     throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
+                }
+
+                if ($length > $maxLength) {
+                    $maxLength = $length;
                 }
             }
 
@@ -336,7 +342,9 @@ function updateAttribute(
                 'elements' => $elements
             ];
 
-            $attribute->setAttribute('formatOptions', $options);
+            $attribute
+                ->setAttribute('formatOptions', $options)
+                ->setAttribute('size', $maxLength);
 
             break;
     }
