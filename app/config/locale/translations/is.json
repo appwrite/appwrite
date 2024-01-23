@@ -240,5 +240,12 @@
     "emails.certificate.signature": "{{project}} liðið",
     "sms.verification.body": "{{secret}} er staðfestingarkóði {{project}} þíns.",
     "emails.magicSession.securityPhrase": "Öryggisfrasi fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þessi frasi passar við frasann sem birtist við innskráningu.",
-    "emails.magicSession.optionUrl": "Ef þú getur ekki skráð þig inn með hnappnum hér að ofan, vinsamlegast heimsækðu eftirfarandi tengil:"
+    "emails.magicSession.optionUrl": "Ef þú getur ekki skráð þig inn með hnappnum hér að ofan, vinsamlegast heimsækðu eftirfarandi tengil:",
+    "emails.otpSession.subject": "{{project}} Innskráning",
+    "emails.otpSession.hello": "Halló,",
+    "emails.otpSession.description": "Sláðu inn eftirfarandi staðfestingarkóða þegar þú ert beðinn um það til að skrá þig örugglega inn á {{project}} reikninginn þinn. Hann rennur út eftir 15 mínútur.",
+    "emails.otpSession.clientInfo": "Innskráningin var óskað eftir með því að nota {{agentClient}} á {{agentDevice}} {{agentOs}}. Ef þú baðst ekki um innskráninguna getur þú hunsað þennan tölvupóst örugglega.",
+    "emails.otpSession.securityPhrase": "Öryggissetning fyrir þetta tölvupóst er {{phrase}}. Þú getur treyst þessum tölvupósti ef þessi setning passar við setninguna sem birtist við innskráningu.",
+    "emails.otpSession.thanks": "Takk,",
+    "emails.otpSession.signature": "{{project}} liðið"
 }

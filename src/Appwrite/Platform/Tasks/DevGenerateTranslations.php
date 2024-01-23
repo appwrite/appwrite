@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Exception;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Fetch\Client;
 use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
@@ -66,11 +67,13 @@ class DevGenerateTranslations extends Action
                         $language = \explode('.', $file)[0];
                         $translation = $this->generateTranslation($language, $mainJson[$key]);
 
-                        $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
-                        $json[$key] = $translation;
-                        \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
+                        if (!empty($translation)) {
+                            $json = \json_decode(\file_get_contents($dir . '/' . $file), true);
+                            $json[$key] = $translation;
+                            \file_put_contents($dir . '/' . $file, \json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | 0));
 
-                        Console::success("Generated {$key} for {$language}");
+                            Console::success("Generated {$key} for {$language}");
+                        }
                     }
                 }
             }
@@ -81,6 +84,20 @@ class DevGenerateTranslations extends Action
 
     private function generateTranslation(string $targetLanguage, string $enTranslation): string
     {
+        $list = Config::getParam('locale-languages');
+        foreach ($list as $language) {
+            if ($language['code'] === $targetLanguage) {
+                $languageObject = $language;
+            }
+        }
+
+        if (!isset($languageObject)) {
+            Console::error("{$targetLanguage} language not found");
+            return '';
+        }
+
+        $targetLanguageName = $languageObject['name'];
+
         $response = Client::fetch('https://api.openai.com/v1/chat/completions', [
             'content-type' => Client::CONTENT_TYPE_APPLICATION_JSON,
             'Authorization' => 'Bearer ' . $this->apiKey
@@ -89,7 +106,7 @@ class DevGenerateTranslations extends Action
             'messages' => [
                 [
                     'role' => 'system',
-                    'content' => "Please translate the message user provides from English language to target language. Target language is language of country with country code {$targetLanguage}. Do not translate text inside {{ and }} placeholders. Provide only translated text."
+                    'content' => "Please translate the message user provides from English language to {$targetLanguageName}. Do not translate text inside {{ and }} placeholders. Provide only translated text."
                 ],
                 [
                     'role' => 'user',
@@ -104,6 +121,16 @@ class DevGenerateTranslations extends Action
             throw new Exception($response->getBody() . ' with status code ' . $response->getStatusCode() . ' for language ' . $targetLanguage . ' and message ' . $enTranslation);
         }
 
-        return $body['choices'][0]['message']['content'];
+        $answer = $body['choices'][0]['message']['content'];
+
+        $failureDetectors = [ 'sorry', 'confusion', 'country code', 'misunderstanding', 'correct', 'clarify', 'specific', 'cannot', 'unable', 'language', 'appears' ];
+
+        foreach ($failureDetectors as $detector) {
+            if (\str_contains($answer, $detector)) {
+                Console::error("Translation of '{$enTranslation}' for {$targetLanguage} is incorrect: {$answer}");
+            }
+        }
+
+        return $answer;
     }
 }

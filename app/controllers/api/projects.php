@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -1552,12 +1553,12 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
-    ->desc('Update SMTP configuration')
+    ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmtpConfiguration')
+    ->label('sdk.method', 'updateSmtp')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
@@ -1639,6 +1640,65 @@ App::patch('/v1/projects/:projectId/smtp')
         $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('smtp', $smtp));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
+    });
+
+App::post('/v1/projects/:projectId/smtp/tests')
+    ->desc('Create SMTP test')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createSmtpTest')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
+    ->param('senderName', App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
+    ->param('senderEmail', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name')
+    ->param('port', 587, new Integer(), 'SMTP server port', true)
+    ->param('username', '', new Text(0, 0), 'SMTP server username', true)
+    ->param('password', '', new Text(0, 0), 'SMTP server password', true)
+    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('queueForMails')
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole, Mail $queueForMails) {
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
+
+        $subject = 'Custom SMTP email sample';
+        $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
+        $template
+            ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
+
+        foreach ($emails as $email) {
+            $queueForMails
+                ->setSmtpHost($host)
+                ->setSmtpPort($port)
+                ->setSmtpUsername($username)
+                ->setSmtpPassword($password)
+                ->setSmtpSecure($secure)
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName)
+                ->setRecipient($email)
+                ->setName('')
+                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setBody($template->render())
+                ->setVariables([])
+                ->setSubject($subject)
+                ->trigger();
+        }
+
+        return $response->noContent();
     });
 
 App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
