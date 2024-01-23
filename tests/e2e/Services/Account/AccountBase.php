@@ -300,4 +300,57 @@ trait AccountBase
         $this->assertEquals(400, $response['headers']['status-code']);
         $this->assertEquals('general_argument_invalid', $response['body']['type']);
     }
+
+    public function testEmailPasswordRememberSession(): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique(),
+            'email' => 'emailpass@appwrite.io',
+            'password' => 'password123'
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']['$id']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'emailpass@appwrite.io',
+            'password' => 'password123',
+            'remember' => true
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertStringContainsStringIgnoringCase('expires=', $response['headers']['set-cookie']);
+
+        $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'email' => 'emailpass@appwrite.io',
+            'password' => 'password123',
+            'remember' => false
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertStringNotContainsStringIgnoringCase('expires=', $response['headers']['set-cookie']);
+
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals($response['headers']['status-code'], 204);
+    }
 }
