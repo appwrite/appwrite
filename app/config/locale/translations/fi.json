@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "Napsauta alla olevaa painiketta kirjautuaksesi turvallisesti {{project}}-tiliisi. Se vanhenee tunnissa.",
     "emails.magicSession.buttonText": "Kirjaudu sisään {{project}}",
     "emails.magicSession.clientInfo": "Tämä kirjautuminen pyydettiin käyttäen {{agentClient}} {{agentDevice}} {{agentOs}}. Jos et pyytänyt kirjautumista, voit huoletta jättää tämän sähköpostin huomiotta.",
-    "emails.certificate.subject": "Varmentotodistuksen vika %s:ssa",
-    "emails.certificate.hello": "Hei",
-    "emails.certificate.body": "Verkkotunnuksellesi '{{domain}}' ei voitu luoda sertifikaattia. Tämä oli yritysnumero {{attempt}}, ja epäonnistuminen johtui virheestä: {{error}}",
-    "emails.certificate.footer": "Aiempi sertifikaattisi on voimassa 30 päivää ensimmäisestä epäonnistumisesta lähtien. Suosittelemme tutkimaan tämän tapauksen, muuten verkkotunnuksesi jää ilman voimassa olevaa SSL-salausta.",
-    "emails.certificate.thanks": "Kiitos",
-    "emails.certificate.signature": "{{project}} tiimi",
     "sms.verification.body": "{{secret}} on sinun {{project}} vahvistuskoodisi.",
     "emails.magicSession.securityPhrase": "Tämän sähköpostin turvalause on {{phrase}}. Voit luottaa tähän sähköpostiin, jos tämä lause vastaa kirjautumisen yhteydessä näytettyä lausetta.",
     "emails.magicSession.optionUrl": "Jos et pysty kirjautumaan sisään yllä olevaa painiketta käyttäen, käy seuraavassa linkissä:"

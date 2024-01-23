@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "بر روی دکمه زیر کلیک کنید تا به صورت امن وارد حساب {{project}} خود شوید. این دکمه یک ساعت دیگر منقضی می‌شود.",
     "emails.magicSession.buttonText": "ورود به {{project}}",
     "emails.magicSession.clientInfo": "این ورود به سیستم با استفاده از {{agentClient}} در {{agentDevice}} {{agentOs}} درخواست شده است. اگر شما این ورود به سیستم را درخواست نکرده‌اید، می‌توانید به راحتی این ایمیل را نادیده بگیرید.",
-    "emails.certificate.subject": "خطا در گواهینامه برای %s",
-    "emails.certificate.hello": "سلام",
-    "emails.certificate.body": "گواهی برای دامنه شما '{{domain}}' نتوانست تولید شود. این تلاش شماره {{attempt}} بود، و شکست به علت: {{error}} اتفاق افتاد.",
-    "emails.certificate.footer": "گواهی قبلی شما از زمان اولین شکست، به مدت 30 روز معتبر خواهد بود. ما به شدت توصیه می‌کنیم که این مورد را بررسی کنید، در غیر این صورت دامنه شما بدون ارتباط SSL معتبر باقی خواهد ماند.",
-    "emails.certificate.thanks": "متشکرم",
-    "emails.certificate.signature": "تیم {{project}}",
     "sms.verification.body": "{{secret}} کد تایید {{project}} شما است.",
     "emails.magicSession.securityPhrase": "عبارت امنیتی برای این ایمیل {{phrase}} است. اگر این عبارت با عبارت نشان داده شده در هنگام ورود به سیستم مطابقت داشت، می‌توانید به این ایمیل اعتماد کنید.",
     "emails.magicSession.optionUrl": "اگر قادر به ورود با استفاده از دکمه بالا نیستید، لطفاً از لینک زیر دیدن فرمایید:"

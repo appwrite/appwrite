@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "Kliknij przycisk poniżej, aby bezpiecznie zalogować się na swoje konto {{project}}. Link wygaśnie po 1 godzinie.",
     "emails.magicSession.buttonText": "Zaloguj się do {{project}}",
     "emails.magicSession.clientInfo": "To logowanie zostało zażądane przy użyciu {{agentClient}} na {{agentDevice}} {{agentOs}}. Jeśli nie zażądałeś logowania, możesz zignorować tę wiadomość e-mail.",
-    "emails.certificate.subject": "Błąd certyfikatu dla %s",
-    "emails.certificate.hello": "Cześć",
-    "emails.certificate.body": "Certyfikat dla Twojej domeny '{{domain}}' nie mógł zostać wygenerowany. To jest próba nr {{attempt}}, a przyczyną niepowodzenia było: {{error}}",
-    "emails.certificate.footer": "Twój poprzedni certyfikat będzie ważny przez 30 dni od pierwszej awarii. Zalecamy dokładne zbadanie tej sprawy, w przeciwnym razie Twój domena zostanie bez ważnego certyfikatu SSL.",
-    "emails.certificate.thanks": "Dziękuję",
-    "emails.certificate.signature": "zespół {{project}}",
     "sms.verification.body": "{{secret}} jest twoim kodem weryfikacyjnym do {{project}}.",
     "emails.magicSession.securityPhrase": "Hasło bezpieczeństwa dla tego e-maila to {{phrase}}. Możesz ufać temu e-mailowi, jeśli hasło to jest zgodne z hasłem wyświetlonym podczas logowania.",
     "emails.magicSession.optionUrl": "Jeśli nie możesz się zalogować, używając powyższego przycisku, odwiedź następujący link:"

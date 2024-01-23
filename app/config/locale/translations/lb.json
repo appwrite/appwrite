@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "Klickt op de Knäppchen hei drënner fir sécher an Äre {{project}} Kont anzeloggen. Et wäert an 1 Stonn oflafen.",
     "emails.magicSession.buttonText": "Connectez-vous à {{project}}",
     "emails.magicSession.clientInfo": "Dëse Login gouf duerch {{agentClient}} op {{agentDevice}} {{agentOs}} ugefrot. Wann Dir de Login net gefrot hutt, kënnt Dir dësen E-Mail ouni weideres ignoréieren.",
-    "emails.certificate.subject": "Zertifikatsfehler fir %s",
-    "emails.certificate.hello": "Moien",
-    "emails.certificate.body": "De Certificat fir äre Domain '{{domain}}' konnt net erstallt ginn. Dat ass den Versuch Nummer {{attempt}}, an de Feeler gouf verursaacht duerch: {{error}}",
-    "emails.certificate.footer": "Äert viregt Zertifikat wäert fir 30 Deeg gëlteg sinn zënter dem éischten Ausfall. Mir recommandéieren Iech staark, dëse Fall z'ënnersichen, soss wäert Är Domain ouni eng valabel SSL-Kommunikatioun enden.",
-    "emails.certificate.thanks": "Merci",
-    "emails.certificate.signature": "Équipe {{project}}",
     "sms.verification.body": "{{secret}} ass äre {{project}} Verifikatiounscode.",
     "emails.magicSession.securityPhrase": "D'Sécherheetsphrase fir dësen E-Mail ass {{phrase}}. Dir kënnt dësem E-Mail vertrauen, wann dës Phrase mat der Phrase iwwereneestëmmt, déi beim Umellen ugewise ginn ass.",
     "emails.magicSession.optionUrl": "Wann Dir Iech net kënnt umellen andeems Dir op de Knäppchen uewendriwwer klickt, besicht w.e.g. de folgenden Link:"

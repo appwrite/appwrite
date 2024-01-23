@@ -1,8 +1,3 @@
-
-
-
-
-
 <p>Hello,</p>
 <p>Domain <strong>{{domain}}</strong> failed to generate certificate after <strong>{{attempts}}</strong> consecutive attempts with following error:</p>
 
@@ -16,9 +11,9 @@
 
 <p>We suggest to follow the below steps:</p>
 <ol>
-    <li>Examine the logs above to identify the issue</li>
+    <li>Examine the logs above to try and identify the issue</li>
     <li>Ensure the domain did not expire without a renewal</li>
     <li>Check DNS configuration for any unwanted changes</li>
 </ol>
 
-<p>The previous certificate will be valid for 30 days since the first failure. We highly recommend investigating this issue, otherwise the domain will end up without a valid HTTPS communication.</p>
+<p>The existing certificate will remain valid for 30 days from the initial failure. It is highly recommended to investigate this issue; failing to do so will lead to security vulnerabilities.</p>

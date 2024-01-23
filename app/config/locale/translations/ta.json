@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "கீழே உள்ள பொத்தானை அழுத்தி, உங்கள் {{project}} கணக்கில் பாதுகாப்பாக உள்நுழையவும். இது 1 மணி நேரத்தில் காலாவதியாகும்.",
     "emails.magicSession.buttonText": "{{project}} இல் உள்நுழைக",
     "emails.magicSession.clientInfo": "இந்த உள்நுழைவு {{agentClient}} மூலம் {{agentDevice}} {{agentOs}} இல் கோரப்பட்டது. நீங்கள் உள்நுழைவு கோரவில்லை என்றால், இந்த மின்னஞ்சலை புறக்கணிக்கலாம்.",
-    "emails.certificate.subject": "%s சான்றிதழ் தோல்வி",
-    "emails.certificate.hello": "வணக்கம்",
-    "emails.certificate.body": "உங்கள் டொமைன் '{{domain}}' க்கான சான்றிதழ் உருவாக்க முடியவில்லை. இது முயற்சியின் எண் {{attempt}}, மற்றும் தோல்விக்கு காரணமாக இருந்தது: {{error}}",
-    "emails.certificate.footer": "உங்களுடைய முந்தைய சான்றிதழ் முதல் தவறு ஏற்பட்ட நாளிலிருந்து 30 நாட்கள் வரை செல்லுபடியாகும். இந்த வழக்கை ஆராய்வதை நாங்கள் மிகவும் பரிந்துரைக்கிறோம், இல்லையெனில் உங்களுடைய டொமைன் செல்லுபடியான SSL தகவல் தொடர்பை இழந்துவிடும்.",
-    "emails.certificate.thanks": "நன்றி",
-    "emails.certificate.signature": "{{project}} குழு",
     "sms.verification.body": "{{secret}} உங்கள் {{project}} சரிபார்ப்பு குறியீடு ஆகும்.",
     "emails.magicSession.securityPhrase": "இந்த மின்னஞ்சலுக்கான பாதுகாப்பு வாசகம் {{phrase}}. இந்த வாசகம் உள்நுழைவு போது காட்டப்பட்ட வாசகத்துடன் பொருந்தும் போது இந்த மின்னஞ்சலை நம்பலாம்.",
     "emails.magicSession.optionUrl": "மேலே உள்ள பொத்தானை பயன்படுத்தி உள்நுழைய முடியாவிட்டால், கீழே உள்ள இணைப்பை பார்வையிடவும்:"

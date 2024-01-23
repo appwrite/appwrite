@@ -232,12 +232,6 @@
     "emails.magicSession.optionButton": "Nhấp vào nút bên dưới để đăng nhập an toàn vào tài khoản {{project}} của bạn. Nó sẽ hết hạn sau 1 giờ.",
     "emails.magicSession.buttonText": "Đăng nhập vào {{project}}",
     "emails.magicSession.clientInfo": "Yêu cầu đăng nhập này được thực hiện bằng {{agentClient}} trên {{agentDevice}} {{agentOs}}. Nếu bạn không yêu cầu đăng nhập, bạn có thể bỏ qua email này một cách an toàn.",
-    "emails.certificate.subject": "Lỗi chứng chỉ cho %s",
-    "emails.certificate.hello": "Xin chào",
-    "emails.certificate.body": "Chứng chỉ cho tên miền của bạn '{{domain}}' không thể được tạo ra. Đây là lần thử thứ {{attempt}}, và sự cố xảy ra do: {{error}}",
-    "emails.certificate.footer": "Chứng chỉ trước đây của bạn sẽ còn hiệu lực trong 30 ngày kể từ lần thất bại đầu tiên. Chúng tôi rất khuyến nghị bạn điều tra vụ việc này, nếu không miền của bạn sẽ kết thúc mà không có một sự giao tiếp SSL hợp lệ.",
-    "emails.certificate.thanks": "Cảm ơn",
-    "emails.certificate.signature": "đội {{project}}",
     "sms.verification.body": "{{secret}} là mã xác minh {{project}} của bạn.",
     "emails.magicSession.securityPhrase": "Cụm từ bảo mật cho email này là {{phrase}}. Bạn có thể tin tưởng email này nếu cụm từ này khớp với cụm từ hiển thị khi đăng nhập.",
     "emails.magicSession.optionUrl": "Nếu bạn không thể đăng nhập bằng cách sử dụng nút ở trên, vui lòng truy cập liên kết sau:"
