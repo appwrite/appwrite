@@ -322,15 +322,10 @@ function updateAttribute(
                 throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Enum elements must not be empty');
             }
 
-            $maxLength = $attribute->getAttribute('size', 0);
             foreach ($elements as $element) {
                 $length = \strlen($element);
                 if ($length === 0) {
                     throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Each enum element must not be empty');
-                }
-
-                if ($length > $maxLength) {
-                    $maxLength = $length;
                 }
             }
 
@@ -344,7 +339,8 @@ function updateAttribute(
 
             $attribute
                 ->setAttribute('formatOptions', $options)
-                ->setAttribute('size', $maxLength);
+                /** https://github.com/appwrite/appwrite/pull/7183 we added a migration to update existing enum values but this was not applied on cloud as a result of which some enum lengths are still stuck at the previous values. This will force update the enum size during the next attribute update  */
+                ->setAttribute('size', DATABASE::LENGTH_KEY);
 
             break;
     }
