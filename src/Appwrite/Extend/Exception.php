@@ -244,7 +244,7 @@ class Exception extends \Exception
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
     public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
-    public const PROVIDER_INTERNAL_UPDATE_DISABLED  = 'provider_internal_update_disabled';
+    public const PROVIDER_MISSING_CREDENTIALS       = 'provider_missing_credentials';
 
     /** Topic */
     public const TOPIC_NOT_FOUND                    = 'topic_not_found';
