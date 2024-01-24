@@ -22,7 +22,6 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -425,11 +424,14 @@ class Certificates extends Action
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
         // Send mail to administratore mail
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
+        $template->setParam('{{domain}}', $domain);
+        $template->setParam('{{error}}', \nl2br($errorMessage));
+        $template->setParam('{{attempts}}', $attempt);
 
-        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
-        if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
-            $locale->setDefault('en');
-        }
+        // TODO: Use setbodyTemplate once #7307 is merged
+        $subject = 'Certificate failed to generate';
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
 
@@ -452,11 +454,10 @@ class Certificates extends Action
         ];
 
         $queueForMails
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->setSubject($subject)
-            ->setBody($body)
-            ->setVariables($emailVariables)
+            ->setBody($body->render())
             ->setName('Appwrite Administrator')
+            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->trigger();
     }
 
