@@ -9,7 +9,7 @@ use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Validator\WhiteList;
 
-class RetryJobs extends Action
+class QueueRetry extends Action
 {
     public static function getName(): string
     {
