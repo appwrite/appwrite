@@ -39,7 +39,6 @@ use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -80,6 +79,7 @@ use Appwrite\Utopia\Response\Model\MFAProvider;
 use Appwrite\Utopia\Response\Model\MFAProviders;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
+use Appwrite\Utopia\Response\Model\MetricBreakdown;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Message;
 use Appwrite\Utopia\Response\Model\Subscriber;
@@ -119,6 +119,7 @@ class Response extends SwooleResponse
     public const MODEL_ERROR = 'error';
     public const MODEL_METRIC = 'metric';
     public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
@@ -423,6 +424,7 @@ class Response extends SwooleResponse
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
             ->setModel(new Metric())
+            ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
