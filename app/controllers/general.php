@@ -739,7 +739,7 @@ App::error()
             'code' => $code,
             'file' => $file,
             'line' => $line,
-            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace,
+            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
             'version' => $version,
             'type' => $type,
         ] : [
