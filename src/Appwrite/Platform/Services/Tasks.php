@@ -12,7 +12,6 @@ use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\Hamster;
-use Appwrite\Platform\Tasks\Usage;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
@@ -21,6 +20,7 @@ use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
 use Appwrite\Platform\Tasks\GetMigrationStats;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
+use Appwrite\Platform\Tasks\CreateInfMetric;
 
 class Tasks extends Service
 {
@@ -29,7 +29,6 @@ class Tasks extends Service
         $this->type = self::TYPE_CLI;
         $this
             ->addAction(Version::getName(), new Version())
-            ->addAction(Usage::getName(), new Usage())
             ->addAction(Vars::getName(), new Vars())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(Hamster::getName(), new Hamster())
@@ -46,6 +45,7 @@ class Tasks extends Service
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
             ->addAction(GetMigrationStats::getName(), new GetMigrationStats())
+            ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
 
         ;
     }

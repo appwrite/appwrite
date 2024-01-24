@@ -59,11 +59,16 @@ class Mails extends Action
         $variables = $payload['variables'];
         $name = $payload['name'];
         $body = $payload['body'];
-
-        $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
-        $bodyTemplate->setParam('{{body}}', $body);
+        $attachment = $payload['attachment'] ?? [];
+        $bodyTemplate = $payload['bodyTemplate'];
+        if (empty($bodyTemplate)) {
+            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
+        }
+        $bodyTemplate = Template::fromFile($bodyTemplate);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value);
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
@@ -89,6 +94,14 @@ class Mails extends Action
         $mail->Subject = $subject;
         $mail->Body = $body;
         $mail->AltBody = \strip_tags($body);
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
 
         try {
             $mail->send();
