@@ -5,7 +5,6 @@ namespace Appwrite\Platform\Workers;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -47,7 +46,7 @@ class Builds extends Action
             ->inject('dbForConsole')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->inject('usage')
+            ->inject('queueForUsage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('getFunctionsDevice')
@@ -60,7 +59,7 @@ class Builds extends Action
      * @param Database $dbForConsole
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Cache $cache
      * @param Database $dbForProject
      * @param callable $getFunctionsDevice
@@ -68,7 +67,7 @@ class Builds extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $queueForUsage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -90,7 +89,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $usage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template);
                 break;
 
             default:
@@ -102,7 +101,7 @@ class Builds extends Action
      * @param callable $getFunctionsDevice
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Database $dbForConsole
      * @param Database $dbForProject
      * @param GitHub $github
@@ -115,7 +114,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -537,19 +536,16 @@ class Builds extends Action
                 roles: $target['roles']
             );
 
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $usage
-                    ->setParam('projectInternalId', $project->getInternalId())
-                    ->setParam('projectId', $project->getId())
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('builds.{scope}.compute', 1)
-                    ->setParam('buildStatus', $build->getAttribute('status', ''))
-                    ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('networkRequestSize', 0)
-                    ->setParam('networkResponseSize', 0)
-                    ->submit();
-            }
+            /** Trigger usage queue */
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_BUILDS, 1) // per project
+                ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+                ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->trigger();
         }
     }
 

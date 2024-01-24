@@ -12,41 +12,19 @@ class UsageCollection extends Model
         $this
             ->addRule('range', [
                 'type' => self::TYPE_STRING,
-                'description' => 'The time range of the usage stats.',
+                'description' => 'Time range of the usage stats.',
                 'default' => '',
                 'example' => '30d',
             ])
-            ->addRule('documentsCount', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for total number of documents.',
-                'default' => [],
-                'example' => [],
-                'array' => true
+            ->addRule('documentsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total aggregated number of of documents.',
+                'default' => 0,
+                'example' => 0,
             ])
-            ->addRule('documentsCreate', [
+            ->addRule('documents', [
                 'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents created.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsRead', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents read.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsUpdate', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents updated.',
-                'default' => [],
-                'example' => [],
-                'array' => true
-            ])
-            ->addRule('documentsDelete', [
-                'type' => Response::MODEL_METRIC,
-                'description' => 'Aggregated stats for documents deleted.',
+                'description' => 'Aggregated  number of documents per period.',
                 'default' => [],
                 'example' => [],
                 'array' => true
