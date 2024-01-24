@@ -108,6 +108,8 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             $hooks->trigger('passwordValidator', [$dbForProject, $project, $plaintextPassword, &$user, true]);
         }
 
+        $user = $dbForProject->createDocument('users', $user);
+
         if ($email) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
@@ -143,8 +145,6 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $user = $dbForProject->createDocument('users', $user);
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
