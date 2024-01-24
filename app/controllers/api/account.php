@@ -550,11 +550,19 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!$user->isEmpty()) {
             $userId = $user->getId();
 
-            $identitiesWithMatchingEmail = $dbForProject->find('identities', [
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
                 Query::equal('providerEmail', [$email]),
                 Query::notEqual('userId', $userId),
             ]);
-            if (!empty($identitiesWithMatchingEmail)) {
+            if (!empty($identityWithMatchingEmail)) {
+                throw new Exception(Exception::USER_ALREADY_EXISTS);
+            }
+
+            $userWithMatchingEmail = $dbForProject->find('users', [
+                Query::equal('email', [$email]),
+                Query::notEqual('$id', $userId),
+            ]);
+            if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
         }
@@ -842,7 +850,7 @@ App::get('/v1/account/identities')
     });
 
 App::delete('/v1/account/identities/:identityId')
-    ->desc('Delete Identity')
+    ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].identities.[identityId].delete')
@@ -859,7 +867,8 @@ App::delete('/v1/account/identities/:identityId')
     ->param('identityId', '', new UID(), 'Identity ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $identityId, Response $response, Database $dbForProject) {
+    ->inject('queueForEvents')
+    ->action(function (string $identityId, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $identity = $dbForProject->getDocument('identities', $identityId);
 
@@ -868,6 +877,11 @@ App::delete('/v1/account/identities/:identityId')
         }
 
         $dbForProject->deleteDocument('identities', $identityId);
+
+        $queueForEvents
+            ->setParam('userId', $identity->getAttribute('userId'))
+            ->setParam('identityId', $identity->getId())
+            ->setPayload($response->output($identity, Response::MODEL_IDENTITY));
 
         return $response->noContent();
     });

@@ -235,6 +235,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         'X-Appwrite-Response-Format' => '1.4.0',
                     ]);
 
+                // Make sure we have a clean slate.
+                // Otherwise, all files in this dir will be pushed,
+                // regardless of whether they were just generated or not.
+                \exec('rm -rf ' . $result);
+
                 try {
                     $sdk->generate($result);
                 } catch (Exception $exception) {
