@@ -22,6 +22,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use MaxMind\Db\Reader;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -590,5 +591,21 @@ App::init()
     ->action(function () {
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
+        }
+    });
+
+App::init()
+    ->groups(['restrict'])
+    ->inject('request')
+    ->inject('geodb')
+    ->action(function (Request $request, Reader $geodb) {
+        if (!empty(app::getEnv('_APP_RESTRICTED_COUNTRIES', ''))) {
+            $countries = explode(',', App::getEnv('_APP_RESTRICTED_COUNTRIES', ''));
+            // $record = $geodb->get($request->getIP());
+            $record = $geodb->get('167.220.238.180');
+            $country = $record['country']['iso_code'];
+            if (in_array($country, $countries)) {
+                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Access from $country is restricted");
+            }
         }
     });

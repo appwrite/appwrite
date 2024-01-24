@@ -192,6 +192,7 @@ services:
       - _APP_MESSAGE_SMS_TEST_DSN
       - _APP_MESSAGE_EMAIL_TEST_DSN
       - _APP_MESSAGE_PUSH_TEST_DSN
+      - _APP_RESTRICTED_COUNTRIES
       
   appwrite-realtime:
     entrypoint: realtime
