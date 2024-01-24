@@ -12,7 +12,7 @@ class RetryJobs extends Action
 {
     public static function getName(): string
     {
-        return 'retry-jobs';
+        return 'queue-retry';
     }
 
 
