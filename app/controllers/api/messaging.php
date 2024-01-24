@@ -616,8 +616,12 @@ App::post('/v1/messaging/providers/fcm')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?array $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, array|string|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $serviceAccountJSON = \is_string($serviceAccountJSON)
+            ? \json_decode($serviceAccountJSON, true)
+            : $serviceAccountJSON;
 
         $credentials = [];
 
@@ -1512,7 +1516,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?array $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1529,6 +1533,10 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
         }
 
         if (!\is_null($serviceAccountJSON)) {
+            $serviceAccountJSON = \is_string($serviceAccountJSON)
+                ? \json_decode($serviceAccountJSON, true)
+                : $serviceAccountJSON;
+
             $provider->setAttribute('credentials', [
                 'serviceAccountJSON' => $serviceAccountJSON
             ]);
