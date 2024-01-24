@@ -6,6 +6,7 @@ use Appwrite\Migration\Migration;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 
 class V20 extends Migration
 {
@@ -120,21 +121,25 @@ class V20 extends Migration
                 break;
             case 'users':
                 if ($document->getAttribute('email', '') !== '') {
-                    $document->setAttribute('targets', [
+                    $target = new Document([
+                        '$id' => ID::unique(),
                         'userId' => $document->getId(),
                         'userInternalId' => $document->getInternalId(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $document->getAttribute('email'),
                     ]);
+                    $this->projectDB->createDocument('targets', $target);
                 }
 
                 if ($document->getAttribute('phone', '') !== '') {
-                    $document->setAttribute('targets', [
+                    $target = new Document([
+                        '$id' => ID::unique(),
                         'userId' => $document->getId(),
                         'userInternalId' => $document->getInternalId(),
                         'providerType' => MESSAGE_TYPE_SMS,
                         'identifier' => $document->getAttribute('phone'),
                     ]);
+                    $this->projectDB->createDocument('targets', $target);
                 }
                 break;
         }
