@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "577d31a631d293cfa0ab47cf5308badd",
+    "content-hash": "d14cf808498f53a1a217350b2e95ec0d",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2120,16 +2120,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.5.4",
+            "version": "0.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336"
+                "reference": "88f7209172bdabd81e76ac981c95fac117dc6e08"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/ca5f436f9aa22dedaa6648f24f3687733808e336",
-                "reference": "ca5f436f9aa22dedaa6648f24f3687733808e336",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/88f7209172bdabd81e76ac981c95fac117dc6e08",
+                "reference": "88f7209172bdabd81e76ac981c95fac117dc6e08",
                 "shasum": ""
             },
             "require": {
@@ -2137,6 +2137,8 @@
                 "php": ">=8.0"
             },
             "require-dev": {
+                "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "1.9.x-dev",
                 "phpunit/phpunit": "^9.3",
                 "vimeo/psalm": "4.13.1"
             },
@@ -2150,12 +2152,6 @@
             "license": [
                 "MIT"
             ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "eldad@appwrite.io"
-                }
-            ],
             "description": "A simple Image manipulation library",
             "keywords": [
                 "framework",
@@ -2166,9 +2162,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.5.4"
+                "source": "https://github.com/utopia-php/image/tree/0.6.0"
             },
-            "time": "2022-05-11T12:30:41+00:00"
+            "time": "2024-01-24T06:59:44+00:00"
         },
         {
             "name": "utopia-php/locale",
