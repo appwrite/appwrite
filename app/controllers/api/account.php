@@ -205,6 +205,7 @@ App::post('/v1/account/sessions/email')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('email', '', new Email(), 'User email.')
     ->param('password', '', new Password(), 'User password. Must be at least 8 chars.')
+    ->param('remember', true, new Boolean(), 'Toggle persistency of session secrets on the client device. Enabled by default, and if disabled, session cookie will expire when user leaves the website, closes browser, or quits the application.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -213,7 +214,7 @@ App::post('/v1/account/sessions/email')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    ->action(function (string $email, string $password, bool $remember, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -283,11 +284,11 @@ App::post('/v1/account/sessions/email')
             ;
         }
 
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = !$remember ? null : (new \DateTime(DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration))))->getTimestamp();
 
         $response
-            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
+            ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), $expire, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), $expire, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
             ->setStatusCode(Response::STATUS_CODE_CREATED)
         ;
 
