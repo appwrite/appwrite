@@ -1474,7 +1474,9 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
     $factor = match ($verifiedToken->getAttribute('type')) {
-        Auth::TOKEN_TYPE_MAGIC_URL, Auth::TOKEN_TYPE_OAUTH2 => 'email',
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_OAUTH2,
+        Auth::TOKEN_TYPE_EMAIL => 'email',
         Auth::TOKEN_TYPE_PHONE => 'phone',
         Auth::TOKEN_TYPE_GENERIC => 'token',
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
