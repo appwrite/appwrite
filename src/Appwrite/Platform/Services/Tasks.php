@@ -21,6 +21,7 @@ use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
 use Appwrite\Platform\Tasks\GetMigrationStats;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
+use Appwrite\Platform\Tasks\QueueRetry;
 
 class Tasks extends Service
 {
@@ -46,6 +47,7 @@ class Tasks extends Service
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
             ->addAction(GetMigrationStats::getName(), new GetMigrationStats())
+            ->addAction(RetryJobs::getName(), new RetryJobs())
 
         ;
     }
