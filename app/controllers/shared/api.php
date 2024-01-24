@@ -601,11 +601,11 @@ App::init()
     ->action(function (Request $request, Reader $geodb) {
         if (!empty(app::getEnv('_APP_RESTRICTED_COUNTRIES', ''))) {
             $countries = explode(',', App::getEnv('_APP_RESTRICTED_COUNTRIES', ''));
-            // $record = $geodb->get($request->getIP());
-            $record = $geodb->get('167.220.238.180');
+            $record = $geodb->get($request->getHeader('x-forwarded-for'));
             $country = $record['country']['iso_code'];
+            $countryName = $record['country']['names']['en'];
             if (in_array($country, $countries)) {
-                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Access from $country is restricted");
+                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Sorry, access from $countryName is restricted");
             }
         }
     });
