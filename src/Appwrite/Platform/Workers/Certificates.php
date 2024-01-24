@@ -280,7 +280,7 @@ class Certificates extends Action
                 $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
                 $log->addTag('dnsDomain', $domain->get());
 
-                $error = $validator->getDnsResponse();
+                $error = $validator->getLogs();
                 $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
                 throw new Exception('Failed to verify domain DNS records.');

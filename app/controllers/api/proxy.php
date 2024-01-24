@@ -305,7 +305,7 @@ App::patch('/v1/proxy/rules/:ruleId/verification')
             $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
             $log->addTag('dnsDomain', $domain->get());
 
-            $error = $validator->getDnsResponse();
+            $error = $validator->getLogs();
             $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
 
             throw new Exception(Exception::RULE_VERIFICATION_FAILED);

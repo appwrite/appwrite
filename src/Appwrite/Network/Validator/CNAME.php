@@ -9,7 +9,7 @@ class CNAME extends Validator
     /**
      * @var mixed
      */
-    protected mixed $dnsResponse;
+    protected mixed $logs;
 
     /**
      * @var string
@@ -35,9 +35,9 @@ class CNAME extends Validator
     /**
      * @return mixed
      */
-    public function getDnsResponse(): mixed
+    public function getLogs(): mixed
     {
-        return $this->dnsResponse;
+        return $this->logs;
     }
 
     /**
@@ -55,7 +55,7 @@ class CNAME extends Validator
 
         try {
             $records = \dns_get_record($domain, DNS_CNAME);
-            $this->dnsResponse = $records;
+            $this->logs = $records;
         } catch (\Throwable $th) {
             return false;
         }
