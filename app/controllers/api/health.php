@@ -405,7 +405,6 @@ App::get('/v1/health/certificate')
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
-        // Extract domain from URL if provided
         if (filter_var($domain, FILTER_VALIDATE_URL)) {
             $domain = parse_url($domain, PHP_URL_HOST);
         }
@@ -417,6 +416,14 @@ App::get('/v1/health/certificate')
         }
         $certificate = stream_context_get_params($read);
         $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
+        $certificatePayload = [
+            'name' => $certificateInfo['name'],
+            'subject' => $certificateInfo['subject'],
+            'issuer' => $certificateInfo['issuer'],
+            'validFrom' => $certificateInfo['validFrom_time_t'],
+            'validTo' => $certificateInfo['validTo_time_t'],
+            'signatureTypeSN' => $certificateInfo['signatureTypeSN'],
+        ];
         $sslExpiration = $certificateInfo['validTo_time_t'];
         $status = ($sslExpiration < time()) ? 'fail' : 'pass';
 

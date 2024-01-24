@@ -477,6 +477,13 @@ class HealthCustomServerTest extends Scope
 
         $this->assertEquals(404, $response['headers']['status-code']);
 
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=www.google.com/usr/src/local', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
         return [];
     }
 }
