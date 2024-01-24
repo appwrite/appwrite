@@ -3,15 +3,13 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Event;
-use Twig\Node\Expression\Test\EvenTest;
 use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-class RetryJobs extends Action
+class QueueRetry extends Action
 {
     public static function getName(): string
     {
