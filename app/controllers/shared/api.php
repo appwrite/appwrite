@@ -601,7 +601,7 @@ App::init()
     ->action(function (Request $request, Reader $geodb) {
         if (!empty(app::getEnv('_APP_RESTRICTED_COUNTRIES', ''))) {
             $countries = explode(',', App::getEnv('_APP_RESTRICTED_COUNTRIES', ''));
-            $record = $geodb->get($request->getHeader('x-forwarded-for'));
+            $record = $geodb->get($request->getIP());
             $country = $record['country']['iso_code'];
             $countryName = $record['country']['names']['en'];
             if (in_array($country, $countries)) {
