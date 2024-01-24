@@ -1107,7 +1107,6 @@ App::post('/v1/account/tokens/magic-url')
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-magic-url.tpl');
         $message
-            ->setParam('{{body}}', $body, escapeHtml: false)
             ->setParam('{{hello}}', $locale->getText("emails.magicSession.hello"))
             ->setParam('{{optionButton}}', $locale->getText("emails.magicSession.optionButton"))
             ->setParam('{{buttonText}}', $locale->getText("emails.magicSession.buttonText"))
