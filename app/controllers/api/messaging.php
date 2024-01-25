@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/mailgun')
             \array_key_exists('isEuRegion', $credentials) &&
             \array_key_exists('apiKey', $credentials) &&
             \array_key_exists('domain', $credentials) &&
-            \array_key_exists('from', $options)
+            \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -179,7 +179,7 @@ App::post('/v1/messaging/providers/sendgrid')
         if (
             $enabled === true
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('from', $options)
+            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -974,7 +974,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
                     \array_key_exists('isEuRegion', $credentials) &&
                     \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('domain', $credentials) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('fromEmail', $options)
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
@@ -1065,7 +1065,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('fromEmail', $provider->getAttribute('options'))
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
