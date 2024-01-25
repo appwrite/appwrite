@@ -688,7 +688,7 @@ App::get('/v1/health/anti-virus')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
     });
 
-App::get('/v1/health/queue/failed/:queueName')
+App::get('/v1/health/queue/failed/:name')
     ->desc('Get number of failed queue jobs')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
