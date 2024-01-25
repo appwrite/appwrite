@@ -70,15 +70,16 @@ class Mails extends Action
         $variables['subject'] = $subject;
         $variables['year'] = date("Y");
 
+        $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
         if (empty($bodyTemplate)) {
             $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
-
         $bodyTemplate = Template::fromFile($bodyTemplate);
-        $bodyTemplate->setParam('{{body}}', $body);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value);
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
@@ -118,6 +119,14 @@ class Mails extends Action
         }
 
         $mail->addReplyTo($replyTo, $replyToName);
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
 
         try {
             $mail->send();
