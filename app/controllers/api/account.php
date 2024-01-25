@@ -3519,24 +3519,16 @@ App::delete('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $target = Authorization::skip(fn() => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        if ($user->getId() !== $target->getAttribute('userId')) {
-            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-        }
+        Authorization::skip(fn() => $dbForProject->deleteDocument('targets', $target->getId()));
 
-        $dbForProject->deleteDocument('targets', $target->getId());
-
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->deleteCachedDocument('users', $target->getAttribute('userId'));
 
         $queueForDeletes
             ->setType(DELETE_TYPE_TARGET)
