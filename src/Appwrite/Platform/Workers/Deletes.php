@@ -159,7 +159,7 @@ class Deletes extends Action
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
-                $this->deleteTarget($project, $getProjectDB, $document);
+                $this->deleteTargetSubscribers($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_EXPIRED_TARGETS:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -249,7 +249,7 @@ class Deletes extends Action
      * @param Document $target
      * @throws Exception
      */
-    private function deleteTarget(Document $project, callable $getProjectDB, Document $target)
+    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target)
     {
         /** @var Database */
         $dbForProject = $getProjectDB($project);
@@ -288,7 +288,7 @@ class Deletes extends Action
             ],
             $getProjectDB($project),
             function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTarget($project, $getProjectDB, $target);
+                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
             }
         );
     }
@@ -634,14 +634,14 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete targets
-        $this->listByGroup(
+        $this->deleteByGroup(
             'targets',
             [
                 Query::equal('userInternalId', [$userInternalId])
             ],
             $dbForProject,
             function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTarget($project, $getProjectDB, $target);
+                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
             }
         );
     }
