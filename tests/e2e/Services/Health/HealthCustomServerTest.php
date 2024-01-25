@@ -439,6 +439,11 @@ class HealthCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['status']);
         $this->assertIsString($response['body']['status']);
         $this->assertEquals('pass', $response['body']['status']);
+        $this->assertNotEmpty($response['body']['payload']);
+        $payload = json_decode($response['body']['payload']);
+        $this->assertEquals('www.google.com', $payload->subjectCN);
+        $this->assertEquals('Google Trust Services LLC', $payload->issuer->O);
+        $this->assertIsInt($payload->validFrom);
 
         $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=appwrite.io', array_merge([
             'content-type' => 'application/json',
@@ -449,6 +454,11 @@ class HealthCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['status']);
         $this->assertIsString($response['body']['status']);
         $this->assertEquals('pass', $response['body']['status']);
+        $this->assertNotEmpty($response['body']['payload']);
+        $payload = json_decode($response['body']['payload']);
+        $this->assertEquals('appwrite.io', $payload->subjectCN);
+        $this->assertEquals("Let's Encrypt", $payload->issuer->O);
+        $this->assertIsInt($payload->validFrom);
 
         $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
             'content-type' => 'application/json',

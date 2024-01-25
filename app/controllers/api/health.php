@@ -401,7 +401,7 @@ App::get('/v1/health/certificate')
     ->label('sdk.description', '/docs/references/health/get-certificate.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_CERTIFICATE)
     ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
     ->inject('response')
     ->action(function (string $domain, Response $response) {
@@ -418,7 +418,7 @@ App::get('/v1/health/certificate')
         $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
         $certificatePayload = [
             'name' => $certificateInfo['name'],
-            'subject' => $certificateInfo['subject'],
+            'subjectCN' => $certificateInfo['subject']['CN'],
             'issuer' => $certificateInfo['issuer'],
             'validFrom' => $certificateInfo['validFrom_time_t'],
             'validTo' => $certificateInfo['validTo_time_t'],
@@ -434,8 +434,8 @@ App::get('/v1/health/certificate')
         $response->dynamic(new Document([
             'name' => 'certificate',
             'status' => $status,
-            'ping' => 0
-        ]), Response::MODEL_HEALTH_STATUS);
+            'payload' => json_encode($certificatePayload),
+        ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
