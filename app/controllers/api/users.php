@@ -1689,10 +1689,10 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
+    ->inject('queueForDeletes')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Event $queueForEvents, Response $response, Database $dbForProject) {
-
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, Delete $queueForDeletes, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1711,6 +1711,10 @@ App::delete('/v1/users/:userId/targets/:targetId')
 
         $dbForProject->deleteDocument('targets', $target->getId());
         $dbForProject->deleteCachedDocument('users', $user->getId());
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_TARGET)
+            ->setDocument($target);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
