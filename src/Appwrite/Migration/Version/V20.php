@@ -13,6 +13,7 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Query;
+use Utopia\Database\Helpers\ID;
 
 class V20 extends Migration
 {
@@ -53,6 +54,9 @@ class V20 extends Migration
 
         Console::info('Migrating Collections');
         $this->migrateCollections();
+
+        Console::info('Migrating Documents');
+        $this->forEachDocument([$this, 'fixDocument']);
 
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
@@ -182,6 +186,7 @@ class V20 extends Migration
             Console::warning("Error while updating metric  {$from}  " . $th->getMessage());
         }
     }
+
     /**
      * Migrate functions.
      *
@@ -241,7 +246,7 @@ class V20 extends Migration
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
 
                 // Collection level
-                $collectionId =  $collection->getId() ;
+                $collectionId =  $collection->getId();
                 $collectionInternalId =  $collection->getInternalId();
 
                 $this->migrateUsageMetrics("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
@@ -250,10 +255,11 @@ class V20 extends Migration
     }
 
     /**
-     * Migrate Collections.
+     * Migrate all Collections.
      *
      * @return void
-     * @throws \Exception
+     * @throws \Throwable
+     * @throws Exception
      */
     private function migrateCollections(): void
     {
@@ -270,9 +276,53 @@ class V20 extends Migration
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_$internalProjectId");
+            $this->projectDB->setNamespace("_{$internalProjectId}");
 
             switch ($id) {
+                case '_metadata':
+                    $this->createCollection('providers');
+                    $this->createCollection('messages');
+                    $this->createCollection('topics');
+                    $this->createCollection('subscribers');
+                    $this->createCollection('targets');
+
+                    break;
+                case 'users':
+                    // Create targets attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'targets');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'targets' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'projects':
+                    // Rename providers to oAuthProviders
+                    try {
+                        $this->projectDB->renameAttribute($id, 'providers', 'oAuthProviders');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'schedules':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'schedules' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'webhooks':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (\Throwable $th) {
+                        Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
                 case 'stats':
                     try {
                         /**
@@ -288,9 +338,59 @@ class V20 extends Migration
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
                     break;
+                default:
+                    break;
             }
+
+            usleep(50000);
         }
     }
+
+    /**
+     * Fix run on each document
+     *
+     * @param Document $document
+     * @return Document
+     */
+    protected function fixDocument(Document $document): Document
+    {
+        switch ($document->getCollection()) {
+            case 'projects':
+                /**
+                 * Bump version number.
+                 */
+                $document->setAttribute('version', '1.5.0');
+                break;
+            case 'schedules':
+                $document->setAttribute('resourceCollection', 'functions');
+                break;
+            case 'users':
+                if ($document->getAttribute('email', '') !== '') {
+                    $target = new Document([
+                        '$id' => ID::unique(),
+                        'userId' => $document->getId(),
+                        'userInternalId' => $document->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_EMAIL,
+                        'identifier' => $document->getAttribute('email'),
+                    ]);
+                    $this->projectDB->createDocument('targets', $target);
+                }
+
+                if ($document->getAttribute('phone', '') !== '') {
+                    $target = new Document([
+                        '$id' => ID::unique(),
+                        'userId' => $document->getId(),
+                        'userInternalId' => $document->getInternalId(),
+                        'providerType' => MESSAGE_TYPE_SMS,
+                        'identifier' => $document->getAttribute('phone'),
+                    ]);
+                    $this->projectDB->createDocument('targets', $target);
+                }
+                break;
+        }
+        return $document;
+    }
+
 
     /**
      * Migrating all Bucket tables.
@@ -315,7 +415,7 @@ class V20 extends Migration
             $bucketId = $bucket->getId();
             $bucketInternalId = $bucket->getInternalId();
 
-             $this->migrateUsageMetrics("files.$bucketId.count.total", "$bucketInternalId.files");
+            $this->migrateUsageMetrics("files.$bucketId.count.total", "$bucketInternalId.files");
             $this->migrateUsageMetrics("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
             // some stats come with $ prefix in front of the id -> files.$650c3fda307b7fec4934.storage.size;
         }
