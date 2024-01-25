@@ -62,10 +62,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/mailgun')
             \array_key_exists('isEuRegion', $credentials) &&
             \array_key_exists('apiKey', $credentials) &&
             \array_key_exists('domain', $credentials) &&
-            \array_key_exists('from', $options)
+            \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -150,10 +150,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -179,7 +179,7 @@ App::post('/v1/messaging/providers/sendgrid')
         if (
             $enabled === true
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('from', $options)
+            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -616,8 +616,12 @@ App::post('/v1/messaging/providers/fcm')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?array $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, array|string|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $serviceAccountJSON = \is_string($serviceAccountJSON)
+            ? \json_decode($serviceAccountJSON, true)
+            : $serviceAccountJSON;
 
         $credentials = [];
 
@@ -917,9 +921,10 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
-        $providerAttr = $provider->getAttribute('provider');
 
-        if ($providerAttr !== 'mailgun') {
+        $providerProvider = $provider->getAttribute('provider');
+
+        if ($providerProvider !== 'mailgun') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
@@ -949,7 +954,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if ($isEuRegion === true || $isEuRegion === false) {
+        if (!\is_null($isEuRegion)) {
             $credentials['isEuRegion'] = $isEuRegion;
         }
 
@@ -963,19 +968,21 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true &&
-                \array_key_exists('isEuRegion', $credentials) &&
-                \array_key_exists('apiKey', $credentials) &&
-                \array_key_exists('domain', $credentials) &&
-                \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('isEuRegion', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('domain', $credentials) &&
+                    \array_key_exists('fromEmail', $options)
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1054,17 +1061,19 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('apiKey', $provider->getAttribute('credentials'))
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
+                    \array_key_exists('fromEmail', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1133,18 +1142,20 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('senderId', $credentials)
-                && \array_key_exists('authKey', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('senderId', $credentials) &&
+                    \array_key_exists('authKey', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1213,19 +1224,20 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('username', $credentials)
-                && \array_key_exists('password', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('username', $credentials) &&
+                    \array_key_exists('password', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1294,19 +1306,20 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('username', $credentials)
-                && \array_key_exists('apiKey', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('username', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1375,19 +1388,20 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('accountSid', $credentials)
-                && \array_key_exists('authToken', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('accountSid', $credentials) &&
+                    \array_key_exists('authToken', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1456,19 +1470,20 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('apiKey', $credentials)
-                && \array_key_exists('apiSecret', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('apiSecret', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1501,7 +1516,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?array $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1518,17 +1533,25 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
         }
 
         if (!\is_null($serviceAccountJSON)) {
-            $provider->setAttribute('credentials', ['serviceAccountJSON' => $serviceAccountJSON]);
+            $serviceAccountJSON = \is_string($serviceAccountJSON)
+                ? \json_decode($serviceAccountJSON, true)
+                : $serviceAccountJSON;
+
+            $provider->setAttribute('credentials', [
+                'serviceAccountJSON' => $serviceAccountJSON
+            ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            if ($enabled === true && \array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (\array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1601,20 +1624,21 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('authKey', $credentials)
-                && \array_key_exists('authKeyId', $credentials)
-                && \array_key_exists('teamId', $credentials)
-                && \array_key_exists('bundleId', $credentials)
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('authKey', $credentials) &&
+                    \array_key_exists('authKeyId', $credentials) &&
+                    \array_key_exists('teamId', $credentials) &&
+                    \array_key_exists('bundleId', $credentials)
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);

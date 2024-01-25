@@ -73,6 +73,7 @@ abstract class ScheduleBase extends Action
                 '$id' => $schedule->getId(),
                 'resourceId' => $schedule->getAttribute('resourceId'),
                 'schedule' => $schedule->getAttribute('schedule'),
+                'active' => $schedule->getAttribute('active'),
                 'resourceUpdatedAt' => $schedule->getAttribute('resourceUpdatedAt'),
                 'project' => $project, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
                 'resource' => $resource, // TODO: @Meldiron Send only ID to worker to reduce memory usage here
