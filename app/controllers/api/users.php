@@ -1531,7 +1531,7 @@ App::post('/v1/users/:userId/tokens')
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $token->setAttribute('secret', $secret);
 
