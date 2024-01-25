@@ -19,6 +19,7 @@ ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
 use Appwrite\Event\Migration;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
@@ -32,7 +33,6 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Logger\Logger;
@@ -67,6 +67,7 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
@@ -75,10 +76,12 @@ use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\CLI\Console;
+use Utopia\Domains\Validator\PublicDomain;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -89,17 +92,17 @@ const APP_MODE_DEFAULT = 'default';
 const APP_MODE_ADMIN = 'admin';
 const APP_PAGING_LIMIT = 12;
 const APP_LIMIT_COUNT = 5000;
-const APP_LIMIT_USERS = 10000;
+const APP_LIMIT_USERS = 10_000;
 const APP_LIMIT_USER_PASSWORD_HISTORY = 20;
 const APP_LIMIT_USER_SESSIONS_MAX = 100;
 const APP_LIMIT_USER_SESSIONS_DEFAULT = 10;
-const APP_LIMIT_ANTIVIRUS = 20000000; //20MB
-const APP_LIMIT_ENCRYPTION = 20000000; //20MB
-const APP_LIMIT_COMPRESSION = 20000000; //20MB
+const APP_LIMIT_ANTIVIRUS = 20_000_000; //20MB
+const APP_LIMIT_ENCRYPTION = 20_000_000; //20MB
+const APP_LIMIT_COMPRESSION = 20_000_000; //20MB
 const APP_LIMIT_ARRAY_PARAMS_SIZE = 100; // Default maximum of how many elements can there be in API parameter that expects array value
 const APP_LIMIT_ARRAY_ELEMENT_SIZE = 4096; // Default maximum length of element in array parameter represented by maximum URL length.
 const APP_LIMIT_SUBQUERY = 1000;
-const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1000000;
+const APP_LIMIT_SUBSCRIBERS_SUBQUERY = 1_000_000;
 const APP_LIMIT_WRITE_RATE_DEFAULT = 60; // Default maximum write rate per rate period
 const APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT = 60; // Default maximum write rate period in seconds
 const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return in list API calls
@@ -115,8 +118,8 @@ const APP_DATABASE_ATTRIBUTE_DATETIME = 'datetime';
 const APP_DATABASE_ATTRIBUTE_URL = 'url';
 const APP_DATABASE_ATTRIBUTE_INT_RANGE = 'intRange';
 const APP_DATABASE_ATTRIBUTE_FLOAT_RANGE = 'floatRange';
-const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1073741824; // 2^32 bits / 4 bits per char
-const APP_DATABASE_TIMEOUT_MILLISECONDS = 15000;
+const APP_DATABASE_ATTRIBUTE_STRING_MAX_LENGTH = 1_073_741_824; // 2^32 bits / 4 bits per char
+const APP_DATABASE_TIMEOUT_MILLISECONDS = 15_000;
 const APP_STORAGE_UPLOADS = '/storage/uploads';
 const APP_STORAGE_FUNCTIONS = '/storage/functions';
 const APP_STORAGE_BUILDS = '/storage/builds';
@@ -171,6 +174,7 @@ const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
+const DELETE_TYPE_TARGET = 'target';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -229,6 +233,12 @@ $register = new Registry();
 
 App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
 
+if (!App::isProduction()) {
+    // Allow specific domains to skip public domain validation in dev environment
+    // Useful for existing tests involving webhooks
+    PublicDomain::allow(['request-catcher']);
+}
+
 /*
  * ENV vars
  */
@@ -240,6 +250,7 @@ Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -545,15 +556,16 @@ Database::addFilter(
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
-            fn ($document) => $document->getAttribute('targetId'),
-            $database
-            ->find('subscribers', [
+            fn ($document) => $document->getAttribute('targetInternalId'),
+            $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBSCRIBERS_SUBQUERY)
             ])
         ));
         if (\count($targetIds) > 0) {
-            return $database->find('targets', [Query::equal('$id', $targetIds)]);
+            return $database->find('targets', [
+                Query::equal('$internalId', $targetIds)
+            ]);
         }
         return [];
     }
@@ -878,31 +890,7 @@ $register->set('db', function () {
         SQL::getPDOAttributes()
     );
 });
-$register->set('influxdb', function () {
 
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -943,6 +931,9 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+$register->set('hooks', function () {
+    return new Hooks();
+});
 /*
  * Localization
  */
@@ -980,6 +971,10 @@ foreach ($locales as $locale) {
 // Runtime Execution
 App::setResource('logger', function ($register) {
     return $register->get('logger');
+}, ['register']);
+
+App::setResource('hooks', function ($register) {
+    return $register->get('hooks');
 }, ['register']);
 
 App::setResource('loggerBreadcrumbs', function () {
@@ -1021,15 +1016,15 @@ App::setResource('queueForAudits', function (Connection $queue) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),
@@ -1037,6 +1032,21 @@ App::setResource('clients', function ($request, $console, $project) {
         'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
+
+    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $validator = new Hostname();
+    foreach ($hostnames as $hostname) {
+        $hostname = trim($hostname);
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
 
     /**
      * Get All verified client URLs for both console and current projects
@@ -1077,11 +1087,9 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
     Authorization::setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
-    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
 
     if (APP_MODE_ADMIN === $mode) {
         Auth::setCookieName('a_session_' . $console->getId());
-        $authDuration = Auth::TOKEN_EXPIRATION_LOGIN_LONG;
     }
 
     $session = Auth::decodeSession(
@@ -1089,9 +1097,18 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
             Auth::$cookieName, // Get sessions
             $request->getCookie(Auth::$cookieName . '_legacy', '')
         )
-    );// Get fallback session from old clients (no SameSite support)
+    );
 
-    // Get fallback session from clients who block 3rd-party cookies
+    // Get session from header for SSR clients
+    if (empty($session['id']) && empty($session['secret'])) {
+        $sessionHeader = $request->getHeader('x-appwrite-session', '');
+
+        if (!empty($sessionHeader)) {
+            $session = Auth::decodeSession($sessionHeader);
+        }
+    }
+
+    // Get fallback session from old clients (no SameSite support) or clients who block 3rd-party cookies
     if ($response) {
         $response->addHeader('X-Debug-Fallback', 'false');
     }
@@ -1124,7 +1141,7 @@ App::setResource('user', function ($mode, $project, $console, $request, $respons
 
     if (
         $user->isEmpty() // Check a document has been found in the DB
-        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration)
+        || !Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret)
     ) { // Validate user has valid login token
         $user = new Document([]);
     }

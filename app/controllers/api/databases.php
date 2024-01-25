@@ -401,7 +401,6 @@ App::post('/v1/databases')
     ->label('scope', 'databases.write')
     ->label('audits.event', 'database.create')
     ->label('audits.resource', 'database/{response.$id}')
-    ->label('usage.metric', 'databases.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'create')
@@ -475,7 +474,6 @@ App::get('/v1/databases')
     ->desc('List databases')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
-    ->label('usage.metric', 'databases.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'list')
@@ -523,7 +521,6 @@ App::get('/v1/databases/:databaseId')
     ->desc('Get database')
     ->groups(['api', 'database'])
     ->label('scope', 'databases.read')
-    ->label('usage.metric', 'databases.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'get')
@@ -638,7 +635,6 @@ App::put('/v1/databases/:databaseId')
     ->label('event', 'databases.[databaseId].update')
     ->label('audits.event', 'database.update')
     ->label('audits.resource', 'database/{response.$id}')
-    ->label('usage.metric', 'databases.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'update')
@@ -683,7 +679,6 @@ App::delete('/v1/databases/:databaseId')
     ->label('event', 'databases.[databaseId].delete')
     ->label('audits.event', 'database.delete')
     ->label('audits.resource', 'database/{request.databaseId}')
-    ->label('usage.metric', 'databases.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'delete')
@@ -728,8 +723,6 @@ App::post('/v1/databases/:databaseId/collections')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'collection.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{response.$id}')
-    ->label('usage.metric', 'collections.{scope}.requests.create')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createCollection')
@@ -795,8 +788,6 @@ App::get('/v1/databases/:databaseId/collections')
     ->desc('List collections')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollections')
@@ -854,8 +845,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId')
     ->desc('Get collection')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getCollection')
@@ -890,8 +879,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->desc('List collection logs')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listCollectionLogs')
@@ -990,8 +977,6 @@ App::put('/v1/databases/:databaseId/collections/:collectionId')
     ->label('event', 'databases.[databaseId].collections.[collectionId].update')
     ->label('audits.event', 'collection.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateCollection')
@@ -1060,8 +1045,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->label('event', 'databases.[databaseId].collections.[collectionId].delete')
     ->label('audits.event', 'collection.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.delete')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteCollection')
@@ -1117,8 +1100,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/string
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createStringAttribute')
@@ -1175,8 +1156,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email'
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEmailAttribute')
@@ -1219,8 +1198,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createEnumAttribute')
@@ -1268,8 +1245,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIpAttribute')
@@ -1312,8 +1287,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createUrlAttribute')
@@ -1356,8 +1329,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/intege
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createIntegerAttribute')
@@ -1429,8 +1400,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float'
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createFloatAttribute')
@@ -1505,8 +1474,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boolea
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createBooleanAttribute')
@@ -1548,8 +1515,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/dateti
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createDatetimeAttribute')
@@ -1594,8 +1559,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
     ->label('scope', 'collections.write')
     ->label('audits.event', 'attribute.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.method', 'createRelationshipAttribute')
@@ -1673,8 +1636,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->desc('List attributes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listAttributes')
@@ -1748,8 +1709,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->desc('Get attribute')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getAttribute')
@@ -1827,8 +1786,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateStringAttribute')
@@ -1868,8 +1825,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateEmailAttribute')
@@ -1909,8 +1864,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateEnumAttribute')
@@ -1952,8 +1905,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:k
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateIpAttribute')
@@ -1993,8 +1944,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/:
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateUrlAttribute')
@@ -2034,8 +1983,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateIntegerAttribute')
@@ -2085,8 +2032,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateFloatAttribute')
@@ -2136,8 +2081,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateBooleanAttribute')
@@ -2176,8 +2119,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'documents.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateDatetimeAttribute')
@@ -2216,8 +2157,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key/
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'documents.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'updateRelationshipAttribute')
@@ -2272,8 +2211,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->label('event', 'databases.[databaseId].collections.[collectionId].attributes.[attributeId].update')
     ->label('audits.event', 'attribute.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteAttribute')
@@ -2383,8 +2320,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->label('scope', 'collections.write')
     ->label('audits.event', 'index.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'createIndex')
@@ -2543,8 +2478,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->desc('List indexes')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listIndexes')
@@ -2608,8 +2541,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->desc('Get index')
     ->groups(['api', 'database'])
     ->label('scope', 'collections.read')
-    ->label('usage.metric', 'collections.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getIndex')
@@ -2652,8 +2583,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->label('event', 'databases.[databaseId].collections.[collectionId].indexes.[indexId].update')
     ->label('audits.event', 'index.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'collections.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'deleteIndex')
@@ -2718,8 +2647,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->label('scope', 'documents.write')
     ->label('audits.event', 'document.create')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}')
-    ->label('usage.metric', 'documents.{scope}.requests.create')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -2956,8 +2883,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->desc('List documents')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
-    ->label('usage.metric', 'documents.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocuments')
@@ -3080,8 +3005,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('Get document')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
-    ->label('usage.metric', 'documents.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'getDocument')
@@ -3175,8 +3098,6 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
     ->desc('List document logs')
     ->groups(['api', 'database'])
     ->label('scope', 'documents.read')
-    ->label('usage.metric', 'documents.{scope}.requests.read')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
     ->label('sdk.method', 'listDocumentLogs')
@@ -3279,8 +3200,6 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
     ->label('scope', 'documents.write')
     ->label('audits.event', 'document.update')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{response.$id}')
-    ->label('usage.metric', 'documents.{scope}.requests.update')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT * 2)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -3509,8 +3428,6 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->label('event', 'databases.[databaseId].collections.[collectionId].documents.[documentId].delete')
     ->label('audits.event', 'document.delete')
     ->label('audits.resource', 'database/{request.databaseId}/collection/{request.collectionId}/document/{request.documentId}')
-    ->label('usage.metric', 'documents.{scope}.requests.delete')
-    ->label('usage.params', ['databaseId:{request.databaseId}', 'collectionId:{request.collectionId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -3627,112 +3544,72 @@ App::get('/v1/databases/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_DATABASES)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_DATABASES,
+            METRIC_COLLECTIONS,
+            METRIC_DOCUMENTS,
+        ];
 
-            $metrics = [
-                'databases.$all.count.total',
-                'documents.$all.count.total',
-                'collections.$all.count.total',
-                'databases.$all.requests.create',
-                'databases.$all.requests.read',
-                'databases.$all.requests.update',
-                'databases.$all.requests.delete',
-                'collections.$all.requests.create',
-                'collections.$all.requests.read',
-                'collections.$all.requests.update',
-                'collections.$all.requests.delete',
-                'documents.$all.requests.create',
-                'documents.$all.requests.read',
-                'documents.$all.requests.update',
-                'documents.$all.requests.delete'
-            ];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    // Added 3'rd level to Index [period, metric, time] because of order by.
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'databasesCount' => $stats['databases.$all.count.total'] ?? [],
-                'documentsCount' => $stats['documents.$all.count.total'] ?? [],
-                'collectionsCount' => $stats['collections.$all.count.total'] ?? [],
-                'documentsCreate' =>  $stats['documents.$all.requests.create'] ?? [],
-                'documentsRead' =>  $stats['documents.$all.requests.read'] ?? [],
-                'documentsUpdate' => $stats['documents.$all.requests.update'] ?? [],
-                'documentsDelete' => $stats['documents.$all.requests.delete'] ?? [],
-                'collectionsCreate' => $stats['collections.$all.requests.create'] ?? [],
-                'collectionsRead' =>  $stats['collections.$all.requests.read'] ?? [],
-                'collectionsUpdate' => $stats['collections.$all.requests.update'] ?? [],
-                'collectionsDelete' => $stats['collections.$all.requests.delete'] ?? [],
-                'databasesCreate' => $stats['databases.$all.requests.create'] ?? [],
-                'databasesRead' =>  $stats['databases.$all.requests.read'] ?? [],
-                'databasesUpdate' => $stats['databases.$all.requests.update'] ?? [],
-                'databasesDelete' => $stats['databases.$all.requests.delete'] ?? [],
-            ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_DATABASES);
+    }
+        $response->dynamic(new Document([
+            'range' => $range,
+            'databasesTotal'   => $usage[$metrics[0]]['total'],
+            'collectionsTotal' => $usage[$metrics[1]]['total'],
+            'documentsTotal'   => $usage[$metrics[2]]['total'],
+            'databases'   => $usage[$metrics[0]]['data'],
+            'collections' => $usage[$metrics[1]]['data'],
+            'documents'   => $usage[$metrics[2]]['data'],
+        ]), Response::MODEL_USAGE_DATABASES);
     });
 
 App::get('/v1/databases/:databaseId/usage')
@@ -3746,102 +3623,76 @@ App::get('/v1/databases/:databaseId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_DATABASE)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), '`Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $database =  $dbForProject->getDocument('databases', $databaseId);
 
-            $metrics = [
-                'collections.' . $databaseId . '.count.total',
-                'collections.' . $databaseId . '.requests.create',
-                'collections.' . $databaseId . '.requests.read',
-                'collections.' . $databaseId . '.requests.update',
-                'collections.' . $databaseId . '.requests.delete',
-                'documents.' . $databaseId . '.count.total',
-                'documents.' . $databaseId . '.requests.create',
-                'documents.' . $databaseId . '.requests.read',
-                'documents.' . $databaseId . '.requests.update',
-                'documents.' . $databaseId . '.requests.delete'
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    // TODO@kodumbeats explore performance if query is ordered by time ASC
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'collectionsCount' => $stats["collections.{$databaseId}.count.total"] ?? [],
-                'collectionsCreate' => $stats["collections.{$databaseId}.requests.create"] ?? [],
-                'collectionsRead' =>  $stats["collections.{$databaseId}.requests.read"] ?? [],
-                'collectionsUpdate' => $stats["collections.{$databaseId}.requests.update"] ?? [],
-                'collectionsDelete' => $stats["collections.{$databaseId}.requests.delete"] ?? [],
-                'documentsCount' => $stats["documents.{$databaseId}.count.total"] ?? [],
-                'documentsCreate' =>  $stats["documents.{$databaseId}.requests.create"] ?? [],
-                'documentsRead' =>  $stats["documents.{$databaseId}.requests.read"] ?? [],
-                'documentsUpdate' => $stats["documents.{$databaseId}.requests.update"] ?? [],
-                'documentsDelete' => $stats["documents.{$databaseId}.requests.delete"] ?? [],
-            ]);
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $response->dynamic($usage, Response::MODEL_USAGE_DATABASE);
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_COLLECTIONS),
+            str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
+        ];
+
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
+
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
+                }
+            }
+        });
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
+        }
+    }
+
+        $response->dynamic(new Document([
+            'range' => $range,
+            'collectionsTotal'   => $usage[$metrics[0]]['total'],
+            'documentsTotal'   => $usage[$metrics[1]]['total'],
+            'collections'   => $usage[$metrics[0]]['data'],
+            'documents'   => $usage[$metrics[1]]['data'],
+        ]), Response::MODEL_USAGE_DATABASE);
     });
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
@@ -3856,7 +3707,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_COLLECTION)
     ->param('databaseId', '', new UID(), 'Database ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -3870,84 +3721,60 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
+        ];
 
-            $metrics = [
-                "documents.{$databaseId}/{$collectionId}.count.total",
-                "documents.{$databaseId}/{$collectionId}.requests.create",
-                "documents.{$databaseId}/{$collectionId}.requests.read",
-                "documents.{$databaseId}/{$collectionId}.requests.update",
-                "documents.{$databaseId}/{$collectionId}.requests.delete",
-            ];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' =>  $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'documentsCount' => $stats["documents.{$databaseId}/{$collectionId}.count.total"] ?? [],
-                'documentsCreate' => $stats["documents.{$databaseId}/{$collectionId}.requests.create"] ?? [],
-                'documentsRead' => $stats["documents.{$databaseId}/{$collectionId}.requests.read"] ?? [],
-                'documentsUpdate' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.update"] ?? [],
-                'documentsDelete' =>  $stats["documents.{$databaseId}/{$collectionId}.requests.delete" ?? []]
-            ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
+    }
 
-        $response->dynamic($usage, Response::MODEL_USAGE_COLLECTION);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'documentsTotal'   => $usage[$metrics[0]]['total'],
+            'documents'   =>  $usage[$metrics[0]]['data'],
+        ]), Response::MODEL_USAGE_COLLECTION);
     });

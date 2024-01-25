@@ -205,15 +205,15 @@ trait LocaleBase
 
         $this->assertEquals($response['headers']['status-code'], 200);
         $this->assertIsArray($response['body']);
-        $this->assertEquals(184, $response['body']['total']);
+        $this->assertEquals(186, $response['body']['total']);
 
         $this->assertEquals($response['body']['languages'][0]['code'], 'aa');
         $this->assertEquals($response['body']['languages'][0]['name'], 'Afar');
         $this->assertEquals($response['body']['languages'][0]['nativeName'], 'Afar');
 
-        $this->assertEquals($response['body']['languages'][183]['code'], 'zu');
-        $this->assertEquals($response['body']['languages'][183]['name'], 'Zulu');
-        $this->assertEquals($response['body']['languages'][183]['nativeName'], 'isiZulu');
+        $this->assertEquals($response['body']['languages'][185]['code'], 'zu');
+        $this->assertEquals($response['body']['languages'][185]['name'], 'Zulu');
+        $this->assertEquals($response['body']['languages'][185]['nativeName'], 'isiZulu');
 
         /**
          * Test for FAILURE

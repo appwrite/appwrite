@@ -197,6 +197,46 @@ class DatabasesConsoleClientTest extends Scope
     /**
      * @depends testCreateCollection
      */
+    public function testGetDatabaseUsage(array $data)
+    {
+        $databaseId = $data['databaseId'];
+        /**
+         * Test for FAILURE
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '32h'
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/usage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id']
+        ], $this->getHeaders()), [
+            'range' => '24h'
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(5, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsNumeric($response['body']['collectionsTotal']);
+        $this->assertIsArray($response['body']['collections']);
+        $this->assertIsArray($response['body']['documents']);
+    }
+
+
+    /**
+     * @depends testCreateCollection
+     */
     public function testGetCollectionUsage(array $data)
     {
         $databaseId = $data['databaseId'];
@@ -231,15 +271,11 @@ class DatabasesConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'range' => '24h'
         ]);
-
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(count($response['body']), 6);
-        $this->assertEquals($response['body']['range'], '24h');
-        $this->assertIsArray($response['body']['documentsCount']);
-        $this->assertIsArray($response['body']['documentsCreate']);
-        $this->assertIsArray($response['body']['documentsRead']);
-        $this->assertIsArray($response['body']['documentsUpdate']);
-        $this->assertIsArray($response['body']['documentsDelete']);
+        $this->assertEquals(3, count($response['body']));
+        $this->assertEquals('24h', $response['body']['range']);
+        $this->assertIsNumeric($response['body']['documentsTotal']);
+        $this->assertIsArray($response['body']['documents']);
     }
 
     /**

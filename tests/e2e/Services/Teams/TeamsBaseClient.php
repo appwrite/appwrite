@@ -233,10 +233,10 @@ trait TeamsBaseClient
          */
         $secondEmail = uniqid() . 'foe@localhost.test';
         $secondName = 'Another Foe';
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+        $response = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
+        ], [
             'userId' => 'unique()',
             'email' => $secondEmail,
             'password' => 'password',

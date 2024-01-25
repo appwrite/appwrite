@@ -1,0 +1,1 @@
+Delete the currently logged in user.
