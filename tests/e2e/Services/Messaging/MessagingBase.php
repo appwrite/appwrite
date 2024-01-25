@@ -652,7 +652,7 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
 
         $user = $response['body'];
-        
+
         $this->assertEquals(1, \count($user['targets']));
         $targetId = $user['targets'][0]['$id'];
 
