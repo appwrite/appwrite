@@ -29,7 +29,7 @@ class Mails extends Action
             ->inject('message')
             ->inject('register')
             ->inject('log')
-            ->callback(fn(Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
+            ->callback(fn (Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
     }
 
     /**
@@ -57,16 +57,29 @@ class Mails extends Action
 
         $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
 
+        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = App::getEnv('_APP_DOMAIN');
+
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
         $variables = $payload['variables'];
+        $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
 
-        $bodyTemplate = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base.tpl');
-        $bodyTemplate->setParam('{{body}}', $body);
+        $variables['subject'] = $subject;
+        $variables['year'] = date("Y");
+
+        $attachment = $payload['attachment'] ?? [];
+        $bodyTemplate = $payload['bodyTemplate'];
+        if (empty($bodyTemplate)) {
+            $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
+        }
+        $bodyTemplate = Template::fromFile($bodyTemplate);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value);
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
@@ -91,7 +104,29 @@ class Mails extends Action
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
-        $mail->AltBody = \strip_tags($body);
+
+        $mail->AltBody = $body;
+        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
+        $mail->AltBody = \strip_tags($mail->AltBody);
+        $mail->AltBody = \trim($mail->AltBody);
+
+        $replyTo = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
+
+        if (!empty($smtp)) {
+            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
+            $replyToName = $smtp['senderName'];
+        }
+
+        $mail->addReplyTo($replyTo, $replyToName);
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
+        }
 
         try {
             $mail->send();
@@ -125,10 +160,6 @@ class Mails extends Action
         $mail->CharSet = 'UTF-8';
 
         $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
-
-        if (!empty($smtp['replyTo'])) {
-            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
-        }
 
         $mail->isHTML();
 
