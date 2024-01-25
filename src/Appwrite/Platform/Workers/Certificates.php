@@ -169,7 +169,6 @@ class Certificates extends Action
             $success = true;
         } catch (Throwable $e) {
             $logs = $e->getMessage();
-            $finalException = $e;
 
             // Set exception as log in certificate document
             $certificate->setAttribute('logs', \mb_strcut($logs, 0, 1000000));// Limit to 1MB
@@ -183,16 +182,14 @@ class Certificates extends Action
 
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
+
+            throw $e;
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', DateTime::now());
 
             // Save all changes we made to certificate document into database
             $this->saveCertificateDocument($domain->get(), $certificate, $success, $dbForConsole, $queueForEvents, $queueForFunctions);
-        }
-
-        if (isset($finalException)) {
-            throw $finalException;
         }
     }
 
