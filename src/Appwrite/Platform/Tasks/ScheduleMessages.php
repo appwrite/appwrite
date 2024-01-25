@@ -48,22 +48,16 @@ class ScheduleMessages extends ScheduleBase
                 $queue = $pools->get('queue')->pop();
                 $connection = $queue->getResource();
                 $queueForMessaging = new Messaging($connection);
-                $queueForDeletes = new Delete($connection);
 
                 $queueForMessaging
                     ->setMessageId($schedule['resourceId'])
                     ->setProject($schedule['project'])
                     ->trigger();
 
-                $dbForConsole->updateDocument(
+                $dbForConsole->deleteDocument(
                     'schedules',
                     $schedule['$id'],
-                    new Document(['active' => false])
                 );
-
-                $queueForDeletes
-                    ->setType(DELETE_TYPE_SCHEDULES)
-                    ->trigger();
 
                 $queue->reclaim();
 
