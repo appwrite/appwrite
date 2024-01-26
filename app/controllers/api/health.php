@@ -718,7 +718,7 @@ App::get('/v1/health/queue/failed/:name')
     ->inject('queue')
     ->action(function (string $name, int|string $threshold, Response $response, Connection $queue) {
         $threshold = \intval($threshold);
-        
+
         $client = new Client($name, $queue);
         $failed = $client->countFailedJobs();
 
