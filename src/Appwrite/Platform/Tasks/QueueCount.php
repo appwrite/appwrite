@@ -59,7 +59,7 @@ class QueueCount extends Action
         $queueClient = new Client($name, $queue);
 
         $count = 0;
-        
+
         switch ($type) {
             case 'success':
                 $count = $queueClient->countSuccessfulJobs();
