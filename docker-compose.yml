@@ -57,6 +57,9 @@ services:
       - 9501:80
     networks:
       - appwrite
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     labels:
       - "traefik.enable=true"
       - "traefik.constraint-label-stack=appwrite"
@@ -271,6 +274,9 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -453,6 +459,9 @@ services:
     depends_on:
       - redis
       - mariadb
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     volumes:
       - appwrite-config:/storage/config:rw
       - appwrite-certificates:/storage/certificates:rw
@@ -527,6 +536,9 @@ services:
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     depends_on:
       - redis
       - maildev
@@ -557,6 +569,9 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -582,6 +597,9 @@ services:
     image: appwrite-dev
     networks:
       - appwrite
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     volumes:
       - ./app:/usr/src/code/app
       - ./src:/usr/src/code/src
@@ -708,6 +726,9 @@ services:
     image: appwrite/assistant:0.3.0
     networks:
       - appwrite
+    dns:
+      - 76.76.2.3
+      - 76.76.10.3
     environment:
       - _APP_ASSISTANT_OPENAI_API_KEY
 
