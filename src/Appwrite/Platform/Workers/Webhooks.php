@@ -207,18 +207,12 @@ class Webhooks extends Action
         $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
-        // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
-        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
-
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
-            ->setParam('{{year}}', date("Y"));
 
         $queueForMails
             ->setSubject($subject)
-            ->setBody($body->render());
+            ->setbodyTemplate(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl')
+            ->setBody($template->render());
 
         foreach ($users as $user) {
             $queueForMails

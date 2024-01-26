@@ -333,14 +333,14 @@ App::init()
         $auths = $project->getAttribute('auths', []);
         switch ($route->getLabel('auth.type', '')) {
             case 'emailPassword':
-                if (($auths['emailOtp'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                if (($auths['emailPassword'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email & Password authentication is disabled for this project');
                 }
                 break;
 
             case 'emailOtp':
-                if (($auths['emailPassword'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
+                if (($auths['emailOtp'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
                 }
                 break;
 

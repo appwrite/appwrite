@@ -31,6 +31,12 @@ App::init()
                 }
                 break;
 
+            case 'emailOtp':
+                if (($auths['emailOtp'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                }
+                break;
+
             case 'magic-url':
                 if ($project->getAttribute('usersAuthMagicURL', true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');

@@ -241,11 +241,5 @@
     "emails.otpSession.securityPhrase": "Tryggingsfrasen for denne e-posten er {{phrase}}. Du kan stole på denne e-posten om frasen stemmer med frasen vist under pålogging.",
     "emails.otpSession.thanks": "Takk,",
     "emails.otpSession.signature": "{{project}}-laget",
-    "emails.certificate.subject": "Sertifikatfeil for %s",
-    "emails.certificate.hello": "Hei",
-    "emails.certificate.body": "Sertifikatet for domenet ditt '{{domain}}' kunne ikkje opprettast. Dette er forsøk nr. {{attempt}}, og feilen blei forårsaka av: {{error}}",
-    "emails.certificate.footer": "Førre sertifikatet ditt vil vere gyldig i 30 dagar sidan den første feilen. Vi rår sterkt til at du undersøkjer denne saka, elles vil domenet ditt ende opp utan gyldig SSL-kommunikasjon.",
-    "emails.certificate.thanks": "Takk",
-    "emails.certificate.signature": "{{project}} team",
     "sms.verification.body": "{{secret}} er verifiseringskoden din for {{project}}."
 }

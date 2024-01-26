@@ -241,11 +241,5 @@
     "emails.otpSession.securityPhrase": "Sententia securitatis huius epistulae est {{phrase}}. Epistulae confidere potes si haec sententia cum ea quae ostensa est in signo ingressus convenit.",
     "emails.otpSession.thanks": "Gratias,",
     "emails.otpSession.signature": "{{project}} team -> {{project}} grex",
-    "emails.certificate.subject": "Defectio testimonii pro %s",
-    "emails.certificate.hello": "Salve",
-    "emails.certificate.body": "Certificatum pro dominio tuo '{{domain}}' generari non potuit. Hoc conatus num. {{attempt}} est, et defectus causatus est ab: {{error}}",
-    "emails.certificate.footer": "Praeclarum tuum testificationem valet ad XXX dies a primo defectu. Magnopere suademus ut hoc casum investiges, alioquin dominium tuum sine valida SSL communicatione erit.",
-    "emails.certificate.thanks": "Gratias",
-    "emails.certificate.signature": "team {{project}}",
     "sms.verification.body": "{{secret}} est codex verificatorius {{project}} tui."
 }
