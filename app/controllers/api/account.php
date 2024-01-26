@@ -1404,9 +1404,9 @@ App::post('/v1/account/tokens/email')
             'team' => '',
             'project' => $project->getAttribute('name'),
             'otp' => $tokenSecret,
-            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'Unknown device') . '</strong>',
-            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'Unknown client') . '</strong>',
-            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'Unknown OS') . '</strong>',
+            'agentDevice' => '<strong>' . (!empty($agentDevice['deviceBrand']) ? $agentDevice['deviceBrand'] : 'Unknown device') . '</strong>',
+            'agentClient' => '<strong>' . (!empty($agentOs['clientName']) ? $agentOs['clientName'] : 'Unknown client') . '</strong>',
+            'agentOs' => '<strong>' . (!empty($agentOs['osName']) ? $agentOs['osName'] : 'Unknown OS') . '</strong>',
             'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
         ];
 

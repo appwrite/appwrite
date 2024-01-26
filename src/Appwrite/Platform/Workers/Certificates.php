@@ -429,7 +429,7 @@ class Certificates extends Action
         // Send mail to administratore mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
         $template->setParam('{{domain}}', $domain);
-        $template->setParam('{{error}}', \nl2br($errorMessage));
+        $template->setParam('{{error}}', \nl2br($errorMessage), false);
         $template->setParam('{{attempts}}', $attempt);
 
         $subject = 'Certificate for ' . $domain . ' failed to generate';
@@ -437,7 +437,6 @@ class Certificates extends Action
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
             'domain' => $domain,
-            'error' => '<br><pre>' . $errorMessage . '</pre>',
             'attempt' => $attempt,
             'project' => 'Console',
             'redirect' => 'https://' . $domain,

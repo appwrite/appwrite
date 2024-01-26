@@ -604,6 +604,8 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(204, $response['headers']['status-code']);
 
+        \sleep(5);
+
         $emails = $this->getLastEmail(2);
         $this->assertCount(2, $emails);
         $this->assertEquals('custommailer@appwrite.io', $emails[0]['from'][0]['address']);
