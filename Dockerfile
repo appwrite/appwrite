@@ -85,6 +85,9 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/queue-retry && \
+    chmod +x /usr/local/bin/queue-count-failed && \
+    chmod +x /usr/local/bin/queue-count-processing && \
+    chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
