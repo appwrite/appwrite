@@ -52,6 +52,6 @@ class QueueCountFailed extends Action
 
         $queueClient = new Client($name, $queue);
 
-        Console::log("Queue: '".$name."' Currently has " . $queueClient->countFailedJobs() . " failed jobs.");
+        Console::log("Queue: '" . $name . "' Currently has " . $queueClient->countFailedJobs() . " failed jobs.");
     }
 }

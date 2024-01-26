@@ -52,6 +52,6 @@ class QueueCountSuccess extends Action
 
         $queueClient = new Client($name, $queue);
 
-        Console::log("Queue: '".$name."' Currently has " . $queueClient->countSuccessfulJobs() . " success jobs.");
+        Console::log("Queue: '" . $name . "' Currently has " . $queueClient->countSuccessfulJobs() . " success jobs.");
     }
 }

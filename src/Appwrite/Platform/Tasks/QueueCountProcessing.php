@@ -52,6 +52,6 @@ class QueueCountProcessing extends Action
 
         $queueClient = new Client($name, $queue);
 
-        Console::log("Queue: '".$name."' Currently has " . $queueClient->countProcessingJobs() . " processing jobs.");
+        Console::log("Queue: '" . $name . "' Currently has " . $queueClient->countProcessingJobs() . " processing jobs.");
     }
 }
