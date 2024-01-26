@@ -248,7 +248,11 @@ class Messaging extends Action
                                     ]);
 
                                     if ($target instanceof Document && !$target->isEmpty()) {
-                                        $dbForProject->deleteDocument('targets', $target->getId());
+                                        $dbForProject->updateDocument(
+                                            'targets',
+                                            $target->getId(),
+                                            $target->setAttribute('expired', true)
+                                        );
                                     }
                                 }
                             }
