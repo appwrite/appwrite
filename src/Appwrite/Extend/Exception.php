@@ -244,8 +244,8 @@ class Exception extends \Exception
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
-        $this->code = $this->errors[$type]['code'] ?? $code;
-        $this->message = $this->errors[$type]['description'] ?? $message;
+        $this->code = $code ?? $this->errors[$type]['code'];
+        $this->message = $message ?? $this->errors[$type]['description'];
 
         $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 
