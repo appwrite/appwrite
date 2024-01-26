@@ -712,14 +712,14 @@ App::get('/v1/health/queue/failed/:name')
     ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_HEALTH_FAILED_JOBS)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->inject('queue')
     ->action(function (string $queueName, Response $response, Connection $queue) {
         $client = new Client($queueName, $queue);
         $failed = $client->countFailedJobs();
 
-        $response->dynamic(new Document(['failed' => $failed]), Response::MODEL_HEALTH_FAILED_JOBS);
+        $response->dynamic(new Document(['size' => $failed]), Response::MODEL_HEALTH_QUEUE);
     });
 
 App::get('/v1/health/stats') // Currently only used internally

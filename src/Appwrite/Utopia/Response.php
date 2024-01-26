@@ -70,7 +70,6 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
-use Appwrite\Utopia\Response\Model\HealthFailedJobs;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
@@ -255,7 +254,6 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
-    public const MODEL_HEALTH_FAILED_JOBS = 'healthFailedJobs';
 
     // Console
     public const MODEL_CONSOLE_VARIABLES = 'consoleVariables';
@@ -394,7 +392,6 @@ class Response extends SwooleResponse
             ->setModel(new HealthStatus())
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
-            ->setModel(new HealthFailedJobs())
             ->setModel(new Metric())
             ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
