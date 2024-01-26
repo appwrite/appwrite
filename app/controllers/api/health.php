@@ -715,8 +715,8 @@ App::get('/v1/health/queue/failed/:name')
     ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
     ->inject('response')
     ->inject('queue')
-    ->action(function (string $queueName, Response $response, Connection $queue) {
-        $client = new Client($queueName, $queue);
+    ->action(function (string $name, Response $response, Connection $queue) {
+        $client = new Client($name, $queue);
         $failed = $client->countFailedJobs();
 
         $response->dynamic(new Document([ 'size' => $failed ]), Response::MODEL_HEALTH_QUEUE);
