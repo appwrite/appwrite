@@ -62,10 +62,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/mailgun')
             \array_key_exists('isEuRegion', $credentials) &&
             \array_key_exists('apiKey', $credentials) &&
             \array_key_exists('domain', $credentials) &&
-            \array_key_exists('from', $options)
+            \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -150,10 +150,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -179,7 +179,7 @@ App::post('/v1/messaging/providers/sendgrid')
         if (
             $enabled === true
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('from', $options)
+            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -974,7 +974,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
                     \array_key_exists('isEuRegion', $credentials) &&
                     \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('domain', $credentials) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('fromEmail', $options)
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
@@ -1065,7 +1065,7 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             if ($enabled) {
                 if (
                     \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
-                    \array_key_exists('from', $provider->getAttribute('options'))
+                    \array_key_exists('fromEmail', $provider->getAttribute('options'))
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
