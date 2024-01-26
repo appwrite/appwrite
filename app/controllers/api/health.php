@@ -16,6 +16,7 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 App::get('/v1/health')
     ->desc('Get HTTP')
@@ -685,6 +686,40 @@ App::get('/v1/health/anti-virus')
         }
 
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_ANTIVIRUS);
+    });
+
+App::get('/v1/health/queue/failed/:name')
+    ->desc('Get number of failed queue jobs')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getFailedJobs')
+    ->param('queueName', '', new WhiteList([
+        Event::DATABASE_QUEUE_NAME,
+        Event::DELETE_QUEUE_NAME,
+        Event::AUDITS_QUEUE_NAME,
+        Event::MAILS_QUEUE_NAME,
+        Event::FUNCTIONS_QUEUE_NAME,
+        Event::USAGE_QUEUE_NAME,
+        Event::WEBHOOK_CLASS_NAME,
+        Event::CERTIFICATES_QUEUE_NAME,
+        Event::BUILDS_QUEUE_NAME,
+        Event::MESSAGING_QUEUE_NAME,
+        Event::MIGRATIONS_QUEUE_NAME,
+        Event::HAMSTER_CLASS_NAME
+    ]), 'The name of the queue')
+    ->label('sdk.description', '/docs/references/health/get-failed-queue-jobs.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_QUEUE)
+    ->inject('response')
+    ->inject('queue')
+    ->action(function (string $name, Response $response, Connection $queue) {
+        $client = new Client($name, $queue);
+        $failed = $client->countFailedJobs();
+
+        $response->dynamic(new Document([ 'size' => $failed ]), Response::MODEL_HEALTH_QUEUE);
     });
 
 App::get('/v1/health/stats') // Currently only used internally
