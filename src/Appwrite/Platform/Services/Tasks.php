@@ -22,6 +22,7 @@ use Appwrite\Platform\Tasks\GetMigrationStats;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\CreateInfMetric;
+use Appwrite\Platform\Tasks\QueueCount;
 
 class Tasks extends Service
 {
@@ -47,6 +48,7 @@ class Tasks extends Service
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
             ->addAction(GetMigrationStats::getName(), new GetMigrationStats())
             ->addAction(QueueRetry::getName(), new QueueRetry())
+            ->addAction(QueueCount::getName(), new QueueCount())
             ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
         ;
     }
