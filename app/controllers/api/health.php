@@ -719,7 +719,7 @@ App::get('/v1/health/queue/failed/:name')
         $client = new Client($queueName, $queue);
         $failed = $client->countFailedJobs();
 
-        $response->dynamic(new Document(['size' => $failed]), Response::MODEL_HEALTH_QUEUE);
+        $response->dynamic(new Document([ 'size' => $failed ]), Response::MODEL_HEALTH_QUEUE);
     });
 
 App::get('/v1/health/stats') // Currently only used internally
