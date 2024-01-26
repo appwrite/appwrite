@@ -156,7 +156,7 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            if ($attempts >= App::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS')) {
+            if ($attempts >= \intval(App::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
             }
