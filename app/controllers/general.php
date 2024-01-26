@@ -613,7 +613,7 @@ App::error()
             $publish = $error->isPublishable();
         }
 
-        if ($logger && $publish) {
+        if ($logger && ($publish || $error->getCode() === 0)) {
             try {
                 /** @var Utopia\Database\Document $user */
                 $user = $utopia->getResource('user');
