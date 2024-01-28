@@ -142,7 +142,7 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-        //Todo debug (to be removed laster @shimon)
+        //Todo debug (to be removed later @shimon)
         //Console::log('@create user=' . time() . '=' . $user->getId());
 
         $response
@@ -1194,7 +1194,7 @@ App::delete('/v1/users/:userId')
 
         $dbForProject->deleteDocument('users', $userId);
 
-        //Todo debug (to be removed laster @shimon)
+        //Todo debug (to be removed later @shimon)
         //Console::log('@delete user=' . $userId . '=' . time() . '=' . $user->getId());
 
         $queueForDeletes

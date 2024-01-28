@@ -43,7 +43,7 @@ class Usage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
-        //Todo debug (to be removed laster @shimon)
+        //Todo debug (to be removed later @shimon)
 //        if ($key === 'users') {
 //            if ($value < 0) {
 //                console::log('@negative=' . $value);
