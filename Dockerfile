@@ -95,7 +95,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/worker-migrations && \
     chmod +x /usr/local/bin/worker-hamster && \
-    chmod +x /usr/local/bin/worker-usage
+    chmod +x /usr/local/bin/worker-usage && \
+    chmod +x /usr/local/bin/worker-usage-dump
 
 
 # Cloud Executabless

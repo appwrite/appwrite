@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\CLI\Console;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Database\Document;
@@ -42,6 +43,14 @@ class Usage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
+        //Todo debug (to be removed laster @shimon)
+//        if ($key === 'users') {
+//            if ($value < 0) {
+//                console::log('@negative=' . $value);
+//            } else {
+//                console::log('@positive=' . $value);
+//            }
+//        }
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
