@@ -86,10 +86,11 @@ class UsageDump extends Action
                             ]));
                         } catch (Duplicate $th) {
                             if ($value < 0) {
-                                var_dump([
-                                    'id' => $time . '_' . $period . '_' . $key,
-                                    'value' => $value,
-                                ]);
+                                //Todo debug (to be removed laster @shimon)
+//                                var_dump([
+//                                    'id' => $time . '_' . $period . '_' . $key,
+//                                    'value' => $value,
+//                                ]);
                                 $dbForProject->decreaseDocumentAttribute(
                                     'stats_v2',
                                     $id,
