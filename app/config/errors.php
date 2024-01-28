@@ -251,6 +251,11 @@ return [
         'description' => 'User phone is already verified',
         'code' => 409
     ],
+    Exception::USER_DELETION_WITH_ACTIVE_TEAMS => [
+        'name' => Exception::USER_DELETION_WITH_ACTIVE_TEAMS,
+        'description' => 'Delete all your teams before trying to delete your account.',
+        'code' => 400
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

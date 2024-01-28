@@ -3031,13 +3031,22 @@ App::delete('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('user')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if ($project->getId() === 'console') {
+            // get active memberships
+            $memberships = $user->getAttribute('memberships', []);
+            if (count($memberships) > 0) {
+                throw new Exception(Exception::USER_DELETION_WITH_ACTIVE_TEAMS);
+            }
         }
 
         $dbForProject->deleteDocument('users', $user->getId());
