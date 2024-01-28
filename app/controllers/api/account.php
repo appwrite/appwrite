@@ -3040,12 +3040,15 @@ App::delete('/v1/account')
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
-
+        
         if ($project->getId() === 'console') {
-            // get active memberships
+            // get all memberships
             $memberships = $user->getAttribute('memberships', []);
-            if (count($memberships) > 0) {
-                throw new Exception(Exception::USER_DELETION_WITH_ACTIVE_TEAMS);
+            foreach ($memberships as $membership) {
+                // prevent deletion if at lease one active membership
+                if($membership->getAttribute('confirm', false)) {
+                    throw new Exception(Exception::USER_DELETION_WITH_ACTIVE_TEAMS);
+                }
             }
         }
 
