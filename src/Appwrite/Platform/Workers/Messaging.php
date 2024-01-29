@@ -61,7 +61,7 @@ class Messaging extends Action
         }
 
         Console::log($payload['project']['$id']);
-        $denyList = App::getEnv('_APP_SMS_DENY_LIST', '');
+        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (in_array($payload['project']['$id'], $denyList)) {
             Console::error("Project is in the deny list. Skipping ...");
