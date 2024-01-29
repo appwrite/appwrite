@@ -53,9 +53,20 @@ class Messaging extends Action
      */
     public function action(Message $message): void
     {
-        var_dump($message);
-
         $payload = $message->getPayload() ?? [];
+
+        if (empty($payload['project'])) {
+            Console::error('Project not found');
+            return;
+        }
+
+        Console::log($payload['project']['$id']);
+        $denyList = App::getEnv('_APP_SMS_DENY_LIST', '');
+        $denyList = explode(',', $denyList);
+        if (in_array($payload['project']['$id'], $denyList)) {
+            Console::error("Project is in the deny list. Skipping ...");
+            return;
+        }
 
         if (empty($payload)) {
             Console::error('Payload arg not found');
