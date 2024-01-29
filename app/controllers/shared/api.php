@@ -346,6 +346,12 @@ App::init()
                 }
                 break;
 
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
+                }
+                break;
+
             case 'invites':
                 if (($auths['invites'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Invites authentication is disabled for this project');
