@@ -56,11 +56,12 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload['project'])) {
-            throw new Exception('Project not found', 500);
+            throw new Exception('Project not set in payload');
+            return;
         }
 
         Console::log($payload['project']['$id']);
-        $denyList = App::getEnv('_APP_SMS_DENY_LIST', '');
+        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
         if (in_array($payload['project']['$id'], $denyList)) {
             Console::error("Project is in the deny list. Skipping ...");
