@@ -1,1 +1,1 @@
-Access tokens have limited lifespan and expire to mitigate security risks. If session was created using an OAuth provider, this route can be used to "refresh" the access token.
+Extend session's expiry to increase it's lifespan. Extending a session is useful when session length is short such as 5 minutes.

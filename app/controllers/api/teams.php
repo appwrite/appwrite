@@ -557,7 +557,7 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
-                    ->setParam('{{body}}', $body)
+                    ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
@@ -613,11 +613,11 @@ App::post('/v1/teams/:teamId/memberships')
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
                     'direction' => $locale->getText('settings.direction'),
-                    /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+                    /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
-                    'project' => $projectName,
-                    'redirect' => $url
+                    'redirect' => $url,
+                    'project' => $projectName
                 ];
 
                 $queueForMails
@@ -962,6 +962,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session

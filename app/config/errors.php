@@ -811,6 +811,11 @@ return [
         'description' => 'Provider with the requested ID is of the incorrect type.',
         'code' => 400,
     ],
+    Exception::PROVIDER_MISSING_CREDENTIALS => [
+        'name' => Exception::PROVIDER_MISSING_CREDENTIALS,
+        'description' => 'Provider with the requested ID is missing credentials.',
+        'code' => 400,
+    ],
 
     /** Topics */
     Exception::TOPIC_NOT_FOUND => [
