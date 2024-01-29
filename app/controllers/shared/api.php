@@ -637,9 +637,8 @@ App::init()
         $denylist = App::getEnv('_APP_COUNTRIES_DENYLIST', '');
         if (!empty($denylist)) {
             $countries = explode(',', $denylist);
-            $record = $geodb->get($request->getIP());
-            $country = $record['country']['iso_code'];
-            $countryName = $record['country']['names']['en'];
+            $record = $geodb->get($request->getIP()) ?? [];
+            $country = $record['country']['iso_code'] ?? '';
             if (in_array($country, $countries)) {
                 throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
