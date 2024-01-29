@@ -335,7 +335,7 @@ App::init()
                 break;
 
             case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
+                if (($auths['usersAuthMagicURL'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
