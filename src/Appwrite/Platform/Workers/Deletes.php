@@ -516,13 +516,8 @@ class Deletes extends Action
             if ($document->getAttribute('confirm')) { // Count only confirmed members
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
-                if (!$team->isEmpty()) {
-                    $team = $dbForProject->updateDocument(
-                        'teams',
-                        $teamId,
-                        // Ensure that total >= 0
-                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                    );
+                if (!$team->isEmpty() && $team->getAttribute('total', 0) > 0) {
+                    $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1);
                 }
             }
         });
