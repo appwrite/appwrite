@@ -641,6 +641,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
+                    ->setProject($project)
                     ->trigger();
             }
         }
