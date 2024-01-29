@@ -1339,6 +1339,7 @@ App::post('/v1/account/sessions/phone')
         $queueForMessaging
             ->setRecipient($phone)
             ->setMessage($message)
+            ->setProject($project)
             ->trigger();
 
         $queueForEvents->setPayload(
@@ -2938,6 +2939,7 @@ App::post('/v1/account/verification/phone')
         $queueForMessaging
             ->setRecipient($user->getAttribute('phone'))
             ->setMessage($message)
+            ->setProject($project)
             ->trigger()
         ;
 
