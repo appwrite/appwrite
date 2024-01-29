@@ -185,6 +185,32 @@ trait MessagingBase
         return $providers;
     }
 
+    public function testUpdateProviderMissingCredentialsThrows(): void
+    {
+        // Create new FCM provider with no serviceAccountJSON
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/fcm', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'FCM3',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        // Enable provider with no serviceAccountJSON
+        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/fcm/' . $response['body']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'enabled' => true,
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+    }
+
     /**
      * @depends testUpdateProviders
      */
@@ -197,7 +223,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(\count($providers), \count($response['body']['providers']));
+        $this->assertEquals(10, \count($response['body']['providers']));
 
         return $providers;
     }
@@ -634,7 +660,7 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
 
         $user = $response['body'];
-
+        var_dump($user);
         $this->assertEquals(1, \count($user['targets']));
         $targetId = $user['targets'][0]['$id'];
 

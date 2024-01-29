@@ -14,6 +14,7 @@ class Mail extends Event
     protected array $smtp = [];
     protected array $variables = [];
     protected string $bodyTemplate = '';
+    protected array $attachment = [];
 
     public function __construct(protected Connection $connection)
     {
@@ -337,6 +338,22 @@ class Mail extends Event
         return $this;
     }
 
+    public function setAttachment(string $content, string $filename, string $encoding = 'base64', string $type = 'plain/text')
+    {
+        $this->attachment = [
+            'content' => base64_encode($content),
+            'filename' => $filename,
+            'encoding' => $encoding,
+            'type' => $type,
+        ];
+        return $this;
+    }
+
+    public function getAttachment(): array
+    {
+        return $this->attachment;
+    }
+
     /**
      * Executes the event and sends it to the mails worker.
      *
@@ -355,6 +372,7 @@ class Mail extends Event
             'body' => $this->body,
             'smtp' => $this->smtp,
             'variables' => $this->variables,
+            'attachment' => $this->attachment,
             'events' => Event::generateEvents($this->getEvent(), $this->getParams())
         ]);
     }
