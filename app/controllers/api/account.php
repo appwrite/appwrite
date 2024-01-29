@@ -1336,6 +1336,8 @@ App::post('/v1/account/sessions/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        var_dump($request->getIP());
+        var_dump($project->getId());
         $queueForMessaging
             ->setRecipient($phone)
             ->setMessage($message)
@@ -2936,6 +2938,8 @@ App::post('/v1/account/verification/phone')
         $message = $message->setParam('{{token}}', $secret);
         $message = $message->render();
 
+        var_dump($request->getIP());
+        var_dump($project->getId());
         $queueForMessaging
             ->setRecipient($user->getAttribute('phone'))
             ->setMessage($message)
