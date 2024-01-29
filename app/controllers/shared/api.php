@@ -177,6 +177,7 @@ App::init()
             $end = $request->getContentRangeEnd();
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
+                ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
                 ->setParam('{userAgent}', $request->getUserAgent(''))
                 ->setParam('{ip}', $request->getIP())
