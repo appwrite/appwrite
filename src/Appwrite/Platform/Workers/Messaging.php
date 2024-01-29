@@ -57,7 +57,6 @@ class Messaging extends Action
 
         if (empty($payload['project'])) {
             throw new Exception('Project not set in payload');
-            return;
         }
 
         Console::log($payload['project']['$id']);
