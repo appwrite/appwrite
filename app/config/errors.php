@@ -114,6 +114,11 @@ return [
         'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
         'code' => 400,
     ],
+    Exception::GENERAL_REGION_ACCESS_DENIED => [
+        'name' => Exception::GENERAL_REGION_ACCESS_DENIED,
+        'description' => 'Sorry, access from the current region is denied.',
+        'code' => 451,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [

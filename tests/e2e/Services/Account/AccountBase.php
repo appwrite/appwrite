@@ -43,11 +43,12 @@ trait AccountBase
         /**
          * Test for FAILURE
          */
+        // Deny request from blocked IP
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-            'x-forwarded-for' => '103.152.127.250'
+            'x-forwarded-for' => '103.152.127.250' // Test IP for denied access region
         ]), [
             'userId' => ID::unique(),
             'email' => $email,
@@ -55,7 +56,7 @@ trait AccountBase
             'name' => $name,
         ]);
 
-        $this->assertEquals(401, $response['headers']['status-code']);
+        $this->assertEquals(451, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',

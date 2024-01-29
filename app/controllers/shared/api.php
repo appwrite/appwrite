@@ -634,13 +634,14 @@ App::init()
     ->inject('request')
     ->inject('geodb')
     ->action(function (Request $request, Reader $geodb) {
-        if (!empty(app::getEnv('_APP_RESTRICTED_COUNTRIES', ''))) {
-            $countries = explode(',', App::getEnv('_APP_RESTRICTED_COUNTRIES', ''));
+        $denylist = App::getEnv('_APP_COUNTRIES_DENYLIST', '');
+        if (!empty($denylist)) {
+            $countries = explode(',', $denylist);
             $record = $geodb->get($request->getIP());
             $country = $record['country']['iso_code'];
             $countryName = $record['country']['names']['en'];
             if (in_array($country, $countries)) {
-                throw new Exception(Exception::GENERAL_ACCESS_FORBIDDEN, "Sorry, access from $countryName is restricted");
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
             }
         }
     });
