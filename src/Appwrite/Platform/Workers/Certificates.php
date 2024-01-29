@@ -22,6 +22,7 @@ use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Domains\Domain;
+use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -423,6 +424,8 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
+        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+
         // Send mail to administratore mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
         $template->setParam('{{domain}}', $domain);
@@ -433,15 +436,31 @@ class Certificates extends Action
         $subject = 'Certificate failed to generate';
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
-        $body
-            ->setParam('{{subject}}', $subject)
-            ->setParam('{{message}}', $template->render())
-            ->setParam('{{year}}', date("Y"));
+        $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
+
+        $message = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-inner-base.tpl');
+        $message
+            ->setParam('{{body}}', $locale->getText("emails.certificate.body"), escapeHtml: false)
+            ->setParam('{{hello}}', $locale->getText("emails.certificate.hello"))
+            ->setParam('{{footer}}', $locale->getText("emails.certificate.footer"))
+            ->setParam('{{thanks}}', $locale->getText("emails.certificate.thanks"))
+            ->setParam('{{signature}}', $locale->getText("emails.certificate.signature"));
+        $body = $message->render();
+
+        $emailVariables = [
+            'direction' => $locale->getText('settings.direction'),
+            'domain' => $domain,
+            'error' => '<br><pre>' . $errorMessage . '</pre>',
+            'attempt' => $attempt,
+            'project' => 'Console',
+            'redirect' => 'https://' . $domain,
+        ];
 
         $queueForMails
             ->setSubject($subject)
-            ->setBody($body->render())
+            ->setBody($body)
             ->setName('Appwrite Administrator')
+            ->setVariables($emailVariables)
             ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->trigger();
     }

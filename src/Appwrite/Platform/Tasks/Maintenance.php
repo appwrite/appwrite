@@ -36,50 +36,78 @@ class Maintenance extends Action
 
         // # of days in seconds (1 day = 86400s)
         $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $executionLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', '1209600');
-        $auditLogRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', '1209600');
-        $abuseLogsRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', '86400');
         $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
         $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
         $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
-        Console::loop(function () use ($interval, $executionLogsRetention, $abuseLogsRetention, $auditLogRetention, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
+        Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();
 
             Console::info("[{$time}] Notifying workers with maintenance tasks every {$interval} seconds");
-            $this->notifyDeleteExecutionLogs($executionLogsRetention, $queueForDeletes);
-            $this->notifyDeleteAbuseLogs($abuseLogsRetention, $queueForDeletes);
-            $this->notifyDeleteAuditLogs($auditLogRetention, $queueForDeletes);
-            $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+
+            $this->foreachProject($dbForConsole, function (Document $project) use ($queueForDeletes, $usageStatsRetentionHourly) {
+                $queueForDeletes->setProject($project);
+
+                $this->notifyDeleteExecutionLogs($queueForDeletes);
+                $this->notifyDeleteAbuseLogs($queueForDeletes);
+                $this->notifyDeleteAuditLogs($queueForDeletes);
+                $this->notifyDeleteUsageStats($usageStatsRetentionHourly, $queueForDeletes);
+                $this->notifyDeleteExpiredSessions($queueForDeletes);
+            });
+
             $this->notifyDeleteConnections($queueForDeletes);
-            $this->notifyDeleteExpiredSessions($queueForDeletes);
             $this->renewCertificates($dbForConsole, $queueForCertificates);
             $this->notifyDeleteCache($cacheRetention, $queueForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $queueForDeletes);
+            $this->notifyDeleteTargets($queueForDeletes);
         }, $interval);
     }
 
-    private function notifyDeleteExecutionLogs(int $interval, Delete $queueForDeletes): void
+    protected function foreachProject(Database $dbForConsole, callable $callback): void
+    {
+        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
+        $count = 0;
+        $chunk = 0;
+        $limit = 50;
+        $sum = $limit;
+        $executionStart = \microtime(true);
+
+        while ($sum === $limit) {
+            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
+
+            $chunk++;
+
+            /** @var string[] $projectIds */
+            $sum = count($projects);
+
+            foreach ($projects as $project) {
+                $callback($project);
+                $count++;
+            }
+        }
+
+        $executionEnd = \microtime(true);
+        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
+    }
+
+    private function notifyDeleteExecutionLogs(Delete $queueForDeletes): void
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_EXECUTIONS)
-            ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
 
-    private function notifyDeleteAbuseLogs(int $interval, Delete $queueForDeletes): void
+    private function notifyDeleteAbuseLogs(Delete $queueForDeletes): void
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_ABUSE)
-            ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
 
-    private function notifyDeleteAuditLogs(int $interval, Delete $queueForDeletes): void
+    private function notifyDeleteAuditLogs(Delete $queueForDeletes): void
     {
         $queueForDeletes
             ->setType(DELETE_TYPE_AUDIT)
-            ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
     }
 
@@ -134,8 +162,7 @@ class Maintenance extends Action
 
     private function notifyDeleteCache($interval, Delete $queueForDeletes): void
     {
-
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_CACHE_BY_TIMESTAMP)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
             ->trigger();
@@ -143,10 +170,16 @@ class Maintenance extends Action
 
     private function notifyDeleteSchedules($interval, Delete $queueForDeletes): void
     {
-
-        ($queueForDeletes)
+        $queueForDeletes
             ->setType(DELETE_TYPE_SCHEDULES)
             ->setDatetime(DateTime::addSeconds(new \DateTime(), -1 * $interval))
+            ->trigger();
+    }
+
+    private function notifyDeleteTargets(Delete $queueForDeletes): void
+    {
+        $queueForDeletes
+            ->setType(DELETE_TYPE_EXPIRED_TARGETS)
             ->trigger();
     }
 }
