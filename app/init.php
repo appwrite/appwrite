@@ -74,6 +74,7 @@ use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 use Utopia\Validator\Range;
+use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
@@ -103,7 +104,7 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 328;
+const APP_CACHE_BUSTER = 329;
 const APP_VERSION_STABLE = '1.4.13';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
@@ -939,6 +940,21 @@ App::setResource('clients', function ($request, $console, $project) {
         'type' => Origin::CLIENT_TYPE_WEB,
         'hostname' => $request->getHostname(),
     ], Document::SET_TYPE_APPEND);
+
+    $hostnames = explode(',', App::getEnv('_APP_CONSOLE_HOSTNAMES', ''));
+    $validator = new Hostname();
+    foreach ($hostnames as $hostname) {
+        $hostname = trim($hostname);
+        if (!$validator->isValid($hostname)) {
+            continue;
+        }
+        $console->setAttribute('platforms', [
+            '$collection' => ID::custom('platforms'),
+            'type' => Origin::CLIENT_TYPE_WEB,
+            'name' => $hostname,
+            'hostname' => $hostname,
+        ], Document::SET_TYPE_APPEND);
+    }
 
     /**
      * Get All verified client URLs for both console and current projects

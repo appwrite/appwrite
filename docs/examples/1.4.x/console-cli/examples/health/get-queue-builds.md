@@ -1,1 +1,2 @@
-appwrite health getQueueBuilds
+appwrite health getQueueBuilds \
+

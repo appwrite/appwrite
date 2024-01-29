@@ -1,1 +1,2 @@
-appwrite health getQueueMails
+appwrite health getQueueMails \
+
