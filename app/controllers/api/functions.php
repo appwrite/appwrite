@@ -1560,8 +1560,9 @@ App::post('/v1/functions/:functionId/executions')
                 }
             }
 
+            $jwtExpiration = $project->getAttribute('auths', [])['jwtExpiration'] ?? Auth::TOKEN_EXPIRATION_PHONE;
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiration, 10); // Instantiate with key, algo, maxAge and leeway.
                 $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),

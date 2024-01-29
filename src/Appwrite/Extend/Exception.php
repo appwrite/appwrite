@@ -188,6 +188,7 @@ class Exception extends \Exception
     public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';
     public const PROJECT_INVALID_SUCCESS_URL       = 'project_invalid_success_url';
     public const PROJECT_INVALID_FAILURE_URL       = 'project_invalid_failure_url';
+    public const PROJECT_INVALID_SESSION_LENGTH    = 'project_invalid_session_length';
     public const PROJECT_RESERVED_PROJECT          = 'project_reserved_project';
     public const PROJECT_KEY_EXPIRED               = 'project_key_expired';
 

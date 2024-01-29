@@ -108,6 +108,12 @@ class Project extends Model
                 'default' => Auth::TOKEN_EXPIRATION_LOGIN_LONG,
                 'example' => 60,
             ])
+            ->addRule('jwtExpiration', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'JWT expiration in seconds.',
+                'default' => Auth::TOKEN_EXPIRATION_PHONE,
+                'example' => 60,
+            ])
             ->addRule('authLimit', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Max users allowed. 0 is unlimited.',
@@ -317,6 +323,7 @@ class Project extends Model
 
         $document->setAttribute('authLimit', $authValues['limit'] ?? 0);
         $document->setAttribute('authDuration', $authValues['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG);
+        $document->setAttribute('jwtExpiration', $authValues['jwtExpiration'] ?? Auth::TOKEN_EXPIRATION_PHONE);
         $document->setAttribute('authSessionsLimit', $authValues['maxSessions'] ?? APP_LIMIT_USER_SESSIONS_DEFAULT);
         $document->setAttribute('authPasswordHistory', $authValues['passwordHistory'] ?? 0);
         $document->setAttribute('authPasswordDictionary', $authValues['passwordDictionary'] ?? false);
