@@ -70,6 +70,8 @@ class Messaging extends Action
             return;
         }
 
+        var_dump($payload['project']);
+
         $sms =  match ($this->dsn->getHost()) {
             'mock' => new Mock($this->user, $this->secret), // used for tests
             'twilio' => new Twilio($this->user, $this->secret),
