@@ -56,8 +56,7 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload['project'])) {
-            Console::error('Project not found');
-            return;
+            throw new Exception('Project not found', 500);
         }
 
         Console::log($payload['project']['$id']);
