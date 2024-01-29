@@ -392,7 +392,7 @@ App::get('/v1/health/queue/logs')
     }, ['response']);
 
 App::get('/v1/health/certificate')
-    ->desc('Get status of certificate for a domain to check whether it is still valid or expired.')
+    ->desc('Get the SSL certificate for a domain')
     ->groups(['api', 'health'])
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
@@ -409,31 +409,38 @@ App::get('/v1/health/certificate')
             $domain = parse_url($domain, PHP_URL_HOST);
         }
 
-        $get = stream_context_create(array("ssl" => array("capture_peer_cert" => true)));
-        $read = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $get);
-        if (!$read) {
-            throw new Exception(Exception::INVALID_HOST, 'The domain is not valid.');
+        $sslContext = stream_context_create([
+            "ssl" => [
+                "capture_peer_cert" => true
+            ]
+        ]);
+        $sslSocket = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+        if (!$sslSocket) {
+            throw new Exception(Exception::HEALTH_INVALID_HOST);
         }
-        $certificate = stream_context_get_params($read);
-        $certificateInfo = openssl_x509_parse($certificate['options']['ssl']['peer_certificate']);
+
+        $streamContextParams = stream_context_get_params($sslSocket);
+        $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
+        $parsedCertificate = openssl_x509_parse($peerCertificate);
+
         $certificatePayload = [
-            'name' => $certificateInfo['name'],
-            'subjectCN' => $certificateInfo['subject']['CN'],
-            'issuer' => $certificateInfo['issuer'],
-            'validFrom' => $certificateInfo['validFrom_time_t'],
-            'validTo' => $certificateInfo['validTo_time_t'],
-            'signatureTypeSN' => $certificateInfo['signatureTypeSN'],
+            'name' => $parsedCertificate['name'],
+            'subjectCN' => $parsedCertificate['subject']['CN'],
+            'issuer' => $parsedCertificate['issuer'],
+            'validFrom' => $parsedCertificate['validFrom_time_t'],
+            'validTo' => $parsedCertificate['validTo_time_t'],
+            'signatureTypeSN' => $parsedCertificate['signatureTypeSN'],
         ];
-        $sslExpiration = $certificateInfo['validTo_time_t'];
+
+        $sslExpiration = $parsedCertificate['validTo_time_t'];
         $status = ($sslExpiration < time()) ? 'fail' : 'pass';
 
         if ($status == 'fail') {
-            throw new Exception(Exception::CERTIFICATE_EXPIRED, 'The certificate of the domain has expired.');
+            throw new Exception(Exception::HEALTH_CERTIFICATE_EXPIRED);
         }
 
         $response->dynamic(new Document([
             'name' => 'certificate',
-            'status' => $status,
             'payload' => json_encode($certificatePayload),
         ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);

@@ -27,12 +27,6 @@ class HealthCertificate extends Model
                     'signatureTypeSN' => 'RSA-SHA256',
                 ],
             ])
-            ->addRule('status', [
-                'type' => self::TYPE_STRING,
-                'description' => 'Service status. Possible values can are: `pass`, `fail`',
-                'default' => '',
-                'example' => 'pass',
-            ])
         ;
     }
 

@@ -436,9 +436,6 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['status']);
-        $this->assertIsString($response['body']['status']);
-        $this->assertEquals('pass', $response['body']['status']);
         $this->assertNotEmpty($response['body']['payload']);
         $payload = json_decode($response['body']['payload']);
         $this->assertEquals('www.google.com', $payload->subjectCN);
@@ -451,9 +448,6 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['status']);
-        $this->assertIsString($response['body']['status']);
-        $this->assertEquals('pass', $response['body']['status']);
         $this->assertNotEmpty($response['body']['payload']);
         $payload = json_decode($response['body']['payload']);
         $this->assertEquals('appwrite.io', $payload->subjectCN);
@@ -466,9 +460,6 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']['status']);
-        $this->assertIsString($response['body']['status']);
-        $this->assertEquals('pass', $response['body']['status']);
 
         /**
          * Test for FAILURE
