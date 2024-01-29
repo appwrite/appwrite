@@ -170,7 +170,6 @@ class MessagingConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'topicId' => ID::unique(),
             'name' => 'my-app',
-            'description' => 'web app'
         ]);
         $this->assertEquals(201, $topic['headers']['status-code']);
 
@@ -178,7 +177,7 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'description' => 'updated-description'
+            'name' => 'android-app'
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

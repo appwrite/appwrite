@@ -269,7 +269,6 @@ trait MessagingBase
         ]);
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals('my-app', $response['body']['name']);
-        $this->assertEquals('', $response['body']['description']);
 
         return $response['body'];
     }
@@ -285,11 +284,9 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'name' => 'android-app',
-            'description' => 'updated-description'
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
-        $this->assertEquals('updated-description', $response['body']['description']);
         return $response['body']['$id'];
     }
 
@@ -298,17 +295,6 @@ trait MessagingBase
      */
     public function testListTopic(string $topicId)
     {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'search' => 'updated-description',
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(1, \count($response['body']['topics']));
-
         $response = $this->client->call(Client::METHOD_GET, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -350,7 +336,6 @@ trait MessagingBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
-        $this->assertEquals('updated-description', $response['body']['description']);
         $this->assertEquals(0, $response['body']['total']);
     }
 
@@ -407,7 +392,6 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals('updated-description', $topic['body']['description']);
         $this->assertEquals(1, $topic['body']['total']);
 
         return [
@@ -626,7 +610,6 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals('updated-description', $topic['body']['description']);
         $this->assertEquals(0, $topic['body']['total']);
     }
 
@@ -724,7 +707,6 @@ trait MessagingBase
         ], [
             'topicId' => ID::unique(),
             'name' => 'topic1',
-            'description' => 'Test Topic'
         ]);
 
         $this->assertEquals(201, $topic['headers']['status-code']);
@@ -881,7 +863,6 @@ trait MessagingBase
         ], [
             'topicId' => ID::unique(),
             'name' => 'topic1',
-            'description' => 'Test Topic'
         ]);
 
         $this->assertEquals(201, $topic['headers']['status-code']);
@@ -1042,7 +1023,6 @@ trait MessagingBase
         ], [
             'topicId' => ID::unique(),
             'name' => 'topic1',
-            'description' => 'Test Topic'
         ]);
 
         $this->assertEquals(201, $topic['headers']['status-code']);
