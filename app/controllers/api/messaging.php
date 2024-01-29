@@ -3266,3 +3266,51 @@ App::patch('/v1/messaging/messages/push/:messageId')
         $response
             ->dynamic($message, Response::MODEL_MESSAGE);
     });
+
+App::delete('/v1/messaging/messages/:messageId')
+    ->desc('Delete a message')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'message.delete')
+    ->label('audits.resource', 'message/{request.route.messageId}')
+    ->label('event', 'messages.[messageId].delete')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/messaging/delete-message.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('response')
+    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+            case MessageStatus::SCHEDULED:
+                $scheduleId = $message->getAttribute('scheduleId');
+
+                if (!empty($scheduleId)) {
+                    try {
+                        $dbForConsole->deleteDocument('schedules', $scheduleId);
+                    } catch (Exception) {
+                        // Ignore
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        $dbForProject->deleteDocument('messages', $message->getId());
+
+        $response->noContent();
+    });

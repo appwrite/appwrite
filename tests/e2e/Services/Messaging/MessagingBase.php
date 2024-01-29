@@ -643,6 +643,60 @@ trait MessagingBase
         $this->assertEquals(204, $response['headers']['status-code']);
     }
 
+    /**
+     * @depends testCreateDraftEmail
+     */
+    public function testListTargets(array $message)
+    {
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/does_not_exist/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $targetList = $response['body'];
+        $this->assertEquals(1, $targetList['total']);
+        $this->assertEquals(1, count($targetList['targets']));
+        $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
+
+        // Test for empty targets
+        $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'messageId' => ID::unique(),
+            'subject' => 'New blog post',
+            'content' => 'Check out the new blog post at http://localhost',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+
+        $message = $response['body'];
+
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        $targetList = $response['body'];
+        $this->assertEquals(0, $targetList['total']);
+        $this->assertEquals(0, count($targetList['targets']));
+    }
+
     public function testCreateDraftEmail()
     {
         // Create User
@@ -746,7 +800,6 @@ trait MessagingBase
         // Get target
         $target = $user['body']['targets'][0];
 
-
         // Create Subscriber
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
@@ -785,14 +838,19 @@ trait MessagingBase
         $this->assertEquals(1, $message['body']['deliveredTotal']);
         $this->assertEquals(0, \count($message['body']['deliveryErrors']));
 
-        return $message;
+        return [
+            'message' => $email['body'],
+            'topic' => $topic['body'],
+        ];
     }
 
     /**
      * @depends testSendEmail
      */
-    public function testUpdateEmail(array $email): void
+    public function testUpdateEmail(array $params): void
     {
+        $email = $params['message'];
+
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $email['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1170,56 +1228,50 @@ trait MessagingBase
     }
 
     /**
-     * @depends testCreateDraftEmail
+     * @depends testSendEmail
+     * @return void
+     * @throws \Exception
      */
-    public function testListTargets(array $message)
+    public function testDeleteMessage(array $params): void
     {
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/does_not_exist/targets', [
+        $message = $params['message'];
+        $topic = $params['topic'];
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $message['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(204, $response['headers']['status-code']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-
-        $targetList = $response['body'];
-        $this->assertEquals(1, $targetList['total']);
-        $this->assertEquals(1, count($targetList['targets']));
-        $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
-
-        // Test for empty targets
+        // Test for FAILURE
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'subject' => 'New blog post',
-            'content' => 'Check out the new blog post at http://localhost',
+            'status' => 'processing',
+            'topics' => [$topic['$id']],
+            'subject' => 'Test subject',
+            'content' => 'Test content',
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-
-        $message = $response['body'];
-
-        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/' . $response['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(400, $response['headers']['status-code']);
 
-        $targetList = $response['body'];
-        $this->assertEquals(0, $targetList['total']);
-        $this->assertEquals(0, count($targetList['targets']));
+        $response = $this->client->call(Client::METHOD_DELETE, '/messaging/messages/does_not_exist', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
     }
 }
