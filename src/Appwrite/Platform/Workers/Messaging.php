@@ -53,6 +53,8 @@ class Messaging extends Action
      */
     public function action(Message $message): void
     {
+        var_dump($message);
+
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -69,8 +71,6 @@ class Messaging extends Action
             Console::error('Message arg not found');
             return;
         }
-
-        var_dump($payload['project']);
 
         $sms =  match ($this->dsn->getHost()) {
             'mock' => new Mock($this->user, $this->secret), // used for tests
