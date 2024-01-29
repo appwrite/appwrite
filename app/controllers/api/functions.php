@@ -1552,7 +1552,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $userJwt = ''; // initialize
+        $jwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
@@ -1565,8 +1565,8 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
-                $userJwt = $jwtObj->encode([
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+                $jwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
@@ -1583,7 +1583,7 @@ App::post('/v1/functions/:functionId/executions')
         $headers['x-appwrite-api-token'] = $apiToken;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
-        $headers['x-appwrite-user-jwt'] = $userJwt ?? '';
+        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
@@ -1649,7 +1649,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->setHeaders($headers)
                 ->setPath($path)
                 ->setMethod($method)
-                ->setJWT($userJwt)
+                ->setJWT($jwt)
                 ->setProject($project)
                 ->setUser($user)
                 ->setParam('functionId', $function->getId())
