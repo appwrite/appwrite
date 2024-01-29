@@ -365,7 +365,7 @@ App::init()
                 break;
 
             default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
+                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication type: ' . $route->getLabel('auth.type', ''));
                 break;
         }
     });
