@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../init.php';
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
 use Utopia\App;
 use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
@@ -9,8 +11,6 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Cache\Cache;
-use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
@@ -527,6 +527,40 @@ App::init()
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
                         $dbForConsole->deleteCachedDocument('projects', $project->getId());
                     }
+                }
+            }
+        }
+
+        // API Token authentication (like API Key but JWT short-term)
+        $apiToken = $request->getHeader('x-appwrite-token', '');
+        if (!empty($apiToken) && $user->isEmpty() && empty($authKey)) {
+            $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
+
+            try {
+                $payload = $jwtObj->decode($apiToken);
+            } catch (JWTException $error) {
+                // Ignore if token is invalid
+            }
+
+            if (!empty($payload)) {
+                $projectId = $payload['projectId'] ?? '';
+                $tokenScopes = $payload['scopes'] ?? [];
+
+                // JWT includes project ID for better security
+                if ($projectId === $project->getId()) {
+                    $user = new Document([
+                        '$id' => '',
+                        'status' => true,
+                        'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                        'password' => '',
+                        'name' => $project->getAttribute('name', 'Untitled'),
+                    ]);
+
+                    $role = Auth::USER_ROLE_APPS;
+                    $scopes = \array_merge($roles[$role]['scopes'], $tokenScopes);
+
+                    Authorization::setRole(Auth::USER_ROLE_APPS);
+                    Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
                 }
             }
         }

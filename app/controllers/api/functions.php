@@ -150,6 +150,7 @@ App::post('/v1/functions')
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
+    ->param('apiTokenScopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Token auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Control System) deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function.', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function.', true)
@@ -168,7 +169,7 @@ App::post('/v1/functions')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $apiTokenScopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
         // build from template
@@ -212,6 +213,7 @@ App::post('/v1/functions')
             'timeout' => $timeout,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
+            'apiTokenScopes' => $apiTokenScopes,
             'search' => implode(' ', [$functionId, $name, $runtime]),
             'version' => 'v3',
             'installationId' => $installation->getId(),
@@ -663,6 +665,7 @@ App::put('/v1/functions/:functionId')
     ->param('logging', true, new Boolean(), 'Whether executions will be logged. When set to false, executions will not be logged, but will reduce resource used by your Appwrite project.', true)
     ->param('entrypoint', '', new Text(1028, 0), 'Entrypoint File. This path is relative to the "providerRootDirectory".', true)
     ->param('commands', '', new Text(8192, 0), 'Build Commands.', true)
+    ->param('apiTokenScopes', [], new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'List of scopes allowed for API Token auto-generated for every execution. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.', true)
     ->param('installationId', '', new Text(128, 0), 'Appwrite Installation ID for VCS (Version Controle System) deployment.', true)
     ->param('providerRepositoryId', '', new Text(128, 0), 'Repository ID of the repo linked to the function', true)
     ->param('providerBranch', '', new Text(128, 0), 'Production branch for the repo linked to the function', true)
@@ -676,7 +679,7 @@ App::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, array $apiTokenScopes, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -788,6 +791,7 @@ App::put('/v1/functions/:functionId')
             'logging' => $logging,
             'entrypoint' => $entrypoint,
             'commands' => $commands,
+            'apiTokenScopes' => $apiTokenScopes,
             'installationId' => $installation->getId(),
             'installationInternalId' => $installation->getInternalId(),
             'providerRepositoryId' => $providerRepositoryId,
@@ -1548,7 +1552,7 @@ App::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $jwt = ''; // initialize
+        $userJwt = ''; // initialize
         if (!$user->isEmpty()) { // If userId exists, generate a JWT for function
             $sessions = $user->getAttribute('sessions', []);
             $current = new Document();
@@ -1561,17 +1565,25 @@ App::post('/v1/functions/:functionId/executions')
             }
 
             if (!$current->isEmpty()) {
-                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
-                $jwt = $jwtObj->encode([
+                $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10);
+                $userJwt = $jwtObj->encode([
                     'userId' => $user->getId(),
                     'sessionId' => $current->getId(),
                 ]);
             }
         }
 
+        $jwtExpiry = $function->getAttribute('timeout', 900);
+        $jwtObj = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', $jwtExpiry, 10);
+        $apiToken = $jwtObj->encode([
+            'projectId' => $project->getId(),
+            'scopes' => $function->getAttribute('apiTokenScopes', [])
+        ]);
+
+        $headers['x-appwrite-api-token'] = $apiToken;
         $headers['x-appwrite-trigger'] = 'http';
         $headers['x-appwrite-user-id'] = $user->getId() ?? '';
-        $headers['x-appwrite-user-jwt'] = $jwt ?? '';
+        $headers['x-appwrite-user-jwt'] = $userJwt ?? '';
         $headers['x-appwrite-country-code'] = '';
         $headers['x-appwrite-continent-code'] = '';
         $headers['x-appwrite-continent-eu'] = 'false';
@@ -1637,7 +1649,7 @@ App::post('/v1/functions/:functionId/executions')
                 ->setHeaders($headers)
                 ->setPath($path)
                 ->setMethod($method)
-                ->setJWT($jwt)
+                ->setJWT($userJwt)
                 ->setProject($project)
                 ->setUser($user)
                 ->setParam('functionId', $function->getId())
@@ -1673,8 +1685,13 @@ App::post('/v1/functions/:functionId/executions')
             $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
         }
 
+        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+        $hostname = App::getEnv('_APP_DOMAIN');
+        $endpoint = $protocol . '://' . $hostname . "/v1";
+
         // Appwrite vars
         $vars = \array_merge($vars, [
+            'APPWRITE_FUNCTION_ENDPOINT' => $endpoint,
             'APPWRITE_FUNCTION_ID' => $functionId,
             'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
             'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
