@@ -571,6 +571,7 @@ services:
       - _APP_REDIS_PASS
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_SMS_PROJECTS_DENY_LIST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
