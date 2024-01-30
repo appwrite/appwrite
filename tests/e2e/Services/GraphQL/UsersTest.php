@@ -104,8 +104,8 @@ class UsersTest extends Scope
             'query' => $query,
             'variables' => [
                 'queries' => [
-                    'limit(100)',
-                    'offset(0)',
+                    Query::limit(100)->toString(),
+                    Query::offset(0)->toString(),
                 ],
             ]
         ];

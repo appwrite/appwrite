@@ -6,6 +6,7 @@ use Appwrite\Enum\MessageStatus;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\DSN\DSN;
 
 trait MessagingBase
@@ -315,7 +316,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                'equal("total", [0])'
+                Query::equal('total', [0])->toString(),
             ],
         ]);
 
@@ -328,7 +329,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                'greaterThan("total", 0)'
+                Query::greaterThan('total', 0)->toString(),
             ],
         ]);
 
@@ -519,7 +520,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -532,7 +535,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['offset(1)'],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -544,7 +549,10 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(1)', 'offset(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -560,7 +568,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['limit(-1)']
+            'queries' => [
+                Query::limit(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -570,7 +580,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['offset(-1)']
+            'queries' => [
+                Query::offset(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -580,7 +592,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['equal("$id", "asdf")']
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -590,7 +604,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['orderAsc("$id")']
+            'queries' => [
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -600,7 +616,9 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'queries' => ['cursorAsc("$id")']
+            'queries' => [
+                '{ "method": "cursorAsc", "attribute": "$id" }'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -714,7 +732,7 @@ trait MessagingBase
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
 
         $user = $response['body'];
-        var_dump($user);
+
         $this->assertEquals(1, \count($user['targets']));
         $targetId = $user['targets'][0]['$id'];
 
