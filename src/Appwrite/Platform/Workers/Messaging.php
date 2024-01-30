@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\DSN\DSN;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Adapters\SMS\Mock;
@@ -15,6 +16,7 @@ use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Appwrite\Event\Usage;
 
 class Messaging extends Action
 {
@@ -43,15 +45,17 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
-            ->callback(fn($message) => $this->action($message));
+            ->inject('queueForUsage')
+            ->callback(fn(Message $message, Usage $queueForUsage) => $this->action($message, $queueForUsage));
     }
 
     /**
      * @param Message $message
+     * @param Usage $queueForUsage
      * @return void
      * @throws Exception
      */
-    public function action(Message $message): void
+    public function action(Message $message, Usage $queueForUsage): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -59,16 +63,14 @@ class Messaging extends Action
             throw new Exception('Project not set in payload');
         }
 
-        Console::log($payload['project']['$id']);
+        $project = new Document($payload['project'] ?? []);
+
+        Console::log($project->getId());
+
         $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
         $denyList = explode(',', $denyList);
-        if (in_array($payload['project']['$id'], $denyList)) {
+        if (in_array($project->getId(), $denyList)) {
             Console::error("Project is in the deny list. Skipping ...");
-            return;
-        }
-
-        if (empty($payload)) {
-            Console::error('Payload arg not found');
             return;
         }
 
@@ -112,6 +114,11 @@ class Messaging extends Action
 
         try {
             $sms->send($message);
+
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_MESSAGES, 1)
+                ->trigger();
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }
