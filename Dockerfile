@@ -95,13 +95,8 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-webhooks && \
     chmod +x /usr/local/bin/worker-migrations && \
-    chmod +x /usr/local/bin/worker-hamster
+    chmod +x /usr/local/bin/worker-usage
 
-# Cloud Executabless
-    chmod +x /usr/local/bin/volume-sync && \
-    chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
-    chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
-    chmod +x /usr/local/bin/patch-delete-project-collections && \
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
