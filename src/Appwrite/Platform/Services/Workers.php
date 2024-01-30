@@ -12,7 +12,6 @@ use Appwrite\Platform\Workers\Databases;
 use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
-use Appwrite\Platform\Workers\Hamster;
 use Appwrite\Platform\Workers\Usage;
 use Appwrite\Platform\Workers\UsageHook;
 use Appwrite\Platform\Workers\Migrations;
