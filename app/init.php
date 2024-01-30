@@ -34,6 +34,7 @@ use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
+use Utopia\Database\Adapter\SQL;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
@@ -804,10 +805,10 @@ $register->set('pools', function () {
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                         return new PDOProxy(function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
                             return new PDO("mysql:host={$dsnHost};port={$dsnPort};dbname={$dsnDatabase};charset=utf8mb4", $dsnUser, $dsnPass, array(
+                                // No need to set PDO::ATTR_ERRMODE it is overwitten in PDOProxy
                                 PDO::ATTR_TIMEOUT => 3, // Seconds
                                 PDO::ATTR_PERSISTENT => true,
                                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                                PDO::ATTR_ERRMODE => App::isDevelopment() ? PDO::ERRMODE_WARNING : PDO::ERRMODE_SILENT, // If in production mode, warnings are not displayed
                                 PDO::ATTR_EMULATE_PREPARES => true,
                                 PDO::ATTR_STRINGIFY_FETCHES => true
                             ));
@@ -829,12 +830,10 @@ $register->set('pools', function () {
 
                 default:
                     throw new Exception(Exception::GENERAL_SERVER_ERROR, "Invalid scheme");
-                    break;
             }
 
             $pool = new Pool($name, $poolSize, function () use ($type, $resource, $dsn) {
                 // Get Adapter
-                $adapter = null;
                 switch ($type) {
                     case 'database':
                         $adapter = match ($dsn->getScheme()) {
@@ -843,7 +842,7 @@ $register->set('pools', function () {
                             default => null
                         };
 
-                        $adapter->setDefaultDatabase($dsn->getPath());
+                        $adapter->setDatabase($dsn->getPath());
                         break;
                     case 'pubsub':
                         $adapter = $resource();
@@ -863,7 +862,6 @@ $register->set('pools', function () {
 
                     default:
                         throw new Exception(Exception::GENERAL_SERVER_ERROR, "Server error: Missing adapter implementation.");
-                        break;
                 }
 
                 return $adapter;
@@ -880,22 +878,18 @@ $register->set('pools', function () {
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope
-       $dbHost = App::getEnv('_APP_DB_HOST', '');
-       $dbPort = App::getEnv('_APP_DB_PORT', '');
-       $dbUser = App::getEnv('_APP_DB_USER', '');
-       $dbPass = App::getEnv('_APP_DB_PASS', '');
-       $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
+    $dbHost = App::getEnv('_APP_DB_HOST', '');
+    $dbPort = App::getEnv('_APP_DB_PORT', '');
+    $dbUser = App::getEnv('_APP_DB_USER', '');
+    $dbPass = App::getEnv('_APP_DB_PASS', '');
+    $dbScheme = App::getEnv('_APP_DB_SCHEMA', '');
 
-       $pdo = new PDO("mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4", $dbUser, $dbPass, array(
-           PDO::ATTR_TIMEOUT => 3, // Seconds
-           PDO::ATTR_PERSISTENT => true,
-           PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-           PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-           PDO::ATTR_EMULATE_PREPARES => true,
-           PDO::ATTR_STRINGIFY_FETCHES => true,
-       ));
-
-       return $pdo;
+    return new PDO(
+        "mysql:host={$dbHost};port={$dbPort};dbname={$dbScheme};charset=utf8mb4",
+        $dbUser,
+        $dbPass,
+        SQL::getPDOAttributes()
+    );
 });
 
 $register->set('smtp', function () {

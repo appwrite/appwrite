@@ -116,7 +116,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
                 $index = 0;
                 do {

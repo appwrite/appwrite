@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 class MessagingConsoleClientTest extends Scope
 {
@@ -67,7 +68,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -79,7 +82,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)'],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -90,7 +95,10 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)', 'offset(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -105,7 +113,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(-1)']
+            'queries' => [
+                Query::limit(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -114,7 +124,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(-1)']
+            'queries' => [
+                Query::offset(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -123,7 +135,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("$id", "asdf")']
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -132,7 +146,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderAsc("$id")']
+            'queries' => [
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -141,7 +157,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAsc("$id")']
+            'queries' => [
+                '{ "method": "cursorAsc", "attribute":"$id" }'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -196,7 +214,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -208,7 +228,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)'],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -219,7 +241,10 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)', 'offset(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -234,7 +259,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(-1)']
+            'queries' => [
+                Query::limit(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -243,7 +270,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(-1)']
+            'queries' => [
+                Query::offset(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -252,7 +281,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("$id", "asdf")']
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -261,7 +292,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderAsc("$id")']
+            'queries' => [
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -270,7 +303,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAsc("$id")']
+            'queries' => [
+                '{"method":"cursorAsc","attribute":"$id","values":[]}'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -330,7 +365,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -342,7 +379,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)'],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -353,7 +392,10 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)', 'offset(1)'],
+            'queries' => [
+                Query::limit(1)->toString(),
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($logs['headers']['status-code'], 200);
@@ -368,7 +410,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(-1)']
+            'queries' => [
+                Query::limit(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -377,7 +421,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(-1)']
+            'queries' => [
+                Query::offset(-1)->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -386,7 +432,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['equal("$id", "asdf")']
+            'queries' => [
+                Query::equal('$id', ['asdf'])->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -395,7 +443,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['orderAsc("$id")']
+            'queries' => [
+                Query::orderAsc('$id')->toString(),
+            ],
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
@@ -404,7 +454,9 @@ class MessagingConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['cursorAsc("$id")']
+            'queries' => [
+                '{"method":"cursorAsc","attribute":"$id","values":[]}'
+            ]
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 400);
