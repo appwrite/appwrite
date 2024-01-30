@@ -99,15 +99,11 @@ class Usage extends Action
             $this->keys >= self::KEYS_THRESHOLD ||
             (time() - $this->lastTriggeredTime > self::KEYS_SENT_THRESHOLD  && $this->keys > 0)
         ) {
-            $offset = count($this->stats);
-            $chunk = array_slice($this->stats, 0, $offset, true);
-            array_splice($this->stats, 0, $offset);
-
             $queueForUsageDump
-                ->setStats($chunk)
+                ->setStats($this->stats)
                 ->trigger();
 
-            //$this->stats = [];
+            $this->stats = [];
             $this->keys = 0;
             $this->lastTriggeredTime = time();
         }
