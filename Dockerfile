@@ -74,7 +74,6 @@ RUN mkdir -p /storage/uploads && \
 # Executables
 RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/maintenance &&  \
-    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/install && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/migrate && \
@@ -85,6 +84,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/vars && \
+    chmod +x /usr/local/bin/queue-retry && \
+    chmod +x /usr/local/bin/queue-count-failed && \
+    chmod +x /usr/local/bin/queue-count-processing && \
+    chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-certificates && \
     chmod +x /usr/local/bin/worker-databases && \
