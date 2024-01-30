@@ -169,7 +169,8 @@ App::post('/v1/account')
                 ]);
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
@@ -273,7 +274,7 @@ App::post('/v1/account/sessions/email')
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $session = $dbForProject->createDocument('sessions', $session->setAttribute('$permissions', [
             Permission::read(Role::user($user->getId())),
@@ -607,7 +608,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $currentDocument = $dbForProject->getDocument('sessions', $current);
             if (!$currentDocument->isEmpty()) {
                 $dbForProject->deleteDocument('sessions', $currentDocument->getId());
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             }
         }
 
@@ -867,7 +868,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $state['success']['query'] = URLParser::unparseQuery($query);
         $state['success'] = URLParser::unparse($state['success']);
@@ -906,7 +907,7 @@ App::get('/v1/account/identities')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -1087,7 +1088,7 @@ App::post('/v1/account/tokens/magic-url')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if (empty($url)) {
             $url = $request->getProtocol() . '://' . $request->getHostname() . '/auth/magic-url';
@@ -1325,7 +1326,7 @@ App::post('/v1/account/tokens/email')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $subject = $locale->getText("emails.otpSession.subject");
         $customTemplate = $project->getAttribute('templates', [])['email.otpSession-' . $locale->default] ?? [];
@@ -1488,9 +1489,9 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::delete(Role::user($user->getId())),
         ]));
 
-    $dbForProject->deleteCachedDocument('users', $user->getId());
+    $dbForProject->purgeCachedDocument('users', $user->getId());
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
-    $dbForProject->deleteCachedDocument('users', $user->getId());
+    $dbForProject->purgeCachedDocument('users', $user->getId());
 
     if ($verifiedToken->getAttribute('type') === Auth::TOKEN_TYPE_MAGIC_URL) {
         $user->setAttribute('emailVerification', true);
@@ -1687,7 +1688,7 @@ App::post('/v1/account/tokens/phone')
                 ]);
                 $user->setAttribute('targets', [...$user->getAttribute('targets', []), $existingTarget]);
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $secret = Auth::codeGenerator();
@@ -1713,7 +1714,7 @@ App::post('/v1/account/tokens/phone')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -1870,7 +1871,7 @@ App::post('/v1/account/sessions/anonymous')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2006,7 +2007,7 @@ App::post('/v1/account/targets/push')
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2385,7 +2386,7 @@ App::patch('/v1/account/email')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email)));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -2466,7 +2467,7 @@ App::patch('/v1/account/phone')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 Authorization::skip(fn () => $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $phone)));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -2612,7 +2613,7 @@ App::delete('/v1/account/sessions/:sessionId')
                     ;
                 }
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
 
                 $queueForEvents
                     ->setParam('userId', $user->getId())
@@ -2691,7 +2692,7 @@ App::patch('/v1/account/sessions/:sessionId')
 
         // Save changes
         $dbForProject->updateDocument('sessions', $sessionId, $session);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2752,7 +2753,7 @@ App::delete('/v1/account/sessions')
             }
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -2837,7 +2838,7 @@ App::post('/v1/account/recovery')
                 Permission::delete(Role::user($profile->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $profile->getId(), 'secret' => $secret, 'expire' => $expire]);
@@ -3013,7 +3014,7 @@ App::put('/v1/account/recovery')
          *  the recovery token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $profile->getId())
@@ -3084,7 +3085,7 @@ App::post('/v1/account/verification')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $url = Template::parseURL($url);
         $url['query'] = Template::mergeQuery(((isset($url['query'])) ? $url['query'] : ''), ['userId' => $user->getId(), 'secret' => $verificationSecret, 'expire' => $expire]);
@@ -3233,7 +3234,7 @@ App::put('/v1/account/verification')
          *  the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $userId)
@@ -3306,7 +3307,7 @@ App::post('/v1/account/verification/phone')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -3402,7 +3403,7 @@ App::put('/v1/account/verification/phone')
          * We act like we're updating and validating the verification token but actually we don't need it anymore.
          */
         $dbForProject->deleteDocument('tokens', $verifiedToken->getId());
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3459,7 +3460,7 @@ App::put('/v1/account/targets/:targetId/push')
         $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
