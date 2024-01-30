@@ -19,6 +19,7 @@ ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
 use Appwrite\Event\Migration;
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
@@ -32,7 +33,6 @@ use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
-use Appwrite\Usage\Stats;
 use Utopia\App;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
@@ -66,9 +66,11 @@ use Ahc\Jwt\JWTException;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
@@ -168,10 +170,6 @@ const DELETE_TYPE_SESSIONS = 'sessions';
 const DELETE_TYPE_CACHE_BY_TIMESTAMP = 'cacheByTimeStamp';
 const DELETE_TYPE_CACHE_BY_RESOURCE  = 'cacheByResource';
 const DELETE_TYPE_SCHEDULES = 'schedules';
-// Compression type
-const COMPRESSION_TYPE_NONE = 'none';
-const COMPRESSION_TYPE_GZIP = 'gzip';
-const COMPRESSION_TYPE_ZSTD = 'zstd';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -237,6 +235,7 @@ Config::load('platforms', __DIR__ . '/config/platforms.php');
 Config::load('collections', __DIR__ . '/config/collections.php');
 Config::load('runtimes', __DIR__ . '/config/runtimes.php');
 Config::load('runtimes-v2', __DIR__ . '/config/runtimes-v2.php');
+Config::load('usage', __DIR__ . '/config/usage.php');
 Config::load('roles', __DIR__ . '/config/roles.php');  // User roles and scopes
 Config::load('scopes', __DIR__ . '/config/scopes.php');  // User roles and scopes
 Config::load('services', __DIR__ . '/config/services.php');  // List of services
@@ -781,31 +780,7 @@ $register->set('db', function () {
 
        return $pdo;
 });
-$register->set('influxdb', function () {
 
- // Register DB connection
-    $host = App::getEnv('_APP_INFLUXDB_HOST', '');
-    $port = App::getEnv('_APP_INFLUXDB_PORT', '');
-
-    if (empty($host) || empty($port)) {
-        return;
-    }
-    $driver = new InfluxDB\Driver\Curl("http://{$host}:{$port}");
-    $client = new InfluxDB\Client($host, $port, '', '', false, false, 5);
-    $client->setDriver($driver);
-
-    return $client;
-});
-$register->set('statsd', function () {
-    // Register DB connection
-    $host = App::getEnv('_APP_STATSD_HOST', 'telegraf');
-    $port = App::getEnv('_APP_STATSD_PORT', 8125);
-
-    $connection = new \Domnikl\Statsd\Connection\UdpSocket($host, $port);
-    $statsd = new \Domnikl\Statsd\Client($connection);
-
-    return $statsd;
-});
 $register->set('smtp', function () {
     $mail = new PHPMailer(true);
 
@@ -846,6 +821,9 @@ $register->set('passwordsDictionary', function () {
 $register->set('promiseAdapter', function () {
     return new Swoole();
 });
+$register->set('hooks', function () {
+    return new Hooks();
+});
 /*
  * Localization
  */
@@ -881,13 +859,14 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
+App::setResource('log', fn() => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
 
-App::setResource('loggerBreadcrumbs', function () {
-    return [];
-});
+App::setResource('hooks', function ($register) {
+    return $register->get('hooks');
+}, ['register']);
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
@@ -924,15 +903,15 @@ App::setResource('queueForAudits', function (Connection $queue) {
 App::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+App::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 App::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
 App::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
-App::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
 App::setResource('clients', function ($request, $console, $project) {
     $console->setAttribute('platforms', [ // Always allow current host
         '$collection' => ID::custom('platforms'),

@@ -338,7 +338,7 @@ return [
     ],
     [
         'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_INFLUXDB_HOST',
@@ -362,7 +362,7 @@ return [
     ],
     [
         'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_STATSD_HOST',
