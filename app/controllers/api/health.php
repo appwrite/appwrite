@@ -695,7 +695,7 @@ App::get('/v1/health/queue/failed/:name')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'health')
     ->label('sdk.method', 'getFailedJobs')
-    ->param('queueName', '', new WhiteList([
+    ->param('name', '', new WhiteList([
         Event::DATABASE_QUEUE_NAME,
         Event::DELETE_QUEUE_NAME,
         Event::AUDITS_QUEUE_NAME,
