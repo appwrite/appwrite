@@ -564,17 +564,15 @@ App::init()
         }
 
         if ($mode !== APP_MODE_ADMIN) {
-            $minFactors = $project->getAttribute('minFactors') ?? 1;
             $mfaEnabled = $user->getAttribute('mfa', false);
             $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
             $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
             $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
             $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            if ($mfaEnabled && $hasMoreFactors && $minFactors === 1) {
-                $minFactors = 2;
-            }
+            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+
             if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minFactors) {
+                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
                     throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
                 }
             }

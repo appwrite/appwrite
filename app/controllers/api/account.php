@@ -3499,7 +3499,7 @@ App::get('/v1/account/mfa/providers')
 
 App::post('/v1/account/mfa/:provider')
     ->desc('Add Authenticator')
-    ->groups(['api', 'account', 'mfa'])
+    ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'accounts.write')
     ->label('audits.event', 'user.update')
@@ -3559,7 +3559,7 @@ App::post('/v1/account/mfa/:provider')
 
 App::put('/v1/account/mfa/:provider')
     ->desc('Verify Authenticator')
-    ->groups(['api', 'account', 'mfa'])
+    ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
     ->label('scope', 'accounts.write')
     ->label('audits.event', 'user.update')
@@ -3697,11 +3697,13 @@ App::post('/v1/account/mfa/challenge')
     ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $code = Auth::codeGenerator();
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'provider' => $provider,
             'token' => Auth::tokenGenerator(),
+            'code' => $code,
             'expire' => $expire,
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
@@ -3709,6 +3711,8 @@ App::post('/v1/account/mfa/challenge')
                 Permission::delete(Role::user($user->getId())),
             ],
         ]);
+
+        $challenge = $dbForProject->createDocument('challenges', $challenge);
 
         switch ($provider) {
             case 'phone':
@@ -3722,11 +3726,14 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_PHONE_NOT_VERIFIED);
                 }
 
-                $code = Auth::codeGenerator();
-                $challenge->setAttribute('code', $code);
-                $messaging
-                    ->setRecipient($user->getAttribute('phone'))
-                    ->setMessage($code)
+                $queueForMessaging
+                    ->setMessage(new Document([
+                        '$id' => $challenge->getId(),
+                        'data' => [
+                            'content' => $code,
+                        ],
+                    ]))
+                    ->setRecipients([$user->getAttribute('phone')])
                     ->trigger();
                 break;
             case 'email':
@@ -3740,20 +3747,13 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_EMAIL_NOT_VERIFIED);
                 }
 
-                $code = Auth::codeGenerator();
-                $challenge->setAttribute('code', $code);
-                $from = $project->isEmpty() || $project->getId() === 'console' ? '' : \sprintf($locale->getText('emails.sender'), $project->getAttribute('name'));
-
-                $mails
-                    ->setSubject('mfa challenge')
+                $queueForMails
+                    ->setSubject("{$code} is your 6-digit code")
                     ->setBody($code)
-                    ->setFrom($from)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
                 break;
         }
-
-        $challenge = $dbForProject->createDocument('challenges', $challenge);
 
         $queueForEvents
             ->setParam('userId', $user->getId())

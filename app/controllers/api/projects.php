@@ -166,7 +166,6 @@ App::post('/v1/projects')
                 'webhooks' => null,
                 'keys' => null,
                 'auths' => $auths,
-                'minFactors' => 1,
                 'search' => implode(' ', [$projectId, $name]),
                 'database' => $database
             ]));
@@ -737,36 +736,6 @@ App::patch('/v1/projects/:projectId/auth/max-sessions')
 
         $dbForConsole->updateDocument('projects', $project->getId(), $project
             ->setAttribute('auths', $auths));
-
-        $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::patch('/v1/projects/:projectId/auth/mfa/factors')
-    ->desc('Update Project user minimum sessions factors')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateAuthMfaFactors')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('factors', false, new Range(1, 4), '')
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->action(function (string $projectId, int $factors, Response $response, Database $dbForConsole) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $auths = $project->getAttribute('auths', []);
-        $auths['minFactors'] = $factors;
-
-        $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('auths', $auths));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });

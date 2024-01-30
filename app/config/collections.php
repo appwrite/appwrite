@@ -4178,17 +4178,6 @@ $consoleCollections = array_merge([
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('minFactors'),
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 0,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => ID::custom('services'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
