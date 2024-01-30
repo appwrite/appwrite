@@ -150,7 +150,6 @@ class Messaging extends Action
 
         /** @var DSN $localDSN */
         foreach ($localDSNs as $localDSN) {
-           
             $localAdapter = null;
             try {
                 $localAdapter = self::createAdapterFromDSN($localDSN);
