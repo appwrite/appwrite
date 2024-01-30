@@ -3297,6 +3297,14 @@ App::delete('/v1/messaging/messages/:messageId')
                 throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
             case MessageStatus::SCHEDULED:
                 $scheduleId = $message->getAttribute('scheduleId');
+                $scheduledAt = $message->getAttribute('scheduledAt');
+
+                $now = DateTime::now();
+                $scheduledDate = DateTime::formatTz($scheduledAt);
+
+                if ($now > $scheduledDate) {
+                    throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+                }
 
                 if (!empty($scheduleId)) {
                     try {
