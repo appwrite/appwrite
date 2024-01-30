@@ -20,7 +20,7 @@ use Utopia\Queue\Message;
 
 class Messaging extends Action
 {
-    private ?DSN $dsn = null;
+    private array $dsns = [];
 
     public static function getName(): string
     {
@@ -32,9 +32,14 @@ class Messaging extends Action
      */
     public function __construct()
     {
-        $provider = App::getEnv('_APP_SMS_PROVIDER', '');
-        if (!empty($provider)) {
-            $this->dsn = new DSN($provider);
+        $providers = App::getEnv('_APP_SMS_PROVIDER', '');
+
+        if (!empty($providers)) {
+            $providers = explode(',', $providers);
+
+            foreach ($providers as $provider) {
+                $this->dsns[] = new DSN($provider);
+            }
         }
 
         $this
@@ -85,7 +90,10 @@ class Messaging extends Action
             return;
         }
 
-        $sms = self::createAdapterFromDSN($this->dsn);
+        $sms = count($this->dsns) > 1
+            ? self::createGEOSMSAdapter($this->dsns)
+            : self::createAdapterFromDSN($this->dsns[0]);
+
         $from = App::getEnv('_APP_SMS_FROM');
 
         if (empty($from)) {
@@ -129,45 +137,35 @@ class Messaging extends Action
                 return new Twilio($dsn->getUser(), $dsn->getPassword(), $from);
             case 'vonage':
                 return new Vonage($dsn->getUser(), $dsn->getPassword(), $from);
-            case 'geosms':
-                return self::createGEOSMSAdapter($dsn);
             default:
                 throw new \Exception('Unknown SMS provider: ' . $dsn->getHost());
         }
     }
 
-    protected static function createGEOSMSAdapter(DSN $dsn): GEOSMS
+    protected static function createGEOSMSAdapter(array $dsns): GEOSMS
     {
-        $defaultAdapter = self::createAdapterFromDSN(new DSN($dsn->getParam('default', '')));
+        $defaultAdapter = self::createAdapterFromDSN($dsns[0]);
         $geosms = new GEOSMS($defaultAdapter);
+        $localDSNs = array_slice($dsns, 1);
 
-        $parameters = [];
-        \parse_str($dsn->getQuery(), $parameters);
-        unset($parameters['default']);
-
-        foreach ($parameters as $parameter => $nestedDSN) {
-            // Extract the calling code in the format of local-callingCode
-            // e.g. ?local-1=twilio://...
-            $callingCodeMatches = [];
-            if (\preg_match('/^local-(\d+)$/', $parameter, $callingCodeMatches) !== 1) {
-                Console::warning('Ignoring invalid GEOSMS parameter: ' . $parameter);
+        /** @var DSN $localDSN */
+        foreach ($localDSNs as $localDSN) {
+           
+            $localAdapter = null;
+            try {
+                $localAdapter = self::createAdapterFromDSN($localDSN);
+            } catch (\Exception) {
+                Console::warning('Unable to create adapter: ' . $localDSN->getHost());
                 continue;
             }
 
-            $dsn = null;
-            try {
-                $dsn = new DSN($nestedDSN);
-            } catch (\Exception $e) {
-                Console::warning('Ignoring invalid GEOSMS adapter DSN: ' . $nestedDSN);
+            $callingCode = $localDSN->getParam('local', '');
+            if (empty($callingCode)) {
+                Console::warning('Unable to register adapter: ' . $localDSN->getHost() . '. Missing `local` parameter.');
                 continue;
             }
 
-            try {
-                $adapter = self::createAdapterFromDSN($dsn);
-                $geosms->setLocal($callingCodeMatches[1], $adapter);
-            } catch (\Exception $e) {
-                Console::warning('Ignoring invalid GEOSMS adapter: ' . $dsn->getHost());
-            }
+            $geosms->setLocal($callingCode, $localAdapter);
         }
 
         return $geosms;

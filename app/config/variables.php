@@ -441,7 +441,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91, vonage and geosms.\n\nWhen using the geosms provider, you must specify a default adapter. The default adapter can be set by URL encoding a normal provider configuration and passing it as the `default` parameter of the geosms configuration. e.g. `sms://geosms?default=[ENCODED_PROVIDER_CONFIG]`\nTo set local providers, for a specific country calling code, URL encode a provider configuration and pass it as the `local-[CALLING_CODE]` parameter of the geosms configuration. e.g. `sms://geosms?local-91=[ENCODED_PROVIDER_CONFIG]`",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91 and vonage.\n\nWhen using the using multiple providers, GEOSMS is enabled. With GEOSMS, the first adapter is used as the default adapter for calling codes, and subsequent adapters can add the `local` parameter to specify the calling code for which they are used: e.g. `sms://[user]:[pass]@twilio?local=default,sms://[user]:[pass]@msg91?local=91`",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
