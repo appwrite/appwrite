@@ -169,7 +169,7 @@ App::get('/v1/storage/buckets')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -451,7 +451,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
 
             $idValidator = new UID();
-            if (!$idValidator->isValid($request->getHeader('x-appwrite-id'))) {
+            if (!$idValidator->isValid($fileId)) {
                 throw new Exception(Exception::STORAGE_INVALID_APPWRITE_ID);
             }
 
@@ -745,7 +745,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -963,7 +963,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 break;
         }
 
-        $image = new Image($source);
+        try {
+            $image = new Image($source);
+        } catch (ImagickException $e) {
+            throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED, $e->getMessage());
+        }
 
         $image->crop((int) $width, (int) $height, $gravity);
 

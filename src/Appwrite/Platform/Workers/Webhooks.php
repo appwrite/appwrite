@@ -163,13 +163,13 @@ class Webhooks extends Action
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->deleteCachedDocument('projects', $project->getId());
+            $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
         } else {
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->deleteCachedDocument('projects', $project->getId());
+            $dbForConsole->purgeCachedDocument('projects', $project->getId());
         }
     }
 

@@ -62,10 +62,10 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -101,7 +101,7 @@ App::post('/v1/messaging/providers/mailgun')
             \array_key_exists('isEuRegion', $credentials) &&
             \array_key_exists('apiKey', $credentials) &&
             \array_key_exists('domain', $credentials) &&
-            \array_key_exists('from', $options)
+            \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -150,10 +150,10 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
-    ->param('replyToName', '', new Text(128), 'Name set in the reply to field for the mail. Default value is sender name.', true)
-    ->param('replyToEmail', '', new Text(128), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
@@ -179,7 +179,7 @@ App::post('/v1/messaging/providers/sendgrid')
         if (
             $enabled === true
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('from', $options)
+            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -616,8 +616,12 @@ App::post('/v1/messaging/providers/fcm')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?array $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, array|string|null $serviceAccountJSON, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $serviceAccountJSON = \is_string($serviceAccountJSON)
+            ? \json_decode($serviceAccountJSON, true)
+            : $serviceAccountJSON;
 
         $credentials = [];
 
@@ -757,7 +761,7 @@ App::get('/v1/messaging/providers')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -917,9 +921,10 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
-        $providerAttr = $provider->getAttribute('provider');
 
-        if ($providerAttr !== 'mailgun') {
+        $providerProvider = $provider->getAttribute('provider');
+
+        if ($providerProvider !== 'mailgun') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
@@ -949,7 +954,7 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if ($isEuRegion === true || $isEuRegion === false) {
+        if (!\is_null($isEuRegion)) {
             $credentials['isEuRegion'] = $isEuRegion;
         }
 
@@ -963,19 +968,21 @@ App::patch('/v1/messaging/providers/mailgun/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true &&
-                \array_key_exists('isEuRegion', $credentials) &&
-                \array_key_exists('apiKey', $credentials) &&
-                \array_key_exists('domain', $credentials) &&
-                \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('isEuRegion', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('domain', $credentials) &&
+                    \array_key_exists('fromEmail', $options)
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1054,17 +1061,19 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
             ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('apiKey', $provider->getAttribute('credentials'))
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
+                    \array_key_exists('fromEmail', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1133,18 +1142,20 @@ App::patch('/v1/messaging/providers/msg91/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('senderId', $credentials)
-                && \array_key_exists('authKey', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('senderId', $credentials) &&
+                    \array_key_exists('authKey', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1213,19 +1224,20 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('username', $credentials)
-                && \array_key_exists('password', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('username', $credentials) &&
+                    \array_key_exists('password', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1294,19 +1306,20 @@ App::patch('/v1/messaging/providers/textmagic/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('username', $credentials)
-                && \array_key_exists('apiKey', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('username', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1375,19 +1388,20 @@ App::patch('/v1/messaging/providers/twilio/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('accountSid', $credentials)
-                && \array_key_exists('authToken', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('accountSid', $credentials) &&
+                    \array_key_exists('authToken', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1456,19 +1470,20 @@ App::patch('/v1/messaging/providers/vonage/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('apiKey', $credentials)
-                && \array_key_exists('apiSecret', $credentials)
-                && \array_key_exists('from', $provider->getAttribute('options'))
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('apiKey', $credentials) &&
+                    \array_key_exists('apiSecret', $credentials) &&
+                    \array_key_exists('from', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1501,7 +1516,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, ?array $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, array|string|null $serviceAccountJSON, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1518,17 +1533,25 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
         }
 
         if (!\is_null($serviceAccountJSON)) {
-            $provider->setAttribute('credentials', ['serviceAccountJSON' => $serviceAccountJSON]);
+            $serviceAccountJSON = \is_string($serviceAccountJSON)
+                ? \json_decode($serviceAccountJSON, true)
+                : $serviceAccountJSON;
+
+            $provider->setAttribute('credentials', [
+                'serviceAccountJSON' => $serviceAccountJSON
+            ]);
         }
 
-        if ($enabled === true || $enabled === false) {
-            if ($enabled === true && \array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (\array_key_exists('serviceAccountJSON', $provider->getAttribute('credentials'))) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1601,20 +1624,21 @@ App::patch('/v1/messaging/providers/apns/:providerId')
 
         $provider->setAttribute('credentials', $credentials);
 
-        if ($enabled === true || $enabled === false) {
-            if (
-                $enabled === true
-                && \array_key_exists('authKey', $credentials)
-                && \array_key_exists('authKeyId', $credentials)
-                && \array_key_exists('teamId', $credentials)
-                && \array_key_exists('bundleId', $credentials)
-            ) {
-                $enabled = true;
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    \array_key_exists('authKey', $credentials) &&
+                    \array_key_exists('authKeyId', $credentials) &&
+                    \array_key_exists('teamId', $credentials) &&
+                    \array_key_exists('bundleId', $credentials)
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
             } else {
-                $enabled = false;
+                $provider->setAttribute('enabled', false);
             }
-
-            $provider->setAttribute('enabled', $enabled);
         }
 
         $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
@@ -1677,17 +1701,15 @@ App::post('/v1/messaging/topics')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
-    ->param('description', '', new Text(2048), 'Topic Description.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, string $description, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
         $topic = new Document([
             '$id' => $topicId,
             'name' => $name,
-            'description' => $description
         ]);
 
         try {
@@ -1727,7 +1749,7 @@ App::get('/v1/messaging/topics')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -1874,11 +1896,10 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.', true)
-    ->param('description', '', new Text(2048), 'Topic Description.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, string $description, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -1887,10 +1908,6 @@ App::patch('/v1/messaging/topics/:topicId')
 
         if (!empty($name)) {
             $topic->setAttribute('name', $name);
-        }
-
-        if (!empty($description)) {
-            $topic->setAttribute('description', $description);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
@@ -2054,7 +2071,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
         \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2277,7 +2294,6 @@ App::post('/v1/messaging/messages/email')
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
-    ->param('description', '', new Text(256), 'Description for message.', true)
     ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -2287,7 +2303,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $description, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2326,7 +2342,6 @@ App::post('/v1/messaging/messages/email')
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
-            'description' => $description,
             'scheduledAt' => $scheduledAt,
             'data' => [
                 'subject' => $subject,
@@ -2396,7 +2411,6 @@ App::post('/v1/messaging/messages/sms')
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
     ->inject('queueForEvents')
@@ -2405,7 +2419,7 @@ App::post('/v1/messaging/messages/sms')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $description, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $content, array $topics, array $users, array $targets, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2442,7 +2456,6 @@ App::post('/v1/messaging/messages/sms')
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
-            'description' => $description,
             'data' => [
                 'content' => $content,
             ],
@@ -2508,7 +2521,6 @@ App::post('/v1/messaging/messages/push')
     ->param('topics', [], new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', [], new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('description', '', new Text(256), 'Description for Message.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
@@ -2524,7 +2536,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, string $description, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2571,7 +2583,6 @@ App::post('/v1/messaging/messages/push')
             'topics' => $topics,
             'users' => $users,
             'targets' => $targets,
-            'description' => $description,
             'scheduledAt' => $scheduledAt,
             'data' => $pushData,
             'status' => $status,
@@ -2639,7 +2650,7 @@ App::get('/v1/messaging/messages')
         }
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2782,7 +2793,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
         $queries[] = Query::equal('$id', $targetIDs);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2845,7 +2856,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('subject', null, new Text(998), 'Email Subject.', true)
-    ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
     ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', null, new Boolean(), 'Is content of type HTML', true)
@@ -2858,7 +2868,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $description, ?string $content, ?string $status, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $subject, ?string $content, ?string $status, ?bool $html, ?array $cc, ?array $bcc, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2908,10 +2918,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
         }
 
         $message->setAttribute('data', $data);
-
-        if (!\is_null($description)) {
-            $message->setAttribute('description', $description);
-        }
 
         if (!\is_null($status)) {
             $message->setAttribute('status', $status);
@@ -2983,7 +2989,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('content', null, new Text(64230), 'Email Content.', true)
     ->param('status', null, new WhiteList(['draft', 'cancelled', 'processing']), 'Message Status. Value must be either draft or cancelled or processing.', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -2993,7 +2998,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $content, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $content, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3030,10 +3035,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (!\is_null($status)) {
             $message->setAttribute('status', $status);
-        }
-
-        if (!\is_null($description)) {
-            $message->setAttribute('description', $description);
         }
 
         if (!\is_null($scheduledAt)) {
@@ -3102,7 +3103,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('topics', null, new ArrayList(new UID()), 'List of Topic IDs.', true)
     ->param('users', null, new ArrayList(new UID()), 'List of User IDs.', true)
     ->param('targets', null, new ArrayList(new UID()), 'List of Targets IDs.', true)
-    ->param('description', null, new Text(256), 'Description for Message.', true)
     ->param('title', null, new Text(256), 'Title for push notification.', true)
     ->param('body', null, new Text(64230), 'Body for push notification.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
@@ -3120,7 +3120,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $description, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3191,10 +3191,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $message->setAttribute('status', $status);
         }
 
-        if (!\is_null($description)) {
-            $message->setAttribute('description', $description);
-        }
-
         if (!\is_null($scheduledAt)) {
             if (\is_null($message->getAttribute(('scheduleId')))) {
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -3241,4 +3237,60 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $response
             ->dynamic($message, Response::MODEL_MESSAGE);
+    });
+
+App::delete('/v1/messaging/messages/:messageId')
+    ->desc('Delete a message')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'message.delete')
+    ->label('audits.resource', 'message/{request.route.messageId}')
+    ->label('event', 'messages.[messageId].delete')
+    ->label('scope', 'messages.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'delete')
+    ->label('sdk.description', '/docs/references/messaging/delete-message.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('messageId', '', new UID(), 'Message ID.')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->inject('response')
+    ->action(function (string $messageId, Database $dbForProject, Database $dbForConsole, Response $response) {
+        $message = $dbForProject->getDocument('messages', $messageId);
+
+        if ($message->isEmpty()) {
+            throw new Exception(Exception::MESSAGE_NOT_FOUND);
+        }
+
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+            case MessageStatus::SCHEDULED:
+                $scheduleId = $message->getAttribute('scheduleId');
+                $scheduledAt = $message->getAttribute('scheduledAt');
+
+                $now = DateTime::now();
+                $scheduledDate = DateTime::formatTz($scheduledAt);
+
+                if ($now > $scheduledDate) {
+                    throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+                }
+
+                if (!empty($scheduleId)) {
+                    try {
+                        $dbForConsole->deleteDocument('schedules', $scheduleId);
+                    } catch (Exception) {
+                        // Ignore
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+
+        $dbForProject->deleteDocument('messages', $message->getId());
+
+        $response->noContent();
     });

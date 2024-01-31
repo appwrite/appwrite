@@ -519,7 +519,7 @@ App::init()
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
                     $key->setAttribute('accessedAt', DateTime::now());
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -533,7 +533,7 @@ App::init()
                         /** Update access time as well */
                         $key->setAttribute('accessedAt', Datetime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
                     }
                 }
             }
@@ -747,7 +747,7 @@ App::error()
             'code' => $code,
             'file' => $file,
             'line' => $line,
-            'trace' => $trace,
+            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
             'version' => $version,
             'type' => $type,
         ] : [

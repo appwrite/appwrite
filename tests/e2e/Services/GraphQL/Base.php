@@ -2000,11 +2000,10 @@ trait Base
                     }
                 }';
             case self::$CREATE_TOPIC:
-                return 'mutation createTopic($topicId: String!, $name: String!, $description: String!) {
-                    messagingCreateTopic(topicId: $topicId, name: $name, description: $description) {
+                return 'mutation createTopic($topicId: String!, $name: String!) {
+                    messagingCreateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
-                        description
                     }
                 }';
             case self::$LIST_TOPICS:
@@ -2014,7 +2013,6 @@ trait Base
                         topics {
                             _id
                             name
-                            description
                         }
                     }
                 }';
@@ -2023,15 +2021,13 @@ trait Base
                     messagingGetTopic(topicId: $topicId) {
                         _id
                         name
-                        description
                     }
                 }';
             case self::$UPDATE_TOPIC:
-                return 'mutation updateTopic($topicId: String!, $name: String!, $description: String!) {
-                    messagingUpdateTopic(topicId: $topicId, name: $name, description: $description) {
+                return 'mutation updateTopic($topicId: String!, $name: String!) {
+                    messagingUpdateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
-                        description
                     }
                 }';
             case self::$DELETE_TOPIC:
@@ -2098,8 +2094,8 @@ trait Base
                     }
             }';
             case self::$CREATE_EMAIL:
-                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $description: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
-                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
+                return 'mutation createEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String!, $content: String!, $status: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+                    messagingCreateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2109,12 +2105,11 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$CREATE_SMS:
-                return 'mutation createSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String!, $status: String, $description: String, $scheduledAt: String) {
-                    messagingCreateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                return 'mutation createSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String!, $status: String, $scheduledAt: String) {
+                    messagingCreateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2124,12 +2119,11 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$CREATE_PUSH_NOTIFICATION:
-                return 'mutation createPushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $scheduledAt: String) {
-                    messagingCreatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                return 'mutation createPushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String!, $body: String!, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $scheduledAt: String) {
+                    messagingCreatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2139,7 +2133,6 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$LIST_MESSAGES:
@@ -2157,7 +2150,6 @@ trait Base
                             deliveryErrors
                             deliveredTotal
                             status
-                            description
                         }
                     }
                 }';
@@ -2174,12 +2166,11 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$UPDATE_EMAIL:
-                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, $description: String, $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
-                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, description: $description, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
+                return 'mutation updateEmail($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $subject: String, $content: String, $status: String, , $html: Boolean, $cc: [String], $bcc: [String], $scheduledAt: String) {
+                    messagingUpdateEmail(messageId: $messageId, topics: $topics, users: $users, targets: $targets, subject: $subject, content: $content, status: $status, html: $html, cc: $cc, bcc: $bcc, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2189,12 +2180,11 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$UPDATE_SMS:
-                return 'mutation updateSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String, $status: String, $description: String, $scheduledAt: String) {
-                    messagingUpdateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                return 'mutation updateSMS($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $content: String, $status: String, $scheduledAt: String) {
+                    messagingUpdateSMS(messageId: $messageId, topics: $topics, users: $users, targets: $targets, content: $content, status: $status, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2204,12 +2194,11 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$UPDATE_PUSH_NOTIFICATION:
-                return 'mutation updatePushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $description: String, $scheduledAt: String) {
-                    messagingUpdatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, description: $description, scheduledAt: $scheduledAt) {
+                return 'mutation updatePushNotification($messageId: String!, $topics: [String!], $users: [String!], $targets: [String!], $title: String, $body: String, $data: Json, $action: String, $icon: String, $sound: String, $color: String, $tag: String, $badge: String, $status: String, $scheduledAt: String) {
+                    messagingUpdatePushNotification(messageId: $messageId, topics: $topics, users: $users, targets: $targets, title: $title, body: $body, data: $data, action: $action, icon: $icon, sound: $sound, color: $color, tag: $tag, badge: $badge, status: $status, scheduledAt: $scheduledAt) {
                         _id
                         topics
                         users
@@ -2219,7 +2208,6 @@ trait Base
                         deliveryErrors
                         deliveredTotal
                         status
-                        description
                     }
                 }';
             case self::$COMPLEX_QUERY:
