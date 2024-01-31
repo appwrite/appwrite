@@ -144,9 +144,20 @@ class Messaging extends Action
 
     protected static function createGEOSMSAdapter(array $dsns): GEOSMS
     {
-        $defaultAdapter = self::createAdapterFromDSN($dsns[0]);
+        $defaultDSN = null;
+        $localDSNs = [];
+
+        /** @var DSN $dsn */
+        foreach ($dsns as $dsn) {
+            if ($dsn->getParam('local', '') === 'default') {
+                $defaultDSN = $dsn;
+            } else {
+                $localDSNs[] = $dsn;
+            }
+        }
+
+        $defaultAdapter = self::createAdapterFromDSN($defaultDSN);
         $geosms = new GEOSMS($defaultAdapter);
-        $localDSNs = array_slice($dsns, 1);
 
         /** @var DSN $localDSN */
         foreach ($localDSNs as $localDSN) {
