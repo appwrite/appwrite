@@ -116,7 +116,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
 
                 Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
-                $dbForProject->deleteCachedDocument('users', $user->getId());
+                $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
                 $index = 0;
                 do {
@@ -521,7 +521,7 @@ App::get('/v1/avatars/initials')
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = null;
+        $initials = '';
         $code = 0;
 
         foreach ($words as $key => $w) {

@@ -6,7 +6,9 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 class StorageCustomServerTest extends Scope
@@ -98,7 +100,9 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -108,7 +112,9 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => [
+                Query::offset(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -118,7 +124,9 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("$id", "bucket1")' ],
+            'queries' => [
+                Query::equal('$id', ['bucket1'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -128,7 +136,9 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("fileSecurity", true)' ],
+            'queries' => [
+                Query::equal('fileSecurity', [true])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -138,7 +148,9 @@ class StorageCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $response['body']['buckets'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $response['body']['buckets'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);

@@ -164,7 +164,7 @@ App::get('/v1/proxy/rules')
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
         // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

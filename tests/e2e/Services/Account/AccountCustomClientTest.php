@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 use function sleep;
@@ -344,7 +345,9 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => [
+                Query::limit(1)->toString()
+            ]
         ]);
 
         $this->assertEquals($responseLimit['headers']['status-code'], 200);
@@ -361,7 +364,9 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'queries' => [ 'offset(1)' ],
+            'queries' => [
+                Query::offset(1)->toString()
+            ]
         ]);
 
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
@@ -378,7 +383,10 @@ class AccountCustomClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
         ]), [
-            'queries' => [ 'limit(1)', 'offset(1)' ],
+            'queries' => [
+                Query::offset(1)->toString(),
+                Query::limit(1)->toString()
+            ]
         ]);
 
         $this->assertEquals($responseLimitOffset['headers']['status-code'], 200);
