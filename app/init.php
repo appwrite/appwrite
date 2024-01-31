@@ -47,13 +47,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Locale\Locale;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Adapters\SMS\Mock;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
-use Utopia\Messaging\Adapters\SMS\Msg91;
-use Utopia\Messaging\Adapters\SMS\Telesign;
-use Utopia\Messaging\Adapters\SMS\TextMagic;
-use Utopia\Messaging\Adapters\SMS\Twilio;
-use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -1340,22 +1334,6 @@ App::setResource('passwordsDictionary', function ($register) {
     /** @var Utopia\Registry\Registry $register */
     return $register->get('passwordsDictionary');
 }, ['register']);
-
-App::setResource('sms', function () {
-    $dsn = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
-    $user = $dsn->getUser();
-    $secret = $dsn->getPassword();
-
-    return match ($dsn->getHost()) {
-        'mock' => new Mock($user, $secret), // used for tests
-        'twilio' => new Twilio($user, $secret),
-        'text-magic' => new TextMagic($user, $secret),
-        'telesign' => new Telesign($user, $secret),
-        'msg91' => new Msg91($user, $secret),
-        'vonage' => new Vonage($user, $secret),
-        default => null
-    };
-});
 
 App::setResource('servers', function () {
     $platforms = Config::getParam('platforms');

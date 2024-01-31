@@ -7,21 +7,20 @@ use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\DSN\DSN;
 use Utopia\Messaging\Messages\SMS;
+use Utopia\Messaging\Adapters\SMS as SMSAdapter;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
 use Utopia\Messaging\Adapters\SMS\TextMagic;
 use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
+use Utopia\Messaging\Adapters\SMS\GEOSMS;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 
 class Messaging extends Action
 {
-    private ?DSN $dsn = null;
-    private string $user = '';
-    private string $secret = '';
-    private string $provider = '';
+    private array $dsns = [];
 
     public static function getName(): string
     {
@@ -33,11 +32,14 @@ class Messaging extends Action
      */
     public function __construct()
     {
-        $this->provider  = App::getEnv('_APP_SMS_PROVIDER', '');
-        if (!empty($this->provider)) {
-            $this->dsn = new DSN($this->provider);
-            $this->user = $this->dsn->getUser();
-            $this->secret = $this->dsn->getPassword();
+        $providers = App::getEnv('_APP_SMS_PROVIDER', '');
+
+        if (!empty($providers)) {
+            $providers = explode(',', $providers);
+
+            foreach ($providers as $provider) {
+                $this->dsns[] = new DSN($provider);
+            }
         }
 
         $this
@@ -82,20 +84,15 @@ class Messaging extends Action
             return;
         }
 
-        $sms =  match ($this->dsn->getHost()) {
-            'mock' => new Mock($this->user, $this->secret), // used for tests
-            'twilio' => new Twilio($this->user, $this->secret),
-            'text-magic' => new TextMagic($this->user, $this->secret),
-            'telesign' => new Telesign($this->user, $this->secret),
-            'msg91' => new Msg91($this->user, $this->secret),
-            'vonage' => new Vonage($this->user, $this->secret),
-            default => null
-        };
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
             Console::error('Skipped sms processing. No Phone provider has been set.');
             return;
         }
+
+        $sms = count($this->dsns) > 1
+            ? self::createGEOSMSAdapter($this->dsns)
+            : self::createAdapterFromDSN($this->dsns[0]);
 
         $from = App::getEnv('_APP_SMS_FROM');
 
@@ -115,5 +112,61 @@ class Messaging extends Action
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }
+    }
+
+    protected static function createAdapterFromDSN(DSN $dsn): SMSAdapter
+    {
+        $from = empty($dsn->getParam('from', '')) ? null : $dsn->getParam('from', '');
+
+        switch ($dsn->getHost()) {
+            case 'mock':
+                return new Mock($dsn->getUser(), $dsn->getPassword());
+            case 'msg91':
+                $adapter = new Msg91($dsn->getUser(), $dsn->getPassword());
+                $template = $dsn->getParam('template', App::getEnv('_APP_SMS_FROM', ''));
+                if (!empty($template)) {
+                    $adapter->setTemplate($template);
+                }
+                return $adapter;
+            case 'telesign':
+                return new Telesign($dsn->getUser(), $dsn->getPassword());
+            case 'textmagic':
+            case 'text-magic':
+                return new TextMagic($dsn->getUser(), $dsn->getPassword(), $from);
+            case 'twilio':
+                return new Twilio($dsn->getUser(), $dsn->getPassword(), $from);
+            case 'vonage':
+                return new Vonage($dsn->getUser(), $dsn->getPassword(), $from);
+            default:
+                throw new \Exception('Unknown SMS provider: ' . $dsn->getHost());
+        }
+    }
+
+    protected static function createGEOSMSAdapter(array $dsns): GEOSMS
+    {
+        $defaultAdapter = self::createAdapterFromDSN($dsns[0]);
+        $geosms = new GEOSMS($defaultAdapter);
+        $localDSNs = array_slice($dsns, 1);
+
+        /** @var DSN $localDSN */
+        foreach ($localDSNs as $localDSN) {
+            $localAdapter = null;
+            try {
+                $localAdapter = self::createAdapterFromDSN($localDSN);
+            } catch (\Exception) {
+                Console::warning('Unable to create adapter: ' . $localDSN->getHost());
+                continue;
+            }
+
+            $callingCode = $localDSN->getParam('local', '');
+            if (empty($callingCode)) {
+                Console::warning('Unable to register adapter: ' . $localDSN->getHost() . '. Missing `local` parameter.');
+                continue;
+            }
+
+            $geosms->setLocal($callingCode, $localAdapter);
+        }
+
+        return $geosms;
     }
 }
