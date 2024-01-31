@@ -154,7 +154,7 @@ Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
 Server::setResource('queueForMessaging', function (Connection $queue) {
-    return new Phone($queue);
+    return new Messaging($queue);
 }, ['queue']);
 Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
@@ -227,6 +227,12 @@ if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
 }
 
+if (\str_starts_with($workerName, 'databases')) {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+} else {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+}
+
 try {
     /**
      * Any worker can be configured with the following env vars:
@@ -234,12 +240,6 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
-    if ($workerName === 'databases') {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-    } else {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
-    }
-
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
@@ -265,20 +265,23 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
+    ->inject('pools')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools) use ($queueName) {
+        $pools->reclaim();
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
         }
 
-        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
+        if ($logger) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
+            $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());
