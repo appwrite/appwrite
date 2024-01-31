@@ -4,8 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
@@ -23,10 +23,10 @@ use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
-use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device\Local;
+use Utopia\Storage\Storage;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 class Builds extends Action
@@ -47,12 +47,11 @@ class Builds extends Action
             ->inject('dbForConsole')
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
-            ->inject('usage')
+            ->inject('queueForUsage')
             ->inject('cache')
             ->inject('dbForProject')
             ->inject('getFunctionsDevice')
-            ->inject('log')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $getFunctionsDevice, $log));
+            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $queueForUsage, $cache, $dbForProject, $getFunctionsDevice));
     }
 
     /**
@@ -60,15 +59,14 @@ class Builds extends Action
      * @param Database $dbForConsole
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Cache $cache
      * @param Database $dbForProject
      * @param callable $getFunctionsDevice
-     * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Stats $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -82,15 +80,12 @@ class Builds extends Action
         $deployment = new Document($payload['deployment'] ?? []);
         $template = new Document($payload['template'] ?? []);
 
-        $log->addTag('projectId', $project->getId());
-        $log->addTag('type', $type);
-
         switch ($type) {
             case BUILD_TYPE_DEPLOYMENT:
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $usage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template);
                 break;
 
             default:
@@ -102,7 +97,7 @@ class Builds extends Action
      * @param callable $getFunctionsDevice
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
-     * @param Stats $usage
+     * @param Usage $queueForUsage
      * @param Database $dbForConsole
      * @param Database $dbForProject
      * @param GitHub $github
@@ -110,27 +105,20 @@ class Builds extends Action
      * @param Document $function
      * @param Document $deployment
      * @param Document $template
-     * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Stats $usage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
-        $functionId = $function->getId();
-        $log->addTag('functionId', $function->getId());
-
-        $function = $dbForProject->getDocument('functions', $functionId);
+        $function = $dbForProject->getDocument('functions', $function->getId());
         if ($function->isEmpty()) {
             throw new Exception('Function not found', 404);
         }
 
-        $deploymentId = $deployment->getId();
-        $log->addTag('deploymentId', $deploymentId);
-
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+        $deployment = $dbForProject->getDocument('deployments', $deployment->getId());
         if ($deployment->isEmpty()) {
             throw new Exception('Deployment not found', 404);
         }
@@ -512,7 +500,10 @@ class Builds extends Action
             $build->setAttribute('endTime', $endTime);
             $build->setAttribute('duration', \intval(\ceil($durationEnd - $durationStart)));
             $build->setAttribute('status', 'failed');
-            $build->setAttribute('logs', $th->getMessage() . "\n" . $th->getFile() . ':' . $th->getLine() . "\n" . $th->getTraceAsString());
+            $build->setAttribute('logs', $th->getMessage());
+            Console::error($th->getMessage());
+            Console::error($th->getFile() . ':' . $th->getLine());
+            Console::error($th->getTraceAsString());
 
             if ($isVcsEnabled) {
                 $this->runGitAction('failed', $github, $providerCommitHash, $owner, $repositoryName, $project, $function, $deployment->getId(), $dbForProject, $dbForConsole);
@@ -537,19 +528,16 @@ class Builds extends Action
                 roles: $target['roles']
             );
 
-            /** Update usage stats */
-            if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-                $usage
-                    ->setParam('projectInternalId', $project->getInternalId())
-                    ->setParam('projectId', $project->getId())
-                    ->setParam('functionId', $function->getId())
-                    ->setParam('builds.{scope}.compute', 1)
-                    ->setParam('buildStatus', $build->getAttribute('status', ''))
-                    ->setParam('buildTime', $build->getAttribute('duration'))
-                    ->setParam('networkRequestSize', 0)
-                    ->setParam('networkResponseSize', 0)
-                    ->submit();
-            }
+            /** Trigger usage queue */
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_BUILDS, 1) // per project
+                ->addMetric(METRIC_BUILDS_STORAGE, $build->getAttribute('size', 0))
+                ->addMetric(METRIC_BUILDS_COMPUTE, (int)$build->getAttribute('duration', 0) * 1000)
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS), 1) // per function
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_STORAGE), $build->getAttribute('size', 0))
+                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_BUILDS_COMPUTE), (int)$build->getAttribute('duration', 0) * 1000)
+                ->trigger();
         }
     }
 

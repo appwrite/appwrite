@@ -7,7 +7,7 @@ use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Runtime;
 use Utopia\App;
-use Utopia\Logger\Log;
+use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Registry\Registry;
@@ -28,19 +28,17 @@ class Mails extends Action
             ->desc('Mails worker')
             ->inject('message')
             ->inject('register')
-            ->inject('log')
-            ->callback(fn (Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
+            ->callback(fn($message, $register) => $this->action($message, $register));
     }
 
     /**
      * @param Message $message
      * @param Registry $register
-     * @param Log $log
      * @throws \PHPMailer\PHPMailer\Exception
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Registry $register, Log $log): void
+    public function action(Message $message, Registry $register): void
     {
         Runtime::setHookFlags(SWOOLE_HOOK_ALL ^ SWOOLE_HOOK_TCP);
         $payload = $message->getPayload() ?? [];
@@ -52,33 +50,25 @@ class Mails extends Action
         $smtp = $payload['smtp'];
 
         if (empty($smtp) && empty(App::getEnv('_APP_SMTP_HOST'))) {
-            throw new Exception('Skipped mail processing. No SMTP configuration has been set.');
+            Console::info('Skipped mail processing. No SMTP configuration has been set.');
+            return;
         }
-
-        $log->addTag('type', empty($smtp) ? 'cloud' : 'smtp');
-
-        $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-        $hostname = App::getEnv('_APP_DOMAIN');
 
         $recipient = $payload['recipient'];
         $subject = $payload['subject'];
         $variables = $payload['variables'];
-        $variables['host'] = $protocol . '://' . $hostname;
         $name = $payload['name'];
         $body = $payload['body'];
-
-        $variables['subject'] = $subject;
-        $variables['year'] = date("Y");
-
+        $attachment = $payload['attachment'] ?? [];
         $bodyTemplate = $payload['bodyTemplate'];
         if (empty($bodyTemplate)) {
             $bodyTemplate = __DIR__ . '/../../../../app/config/locale/templates/email-base.tpl';
         }
-
         $bodyTemplate = Template::fromFile($bodyTemplate);
-        $bodyTemplate->setParam('{{body}}', $body);
+        $bodyTemplate->setParam('{{body}}', $body, escapeHtml: false);
         foreach ($variables as $key => $value) {
-            $bodyTemplate->setParam('{{' . $key . '}}', $value);
+            // TODO: hotfix for redirect param
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
         }
         $body = $bodyTemplate->render();
 
@@ -103,21 +93,15 @@ class Mails extends Action
         $mail->addAddress($recipient, $name);
         $mail->Subject = $subject;
         $mail->Body = $body;
-
-        $mail->AltBody = $body;
-        $mail->AltBody = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $mail->AltBody);
-        $mail->AltBody = \strip_tags($mail->AltBody);
-        $mail->AltBody = \trim($mail->AltBody);
-
-        $replyTo = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $replyToName = \urldecode(App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'));
-
-        if (!empty($smtp)) {
-            $replyTo = !empty($smtp['replyTo']) ? $smtp['replyTo'] : $smtp['senderEmail'];
-            $replyToName = $smtp['senderName'];
+        $mail->AltBody = \strip_tags($body);
+        if (!empty($attachment['content'] ?? '')) {
+            $mail->AddStringAttachment(
+                base64_decode($attachment['content']),
+                $attachment['filename'] ?? 'unknown.file',
+                $attachment['encoding'] ?? PHPMailer::ENCODING_BASE64,
+                $attachment['type'] ?? 'plain/text'
+            );
         }
-
-        $mail->addReplyTo($replyTo, $replyToName);
 
         try {
             $mail->send();
@@ -151,6 +135,10 @@ class Mails extends Action
         $mail->CharSet = 'UTF-8';
 
         $mail->setFrom($smtp['senderEmail'], $smtp['senderName']);
+
+        if (!empty($smtp['replyTo'])) {
+            $mail->addReplyTo($smtp['replyTo'], $smtp['senderName']);
+        }
 
         $mail->isHTML();
 

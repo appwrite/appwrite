@@ -1,3 +1,14 @@
+# Version 1.4.14
+
+## Changes
+- New usage metrics collection flow [#7005](https://github.com/appwrite/appwrite/pull/7005)
+  - Deprecated influxdb, telegraf containers and removed all of their occurrences from the code.
+  - Removed _APP_INFLUXDB_HOST, _APP_INFLUXDB_PORT, _APP_STATSD_HOST, _APP_STATSD_PORT env variables.
+  - Removed usage labels dependency.
+  - Dropped type attribute from stats collection.
+  - Usage metrics are processed via new usage worker.
+  - updated Metric names.
+  
 # Version 1.4.13
 
 ## Notable changes
@@ -48,6 +59,7 @@
 * Fix regression from worker refactor [#7074](https://github.com/appwrite/appwrite/pull/7074)
 * Use getQueueSize() in the Health service's get X queue endpoints [#7073](https://github.com/appwrite/appwrite/pull/7073)
 * Delete linked VCS repos and comments [#7066](https://github.com/appwrite/appwrite/pull/7066)
+
 
 # Version 1.4.9
 
