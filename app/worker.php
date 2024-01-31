@@ -11,6 +11,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;

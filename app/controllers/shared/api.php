@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
@@ -149,14 +150,14 @@ App::init()
     ->inject('project')
     ->inject('user')
     ->inject('queueForEvents')
+    ->inject('queueForMessaging')
     ->inject('queueForAudits')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
+    ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('queueForMails')
-    ->inject('queueForUsage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Usage $queueForUsage) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -232,6 +233,9 @@ App::init()
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
             ->setUser($user);
+
+        $queueForMessaging
+            ->setProject($project);
 
         $queueForAudits
             ->setMode($mode)
@@ -355,6 +359,12 @@ App::init()
             case 'jwt':
                 if (($auths['JWT'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'JWT authentication is disabled for this project');
+                }
+                break;
+
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
                 }
                 break;
 

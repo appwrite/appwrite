@@ -20,7 +20,9 @@ use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Utopia\Storage\Device;
@@ -49,14 +51,15 @@ class Deletes extends Action
             ->inject('abuseRetention')
             ->inject('executionRetention')
             ->inject('auditRetention')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $abuseRetention, $executionRetention, $auditRetention));
+            ->inject('log')
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $abuseRetention, $executionRetention, $auditRetention, $log));
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -71,7 +74,10 @@ class Deletes extends Action
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
 
-        switch (strval($type)) {
+        $log->addTag('projectId', $project->getId());
+        $log->addTag('type', $type);
+
+        switch (\strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
                     case DELETE_TYPE_DATABASES:
@@ -151,10 +157,16 @@ class Deletes extends Action
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_SCHEDULES:
-                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
+                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
+                break;
+            case DELETE_TYPE_TOPIC:
+                $this->deleteTopic($project, $getProjectDB, $document);
+                break;
+            case DELETE_TYPE_TARGET:
+                $this->deleteTarget($project, $getProjectDB, $document);
                 break;
             default:
-                Console::error('No delete operation for type: ' . $type);
+                throw new \Exception('No delete operation for type: ' . \strval($type));
                 break;
         }
     }
@@ -163,17 +175,21 @@ class Deletes extends Action
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $datetime
+     * @param Document|null $document
      * @return void
      * @throws Authorization
-     * @throws Throwable
+     * @throws Conflict
+     * @throws Restricted
+     * @throws Structure
+     * @throws DatabaseException
      */
-    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime, ?Document $document = null): void
     {
         $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', ['function']),
+                Query::equal('resourceType', [$document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -187,11 +203,70 @@ class Deletes extends Action
                     return;
                 }
 
-                $function = $getProjectDB($project)->getDocument('functions', $document->getAttribute('resourceId'));
+                $resource = $getProjectDB($project)->getDocument(
+                    $document->getAttribute('resourceCollection'),
+                    $document->getAttribute('resourceId')
+                );
 
-                if ($function->isEmpty()) {
+                $delete = true;
+
+                switch ($document->getAttribute('resourceType')) {
+                    case 'function':
+                        $delete = $resource->isEmpty();
+                        break;
+                }
+
+                if ($delete) {
                     $dbForConsole->deleteDocument('schedules', $document->getId());
-                    Console::success('Deleting schedule for function ' . $document->getAttribute('resourceId'));
+                    Console::success('Deleting schedule for ' . $document->getAttribute('resourceType') . ' ' . $document->getAttribute('resourceId'));
+                }
+            }
+        );
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $topic
+     * @throws Exception
+     */
+    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    {
+        if ($topic->isEmpty()) {
+            Console::error('Failed to delete subscribers. Topic not found');
+            return;
+        }
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('subscribers', [
+            Query::equal('topicInternalId', [$topic->getInternalId()])
+        ], $dbForProject);
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $target
+     * @throws Exception
+     */
+    protected function deleteTarget(Document $project, callable $getProjectDB, Document $target)
+    {
+        /** @var Database */
+        $dbForProject = $getProjectDB($project);
+
+        // Delete subscribers and decrement topic counts
+        $this->deleteByGroup(
+            'subscribers',
+            [
+                Query::equal('targetInternalId', [$target->getInternalId()])
+            ],
+            $dbForProject,
+            function (Document $subscriber) use ($dbForProject) {
+                $topicId = $subscriber->getAttribute('topicId');
+                $topicInternalId = $subscriber->getAttribute('topicInternalId');
+                $topic = $dbForProject->getDocument('topics', $topicId);
+                if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
+                    $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', min: 0);
                 }
             }
         );
@@ -536,6 +611,18 @@ class Deletes extends Action
         $this->deleteByGroup('identities', [
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
+
+        // Delete targets
+        $this->listByGroup(
+            'targets',
+            [
+                Query::equal('userInternalId', [$userInternalId])
+            ],
+            $dbForProject,
+            function (Document $target) use ($getProjectDB, $project) {
+                $this->deleteTarget($project, $getProjectDB, $target);
+            }
+        );
     }
 
     /**
