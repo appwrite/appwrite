@@ -521,7 +521,7 @@ App::get('/v1/avatars/initials')
         // if there is no space, try to split by `_` underscore
         $words = (count($words) == 1) ? \explode('_', \strtoupper($name)) : $words;
 
-        $initials = null;
+        $initials = '';
         $code = 0;
 
         foreach ($words as $key => $w) {

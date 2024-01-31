@@ -28,7 +28,7 @@ trait StorageBase
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, //2MB
-            'allowedFileExtensions' => ["jpg", "png", 'jfif'],
+            'allowedFileExtensions' => ['jpg', 'png', 'jfif'],
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::create(Role::any()),
