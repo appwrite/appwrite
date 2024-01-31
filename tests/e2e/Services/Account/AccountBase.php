@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Account;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Query;
 
 trait AccountBase
 {
