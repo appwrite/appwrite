@@ -3527,9 +3527,13 @@ App::delete('/v1/account/targets/:targetId/push')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
         Authorization::skip(fn() => $dbForProject->deleteDocument('targets', $target->getId()));
 
-        $dbForProject->deleteCachedDocument('users', $target->getAttribute('userId'));
+        $dbForProject->deleteCachedDocument('users', $user->getId());
 
         $queueForDeletes
             ->setType(DELETE_TYPE_TARGET)
