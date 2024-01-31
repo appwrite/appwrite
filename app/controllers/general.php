@@ -722,6 +722,7 @@ App::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 429: // Error allowed publicly
+            case 451: // Error allowed publicly
             case 501: // Error allowed publicly
             case 503: // Error allowed publicly
                 break;
