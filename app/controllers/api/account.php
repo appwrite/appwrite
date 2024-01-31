@@ -3541,7 +3541,8 @@ App::delete('/v1/account/targets/:targetId/push')
 
         $queueForEvents
             ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
+            ->setParam('targetId', $target->getId())
+            ->setPayload($response->output($target, Response::MODEL_TARGET));
 
         $response->noContent();
     });
