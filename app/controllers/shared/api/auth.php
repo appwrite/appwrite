@@ -6,13 +6,24 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use MaxMind\Db\Reader;
 
 App::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->inject('geodb')
+    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+        $denylist = App::getEnv('_APP_COUNTRIES_DENYLIST', '');
+        if (!empty($denylist)) {
+            $countries = explode(',', $denylist);
+            $record = $geodb->get($request->getIP()) ?? [];
+            $country = $record['country']['iso_code'] ?? '';
+            if (in_array($country, $countries)) {
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+            }
+        }
 
         $route = $utopia->match($request);
 

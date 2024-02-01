@@ -42,7 +42,7 @@ use Utopia\Validator\Text;
 
 App::post('/v1/teams')
     ->desc('Create team')
-    ->groups(['api', 'teams', 'restrict'])
+    ->groups(['api', 'teams'])
     ->label('event', 'teams.[teamId].create')
     ->label('scope', 'teams.write')
     ->label('audits.event', 'team.create')
@@ -358,7 +358,7 @@ App::delete('/v1/teams/:teamId')
 
 App::post('/v1/teams/:teamId/memberships')
     ->desc('Create team membership')
-    ->groups(['api', 'teams', 'auth', 'restrict'])
+    ->groups(['api', 'teams', 'auth'])
     ->label('event', 'teams.[teamId].memberships.[membershipId].create')
     ->label('scope', 'teams.write')
     ->label('auth.type', 'invites')

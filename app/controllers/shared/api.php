@@ -320,7 +320,17 @@ App::init()
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->inject('geodb')
+    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+        $denylist = App::getEnv('_APP_COUNTRIES_DENYLIST', '');
+        if (!empty($denylist)) {
+            $countries = explode(',', $denylist);
+            $record = $geodb->get($request->getIP()) ?? [];
+            $country = $record['country']['iso_code'] ?? '';
+            if (in_array($country, $countries)) {
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+            }
+        }
 
         $route = $utopia->getRoute();
 
@@ -626,21 +636,5 @@ App::init()
     ->action(function () {
         if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
-        }
-    });
-
-App::init()
-    ->groups(['restrict'])
-    ->inject('request')
-    ->inject('geodb')
-    ->action(function (Request $request, Reader $geodb) {
-        $denylist = App::getEnv('_APP_COUNTRIES_DENYLIST', '');
-        if (!empty($denylist)) {
-            $countries = explode(',', $denylist);
-            $record = $geodb->get($request->getIP()) ?? [];
-            $country = $record['country']['iso_code'] ?? '';
-            if (in_array($country, $countries)) {
-                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
-            }
         }
     });
