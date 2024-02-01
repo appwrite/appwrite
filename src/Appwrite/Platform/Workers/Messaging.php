@@ -408,7 +408,8 @@ class Messaging extends Action
 
     private function email(Document $provider): ?EmailAdapter
     {
-        $credentials = $provider->getAttribute('credentials');
+        $credentials = $provider->getAttribute('credentials', []);
+        $options = $provider->getAttribute('options', []);
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(
@@ -416,9 +417,9 @@ class Messaging extends Action
                 $credentials['port'],
                 $credentials['username'],
                 $credentials['password'],
-                $credentials['encryption'],
-                $credentials['autoTLS'],
-                $credentials['mailer'],
+                $options['encryption'],
+                $options['autoTLS'],
+                $options['mailer'],
             ),
             'mailgun' => new Mailgun(
                 $credentials['apiKey'],
