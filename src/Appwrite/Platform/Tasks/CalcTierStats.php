@@ -270,7 +270,7 @@ class CalcTierStats extends Action
                 $limit = $periods[$range]['limit'];
                 $period = $periods[$range]['period'];
 
-                $requestDocs = $dbForProject->find('stats_v2', [
+                $requestDocs = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),

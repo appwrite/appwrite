@@ -59,6 +59,136 @@ class V20 extends Migration
     }
 
     /**
+     * Migrate Collections.
+     *
+     * @return void
+     * @throws Exception|Throwable
+     */
+    private function migrateCollections(): void
+    {
+        $internalProjectId = $this->project->getInternalId();
+        $collectionType = match ($internalProjectId) {
+            'console' => 'console',
+            default => 'projects',
+        };
+        $collections = $this->collections[$collectionType];
+        foreach ($collections as $collection) {
+            $id = $collection['$id'];
+
+            Console::log("Migrating Collection \"{$id}\"");
+
+            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
+            $modifiedAttr = [];
+            foreach ($collection['attributes'] ?? [] as $attribute) {
+                if ($attribute['type'] === 'string' && $attribute['array'] === true) {
+                    $this->projectDB->updateAttribute($id, $attribute['$id']);
+                    $modifiedAttr[] = $attribute['$id'];
+                }
+            }
+            if (!empty($modified)) {
+                foreach ($collection['indexes'] ?? [] as $index) {
+                    $foundIndexes = array_intersect($modifiedAttr, $index['attributes']);
+                    if ($foundIndexes) {
+                        $this->projectDB->deleteIndex($id, $index['$id']);
+                    }
+                }
+            }
+
+            switch ($id) {
+                case '_metadata':
+                    $this->createCollection('providers');
+                    $this->createCollection('messages');
+                    $this->createCollection('topics');
+                    $this->createCollection('subscribers');
+                    $this->createCollection('targets');
+
+                    break;
+                case 'stats':
+                    try {
+                        /**
+                         * Delete 'type' attribute
+                         */
+                        $this->projectDB->deleteAttribute($id, 'type');
+                        /**
+                         * Alter `signed`  internal type on `value` attr
+                         */
+                        $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'type' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // update stats index
+                    $index = '_key_metric_period_time';
+
+                    try {
+                        $this->projectDB->deleteIndex($id, $index);
+                    } catch (\Throwable $th) {
+                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->projectDB, $id, $index);
+                    } catch (\Throwable $th) {
+                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+                case 'sessions':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'expire');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'expire' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'users':
+                    // Create targets attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'targets');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'targets' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'projects':
+                    // Rename providers authProviders to oAuthProviders
+                    try {
+                        $this->projectDB->renameAttribute($id, 'authProviders', 'oAuthProviders');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'schedules':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'schedules' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                case 'webhooks':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            usleep(50000);
+        }
+    }
+
+
+
+    /**
      * @return void
      * @throws Authorization
      * @throws Exception
@@ -248,113 +378,6 @@ class V20 extends Migration
 
                 $this->migrateUsageMetrics("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
             }
-        }
-    }
-
-    /**
-     * Migrate Collections.
-     *
-     * @return void
-     * @throws Exception|Throwable
-     */
-    private function migrateCollections(): void
-    {
-        foreach ($this->collections as $collection) {
-            $id = $collection['$id'];
-
-            Console::log("Migrating Collection \"{$id}\"");
-
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
-
-            switch ($id) {
-                case '_metadata':
-                    $this->createCollection('providers');
-                    $this->createCollection('messages');
-                    $this->createCollection('topics');
-                    $this->createCollection('subscribers');
-                    $this->createCollection('targets');
-
-                    break;
-                case 'stats':
-                    try {
-                        /**
-                         * Delete 'type' attribute
-                         */
-                        $this->projectDB->deleteAttribute($id, 'type');
-                        /**
-                         * Alter `signed`  internal type on `value` attr
-                         */
-                        $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'type' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // update stats index
-                    $index = '_key_metric_period_time';
-
-                    try {
-                        $this->projectDB->deleteIndex($id, $index);
-                    } catch (\Throwable $th) {
-                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
-                    }
-
-                    try {
-                        $this->createIndexFromCollection($this->projectDB, $id, $index);
-                    } catch (\Throwable $th) {
-                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
-                    }
-
-                    break;
-                case 'sessions':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'expire');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'expire' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'users':
-                    // Create targets attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'targets');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'targets' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'projects':
-                    // Rename providers authProviders to oAuthProviders
-                    try {
-                        $this->projectDB->renameAttribute($id, 'authProviders', 'oAuthProviders');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'schedules':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'schedules' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'webhooks':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
-                        $this->projectDB->deleteCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                default:
-                    break;
-            }
-
-            usleep(50000);
         }
     }
 
