@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b692b61971354d653a0a0aa27bd5a646",
+    "content-hash": "4b9b6ff602a179493e0196636d961e9c",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1358,16 +1358,16 @@
         },
         {
             "name": "utopia-php/framework",
-            "version": "0.33.1",
+            "version": "0.33.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/http.git",
-                "reference": "b745607aa1875554a0ad52e28f6db918da1ce11c"
+                "reference": "b1423ca3e3b61c6c4c2e619d2cb80672809a19f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/http/zipball/b745607aa1875554a0ad52e28f6db918da1ce11c",
-                "reference": "b745607aa1875554a0ad52e28f6db918da1ce11c",
+                "url": "https://api.github.com/repos/utopia-php/http/zipball/b1423ca3e3b61c6c4c2e619d2cb80672809a19f3",
+                "reference": "b1423ca3e3b61c6c4c2e619d2cb80672809a19f3",
                 "shasum": ""
             },
             "require": {
@@ -1397,9 +1397,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/http/issues",
-                "source": "https://github.com/utopia-php/http/tree/0.33.1"
+                "source": "https://github.com/utopia-php/http/tree/0.33.2"
             },
-            "time": "2024-01-17T16:48:32+00:00"
+            "time": "2024-01-31T10:35:59+00:00"
         },
         {
             "name": "utopia-php/image",
@@ -1555,16 +1555,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.8.1",
+            "version": "0.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "bfb5014d3a8752901e50da1ae21bf309a6af5006"
+                "reference": "df54ba51570e886724590edeb03dbd455bb0464d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/bfb5014d3a8752901e50da1ae21bf309a6af5006",
-                "reference": "bfb5014d3a8752901e50da1ae21bf309a6af5006",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/df54ba51570e886724590edeb03dbd455bb0464d",
+                "reference": "df54ba51570e886724590edeb03dbd455bb0464d",
                 "shasum": ""
             },
             "require": {
@@ -1599,9 +1599,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.8.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.9.0"
             },
-            "time": "2024-01-10T23:55:03+00:00"
+            "time": "2024-01-31T11:51:27+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2474,16 +2474,16 @@
         },
         {
             "name": "doctrine/deprecations",
-            "version": "1.1.2",
+            "version": "1.1.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/deprecations.git",
-                "reference": "4f2d4f2836e7ec4e7a8625e75c6aa916004db931"
+                "reference": "dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/4f2d4f2836e7ec4e7a8625e75c6aa916004db931",
-                "reference": "4f2d4f2836e7ec4e7a8625e75c6aa916004db931",
+                "url": "https://api.github.com/repos/doctrine/deprecations/zipball/dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab",
+                "reference": "dfbaa3c2d2e9a9df1118213f3b8b0c597bb99fab",
                 "shasum": ""
             },
             "require": {
@@ -2515,9 +2515,9 @@
             "homepage": "https://www.doctrine-project.org/",
             "support": {
                 "issues": "https://github.com/doctrine/deprecations/issues",
-                "source": "https://github.com/doctrine/deprecations/tree/1.1.2"
+                "source": "https://github.com/doctrine/deprecations/tree/1.1.3"
             },
-            "time": "2023-09-27T20:04:15+00:00"
+            "time": "2024-01-30T19:34:25+00:00"
         },
         {
             "name": "doctrine/instantiator",

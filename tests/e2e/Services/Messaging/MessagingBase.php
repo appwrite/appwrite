@@ -29,6 +29,17 @@ trait MessagingBase
                 'fromEmail' => 'sender-email@my-domain.com',
                 'isEuRegion' => false,
             ],
+            'smtp' => [
+                'providerId' => ID::unique(),
+                'name' => 'SMTP1',
+                'host' => 'smtp.appwrite.io',
+                'port' => 587,
+                'security' => 'tls',
+                'username' => 'my-username',
+                'password' => 'my-password',
+                'fromName' => 'sender name',
+                'fromEmail' => 'tester@appwrite.io',
+            ],
             'twilio' => [
                 'providerId' => ID::unique(),
                 'name' => 'Twilio1',
@@ -114,6 +125,14 @@ trait MessagingBase
                 'name' => 'Mailgun2',
                 'apiKey' => 'my-apikey',
                 'domain' => 'my-domain',
+            ],
+            'smtp' => [
+                'name' => 'SMTP2',
+                'host' => 'smtp.appwrite.io',
+                'port' => 587,
+                'security' => 'tls',
+                'username' => 'my-username',
+                'password' => 'my-password',
             ],
             'twilio' => [
                 'name' => 'Twilio2',
@@ -224,7 +243,7 @@ trait MessagingBase
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals(10, \count($response['body']['providers']));
+        $this->assertEquals(11, \count($response['body']['providers']));
 
         return $providers;
     }
