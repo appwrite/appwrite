@@ -9,7 +9,9 @@ use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 
@@ -130,6 +132,7 @@ class V20 extends Migration
      */
     protected function migrateUsageMetrics(string $from, string $to): void
     {
+
         /**
          * inf metric
          */
@@ -286,6 +289,30 @@ class V20 extends Migration
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
+
+                    // update stats index
+                    $index = '_key_metric_period_time';
+
+                    try {
+                        $this->projectDB->deleteIndex($id, $index);
+                    } catch (\Throwable $th) {
+                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
+                        $this->createIndexFromCollection($this->projectDB, $id, $index);
+                    } catch (\Throwable $th) {
+                        Console::warning("'$index' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
+                case 'sessions':
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'expire');
+                        $this->projectDB->deleteCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'expire' from {$id}: {$th->getMessage()}");
+                    }
                     break;
                 case 'users':
                     // Create targets attribute
@@ -297,9 +324,9 @@ class V20 extends Migration
                     }
                     break;
                 case 'projects':
-                    // Rename providers to oAuthProviders
+                    // Rename providers authProviders to oAuthProviders
                     try {
-                        $this->projectDB->renameAttribute($id, 'providers', 'oAuthProviders');
+                        $this->projectDB->renameAttribute($id, 'authProviders', 'oAuthProviders');
                         $this->projectDB->deleteCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
@@ -357,7 +384,6 @@ class V20 extends Migration
             $this->migrateUsageMetrics("files.$bucketId.storage.size", "$bucketInternalId.files.storage");
         }
     }
-
 
     /**
      * Fix run on each document
