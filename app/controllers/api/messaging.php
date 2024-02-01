@@ -225,7 +225,7 @@ App::post('/v1/messaging/providers/smtp')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', 'tls', new WhiteList(['ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true)
     ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
@@ -262,7 +262,7 @@ App::post('/v1/messaging/providers/smtp')
             'fromEmail' => $fromEmail,
             'replyToName' => $replyToName,
             'replyToEmail' => $replyToEmail,
-            'encryption' => $encryption,
+            'encryption' => $encryption === 'none' ? '' : $encryption,
             'autoTLS' => $autoTLS,
             'mailer' => $mailer,
         ];
@@ -1195,7 +1195,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('port', null, new Range(1, 65535), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
-    ->param('encryption', '', new WhiteList(['ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
     ->param('autoTLS', null, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
@@ -1261,7 +1261,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
         }
 
         if (!empty($encryption)) {
-            $credentials['encryption'] = $encryption;
+            $credentials['encryption'] = $encryption === 'none' ? '' : $encryption;
         }
 
         if (!\is_null($autoTLS)) {
