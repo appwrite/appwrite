@@ -96,15 +96,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(false, $mailgun['body']['enabled']);
 
 
-        $response = json_decode($client->receive(), true);
-        $this->assertArrayHasKey('type', $response);
-        $this->assertEquals('connected', $response['type']); // ? or event?
-        $this->assertArrayHasKey('data', $response);
-        $this->assertCount(2, $response['data']['channels']);
-        //$this->assertContains("providers.*", $response['data']['events']);
-        //$this->assertNotEmpty($response['data']['payload']);
-
-
 
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
             'content-type' => 'application/json',
@@ -119,7 +110,6 @@ class RealtimeCustomClientTest extends Scope
 
 
 
-
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['$id'] . '/targets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -131,21 +121,10 @@ class RealtimeCustomClientTest extends Scope
             'identifier' => 'realtime@appwrite.io',
         ]);
 
-        $x = '' ?? null;
-        var_dump($x);
-        $this->assertEquals('-', '----------------------');
-
-
-        var_dump($target);
         $this->assertEquals(201, $target['headers']['status-code']);
-        $this->assertEquals('-', '----------------------');
 
 
-
-
-
-
-        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -153,11 +132,23 @@ class RealtimeCustomClientTest extends Scope
             'targetId' => $target['body']['$id'],
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
-        $this->assertEquals($target['body']['userId'], $response['body']['target']['userId']);
-        $this->assertEquals($target['body']['providerType'], $response['body']['target']['providerType']);
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+        $this->assertEquals($target['body']['userId'], $subscriber['body']['target']['userId']);
+        $this->assertEquals($target['body']['providerType'], $subscriber['body']['target']['providerType']);
 
 
+
+        $response = json_decode($client->receive(), true);
+        var_dump($response);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']); // ? or event?
+        $this->assertArrayHasKey('data', $response);
+        $this->assertCount(2, $response['data']['channels']);
+        //$this->assertContains("providers.*", $response['data']['events']);
+        //$this->assertNotEmpty($response['data']['payload']);
+
+
+        $this->assertEquals('-', '----------------------');
 
     }
 
