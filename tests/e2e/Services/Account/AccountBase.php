@@ -216,13 +216,13 @@ trait AccountBase
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals($userId, $response['body']['userId']);
 
-        $securityPhrase = $response['body']['phrase'];
+        $phrase = $response['body']['phrase'];
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
-        $this->assertStringContainsStringIgnoringCase($securityPhrase, $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',
