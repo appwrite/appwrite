@@ -158,6 +158,12 @@ App::post('/v1/messaging/providers/sendgrid')
     ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
+        $credentials = [];
+
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
+        }
+
         $options = [
             'fromName' => $fromName,
             'fromEmail' => $fromEmail,
@@ -165,17 +171,10 @@ App::post('/v1/messaging/providers/sendgrid')
             'replyToEmail' => $replyToEmail,
         ];
 
-        $credentials = [];
-
-        if (!empty($apiKey)) {
-            $credentials['apiKey'] = $apiKey;
-        }
-
         if (
             $enabled === true
             && !empty($fromEmail)
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
