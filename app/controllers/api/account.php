@@ -2035,6 +2035,9 @@ App::get('/v1/account')
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });

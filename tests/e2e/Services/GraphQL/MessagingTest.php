@@ -285,7 +285,6 @@ class MessagingTest extends Scope
             'variables' => [
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
-                'description' => 'Active users',
             ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -296,7 +295,6 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic1', $response['body']['data']['messagingCreateTopic']['name']);
-        $this->assertEquals('Active users', $response['body']['data']['messagingCreateTopic']['description']);
 
         return $response['body']['data']['messagingCreateTopic'];
     }
@@ -313,7 +311,6 @@ class MessagingTest extends Scope
             'variables' => [
                 'topicId' => $topicId,
                 'name' => 'topic2',
-                'description' => 'Inactive users',
             ],
         ];
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -324,7 +321,6 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic2', $response['body']['data']['messagingUpdateTopic']['name']);
-        $this->assertEquals('Inactive users', $response['body']['data']['messagingUpdateTopic']['description']);
 
         return $topicId;
     }
@@ -368,7 +364,6 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('topic2', $response['body']['data']['messagingGetTopic']['name']);
-        $this->assertEquals('Inactive users', $response['body']['data']['messagingGetTopic']['description']);
     }
 
     /**
@@ -594,7 +589,6 @@ class MessagingTest extends Scope
             'variables' => [
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
-                'description' => 'Active users',
             ],
         ];
         $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -801,7 +795,6 @@ class MessagingTest extends Scope
             'variables' => [
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
-                'description' => 'Active users',
             ],
         ];
         $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
@@ -1006,7 +999,6 @@ class MessagingTest extends Scope
             'variables' => [
                 'topicId' => ID::unique(),
                 'name' => 'topic1',
-                'description' => 'Active users',
             ],
         ];
         $topic = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
