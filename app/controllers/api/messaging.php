@@ -239,22 +239,14 @@ App::post('/v1/messaging/providers/smtp')
     ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
-        $credentials = [];
+        $credentials = [
+            'port' => $port,
+            'username' => $username,
+            'password' => $password,
+        ];
 
         if (!empty($host)) {
             $credentials['host'] = $host;
-        }
-
-        if (!empty($port)) {
-            $credentials['port'] = $port;
-        }
-
-        if (!empty($username)) {
-            $credentials['username'] = $username;
-        }
-
-        if (!empty($password)) {
-            $credentials['password'] = $password;
         }
 
         $options = [
@@ -269,6 +261,7 @@ App::post('/v1/messaging/providers/smtp')
 
         if (
             $enabled === true
+            && !empty($fromEmail)
             && \array_key_exists('host', $credentials)
         ) {
             $enabled = true;
@@ -1272,7 +1265,10 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
 
         if (!\is_null($enabled)) {
             if ($enabled) {
-                if (\array_key_exists('host', $credentials)) {
+                if (
+                    !empty($options['fromEmail'])
+                    && \array_key_exists('host', $credentials)
+                ) {
                     $provider->setAttribute('enabled', true);
                 } else {
                     throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
