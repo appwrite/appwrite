@@ -497,7 +497,7 @@ App::post('/v1/users/:userId/targets')
             $target = $dbForProject->createDocument('targets', new Document([
                 '$id' => $targetId,
                 'providerId' => $providerId ?? null,
-                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getInternalId(),

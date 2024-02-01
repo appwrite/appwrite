@@ -258,7 +258,7 @@ class Realtime extends Adapter
             case 'providers':
                 $channels[] = 'providers';
                 $channels[] = 'providers.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                //$roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'messages':
                 $channels[] = 'messages';
