@@ -47,6 +47,8 @@ class UsageHook extends Usage
             foreach ($projects as $data) {
                 $numberOfKeys = !empty($data['keys']) ? count($data['keys']) : 0;
                 $projectInternalId = $data['project']->getInternalId();
+                $database = $data['project']['database'] ?? '';
+
                 console::warning('Ticker started ' . DateTime::now());
 
                 if ($numberOfKeys === 0) {
