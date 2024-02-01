@@ -70,16 +70,6 @@ class Usage extends Action
                 getProjectDB: $getProjectDB
             );
         }
-        if ($project->getInternalId() == self::DEBUG_PROJECT_ID) {
-            var_dump([
-                'type' => 'payload',
-                'project' => $project->getInternalId(),
-                'database' => $project['database'] ?? '',
-                $payload['metrics']
-            ]);
-
-            var_dump('==========================');
-        }
 
         self::$stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
@@ -90,7 +80,6 @@ class Usage extends Action
             self::$stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
     }
-
 
      /**
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
