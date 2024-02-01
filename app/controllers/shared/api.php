@@ -474,6 +474,7 @@ App::shutdown()
                     bucket: $bucket,
                 );
 
+                var_dump($target);
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
                     payload: $queueForEvents->getPayload(),

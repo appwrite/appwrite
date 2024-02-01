@@ -20,56 +20,6 @@ class RealtimeCustomClientTest extends Scope
     use SideClient;
 
 
-//
-//    public function testChannelMessaging()
-//    {
-//        $user = $this->getUser();
-//        $session = $user['session'] ?? '';
-//        $projectId = $this->getProject()['$id'];
-//
-//        $client = $this->getWebsocket(['documents', 'collections'], [
-//            'origin' => 'http://localhost',
-//            'cookie' => 'a_session_' . $projectId . '=' . $session
-//        ]);
-//
-//        $response = json_decode($client->receive(), true);
-//
-//        $this->assertArrayHasKey('type', $response);
-//        $this->assertArrayHasKey('data', $response);
-//        $this->assertEquals('connected', $response['type']);
-//        $this->assertNotEmpty($response['data']);
-//        $this->assertCount(2, $response['data']['channels']);
-//        $this->assertContains('documents', $response['data']['channels']);
-//        $this->assertContains('collections', $response['data']['channels']);
-//        $this->assertNotEmpty($response['data']['user']);
-//        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
-//
-//        /**
-//         * Test Database Create
-//         */
-//        $database = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//            'x-appwrite-key' => $this->getProject()['apiKey']
-//        ]), [
-//            'databaseId' => ID::unique(),
-//            'name' => 'Actors DB',
-//        ]);
-//
-//        $databaseId = $database['body']['$id'];
-//
-//
-//        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
-//            'content-type' => 'application/json',
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//            'x-appwrite-key' => $this->getProject()['apiKey'],
-//        ], $providersParams[$key]);
-//        $this->assertEquals(200, $response['headers']['status-code']);
-//        $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
-//        $providers[$index] = $response['body'];
-//    }
-
-
 
     public function testChannelParsing()
     {
@@ -137,6 +87,12 @@ class RealtimeCustomClientTest extends Scope
             'documents',
             'collections.1.documents.1',
             'collections.2.documents.2',
+            'providers',
+            'providers.mailgun',
+            'topics',
+            'topics.1.subscribers',
+            'topics.1.subscribers.create',
+            'messages',
         ], $headers);
 
         $response = json_decode($client->receive(), true);
@@ -146,7 +102,7 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('connected', $response['type']);
         $this->assertNotEmpty($response['data']);
         $this->assertNotEmpty($response['data']['user']);
-        $this->assertCount(10, $response['data']['channels']);
+        $this->assertCount(16, $response['data']['channels']);
         $this->assertContains('account', $response['data']['channels']);
         $this->assertContains('account.' . $userId, $response['data']['channels']);
         $this->assertContains('files', $response['data']['channels']);
@@ -157,6 +113,12 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('documents', $response['data']['channels']);
         $this->assertContains('collections.1.documents.1', $response['data']['channels']);
         $this->assertContains('collections.2.documents.2', $response['data']['channels']);
+        $this->assertContains('providers', $response['data']['channels']);
+        $this->assertContains('providers.mailgun', $response['data']['channels']);
+        $this->assertContains('topics', $response['data']['channels']);
+        $this->assertContains('topics.1.subscribers', $response['data']['channels']);
+        $this->assertContains('topics.1.subscribers.create', $response['data']['channels']);
+        $this->assertContains('messages', $response['data']['channels']);
         $this->assertEquals($userId, $response['data']['user']['$id']);
 
         $client->close();
@@ -1639,5 +1601,63 @@ class RealtimeCustomClientTest extends Scope
         $client->close();
     }
 
+    public function testChannelMessaging()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
 
+        $channels = ['providers', 'topics'];
+
+        $client = $this->getWebsocket($channels, [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ]);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains('providers', $response['data']['channels']);
+        $this->assertContains('topics', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
+
+        $client->close();
+
+        $client = $this->getWebsocket($channels, [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ]);
+
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/messaging/providers/mailgun',
+            [
+                'origin' => 'http://localhost',
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $projectId,
+                'x-appwrite-key' => $this->getProject()['apiKey'],
+            ],
+            [
+                'providerId' => ID::unique(),
+                'name' => 'Mailgun1',
+                'apiKey' => 'my-apikey',
+                'domain' => 'my-domain',
+                'fromName' => 'sender name',
+                'fromEmail' => 'sender-email@my-domain.com',
+                'isEuRegion' => false
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('Mailgun1', $response['body']['name']);
+
+        $response = json_decode($client->receive(), true);
+        var_dump($response['data']['events']);
+        $this->assertEquals('----', '--------------------------');
+    }
 }
