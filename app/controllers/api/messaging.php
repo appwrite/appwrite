@@ -96,7 +96,7 @@ App::post('/v1/messaging/providers/mailgun')
 
         if (
             $enabled === true
-            && !empty($fromName)
+            && !empty($fromEmail)
             && \array_key_exists('isEuRegion', $credentials)
             && \array_key_exists('apiKey', $credentials)
             && \array_key_exists('domain', $credentials)
