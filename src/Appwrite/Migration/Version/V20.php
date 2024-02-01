@@ -71,26 +71,29 @@ class V20 extends Migration
             'console' => 'console',
             default => 'projects',
         };
+
+        $databases = $this->projectDB->find('databases', []);
+        foreach ($databases as $database) {
+            var_dump($database);
+        }
+
         $collections = $this->collections[$collectionType];
         foreach ($collections as $collection) {
             $id = $collection['$id'];
 
             Console::log("Migrating Collection \"{$id}\"");
 
-            $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
-            $modifiedAttr = [];
+            $this->projectDB->setNamespace("_$internalProjectId");
+
+            // Support database array type migration
             foreach ($collection['attributes'] ?? [] as $attribute) {
-                if ($attribute['type'] === 'string' && $attribute['array'] === true) {
-                    $this->projectDB->updateAttribute($id, $attribute['$id']);
-                    $modifiedAttr[] = $attribute['$id'];
-                }
-            }
-            if (!empty($modified)) {
-                foreach ($collection['indexes'] ?? [] as $index) {
-                    $foundIndexes = array_intersect($modifiedAttr, $index['attributes']);
-                    if ($foundIndexes) {
-                        $this->projectDB->deleteIndex($id, $index['$id']);
+                if ($attribute['array'] === true) {
+                    foreach ($collection['indexes'] ?? [] as $index) {
+                        if (in_array($attribute['$id'], $index['attributes'])) {
+                            $this->projectDB->deleteIndex($id, $index['$id']);
+                        }
                     }
+                    $this->projectDB->updateAttribute($id, $attribute['$id'], Database::VAR_STRING);
                 }
             }
 
