@@ -990,7 +990,7 @@ App::post('/v1/account/tokens/magic-url')
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -999,14 +999,14 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-        if ($securityPhrase === true) {
-            $securityPhrase = SecurityPhrase::generate();
+        if ($phrase === true) {
+            $phrase = SecurityPhrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -1116,7 +1116,7 @@ App::post('/v1/account/tokens/magic-url')
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
 
-        if (!empty($securityPhrase)) {
+        if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
         } else {
             $message->setParam('{{securityPhrase}}', '');
@@ -1180,7 +1180,7 @@ App::post('/v1/account/tokens/magic-url')
             'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
             'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
             'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
+            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1200,8 +1200,8 @@ App::post('/v1/account/tokens/magic-url')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
 
-        if (!empty($securityPhrase)) {
-            $token->setAttribute('securityPhrase', $securityPhrase);
+        if (!empty($phrase)) {
+            $token->setAttribute('phrase', $phrase);
         }
 
         $response
@@ -1229,7 +1229,7 @@ App::post('/v1/account/tokens/email')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1238,13 +1238,13 @@ App::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-        if ($securityPhrase === true) {
-            $securityPhrase = SecurityPhrase::generate();
+        if ($phrase === true) {
+            $phrase = SecurityPhrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -1344,7 +1344,7 @@ App::post('/v1/account/tokens/email')
             ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
 
-        if (!empty($securityPhrase)) {
+        if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
         } else {
             $message->setParam('{{securityPhrase}}', '');
@@ -1408,7 +1408,7 @@ App::post('/v1/account/tokens/email')
             'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
             'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
             'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
+            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1428,8 +1428,8 @@ App::post('/v1/account/tokens/email')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
 
-        if (!empty($securityPhrase)) {
-            $token->setAttribute('securityPhrase', $securityPhrase);
+        if (!empty($phrase)) {
+            $token->setAttribute('phrase', $phrase);
         }
 
         $response
