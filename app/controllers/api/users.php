@@ -145,7 +145,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
@@ -508,7 +508,7 @@ App::post('/v1/users/:userId/targets')
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -544,7 +544,7 @@ App::get('/v1/users')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -839,7 +839,7 @@ App::get('/v1/users/:userId/targets')
         $queries[] = Query::equal('userId', [$userId]);
 
          // Get cursor document if there was a cursor query
-         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
          $cursor = reset($cursor);
 
         if ($cursor) {
@@ -884,7 +884,7 @@ App::get('/v1/users/identities')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -958,7 +958,7 @@ App::put('/v1/users/:userId/labels')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
+    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1184,7 +1184,7 @@ App::patch('/v1/users/:userId/email')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -1246,7 +1246,7 @@ App::patch('/v1/users/:userId/phone')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -1408,7 +1408,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
         }
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1657,7 +1657,7 @@ App::post('/v1/users/:userId/tokens')
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $token->setAttribute('secret', $secret);
 
@@ -1704,7 +1704,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         }
 
         $dbForProject->deleteDocument('sessions', $session->getId());
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1747,7 +1747,7 @@ App::delete('/v1/users/:userId/sessions')
             //TODO: fix this
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1815,10 +1815,10 @@ App::delete('/v1/users/:userId/targets/:targetId')
     ->param('userId', '', new UID(), 'User ID.')
     ->param('targetId', '', new UID(), 'Target ID.')
     ->inject('queueForEvents')
+    ->inject('queueForDeletes')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $userId, string $targetId, Event $queueForEvents, Response $response, Database $dbForProject) {
-
+    ->action(function (string $userId, string $targetId, Event $queueForEvents, Delete $queueForDeletes, Response $response, Database $dbForProject) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1836,7 +1836,11 @@ App::delete('/v1/users/:userId/targets/:targetId')
         }
 
         $dbForProject->deleteDocument('targets', $target->getId());
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_TARGET)
+            ->setDocument($target);
 
         $queueForEvents
             ->setParam('userId', $user->getId())

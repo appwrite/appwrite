@@ -7,10 +7,7 @@ use PHPUnit\Framework\TestCase;
 
 class ProjectIdTest extends TestCase
 {
-    /**
-     * @var Key
-     */
-    protected $object = null;
+    protected ?ProjectId $object = null;
 
     public function setUp(): void
     {

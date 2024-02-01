@@ -122,11 +122,9 @@ class Deletes extends Action
                         break;
                 }
                 break;
-
             case DELETE_TYPE_EXECUTIONS:
                 $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 break;
-
             case DELETE_TYPE_AUDIT:
                 if (!$project->isEmpty()) {
                     $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
@@ -139,11 +137,9 @@ class Deletes extends Action
             case DELETE_TYPE_ABUSE:
                 $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
                 break;
-
             case DELETE_TYPE_REALTIME:
                 $this->deleteRealtimeUsage($dbForConsole, $datetime);
                 break;
-
             case DELETE_TYPE_SESSIONS:
                 $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
@@ -157,17 +153,19 @@ class Deletes extends Action
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_SCHEDULES:
-                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime, $document);
+                $this->deleteSchedules($dbForConsole, $getProjectDB, $datetime);
                 break;
             case DELETE_TYPE_TOPIC:
                 $this->deleteTopic($project, $getProjectDB, $document);
                 break;
             case DELETE_TYPE_TARGET:
-                $this->deleteTarget($project, $getProjectDB, $document);
+                $this->deleteTargetSubscribers($project, $getProjectDB, $document);
+                break;
+            case DELETE_TYPE_EXPIRED_TARGETS:
+                $this->deleteExpiredTargets($project, $getProjectDB);
                 break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
-                break;
         }
     }
 
@@ -183,13 +181,12 @@ class Deletes extends Action
      * @throws Structure
      * @throws DatabaseException
      */
-    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime, ?Document $document = null): void
+    private function deleteSchedules(Database $dbForConsole, callable $getProjectDB, string $datetime): void
     {
         $this->listByGroup(
             'schedules',
             [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', [$document->getAttribute('resourceType')]),
                 Query::lessThanEqual('resourceUpdatedAt', $datetime),
                 Query::equal('active', [false]),
             ],
@@ -230,17 +227,20 @@ class Deletes extends Action
      * @param Document $topic
      * @throws Exception
      */
-    protected function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
+    private function deleteTopic(Document $project, callable $getProjectDB, Document $topic)
     {
         if ($topic->isEmpty()) {
             Console::error('Failed to delete subscribers. Topic not found');
             return;
         }
-        $dbForProject = $getProjectDB($project);
 
-        $this->deleteByGroup('subscribers', [
-            Query::equal('topicInternalId', [$topic->getInternalId()])
-        ], $dbForProject);
+        $this->deleteByGroup(
+            'subscribers',
+            [
+                Query::equal('topicInternalId', [$topic->getInternalId()])
+            ],
+            $getProjectDB($project)
+        );
     }
 
     /**
@@ -249,7 +249,7 @@ class Deletes extends Action
      * @param Document $target
      * @throws Exception
      */
-    protected function deleteTarget(Document $project, callable $getProjectDB, Document $target)
+    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target)
     {
         /** @var Database */
         $dbForProject = $getProjectDB($project);
@@ -268,6 +268,27 @@ class Deletes extends Action
                 if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
                     $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', min: 0);
                 }
+            }
+        );
+    }
+
+    /**
+     * @param Document $project
+     * @param callable $getProjectDB
+     * @param Document $target
+     * @return void
+     * @throws Exception
+     */
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB)
+    {
+        $this->deleteByGroup(
+            'targets',
+            [
+                Query::equal('expired', [true])
+            ],
+            $getProjectDB($project),
+            function (Document $target) use ($getProjectDB, $project) {
+                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
             }
         );
     }
@@ -390,8 +411,8 @@ class Deletes extends Action
             }
             $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
             $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
-            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
-            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+            $dbForProject->purgeCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->purgeCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
         }
 
         $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
@@ -447,7 +468,7 @@ class Deletes extends Action
             $dbForProject,
             function (Document $membership) use ($dbForProject) {
                 $userId = $membership->getAttribute('userId');
-                $dbForProject->deleteCachedDocument('users', $userId);
+                $dbForProject->purgeCachedDocument('users', $userId);
             }
         );
     }
@@ -582,7 +603,7 @@ class Deletes extends Action
             Query::equal('userInternalId', [$userInternalId])
         ], $dbForProject);
 
-        $dbForProject->deleteCachedDocument('users', $userId);
+        $dbForProject->purgeCachedDocument('users', $userId);
 
         // Delete Memberships and decrement team membership counts
         $this->deleteByGroup('memberships', [
@@ -613,14 +634,14 @@ class Deletes extends Action
         ], $dbForProject);
 
         // Delete targets
-        $this->listByGroup(
+        $this->deleteByGroup(
             'targets',
             [
                 Query::equal('userInternalId', [$userInternalId])
             ],
             $dbForProject,
             function (Document $target) use ($getProjectDB, $project) {
-                $this->deleteTarget($project, $getProjectDB, $target);
+                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
             }
         );
     }
