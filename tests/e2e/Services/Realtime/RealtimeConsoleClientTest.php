@@ -184,8 +184,6 @@ class RealtimeConsoleClientTest extends Scope
             'required' => true,
         ]);
 
-        $attributeKey = $name['body']['key'];
-
         $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');

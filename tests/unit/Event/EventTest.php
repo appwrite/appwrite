@@ -157,9 +157,8 @@ class EventTest extends TestCase
         $this->assertContains('databases.chaptersDB.collections.*.documents.*', $event);
         $this->assertContains('databases.chaptersDB.collections.*.documents.*.create', $event);
 
-
         try {
-            $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
+            Event::generateEvents('collections.[collectionId].documents.[documentId].create', [
                 'collectionId' => 'chapters'
             ]);
             $this->fail();
@@ -168,10 +167,42 @@ class EventTest extends TestCase
         }
 
         try {
-            $event = Event::generateEvents('collections.[collectionId].documents.[documentId].create');
+            Event::generateEvents('collections.[collectionId].documents.[documentId].create');
             $this->fail();
         } catch (\Throwable $th) {
             $this->assertInstanceOf(InvalidArgumentException::class, $th, 'An invalid exception was thrown');
         }
+
+        $event = Event::generateEvents('providers.[providerId]', [
+            'providerId' => 'sms',
+        ]);
+        $this->assertCount(2, $event);
+        $this->assertContains('providers.sms', $event);
+        $this->assertContains('providers.*', $event);
+
+        $event = Event::generateEvents('messages.[messageId].update', [
+            'messageId' => 9,
+        ]);
+        $this->assertCount(4, $event);
+        $this->assertContains('messages.9.update', $event);
+        $this->assertContains('messages.*.update', $event);
+        $this->assertContains('messages.9', $event);
+        $this->assertContains('messages.*', $event);
+
+        $event = Event::generateEvents('topics.[topicId].subscribers.[subscriberId].create', [
+            'topicId' => 2,
+            'subscriberId' => 7,
+        ]);
+        $this->assertCount(10, $event);
+        $this->assertContains('topics.2.subscribers.7.create', $event);
+        $this->assertContains('topics.*.subscribers.*.create', $event);
+        $this->assertContains('topics.2.subscribers.*.create', $event);
+        $this->assertContains('topics.*.subscribers.7.create', $event);
+        $this->assertContains('topics.2.subscribers.7', $event);
+        $this->assertContains('topics.*.subscribers.*', $event);
+        $this->assertContains('topics.2.subscribers.*', $event);
+        $this->assertContains('topics.*.subscribers.7', $event);
+        $this->assertContains('topics.2', $event);
+        $this->assertContains('topics.*', $event);
     }
 }

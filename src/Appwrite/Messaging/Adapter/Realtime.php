@@ -255,11 +255,31 @@ class Realtime extends Adapter
         $parts = explode('.', $event);
 
         switch ($parts[0]) {
+            case 'providers':
+                $channels[] = 'providers';
+                $channels[] = 'providers.' . $parts[1];
+                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                break;
+            case 'messages':
+                $channels[] = 'messages';
+                $channels[] = 'messages.' . $parts[1];
+                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                break;
+            case 'topics':
+                $channels[] = 'topics';
+                $channels[] = 'topics.' . $parts[1];
+                if ($parts[2] === 'subscribers') {
+                    $channels[] = 'subscribers';
+                    $channels[] = 'subscribers.' . $parts[3];
+                }
+                $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                break;
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'migrations':
             case 'rules':
                 $channels[] = 'console';
                 $projectId = 'console';
@@ -330,11 +350,6 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
-                break;
-            case 'migrations':
-                $channels[] = 'console';
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 

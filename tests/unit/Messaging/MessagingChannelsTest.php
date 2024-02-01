@@ -14,14 +14,14 @@ class MessagingChannelsTest extends TestCase
     /**
      * Configures how many Connections the Test should Mock.
      */
-    public $connectionsPerChannel = 10;
+    public int $connectionsPerChannel = 10;
 
     public Realtime $realtime;
-    public $connectionsCount = 0;
-    public $connectionsAuthenticated = 0;
-    public $connectionsGuest = 0;
-    public $connectionsTotal = 0;
-    public $allChannels = [
+    public int $connectionsCount = 0;
+    public int $connectionsAuthenticated = 0;
+    public int $connectionsGuest = 0;
+    public int $connectionsTotal = 0;
+    public array $allChannels = [
         'files',
         'files.1',
         'collections',
@@ -32,6 +32,10 @@ class MessagingChannelsTest extends TestCase
         'executions',
         'executions.1',
         'functions.1',
+        'messages.1.create',
+        'messages.1.update',
+        'topics.1.subscribers.1.delete',
+        'providers.1.create'
     ];
 
     public function setUp(): void
