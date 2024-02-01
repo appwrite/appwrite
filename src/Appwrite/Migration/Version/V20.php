@@ -72,9 +72,26 @@ class V20 extends Migration
             default => 'projects',
         };
 
-        $databases = $this->projectDB->find('databases', []);
-        foreach ($databases as $database) {
-            var_dump($database);
+        // Support database array type migration (user collections)
+        $attributes = $this->projectDB->find('attributes', [
+            Query::equal('array', [true]),
+        ]);
+
+        foreach ($attributes as $attribute) {
+            $indexes = $this->projectDB->find('indexes', [
+                Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
+                Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
+            ]);
+            $foundIndex = 0;
+            foreach ($indexes as $index) {
+                if (in_array($attribute['key'], $index['attributes'])) {
+                    $this->projectDB->deleteIndex($index['collectionId'], $index['_uid']);
+                    $foundIndex = 1;
+                }
+            }
+            if ($foundIndex === 1) {
+                $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], Database::VAR_STRING);
+            }
         }
 
         $collections = $this->collections[$collectionType];
@@ -86,14 +103,18 @@ class V20 extends Migration
             $this->projectDB->setNamespace("_$internalProjectId");
 
             // Support database array type migration
+             $foundIndex = 0;
             foreach ($collection['attributes'] ?? [] as $attribute) {
                 if ($attribute['array'] === true) {
                     foreach ($collection['indexes'] ?? [] as $index) {
                         if (in_array($attribute['$id'], $index['attributes'])) {
                             $this->projectDB->deleteIndex($id, $index['$id']);
+                              $foundIndex = 1;
                         }
                     }
-                    $this->projectDB->updateAttribute($id, $attribute['$id'], Database::VAR_STRING);
+                    if ($foundIndex === 1) {
+                        $this->projectDB->updateAttribute($id, $attribute['$id'], Database::VAR_STRING);
+                    }
                 }
             }
 
