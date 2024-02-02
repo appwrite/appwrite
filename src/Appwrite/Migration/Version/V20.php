@@ -283,7 +283,7 @@ class V20 extends Migration
                          * Alter `signed`  internal type on `value` attr
                          */
                         $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }

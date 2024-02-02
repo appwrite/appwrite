@@ -3428,7 +3428,7 @@ App::post('/v1/account/targets/push')
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3483,7 +3483,7 @@ App::put('/v1/account/targets/:targetId/push')
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3526,7 +3526,7 @@ App::delete('/v1/account/targets/:targetId/push')
 
         Authorization::skip(fn() => $dbForProject->deleteDocument('targets', $target->getId()));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForDeletes
             ->setType(DELETE_TYPE_TARGET)
