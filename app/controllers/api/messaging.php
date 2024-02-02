@@ -2,11 +2,11 @@
 
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
-use Appwrite\Enum\MessageStatus;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
 use Appwrite\Role;

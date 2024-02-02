@@ -2,6 +2,9 @@
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Challenge;
+use Appwrite\Auth\MFA\Provider;
+use Appwrite\Auth\MFA\Provider\TOTP;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
@@ -146,6 +149,8 @@ App::post('/v1/account')
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'name' => $name,
+                'mfa' => false,
+                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
@@ -255,6 +260,7 @@ App::post('/v1/account/sessions/email')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
+                'factors' => ['email'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
@@ -462,8 +468,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
-    ->label('usage.params', ['provider:{request.provider}'])
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
@@ -689,6 +693,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'registration' => DateTime::now(),
                         'reset' => false,
                         'name' => $name,
+                        'mfa' => false,
+                        'totp' => false,
                         'prefs' => new \stdClass(),
                         'sessions' => null,
                         'tokens' => null,
@@ -833,6 +839,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
+                'factors' => ['email'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
@@ -886,7 +893,6 @@ App::get('/v1/account/identities')
     ->desc('List Identities')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listIdentities')
@@ -1053,6 +1059,8 @@ App::post('/v1/account/tokens/magic-url')
                 'passwordUpdate' => null,
                 'registration' => DateTime::now(),
                 'reset' => false,
+                'mfa' => false,
+                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
@@ -1463,6 +1471,15 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
+    $factor = match ($verifiedToken->getAttribute('type')) {
+        Auth::TOKEN_TYPE_MAGIC_URL,
+        Auth::TOKEN_TYPE_OAUTH2,
+        Auth::TOKEN_TYPE_EMAIL => 'email',
+        Auth::TOKEN_TYPE_PHONE => 'phone',
+        Auth::TOKEN_TYPE_GENERIC => 'token',
+        default => throw new Exception(Exception::USER_INVALID_TOKEN)
+    };
+
     $session = new Document(array_merge(
         [
             '$id' => ID::unique(),
@@ -1472,6 +1489,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             'secret' => Auth::hash($sessionSecret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+            'factors' => [$factor],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
             'expire' => DateTime::addSeconds(new \DateTime(), $duration)
         ],
@@ -1544,7 +1562,6 @@ App::put('/v1/account/sessions/magic-url')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', ['updateMagicURLSession', 'updatePhoneSession'])
@@ -1574,7 +1591,6 @@ App::post('/v1/account/sessions/token')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
@@ -1830,6 +1846,8 @@ App::post('/v1/account/sessions/anonymous')
             'registration' => DateTime::now(),
             'reset' => false,
             'name' => null,
+            'mfa' => false,
+            'totp' => false,
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
@@ -1855,6 +1873,7 @@ App::post('/v1/account/sessions/anonymous')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
+                'factors' => ['anonymous'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
@@ -2022,7 +2041,6 @@ App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
@@ -2046,7 +2064,6 @@ App::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
@@ -2069,7 +2086,6 @@ App::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listSessions')
@@ -2105,7 +2121,6 @@ App::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listLogs')
@@ -2166,7 +2181,6 @@ App::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSession')
@@ -2180,9 +2194,8 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('response')
     ->inject('user')
     ->inject('locale')
-    ->inject('dbForProject')
     ->inject('project')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Database $dbForProject, Document $project) {
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project) {
 
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
@@ -2190,7 +2203,7 @@ App::get('/v1/account/sessions/:sessionId')
             : $sessionId;
 
         foreach ($sessions as $session) {/** @var Document $session */
-            if ($sessionId == $session->getId()) {
+            if ($sessionId === $session->getId()) {
                 $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
 
                 $session
@@ -3416,6 +3429,391 @@ App::put('/v1/account/verification/phone')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
+App::patch('/v1/account/mfa')
+    ->desc('Update MFA')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'accounts.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateMFA')
+    ->label('sdk.description', '/docs/references/account/update-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->param('mfa', null, new Boolean(), 'Enable or disable MFA.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (bool $mfa, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $user->setAttribute('mfa', $mfa);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
+    });
+
+App::get('/v1/account/mfa/factors')
+    ->desc('List Factors')
+    ->groups(['api', 'account', 'mfa'])
+    ->label('scope', 'accounts.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'listFactors')
+    ->label('sdk.description', '/docs/references/account/get.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDERS)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('response')
+    ->inject('user')
+    ->action(function (Response $response, Document $user) {
+
+        $providers = new Document([
+            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
+            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+        ]);
+
+        $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
+    });
+
+App::post('/v1/account/mfa/:factor')
+    ->desc('Add Authenticator')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'accounts.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'addAuthenticator')
+    ->label('sdk.description', '/docs/references/account/update-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('project')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $factor, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $otp = match ($factor) {
+            'totp' => new TOTP(),
+            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown provider.')
+        };
+
+        $otp->setLabel($user->getAttribute('email'));
+        $otp->setIssuer($project->getAttribute('name'));
+
+        $backups = Provider::generateBackupCodes();
+
+    if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
+    }
+
+        $user
+            ->setAttribute('totp', true)
+            ->setAttribute('totpVerification', false)
+            ->setAttribute('totpBackup', $backups)
+            ->setAttribute('totpSecret', $otp->getSecret());
+
+        $model = new Document();
+        $model
+            ->setAttribute('backups', $backups)
+            ->setAttribute('secret', $otp->getSecret())
+            ->setAttribute('uri', $otp->getProvisioningUri());
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($model, Response::MODEL_MFA_PROVIDER);
+    });
+
+App::put('/v1/account/mfa/:factor')
+    ->desc('Verify Authenticator')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'accounts.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'verifyAuthenticator')
+    ->label('sdk.description', '/docs/references/account/update-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
+    ->param('otp', '', new Text(256), 'Valid verification token.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $factor, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+
+        $success = match ($factor) {
+            'totp' => Challenge\TOTP::verify($user, $otp),
+            default => false
+        };
+
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+    if (!$user->getAttribute('totp')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+    } elseif ($user->getAttribute('totpVerification')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+    }
+
+        $user->setAttribute('totpVerification', true);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->dynamic($user, Response::MODEL_ACCOUNT);
+    });
+
+App::delete('/v1/account/mfa/:provider')
+    ->desc('Delete Authenticator')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].delete.mfa')
+    ->label('scope', 'accounts.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deleteAuthenticator')
+    ->label('sdk.description', '/docs/references/account/delete-mfa.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('otp', '', new Text(256), 'Valid verification token.')
+    ->inject('requestTimestamp')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $success = match ($provider) {
+            'totp' => Challenge\TOTP::verify($user, $otp),
+            default => false
+        };
+
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+    if (!$user->getAttribute('totp')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+    }
+
+        $user
+            ->setAttribute('totp', false)
+            ->setAttribute('totpVerification', false)
+            ->setAttribute('totpSecret', null)
+            ->setAttribute('totpBackup', null);
+
+        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $response->noContent();
+    });
+
+App::post('/v1/account/mfa/challenge')
+    ->desc('Create MFA Challenge')
+    ->groups(['api', 'account', 'mfa'])
+    ->label('scope', 'accounts.write')
+    ->label('event', 'users.[userId].challenges.[challengeId].create')
+    ->label('auth.type', 'createChallenge')
+    ->label('audits.event', 'challenge.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk.auth', [])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createChallenge')
+    ->label('sdk.description', '/docs/references/account/create-challenge.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'url:{url},token:{param-token}')
+    ->param('provider', '', new WhiteList(['totp', 'phone', 'email']), 'provider.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('user')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->inject('queueForMessaging')
+    ->inject('queueForMails')
+    ->inject('locale')
+    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
+
+        $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
+        $code = Auth::codeGenerator();
+        $challenge = new Document([
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'provider' => $provider,
+            'token' => Auth::tokenGenerator(),
+            'code' => $code,
+            'expire' => $expire,
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ],
+        ]);
+
+        $challenge = $dbForProject->createDocument('challenges', $challenge);
+
+        switch ($provider) {
+            case 'phone':
+                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                    throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
+                }
+                if (empty($user->getAttribute('phone'))) {
+                    throw new Exception(Exception::USER_PHONE_NOT_FOUND);
+                }
+                if (!$user->getAttribute('phoneVerification')) {
+                    throw new Exception(Exception::USER_PHONE_NOT_VERIFIED);
+                }
+
+                $queueForMessaging
+                    ->setMessage(new Document([
+                        '$id' => $challenge->getId(),
+                        'data' => [
+                            'content' => $code,
+                        ],
+                    ]))
+                    ->setRecipients([$user->getAttribute('phone')])
+                    ->trigger();
+                break;
+            case 'email':
+                if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+                    throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
+                }
+                if (empty($user->getAttribute('email'))) {
+                    throw new Exception(Exception::USER_EMAIL_NOT_FOUND);
+                }
+                if (!$user->getAttribute('emailVerification')) {
+                    throw new Exception(Exception::USER_EMAIL_NOT_VERIFIED);
+                }
+
+                $queueForMails
+                    ->setSubject("{$code} is your 6-digit code")
+                    ->setBody($code)
+                    ->setRecipient($user->getAttribute('email'))
+                    ->trigger();
+                break;
+        }
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('challengeId', $challenge->getId());
+
+        $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
+    });
+
+App::put('/v1/account/mfa/challenge')
+    ->desc('Create MFA Challenge (confirmation)')
+    ->groups(['api', 'account', 'mfa'])
+    ->label('scope', 'accounts.write')
+    ->label('event', 'users.[userId].sessions.[tokenId].create')
+    ->label('audits.event', 'challenges.update')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateChallenge')
+    ->label('sdk.description', '/docs/references/account/update-challenge.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'userId:{param-userId}')
+    ->param('challengeId', '', new Text(256), 'Valid verification token.')
+    ->param('otp', '', new Text(256), 'Valid verification token.')
+    ->inject('project')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $challenge = $dbForProject->getDocument('challenges', $challengeId);
+
+        if ($challenge->isEmpty()) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
+
+        $provider = $challenge->getAttribute('provider');
+        $success = match ($provider) {
+            'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
+            'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
+            'email' => Challenge\Email::challenge($challenge, $user, $otp),
+            default => false
+        };
+
+    if (!$success && $provider === 'totp') {
+        $backups = $user->getAttribute('mfaBackups', []);
+        if (in_array($otp, $backups)) {
+            $success = true;
+            $backups = array_diff($backups, [$otp]);
+            $user->setAttribute('mfaBackups', $backups);
+            $dbForProject->updateDocument('users', $user->getId(), $user);
+        }
+    }
+
+    if (!$success) {
+        throw new Exception(Exception::USER_INVALID_TOKEN);
+    }
+
+        $dbForProject->deleteDocument('challenges', $challengeId);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
+
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
+
+        $response->dynamic($session, Response::MODEL_SESSION);
+    });
+
 App::put('/v1/account/targets/:targetId/push')
     ->desc('Update Account\'s push target')
     ->groups(['api', 'account'])
@@ -3480,7 +3878,6 @@ App::delete('/v1/account')
     ->label('scope', 'accounts.write')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')

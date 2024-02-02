@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Messaging;
 
-use Appwrite\Enum\MessageStatus;
+use Appwrite\Messaging\Status as MessageStatus;
 use Tests\E2E\Client;
 use Utopia\App;
 use Utopia\Database\Helpers\ID;
