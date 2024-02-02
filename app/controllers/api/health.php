@@ -421,18 +421,10 @@ App::get('/v1/health/certificate')
 
         $streamContextParams = stream_context_get_params($sslSocket);
         $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
-        $parsedCertificate = openssl_x509_parse($peerCertificate);
+        $certificatePayload = openssl_x509_parse($peerCertificate);
 
-        $certificatePayload = [
-            'name' => $parsedCertificate['name'],
-            'subjectCN' => $parsedCertificate['subject']['CN'],
-            'issuer' => $parsedCertificate['issuer'],
-            'validFrom' => $parsedCertificate['validFrom_time_t'],
-            'validTo' => $parsedCertificate['validTo_time_t'],
-            'signatureTypeSN' => $parsedCertificate['signatureTypeSN'],
-        ];
 
-        $sslExpiration = $parsedCertificate['validTo_time_t'];
+        $sslExpiration = $certificatePayload['validTo_time_t'];
         $status = ($sslExpiration < time()) ? 'fail' : 'pass';
 
         if ($status == 'fail') {
@@ -441,7 +433,12 @@ App::get('/v1/health/certificate')
 
         $response->dynamic(new Document([
             'name' => 'certificate',
-            'payload' => json_encode($certificatePayload),
+            'certificateName' => $certificatePayload['name'],
+            'certificateSubjectSN' => $certificatePayload['subject']['CN'],
+            'certificateIssuerOrganisation' => $certificatePayload['issuer']['O'],
+            'certificateValidFrom' => $certificatePayload['validFrom_time_t'],
+            'certificateValidTo' => $certificatePayload['validTo_time_t'],
+            'certificateSignatureTypeSN' => $certificatePayload['signatureTypeSN'],
         ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);
 

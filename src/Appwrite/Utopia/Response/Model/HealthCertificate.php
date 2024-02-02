@@ -16,16 +16,41 @@ class HealthCertificate extends Model
                 'default' => '',
                 'example' => 'database',
             ])
-            ->addRule('payload', [
-                'type' => self::TYPE_JSON,
-                'description' => 'Certificate information payload',
-                'default' => [],
-                'example' => [
-                    'name' => '/CN=www.google.com',
-                    'validFrom' => '1704200998',
-                    'validTo' => '1711458597',
-                    'signatureTypeSN' => 'RSA-SHA256',
-                ],
+            ->addRule('certificateName', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate name',
+                'default' => '',
+                'example' => '/CN=www.google.com',
+            ])
+            ->addRule('certificateSubjectSN', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate subject SN',
+                'default' => 'www.google.com',
+                'example' => '',
+            ])
+            ->addRule('certificateIssuerOrganisation', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate issuer organisation',
+                'default' => 'Google Trust Services LLC',
+                'example' => '',
+            ])
+            ->addRule('certificateValidFrom', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate valid from',
+                'default' => '',
+                'example' => '1704200998',
+            ])
+            ->addRule('certificateValidTo', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate valid to',
+                'default' => '',
+                'example' => '1711458597',
+            ])
+            ->addRule('certificateSignatureTypeSN', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Certificate signature type SN',
+                'default' => '',
+                'example' => 'RSA-SHA256',
             ])
         ;
     }
