@@ -4,8 +4,8 @@
  * List of server wide error codes and their respective messages.
  */
 
-use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 
 return [
     /** General Errors */
