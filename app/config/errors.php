@@ -116,7 +116,7 @@ return [
     ],
     Exception::GENERAL_REGION_ACCESS_DENIED => [
         'name' => Exception::GENERAL_REGION_ACCESS_DENIED,
-        'description' => 'Sorry, access from the current region is denied.',
+        'description' => 'Your location is not supported due to legal requirements.',
         'code' => 451,
     ],
 
