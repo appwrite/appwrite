@@ -3531,7 +3531,7 @@ App::delete('/v1/account/targets/:targetId/push')
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        if ($user->getId() !== $target->getAttribute('userId')) {
+        if ($user->getInternalId() !== $target->getAttribute('userInternalId')) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
