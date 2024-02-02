@@ -177,6 +177,7 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
+const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';

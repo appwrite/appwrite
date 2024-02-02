@@ -2033,76 +2033,6 @@ App::post('/v1/account/jwt')
         ])]), Response::MODEL_JWT);
     });
 
-App::post('/v1/account/targets/push')
-    ->desc('Create Account\'s push target')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('audits.event', 'target.create')
-    ->label('audits.resource', 'target/response.$id')
-    ->label('event', 'users.[userId].targets.[targetId].create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createPushTarget')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
-    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
-    ->inject('queueForEvents')
-    ->inject('user')
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $targetId, string $providerId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
-        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
-
-        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
-
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
-
-        if (!$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
-        }
-
-        $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-        $device = $detector->getDevice();
-
-        try {
-            $target = $dbForProject->createDocument('targets', new Document([
-                '$id' => $targetId,
-                '$permissions' => [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                ],
-                'providerId' => !empty($providerId) ? $providerId : null,
-                'providerInternalId' => !empty($providerId) ? $provider->getInternalId() : null,
-                'providerType' =>  MESSAGE_TYPE_PUSH,
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'identifier' => $identifier,
-                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
-            ]));
-        } catch (Duplicate) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
-        }
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($target, Response::MODEL_TARGET);
-    });
-
 App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
@@ -2657,8 +2587,9 @@ App::delete('/v1/account/sessions/:sessionId')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
+    ->inject('queueForDeletes')
     ->inject('project')
-    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Document $project) {
+    ->action(function (?string $sessionId, ?\DateTime $requestTimestamp, Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes, Document $project) {
 
         $protocol = $request->getProtocol();
         $sessionId = ($sessionId === 'current')
@@ -2667,43 +2598,48 @@ App::delete('/v1/account/sessions/:sessionId')
 
         $sessions = $user->getAttribute('sessions', []);
 
-        foreach ($sessions as $key => $session) {/** @var Document $session */
-            if ($sessionId == $session->getId()) {
-                $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
-                    return $dbForProject->deleteDocument('sessions', $session->getId());
-                });
+        foreach ($sessions as $key => $session) {
+            /** @var Document $session */
+            if ($sessionId !== $session->getId()) {
+                continue;
+            }
 
-                unset($sessions[$key]);
+            $dbForProject->withRequestTimestamp($requestTimestamp, function () use ($dbForProject, $session) {
+                return $dbForProject->deleteDocument('sessions', $session->getId());
+            });
 
-                $session->setAttribute('current', false);
+            unset($sessions[$key]);
 
-                if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
-                    $session
-                        ->setAttribute('current', true)
-                        ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-                    ;
+            $session->setAttribute('current', false);
 
-                    if (!Config::getParam('domainVerification')) {
-                        $response
-                            ->addHeader('X-Fallback-Cookies', \json_encode([]))
-                        ;
-                    }
+            if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) { // If current session delete the cookies too
+                $session
+                    ->setAttribute('current', true)
+                    ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
-                    $response
-                        ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-                        ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-                    ;
+                if (!Config::getParam('domainVerification')) {
+                    $response->addHeader('X-Fallback-Cookies', \json_encode([]));
                 }
 
-                $dbForProject->purgeCachedDocument('users', $user->getId());
-
-                $queueForEvents
-                    ->setParam('userId', $user->getId())
-                    ->setParam('sessionId', $session->getId())
-                    ->setPayload($response->output($session, Response::MODEL_SESSION))
-                ;
-                return $response->noContent();
+                $response
+                    ->addCookie(Auth::$cookieName . '_legacy', '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
+                    ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
             }
+
+            $dbForProject->purgeCachedDocument('users', $user->getId());
+
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setParam('sessionId', $session->getId())
+                ->setPayload($response->output($session, Response::MODEL_SESSION));
+
+            $queueForDeletes
+                ->setType(DELETE_TYPE_SESSION_TARGETS)
+                ->setDocument($session)
+                ->trigger();
+
+            $response->noContent();
+            return;
         }
 
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
@@ -2805,7 +2741,8 @@ App::delete('/v1/account/sessions')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('queueForEvents')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents) {
+    ->inject('queueForDeletes')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Delete $queueForDeletes) {
 
         $protocol = $request->getProtocol();
         $sessions = $user->getAttribute('sessions', []);
@@ -2819,8 +2756,7 @@ App::delete('/v1/account/sessions')
 
             $session
                 ->setAttribute('current', false)
-                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')))
-            ;
+                ->setAttribute('countryName', $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown')));
 
             if ($session->getAttribute('secret') == Auth::hash(Auth::$secret)) {
                 $session->setAttribute('current', true);
@@ -2831,7 +2767,13 @@ App::delete('/v1/account/sessions')
                     ->addCookie(Auth::$cookieName, '', \time() - 3600, '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
                 // Use current session for events.
-                $queueForEvents->setPayload($response->output($session, Response::MODEL_SESSION));
+                $queueForEvents
+                    ->setPayload($response->output($session, Response::MODEL_SESSION));
+
+                $queueForDeletes
+                    ->setType(DELETE_TYPE_SESSION_TARGETS)
+                    ->setDocument($session)
+                    ->trigger();
             }
         }
 
@@ -3880,63 +3822,6 @@ App::put('/v1/account/mfa/challenge')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::put('/v1/account/targets/:targetId/push')
-    ->desc('Update Account\'s push target')
-    ->groups(['api', 'account'])
-    ->label('scope', 'account')
-    ->label('audits.event', 'target.update')
-    ->label('audits.resource', 'target/response.$id')
-    ->label('event', 'users.[userId].targets.[targetId].update')
-    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
-    ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updatePushTarget')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_TARGET)
-    ->param('targetId', '', new UID(), 'Target ID.')
-    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
-    ->inject('queueForEvents')
-    ->inject('user')
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
-        if ($user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
-
-        if ($target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-        }
-
-        if ($user->getId() !== $target->getAttribute('userId')) {
-            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
-        }
-
-        if ($identifier) {
-            $target->setAttribute('identifier', $identifier);
-        }
-
-        $detector = new Detector($request->getUserAgent());
-        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
-
-        $device = $detector->getDevice();
-
-        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
-
-        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
-        $dbForProject->purgeCachedDocument('users', $user->getId());
-
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('targetId', $target->getId());
-
-        $response
-            ->dynamic($target, Response::MODEL_TARGET);
-    });
-
 App::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
@@ -3969,6 +3854,182 @@ App::delete('/v1/account')
         $queueForEvents
             ->setParam('userId', $user->getId())
             ->setPayload($response->output($user, Response::MODEL_USER));
+
+        $response->noContent();
+    });
+
+App::post('/v1/account/targets/push')
+    ->desc('Create a push target')
+    ->groups(['api', 'account'])
+    ->label('scope', 'targets.write')
+    ->label('audits.event', 'target.create')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].create')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createPushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new CustomId(), 'Target ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->param('providerId', '', new UID(), 'Provider ID. Message will be sent to this target from the specified provider ID. If no provider ID is set the first setup provider will be used.', true)
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('session')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
+
+        $provider = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if (!$target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret);
+        $session = $dbForProject->getDocument('sessions', $sessionId);
+
+        try {
+            $target = $dbForProject->createDocument('targets', new Document([
+                '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
+                'providerId' => !empty($providerId) ? $providerId : null,
+                'providerInternalId' => !empty($providerId) ? $provider->getInternalId() : null,
+                'providerType' =>  MESSAGE_TYPE_PUSH,
+                'userId' => $user->getId(),
+                'userInternalId' => $user->getInternalId(),
+                'sessionId' => $session->getId(),
+                'sessionInternalId' => $session->getInternalId(),
+                'identifier' => $identifier,
+                'name' => "{$device['deviceBrand']} {$device['deviceModel']}"
+            ]));
+        } catch (Duplicate) {
+            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+        }
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
+App::put('/v1/account/targets/:targetId/push')
+    ->desc('Update a push target')
+    ->groups(['api', 'account'])
+    ->label('scope', 'targets.write')
+    ->label('audits.event', 'target.update')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->param('identifier', '', new Text(Database::LENGTH_KEY), 'The target identifier (token, email, phone etc.)')
+    ->inject('queueForEvents')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+
+        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getId() !== $target->getAttribute('userId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($identifier) {
+            $target->setAttribute('identifier', $identifier);
+        }
+
+        $detector = new Detector($request->getUserAgent());
+        $detector->skipBotDetection(); // OPTIONAL: If called, bot detection will completely be skipped (bots will be detected as regular devices then)
+
+        $device = $detector->getDevice();
+
+        $target->setAttribute('name', "{$device['deviceBrand']} {$device['deviceModel']}");
+
+        $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId());
+
+        $response
+            ->dynamic($target, Response::MODEL_TARGET);
+    });
+
+App::delete('/v1/account/targets/:targetId/push')
+    ->desc('Delete a push target')
+    ->groups(['api', 'account'])
+    ->label('scope', 'targets.write')
+    ->label('audits.event', 'target.delete')
+    ->label('audits.resource', 'target/response.$id')
+    ->label('event', 'users.[userId].targets.[targetId].delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'deletePushTarget')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_TARGET)
+    ->param('targetId', '', new UID(), 'Target ID.')
+    ->inject('queueForEvents')
+    ->inject('queueForDeletes')
+    ->inject('user')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
+        $target = Authorization::skip(fn() => $dbForProject->getDocument('targets', $targetId));
+
+        if ($target->isEmpty()) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        if ($user->getInternalId() !== $target->getAttribute('userInternalId')) {
+            throw new Exception(Exception::USER_TARGET_NOT_FOUND);
+        }
+
+        $dbForProject->deleteDocument('targets', $target->getId());
+
+        $dbForProject->purgeCachedDocument('users', $user->getId());
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_TARGET)
+            ->setDocument($target);
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setParam('targetId', $target->getId())
+            ->setPayload($response->output($target, Response::MODEL_TARGET));
 
         $response->noContent();
     });
