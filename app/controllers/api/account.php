@@ -3437,7 +3437,6 @@ App::patch('/v1/account/mfa')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateMFA')
@@ -3464,14 +3463,13 @@ App::patch('/v1/account/mfa')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account/mfa/providers')
-    ->desc('List Providers')
+App::get('/v1/account/mfa/factors')
+    ->desc('List Factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'listProviders')
+    ->label('sdk.method', 'listFactors')
     ->label('sdk.description', '/docs/references/account/get.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3491,7 +3489,7 @@ App::get('/v1/account/mfa/providers')
         $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
     });
 
-App::post('/v1/account/mfa/:provider')
+App::post('/v1/account/mfa/:factor')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3499,7 +3497,6 @@ App::post('/v1/account/mfa/:provider')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'addAuthenticator')
@@ -3509,16 +3506,16 @@ App::post('/v1/account/mfa/:provider')
     ->label('sdk.response.model', Response::MODEL_MFA_PROVIDER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $provider, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $factor, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $otp = match ($provider) {
+        $otp = match ($factor) {
             'totp' => new TOTP(),
             default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown provider.')
         };
@@ -3551,7 +3548,7 @@ App::post('/v1/account/mfa/:provider')
         $response->dynamic($model, Response::MODEL_MFA_PROVIDER);
     });
 
-App::put('/v1/account/mfa/:provider')
+App::put('/v1/account/mfa/:factor')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3559,7 +3556,6 @@ App::put('/v1/account/mfa/:provider')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'verifyAuthenticator')
@@ -3569,7 +3565,7 @@ App::put('/v1/account/mfa/:provider')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -3577,9 +3573,9 @@ App::put('/v1/account/mfa/:provider')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $factor, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
-        $success = match ($provider) {
+        $success = match ($factor) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
         };
@@ -3616,7 +3612,6 @@ App::delete('/v1/account/mfa/:provider')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'deleteAuthenticator')
@@ -3624,8 +3619,6 @@ App::delete('/v1/account/mfa/:provider')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->label('sdk.offline.model', '/account')
-    ->label('sdk.offline.key', 'current')
     ->param('provider', null, new WhiteList(['totp']), 'Provider.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
@@ -3764,7 +3757,6 @@ App::put('/v1/account/mfa/challenge')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'updateChallenge')
@@ -3784,7 +3776,7 @@ App::put('/v1/account/mfa/challenge')
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
 
-        if (!$challenge) {
+        if ($challenge->isEmpty()) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
@@ -3801,7 +3793,7 @@ App::put('/v1/account/mfa/challenge')
     }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);

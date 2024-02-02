@@ -162,7 +162,7 @@ class Session extends Model
             ])
             ->addRule('factors', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Returns true if this the current user session.',
+                'description' => 'Returns a list of active session factors.',
                 'default' => 1,
                 'example' => 1,
             ])

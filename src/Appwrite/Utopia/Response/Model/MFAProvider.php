@@ -12,20 +12,20 @@ class MFAProvider extends Model
         $this
             ->addRule('backups', [
                 'type' => self::TYPE_STRING,
-                'description' => 'backup codes',
+                'description' => 'Backup codes.',
                 'array' => true,
                 'default' => [],
                 'example' => true
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
-                'description' => 'secret used for top auth',
+                'description' => 'Secret token used for TOTP factor.',
                 'default' => '',
                 'example' => true
             ])
             ->addRule('uri', [
                 'type' => self::TYPE_STRING,
-                'description' => 'uri for otp app',
+                'description' => 'URI for authenticator apps.',
                 'default' => '',
                 'example' => true
             ])

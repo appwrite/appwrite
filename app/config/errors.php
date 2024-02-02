@@ -239,7 +239,7 @@ return [
     ],
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
-        'description' => null,
+        'description' => 'More factors are required to complete the sign in process.',
         'code' => 400,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
