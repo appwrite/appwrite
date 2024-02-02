@@ -15,7 +15,7 @@ $image = $this->getParam('image', '');
 
 services:
   traefik:
-    image: traefik:2.9
+    image: traefik:2.11
     container_name: appwrite-traefik
     <<: *x-logging
     command:
@@ -735,7 +735,7 @@ services:
       - OPR_EXECUTOR_STORAGE_WASABI_BUCKET=$_APP_STORAGE_WASABI_BUCKET
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     restart: unless-stopped
@@ -751,7 +751,7 @@ services:
     command: 'mysqld --innodb-flush-method=fsync'
 
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.2.4-alpine
     container_name: appwrite-redis
     <<: *x-logging
     restart: unless-stopped
