@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Account;
 use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Query;
 
 trait AccountBase
 {
@@ -147,7 +148,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['expire']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertEmpty($response['body']['securityPhrase']);
+        $this->assertEmpty($response['body']['phrase']);
 
         $userId = $response['body']['userId'];
 
@@ -207,21 +208,21 @@ trait AccountBase
         ]), [
             'userId' => ID::unique(),
             'email' => 'otpuser@appwrite.io',
-            'securityPhrase' => true
+            'phrase' => true
         ]);
 
         $this->assertEquals($response['headers']['status-code'], 201);
-        $this->assertNotEmpty($response['body']['securityPhrase']);
+        $this->assertNotEmpty($response['body']['phrase']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals($userId, $response['body']['userId']);
 
-        $securityPhrase = $response['body']['securityPhrase'];
+        $phrase = $response['body']['phrase'];
 
         $lastEmail = $this->getLastEmail();
         $this->assertEquals('otpuser@appwrite.io', $lastEmail['to'][0]['address']);
         $this->assertEquals('OTP for ' . $this->getProject()['name'] . ' Login', $lastEmail['subject']);
         $this->assertStringContainsStringIgnoringCase('security phrase', $lastEmail['text']);
-        $this->assertStringContainsStringIgnoringCase($securityPhrase, $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase($phrase, $lastEmail['text']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/tokens/email', array_merge([
             'origin' => 'http://localhost',

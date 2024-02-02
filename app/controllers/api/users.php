@@ -144,7 +144,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             }
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
     } catch (Duplicate $th) {
         throw new Exception(Exception::USER_ALREADY_EXISTS);
     }
@@ -507,7 +507,7 @@ App::post('/v1/users/:userId/targets')
         } catch (Duplicate) {
             throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
         }
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -543,7 +543,7 @@ App::get('/v1/users')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -838,7 +838,7 @@ App::get('/v1/users/:userId/targets')
         $queries[] = Query::equal('userId', [$userId]);
 
          // Get cursor document if there was a cursor query
-         $cursor = Query::getByType($queries, [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+         $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
          $cursor = reset($cursor);
 
         if ($cursor) {
@@ -883,7 +883,7 @@ App::get('/v1/users/identities')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -957,7 +957,7 @@ App::put('/v1/users/:userId/labels')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
+    ->param('labels', [], new ArrayList(new Text(36, allowList: [...Text::NUMBERS, ...Text::ALPHABET_UPPER, ...Text::ALPHABET_LOWER]), APP_LIMIT_ARRAY_LABELS_SIZE), 'Array of user labels. Replaces the previous labels. Maximum of ' . APP_LIMIT_ARRAY_LABELS_SIZE . ' labels are allowed, each up to 36 alphanumeric characters long.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1183,7 +1183,7 @@ App::patch('/v1/users/:userId/email')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
         }
@@ -1245,7 +1245,7 @@ App::patch('/v1/users/:userId/phone')
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
                 $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
             }
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_PHONE_ALREADY_EXISTS);
         }
@@ -1407,7 +1407,7 @@ App::patch('/v1/users/:userId/targets/:targetId')
         }
 
         $target = $dbForProject->updateDocument('targets', $target->getId(), $target);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1417,76 +1417,6 @@ App::patch('/v1/users/:userId/targets/:targetId')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::post('/v1/users/:userId/sessions')
-    ->desc('Create session')
-    ->groups(['api', 'users'])
-    ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->label('scope', 'users.write')
-    ->label('audits.event', 'session.create')
-    ->label('audits.resource', 'user/{request.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'createSession')
-    ->label('sdk.description', '/docs/references/users/create-session.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_SESSION)
-    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('locale')
-    ->inject('geodb')
-    ->inject('queueForEvents')
-    ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
-        $user = $dbForProject->getDocument('users', $userId);
-        if ($user === false || $user->isEmpty()) {
-            throw new Exception(Exception::USER_NOT_FOUND);
-        }
-
-        $secret = Auth::codeGenerator();
-        $detector = new Detector($request->getUserAgent('UNKNOWN'));
-        $record = $geodb->get($request->getIP());
-
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-        $session = new Document(array_merge(
-            [
-                '$id' => ID::unique(),
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'provider' => Auth::SESSION_PROVIDER_SERVER,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
-                'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
-            ],
-            $detector->getOS(),
-            $detector->getClient(),
-            $detector->getDevice()
-        ));
-
-        $countryName = $locale->getText('countries.' . strtolower($session->getAttribute('countryCode')), $locale->getText('locale.country.unknown'));
-
-        $session = $dbForProject->createDocument('sessions', $session);
-        $session
-            ->setAttribute('secret', $secret)
-            ->setAttribute('expire', $expire)
-            ->setAttribute('countryName', $countryName);
-
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setParam('sessionId', $session->getId())
-            ->setPayload($response->output($session, Response::MODEL_SESSION));
-
-        return $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($session, Response::MODEL_SESSION);
-    });
-
 App::post('/v1/users/:userId/tokens')
     ->desc('Create token')
     ->groups(['api', 'users'])
@@ -1494,7 +1424,6 @@ App::post('/v1/users/:userId/tokens')
     ->label('scope', 'users.write')
     ->label('audits.event', 'tokens.create')
     ->label('audits.resource', 'user/{request.userId}')
-    ->label('usage.metric', 'tokens.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
     ->label('sdk.method', 'createToken')
@@ -1531,7 +1460,7 @@ App::post('/v1/users/:userId/tokens')
         ]);
 
         $token = $dbForProject->createDocument('tokens', $token);
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $token->setAttribute('secret', $secret);
 
@@ -1578,7 +1507,7 @@ App::delete('/v1/users/:userId/sessions/:sessionId')
         }
 
         $dbForProject->deleteDocument('sessions', $session->getId());
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1621,7 +1550,7 @@ App::delete('/v1/users/:userId/sessions')
             //TODO: fix this
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -1710,7 +1639,7 @@ App::delete('/v1/users/:userId/targets/:targetId')
         }
 
         $dbForProject->deleteDocument('targets', $target->getId());
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForDeletes
             ->setType(DELETE_TYPE_TARGET)

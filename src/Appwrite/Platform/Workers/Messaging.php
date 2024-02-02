@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
@@ -18,6 +18,7 @@ use Utopia\Database\Query;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push\FCM;
@@ -216,8 +217,8 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $dbForProject) {
-                    return function () use ($batch, $message, $provider, $adapter, $batchIndex, $dbForProject) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject) {
+                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -407,10 +408,24 @@ class Messaging extends Action
 
     private function email(Document $provider): ?EmailAdapter
     {
-        $credentials = $provider->getAttribute('credentials');
+        $credentials = $provider->getAttribute('credentials', []);
+        $options = $provider->getAttribute('options', []);
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
-            'mailgun' => new Mailgun($credentials['apiKey'], $credentials['domain'], $credentials['isEuRegion']),
+            'smtp' => new SMTP(
+                $credentials['host'],
+                $credentials['port'],
+                $credentials['username'],
+                $credentials['password'],
+                $options['encryption'],
+                $options['autoTLS'],
+                $options['mailer'],
+            ),
+            'mailgun' => new Mailgun(
+                $credentials['apiKey'],
+                $credentials['domain'],
+                $credentials['isEuRegion']
+            ),
             'sendgrid' => new Sendgrid($credentials['apiKey']),
             default => null
         };
@@ -418,16 +433,10 @@ class Messaging extends Action
 
     private function buildEmailMessage(Database $dbForProject, Document $message, Document $provider): Email
     {
-        $fromName = $provider['options']['fromName'];
-        $fromEmail = $provider['options']['fromEmail'];
-        $replyToEmail = null;
-        $replyToName = null;
-
-        if (isset($provider['options']['replyToName']) && isset($provider['options']['replyToEmail'])) {
-            $replyToName = $provider['options']['replyToName'];
-            $replyToEmail = $provider['options']['replyToEmail'];
-        }
-
+        $fromName = $provider['options']['fromName'] ?? null;
+        $fromEmail = $provider['options']['fromEmail'] ?? null;
+        $replyToEmail = $provider['options']['replyToEmail'] ?? null;
+        $replyToName = $provider['options']['replyToName'] ?? null;
         $data = $message['data'] ?? [];
         $ccTargets = $data['cc'] ?? [];
         $bccTargets = $data['bcc'] ?? [];
