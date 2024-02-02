@@ -9,6 +9,7 @@ use Tests\E2E\Scopes\SideConsole;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
 
 class DatabasesConsoleClientTest extends Scope
 {
@@ -279,6 +280,7 @@ class DatabasesConsoleClientTest extends Scope
 
     /**
      * @depends testCreateCollection
+     * @throws \Utopia\Database\Exception\Query
      */
     public function testGetCollectionLogs(array $data)
     {
@@ -299,7 +301,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['limit(1)']
+            'queries' => [Query::limit(1)->toString()]
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -311,7 +313,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)']
+            'queries' => [Query::offset(1)->toString()]
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);
@@ -322,7 +324,7 @@ class DatabasesConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => ['offset(1)', 'limit(1)']
+            'queries' => [Query::offset(1)->toString(), Query::limit(1)->toString()]
         ]);
 
         $this->assertEquals(200, $logs['headers']['status-code']);

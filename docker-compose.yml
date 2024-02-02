@@ -14,7 +14,7 @@ version: '3'
 
 services:
   traefik:
-    image: traefik:2.9
+    image: traefik:2.11
     <<: *x-logging
     container_name: appwrite-traefik
     command:
@@ -297,6 +297,7 @@ services:
       - _APP_REDIS_PASS
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
+      - _APP_WEBHOOK_MAX_FAILED_ATTEMPTS
 
   appwrite-worker-deletes:
     entrypoint: worker-deletes
@@ -885,7 +886,7 @@ services:
       - OPR_PROXY_HEALTHCHECK=enabled
 
   mariadb:
-    image: mariadb:10.7 # fix issues when upgrading using: mysql_upgrade -u root -p
+    image: mariadb:10.11 # fix issues when upgrading using: mysql_upgrade -u root -p
     container_name: appwrite-mariadb
     <<: *x-logging
     networks:
@@ -915,7 +916,7 @@ services:
   #     - SMARTHOST_PORT=587
 
   redis:
-    image: redis:7.0.4-alpine
+    image: redis:7.2.4-alpine
     <<: *x-logging
     container_name: appwrite-redis
     command: >

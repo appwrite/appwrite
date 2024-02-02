@@ -10,7 +10,9 @@ use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -288,7 +290,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("teamId", "' . $team['body']['$id'] . '")' ],
+            'queries' => [
+                Query::equal('teamId', [$team['body']['$id']])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -300,7 +304,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'limit(1)' ],
+            'queries' => [
+                Query::limit(1)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -312,7 +318,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'offset(3)' ],
+            'queries' => [
+                Query::offset(3)->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -324,7 +332,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'equal("name", "Project Test 2")' ],
+            'queries' => [
+                Query::equal('name', ['Project Test 2'])->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -336,7 +346,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'orderDesc("")' ],
+            'queries' => [
+                Query::orderDesc()->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -360,7 +372,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("' . $response['body']['projects'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -372,7 +386,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorBefore("' . $response['body']['projects'][0]['$id'] . '")' ],
+            'queries' => [
+                Query::cursorBefore(new Document(['$id' => $response['body']['projects'][0]['$id']]))->toString(),
+            ],
         ]);
 
         $this->assertEquals(200, $response['headers']['status-code']);
@@ -387,7 +403,9 @@ class ProjectsConsoleClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
-            'queries' => [ 'cursorAfter("unknown")' ],
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => 'unknown']))->toString(),
+            ],
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
