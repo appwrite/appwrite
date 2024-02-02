@@ -31,7 +31,7 @@ App::init()
                 }
                 break;
 
-            case 'emailOtp':
+            case 'email-otp':
                 if (($auths['emailOtp'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
                 }
