@@ -40,7 +40,7 @@ class Token extends Model
                 'default' => '',
                 'example' => self::TYPE_DATETIME_EXAMPLE,
             ])
-            ->addRule('securityPhrase', [
+            ->addRule('phrase', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Security phrase of a token. Empty if security phrase was not requested when creating a token. It includes randomly generated phrase which is also sent in the external resource such as email.',
                 'default' => '',

@@ -16,7 +16,6 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const MAX_FAILED_ATTEMPTS = 10;
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
     public static function getName(): string
@@ -157,7 +156,7 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
+            if ($attempts >= \intval(App::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
             }

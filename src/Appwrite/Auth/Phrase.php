@@ -2,7 +2,7 @@
 
 namespace Appwrite\Auth;
 
-class SecurityPhrase
+class Phrase
 {
     public static function generate(): string
     {
