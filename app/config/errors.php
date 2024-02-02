@@ -107,7 +107,7 @@ return [
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
         'name' => Exception::USER_COUNT_EXCEEDED,
-        'description' => 'The current project has exceeded the maximum number of users. Please check your user limit in the Appwrite console.',
+        'description' => 'Registering new console accounts has been disabled. To enable, set the _APP_CONSOLE_ROOT environment variable to enabled.',
         'code' => 501,
     ],
     Exception::USER_JWT_INVALID => [
