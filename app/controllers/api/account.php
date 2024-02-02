@@ -3788,9 +3788,19 @@ App::put('/v1/account/mfa/challenge')
             default => false
         };
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success && $provider === 'totp') {
+            $backups = $user->getAttribute('mfaBackups', []);
+            if (in_array($otp, $backups)) {
+                $success = true;
+                $backups = array_diff($backups, [$otp]);
+                $user->setAttribute('mfaBackups', $backups);
+                $dbForProject->updateDocument('users', $user->getId(), $user);
+            }
+        }
+
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
