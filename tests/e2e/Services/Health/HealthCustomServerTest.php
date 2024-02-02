@@ -436,10 +436,11 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('www.google.com', $response['body']['certificateSubjectSN']);
-        $this->assertEquals('Google Trust Services LLC', $response['body']['certificateIssuerOrganisation']);
-        $this->assertIsInt($response['body']['certificateValidFrom']);
-        $this->assertIsInt($response['body']['certificateValidTo']);
+        $this->assertEquals('/CN=www.google.com', $response['body']['name']);
+        $this->assertEquals('www.google.com', $response['body']['subjectSN']);
+        $this->assertEquals('Google Trust Services LLC', $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
 
         $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=appwrite.io', array_merge([
             'content-type' => 'application/json',
@@ -447,10 +448,11 @@ class HealthCustomServerTest extends Scope
         ], $this->getHeaders()), []);
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertEquals('appwrite.io', $response['body']['certificateSubjectSN']);
-        $this->assertEquals("Let's Encrypt", $response['body']['certificateIssuerOrganisation']);
-        $this->assertIsInt($response['body']['certificateValidFrom']);
-        $this->assertIsInt($response['body']['certificateValidTo']);
+        $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
+        $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
+        $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
 
         $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
             'content-type' => 'application/json',

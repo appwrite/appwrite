@@ -432,13 +432,12 @@ App::get('/v1/health/certificate')
         }
 
         $response->dynamic(new Document([
-            'name' => 'certificate',
-            'certificateName' => $certificatePayload['name'],
-            'certificateSubjectSN' => $certificatePayload['subject']['CN'],
-            'certificateIssuerOrganisation' => $certificatePayload['issuer']['O'],
-            'certificateValidFrom' => $certificatePayload['validFrom_time_t'],
-            'certificateValidTo' => $certificatePayload['validTo_time_t'],
-            'certificateSignatureTypeSN' => $certificatePayload['signatureTypeSN'],
+            'name' => $certificatePayload['name'],
+            'subjectSN' => $certificatePayload['subject']['CN'],
+            'issuerOrganisation' => $certificatePayload['issuer']['O'],
+            'validFrom' => $certificatePayload['validFrom_time_t'],
+            'validTo' => $certificatePayload['validTo_time_t'],
+            'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
         ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);
 

@@ -12,43 +12,37 @@ class HealthCertificate extends Model
         $this
             ->addRule('name', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Name of the service.',
-                'default' => '',
-                'example' => 'database',
-            ])
-            ->addRule('certificateName', [
-                'type' => self::TYPE_STRING,
                 'description' => 'Certificate name',
                 'default' => '',
                 'example' => '/CN=www.google.com',
             ])
-            ->addRule('certificateSubjectSN', [
+            ->addRule('subjectSN', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate subject SN',
+                'description' => 'Subject SN',
                 'default' => 'www.google.com',
                 'example' => '',
             ])
-            ->addRule('certificateIssuerOrganisation', [
+            ->addRule('issuerOrganisation', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate issuer organisation',
+                'description' => 'Issuer organisation',
                 'default' => 'Google Trust Services LLC',
                 'example' => '',
             ])
-            ->addRule('certificateValidFrom', [
+            ->addRule('validFrom', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate valid from',
+                'description' => 'Valid from',
                 'default' => '',
                 'example' => '1704200998',
             ])
-            ->addRule('certificateValidTo', [
+            ->addRule('validTo', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate valid to',
+                'description' => 'Valid to',
                 'default' => '',
                 'example' => '1711458597',
             ])
-            ->addRule('certificateSignatureTypeSN', [
+            ->addRule('signatureTypeSN', [
                 'type' => self::TYPE_STRING,
-                'description' => 'Certificate signature type SN',
+                'description' => 'Signature type SN',
                 'default' => '',
                 'example' => 'RSA-SHA256',
             ])
