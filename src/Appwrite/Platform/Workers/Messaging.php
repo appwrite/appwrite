@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Helpers\ID;
