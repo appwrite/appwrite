@@ -11,7 +11,7 @@ use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Mail;
-use Appwrite\Auth\SecurityPhrase;
+use Appwrite\Auth\Phrase;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
 use Utopia\Validator\Host;
@@ -468,8 +468,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->label('abuse-limit', 50)
     ->label('abuse-key', 'ip:{ip}')
     ->label('docs', false)
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
-    ->label('usage.params', ['provider:{request.provider}'])
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 provider.')
     ->param('code', '', new Text(2048, 0), 'OAuth2 code. This is a temporary code that the will be later exchanged for an access token.', true)
     ->param('state', '', new Text(2048), 'OAuth2 state params.', true)
@@ -895,7 +893,6 @@ App::get('/v1/account/identities')
     ->desc('List Identities')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listIdentities')
@@ -999,7 +996,7 @@ App::post('/v1/account/tokens/magic-url')
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the magic URL login. Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1008,14 +1005,14 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-        if ($securityPhrase === true) {
-            $securityPhrase = SecurityPhrase::generate();
+        if ($phrase === true) {
+            $phrase = Phrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -1127,7 +1124,7 @@ App::post('/v1/account/tokens/magic-url')
             ->setParam('{{thanks}}', $locale->getText("emails.magicSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.magicSession.signature"));
 
-        if (!empty($securityPhrase)) {
+        if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.magicSession.securityPhrase"));
         } else {
             $message->setParam('{{securityPhrase}}', '');
@@ -1191,7 +1188,7 @@ App::post('/v1/account/tokens/magic-url')
             'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
             'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
             'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
+            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1211,8 +1208,8 @@ App::post('/v1/account/tokens/magic-url')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
 
-        if (!empty($securityPhrase)) {
-            $token->setAttribute('securityPhrase', $securityPhrase);
+        if (!empty($phrase)) {
+            $token->setAttribute('phrase', $phrase);
         }
 
         $response
@@ -1240,7 +1237,7 @@ App::post('/v1/account/tokens/email')
     ->label('abuse-key', 'url:{url},email:{param-email}')
     ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('email', '', new Email(), 'User email.')
-    ->param('securityPhrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of authentication flow.', true)
+    ->param('phrase', false, new Boolean(), 'Toggle for security phrase. If enabled, email will be send with a randomly generated phrase and the phrase will also be included in the response. Confirming phrases match increases the security of your authentication flow.', true)
     ->inject('request')
     ->inject('response')
     ->inject('user')
@@ -1249,13 +1246,13 @@ App::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $securityPhrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
         if (empty(App::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
-        if ($securityPhrase === true) {
-            $securityPhrase = SecurityPhrase::generate();
+        if ($phrase === true) {
+            $phrase = Phrase::generate();
         }
 
         $roles = Authorization::getRoles();
@@ -1355,7 +1352,7 @@ App::post('/v1/account/tokens/email')
             ->setParam('{{thanks}}', $locale->getText("emails.otpSession.thanks"))
             ->setParam('{{signature}}', $locale->getText("emails.otpSession.signature"));
 
-        if (!empty($securityPhrase)) {
+        if (!empty($phrase)) {
             $message->setParam('{{securityPhrase}}', $locale->getText("emails.otpSession.securityPhrase"));
         } else {
             $message->setParam('{{securityPhrase}}', '');
@@ -1419,7 +1416,7 @@ App::post('/v1/account/tokens/email')
             'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
             'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
             'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($securityPhrase) ? $securityPhrase : '') . '</strong>'
+            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
         ];
 
         $queueForMails
@@ -1439,8 +1436,8 @@ App::post('/v1/account/tokens/email')
         // Hide secret for clients
         $token->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $tokenSecret : '');
 
-        if (!empty($securityPhrase)) {
-            $token->setAttribute('securityPhrase', $securityPhrase);
+        if (!empty($phrase)) {
+            $token->setAttribute('phrase', $phrase);
         }
 
         $response
@@ -1565,7 +1562,6 @@ App::put('/v1/account/sessions/magic-url')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', ['updateMagicURLSession', 'updatePhoneSession'])
@@ -1595,7 +1591,6 @@ App::post('/v1/account/sessions/token')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
-    ->label('usage.metric', 'sessions.{scope}.requests.create')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createSession')
@@ -2046,7 +2041,6 @@ App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
@@ -2059,6 +2053,9 @@ App::get('/v1/account')
     ->inject('response')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
@@ -2067,7 +2064,6 @@ App::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
@@ -2090,7 +2086,6 @@ App::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listSessions')
@@ -2126,7 +2121,6 @@ App::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listLogs')
@@ -2187,7 +2181,6 @@ App::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'accounts.read')
-    ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSession')
@@ -3883,7 +3876,6 @@ App::delete('/v1/account')
     ->label('scope', 'accounts.write')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{response.$id}')
-    ->label('usage.metric', 'users.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'delete')
