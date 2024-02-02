@@ -35,6 +35,7 @@ use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use MaxMind\Db\Reader;
 use Utopia\Database\DateTime;
@@ -61,30 +62,20 @@ App::post('/v1/messaging/providers/mailgun')
     ->param('apiKey', '', new Text(0), 'Mailgun API Key.', true)
     ->param('domain', '', new Text(0), 'Mailgun Domain.', true)
     ->param('isEuRegion', null, new Boolean(), 'Set as EU region.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name. Reply to name must have reply to email as well.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email. Reply to email must have reply to name as well.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $domain, ?bool $isEuRegion, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-
-        $options = [
-            'fromName' => $fromName,
-            'fromEmail' => $fromEmail,
-        ];
-
-        if (!empty($replyToName) && !empty($replyToEmail)) {
-            $options['replyToName'] = $replyToName;
-            $options['replyToEmail'] = $replyToEmail;
-        }
 
         $credentials = [];
 
-        if ($isEuRegion === true || $isEuRegion === false) {
+        if (!\is_null($isEuRegion)) {
             $credentials['isEuRegion'] = $isEuRegion;
         }
 
@@ -96,12 +87,19 @@ App::post('/v1/messaging/providers/mailgun')
             $credentials['domain'] = $domain;
         }
 
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+        ];
+
         if (
-            $enabled === true &&
-            \array_key_exists('isEuRegion', $credentials) &&
-            \array_key_exists('apiKey', $credentials) &&
-            \array_key_exists('domain', $credentials) &&
-            \array_key_exists('fromEmail', $options)
+            $enabled === true
+            && !empty($fromEmail)
+            && \array_key_exists('isEuRegion', $credentials)
+            && \array_key_exists('apiKey', $credentials)
+            && \array_key_exists('domain', $credentials)
         ) {
             $enabled = true;
         } else {
@@ -149,26 +147,16 @@ App::post('/v1/messaging/providers/sendgrid')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('apiKey', '', new Text(0), 'Sendgrid API key.', true)
-    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
     ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $apiKey, ?bool $enabled, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $apiKey, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
-
-        $options = [
-            'fromName' => $fromName,
-            'fromEmail' => $fromEmail,
-        ];
-
-        if (!empty($replyToName) && !empty($replyToEmail)) {
-            $options['replyToName'] = $replyToName;
-            $options['replyToEmail'] = $replyToEmail;
-        }
 
         $credentials = [];
 
@@ -176,10 +164,17 @@ App::post('/v1/messaging/providers/sendgrid')
             $credentials['apiKey'] = $apiKey;
         }
 
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+        ];
+
         if (
             $enabled === true
+            && !empty($fromEmail)
             && \array_key_exists('apiKey', $credentials)
-            && \array_key_exists('fromEmail', $options)
         ) {
             $enabled = true;
         } else {
@@ -190,6 +185,94 @@ App::post('/v1/messaging/providers/sendgrid')
             '$id' => $providerId,
             'name' => $name,
             'provider' => 'sendgrid',
+            'type' => MESSAGE_TYPE_EMAIL,
+            'enabled' => $enabled,
+            'credentials' => $credentials,
+            'options' => $options,
+        ]);
+
+        try {
+            $provider = $dbForProject->createDocument('providers', $provider);
+        } catch (DuplicateException) {
+            throw new Exception(Exception::PROVIDER_ALREADY_EXISTS);
+        }
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::post('/v1/messaging/providers/smtp')
+    ->desc('Create SMTP provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.create')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].create')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'createSMTPProvider')
+    ->label('sdk.description', '/docs/references/messaging/create-smtp-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Provider name.')
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.')
+    ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
+    ->param('username', '', new Text(0), 'Authentication username.', true)
+    ->param('password', '', new Text(0), 'Authentication password.', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be omitted, \'ssl\', or \'tls\'', true)
+    ->param('autoTLS', true, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
+    ->param('fromName', '', new Text(128, 0), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128, 0), 'Name set in the reply to field for the mail. Default value is sender name.', true)
+    ->param('replyToEmail', '', new Email(), 'Email set in the reply to field for the mail. Default value is sender email.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $host, int $port, string $username, string $password, string $encryption, bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
+
+        $credentials = [
+            'port' => $port,
+            'username' => $username,
+            'password' => $password,
+        ];
+
+        if (!empty($host)) {
+            $credentials['host'] = $host;
+        }
+
+        $options = [
+            'fromName' => $fromName,
+            'fromEmail' => $fromEmail,
+            'replyToName' => $replyToName,
+            'replyToEmail' => $replyToEmail,
+            'encryption' => $encryption === 'none' ? '' : $encryption,
+            'autoTLS' => $autoTLS,
+            'mailer' => $mailer,
+        ];
+
+        if (
+            $enabled === true
+            && !empty($fromEmail)
+            && \array_key_exists('host', $credentials)
+        ) {
+            $enabled = true;
+        } else {
+            $enabled = false;
+        }
+
+        $provider = new Document([
+            '$id' => $providerId,
+            'name' => $name,
+            'provider' => 'smtp',
             'type' => MESSAGE_TYPE_EMAIL,
             'enabled' => $enabled,
             'credentials' => $credentials,
@@ -1066,6 +1149,125 @@ App::patch('/v1/messaging/providers/sendgrid/:providerId')
                 if (
                     \array_key_exists('apiKey', $provider->getAttribute('credentials')) &&
                     \array_key_exists('fromEmail', $provider->getAttribute('options'))
+                ) {
+                    $provider->setAttribute('enabled', true);
+                } else {
+                    throw new Exception(Exception::PROVIDER_MISSING_CREDENTIALS);
+                }
+            } else {
+                $provider->setAttribute('enabled', false);
+            }
+        }
+
+        $provider = $dbForProject->updateDocument('providers', $provider->getId(), $provider);
+
+        $queueForEvents
+            ->setParam('providerId', $provider->getId());
+
+        $response
+            ->dynamic($provider, Response::MODEL_PROVIDER);
+    });
+
+App::patch('/v1/messaging/providers/smtp/:providerId')
+    ->desc('Update SMTP provider')
+    ->groups(['api', 'messaging'])
+    ->label('audits.event', 'provider.update')
+    ->label('audits.resource', 'provider/{response.$id}')
+    ->label('event', 'providers.[providerId].update')
+    ->label('scope', 'providers.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'messaging')
+    ->label('sdk.method', 'updateSMTPProvider')
+    ->label('sdk.description', '/docs/references/messaging/update-smtp-provider.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_PROVIDER)
+    ->param('providerId', '', new UID(), 'Provider ID.')
+    ->param('name', '', new Text(128), 'Provider name.', true)
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.', true)
+    ->param('port', null, new Range(1, 65535), 'SMTP port.', true)
+    ->param('username', '', new Text(0), 'Authentication username.', true)
+    ->param('password', '', new Text(0), 'Authentication password.', true)
+    ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
+    ->param('autoTLS', null, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('fromName', '', new Text(128), 'Sender Name.', true)
+    ->param('fromEmail', '', new Email(), 'Sender email address.', true)
+    ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
+    ->param('replyToEmail', '', new Text(128), 'Email set in the Reply To field for the mail. Default value is Sender Email.', true)
+    ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
+    ->inject('queueForEvents')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+        $provider = $dbForProject->getDocument('providers', $providerId);
+
+        if ($provider->isEmpty()) {
+            throw new Exception(Exception::PROVIDER_NOT_FOUND);
+        }
+
+        $providerAttr = $provider->getAttribute('provider');
+
+        if ($providerAttr !== 'smtp') {
+            throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
+        }
+
+        if (!empty($name)) {
+            $provider->setAttribute('name', $name);
+        }
+
+        $options = $provider->getAttribute('options');
+
+        if (!empty($fromName)) {
+            $options['fromName'] = $fromName;
+        }
+
+        if (!empty($fromEmail)) {
+            $options['fromEmail'] = $fromEmail;
+        }
+
+        if (!empty($replyToName)) {
+            $options['replyToName'] = $replyToName;
+        }
+
+        if (!empty($replyToEmail)) {
+            $options['replyToEmail'] = $replyToEmail;
+        }
+
+        $provider->setAttribute('options', $options);
+
+        $credentials = $provider->getAttribute('credentials');
+
+        if (!empty($host)) {
+            $credentials['host'] = $host;
+        }
+
+        if (!\is_null($port)) {
+            $credentials['port'] = $port;
+        }
+
+        if (!empty($username)) {
+            $credentials['username'] = $username;
+        }
+
+        if (!empty($password)) {
+            $credentials['password'] = $password;
+        }
+
+        if (!empty($encryption)) {
+            $credentials['encryption'] = $encryption === 'none' ? '' : $encryption;
+        }
+
+        if (!\is_null($autoTLS)) {
+            $credentials['autoTLS'] = $autoTLS;
+        }
+
+        $provider->setAttribute('credentials', $credentials);
+
+        if (!\is_null($enabled)) {
+            if ($enabled) {
+                if (
+                    !empty($options['fromEmail'])
+                    && \array_key_exists('host', $credentials)
                 ) {
                     $provider->setAttribute('enabled', true);
                 } else {
