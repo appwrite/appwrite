@@ -379,6 +379,12 @@ App::init()
                 }
                 break;
 
+            case 'email-otp':
+                if (($auths['emailOTP'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
                 break;
