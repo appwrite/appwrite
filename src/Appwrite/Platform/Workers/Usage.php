@@ -73,16 +73,6 @@ class Usage extends Action
             );
         }
 
-        foreach ($payload['metrics'] ?? [] as $metric) {
-            if ($metric['key'] === 'users') {
-                if ($metric['value'] < 0) {
-                    $this->stats[$metric['key']]['negative'] += $metric['value'];
-                } else {
-                    $this->stats[$metric['key']]['positive'] += $metric['value'];
-                }
-            }
-        }
-
         $this->stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
                  $this->keys++;

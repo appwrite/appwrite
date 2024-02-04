@@ -142,7 +142,6 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -1190,15 +1189,16 @@ App::delete('/v1/users/:userId')
         // clone user object to send to workers
         $clone = clone $user;
 
-        $dbForProject->deleteDocument('users', $userId);
+        $affected = $dbForProject->deleteDocument('users', $userId);
+        if (!empty($affected)) {
+            $queueForDeletes
+                ->setType(DELETE_TYPE_DOCUMENT)
+                ->setDocument($clone);
 
-        $queueForDeletes
-            ->setType(DELETE_TYPE_DOCUMENT)
-            ->setDocument($clone);
-
-        $queueForEvents
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($clone, Response::MODEL_USER));
+            $queueForEvents
+                ->setParam('userId', $user->getId())
+                ->setPayload($response->output($clone, Response::MODEL_USER));
+        }
 
         $response->noContent();
     });
