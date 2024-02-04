@@ -42,14 +42,14 @@ class V20 extends Migration
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
+        Console::info('Migrating Collections');
+        $this->migrateCollections();
+
         Console::info('Migrating Functions');
         $this->migrateFunctions();
 
         Console::info('Migrating Databases');
         $this->migrateDatabases();
-
-        Console::info('Migrating Collections');
-        $this->migrateCollections();
 
         Console::info('Migrating Buckets');
         $this->migrateBuckets();
