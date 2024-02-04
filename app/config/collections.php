@@ -1510,7 +1510,7 @@ $commonCollections = [
     'stats' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('stats'),
-        'name' => 'stats',
+        'name' => 'Stats',
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),

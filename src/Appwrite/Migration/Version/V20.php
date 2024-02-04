@@ -125,6 +125,7 @@ class V20 extends Migration
                     $this->createCollection('topics');
                     $this->createCollection('subscribers');
                     $this->createCollection('targets');
+                    $this->createCollection('challenges');
 
                     break;
                 case 'stats':
@@ -137,7 +138,7 @@ class V20 extends Migration
                          * Alter `signed`  internal type on `value` attr
                          */
                         $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
                     }
@@ -159,27 +160,78 @@ class V20 extends Migration
 
                     break;
                 case 'sessions':
+                    // Create expire attribute
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'expire');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'expire' from {$id}: {$th->getMessage()}");
                     }
+
+                    // Create factors attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'factors');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'factors' from {$id}: {$th->getMessage()}");
+                    }
+
                     break;
                 case 'users':
                     // Create targets attribute
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'targets');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'targets' from {$id}: {$th->getMessage()}");
                     }
+
+                    // Create mfa attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfa');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'mfa' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create totp attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'totp');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'totp' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create totpVerification attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpVerification');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'totpVerification' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create totpSecret attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpSecret');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'totpSecret' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create totpBackup attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpBackup');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'totpBackup' from {$id}: {$th->getMessage()}");
+                    }
+
                     break;
                 case 'projects':
                     // Rename providers authProviders to oAuthProviders
                     try {
                         $this->projectDB->renameAttribute($id, 'authProviders', 'oAuthProviders');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
                     }
@@ -187,7 +239,7 @@ class V20 extends Migration
                 case 'schedules':
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'schedules' from {$id}: {$th->getMessage()}");
                     }
@@ -197,7 +249,7 @@ class V20 extends Migration
                         $this->createAttributeFromCollection($this->projectDB, $id, 'enabled');
                         $this->createAttributeFromCollection($this->projectDB, $id, 'logs');
                         $this->createAttributeFromCollection($this->projectDB, $id, 'attempts');
-                        $this->projectDB->deleteCachedCollection($id);
+                        $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
                     }
