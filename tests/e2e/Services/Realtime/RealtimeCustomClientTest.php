@@ -46,13 +46,16 @@ class RealtimeCustomClientTest extends Scope
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
 
-        $client->close();
+//        $client->close();
+//
+//        $client = $this->getWebsocket($channels, [
+//            'origin' => 'http://localhost',
+//            'cookie' => 'a_session_' . $projectId . '=' . $session
+//        ]);
 
-        $client = $this->getWebsocket($channels, [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
-
+        /**
+         * Test Create Provider
+         */
         $mailgun = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
@@ -71,6 +74,19 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('mailgun', $mailgun['body']['provider']);
         $this->assertEquals('Mailgun 1', $mailgun['body']['name']);
 
+        $response = json_decode($client->receive(), true);
+          var_dump($response);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('connected', $response['type']); // ? or event?
+        $this->assertArrayHasKey('data', $response);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertContains("providers.*", $response['data']['events']);
+        $this->assertNotEmpty($response['data']['payload']);
+
+
+        $this->assertEquals('-', '----------------------');
+
+
         //$response = json_decode($client->receive(), true);
       //  var_dump($response);
 //        $this->assertArrayHasKey('type', $response);
@@ -80,6 +96,9 @@ class RealtimeCustomClientTest extends Scope
 //        $this->assertContains("providers.*", $response['data']['events']);
 //        $this->assertNotEmpty($response['data']['payload']);
 
+        /**
+         * Test Update Provider
+         */
         $mailgun = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/mailgun/' . $mailgun['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -96,7 +115,9 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals(false, $mailgun['body']['enabled']);
 
 
-
+        /**
+         * Test create Topic
+         */
         $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -109,7 +130,9 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals('usa', $topic['body']['name']);
 
 
-
+        /**
+         * Test create Target
+         */
         $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['$id'] . '/targets', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -123,7 +146,9 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(201, $target['headers']['status-code']);
 
-
+        /**
+         * Test create Subscriber
+         */
         $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

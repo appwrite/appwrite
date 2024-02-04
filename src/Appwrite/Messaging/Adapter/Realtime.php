@@ -139,6 +139,19 @@ class Realtime extends Adapter
         $permissionsChanged = array_key_exists('permissionsChanged', $options) && $options['permissionsChanged'];
         $userId = array_key_exists('userId', $options) ? $options['userId'] : null;
 
+        var_dump([
+            'project' => $projectId,
+            'roles' => $roles,
+            'permissionsChanged' => $permissionsChanged,
+            'userId' => $userId,
+            'data' => [
+                'events' => $events,
+                'channels' => $channels,
+                'timestamp' => DateTime::formatTz(DateTime::now()),
+                'payload' => $payload
+            ]
+        ]);
+
         $redis = new \Redis(); //TODO: make this part of the constructor
         $redis->connect(App::getEnv('_APP_REDIS_HOST', ''), App::getEnv('_APP_REDIS_PORT', ''));
         $redis->publish('realtime', json_encode([
@@ -256,9 +269,10 @@ class Realtime extends Adapter
 
         switch ($parts[0]) {
             case 'providers':
+                $channels[] = 'console';
                 $channels[] = 'providers';
                 $channels[] = 'providers.' . $parts[1];
-                //$roles = [Role::user(ID::custom($parts[1]))->toString()];
+                $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'messages':
                 $channels[] = 'messages';

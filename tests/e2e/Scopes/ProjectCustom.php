@@ -116,7 +116,10 @@ trait ProjectCustom
                 'buckets.*',
                 'teams.*',
                 'users.*',
-                'providers.*'
+                'providers.*',
+                'messages.*',
+                'topics.*',
+                //'subscribers.*'
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,
