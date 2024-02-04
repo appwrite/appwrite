@@ -132,6 +132,8 @@ class Realtime extends Adapter
      */
     public static function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
+
+        var_dump('Realtime::send');
         if (empty($channels) || empty($roles) || empty($projectId)) {
             return;
         }
@@ -267,9 +269,9 @@ class Realtime extends Adapter
         // TODO: add method here to remove all the magic index accesses
         $parts = explode('.', $event);
 
+        var_dump('--- fromPayload ---');
         switch ($parts[0]) {
             case 'providers':
-                $channels[] = 'console';
                 $channels[] = 'providers';
                 $channels[] = 'providers.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
@@ -367,6 +369,7 @@ class Realtime extends Adapter
                 break;
         }
 
+        var_dump('--- end fromPayload ---');
         return [
             'channels' => $channels,
             'roles' => $roles,

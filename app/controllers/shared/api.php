@@ -465,9 +465,6 @@ App::shutdown()
                 $bucket = $queueForEvents->getContext('bucket');
 
                 var_dump('----------------------------------');
-                var_dump($allEvents);
-                var_dump($payload);
-
                 $target = Realtime::fromPayload(
                     // Pass first, most verbose event pattern
                     event: $allEvents[0],
@@ -478,7 +475,6 @@ App::shutdown()
                     bucket: $bucket,
                 );
 
-                var_dump($target);
                 var_dump('----------------------------------');
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
