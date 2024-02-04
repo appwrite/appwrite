@@ -2248,7 +2248,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(2);
+        \sleep(5);
 
         $smsRequest = $this->getLastRequest();
 
