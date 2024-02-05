@@ -463,7 +463,7 @@ class Messaging extends Action
         $to = $message['to'];
         $subject = $data['subject'];
         $content = $data['content'];
-        $html = $data['html'];
+        $html = $data['html'] ?? false;
 
         return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, null, $html);
     }
@@ -482,13 +482,13 @@ class Messaging extends Action
         $to = $message['to'];
         $title = $message['data']['title'];
         $body = $message['data']['body'];
-        $data = $message['data']['data'];
-        $action = $message['data']['action'];
-        $sound = $message['data']['sound'];
-        $icon = $message['data']['icon'];
-        $color = $message['data']['color'];
-        $tag = $message['data']['tag'];
-        $badge = $message['data']['badge'];
+        $data = $message['data']['data'] ?? null;
+        $action = $message['data']['action'] ?? null;
+        $sound = $message['data']['sound'] ?? null;
+        $icon = $message['data']['icon'] ?? null;
+        $color = $message['data']['color'] ?? null;
+        $tag = $message['data']['tag'] ?? null;
+        $badge = $message['data']['badge'] ?? null;
 
         return new Push($to, $title, $body, $data, $action, $sound, $icon, $color, $tag, $badge);
     }
