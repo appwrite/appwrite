@@ -48,7 +48,7 @@ trait AccountBase
         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-project' => 'console',
             'x-forwarded-for' => '103.152.127.250' // Test IP for denied access region
         ]), [
             'userId' => ID::unique(),
