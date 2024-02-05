@@ -398,7 +398,7 @@ class Messaging extends Action
                 $credentials['teamId'],
                 $credentials['bundleId'],
             ),
-            'fcm' => new FCM($credentials['serviceAccountJSON']),
+            'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
         };
     }
