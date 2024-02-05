@@ -893,7 +893,7 @@ $commonCollections = [
                 'signed' => true,
                 'required' => false,
                 'default' => new \stdClass(),
-                'array' => true,
+                'array' => false,
                 'filters' => ['json'],
             ],
             [
