@@ -949,6 +949,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_MAINTENANCE_DELAY',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 20 seconds.',
+                'introduction' => '1.5.0',
+                'default' => '20',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_MAINTENANCE_RETENTION_CACHE',
                 'description' => 'The maximum duration (in seconds) upto which to retain cached files. The default value is 2592000 seconds (30 days).',
                 'introduction' => '1.0.0',
