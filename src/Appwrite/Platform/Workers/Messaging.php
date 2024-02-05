@@ -232,20 +232,17 @@ class Messaging extends Action
                         };
 
                         try {
-                            $response = new Response($provider->getAttribute('type'));
-                            $response->fromArray($adapter->send($data));
-
-                            $deliveredTotal += $response->getDeliveredTo();
-                            $details[] = $response->getDetails();
-                            foreach ($details as $detail) {
-                                if ($detail['status'] === 'failure') {
-                                    $deliveryErrors[] = "Failed sending to target {$detail['recipient']} with error: {$detail['error']}";
+                            $response = $adapter->send($data);
+                            $deliveredTotal += $response['deliveredTo'];
+                            foreach ($response['results'] as $result) {
+                                if ($result['status'] === 'failure') {
+                                    $deliveryErrors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
                                 }
 
                                 // Deleting push targets when token has expired.
-                                if ($detail['error'] === 'Expired device token.') {
+                                if (($result['error'] ??  '') === 'Expired device token.') {
                                     $target = $dbForProject->findOne('targets', [
-                                        Query::equal('identifier', [$detail['recipient']])
+                                        Query::equal('identifier', [$result['recipient']])
                                     ]);
 
                                     if ($target instanceof Document && !$target->isEmpty()) {
