@@ -14,6 +14,7 @@ class PersonalData extends Password
         protected ?string $phone = null,
         protected bool $strict = false
     ) {
+        parent::__construct();
     }
 
     /**
