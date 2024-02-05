@@ -116,7 +116,28 @@ abstract class Format
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
-                        return 'Provider';
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'addAuthenticator':
+                    case 'verifyAuthenticator':
+                    case 'deleteAuthenticator':
+                        switch ($param) {
+                            case 'factor':
+                                return 'AuthenticatorFactor';
+                            case 'provider':
+                                return 'AuthenticatorProvider';
+                        }
+                        break;
+                    case 'createChallenge':
+                    case 'verifyChallenge':
+                        switch ($param) {
+                            case 'provider':
+                                return 'AuthenticatorProvider';
+                        }
+                        break;
                 }
                 break;
             case 'avatars':
@@ -129,33 +150,14 @@ abstract class Format
                         return  'Flag';
                 }
                 break;
-            case 'storage':
-                switch ($method) {
-                    case 'getUsage':
-                    case 'getBucketUsage':
-                        switch ($param) {
-                            case 'period':
-                                return 'StorageUsagePeriod';
-                        }
-                        break;
-                    case 'getFilePreview':
-                        switch ($param) {
-                            case 'gravity':
-                                return 'ImageGravity';
-                            case 'output':
-                                return  'ImageFormat';
-                        }
-                        break;
-                }
-                break;
             case 'databases':
                 switch ($method) {
                     case 'getUsage':
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         switch ($param) {
-                            case 'period':
-                                return 'DatabaseUsagePeriod';
+                            case 'range':
+                                return 'DatabaseUsageRange';
                         }
                         break;
                     case 'createRelationshipAttribute':
@@ -186,24 +188,137 @@ abstract class Format
                     case 'getUsage':
                     case 'getFunctionUsage':
                         switch ($param) {
+                            case 'range':
+                                return 'FunctionUsageRange';
+                        }
+                        break;
+                    case 'createExecution':
+                        switch ($param) {
+                            case 'method':
+                                return 'ExecutionMethod';
+                        }
+                        break;
+                }
+                break;
+            case 'messaging':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
                             case 'period':
-                                return 'FunctionUsagePeriod';
+                                return 'MessagingUsageRange';
+                        }
+                        break;
+                    case 'createSMS':
+                    case 'createPush':
+                    case 'createEmail':
+                    case 'updateSMS':
+                    case 'updatePush':
+                    case 'updateEmail':
+                        switch ($param) {
+                            case 'status':
+                                return 'MessageType';
+                        }
+                        break;
+                    case 'createSMTPProvider':
+                    case 'updateSMTPProvider':
+                        switch ($param) {
+                            case 'encryption':
+                                return 'SMTPEncryption';
+                        }
+                        break;
+                }
+                break;
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'ProjectUsageRange';
                         }
                         break;
                 }
                 break;
             case 'projects':
                 switch ($method) {
-                    case 'getUsage':
+                    case 'getSmsTemplate':
+                    case 'getEmailTemplate':
+                    case 'updateSmsTemplate':
+                    case 'updateEmailTemplate':
+                    case 'deleteSmsTemplate':
+                    case 'deleteEmailTemplate':
                         switch ($param) {
-                            case 'period':
-                                return 'ProjectUsagePeriod';
+                            case 'type':
+                                return 'TemplateType';
+                            case 'locale':
+                                return 'TemplateLocale';
                         }
                         break;
                     case 'createPlatform':
                         switch ($param) {
                             case 'type':
                                 return 'PlatformType';
+                        }
+                        break;
+                    case 'createSmtpTest':
+                    case 'updateSmtp':
+                        switch ($param) {
+                            case 'secure':
+                                return 'SMTPSecure';
+                        }
+                        break;
+                    case 'updateOAuth2':
+                        switch ($param) {
+                            case 'provider':
+                                return 'OAuthProvider';
+                        }
+                        break;
+                    case 'updateAuthStatus':
+                        switch ($param) {
+                            case 'method':
+                                return 'AuthMethod';
+                        }
+                        break;
+                }
+                break;
+            case 'storage':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getBucketUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'StorageUsageRange';
+                        }
+                        break;
+                    case 'getFilePreview':
+                        switch ($param) {
+                            case 'gravity':
+                                return 'ImageGravity';
+                            case 'output':
+                                return  'ImageFormat';
+                        }
+                        break;
+                }
+                break;
+            case 'users':
+                switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'range':
+                                return 'UserUsageRange';
+                        }
+                        break;
+                    case 'deleteAuthenticator':
+                        switch ($param) {
+                            case 'factor':
+                                return 'AuthenticatorFactor';
+                            case 'provider':
+                                return 'AuthenticatorProvider';
+                        }
+                        break;
+                    case 'createTarget':
+                        switch ($param) {
+                            case 'providerType':
+                                return 'MessagingProviderType';
                         }
                         break;
                 }
