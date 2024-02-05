@@ -1098,7 +1098,7 @@ App::patch('/v1/users/:userId/password')
             $queueForEvents->setParam('userId', $user->getId());
             $response->dynamic($user, Response::MODEL_USER);
         }
-        
+
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
 
         $newPassword = Auth::passwordHash($password, Auth::DEFAULT_ALGO, Auth::DEFAULT_ALGO_OPTIONS);
