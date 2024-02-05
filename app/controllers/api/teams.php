@@ -69,7 +69,7 @@ App::post('/v1/teams')
         $teamId = $teamId == 'unique()' ? ID::unique() : $teamId;
 
         try {
-            $team = Authorization::skip(fn() => $dbForProject->createDocument('teams', new Document([
+            $team = Authorization::skip(fn () => $dbForProject->createDocument('teams', new Document([
                 '$id' => $teamId,
                 '$permissions' => [
                     Permission::read(Role::team($teamId)),
@@ -350,8 +350,7 @@ App::delete('/v1/teams/:teamId')
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
-            ->setPayload($response->output($team, Response::MODEL_TEAM))
-        ;
+            ->setPayload($response->output($team, Response::MODEL_TEAM));
 
         $response->noContent();
     });
@@ -378,7 +377,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
     ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
-    ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
+    ->param('url', '', fn ($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
     ->inject('response')
     ->inject('project')
@@ -462,7 +461,7 @@ App::post('/v1/teams/:teamId/memberships')
 
             try {
                 $userId = ID::unique();
-                $invitee = Authorization::skip(fn() => $dbForProject->createDocument('users', new Document([
+                $invitee = Authorization::skip(fn () => $dbForProject->createDocument('users', new Document([
                     '$id' => $userId,
                     '$permissions' => [
                         Permission::read(Role::any()),
@@ -503,43 +502,64 @@ App::post('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::USER_UNAUTHORIZED, 'User is not allowed to send invitations for this team');
         }
 
-        $secret = Auth::tokenGenerator();
-
-        $membershipId = ID::unique();
-        $membership = new Document([
-            '$id' => $membershipId,
-            '$permissions' => [
-                Permission::read(Role::any()),
-                Permission::update(Role::user($invitee->getId())),
-                Permission::update(Role::team($team->getId(), 'owner')),
-                Permission::delete(Role::user($invitee->getId())),
-                Permission::delete(Role::team($team->getId(), 'owner')),
-            ],
-            'userId' => $invitee->getId(),
-            'userInternalId' => $invitee->getInternalId(),
-            'teamId' => $team->getId(),
-            'teamInternalId' => $team->getInternalId(),
-            'roles' => $roles,
-            'invited' => DateTime::now(),
-            'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
-            'confirm' => ($isPrivilegedUser || $isAppUser),
-            'secret' => Auth::hash($secret),
-            'search' => implode(' ', [$membershipId, $invitee->getId()])
+        $existingMembership = $dbForProject->findOne('memberships', [
+            Query::equal('teamId', [$teamId]),
+            Query::equal('userEmail', [$email]),
+            Query::equal('confirm', [false]),
         ]);
+        $shouldCreateMembership = true;
+
+        if (empty($existingMembership)) {
+            $secret = Auth::tokenGenerator();
+
+            $membershipId = ID::unique();
+            $membership = new Document([
+                '$id' => $membershipId,
+                '$permissions' => [
+                    Permission::read(Role::any()),
+                    Permission::update(Role::user($invitee->getId())),
+                    Permission::update(Role::team($team->getId(), 'owner')),
+                    Permission::delete(Role::user($invitee->getId())),
+                    Permission::delete(Role::team($team->getId(), 'owner')),
+                ],
+                'userId' => $invitee->getId(),
+                'userInternalId' => $invitee->getInternalId(),
+                'teamId' => $team->getId(),
+                'teamInternalId' => $team->getInternalId(),
+                'roles' => $roles,
+                'invited' => DateTime::now(),
+                'joined' => ($isPrivilegedUser || $isAppUser) ? DateTime::now() : null,
+                'confirm' => ($isPrivilegedUser || $isAppUser),
+                'secret' => Auth::hash($secret),
+                'search' => implode(' ', [$membershipId, $invitee->getId()])
+            ]);
+        } else {
+            $membership = $existingMembership;
+            $membership->setAttribute('joined', DateTime::now());
+            $shouldCreateMembership = false;
+        }
 
         if ($isPrivilegedUser || $isAppUser) { // Allow admin to create membership
             try {
-                $membership = Authorization::skip(fn() => $dbForProject->createDocument('memberships', $membership));
+                if ($shouldCreateMembership) {
+                    $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                } else {
+                    $membership = Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
+                }
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
             $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
             try {
-                $membership = $dbForProject->createDocument('memberships', $membership);
+                if ($shouldCreateMembership) {
+                    $membership = Authorization::skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                } else {
+                    $membership = Authorization::skip(fn () => $dbForProject->updateDocument('memberships', $membership->getId(), $membership));
+                }
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
@@ -625,8 +645,7 @@ App::post('/v1/teams/:teamId/memberships')
                     ->setRecipient($invitee->getAttribute('email'))
                     ->setName($invitee->getAttribute('name'))
                     ->setVariables($emailVariables)
-                    ->trigger()
-                ;
+                    ->trigger();
             } elseif (!empty($phone)) {
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
@@ -647,8 +666,7 @@ App::post('/v1/teams/:teamId/memberships')
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+            ->setParam('membershipId', $membership->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -725,7 +743,7 @@ App::get('/v1/teams/:teamId/memberships')
             max: APP_LIMIT_COUNT
         );
 
-        $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
+        $memberships = array_filter($memberships, fn (Document $membership) => !empty($membership->getAttribute('userId')));
 
         $memberships = array_map(function ($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
@@ -733,8 +751,7 @@ App::get('/v1/teams/:teamId/memberships')
             $membership
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
-                ->setAttribute('userEmail', $user->getAttribute('email'))
-            ;
+                ->setAttribute('userEmail', $user->getAttribute('email'));
 
             return $membership;
         }, $memberships);
@@ -781,8 +798,7 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
             ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email'))
-        ;
+            ->setAttribute('userEmail', $user->getAttribute('email'));
 
         $response->dynamic($membership, Response::MODEL_MEMBERSHIP);
     });
@@ -897,7 +913,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::TEAM_MEMBERSHIP_MISMATCH);
         }
 
-        $team = Authorization::skip(fn() => $dbForProject->getDocument('teams', $teamId));
+        $team = Authorization::skip(fn () => $dbForProject->getDocument('teams', $teamId));
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
@@ -925,10 +941,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $membership // Attach user to team
             ->setAttribute('joined', DateTime::now())
-            ->setAttribute('confirm', true)
-        ;
+            ->setAttribute('confirm', true);
 
-        Authorization::skip(fn() => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
+        Authorization::skip(fn () => $dbForProject->updateDocument('users', $user->getId(), $user->setAttribute('emailVerification', true)));
 
         // Log user in
 
@@ -966,29 +981,26 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        $team = Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
-            ->setParam('membershipId', $membership->getId())
-        ;
+            ->setParam('membershipId', $membership->getId());
 
         if (!Config::getParam('domainVerification')) {
             $response
-                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]))
-            ;
+                ->addHeader('X-Fallback-Cookies', \json_encode([Auth::$cookieName => Auth::encodeSession($user->getId(), $secret)]));
         }
 
         $response
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
-            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
-        ;
+            ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
 
         $response->dynamic(
             $membership
-            ->setAttribute('teamName', $team->getAttribute('name'))
-            ->setAttribute('userName', $user->getAttribute('name'))
-            ->setAttribute('userEmail', $user->getAttribute('email')),
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $user->getAttribute('name'))
+                ->setAttribute('userEmail', $user->getAttribute('email')),
             Response::MODEL_MEMBERSHIP
         );
     });
@@ -1047,14 +1059,13 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn () => $dbForProject->updateDocument('teams', $team->getId(), $team));
         }
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
-            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP))
-        ;
+            ->setPayload($response->output($membership, Response::MODEL_MEMBERSHIP));
 
         $response->noContent();
     });
