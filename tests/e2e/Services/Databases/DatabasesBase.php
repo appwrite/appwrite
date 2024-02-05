@@ -5,12 +5,10 @@ namespace Tests\E2E\Services\Databases;
 use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
 trait DatabasesBase
@@ -980,7 +978,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $badEnum['headers']['status-code']);
-        $this->assertEquals('Each enum element must not be empty', $badEnum['body']['message']);
+        $this->assertEquals('Invalid `elements` param: Value must a valid array and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
 
         return $data;
     }
@@ -2793,7 +2791,7 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
         $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
             'origin' => 'http://localhost',
@@ -2981,7 +2979,7 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
         $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
             'origin' => 'http://localhost',
@@ -4215,5 +4213,71 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(200, $update['headers']['status-code']);
+    }
+
+    /**
+     * @depends testCreateDatabase
+     */
+    public function testTimeout(array $data): void
+    {
+        $collection = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'collectionId' => ID::unique(),
+            'name' => 'Slow Queries',
+            'documentSecurity' => true,
+            'permissions' => [
+                Permission::create(Role::user($this->getUser()['$id'])),
+            ],
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $data = [
+            '$id' => $collection['body']['$id'],
+            'databaseId' => $collection['body']['databaseId']
+        ];
+
+        $longtext = $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/attributes/string', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'key' => 'longtext',
+            'size' => 100000000,
+            'required' => false,
+            'default' => null,
+        ]);
+
+        $this->assertEquals($longtext['headers']['status-code'], 202);
+
+        for ($i = 0; $i < 1; $i++) {
+            $this->client->call(Client::METHOD_POST, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'documentId' => ID::unique(),
+                'data' => [
+                    'longtext' => file_get_contents('tests/resources/longtext.txt'),
+                ],
+                'permissions' => [
+                    Permission::read(Role::user($this->getUser()['$id'])),
+                    Permission::update(Role::user($this->getUser()['$id'])),
+                    Permission::delete(Role::user($this->getUser()['$id'])),
+                ]
+            ]);
+        }
+
+        $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['$id'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-timeout' => 1,
+        ], $this->getHeaders()), [
+            'queries' => ['notEqual("longtext", "appwrite")'],
+        ]);
+
+        $this->assertEquals(408, $response['headers']['status-code']);
     }
 }

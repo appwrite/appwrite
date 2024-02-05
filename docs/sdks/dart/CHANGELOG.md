@@ -1,3 +1,8 @@
+## 10.1.0
+
+* Add new queue health endpoints
+* Fix between queries
+
 ## 10.0.0
 
 * Parameter `url` is now optional in the `createMembership` endpoint

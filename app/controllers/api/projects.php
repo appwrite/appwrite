@@ -92,12 +92,12 @@ App::post('/v1/projects')
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;
 
-        $backups['database_db_fra1_v14x_02'] = ['from' => '7:30', 'to' => '8:15'];
-        $backups['database_db_fra1_v14x_03'] = ['from' => '10:30', 'to' => '11:15'];
-        $backups['database_db_fra1_v14x_04'] = ['from' => '13:30', 'to' => '14:15'];
-        $backups['database_db_fra1_v14x_05'] = ['from' => '4:30', 'to' => '5:15'];
-        $backups['database_db_fra1_v14x_06'] = ['from' => '16:30', 'to' => '17:15'];
-        $backups['database_db_fra1_v14x_07'] = ['from' => '19:30', 'to' => '20:15'];
+        $backups['database_db_fra1_v14x_02'] = ['from' => '03:00', 'to' => '05:00'];
+        $backups['database_db_fra1_v14x_03'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_04'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_05'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_06'] = ['from' => '00:00', 'to' => '02:00'];
+        $backups['database_db_fra1_v14x_07'] = ['from' => '00:00', 'to' => '02:00'];
 
         $databases = Config::getParam('pools-database', []);
 
@@ -123,7 +123,7 @@ App::post('/v1/projects')
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE', null);
         $index = array_search($databaseOverride, $databases);
-        if ($index) {
+        if ($index !== false) {
             $database = $databases[$index];
         } else {
             $database = $databases[array_rand($databases)];
@@ -291,120 +291,6 @@ App::get('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects/:projectId/usage')
-    ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects', 'usage'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->inject('register')
-    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-            $metrics = [
-                'project.$all.network.requests',
-                'project.$all.network.bandwidth',
-                'project.$all.storage.size',
-                'users.$all.count.total',
-                'databases.$all.count.total',
-                'documents.$all.count.total',
-                'executions.$all.compute.total',
-                'buckets.$all.count.total'
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'requests' => $stats[$metrics[0]] ?? [],
-                'network' => $stats[$metrics[1]] ?? [],
-                'storage' => $stats[$metrics[2]] ?? [],
-                'users' => $stats[$metrics[3]] ?? [],
-                'databases' => $stats[$metrics[4]] ?? [],
-                'documents' => $stats[$metrics[5]] ?? [],
-                'executions' => $stats[$metrics[6]] ?? [],
-                'buckets' => $stats[$metrics[7]] ?? [],
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')
@@ -864,15 +750,15 @@ App::delete('/v1/projects/:projectId')
     ->inject('response')
     ->inject('user')
     ->inject('dbForConsole')
-    ->inject('deletes')
-    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $projectId, Response $response, Document $user, Database $dbForConsole, Delete $queueForDeletes) {
         $project = $dbForConsole->getDocument('projects', $projectId);
 
         if ($project->isEmpty()) {
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($project);
 
@@ -1703,9 +1589,8 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
-                ->setParam('{{user}}', '')
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));

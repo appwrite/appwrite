@@ -126,7 +126,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -206,7 +206,7 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -288,7 +288,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['headers']['status-code'], 201);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -368,7 +368,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertNotEmpty($response['body']['$id']);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         \usleep(1000 * 30); // wait for 30ms to let the shutdown update accessedAt
 
@@ -571,7 +571,7 @@ class AccountCustomClientTest extends Scope
             'failure' => 'http://localhost/v1/mock/tests/general/oauth2/failure',
         ]);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('success', $response['body']['result']);
@@ -849,7 +849,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['userId']);
 
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -1011,7 +1011,7 @@ class AccountCustomClientTest extends Scope
         $smsRequest = $this->getLastRequest();
 
         return \array_merge($data, [
-            'token' => $smsRequest['data']['message']
+            'token' => $smsRequest['data']['secret']
         ]);
     }
 
@@ -1065,6 +1065,29 @@ class AccountCustomClientTest extends Scope
         ]);
 
         $this->assertEquals(401, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testPhoneVerification
+     */
+    #[Retry(count: 1)]
+    public function testPhoneVerificationForVerifiedPhone(array $data): array
+    {
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]));
+
+        $this->assertEquals(409, $response['headers']['status-code']);
 
         return $data;
     }

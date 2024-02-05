@@ -3,7 +3,10 @@
 require_once __DIR__ . '/init.php';
 require_once __DIR__ . '/controllers/general.php';
 
+use Appwrite\Event\Delete;
+use Appwrite\Event\Certificate;
 use Appwrite\Event\Func;
+use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
 use Utopia\CLI\CLI;
 use Utopia\Database\Validator\Authorization;
@@ -17,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Logger\Log;
 use Utopia\Pools\Group;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
 Authorization::disable();
@@ -58,7 +62,11 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
-            $dbForConsole->setNamespace('_console');
+
+            $dbForConsole
+                ->setNamespace('_console')
+                ->setMetadata('host', \gethostname())
+                ->setMetadata('project', 'console');
 
             // Ensure tables exist
             $collections = Config::getParam('collections', [])['console'];
@@ -86,7 +94,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
 CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -108,42 +116,30 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-        $database->setNamespace('_' . $project->getInternalId());
+        $database
+            ->setNamespace('_' . $project->getInternalId())
+            ->setMetadata('host', \gethostname())
+            ->setMetadata('project', $project->getId());
 
         return $database;
     };
-
-    return $getProjectDB;
 }, ['pools', 'dbForConsole', 'cache']);
 
-CLI::setResource('influxdb', function (Registry $register) {
-    $client = $register->get('influxdb'); /** @var InfluxDB\Client $client */
-    $attempts = 0;
-    $max = 10;
-    $sleep = 1;
-
-    do { // check if telegraf database is ready
-        try {
-            $attempts++;
-            $database = $client->selectDB('telegraf');
-            if (in_array('telegraf', $client->listDatabases())) {
-                break; // leave the do-while if successful
-            }
-        } catch (\Throwable $th) {
-            Console::warning("InfluxDB not ready. Retrying connection ({$attempts})...");
-            if ($attempts >= $max) {
-                throw new \Exception('InfluxDB database not ready yet');
-            }
-            sleep($sleep);
-        }
-    } while ($attempts < $max);
-    return $database;
-}, ['register']);
-
-CLI::setResource('queueForFunctions', function (Group $pools) {
-    return new Func($pools->get('queue')->pop()->getResource());
+CLI::setResource('queue', function (Group $pools) {
+    return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
-
+CLI::setResource('queueForFunctions', function (Connection $queue) {
+    return new Func($queue);
+}, ['queue']);
+CLI::setResource('queueForHamster', function (Connection $queue) {
+    return new Hamster($queue);
+}, ['queue']);
+CLI::setResource('queueForDeletes', function (Connection $queue) {
+    return new Delete($queue);
+}, ['queue']);
+CLI::setResource('queueForCertificates', function (Connection $queue) {
+    return new Certificate($queue);
+}, ['queue']);
 CLI::setResource('logError', function (Registry $register) {
     return function (Throwable $error, string $namespace, string $action) use ($register) {
         $logger = $register->get('logger');

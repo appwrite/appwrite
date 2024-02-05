@@ -44,6 +44,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 use Utopia\DSN\DSN;
 use Utopia\Swoole\Request;
+use Utopia\Storage\Compression\Compression;
 
 App::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -52,7 +53,6 @@ App::post('/v1/storage/buckets')
     ->label('event', 'buckets.[bucketId].create')
     ->label('audits.event', 'bucket.create')
     ->label('audits.resource', 'bucket/{response.$id}')
-    ->label('usage.metric', 'buckets.{scope}.requests.create')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'createBucket')
@@ -67,13 +67,13 @@ App::post('/v1/storage/buckets')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
     ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
-    ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ',  [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
+    ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
 
         $bucketId = $bucketId === 'unique()' ? ID::unique() : $bucketId;
 
@@ -135,7 +135,7 @@ App::post('/v1/storage/buckets')
             throw new Exception(Exception::STORAGE_BUCKET_ALREADY_EXISTS);
         }
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
         ;
 
@@ -148,7 +148,6 @@ App::get('/v1/storage/buckets')
     ->desc('List buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
-    ->label('usage.metric', 'buckets.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listBuckets')
@@ -197,7 +196,6 @@ App::get('/v1/storage/buckets/:bucketId')
     ->desc('Get bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
-    ->label('usage.metric', 'buckets.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getBucket')
@@ -226,7 +224,6 @@ App::put('/v1/storage/buckets/:bucketId')
     ->label('event', 'buckets.[bucketId].update')
     ->label('audits.event', 'bucket.update')
     ->label('audits.resource', 'bucket/{response.$id}')
-    ->label('usage.metric', 'buckets.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'updateBucket')
@@ -241,13 +238,13 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
     ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
-    ->param('compression', COMPRESSION_TYPE_NONE, new WhiteList([COMPRESSION_TYPE_NONE, COMPRESSION_TYPE_GZIP, COMPRESSION_TYPE_ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . COMPRESSION_TYPE_NONE . ', [' . COMPRESSION_TYPE_GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . COMPRESSION_TYPE_ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
+    ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
     ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Storage::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $name, ?array $permissions, bool $fileSecurity, bool $enabled, ?int $maximumFileSize, array $allowedFileExtensions, string $compression, bool $encryption, bool $antivirus, Response $response, Database $dbForProject, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -280,7 +277,7 @@ App::put('/v1/storage/buckets/:bucketId')
                 ->setAttribute('antivirus', $antivirus));
         $dbForProject->updateCollection('bucket_' . $bucket->getInternalId(), $permissions, $fileSecurity);
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
         ;
 
@@ -294,7 +291,6 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->label('audits.event', 'bucket.delete')
     ->label('event', 'buckets.[bucketId].delete')
     ->label('audits.resource', 'bucket/{request.bucketId}')
-    ->label('usage.metric', 'buckets.{scope}.requests.delete')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'deleteBucket')
@@ -304,9 +300,9 @@ App::delete('/v1/storage/buckets/:bucketId')
     ->param('bucketId', '', new UID(), 'Bucket unique ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('deletes')
-    ->inject('events')
-    ->action(function (string $bucketId, Response $response, Database $dbForProject, Delete $deletes, Event $events) {
+    ->inject('queueForDeletes')
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents) {
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
         if ($bucket->isEmpty()) {
@@ -317,11 +313,11 @@ App::delete('/v1/storage/buckets/:bucketId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove bucket from DB');
         }
 
-        $deletes
+        $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($bucket);
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setPayload($response->output($bucket, Response::MODEL_BUCKET))
         ;
@@ -337,8 +333,6 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->label('audits.event', 'file.create')
     ->label('event', 'buckets.[bucketId].files.[fileId].create')
     ->label('audits.resource', 'file/{response.$id}')
-    ->label('usage.metric', 'files.{scope}.requests.create')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -359,11 +353,12 @@ App::post('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('mode')
     ->inject('deviceFiles')
     ->inject('deviceLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $events, string $mode, Device $deviceFiles, Device $deviceLocal) {
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceFiles, Device $deviceLocal) {
+
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -537,19 +532,24 @@ App::post('/v1/storage/buckets/:bucketId/files')
             $fileHash = $deviceFiles->getFileHash($path); // Get file hash before compression and encryption
             $data = '';
             // Compression
-            $algorithm = $bucket->getAttribute('compression', COMPRESSION_TYPE_NONE);
-            if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != COMPRESSION_TYPE_NONE) {
+            $algorithm = $bucket->getAttribute('compression', Compression::NONE);
+            if ($fileSize <= APP_STORAGE_READ_BUFFER && $algorithm != Compression::NONE) {
                 $data = $deviceFiles->read($path);
                 switch ($algorithm) {
-                    case COMPRESSION_TYPE_ZSTD:
+                    case Compression::ZSTD:
                         $compressor = new Zstd();
                         break;
-                    case COMPRESSION_TYPE_GZIP:
+                    case Compression::GZIP:
                     default:
                         $compressor = new GZIP();
                         break;
                 }
                 $data = $compressor->compress($data);
+            } else {
+                // reset the algorithm to none as we do not compress the file
+                // if file size exceedes the APP_STORAGE_READ_BUFFER
+                // regardless the bucket compression algoorithm
+                $algorithm = Compression::NONE;
             }
 
             if ($bucket->getAttribute('encryption', true) && $fileSize <= APP_STORAGE_READ_BUFFER) {
@@ -621,7 +621,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('metadata', $metadata)
                         ->setAttribute('chunksUploaded', $chunksUploaded);
 
-                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+                    /**
+                     * Validate create permission and skip authorization in updateDocument
+                     * Without this, the file creation will fail when user doesn't have update permission
+                     * However as with chunk upload even if we are updating, we are essentially creating a file
+                     * adding it's new chunk so we validate create permission instead of update
+                     */
+                    $validator = new Authorization(Database::PERMISSION_CREATE);
+                    if (!$validator->isValid($bucket->getCreate())) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
+                    $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                 }
             } catch (AuthorizationException) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -658,7 +668,17 @@ App::post('/v1/storage/buckets/:bucketId/files')
                         ->setAttribute('chunksUploaded', $chunksUploaded)
                         ->setAttribute('metadata', $metadata);
 
-                    $file = $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file);
+                    /**
+                     * Validate create permission and skip authorization in updateDocument
+                     * Without this, the file creation will fail when user doesn't have update permission
+                     * However as with chunk upload even if we are updating, we are essentially creating a file
+                     * adding it's new chunk so we validate create permission instead of update
+                     */
+                    $validator = new Authorization(Database::PERMISSION_CREATE);
+                    if (!$validator->isValid($bucket->getCreate())) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED);
+                    }
+                    $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
                 }
             } catch (AuthorizationException) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
@@ -669,7 +689,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             }
         }
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
@@ -688,8 +708,6 @@ App::get('/v1/storage/buckets/:bucketId/files')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('usage.metric', 'files.{scope}.requests.read')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'listFiles')
     ->label('sdk.description', '/docs/references/storage/list-files.md')
@@ -769,8 +787,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
-    ->label('usage.metric', 'files.{scope}.requests.read')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFile')
     ->label('sdk.description', '/docs/references/storage/get-file.md')
@@ -820,8 +836,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->label('cache', true)
     ->label('cache.resourceType', 'bucket/{request.bucketId}')
     ->label('cache.resource', 'file/{request.fileId}')
-    ->label('usage.metric', 'files.{scope}.requests.read')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFilePreview')
@@ -871,14 +885,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
-        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
-            $output = 'jpg';
-        }
-
-        $inputs = Config::getParam('storage-inputs');
-        $outputs = Config::getParam('storage-outputs');
-        $fileLogos = Config::getParam('storage-logos');
-
         if ($fileSecurity && !$valid) {
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
         } else {
@@ -889,9 +895,17 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
         }
 
+        if ((\strpos($request->getAccept(), 'image/webp') === false) && ('webp' === $output)) { // Fallback webp to jpeg when no browser support
+            $output = 'jpg';
+        }
+
+        $inputs = Config::getParam('storage-inputs');
+        $outputs = Config::getParam('storage-outputs');
+        $fileLogos = Config::getParam('storage-logos');
+
         $path = $file->getAttribute('path');
         $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
-        $algorithm = $file->getAttribute('algorithm', 'none');
+        $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
         if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
@@ -902,7 +916,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
                 $path = $fileLogos['default_image'];
             }
 
-            $algorithm = 'none';
+            $algorithm = Compression::NONE;
             $cipher = null;
             $background = (empty($background)) ? 'eceff1' : $background;
             $type = \strtolower(\pathinfo($path, PATHINFO_EXTENSION));
@@ -914,11 +928,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         if (empty($output)) {
+            // when file extension is provided but it's not one of our
+            // supported outputs we fallback to `jpg`
+            if (!empty($type) && !array_key_exists($type, $outputs)) {
+                $type = 'jpg';
+            }
+
             // when file extension is not provided and the mime type is not one of our supported outputs
             // we fallback to `jpg` output format
             $output = empty($type) ? (array_search($mime, $outputs) ?? 'jpg') : $type;
         }
-
 
         $source = $deviceFiles->read($path);
 
@@ -934,11 +953,11 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         switch ($algorithm) {
-            case 'zstd':
+            case Compression::ZSTD:
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case Compression::GZIP:
                 $compressor = new GZIP();
                 $source = $compressor->decompress($source);
                 break;
@@ -986,8 +1005,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->desc('Get file for download')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
-    ->label('usage.metric', 'files.{scope}.requests.read')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileDownload')
@@ -1079,15 +1096,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', Compression::NONE)) {
+            case Compression::ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case Compression::GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
@@ -1108,7 +1125,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFiles->read(
@@ -1129,8 +1145,6 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->desc('Get file for view')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
-    ->label('usage.metric', 'files.{scope}.requests.read')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'storage')
     ->label('sdk.method', 'getFileView')
@@ -1231,15 +1245,15 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             );
         }
 
-        switch ($file->getAttribute('algorithm', 'none')) {
-            case 'zstd':
+        switch ($file->getAttribute('algorithm', Compression::NONE)) {
+            case Compression::ZSTD:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
                 $compressor = new Zstd();
                 $source = $compressor->decompress($source);
                 break;
-            case 'gzip':
+            case Compression::GZIP:
                 if (empty($source)) {
                     $source = $deviceFiles->read($path);
                 }
@@ -1253,15 +1267,16 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
                 $response->send(substr($source, $start, ($end - $start + 1)));
             }
             $response->send($source);
+            return;
         }
 
         if (!empty($rangeHeader)) {
             $response->send($deviceFiles->read($path, $start, ($end - $start + 1)));
+            return;
         }
 
         $size = $deviceFiles->getFileSize($path);
         if ($size > APP_STORAGE_READ_BUFFER) {
-            $response->addHeader('Content-Length', $deviceFiles->getFileSize($path));
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
                     $deviceFiles->read(
@@ -1285,8 +1300,6 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('event', 'buckets.[bucketId].files.[fileId].update')
     ->label('audits.event', 'file.update')
     ->label('audits.resource', 'file/{response.$id}')
-    ->label('usage.metric', 'files.{scope}.requests.update')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -1305,8 +1318,9 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('dbForProject')
     ->inject('user')
     ->inject('mode')
-    ->inject('events')
-    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1378,7 +1392,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
             $file = Authorization::skip(fn() => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
         }
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
@@ -1394,8 +1408,6 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->label('event', 'buckets.[bucketId].files.[fileId].delete')
     ->label('audits.event', 'file.delete')
     ->label('audits.resource', 'file/{request.fileId}')
-    ->label('usage.metric', 'files.{scope}.requests.delete')
-    ->label('usage.params', ['bucketId:{request.bucketId}'])
     ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
     ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
     ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
@@ -1409,11 +1421,11 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->param('fileId', '', new UID(), 'File ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
+    ->inject('queueForEvents')
     ->inject('mode')
     ->inject('deviceFiles')
-    ->inject('deletes')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $events, string $mode, Device $deviceFiles, Delete $deletes) {
+    ->inject('queueForDeletes')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceFiles, Delete $queueForDeletes) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
@@ -1453,7 +1465,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         if ($deviceDeleted) {
-            $deletes
+            $queueForDeletes
                 ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
                 ->setResource('file/' . $fileId)
             ;
@@ -1475,7 +1487,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to delete file from device');
         }
 
-        $events
+        $queueForEvents
             ->setParam('bucketId', $bucket->getId())
             ->setParam('fileId', $file->getId())
             ->setContext('bucket', $bucket)
@@ -1487,7 +1499,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
 
 App::get('/v1/storage/usage')
     ->desc('Get usage stats for storage')
-    ->groups(['api', 'storage', 'usage'])
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
@@ -1495,109 +1507,78 @@ App::get('/v1/storage/usage')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_STORAGE)
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $range, Response $response, Database $dbForProject) {
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            METRIC_BUCKETS,
+            METRIC_FILES,
+            METRIC_FILES_STORAGE,
+        ];
 
-            $metrics = [
-                'project.$all.storage.size',
-                'buckets.$all.count.total',
-                'buckets.$all.requests.create',
-                'buckets.$all.requests.read',
-                'buckets.$all.requests.update',
-                'buckets.$all.requests.delete',
-                'files.$all.storage.size',
-                'files.$all.count.total',
-                'files.$all.requests.create',
-                'files.$all.requests.read',
-                'files.$all.requests.update',
-                'files.$all.requests.delete',
-            ];
+        $total = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'bucketsCount' => $stats['buckets.$all.count.total'],
-                'bucketsCreate' => $stats['buckets.$all.requests.create'],
-                'bucketsRead' => $stats['buckets.$all.requests.read'],
-                'bucketsUpdate' => $stats['buckets.$all.requests.update'],
-                'bucketsDelete' => $stats['buckets.$all.requests.delete'],
-                'storage' => $stats['project.$all.storage.size'],
-                'filesCount' => $stats['files.$all.count.total'],
-                'filesCreate' => $stats['files.$all.requests.create'],
-                'filesRead' => $stats['files.$all.requests.read'],
-                'filesUpdate' => $stats['files.$all.requests.update'],
-                'filesDelete' => $stats['files.$all.requests.delete'],
-            ]);
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_STORAGE);
+    }
+        $response->dynamic(new Document([
+            'range' => $range,
+            'bucketsTotal' => $usage[$metrics[0]]['total'],
+            'filesTotal' => $usage[$metrics[1]]['total'],
+            'filesStorageTotal' => $usage[$metrics[2]]['total'],
+            'buckets' => $usage[$metrics[0]]['data'],
+            'files' =>  $usage[$metrics[1]]['data'],
+            'storage' =>  $usage[$metrics[2]]['data'],
+        ]), Response::MODEL_USAGE_STORAGE);
     });
 
 App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get usage stats for a storage bucket')
-    ->groups(['api', 'storage', 'usage'])
+    ->desc('Get usage stats for storage bucket')
+    ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'storage')
@@ -1606,7 +1587,7 @@ App::get('/v1/storage/:bucketId/usage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USAGE_BUCKETS)
     ->param('bucketId', '', new UID(), 'Bucket ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
+    ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
@@ -1617,86 +1598,65 @@ App::get('/v1/storage/:bucketId/usage')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') === 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
+        $periods = Config::getParam('usage', []);
+        $stats = $usage = [];
+        $days = $periods[$range];
+        $metrics = [
+            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
+            str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
+        ];
 
-            $metrics = [
-                "files.{$bucketId}.count.total",
-                "files.{$bucketId}.storage.size",
-                "files.{$bucketId}.requests.create",
-                "files.{$bucketId}.requests.read",
-                "files.{$bucketId}.requests.update",
-                "files.{$bucketId}.requests.delete",
-            ];
 
-            $stats = [];
+        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
+            foreach ($metrics as $metric) {
+                $result =  $dbForProject->findOne('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', ['inf'])
+                ]);
 
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
+                $stats[$metric]['total'] = $result['value'] ?? 0;
+                $limit = $days['limit'];
+                $period = $days['period'];
+                $results = $dbForProject->find('stats_v2', [
+                    Query::equal('metric', [$metric]),
+                    Query::equal('period', [$period]),
+                    Query::limit($limit),
+                    Query::orderDesc('time'),
+                ]);
+                $stats[$metric]['data'] = [];
+                foreach ($results as $result) {
+                    $stats[$metric]['data'][$result->getAttribute('time')] = [
+                        'value' => $result->getAttribute('value'),
+                    ];
                 }
-            });
+            }
+        });
 
-            $usage = new Document([
-                'range' => $range,
-                'filesCount' => $stats[$metrics[0]],
-                'filesStorage' => $stats[$metrics[1]],
-                'filesCreate' => $stats[$metrics[2]],
-                'filesRead' => $stats[$metrics[3]],
-                'filesUpdate' => $stats[$metrics[4]],
-                'filesDelete' => $stats[$metrics[5]],
-            ]);
+
+        $format = match ($days['period']) {
+            '1h' => 'Y-m-d\TH:00:00.000P',
+            '1d' => 'Y-m-d\T00:00:00.000P',
+        };
+
+    foreach ($metrics as $metric) {
+        $usage[$metric]['total'] =  $stats[$metric]['total'];
+        $usage[$metric]['data'] = [];
+        $leap = time() - ($days['limit'] * $days['factor']);
+        while ($leap < time()) {
+            $leap += $days['factor'];
+            $formatDate = date($format, $leap);
+            $usage[$metric]['data'][] = [
+                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                'date' => $formatDate,
+            ];
         }
+    }
 
-        $response->dynamic($usage, Response::MODEL_USAGE_BUCKETS);
+        $response->dynamic(new Document([
+            'range' => $range,
+            'filesTotal' => $usage[$metrics[0]]['total'],
+            'filesStorageTotal' => $usage[$metrics[1]]['total'],
+            'files' => $usage[$metrics[0]]['data'],
+            'storage' => $usage[$metrics[1]]['data'],
+        ]), Response::MODEL_USAGE_BUCKETS);
     });
