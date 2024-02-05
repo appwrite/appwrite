@@ -385,6 +385,7 @@ abstract class Format
                         // Range Enum Keys
                         return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
+                break;
             case 'project':
                 switch ($method) {
                     case 'getUsage':
