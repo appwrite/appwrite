@@ -131,6 +131,13 @@ abstract class Format
                 break;
             case 'storage':
                 switch ($method) {
+                    case 'getUsage':
+                    case 'getBucketUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'StorageUsagePeriod';
+                        }
+                        break;
                     case 'getFilePreview':
                         switch ($param) {
                             case 'gravity':
@@ -143,6 +150,14 @@ abstract class Format
                 break;
             case 'databases':
                 switch ($method) {
+                    case 'getUsage':
+                    case 'getCollectionUsage':
+                    case 'getDatabaseUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'DatabaseUsagePeriod';
+                        }
+                        break;
                     case 'createRelationshipAttribute':
                         switch ($param) {
                             case 'type':
@@ -166,8 +181,25 @@ abstract class Format
                         }
                 }
                 break;
+            case 'functions':
+                switch ($method) {
+                    case 'getUsage':
+                    case 'getFunctionUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'FunctionUsagePeriod';
+                        }
+                        break;
+                }
+                break;
             case 'projects':
                 switch ($method) {
+                    case 'getUsage':
+                        switch ($param) {
+                            case 'period':
+                                return 'ProjectUsagePeriod';
+                        }
+                        break;
                     case 'createPlatform':
                         switch ($param) {
                             case 'type':
@@ -211,27 +243,23 @@ abstract class Format
                     case 'getCollectionUsage':
                     case 'getDatabaseUsage':
                         // Range Enum Keys
-                        $values  = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
-            case 'function':
+            case 'functions':
                 switch ($method) {
                     case 'getUsage':
                     case 'getFunctionUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
                 break;
             case 'users':
                 switch ($method) {
                     case 'getUsage':
-                    case 'getUserUsage':
                         // Range Enum Keys
                         if ($param == 'range') {
-                            $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                            return $values;
+                            return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                         }
                 }
                 break;
@@ -240,9 +268,15 @@ abstract class Format
                     case 'getUsage':
                     case 'getBucketUsage':
                         // Range Enum Keys
-                        $values = ['Twenty Four Hours', 'Seven Days', 'Thirty Days', 'Ninety Days'];
-                        return $values;
+                        return ['Twenty Four Hours', 'Thirty Days', 'Ninety Days'];
                 }
+            case 'project':
+                switch ($method) {
+                    case 'getUsage':
+                        // Range Enum Keys
+                        return ['One Hour', 'One Day'];
+                }
+                break;
         }
         return $values;
     }
