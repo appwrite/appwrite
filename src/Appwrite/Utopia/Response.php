@@ -62,7 +62,6 @@ use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Headers;
@@ -75,6 +74,9 @@ use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\MFAChallenge;
+use Appwrite\Utopia\Response\Model\MFAProvider;
+use Appwrite\Utopia\Response\Model\MFAProviders;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
 use Appwrite\Utopia\Response\Model\MetricBreakdown;
@@ -101,6 +103,7 @@ use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 // Keep last
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\Rule;
 
 /**
  * @method int getStatusCode()
@@ -164,6 +167,12 @@ class Response extends SwooleResponse
     public const MODEL_TOKEN = 'token';
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
+
+    // MFA
+    public const MODEL_MFA_PROVIDER = 'mfaProvider';
+    public const MODEL_MFA_PROVIDERS = 'mfaProviders';
+    public const MODEL_MFA_OTP = 'mfaTotp';
+    public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -430,6 +439,9 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
+            ->setModel(new MFAChallenge())
+            ->setModel(new MFAProvider())
+            ->setModel(new MFAProviders())
             ->setModel(new Provider())
             ->setModel(new Message())
             ->setModel(new Topic())
@@ -438,8 +450,6 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
-            // Verification
-            // Recovery
             // Tests (keep last)
             ->setModel(new Mock());
 
@@ -654,7 +664,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**

@@ -177,6 +177,7 @@ const DELETE_TYPE_SCHEDULES = 'schedules';
 const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
+const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -439,6 +440,20 @@ Database::addFilter(
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn() => $database
             ->find('tokens', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+    }
+);
+
+Database::addFilter(
+    'subQueryChallenges',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('challenges', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]));
@@ -1200,6 +1215,28 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
+
+App::setResource('session', function (Document $user, Document $project) {
+    if ($user->isEmpty()) {
+        return null;
+    }
+
+    $sessions = $user->getAttribute('sessions', []);
+    $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+    $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
+
+    if (!$sessionId) {
+        return null;
+    }
+
+    foreach ($sessions as $session) {/** @var Document $session */
+        if ($sessionId === $session->getId()) {
+            return $session;
+        }
+    }
+
+    return null;
+}, ['user', 'project']);
 
 App::setResource('console', function () {
     return new Document([

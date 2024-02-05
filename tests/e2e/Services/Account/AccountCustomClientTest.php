@@ -2248,7 +2248,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(2);
+        \sleep(5);
 
         $smsRequest = $this->getLastRequest();
 
@@ -2331,7 +2331,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
-        $this->assertEmpty($response['body']['securityPhrase']);
+        $this->assertEmpty($response['body']['phrase']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
@@ -2399,15 +2399,15 @@ class AccountCustomClientTest extends Scope
         ]), [
             'userId' => ID::unique(),
             'email' => $email,
-            'securityPhrase' => true
+            'phrase' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
-        $this->assertNotEmpty($response['body']['securityPhrase']);
+        $this->assertNotEmpty($response['body']['phrase']);
 
         $lastEmail = $this->getLastEmail();
-        $this->assertStringContainsStringIgnoringCase($response['body']['securityPhrase'], $lastEmail['text']);
+        $this->assertStringContainsStringIgnoringCase($response['body']['phrase'], $lastEmail['text']);
 
         $data['token'] = $token;
         $data['id'] = $userId;

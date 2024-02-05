@@ -9,8 +9,6 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Cache\Cache;
-use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
@@ -210,12 +208,13 @@ App::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
+    ->inject('session')
+    ->inject('mode')
     ->inject('queueForCertificates')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, ?Document $session, string $mode, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
-
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -563,6 +562,21 @@ App::init()
         if ($user->getAttribute('reset')) {
             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
         }
+
+        if ($mode !== APP_MODE_ADMIN) {
+            $mfaEnabled = $user->getAttribute('mfa', false);
+            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
+            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+
+            if (!in_array('mfa', $route->getGroups())) {
+                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                    throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
+                }
+            }
+        }
     });
 
 App::options()
@@ -722,6 +736,7 @@ App::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 429: // Error allowed publicly
+            case 451: // Error allowed publicly
             case 501: // Error allowed publicly
             case 503: // Error allowed publicly
                 break;
@@ -739,7 +754,7 @@ App::error()
             'code' => $code,
             'file' => $file,
             'line' => $line,
-            'trace' => $trace,
+            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
             'version' => $version,
             'type' => $type,
         ] : [

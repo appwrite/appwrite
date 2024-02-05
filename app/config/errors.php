@@ -4,8 +4,8 @@
  * List of server wide error codes and their respective messages.
  */
 
-use Appwrite\Enum\MessageStatus;
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 
 return [
     /** General Errors */
@@ -113,6 +113,11 @@ return [
         'name' => Exception::GENERAL_INVALID_PHONE,
         'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
         'code' => 400,
+    ],
+    Exception::GENERAL_REGION_ACCESS_DENIED => [
+        'name' => Exception::GENERAL_REGION_ACCESS_DENIED,
+        'description' => 'Your location is not supported due to legal requirements.',
+        'code' => 451,
     ],
 
     /** User Errors */
@@ -235,6 +240,11 @@ return [
     Exception::USER_MISSING_ID => [
         'name' => Exception::USER_MISSING_ID,
         'description' => 'Missing ID from OAuth2 provider.',
+        'code' => 400,
+    ],
+    Exception::USER_MORE_FACTORS_REQUIRED => [
+        'name' => Exception::USER_MORE_FACTORS_REQUIRED,
+        'description' => 'More factors are required to complete the sign in process.',
         'code' => 400,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [

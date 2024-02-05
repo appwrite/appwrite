@@ -164,6 +164,9 @@ class Deletes extends Action
             case DELETE_TYPE_EXPIRED_TARGETS:
                 $this->deleteExpiredTargets($project, $getProjectDB);
                 break;
+            case DELETE_TYPE_SESSION_TARGETS:
+                $this->deleteSessionTargets($project, $getProjectDB, $document);
+                break;
             default:
                 throw new \Exception('No delete operation for type: ' . \strval($type));
         }
@@ -249,7 +252,7 @@ class Deletes extends Action
      * @param Document $target
      * @throws Exception
      */
-    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target)
+    private function deleteTargetSubscribers(Document $project, callable $getProjectDB, Document $target): void
     {
         /** @var Database */
         $dbForProject = $getProjectDB($project);
@@ -279,12 +282,26 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteExpiredTargets(Document $project, callable $getProjectDB)
+    private function deleteExpiredTargets(Document $project, callable $getProjectDB): void
     {
         $this->deleteByGroup(
             'targets',
             [
                 Query::equal('expired', [true])
+            ],
+            $getProjectDB($project),
+            function (Document $target) use ($getProjectDB, $project) {
+                $this->deleteTargetSubscribers($project, $getProjectDB, $target);
+            }
+        );
+    }
+
+    private function deleteSessionTargets(Document $project, callable $getProjectDB, Document $session): void
+    {
+        $this->deleteByGroup(
+            'targets',
+            [
+                Query::equal('sessionInternalId', [$session->getInternalId()])
             ],
             $getProjectDB($project),
             function (Document $target) use ($getProjectDB, $project) {

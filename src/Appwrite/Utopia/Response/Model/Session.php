@@ -160,6 +160,12 @@ class Session extends Model
                 'default' => false,
                 'example' => true,
             ])
+            ->addRule('factors', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Returns a list of active session factors.',
+                'default' => 1,
+                'example' => 1,
+            ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Secret used to authenticate the user. Only included if the request was made with an API key',
