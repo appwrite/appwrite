@@ -1,0 +1,5 @@
+query {
+    healthGetQueueMessaging {
+        size
+    }
+}
