@@ -535,7 +535,7 @@ App::post('/v1/teams/:teamId/memberships')
             ]);
         } else {
             $membership = $existingMembership;
-            $membership->setAttribute('joined', DateTime::now());
+            $membership->setAttribute('invited', DateTime::now());
             $shouldCreateMembership = false;
         }
 
