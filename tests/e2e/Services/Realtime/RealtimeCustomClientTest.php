@@ -50,9 +50,13 @@ class RealtimeCustomClientTest extends Scope
          * Test Create Provider
          */
         $mailgun = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', [
+//            'content-type' => 'application/json',
+//            'x-appwrite-project' => $projectId,
+//            'x-appwrite-key' => $this->getProject()['apiKey']
+            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'cookie' => 'a_session_' . $projectId . '=' . $session,
         ], [
             'providerId' => ID::unique(),
             'name' => 'Mailgun 1',

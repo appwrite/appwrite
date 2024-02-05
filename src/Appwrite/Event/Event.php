@@ -263,9 +263,10 @@ class Event
     /**
      * Execute Event.
      *
-     * @return bool
+     * @return string|bool
+     * @throws InvalidArgumentException
      */
-    public function trigger(): bool
+    public function trigger(): string|bool
     {
         if ($this->paused) {
             return false;
