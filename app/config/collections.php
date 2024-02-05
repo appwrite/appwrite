@@ -892,9 +892,9 @@ $commonCollections = [
                 'size' => 256,
                 'signed' => true,
                 'required' => false,
-                'default' => new \stdClass(),
-                'array' => false,
-                'filters' => ['json'],
+                'default' => [],
+                'array' => true,
+                'filters' => [],
             ],
             [
                 '$id' => ID::custom('expire'),
