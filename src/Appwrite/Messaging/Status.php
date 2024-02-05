@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Enum;
+namespace Appwrite\Messaging;
 
-class MessageStatus
+class Status
 {
     /**
      * Message that is not ready to be sent

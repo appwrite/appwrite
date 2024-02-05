@@ -16,7 +16,6 @@ use Utopia\Queue\Message;
 class Webhooks extends Action
 {
     private array $errors = [];
-    private const MAX_FAILED_ATTEMPTS = 10;
     private const MAX_FILE_SIZE = 5242880; // 5 MB
 
     public static function getName(): string
@@ -157,19 +156,19 @@ class Webhooks extends Action
 
             $webhook->setAttribute('logs', $logs);
 
-            if ($attempts >= self::MAX_FAILED_ATTEMPTS) {
+            if ($attempts >= \intval(App::getEnv('_APP_WEBHOOK_MAX_FAILED_ATTEMPTS', '10'))) {
                 $webhook->setAttribute('enabled', false);
                 $this->sendEmailAlert($attempts, $statusCode, $webhook, $project, $dbForConsole, $queueForMails);
             }
 
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->deleteCachedDocument('projects', $project->getId());
+            $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
             $this->errors[] = $logs;
         } else {
             $webhook->setAttribute('attempts', 0); // Reset attempts on success
             $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-            $dbForConsole->deleteCachedDocument('projects', $project->getId());
+            $dbForConsole->purgeCachedDocument('projects', $project->getId());
         }
     }
 
@@ -204,9 +203,10 @@ class Webhooks extends Action
         $template->setParam('{{project}}', $project->getAttribute('name'));
         $template->setParam('{{url}}', $webhook->getAttribute('url'));
         $template->setParam('{{error}}', $curlError ??  'The server returned ' . $statusCode . ' status code');
-        $template->setParam('{{redirect}}', "/console/project-$projectId/settings/webhooks/$webhookId");
+        $template->setParam('{{path}}', "/console/project-$projectId/settings/webhooks/$webhookId");
         $template->setParam('{{attempts}}', $attempts);
 
+        // TODO: Use setbodyTemplate once #7307 is merged
         $subject = 'Webhook deliveries have been paused';
         $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 

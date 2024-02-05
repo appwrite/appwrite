@@ -8,7 +8,10 @@ use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Validator;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Range;
+use Utopia\Validator\WhiteList;
 
 class OpenAPI3 extends Format
 {
@@ -288,12 +291,6 @@ class OpenAPI3 extends Format
                     'required' => !$param['optional'],
                 ];
 
-                foreach ($this->services as $service) {
-                    if ($route->getLabel('sdk.namespace', 'default') === $service['name'] && in_array($name, $service['x-globalAttributes'] ?? [])) {
-                        $node['x-global'] = true;
-                    }
-                }
-
                 $isNullable = $validator instanceof Nullable;
 
                 if ($isNullable) {
@@ -302,6 +299,7 @@ class OpenAPI3 extends Format
                 }
 
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
+                    case 'Utopia\Database\Validator\UID':
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
@@ -309,10 +307,6 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Boolean':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = false;
-                        break;
-                    case 'Utopia\Database\Validator\UID':
-                        $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
                     case 'Appwrite\Utopia\Database\Validator\CustomId':
                         if ($route->getLabel('sdk.methodType', '') === 'upload') {
@@ -331,6 +325,7 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'email';
                         $node['schema']['x-example'] = 'email@example.com';
                         break;
+                    case 'Utopia\Validator\Host':
                     case 'Utopia\Validator\URL':
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['format'] = 'url';
@@ -342,7 +337,6 @@ class OpenAPI3 extends Format
                         $param['default'] = (empty($param['default'])) ? new \stdClass() : $param['default'];
                         $node['schema']['type'] = 'object';
                         $node['schema']['x-example'] = '{}';
-                        //$node['schema']['format'] = 'json';
                         break;
                     case 'Utopia\Storage\Validator\File':
                         $consumes = ['multipart/form-data'];
@@ -350,25 +344,38 @@ class OpenAPI3 extends Format
                         $node['schema']['format'] = 'binary';
                         break;
                     case 'Utopia\Validator\ArrayList':
+                        /** @var ArrayList $validator */
+                        $node['schema']['type'] = 'array';
+                        $node['schema']['items'] = [
+                            'type' => $validator->getValidator()->getType(),
+                        ];
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Buckets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Collections':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Attributes':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Databases':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Deployments':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Documents':
-                    case 'Utopia\Database\Validator\Queries\Documents':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Executions':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Files':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Functions':
-                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Identities':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Indexes':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Installations':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Memberships':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Messages':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Migrations':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Projects':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Providers':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Rules':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Subscribers':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Targets':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Teams':
+                    case 'Appwrite\Utopia\Database\Validator\Queries\Topics':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Users':
                     case 'Appwrite\Utopia\Database\Validator\Queries\Variables':
                     case 'Utopia\Database\Validator\Queries':
+                    case 'Utopia\Database\Validator\Queries\Document':
+                    case 'Utopia\Database\Validator\Queries\Documents':
                         $node['schema']['type'] = 'array';
                         $node['schema']['items'] = [
                             'type' => 'string',
@@ -399,7 +406,7 @@ class OpenAPI3 extends Format
                         $node['schema']['x-example'] = '+12065550100'; // In the US, 555 is reserved like example.com
                         break;
                     case 'Utopia\Validator\Range':
-                        /** @var \Utopia\Validator\Range $validator */
+                        /** @var Range $validator */
                         $node['schema']['type'] = $validator->getType() === Validator::TYPE_FLOAT ? 'number' : $validator->getType();
                         $node['schema']['format'] = $validator->getType() == Validator::TYPE_INTEGER ? 'int32' : 'float';
                         $node['schema']['x-example'] = $validator->getMin();
@@ -416,13 +423,8 @@ class OpenAPI3 extends Format
                     case 'Utopia\Validator\Length':
                         $node['schema']['type'] = $validator->getType();
                         break;
-                    case 'Utopia\Validator\Host':
-                        $node['schema']['type'] = $validator->getType();
-                        $node['schema']['format'] = 'url';
-                        $node['schema']['x-example'] = 'https://example.com';
-                        break;
                     case 'Utopia\Validator\WhiteList':
-                        /** @var \Utopia\Validator\WhiteList $validator */
+                        /** @var WhiteList $validator */
                         $node['schema']['type'] = $validator->getType();
                         $node['schema']['x-example'] = $validator->getList()[0];
 

@@ -54,6 +54,7 @@ class Auth
     public const TOKEN_TYPE_PHONE = 6;
     public const TOKEN_TYPE_OAUTH2 = 7;
     public const TOKEN_TYPE_GENERIC = 8;
+    public const TOKEN_TYPE_EMAIL = 9; // OTP
 
     /**
      * Session Providers.
@@ -73,7 +74,7 @@ class Auth
     public const TOKEN_EXPIRATION_LOGIN_SHORT = 3600;         /* 1 hour */
     public const TOKEN_EXPIRATION_RECOVERY = 3600;            /* 1 hour */
     public const TOKEN_EXPIRATION_CONFIRM = 3600 * 1;         /* 1 hour */
-    public const TOKEN_EXPIRATION_PHONE = 60 * 15;            /* 15 minutes */
+    public const TOKEN_EXPIRATION_OTP = 60 * 15;            /* 15 minutes */
     public const TOKEN_EXPIRATION_GENERIC = 60 * 15;        /* 15 minutes */
 
     /**
@@ -345,8 +346,8 @@ class Auth
     /**
      * Verify token and check that its not expired.
      *
-     * @param array  $tokens
-     * @param int    $type   Type of token to verify, if null will verify any type
+     * @param array<Document> $tokens
+     * @param int $type Type of token to verify, if null will verify any type
      * @param string $secret
      *
      * @return false|Document
@@ -354,7 +355,6 @@ class Auth
     public static function tokenVerify(array $tokens, int $type = null, string $secret): false|Document
     {
         foreach ($tokens as $token) {
-            /** @var Document $token */
             if (
                 $token->isSet('secret') &&
                 $token->isSet('expire') &&
@@ -373,21 +373,19 @@ class Auth
     /**
      * Verify session and check that its not expired.
      *
-     * @param array  $sessions
+     * @param array<Document> $sessions
      * @param string $secret
-     * @param string $expires
      *
      * @return bool|string
      */
-    public static function sessionVerify(array $sessions, string $secret, int $expires)
+    public static function sessionVerify(array $sessions, string $secret)
     {
         foreach ($sessions as $session) {
-            /** @var Document $session */
             if (
                 $session->isSet('secret') &&
                 $session->isSet('provider') &&
                 $session->getAttribute('secret') === self::hash($secret) &&
-                DateTime::formatTz(DateTime::addSeconds(new \DateTime($session->getCreatedAt()), $expires)) >= DateTime::formatTz(DateTime::now())
+                DateTime::formatTz(DateTime::format(new \DateTime($session->getAttribute('expire')))) >= DateTime::formatTz(DateTime::now())
             ) {
                 return $session->getId();
             }
@@ -399,7 +397,7 @@ class Auth
     /**
      * Is Privileged User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -419,7 +417,7 @@ class Auth
     /**
      * Is App User?
      *
-     * @param array $roles
+     * @param array<string> $roles
      *
      * @return bool
      */
@@ -436,7 +434,7 @@ class Auth
      * Returns all roles for a user.
      *
      * @param Document $user
-     * @return array
+     * @return array<string>
      */
     public static function getRoles(Document $user): array
     {
@@ -486,6 +484,12 @@ class Auth
         return $roles;
     }
 
+    /**
+     * Check if user is anonymous.
+     *
+     * @param Document $user
+     * @return bool
+     */
     public static function isAnonymousUser(Document $user): bool
     {
         return is_null($user->getAttribute('email'))

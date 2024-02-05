@@ -57,6 +57,7 @@ class Exception extends \Exception
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
     public const GENERAL_INVALID_EMAIL             = 'general_invalid_email';
     public const GENERAL_INVALID_PHONE             = 'general_invalid_phone';
+    public const GENERAL_REGION_ACCESS_DENIED      = 'general_region_access_denied';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
@@ -82,7 +83,12 @@ class Exception extends \Exception
     public const USER_AUTH_METHOD_UNSUPPORTED      = 'user_auth_method_unsupported';
     public const USER_PHONE_ALREADY_EXISTS         = 'user_phone_already_exists';
     public const USER_PHONE_NOT_FOUND              = 'user_phone_not_found';
+    public const USER_PHONE_NOT_VERIFIED           = 'user_phone_not_verified';
+    public const USER_EMAIL_NOT_FOUND              = 'user_email_not_found';
+    public const USER_EMAIL_NOT_VERIFIED           = 'user_email_not_verified';
     public const USER_MISSING_ID                   = 'user_missing_id';
+    public const USER_MORE_FACTORS_REQUIRED        = 'user_more_factors_required';
+    public const USER_INVALID_CHALLENGE            = 'user_invalid_challenge';
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
@@ -244,7 +250,7 @@ class Exception extends \Exception
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
     public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
-    public const PROVIDER_INTERNAL_UPDATE_DISABLED  = 'provider_internal_update_disabled';
+    public const PROVIDER_MISSING_CREDENTIALS       = 'provider_missing_credentials';
 
     /** Topic */
     public const TOPIC_NOT_FOUND                    = 'topic_not_found';

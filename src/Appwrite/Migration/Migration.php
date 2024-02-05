@@ -77,7 +77,8 @@ abstract class Migration
         '1.4.10' => 'V19',
         '1.4.11' => 'V19',
         '1.4.12' => 'V19',
-        '1.4.13' => 'V19'
+        '1.4.13' => 'V19',
+        '1.4.14' => 'V20'
     ];
 
     /**
@@ -396,7 +397,7 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();

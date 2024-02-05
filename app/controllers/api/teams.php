@@ -114,7 +114,7 @@ App::post('/v1/teams')
             ]);
 
             $membership = $dbForProject->createDocument('memberships', $membership);
-            $dbForProject->deleteCachedDocument('users', $user->getId());
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
 
         $queueForEvents->setParam('teamId', $team->getId());
@@ -154,7 +154,7 @@ App::get('/v1/teams')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -537,7 +537,7 @@ App::post('/v1/teams/:teamId/memberships')
             $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
             $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
 
-            $dbForProject->deleteCachedDocument('users', $invitee->getId());
+            $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
             try {
                 $membership = $dbForProject->createDocument('memberships', $membership);
@@ -557,7 +557,7 @@ App::post('/v1/teams/:teamId/memberships')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-inner-base.tpl');
                 $message
-                    ->setParam('{{body}}', $body)
+                    ->setParam('{{body}}', $body, escapeHtml: false)
                     ->setParam('{{hello}}', $locale->getText("emails.invitation.hello"))
                     ->setParam('{{footer}}', $locale->getText("emails.invitation.footer"))
                     ->setParam('{{thanks}}', $locale->getText("emails.invitation.thanks"))
@@ -613,11 +613,11 @@ App::post('/v1/teams/:teamId/memberships')
                 $emailVariables = [
                     'owner' => $user->getAttribute('name'),
                     'direction' => $locale->getText('settings.direction'),
-                    /* {{user}} ,{{team}}, {{project}} and {{redirect}} are required in the templates */
+                    /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
                     'user' => $user->getAttribute('name'),
                     'team' => $team->getAttribute('name'),
-                    'project' => $projectName,
-                    'redirect' => $url
+                    'redirect' => $url,
+                    'project' => $projectName
                 ];
 
                 $queueForMails
@@ -710,7 +710,7 @@ App::get('/v1/teams/:teamId/memberships')
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -744,6 +744,7 @@ App::get('/v1/teams/:teamId/memberships')
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
+                ->setAttribute('mfa', $user->getAttribute('mfa'))
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'))
@@ -856,7 +857,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         /**
          * Replace membership on profile
          */
-        $dbForProject->deleteCachedDocument('users', $profile->getId());
+        $dbForProject->purgeCachedDocument('users', $profile->getId());
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -961,7 +962,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
             'userAgent' => $request->getUserAgent('UNKNOWN'),
             'ip' => $request->getIP(),
+            'factors' => ['email'],
             'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
+            'expire' => DateTime::addSeconds(new \DateTime(), $authDuration)
         ], $detector->getOS(), $detector->getClient(), $detector->getDevice()));
 
         $session = $dbForProject->createDocument('sessions', $session
@@ -971,13 +974,13 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
                 Permission::delete(Role::user($user->getId())),
             ]));
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         Authorization::setRole(Role::user($userId)->toString());
 
         $membership = $dbForProject->updateDocument('memberships', $membership->getId(), $membership);
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
 
@@ -1056,7 +1059,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
-        $dbForProject->deleteCachedDocument('users', $user->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
             $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));

@@ -29,7 +29,7 @@ ENV VITE_APPWRITE_GROWTH_ENDPOINT=$VITE_APPWRITE_GROWTH_ENDPOINT
 RUN npm ci
 RUN npm run build
 
-FROM appwrite/base:0.4.3 as final
+FROM appwrite/base:0.7.2 as final
 
 LABEL maintainer="team@appwrite.io"
 
@@ -56,6 +56,7 @@ COPY ./public /usr/src/code/public
 COPY ./bin /usr/local/bin
 COPY ./docs /usr/src/code/docs
 COPY ./src /usr/src/code/src
+COPY ./dev /usr/src/code/dev
 
 # Set Volumes
 RUN mkdir -p /storage/uploads && \
@@ -87,7 +88,6 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/ssl && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
-    chmod +x /usr/local/bin/usage && \
     chmod +x /usr/local/bin/vars && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-builds && \
@@ -99,7 +99,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/worker-mails && \
     chmod +x /usr/local/bin/worker-messaging && \
     chmod +x /usr/local/bin/worker-migrations && \
-    chmod +x /usr/local/bin/worker-webhooks
+    chmod +x /usr/local/bin/worker-webhooks && \
+    chmod +x /usr/local/bin/worker-hamster && \
+    chmod +x /usr/local/bin/worker-usage
+
 
 # Cloud Executabless
 RUN chmod +x /usr/local/bin/calc-tier-stats && \
@@ -111,15 +114,23 @@ RUN chmod +x /usr/local/bin/calc-tier-stats && \
     chmod +x /usr/local/bin/patch-delete-project-collections && \
     chmod +x /usr/local/bin/patch-delete-schedule-updated-at-attribute && \
     chmod +x /usr/local/bin/patch-recreate-repositories-documents && \
-    chmod +x /usr/local/bin/volume-sync
+    chmod +x /usr/local/bin/volume-sync && \
+    chmod +x /usr/local/bin/patch-delete-project-collections && \
+    chmod +x /usr/local/bin/delete-orphaned-projects && \
+    chmod +x /usr/local/bin/clear-card-cache && \
+    chmod +x /usr/local/bin/calc-users-stats && \
+    chmod +x /usr/local/bin/calc-tier-stats && \
+    chmod +x /usr/local/bin/get-migration-stats && \
+    chmod +x /usr/local/bin/create-inf-metric
 
 # Letsencrypt Permissions
 RUN mkdir -p /etc/letsencrypt/live/ && chmod -Rf 755 /etc/letsencrypt/live/
 
 # Enable Extensions
-RUN if [ "$DEBUG" == "true" ]; then printf "zend_extension=yasd \nyasd.debug_mode=remote \nyasd.init_file=/usr/src/code/dev/yasd_init.php \nyasd.remote_port=9005 \nyasd.log_level=-1" >> /usr/local/etc/php/conf.d/yasd.ini; fi
-
+RUN if [ "$DEBUG" == "true" ]; then cp /usr/src/code/dev/xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini; fi
 RUN if [ "$DEBUG" == "true" ]; then echo "opcache.enable=0" >> /usr/local/etc/php/conf.d/appwrite.ini; fi
+RUN if [ "$DEBUG" = "false" ]; then rm -rf /usr/src/code/dev; fi
+RUN if [ "$DEBUG" = "false" ]; then rm -f /usr/local/lib/php/extensions/no-debug-non-zts-20220829/xdebug.so; fi
 RUN echo "opcache.preload_user=www-data" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.preload=/usr/src/code/app/preload.php" >> /usr/local/etc/php/conf.d/appwrite.ini
 RUN echo "opcache.enable_cli=1" >> /usr/local/etc/php/conf.d/appwrite.ini
