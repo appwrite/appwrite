@@ -607,10 +607,11 @@ App::error()
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
-        $publish = true;
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
         if ($logger && ($publish || $error->getCode() === 0)) {
