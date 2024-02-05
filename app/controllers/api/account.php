@@ -379,6 +379,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
+            'token' => false,
         ], $scopes);
 
         $response
