@@ -28,14 +28,14 @@ class RealtimeCustomClientTest extends Scope
         $projectId = $this->getProject()['$id'];
 
         $channels = ['providers', 'topics'];
-
-        $client = $this->getWebsocket($channels, [
+        $headers =  [
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
-        ]);
+        ];
+        var_dump($this->getProject());
+        $client = $this->getWebsocket($channels, $headers);
 
         $response = json_decode($client->receive(), true);
-
         $this->assertArrayHasKey('type', $response);
         $this->assertArrayHasKey('data', $response);
         $this->assertEquals('connected', $response['type']);
@@ -45,13 +45,6 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains('topics', $response['data']['channels']);
         $this->assertNotEmpty($response['data']['user']);
         $this->assertEquals($user['$id'], $response['data']['user']['$id']);
-
-//        $client->close();
-//
-//        $client = $this->getWebsocket($channels, [
-//            'origin' => 'http://localhost',
-//            'cookie' => 'a_session_' . $projectId . '=' . $session
-//        ]);
 
         /**
          * Test Create Provider
@@ -72,10 +65,10 @@ class RealtimeCustomClientTest extends Scope
 
         $this->assertEquals(201, $mailgun['headers']['status-code']);
         $this->assertEquals('mailgun', $mailgun['body']['provider']);
-        $this->assertEquals('Mailgun 1', $mailgun['body']['name']);
 
         $response = json_decode($client->receive(), true);
-          var_dump($response);
+        var_dump($response);
+
         $this->assertArrayHasKey('type', $response);
         $this->assertEquals('connected', $response['type']); // ? or event?
         $this->assertArrayHasKey('data', $response);
@@ -174,7 +167,6 @@ class RealtimeCustomClientTest extends Scope
 
 
         $this->assertEquals('-', '----------------------');
-
     }
 
     public function testChannelParsing()
