@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3b43bf6f0fca50a3a2834e1bbaa90d63",
+    "content-hash": "e6e0d6874f4d718d96396d71a66864da",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1543,16 +1543,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.48.1",
+            "version": "0.48.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "52abe057180a76fe354a516300344b33f268f6ea"
+                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/52abe057180a76fe354a516300344b33f268f6ea",
-                "reference": "52abe057180a76fe354a516300344b33f268f6ea",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
+                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
                 "shasum": ""
             },
             "require": {
@@ -1593,9 +1593,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.48.1"
+                "source": "https://github.com/utopia-php/database/tree/0.48.2"
             },
-            "time": "2024-02-02T04:54:13+00:00"
+            "time": "2024-02-02T14:10:14+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2432,28 +2432,28 @@
         },
         {
             "name": "utopia-php/swoole",
-            "version": "0.5.0",
+            "version": "0.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/swoole.git",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1"
+                "reference": "5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
-                "reference": "c2a3a4f944a2f22945af3cbcb95b13f0769628b1",
+                "url": "https://api.github.com/repos/utopia-php/swoole/zipball/5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4",
+                "reference": "5fa9d42c608ad46a4ce42a6d2b2eae00592fccd4",
                 "shasum": ""
             },
             "require": {
                 "ext-swoole": "*",
                 "php": ">=8.0",
-                "utopia-php/framework": "0.*.*"
+                "utopia-php/framework": "0.33.*"
             },
             "require-dev": {
                 "laravel/pint": "1.2.*",
+                "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^9.3",
-                "swoole/ide-helper": "4.8.3",
-                "vimeo/psalm": "4.15.0"
+                "swoole/ide-helper": "5.0.2"
             },
             "type": "library",
             "autoload": {
@@ -2477,9 +2477,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/swoole/issues",
-                "source": "https://github.com/utopia-php/swoole/tree/0.5.0"
+                "source": "https://github.com/utopia-php/swoole/tree/0.8.2"
             },
-            "time": "2022-10-19T22:19:07+00:00"
+            "time": "2024-02-01T14:54:12+00:00"
         },
         {
             "name": "utopia-php/system",
@@ -5523,5 +5523,5 @@
     "platform-overrides": {
         "php": "8.2"
     },
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
