@@ -278,6 +278,12 @@ abstract class Format
                                 return 'AuthMethod';
                         }
                         break;
+                    case 'updateServiceStatus':
+                        switch ($param) {
+                            case 'service':
+                                return 'APIService';
+                        }
+                        break;
                 }
                 break;
             case 'storage':
