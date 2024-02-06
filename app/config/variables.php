@@ -950,9 +950,9 @@ return [
             ],
             [
                 'name' => '_APP_MAINTENANCE_DELAY',
-                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 20 seconds.',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
                 'introduction' => '1.5.0',
-                'default' => '20',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
