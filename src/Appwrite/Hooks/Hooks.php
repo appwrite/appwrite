@@ -23,5 +23,7 @@ class Hooks
         if (isset(self::$hooks[$name])) {
             return call_user_func_array(self::$hooks[$name], $params);
         }
+
+        return null;
     }
 }
