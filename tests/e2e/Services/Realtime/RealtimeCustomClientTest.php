@@ -76,18 +76,8 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("providers.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
 
-
         $this->assertEquals('-', '----------------------');
 
-
-        //$response = json_decode($client->receive(), true);
-      //  var_dump($response);
-//        $this->assertArrayHasKey('type', $response);
-//        $this->assertEquals('connected', $response['type']); // ? or event?
-//        $this->assertArrayHasKey('data', $response);
-//        $this->assertCount(2, $response['data']['channels']);
-//        $this->assertContains("providers.*", $response['data']['events']);
-//        $this->assertNotEmpty($response['data']['payload']);
 
         /**
          * Test Update Provider
