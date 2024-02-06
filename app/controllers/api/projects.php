@@ -185,12 +185,6 @@ App::post('/v1/projects')
         /** @var array $collections */
         $collections = Config::getParam('collections', [])['projects'] ?? [];
 
-        // Allow Cloud overrides (useful for ZDT migration)
-        $collectiosOverride = $hooks->trigger('getProjectCollections');
-        if (!empty($collectiosOverride)) {
-            $collections = $collectiosOverride;
-        }
-
         foreach ($collections as $key => $collection) {
             if (($collection['$collection'] ?? '') !== Database::METADATA) {
                 continue;
@@ -224,6 +218,8 @@ App::post('/v1/projects')
             }
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
+
+        $hooks->trigger('afterProjectCreated'); // Useful for ZDT to mirror the project to destination
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
