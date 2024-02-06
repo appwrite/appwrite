@@ -774,4 +774,16 @@ return [
         'code' => 503,
         'publish' => false
     ],
+
+    Exception::HEALTH_CERTIFICATE_EXPIRED => [
+        'name' => Exception::HEALTH_CERTIFICATE_EXPIRED,
+        'description' => 'The SSL certificate for the specified domain has expired and is no longer valid.',
+        'code' => 404,
+    ],
+
+    Exception::HEALTH_INVALID_HOST => [
+        'name' => Exception::HEALTH_INVALID_HOST,
+        'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
+        'code' => 404,
+    ],
 ];

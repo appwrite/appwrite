@@ -7,6 +7,7 @@ use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -14,7 +15,9 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
+use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -387,6 +390,56 @@ App::get('/v1/health/queue/logs')
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
+    }, ['response']);
+
+App::get('/v1/health/certificate')
+    ->desc('Get the SSL certificate for a domain')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getCertificate')
+    ->label('sdk.description', '/docs/references/health/get-certificate.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_CERTIFICATE)
+    ->param('domain', null, new Multiple([new Domain(), new PublicDomain()]), Multiple::TYPE_STRING, 'Domain name')
+    ->inject('response')
+    ->action(function (string $domain, Response $response) {
+        if (filter_var($domain, FILTER_VALIDATE_URL)) {
+            $domain = parse_url($domain, PHP_URL_HOST);
+        }
+
+        $sslContext = stream_context_create([
+            "ssl" => [
+                "capture_peer_cert" => true
+            ]
+        ]);
+        $sslSocket = stream_socket_client("ssl://" . $domain . ":443", $errno, $errstr, 30, STREAM_CLIENT_CONNECT, $sslContext);
+        if (!$sslSocket) {
+            throw new Exception(Exception::HEALTH_INVALID_HOST);
+        }
+
+        $streamContextParams = stream_context_get_params($sslSocket);
+        $peerCertificate = $streamContextParams['options']['ssl']['peer_certificate'];
+        $certificatePayload = openssl_x509_parse($peerCertificate);
+
+
+        $sslExpiration = $certificatePayload['validTo_time_t'];
+        $status = ($sslExpiration < time()) ? 'fail' : 'pass';
+
+        if ($status == 'fail') {
+            throw new Exception(Exception::HEALTH_CERTIFICATE_EXPIRED);
+        }
+
+        $response->dynamic(new Document([
+            'name' => $certificatePayload['name'],
+            'subjectSN' => $certificatePayload['subject']['CN'],
+            'issuerOrganisation' => $certificatePayload['issuer']['O'],
+            'validFrom' => $certificatePayload['validFrom_time_t'],
+            'validTo' => $certificatePayload['validTo_time_t'],
+            'signatureTypeSN' => $certificatePayload['signatureTypeSN'],
+        ]), Response::MODEL_HEALTH_CERTIFICATE);
     }, ['response']);
 
 App::get('/v1/health/queue/certificates')
