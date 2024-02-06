@@ -19,114 +19,6 @@ class RealtimeCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-    public function testChannelMessaging()
-    {
-        $user = $this->getUser();
-        $session = $user['session'] ?? '';
-        $projectId = $this->getProject()['$id'];
-
-        $channels = ['subscribers'];
-        $headers =  [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_' . $projectId . '=' . $session
-        ];
-
-        $client = $this->getWebsocket($channels, $headers);
-
-        $response = json_decode($client->receive(), true);
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('subscribers', $response['data']['channels']);
-        $this->assertNotEmpty($response['data']['user']);
-        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
-
-        /**
-         * Test Create Provider
-         */
-        $mailgun = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $projectId,
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], [
-            'providerId' => ID::unique(),
-            'name' => 'Mailgun 1',
-            'apiKey' => 'my-apikey',
-            'domain' => 'my-domain',
-            'fromName' => 'sender name',
-            'fromEmail' => 'sender-email@my-domain.com',
-            'isEuRegion' => false
-        ]);
-
-        $this->assertEquals(201, $mailgun['headers']['status-code']);
-        $this->assertEquals('mailgun', $mailgun['body']['provider']);
-
-        /**
-         * Test create Topic
-         */
-        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'topicId' => 'usa',
-            'name' => 'usa',
-        ]);
-        $this->assertEquals(201, $topic['headers']['status-code']);
-        $this->assertEquals('usa', $topic['body']['name']);
-
-        /**
-         * Test create Target
-         */
-        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['$id'] . '/targets', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]), [
-            'targetId' => ID::unique(),
-            'providerType' => 'email',
-            'providerId' => $mailgun['body']['$id'],
-            'identifier' => 'realtime@appwrite.io',
-        ]);
-
-        $this->assertEquals(201, $target['headers']['status-code']);
-
-        /**
-         * Test create Subscriber
-         */
-        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'subscriberId' => ID::unique(),
-            'targetId' => $target['body']['$id'],
-        ]);
-
-        $this->assertEquals(201, $subscriber['headers']['status-code']);
-        $this->assertEquals($target['body']['userId'], $subscriber['body']['target']['userId']);
-        $this->assertEquals($target['body']['providerType'], $subscriber['body']['target']['providerType']);
-
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertEquals('event', $response['type']);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertCount(2, $response['data']['channels']);
-        $this->assertNotEmpty($response['data']['payload']);
-        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
-        $this->assertContains("topics.*.subscribers.*.create", $response['data']['events']);
-        $this->assertContains("topics.usa.subscribers.*.create", $response['data']['events']);
-        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
-        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
-        $this->assertContains("topics.*.subscribers.*", $response['data']['events']);
-        $this->assertContains("topics.usa.subscribers.*", $response['data']['events']);
-        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
-        $this->assertContains("topics.usa", $response['data']['events']);
-        $this->assertContains("topics.*", $response['data']['events']);
-    }
-
     public function testChannelParsing()
     {
         $user = $this->getUser();
@@ -1703,6 +1595,115 @@ class RealtimeCustomClientTest extends Scope
         $this->assertContains("teams.*.memberships.*", $response['data']['events']);
         $this->assertContains("teams.*", $response['data']['events']);
         $this->assertNotEmpty($response['data']['payload']);
+
+        $client->close();
+    }
+    public function testChannelMessaging()
+    {
+        $user = $this->getUser();
+        $session = $user['session'] ?? '';
+        $projectId = $this->getProject()['$id'];
+
+        $channels = ['subscribers'];
+        $headers =  [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_' . $projectId . '=' . $session
+        ];
+
+        $client = $this->getWebsocket($channels, $headers);
+
+        $response = json_decode($client->receive(), true);
+        $this->assertArrayHasKey('type', $response);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertEquals('connected', $response['type']);
+        $this->assertNotEmpty($response['data']);
+        $this->assertCount(1, $response['data']['channels']);
+        $this->assertContains('subscribers', $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['user']);
+        $this->assertEquals($user['$id'], $response['data']['user']['$id']);
+
+        /**
+         * Test Create Provider
+         */
+        $mailgun = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            'providerId' => ID::unique(),
+            'name' => 'Mailgun 1',
+            'apiKey' => 'my-apikey',
+            'domain' => 'my-domain',
+            'fromName' => 'sender name',
+            'fromEmail' => 'sender-email@my-domain.com',
+            'isEuRegion' => false
+        ]);
+
+        $this->assertEquals(201, $mailgun['headers']['status-code']);
+        $this->assertEquals('mailgun', $mailgun['body']['provider']);
+
+        /**
+         * Test create Topic
+         */
+        $topic = $this->client->call(Client::METHOD_POST, '/messaging/topics', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'topicId' => 'usa',
+            'name' => 'usa',
+        ]);
+        $this->assertEquals(201, $topic['headers']['status-code']);
+        $this->assertEquals('usa', $topic['body']['name']);
+
+        /**
+         * Test create Target
+         */
+        $target = $this->client->call(Client::METHOD_POST, '/users/' . $user['$id'] . '/targets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'targetId' => ID::unique(),
+            'providerType' => 'email',
+            'providerId' => $mailgun['body']['$id'],
+            'identifier' => 'realtime@appwrite.io',
+        ]);
+
+        $this->assertEquals(201, $target['headers']['status-code']);
+
+        /**
+         * Test create Subscriber
+         */
+        $subscriber = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topic['body']['$id'] . '/subscribers', \array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'subscriberId' => ID::unique(),
+            'targetId' => $target['body']['$id'],
+        ]);
+
+        $this->assertEquals(201, $subscriber['headers']['status-code']);
+        $this->assertEquals($target['body']['userId'], $subscriber['body']['target']['userId']);
+        $this->assertEquals($target['body']['providerType'], $subscriber['body']['target']['providerType']);
+
+        $response = json_decode($client->receive(), true);
+
+        $this->assertArrayHasKey('type', $response);
+        $this->assertEquals('event', $response['type']);
+        $this->assertArrayHasKey('data', $response);
+        $this->assertCount(2, $response['data']['channels']);
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.*.create", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.*.create", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.*", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.*", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
+        $this->assertContains("topics.usa", $response['data']['events']);
+        $this->assertContains("topics.*", $response['data']['events']);
 
         $client->close();
     }
