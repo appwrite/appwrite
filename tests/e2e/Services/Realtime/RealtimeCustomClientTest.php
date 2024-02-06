@@ -19,8 +19,6 @@ class RealtimeCustomClientTest extends Scope
     use ProjectCustom;
     use SideClient;
 
-
-
     public function testChannelMessaging()
     {
         $user = $this->getUser();
@@ -32,7 +30,7 @@ class RealtimeCustomClientTest extends Scope
             'origin' => 'http://localhost',
             'cookie' => 'a_session_' . $projectId . '=' . $session
         ];
-        var_dump($this->getProject());
+
         $client = $this->getWebsocket($channels, $headers);
 
         $response = json_decode($client->receive(), true);
@@ -111,16 +109,22 @@ class RealtimeCustomClientTest extends Scope
         $this->assertEquals($target['body']['providerType'], $subscriber['body']['target']['providerType']);
 
         $response = json_decode($client->receive(), true);
-        var_dump($response);
+
         $this->assertArrayHasKey('type', $response);
-        $this->assertEquals('connected', $response['type']); // ? or event?
+        $this->assertEquals('event', $response['type']);
         $this->assertArrayHasKey('data', $response);
         $this->assertCount(2, $response['data']['channels']);
-        //$this->assertContains("providers.*", $response['data']['events']);
-        //$this->assertNotEmpty($response['data']['payload']);
-
-
-        $this->assertEquals('-', '----------------------');
+        $this->assertNotEmpty($response['data']['payload']);
+        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.*.create", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.*.create", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}.create", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.*", $response['data']['events']);
+        $this->assertContains("topics.usa.subscribers.*", $response['data']['events']);
+        $this->assertContains("topics.*.subscribers.{$subscriber['body']['$id']}", $response['data']['events']);
+        $this->assertContains("topics.usa", $response['data']['events']);
+        $this->assertContains("topics.*", $response['data']['events']);
     }
 
     public function testChannelParsing()
