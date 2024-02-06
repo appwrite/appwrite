@@ -234,7 +234,7 @@ class Exception extends \Exception
     public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
 
     /** Health */
-    public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
+    public const HEALTH_QUEUE_SIZE_EXCEEDED          = 'health_queue_size_exceeded';
     public const HEALTH_CERTIFICATE_EXPIRED          = 'health_certificate_expired';
     public const HEALTH_INVALID_HOST                 = 'health_invalid_host';
 

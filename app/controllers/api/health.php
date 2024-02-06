@@ -359,7 +359,7 @@ App::get('/v1/health/queue/webhooks')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -386,7 +386,7 @@ App::get('/v1/health/queue/logs')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -463,7 +463,7 @@ App::get('/v1/health/queue/certificates')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -490,7 +490,7 @@ App::get('/v1/health/queue/builds')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -518,7 +518,7 @@ App::get('/v1/health/queue/databases')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -545,7 +545,7 @@ App::get('/v1/health/queue/deletes')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -572,7 +572,7 @@ App::get('/v1/health/queue/mails')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -599,7 +599,7 @@ App::get('/v1/health/queue/messaging')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -626,7 +626,7 @@ App::get('/v1/health/queue/migrations')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -653,7 +653,7 @@ App::get('/v1/health/queue/functions')
         $size = $client->getQueueSize();
 
         if ($size >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue size threshold hit. Current size is {$size} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $size ]), Response::MODEL_HEALTH_QUEUE);
@@ -776,7 +776,7 @@ App::get('/v1/health/queue/failed/:name')
         $failed = $client->countFailedJobs();
 
         if ($failed >= $threshold) {
-            throw new Exception(Exception::QUEUE_SIZE_EXCEEDED, "Queue failed jobs threshold hit. Current size is {$failed} and threshold is {$threshold}.");
+            throw new Exception(Exception::HEALTH_QUEUE_SIZE_EXCEEDED, "Queue failed jobs threshold hit. Current size is {$failed} and threshold is {$threshold}.");
         }
 
         $response->dynamic(new Document([ 'size' => $failed ]), Response::MODEL_HEALTH_QUEUE);

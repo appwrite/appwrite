@@ -768,8 +768,8 @@ return [
     ],
 
     /** Health */
-    Exception::QUEUE_SIZE_EXCEEDED => [
-        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+    Exception::HEALTH_QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::HEALTH_QUEUE_SIZE_EXCEEDED,
         'description' => 'Queue size threshold hit.',
         'code' => 503,
         'publish' => false
