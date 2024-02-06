@@ -271,24 +271,12 @@ class Realtime extends Adapter
 
         var_dump('--- fromPayload ---');
         switch ($parts[0]) {
-            case 'providers':
-                $channels[] = 'providers';
-                $channels[] = 'providers.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
-                break;
-            case 'messages':
-                $channels[] = 'messages';
-                $channels[] = 'messages.' . $parts[1];
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
-                break;
             case 'topics':
-                $channels[] = 'topics';
-                $channels[] = 'topics.' . $parts[1];
                 if ($parts[2] === 'subscribers') {
                     $channels[] = 'subscribers';
                     $channels[] = 'subscribers.' . $parts[3];
+                    $roles = [Role::user(ID::custom($payload->getAttribute('userId')))->toString()];
                 }
-                $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
             case 'users':
                 $channels[] = 'account';
@@ -370,6 +358,7 @@ class Realtime extends Adapter
         }
 
         var_dump('--- end fromPayload ---');
+
         return [
             'channels' => $channels,
             'roles' => $roles,
