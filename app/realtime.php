@@ -452,7 +452,7 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
         if (empty($channels)) {
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, 'Missing channels');
         }
-        
+
         $realtime->subscribe($project->getId(), $connection, $roles, $channels);
 
         $user = empty($user->getId()) ? null : $response->output($user, Response::MODEL_ACCOUNT);
