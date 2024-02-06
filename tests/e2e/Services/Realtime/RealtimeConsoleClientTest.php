@@ -184,6 +184,8 @@ class RealtimeConsoleClientTest extends Scope
             'required' => true,
         ]);
 
+        $attributeKey = $name['body']['key'];
+
         $this->assertEquals($name['headers']['status-code'], 202);
         $this->assertEquals($name['body']['key'], 'name');
         $this->assertEquals($name['body']['type'], 'string');
@@ -461,63 +463,6 @@ class RealtimeConsoleClientTest extends Scope
         $client->close();
     }
 
-    public function testCreateProvider()
-    {
-        // todo:: do we need console tests?
-        $projectId = 'console';
-
-        $client = $this->getWebsocket(['console'], [
-            'origin' => 'http://localhost',
-            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-        ], $projectId);
-
-        $response = json_decode($client->receive(), true);
-
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('connected', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertNotEmpty($response['data']['user']);
-
-        /**
-         * Test Create Provider
-         */
-        $mailgun = $this->client->call(Client::METHOD_POST, '/messaging/providers/mailgun', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'providerId' => ID::unique(),
-            'name' => 'Mailgun 1',
-            'apiKey' => 'my-apikey',
-            'domain' => 'my-domain',
-            'fromName' => 'sender name',
-            'fromEmail' => 'realtime.console@appwrite.io',
-            'isEuRegion' => false
-        ]);
-
-        $this->assertEquals(201, $mailgun['headers']['status-code']);
-        $this->assertEquals('mailgun', $mailgun['body']['provider']);
-
-        $response = json_decode($client->receive(), true);
-
-        var_dump($response);
-        $this->assertArrayHasKey('type', $response);
-        $this->assertArrayHasKey('data', $response);
-        $this->assertEquals('event', $response['type']);
-        $this->assertNotEmpty($response['data']);
-        $this->assertArrayHasKey('timestamp', $response['data']);
-        $this->assertCount(1, $response['data']['channels']);
-        $this->assertContains('console', $response['data']['channels']);
-        $this->assertContains("providers.", $response['data']['events']);
-        $this->assertNotEmpty($response['data']['payload']);
-
-        $client->close();
-
-        $this->assertEquals('-', '----------------------');
-    }
-
     public function testCreateDeployment()
     {
         $response1 = $this->client->call(Client::METHOD_POST, '/functions', array_merge([
@@ -592,5 +537,4 @@ class RealtimeConsoleClientTest extends Scope
 
         $client->close();
     }
-
 }

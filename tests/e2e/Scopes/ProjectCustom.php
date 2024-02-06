@@ -119,7 +119,7 @@ trait ProjectCustom
                 'providers.*',
                 'messages.*',
                 'topics.*',
-                //'subscribers.*'
+                //'subscribers.*' // limit length error
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,
