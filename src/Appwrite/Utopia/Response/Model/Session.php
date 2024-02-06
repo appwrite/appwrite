@@ -161,10 +161,11 @@ class Session extends Model
                 'example' => true,
             ])
             ->addRule('factors', [
-                'type' => self::TYPE_INTEGER,
+                'type' => self::TYPE_STRING,
                 'description' => 'Returns a list of active session factors.',
-                'default' => 1,
-                'example' => 1,
+                'default' => [],
+                'example' => ['email'],
+                'array' => true,
             ])
             ->addRule('secret', [
                 'type' => self::TYPE_STRING,

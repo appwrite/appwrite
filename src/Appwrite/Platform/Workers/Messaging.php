@@ -232,20 +232,17 @@ class Messaging extends Action
                         };
 
                         try {
-                            $response = new Response($provider->getAttribute('type'));
-                            $response->fromArray($adapter->send($data));
-
-                            $deliveredTotal += $response->getDeliveredTo();
-                            $details[] = $response->getDetails();
-                            foreach ($details as $detail) {
-                                if ($detail['status'] === 'failure') {
-                                    $deliveryErrors[] = "Failed sending to target {$detail['recipient']} with error: {$detail['error']}";
+                            $response = $adapter->send($data);
+                            $deliveredTotal += $response['deliveredTo'];
+                            foreach ($response['results'] as $result) {
+                                if ($result['status'] === 'failure') {
+                                    $deliveryErrors[] = "Failed sending to target {$result['recipient']} with error: {$result['error']}";
                                 }
 
                                 // Deleting push targets when token has expired.
-                                if ($detail['error'] === 'Expired device token.') {
+                                if (($result['error'] ??  '') === 'Expired device token.') {
                                     $target = $dbForProject->findOne('targets', [
-                                        Query::equal('identifier', [$detail['recipient']])
+                                        Query::equal('identifier', [$result['recipient']])
                                     ]);
 
                                     if ($target instanceof Document && !$target->isEmpty()) {
@@ -401,7 +398,7 @@ class Messaging extends Action
                 $credentials['teamId'],
                 $credentials['bundleId'],
             ),
-            'fcm' => new FCM($credentials['serviceAccountJSON']),
+            'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null
         };
     }
@@ -466,7 +463,7 @@ class Messaging extends Action
         $to = $message['to'];
         $subject = $data['subject'];
         $content = $data['content'];
-        $html = $data['html'];
+        $html = $data['html'] ?? false;
 
         return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, null, $html);
     }
@@ -485,13 +482,13 @@ class Messaging extends Action
         $to = $message['to'];
         $title = $message['data']['title'];
         $body = $message['data']['body'];
-        $data = $message['data']['data'];
-        $action = $message['data']['action'];
-        $sound = $message['data']['sound'];
-        $icon = $message['data']['icon'];
-        $color = $message['data']['color'];
-        $tag = $message['data']['tag'];
-        $badge = $message['data']['badge'];
+        $data = $message['data']['data'] ?? null;
+        $action = $message['data']['action'] ?? null;
+        $sound = $message['data']['sound'] ?? null;
+        $icon = $message['data']['icon'] ?? null;
+        $color = $message['data']['color'] ?? null;
+        $tag = $message['data']['tag'] ?? null;
+        $badge = $message['data']['badge'] ?? null;
 
         return new Push($to, $title, $body, $data, $action, $sound, $icon, $color, $tag, $badge);
     }

@@ -12,8 +12,9 @@ class PasswordDictionary extends Password
     protected array $dictionary;
     protected bool $enabled;
 
-    public function __construct(array $dictionary, bool $enabled = false)
+    public function __construct(array $dictionary, bool $enabled = false, bool $allowEmpty = false)
     {
+        parent::__construct($allowEmpty);
         $this->dictionary = $dictionary;
         $this->enabled = $enabled;
     }

@@ -1031,7 +1031,7 @@ App::patch('/v1/users/:userId/name')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('name', '', new Text(128), 'User name. Max length: 128 chars.')
+    ->param('name', '', new Text(128, 0), 'User name. Max length: 128 chars.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1068,7 +1068,7 @@ App::patch('/v1/users/:userId/password')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, $project->getAttribute('auths', [])['passwordDictionary'] ?? false), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
+    ->param('password', '', fn ($project, $passwordsDictionary) => new PasswordDictionary($passwordsDictionary, enabled: $project->getAttribute('auths', [])['passwordDictionary'] ?? false, allowEmpty: true), 'New user password. Must be at least 8 chars.', false, ['project', 'passwordsDictionary'])
     ->inject('response')
     ->inject('project')
     ->inject('dbForProject')
@@ -1087,6 +1087,16 @@ App::patch('/v1/users/:userId/password')
             if (!$personalDataValidator->isValid($password)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
+        }
+
+        if (\strlen($password) === 0) {
+            $user
+                ->setAttribute('password', '')
+                ->setAttribute('passwordUpdate', DateTime::now());
+
+            $user = $dbForProject->updateDocument('users', $user->getId(), $user);
+            $queueForEvents->setParam('userId', $user->getId());
+            $response->dynamic($user, Response::MODEL_USER);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -1135,7 +1145,7 @@ App::patch('/v1/users/:userId/email')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('email', '', new Email(), 'User email.')
+    ->param('email', '', new Email(allowEmpty: true), 'User email.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1149,21 +1159,23 @@ App::patch('/v1/users/:userId/email')
 
         $email = \strtolower($email);
 
-        // Makes sure this email is not already used in another identity
-        $identityWithMatchingEmail = $dbForProject->findOne('identities', [
-            Query::equal('providerEmail', [$email]),
-            Query::notEqual('userId', $user->getId()),
-        ]);
-        if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
-        }
+        if (\strlen($email) !== 0) {
+            // Makes sure this email is not already used in another identity
+            $identityWithMatchingEmail = $dbForProject->findOne('identities', [
+                Query::equal('providerEmail', [$email]),
+                Query::notEqual('userId', $user->getId()),
+            ]);
+            if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
+                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            }
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$email]),
-        ]);
+            $target = $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$email]),
+            ]);
 
-        if ($target instanceof Document && !$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            if ($target instanceof Document && !$target->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
         }
 
         $oldEmail = $user->getAttribute('email');
@@ -1173,7 +1185,6 @@ App::patch('/v1/users/:userId/email')
             ->setAttribute('emailVerification', false)
         ;
 
-
         try {
             $user = $dbForProject->updateDocument('users', $user->getId(), $user);
             /**
@@ -1182,7 +1193,21 @@ App::patch('/v1/users/:userId/email')
             $oldTarget = $user->find('identifier', $oldEmail, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+                if (\strlen($email) !== 0) {
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $email));
+                } else {
+                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                }
+            } else {
+                if (\strlen($email) !== 0) {
+                    $target = $dbForProject->createDocument('targets', new Document([
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
+                        'providerType' => 'email',
+                        'identifier' => $email,
+                    ]));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                }
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
@@ -1209,7 +1234,7 @@ App::patch('/v1/users/:userId/phone')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('number', '', new Phone(), 'User phone number.')
+    ->param('number', '', new Phone(allowEmpty: true), 'User phone number.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
@@ -1228,12 +1253,14 @@ App::patch('/v1/users/:userId/phone')
             ->setAttribute('phoneVerification', false)
         ;
 
-        $target = $dbForProject->findOne('targets', [
-            Query::equal('identifier', [$number]),
-        ]);
+        if (\strlen($number) !== 0) {
+            $target = $dbForProject->findOne('targets', [
+                Query::equal('identifier', [$number]),
+            ]);
 
-        if ($target instanceof Document && !$target->isEmpty()) {
-            throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            if ($target instanceof Document && !$target->isEmpty()) {
+                throw new Exception(Exception::USER_TARGET_ALREADY_EXISTS);
+            }
         }
 
         try {
@@ -1244,7 +1271,21 @@ App::patch('/v1/users/:userId/phone')
             $oldTarget = $user->find('identifier', $oldPhone, 'targets');
 
             if ($oldTarget instanceof Document && !$oldTarget->isEmpty()) {
-                $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+                if (\strlen($number) !== 0) {
+                    $dbForProject->updateDocument('targets', $oldTarget->getId(), $oldTarget->setAttribute('identifier', $number));
+                } else {
+                    $dbForProject->deleteDocument('targets', $oldTarget->getId());
+                }
+            } else {
+                if (\strlen($number) !== 0) {
+                    $target = $dbForProject->createDocument('targets', new Document([
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
+                        'providerType' => 'sms',
+                        'identifier' => $number,
+                    ]));
+                    $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
+                }
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
