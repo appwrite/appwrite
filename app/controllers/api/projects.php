@@ -187,7 +187,7 @@ App::post('/v1/projects')
 
         // Allow Cloud overrides (useful for ZDT migration)
         $collectiosOverride = $hooks->trigger('getProjectCollections');
-        if(!empty($collectiosOverride)) {
+        if (!empty($collectiosOverride)) {
             $collections = $collectiosOverride;
         }
 
