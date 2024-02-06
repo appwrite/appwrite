@@ -2,12 +2,14 @@
 
 namespace Appwrite\Migration\Version;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Migration\Migration;
 use Exception;
 use PDOException;
 use Throwable;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Duplicate;
@@ -524,6 +526,11 @@ class V20 extends Migration
                     ]);
                     $this->projectDB->createDocument('targets', $target);
                 }
+                break;
+            case 'sessions':
+                $duration = $this->project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+                $expire = DateTime::addSeconds(new \DateTime(), $duration);
+                $document->setAttribute('expire', $expire);
                 break;
         }
         return $document;
