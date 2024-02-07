@@ -1186,7 +1186,7 @@ trait Base
                 }';
             case self::$CREATE_ACCOUNT_SESSION:
                 return 'mutation createAccountEmailSession($email: String!, $password: String!){
-                    accountCreateEmailSession(email: $email, password: $password) {
+                    accountCreateEmailPasswordSession(email: $email, password: $password) {
                         _id
                         userId
                         expire
