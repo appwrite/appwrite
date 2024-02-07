@@ -43,14 +43,6 @@ class Usage extends Event
      */
     public function addMetric(string $key, int $value): self
     {
-        //Todo debug (to be removed later @shimon)
-//        if ($key === 'users') {
-//            if ($value < 0) {
-//                console::log('@negative=' . $value);
-//            } else {
-//                console::log('@positive=' . $value);
-//            }
-//        }
         $this->metrics[] = [
             'key' => $key,
             'value' => $value,
