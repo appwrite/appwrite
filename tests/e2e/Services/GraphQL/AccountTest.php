@@ -63,7 +63,7 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateEmailSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateEmailPasswordSession']);
 
         $cookie = $session['cookies']['a_session_' . $this->getProject()['$id']];
         $this->assertNotEmpty($cookie);
