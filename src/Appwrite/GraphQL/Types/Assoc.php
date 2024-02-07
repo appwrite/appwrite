@@ -14,8 +14,8 @@ use GraphQL\Type\Definition\ScalarType;
 // https://github.com/webonyx/graphql-php/issues/129#issuecomment-309366803
 class Assoc extends Json
 {
-    public $name = 'Assoc';
-    public $description = 'The `Assoc` scalar type represents associative array values.';
+    public string $name = 'Assoc';
+    public ?string $description = 'The `Assoc` scalar type represents associative array values.';
 
     public function serialize($value)
     {
