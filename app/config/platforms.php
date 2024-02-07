@@ -195,7 +195,7 @@ return [
                 'family' => APP_PLATFORM_CONSOLE,
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/console-web'),
-                'gitUrl' => 'ssh://git@github.com/appwrite/sdk-for-console.git',
+                'gitUrl' => 'git@github.com/appwrite/sdk-for-console.git',
                 'gitBranch' => '1.5.x',
                 'gitRepoName' => 'sdk-for-console',
                 'gitUserName' => 'appwrite',
