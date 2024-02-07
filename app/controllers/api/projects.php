@@ -175,7 +175,7 @@ App::post('/v1/projects')
         // Useful for ZDT to mirror the project to destination
         $dbForProject = $hooks->trigger('getProxyProjectDatabase', [ $project, $pools, $cache ]);
 
-        if(empty($dbForProject)) {
+        if (empty($dbForProject)) {
             $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
             $dbForProject->setNamespace("_{$project->getInternalId()}");
             $dbForProject->create();
