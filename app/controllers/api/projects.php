@@ -178,8 +178,9 @@ App::post('/v1/projects')
         if (empty($dbForProject)) {
             $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
             $dbForProject->setNamespace("_{$project->getInternalId()}");
-            $dbForProject->create();
         }
+
+        $dbForProject->create();
 
         $audit = new Audit($dbForProject);
         $audit->setup();
