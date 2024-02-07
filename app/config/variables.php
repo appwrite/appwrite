@@ -441,7 +441,7 @@ return [
         'variables' => [
             [
                 'name' => '_APP_SMS_PROVIDER',
-                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91 and vonage.\n\nWhen using the using multiple comma-seperated providers, GEOSMS is enabled. With GEOSMS, the adapter with the `local=default` parameter is used by default. If additional adapters are specificied with the `local=XX` parameter, they will be used to send messages to numbers with the XX calling code: e.g. `sms://[user]:[pass]@twilio?local=default,sms://[user]:[pass]@msg91?local=91`",
+                'description' => "Provider used for delivering SMS for Phone authentication. Use the following format: 'sms://[USER]:[SECRET]@[PROVIDER]'.\n\nEnsure `[USER]` and `[SECRET]` are URL encoded if they contain any non-alphanumeric characters.\n\nAvailable providers are twilio, text-magic, telesign, msg91 and vonage.\n\nIf the `from` parameter is not set, the value of `_APP_SMS_FROM` will be used.\n\nWhen using the using multiple comma-seperated providers, GEOSMS is enabled. With GEOSMS, the adapter with the `local=default` parameter is used by default. If additional adapters are specificied with the `local=XX` parameter, they will be used to send messages to numbers with the XX calling code: e.g. `sms://[user]:[pass]@twilio?local=default,sms://[user]:[pass]@msg91?local=91`",
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
@@ -450,7 +450,7 @@ return [
             ],
             [
                 'name' => '_APP_SMS_FROM',
-                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).',
+                'description' => 'Phone number used for sending out messages. Must start with a leading \'+\' and maximum of 15 digits without spaces (+123456789).\n\n If using multiple providers, using the `from` parameter for the provider instead of `_APP_SMS_FROM`.',
                 'introduction' => '0.15.0',
                 'default' => '',
                 'required' => false,
