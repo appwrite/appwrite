@@ -287,7 +287,7 @@ class BatchTest extends Scope
                 accountCreate(userId: $userId, email: $email, password: $password, name: $name) {
                     name
                 }
-                accountCreateEmailSession(email: $email, password: $password) {
+                accountCreateEmailPasswordSession(email: $email, password: $password) {
                     expire
                 }
             }',
@@ -308,7 +308,7 @@ class BatchTest extends Scope
         $this->assertIsArray($response['body']['data']);
         $this->assertArrayNotHasKey('errors', $response['body']);
         $this->assertArrayHasKey('accountCreate', $response['body']['data']);
-        $this->assertArrayHasKey('accountCreateEmailSession', $response['body']['data']);
+        $this->assertArrayHasKey('accountCreateEmailPasswordSession', $response['body']['data']);
         $this->assertEquals('Tester', $response['body']['data']['accountCreate']['name']);
     }
 
