@@ -172,14 +172,8 @@ App::post('/v1/projects')
             throw new Exception(Exception::PROJECT_ALREADY_EXISTS);
         }
 
-        // Useful for ZDT to mirror the project to destination
-        $dbForProject = $hooks->trigger('getProxyProjectDatabase', [ $project, $pools, $cache ]);
-
-        if (empty($dbForProject)) {
-            $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
-            $dbForProject->setNamespace("_{$project->getInternalId()}");
-        }
-
+        $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
         $audit = new Audit($dbForProject);
@@ -224,6 +218,8 @@ App::post('/v1/projects')
             }
             $dbForProject->createCollection($key, $attributes, $indexes);
         }
+
+        $hooks->trigger('afterProjectCreation', [ $project, $pools, $cache ]);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
