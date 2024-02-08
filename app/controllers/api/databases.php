@@ -2898,6 +2898,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+        var_dump("ininin 0");
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -2912,7 +2913,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries); // todo: make this to all  parseQueries places?
+        } catch (QueryException $e) {
+            // question: should this throw GENERAL_ARGUMENT_INVALID like all QueryException and get 500 ?
+            // or GENERAL_QUERY_INVALID and get 400?
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         // Get cursor document if there was a cursor query
         $cursor = \array_filter($queries, function ($query) {
@@ -2933,14 +2940,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-
         try {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage()); //  Should this GENERAL_QUERY_INVALID? or 500 is ok?
         }
 
         // Add $collectionId and $databaseId for all documents

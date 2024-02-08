@@ -2039,6 +2039,18 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'queries' => [
+                '{"method":"contains","attribute":"title","values":[bad]}'
+            ],
+        ]);
+
+        $this->assertEquals(400, $documents['headers']['status-code']);
+        $this->assertEquals('Invalid query: Syntax error', $documents['body']['message']);
+
+        $documents = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/documents', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [
                 Query::contains('title', ['spi'])->toString(), // like query
             ],
         ]);
