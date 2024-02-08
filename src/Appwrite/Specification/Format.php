@@ -327,6 +327,12 @@ abstract class Format
                                 return 'MessagingProviderType';
                         }
                         break;
+                    case 'createSHAUser':
+                        switch ($param) {
+                            case 'passwordVersion':
+                                return 'PasswordHash';
+                        }
+                        break;
                 }
                 break;
         }
