@@ -216,7 +216,7 @@ abstract class Format
                     case 'updateEmail':
                         switch ($param) {
                             case 'status':
-                                return 'MessageType';
+                                return 'MessageStatus';
                         }
                         break;
                     case 'createSMTPProvider':
@@ -325,6 +325,12 @@ abstract class Format
                         switch ($param) {
                             case 'providerType':
                                 return 'MessagingProviderType';
+                        }
+                        break;
+                    case 'createSHAUser':
+                        switch ($param) {
+                            case 'passwordVersion':
+                                return 'PasswordHash';
                         }
                         break;
                 }
