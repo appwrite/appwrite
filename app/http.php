@@ -77,7 +77,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 $dbForConsole = $app->getResource('dbForConsole');
                 /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= $max) {
                     throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -91,7 +91,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         try {
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 

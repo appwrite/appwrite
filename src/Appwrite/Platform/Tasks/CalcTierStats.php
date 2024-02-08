@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Exception;
 use League\Csv\CannotInsertRecord;
 use Utopia\App;
 use Utopia\Database\Document;
@@ -200,7 +199,7 @@ class CalcTierStats extends Action
             $mail->Body = "Please find the daily cloud report atttached";
             $mail->send();
             Console::success('Email has been sent!');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         }
     }

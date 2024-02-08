@@ -8,7 +8,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Exception;
 use Swoole\Coroutine as Co;
 use Executor\Executor;
 use Utopia\App;
@@ -420,7 +419,7 @@ class Builds extends Action
                             variables: $vars,
                             command: $command
                         );
-                    } catch (Exception $error) {
+                    } catch (\Throwable $error) {
                         $err = $error;
                     }
                 }),
@@ -459,7 +458,7 @@ class Builds extends Action
                                     }
                                 }
                             );
-                        } catch (Exception $error) {
+                        } catch (\Throwable $error) {
                             if (empty($err)) {
                                 $err = $error;
                             }
@@ -617,7 +616,7 @@ class Builds extends Action
                         '$id' => $commentId
                     ]));
                     break;
-                } catch (Exception $err) {
+                } catch (\Throwable $err) {
                     if ($retries >= 9) {
                         throw $err;
                     }

@@ -610,7 +610,7 @@ App::get('/v1/migrations/firebase/report/oauth')
 
         try {
             $report = $firebase->report($resources);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
 
@@ -822,7 +822,7 @@ App::get('/v1/migrations/firebase/projects')
             if ($isExpired) {
                 try {
                     $firebase->refreshTokens($refreshToken);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
                 }
 
@@ -852,7 +852,7 @@ App::get('/v1/migrations/firebase/projects')
                     'projectId' => $project['projectId'],
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 

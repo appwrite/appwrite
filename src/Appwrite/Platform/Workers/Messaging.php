@@ -254,7 +254,7 @@ class Messaging extends Action
                                     }
                                 }
                             }
-                        } catch (\Exception $e) {
+                        } catch (\Throwable $e) {
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
                             $batchIndex++;
@@ -362,7 +362,7 @@ class Messaging extends Action
 
                 try {
                     $adapter->send($data);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage()); // TODO: Find a way to log into Sentry
                 }
             };

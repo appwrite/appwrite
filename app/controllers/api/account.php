@@ -505,7 +505,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         if (!empty($state)) {
             try {
                 $state = \array_merge($defaultState, $oauth2->parseState($state));
-            } catch (\Exception $exception) {
+            } catch (\Throwable $exception) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to parse login state params as passed from OAuth2 provider');
             }
         } else {
