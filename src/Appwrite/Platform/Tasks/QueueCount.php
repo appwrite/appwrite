@@ -58,7 +58,7 @@ class QueueCount extends Action
 
         $queueClient = new Client($name, $queue);
 
-        $count = match($type) {
+        $count = match ($type) {
             'success' => $queueClient->countSuccessfulJobs(),
             'failed' => $queueClient->countFailedJobs(),
             'processing' => $queueClient->countProcessingJobs(),
