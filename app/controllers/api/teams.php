@@ -648,7 +648,18 @@ App::post('/v1/teams/:teamId/memberships')
         $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId())
+            ->setPayload($response->output(
+                $membership
+                ->setAttribute('teamName', $team->getAttribute('name'))
+                ->setAttribute('userName', $invitee->getAttribute('name'))
+                ->setAttribute('userEmail', $invitee->getAttribute('email'))
+                ->setAttribute('secret', $secret),
+                Response::MODEL_MEMBERSHIP
+            ))
         ;
+
+        // Hide secret for clients
+        $membership->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $secret : '');
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -685,6 +696,9 @@ App::get('/v1/teams/:teamId/memberships')
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
+
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
 
         $queries = Query::parseQueries($queries);
 
@@ -727,7 +741,11 @@ App::get('/v1/teams/:teamId/memberships')
 
         $memberships = array_filter($memberships, fn(Document $membership) => !empty($membership->getAttribute('userId')));
 
-        $memberships = array_map(function ($membership) use ($dbForProject, $team) {
+        $memberships = array_map(function ($membership) use ($dbForProject, $team, $isPrivilegedUser, $isAppUser) {
+
+            // Hide secret for clients
+            $membership->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $membership->getAttribute('secret') : '');
+
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $membership
@@ -776,7 +794,13 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
             throw new Exception(Exception::MEMBERSHIP_NOT_FOUND);
         }
 
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+
         $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
+
+        // Hide secret for clients
+        $membership->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $membership->getAttribute('secret') : '');
 
         $membership
             ->setAttribute('teamName', $team->getAttribute('name'))
@@ -848,6 +872,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId')
         $queueForEvents
             ->setParam('teamId', $team->getId())
             ->setParam('membershipId', $membership->getId());
+
+        // Hide secret for clients
+        $membership->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $membership->getAttribute('secret') : '');
 
         $response->dynamic(
             $membership
@@ -923,6 +950,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             throw new Exception(Exception::MEMBERSHIP_ALREADY_CONFIRMED);
         }
 
+        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAppUser = Auth::isAppUser(Authorization::getRoles());
+
         $membership // Attach user to team
             ->setAttribute('joined', DateTime::now())
             ->setAttribute('confirm', true)
@@ -983,6 +1013,9 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
             ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
             ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'))
         ;
+
+        // Hide secret for clients
+        $membership->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $membership->getAttribute('secret') : '');
 
         $response->dynamic(
             $membership

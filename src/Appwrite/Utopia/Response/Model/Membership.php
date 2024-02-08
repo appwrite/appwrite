@@ -83,6 +83,12 @@ class Membership extends Model
                 'example' => ['owner'],
                 'array' => true,
             ])
+            ->addRule('secret', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token secret key. This will return an empty string unless the response is returned using an API key or as part of a webhook payload.',
+                'default' => '',
+                'example' => '',
+            ])
         ;
     }
 

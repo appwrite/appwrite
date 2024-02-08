@@ -2,6 +2,7 @@
 
 namespace Tests\E2E\Services\Teams;
 
+use Appwrite\Auth\Auth;
 use Tests\E2E\Client;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 
@@ -58,6 +59,7 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined'])); // is null in DB
         $this->assertEquals(true, $response['body']['confirm']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         /**
          * Test for FAILURE
@@ -109,9 +111,22 @@ trait TeamsBaseServer
         $this->assertCount(2, $response['body']['roles']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['joined']));
         $this->assertEquals(true, $response['body']['confirm']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         $userUid = $response['body']['userId'];
         $membershipUid = $response['body']['$id'];
+        $membershipSecret = $response['body']['secret'];
+
+        // Ensure secret is present on GET too, but hashed
+        $response = $this->client->call(Client::METHOD_GET, '/teams/' . $teamUid . '/memberships/' . $membershipUid, array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals($membershipUid, $response['body']['$id']);
+        $this->assertNotEmpty(true, $response['body']['secret']);
+        $this->assertEquals(Auth::hash($membershipSecret), $response['body']['secret']);
 
         // $response = $this->client->call(Client::METHOD_GET, '/users/'.$userUid, array_merge([
         //     'content-type' => 'application/json',
@@ -210,7 +225,7 @@ trait TeamsBaseServer
         $this->assertEquals($roles[0], $response['body']['roles'][0]);
         $this->assertEquals($roles[1], $response['body']['roles'][1]);
         $this->assertEquals($roles[2], $response['body']['roles'][2]);
-
+        $this->assertNotEmpty(true, $response['body']['secret']);
 
         /**
          * Test for FAILURE

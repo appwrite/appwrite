@@ -378,6 +378,9 @@
 - Fix missing file permissions due to cache [#4661](https://github.com/appwrite/appwrite/pull/4661)
 - Fix usage stats for async function executions [#4674](https://github.com/appwrite/appwrite/pull/4674)
 
+## Version 1.0.4
+- Add secret to membership return model [#4445](https://github.com/appwrite/appwrite/pull/4445)
+
 # Version 1.0.3
 ## Bugs
 - Fix document audit deletion [#4429](https://github.com/appwrite/appwrite/pull/4429)
