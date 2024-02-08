@@ -380,6 +380,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->param('roles', [], new ArrayList(new Key(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of strings. Use this param to set the user roles in the team. A role can be any string. Learn more about [roles and permissions](https://appwrite.io/docs/permissions). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 32 characters long.')
     ->param('url', '', fn($clients) => new Host($clients), 'URL to redirect the user back to your app from the invitation email.  Only URLs from hostnames in your project platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients']) // TODO add our own built-in confirm page
     ->param('name', '', new Text(128), 'Name of the new team member. Max length: 128 chars.', true)
+    ->inject('request')
     ->inject('response')
     ->inject('project')
     ->inject('user')
@@ -388,7 +389,7 @@ App::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, EventPhone $queueForMessaging, Event $queueForEvents) {
         $isAPIKey = Auth::isAppUser(Authorization::getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
 
@@ -533,8 +534,8 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+
+            Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
@@ -638,9 +639,12 @@ App::post('/v1/teams/:teamId/memberships')
                 $message = $message->setParam('{{token}}', $url);
                 $message = $message->render();
 
+                var_dump($request->getIP());
+                var_dump($project->getId());
                 $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
+                    ->setProject($project)
                     ->trigger();
             }
         }
