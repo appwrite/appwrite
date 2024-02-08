@@ -53,11 +53,10 @@ class V17 extends Filter
             case 'vcs.listInstallations':
                 $content = $this->convertOldQueries($content);
                 break;
-
         }
         return $content;
     }
-    
+
     function convertOldQueries(array $content): array
     {
         $parsed = [];
