@@ -216,7 +216,7 @@ abstract class Format
                     case 'updateEmail':
                         switch ($param) {
                             case 'status':
-                                return 'MessageType';
+                                return 'MessageStatus';
                         }
                         break;
                     case 'createSMTPProvider':
