@@ -1189,16 +1189,15 @@ App::delete('/v1/users/:userId')
         // clone user object to send to workers
         $clone = clone $user;
 
-        $affected = $dbForProject->deleteDocument('users', $userId);
-        if (!empty($affected)) {
-            $queueForDeletes
-                ->setType(DELETE_TYPE_DOCUMENT)
-                ->setDocument($clone);
+        $dbForProject->deleteDocument('users', $userId);
 
-            $queueForEvents
-                ->setParam('userId', $user->getId())
-                ->setPayload($response->output($clone, Response::MODEL_USER));
-        }
+        $queueForDeletes
+            ->setType(DELETE_TYPE_DOCUMENT)
+            ->setDocument($clone);
+
+        $queueForEvents
+            ->setParam('userId', $user->getId())
+            ->setPayload($response->output($clone, Response::MODEL_USER));
 
         $response->noContent();
     });

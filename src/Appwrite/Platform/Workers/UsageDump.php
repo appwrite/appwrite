@@ -55,6 +55,7 @@ class UsageDump extends Action
             throw new Exception('Missing payload');
         }
 
+        //Todo rename both usage workers @shimonewman
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;

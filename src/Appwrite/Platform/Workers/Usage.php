@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Exception;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -15,9 +16,7 @@ class Usage extends Action
     private int $lastTriggeredTime = 0;
     private int $keys = 0;
     private const INFINITY_PERIOD = '_inf_';
-    private const KEYS_THRESHOLD = 5;
-    private const KEYS_SENT_THRESHOLD = 60;
-
+    private const KEYS_THRESHOLD = 10000;
 
 
     public static function getName(): string
@@ -57,7 +56,9 @@ class Usage extends Action
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+        //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
+        $aggregationInterval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '60');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
@@ -87,7 +88,7 @@ class Usage extends Action
         // if keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
-            (time() - $this->lastTriggeredTime > self::KEYS_SENT_THRESHOLD  && $this->keys > 0)
+            (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
             $queueForUsageDump
                 ->setStats($this->stats)
