@@ -1268,7 +1268,7 @@ trait DatabasesBase
         $this->assertCount(1, $releaseYearIndex['body']['attributes']);
         $this->assertEquals('releaseYear', $releaseYearIndex['body']['attributes'][0]);
 
-        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+        $releaseWithDate1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1278,33 +1278,15 @@ trait DatabasesBase
             'attributes' => ['releaseYear', '$createdAt', '$updatedAt'],
         ]);
 
-        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
-        $this->assertEquals('releaseYearDated', $releaseWithDate['body']['key']);
-        $this->assertEquals('key', $releaseWithDate['body']['type']);
-        $this->assertCount(3, $releaseWithDate['body']['attributes']);
-        $this->assertEquals('releaseYear', $releaseWithDate['body']['attributes'][0]);
-        $this->assertEquals('$createdAt', $releaseWithDate['body']['attributes'][1]);
-        $this->assertEquals('$updatedAt', $releaseWithDate['body']['attributes'][2]);
+        $this->assertEquals(202, $releaseWithDate1['headers']['status-code']);
+        $this->assertEquals('releaseYearDated', $releaseWithDate1['body']['key']);
+        $this->assertEquals('key', $releaseWithDate1['body']['type']);
+        $this->assertCount(3, $releaseWithDate1['body']['attributes']);
+        $this->assertEquals('releaseYear', $releaseWithDate1['body']['attributes'][0]);
+        $this->assertEquals('$createdAt', $releaseWithDate1['body']['attributes'][1]);
+        $this->assertEquals('$updatedAt', $releaseWithDate1['body']['attributes'][2]);
 
-        // wait for database worker to create index
-        sleep(2);
-
-        $movies = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'], array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), []);
-
-        $this->assertIsArray($movies['body']['indexes']);
-        $this->assertCount(3, $movies['body']['indexes']);
-        $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
-        $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
-        $this->assertEquals($releaseWithDate['body']['key'], $movies['body']['indexes'][2]['key']);
-        $this->assertEquals('available', $movies['body']['indexes'][0]['status']);
-        $this->assertEquals('available', $movies['body']['indexes'][1]['status']);
-        $this->assertEquals('available', $movies['body']['indexes'][2]['status']);
-
-        $releaseWithDate = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+        $releaseWithDate2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
@@ -1314,11 +1296,11 @@ trait DatabasesBase
             'attributes' => ['birthDay'],
         ]);
 
-        $this->assertEquals(202, $releaseWithDate['headers']['status-code']);
-        $this->assertEquals('birthDay', $releaseWithDate['body']['key']);
-        $this->assertEquals('key', $releaseWithDate['body']['type']);
-        $this->assertCount(1, $releaseWithDate['body']['attributes']);
-        $this->assertEquals('birthDay', $releaseWithDate['body']['attributes'][0]);
+        $this->assertEquals(202, $releaseWithDate2['headers']['status-code']);
+        $this->assertEquals('birthDay', $releaseWithDate2['body']['key']);
+        $this->assertEquals('key', $releaseWithDate2['body']['type']);
+        $this->assertCount(1, $releaseWithDate2['body']['attributes']);
+        $this->assertEquals('birthDay', $releaseWithDate2['body']['attributes'][0]);
 
         // Test for failure
         $fulltextReleaseYear = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
@@ -1406,9 +1388,12 @@ trait DatabasesBase
             'key' => 'index-ip-actors',
             'type' => 'key',
             'attributes' => ['releaseYear', 'actors'], // 2 levels
+            'orders' => ['DESC', 'DESC'],
         ]);
 
         $this->assertEquals(202, $twoLevelsArray['headers']['status-code']);
+        $this->assertEquals('DESC', $twoLevelsArray['body']['orders'][0]);
+        $this->assertEquals(null, $twoLevelsArray['body']['orders'][1]); // Overwrite by API (array)
 
         $unknown = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
             'content-type' => 'application/json',
@@ -1422,6 +1407,50 @@ trait DatabasesBase
 
         $this->assertEquals(400, $unknown['headers']['status-code']);
         $this->assertEquals('Unknown attribute: Unknown', $unknown['body']['message']);
+
+        $index1 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'integers-order',
+            'type' => 'key',
+            'attributes' => ['integers'], // array attribute
+            'orders' => ['DESC'], // Check order is removed in API
+        ]);
+        $this->assertEquals(202, $index1['headers']['status-code']);
+
+        $index2 = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/indexes', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]), [
+            'key' => 'integers-size',
+            'type' => 'key',
+            'attributes' => ['integers'], // array attribute
+        ]);
+        $this->assertEquals(202, $index2['headers']['status-code']);
+
+        /**
+         * Create Indexes by worker
+         */
+        sleep(2);
+
+        $movies = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'], array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), []);
+
+        $this->assertIsArray($movies['body']['indexes']);
+        $this->assertCount(8, $movies['body']['indexes']);
+        $this->assertEquals($titleIndex['body']['key'], $movies['body']['indexes'][0]['key']);
+        $this->assertEquals($releaseYearIndex['body']['key'], $movies['body']['indexes'][1]['key']);
+        $this->assertEquals($releaseWithDate1['body']['key'], $movies['body']['indexes'][2]['key']);
+        $this->assertEquals($releaseWithDate2['body']['key'], $movies['body']['indexes'][3]['key']);
+        foreach ($movies['body']['indexes'] as $index) {
+            $this->assertEquals('available', $index['status']);
+        }
 
         return $data;
     }
