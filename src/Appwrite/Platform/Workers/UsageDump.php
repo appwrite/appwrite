@@ -64,7 +64,7 @@ class UsageDump extends Action
                 continue;
             }
 
-            console::warning('[' . DateTime::now() . '] aggregation received project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . $numberOfKeys . ' keys');
+            console::log('[' . DateTime::now() . '] aggregation received project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . $numberOfKeys . ' keys');
 
             try {
                 $dbForProject = $getProjectDB($project);
