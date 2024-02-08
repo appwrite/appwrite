@@ -426,9 +426,9 @@ App::get('/v1/health/certificate')
 
 
         $sslExpiration = $certificatePayload['validTo_time_t'];
-        $status = ($sslExpiration < time()) ? 'fail' : 'pass';
+        $status = $sslExpiration < time() ? 'fail' : 'pass';
 
-        if ($status == 'fail') {
+        if ($status === 'fail') {
             throw new Exception(Exception::HEALTH_CERTIFICATE_EXPIRED);
         }
 
