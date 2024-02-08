@@ -20,7 +20,6 @@ class Usage extends Action
     ];
 
     protected const INFINITY_PERIOD = '_inf_';
-    protected const DEBUG_PROJECT_ID = 85293;
     public static function getName(): string
     {
         return 'usage';
@@ -70,7 +69,6 @@ class Usage extends Action
                 getProjectDB: $getProjectDB
             );
         }
-
         self::$stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
             if (!isset(self::$stats[$projectId]['keys'][$metric['key']])) {

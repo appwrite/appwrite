@@ -533,8 +533,8 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+
+            Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->deleteCachedDocument('users', $invitee->getId());
         } else {
@@ -641,6 +641,7 @@ App::post('/v1/teams/:teamId/memberships')
                 $queueForMessaging
                     ->setRecipient($phone)
                     ->setMessage($message)
+                    ->setProject($project)
                     ->trigger();
             }
         }

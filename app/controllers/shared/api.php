@@ -177,6 +177,7 @@ App::init()
             $end = $request->getContentRangeEnd();
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
+                ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
                 ->setParam('{userAgent}', $request->getUserAgent(''))
                 ->setParam('{ip}', $request->getIP())
@@ -335,7 +336,7 @@ App::init()
                 break;
 
             case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
+                if (($auths['usersAuthMagicURL'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
@@ -343,6 +344,12 @@ App::init()
             case 'anonymous':
                 if (($auths['anonymous'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
+                }
+                break;
+
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
                 }
                 break;
 
@@ -359,7 +366,7 @@ App::init()
                 break;
 
             default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
+                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication type: ' . $route->getLabel('auth.type', ''));
                 break;
         }
     });
