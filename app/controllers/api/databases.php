@@ -2945,7 +2945,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage()); //  Should this GENERAL_QUERY_INVALID? or 500 is ok?
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage()); //  Should this be GENERAL_QUERY_INVALID? or 500 is ok?
         }
 
         // Add $collectionId and $databaseId for all documents
