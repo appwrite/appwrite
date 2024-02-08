@@ -41,13 +41,46 @@ class V17Test extends TestCase
         ];
     }
 
-
     /**
      * @dataProvider createUpdateRecoveryProvider
      */
     public function testUpdateRecovery(array $content, array $expected): void
     {
         $model = 'account.updateRecovery';
+
+        $result = $this->filter->parse($content, $model);
+
+        $this->assertEquals($expected, $result);
+    }
+
+    public function createQueryProvider()
+    {
+        return [
+            'convert queries' => [
+                [
+                    'queries' => [
+                        'cursorAfter("exampleId")',
+                        'search("name", ["example"])',
+                        'isNotNull("name")'
+                    ]
+                ],
+                [
+                    'queries' => [
+                        '{"method":"cursorAfter","values":["exampleId"]}',
+                        '{"method":"search","attribute":"name","values":["example"]}',
+                        '{"method":"isNotNull","attribute":"name"}'
+                    ]
+                ],
+            ]
+            ];
+    }
+
+    /**
+     * @dataProvider createQueryProvider
+     */
+    public function testQuery(array $content, array $expected): void
+    {
+        $model = 'databases.getDocument';
 
         $result = $this->filter->parse($content, $model);
 
