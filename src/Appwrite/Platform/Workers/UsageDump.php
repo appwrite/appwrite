@@ -59,11 +59,12 @@ class UsageDump extends Action
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-            $projectInternalId = $project->getInternalId();
 
             if ($numberOfKeys === 0) {
                 continue;
             }
+
+            console::warning('[' . DateTime::now() . '] aggregation received project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . $numberOfKeys . ' keys');
 
             try {
                 $dbForProject = $getProjectDB($project);
@@ -105,7 +106,7 @@ class UsageDump extends Action
                     }
                 }
             } catch (\Exception $e) {
-                console::error(DateTime::now() . ' ' . $projectInternalId . ' ' . $e->getMessage());
+                console::error('[' . DateTime::now() . '] project [' . $project->getInternalId() . '] database [' . $project['database'] . '] ' . ' ' . $e->getMessage());
             }
         }
     }

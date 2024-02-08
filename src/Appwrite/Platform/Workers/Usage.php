@@ -90,7 +90,8 @@ class Usage extends Action
             $this->keys >= self::KEYS_THRESHOLD ||
             (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
         ) {
-            var_dump(DateTime::now());
+            console::warning('[' . DateTime::now() . '] stats aggregation sent to worker with ' . $this->keys . ' keys');
+
             $queueForUsageDump
                 ->setStats($this->stats)
                 ->trigger();
