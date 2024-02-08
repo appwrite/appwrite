@@ -79,7 +79,6 @@ class Usage extends Action
         }
     }
 
-
      /**
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
      * When we remove a parent document we need to deduct his children aggregation from the project scope.
