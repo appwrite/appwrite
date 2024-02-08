@@ -57,7 +57,7 @@ class V17 extends Filter
         return $content;
     }
 
-    function convertOldQueries(array $content): array
+    private function convertOldQueries(array $content): array
     {
         $parsed = [];
         foreach ($content['queries'] as $query) {
@@ -259,7 +259,7 @@ class V17 extends Filter
      * @param string $value
      * @return mixed
      */
-    function parseValue(string $value): mixed
+    private function parseValue(string $value): mixed
     {
         $value = \trim($value);
 
@@ -291,7 +291,7 @@ class V17 extends Filter
      * @param string $currentParam
      * @return void
      */
-    function appendSymbol(bool $isStringStack, string $char, int $index, string $filter, string &$currentParam): void
+    private function appendSymbol(bool $isStringStack, string $char, int $index, string $filter, string &$currentParam): void
     {
         // Ignore spaces and commas outside of string
         $canBeIgnored = false;
@@ -311,7 +311,7 @@ class V17 extends Filter
         }
     }
 
-    function isQuote(string $char): bool
+    private function isQuote(string $char): bool
     {
         if ($char === self::CHAR_SINGLE_QUOTE) {
             return true;
@@ -322,7 +322,7 @@ class V17 extends Filter
         return false;
     }
 
-    function isSpecialChar(string $char): bool
+    private function isSpecialChar(string $char): bool
     {
         if ($char === static::CHAR_COMMA) {
             return true;
