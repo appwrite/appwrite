@@ -69,6 +69,7 @@ class Usage extends Action
                 getProjectDB: $getProjectDB
             );
         }
+
         self::$stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
             if (!isset(self::$stats[$projectId]['keys'][$metric['key']])) {
@@ -78,7 +79,6 @@ class Usage extends Action
             self::$stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
     }
-
 
      /**
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.
