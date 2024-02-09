@@ -85,6 +85,10 @@ class Usage extends Action
 
             $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
+        var_dump(time() - $this->lastTriggeredTime > $aggregationInterval);
+        var_dump(time() - $this->lastTriggeredTime);
+        var_dump($aggregationInterval);
+        var_dump($this->keys);
         // if keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
         if (
             $this->keys >= self::KEYS_THRESHOLD ||
