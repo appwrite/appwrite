@@ -251,7 +251,7 @@ return [
         'description' => 'User phone is already verified',
         'code' => 409
     ],
-    Exception::USER_DELETION_WITH_ACTIVE_TEAMS => [
+    Exception::USER_DELETION_PROHIBITED => [
         'name' => Exception::USER_DELETION_WITH_ACTIVE_TEAMS,
         'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
         'code' => 400
