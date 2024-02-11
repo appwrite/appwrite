@@ -253,7 +253,7 @@ return [
     ],
     Exception::USER_DELETION_WITH_ACTIVE_TEAMS => [
         'name' => Exception::USER_DELETION_WITH_ACTIVE_TEAMS,
-        'description' => 'Delete all your teams before trying to delete your account.',
+        'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
         'code' => 400
     ],
 
