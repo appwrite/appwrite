@@ -3053,7 +3053,7 @@ App::delete('/v1/account')
                 }
             }
         }
-        
+
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
