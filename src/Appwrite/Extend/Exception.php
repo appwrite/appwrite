@@ -86,7 +86,7 @@ class Exception extends \Exception
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
     public const USER_EMAIL_ALREADY_VERIFIED        = 'user_email_alread_verified';
     public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
-    public const USER_DELETION_PROHIBITED    = 'USER_DELETION_PROHIBITED';
+    public const USER_DELETION_PROHIBITED    = 'user_deletion_prohibited';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
