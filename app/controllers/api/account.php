@@ -1288,7 +1288,16 @@ App::post('/v1/account/sessions/phone')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
-        $secret = Auth::codeGenerator();
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        $secret = null;
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['number'] === $phone) {
+                $secret = $mockNumber['otp'];
+                break;
+            }
+        }
+        
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
 
         $token = new Document([
@@ -2879,14 +2888,25 @@ App::post('/v1/account/verification/phone')
             throw new Exception(Exception::GENERAL_PHONE_DISABLED);
         }
 
-        if (empty($user->getAttribute('phone'))) {
+        $phone = $user->getAttribute('phone');
+        if (!$phone) {
             throw new Exception(Exception::USER_PHONE_NOT_FOUND);
         }
 
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
         $isAppUser = Auth::isAppUser($roles);
-        $secret = Auth::codeGenerator();
+
+        $mockNumbers = $project->getAttribute('auths', [])['mockNumbers'] ?? [];
+        $secret = null;
+        foreach ($mockNumbers as $mockNumber) {
+            if ($mockNumber['number'] === $phone) {
+                $secret = $mockNumber['otp'];
+                break;
+            }
+        }
+        
+        $secret ??= Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
@@ -2922,7 +2942,7 @@ App::post('/v1/account/verification/phone')
         $message = $message->render();
 
         $queueForMessaging
-            ->setRecipient($user->getAttribute('phone'))
+            ->setRecipient($phone)
             ->setMessage($message)
             ->trigger()
         ;

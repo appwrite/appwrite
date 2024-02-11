@@ -98,6 +98,8 @@ use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 // Keep last
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\MockNumber;
+use Appwrite\Utopia\Response\Model\MockOTP;
 
 /**
  * @method int getStatusCode()
@@ -240,6 +242,8 @@ class Response extends SwooleResponse
     public const MODEL_KEY_LIST = 'keyList';
     public const MODEL_PROVIDER = 'provider';
     public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_MOCK_NUMBER = 'mockNumber';
+    public const MODEL_MOCK_NUMBER_LIST = 'mockNumberList';
     public const MODEL_PLATFORM = 'platform';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
@@ -316,7 +320,8 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
+            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER, true, false))
+            ->setModel(new BaseList('Mock Numbers List', self::MODEL_MOCK_NUMBER_LIST, 'numbers', self::MODEL_MOCK_NUMBER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
@@ -381,6 +386,7 @@ class Response extends SwooleResponse
             ->setModel(new Webhook())
             ->setModel(new Key())
             ->setModel(new Provider())
+            ->setModel(new MockNumber())
             ->setModel(new Platform())
             ->setModel(new Variable())
             ->setModel(new Country())
