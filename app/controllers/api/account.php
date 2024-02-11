@@ -1296,7 +1296,7 @@ App::post('/v1/account/sessions/phone')
                 break;
             }
         }
-        
+
         $secret ??= Auth::codeGenerator();
         $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_PHONE));
 
@@ -2905,7 +2905,7 @@ App::post('/v1/account/verification/phone')
                 break;
             }
         }
-        
+
         $secret ??= Auth::codeGenerator();
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
 

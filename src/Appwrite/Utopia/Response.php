@@ -99,7 +99,6 @@ use Appwrite\Utopia\Response\Model\MigrationReport;
 // Keep last
 use Appwrite\Utopia\Response\Model\Mock;
 use Appwrite\Utopia\Response\Model\MockNumber;
-use Appwrite\Utopia\Response\Model\MockOTP;
 
 /**
  * @method int getStatusCode()

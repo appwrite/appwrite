@@ -8,11 +8,10 @@ use Utopia\Validator\Text;
 /**
  * MockNumber.
  *
- * Validates if a given object represents a valid phone and OTP pair 
+ * Validates if a given object represents a valid phone and OTP pair
  */
 class MockNumber extends Validator
 {
-
     private $message = '';
 
     /**
