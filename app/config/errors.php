@@ -252,7 +252,7 @@ return [
         'code' => 409
     ],
     Exception::USER_DELETION_PROHIBITED => [
-        'name' => Exception::USER_DELETION_WITH_ACTIVE_TEAMS,
+        'name' => Exception::USER_DELETION_PROHIBITED,
         'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
         'code' => 400
     ],
