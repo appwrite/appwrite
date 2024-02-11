@@ -3045,7 +3045,7 @@ App::delete('/v1/account')
             // get all memberships
             $memberships = $user->getAttribute('memberships', []);
             foreach ($memberships as $membership) {
-                // prevent deletion if at lease one active membership
+                // prevent deletion if at least one active membership
                 if ($membership->getAttribute('confirm', false)) {
                     throw new Exception(Exception::USER_DELETION_WITH_ACTIVE_TEAMS);
                 }
