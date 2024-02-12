@@ -258,7 +258,7 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', 'cloud.appwrite.io');
+                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
                 $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
