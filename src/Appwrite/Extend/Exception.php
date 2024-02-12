@@ -264,6 +264,8 @@ class Exception extends \Exception
     public const MESSAGE_NOT_FOUND                  = 'message_not_found';
     public const MESSAGE_MISSING_TARGET             = 'message_missing_target';
     public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
+    public const MESSAGE_ALREADY_PROCESSING         = 'message_already_processing';
+    public const MESSAGE_ALREADY_FAILED             = 'message_already_failed';
     public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
     public const MESSAGE_TARGET_NOT_EMAIL           = 'message_target_not_email';
     public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';

@@ -3077,8 +3077,13 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === MessageStatus::SENT) {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!\is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3207,8 +3212,13 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3329,8 +3339,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {

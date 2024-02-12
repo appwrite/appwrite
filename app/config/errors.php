@@ -867,6 +867,16 @@ return [
         'description' => 'Message with the requested ID has already been sent.',
         'code' => 400,
     ],
+    Exception::MESSAGE_ALREADY_PROCESSING => [
+        'name' => Exception::MESSAGE_ALREADY_PROCESSING,
+        'description' => 'Message with the requested ID is already being processed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_FAILED => [
+        'name' => Exception::MESSAGE_ALREADY_FAILED,
+        'description' => 'Message with the requested ID has already failed.',
+        'code' => 400,
+    ],
     Exception::MESSAGE_ALREADY_SCHEDULED => [
         'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
         'description' => 'Message with the requested ID has already been scheduled for delivery.',
