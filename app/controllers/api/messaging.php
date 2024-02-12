@@ -3141,7 +3141,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3155,7 +3155,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3260,7 +3260,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3274,7 +3274,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3284,7 +3284,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->trigger();
@@ -3419,7 +3419,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3433,7 +3433,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3443,7 +3443,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->trigger();
