@@ -20,7 +20,6 @@ class Usage extends Action
     ];
 
     protected const INFINITY_PERIOD = '_inf_';
-    protected const DEBUG_PROJECT_ID = 85293;
     public static function getName(): string
     {
         return 'usage';
@@ -70,17 +69,6 @@ class Usage extends Action
                 getProjectDB: $getProjectDB
             );
         }
-        if ($project->getInternalId() == self::DEBUG_PROJECT_ID) {
-            var_dump([
-                'type' => 'payload',
-                'project' => $project->getInternalId(),
-                'database' => $project['database'] ?? '',
-                $payload['metrics']
-            ]);
-
-            var_dump('==========================');
-        }
-
         self::$stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
             if (!isset(self::$stats[$projectId]['keys'][$metric['key']])) {
@@ -90,7 +78,6 @@ class Usage extends Action
             self::$stats[$projectId]['keys'][$metric['key']] += $metric['value'];
         }
     }
-
 
      /**
      * On Documents that tied by relations like functions>deployments>build || documents>collection>database || buckets>files.

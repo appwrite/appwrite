@@ -216,7 +216,7 @@ abstract class Format
                     case 'updateEmail':
                         switch ($param) {
                             case 'status':
-                                return 'MessageType';
+                                return 'MessageStatus';
                         }
                         break;
                     case 'createSMTPProvider':
@@ -240,17 +240,24 @@ abstract class Format
                 break;
             case 'projects':
                 switch ($method) {
-                    case 'getSmsTemplate':
                     case 'getEmailTemplate':
-                    case 'updateSmsTemplate':
                     case 'updateEmailTemplate':
-                    case 'deleteSmsTemplate':
                     case 'deleteEmailTemplate':
                         switch ($param) {
                             case 'type':
-                                return 'TemplateType';
+                                return 'EmailTemplateType';
                             case 'locale':
-                                return 'TemplateLocale';
+                                return 'EmailTemplateLocale';
+                        }
+                        break;
+                    case 'getSmsTemplate':
+                    case 'updateSmsTemplate':
+                    case 'deleteSmsTemplate':
+                        switch ($param) {
+                            case 'type':
+                                return 'SMSTemplateType';
+                            case 'locale':
+                                return 'SMSTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
@@ -325,6 +332,12 @@ abstract class Format
                         switch ($param) {
                             case 'providerType':
                                 return 'MessagingProviderType';
+                        }
+                        break;
+                    case 'createSHAUser':
+                        switch ($param) {
+                            case 'passwordVersion':
+                                return 'PasswordHash';
                         }
                         break;
                 }

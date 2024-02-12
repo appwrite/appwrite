@@ -629,12 +629,7 @@ class Deletes extends Action
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $dbForProject->updateDocument(
-                        'teams',
-                        $teamId,
-                        // Ensure that total >= 0
-                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                    );
+                    $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
         });
