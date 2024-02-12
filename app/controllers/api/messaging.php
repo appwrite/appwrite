@@ -3136,8 +3136,13 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === MessageStatus::SENT) {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!\is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3195,7 +3200,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3209,7 +3214,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3266,8 +3271,13 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3309,7 +3319,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3323,7 +3333,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3333,7 +3343,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->trigger();
@@ -3388,8 +3398,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3463,7 +3478,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3477,7 +3492,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3487,7 +3502,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
                 ->setMessageId($message->getId())
                 ->trigger();
