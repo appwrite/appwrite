@@ -492,7 +492,6 @@ trait DatabasesBase
                 Query::cursorAfter(new Document(['$id' => 'title']))->toString()
             ],
         ]);
-        var_dump($response);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, \count($response['body']['attributes']));
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $data['moviesId'] . '/attributes', array_merge([
