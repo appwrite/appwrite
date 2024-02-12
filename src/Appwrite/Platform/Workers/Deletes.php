@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Auth\Auth;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
@@ -45,14 +46,17 @@ class Deletes extends Action
             ->inject('getFunctionsDevice')
             ->inject('getBuildsDevice')
             ->inject('getCacheDevice')
-            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice));
+            ->inject('abuseRetention')
+            ->inject('executionRetention')
+            ->inject('auditRetention')
+            ->callback(fn ($message, $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention) => $this->action($message, $dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $abuseRetention, $executionRetention, $auditRetention));
     }
 
     /**
      * @throws Exception
      * @throws Throwable
      */
-    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice): void
+    public function action(Message $message, Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, string $abuseRetention, string $executionRetention, string $auditRetention): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -115,12 +119,12 @@ class Deletes extends Action
                 break;
 
             case DELETE_TYPE_EXECUTIONS:
-                $this->deleteExecutionLogs($dbForConsole, $getProjectDB, $datetime);
+                $this->deleteExecutionLogs($project, $getProjectDB, $executionRetention);
                 break;
 
             case DELETE_TYPE_AUDIT:
-                if (!empty($datetime)) {
-                    $this->deleteAuditLogs($dbForConsole, $getProjectDB, $datetime);
+                if (!$project->isEmpty()) {
+                    $this->deleteAuditLogs($project, $getProjectDB, $auditRetention);
                 }
 
                 if (!$document->isEmpty()) {
@@ -128,7 +132,7 @@ class Deletes extends Action
                 }
                 break;
             case DELETE_TYPE_ABUSE:
-                $this->deleteAbuseLogs($dbForConsole, $getProjectDB, $datetime);
+                $this->deleteAbuseLogs($project, $getProjectDB, $abuseRetention);
                 break;
 
             case DELETE_TYPE_REALTIME:
@@ -136,10 +140,10 @@ class Deletes extends Action
                 break;
 
             case DELETE_TYPE_SESSIONS:
-                $this->deleteExpiredSessions($dbForConsole, $getProjectDB);
+                $this->deleteExpiredSessions($project, $getProjectDB);
                 break;
             case DELETE_TYPE_USAGE:
-                $this->deleteUsageStats($dbForConsole, $getProjectDB, $hourlyUsageRetentionDatetime);
+                $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
                 $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
@@ -343,16 +347,14 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteUsageStats(Database $dbForConsole, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
+    private function deleteUsageStats(Document $project, callable $getProjectDB, string $hourlyUsageRetentionDatetime): void
     {
-        $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($getProjectDB, $hourlyUsageRetentionDatetime) {
-            $dbForProject = $getProjectDB($project);
-            // Delete Usage stats
-            $this->deleteByGroup('stats', [
-                Query::lessThan('time', $hourlyUsageRetentionDatetime),
-                Query::equal('period', ['1h']),
-            ], $dbForProject);
-        });
+        $dbForProject = $getProjectDB($project);
+        // Delete Usage stats
+        $this->deleteByGroup('stats_v2', [
+            Query::lessThan('time', $hourlyUsageRetentionDatetime),
+            Query::equal('period', ['1h']),
+        ], $dbForProject);
     }
 
     /**
@@ -393,6 +395,7 @@ class Deletes extends Action
      */
     private function deleteProjectsByTeam(Database $dbForConsole, callable $getProjectDB, callable $getFilesDevice, callable $getFunctionsDevice, callable $getBuildsDevice, callable $getCacheDevice, Document $document): void
     {
+
         $projects = $dbForConsole->find('projects', [
             Query::equal('teamInternalId', [$document->getInternalId()])
         ]);
@@ -520,12 +523,7 @@ class Deletes extends Action
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $dbForProject->updateDocument(
-                        'teams',
-                        $teamId,
-                        // Ensure that total >= 0
-                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                    );
+                    $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
         });
@@ -548,15 +546,13 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteExecutionLogs(database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteExecutionLogs(Document $project, callable $getProjectDB, string $datetime): void
     {
-        $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($getProjectDB, $datetime) {
-            $dbForProject = $getProjectDB($project);
-            // Delete Executions
-            $this->deleteByGroup('executions', [
-                Query::lessThan('$createdAt', $datetime)
-            ], $dbForProject);
-        });
+        $dbForProject = $getProjectDB($project);
+        // Delete Executions
+        $this->deleteByGroup('executions', [
+            Query::lessThan('$createdAt', $datetime)
+        ], $dbForProject);
     }
 
     /**
@@ -565,20 +561,16 @@ class Deletes extends Action
      * @return void
      * @throws Exception|Throwable
      */
-    private function deleteExpiredSessions(Database $dbForConsole, callable $getProjectDB): void
+    private function deleteExpiredSessions(Document $project, callable $getProjectDB): void
     {
+        $dbForProject = $getProjectDB($project);
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
 
-        $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($dbForConsole, $getProjectDB) {
-            $dbForProject = $getProjectDB($project);
-            $project = $dbForConsole->getDocument('projects', $project->getId());
-            $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-            $expired = DateTime::addSeconds(new \DateTime(), -1 * $duration);
-
-            // Delete Sessions
-            $this->deleteByGroup('sessions', [
-                Query::lessThan('$createdAt', $expired)
-            ], $dbForProject);
-        });
+        // Delete Sessions
+        $this->deleteByGroup('sessions', [
+            Query::lessThan('$createdAt', $expired)
+        ], $dbForProject);
     }
 
     /**
@@ -602,22 +594,16 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAbuseLogs(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteAbuseLogs(Document $project, callable $getProjectDB, string $abuseRetention): void
     {
-        if (empty($datetime)) {
-            throw new Exception('Failed to delete audit logs. No datetime provided');
+        $projectId = $project->getId();
+        $dbForProject = $getProjectDB($project);
+        $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
+        $abuse = new Abuse($timeLimit);
+        $status = $abuse->cleanup($abuseRetention);
+        if (!$status) {
+            throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
         }
-
-        $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($getProjectDB, $datetime) {
-            $projectId = $project->getId();
-            $dbForProject = $getProjectDB($project);
-            $timeLimit = new TimeLimit("", 0, 1, $dbForProject);
-            $abuse = new Abuse($timeLimit);
-            $status = $abuse->cleanup($datetime);
-            if (!$status) {
-                throw new Exception('Failed to delete Abuse logs for project ' . $projectId);
-            }
-        });
     }
 
     /**
@@ -627,21 +613,15 @@ class Deletes extends Action
      * @return void
      * @throws Exception
      */
-    private function deleteAuditLogs(Database $dbForConsole, callable $getProjectDB, string $datetime): void
+    private function deleteAuditLogs(Document $project, callable $getProjectDB, string $auditRetention): void
     {
-        if (empty($datetime)) {
-            throw new Exception('Failed to delete audit logs. No datetime provided');
+        $projectId = $project->getId();
+        $dbForProject = $getProjectDB($project);
+        $audit = new Audit($dbForProject);
+        $status = $audit->cleanup($auditRetention);
+        if (!$status) {
+            throw new Exception('Failed to delete Audit logs for project' . $projectId);
         }
-
-        $this->deleteForProjectIds($dbForConsole, function (Document $project) use ($getProjectDB, $datetime) {
-            $projectId = $project->getId();
-            $dbForProject = $getProjectDB($project);
-            $audit = new Audit($dbForProject);
-            $status = $audit->cleanup($datetime);
-            if (!$status) {
-                throw new Exception('Failed to delete Audit logs for project' . $projectId);
-            }
-        });
     }
 
     /**
@@ -874,39 +854,6 @@ class Deletes extends Action
         } else {
             Console::error('Failed to delete document: ' . $document->getId());
         }
-    }
-
-    /**
-     * @param Database $dbForConsole
-     * @param callable $callback
-     * @throws Exception
-     */
-    private function deleteForProjectIds(database $dbForConsole, callable $callback): void
-    {
-        // TODO: @Meldiron name of this method no longer matches. It does not delete, and it gives whole document
-        $count = 0;
-        $chunk = 0;
-        $limit = 50;
-        $sum = $limit;
-        $executionStart = \microtime(true);
-
-        while ($sum === $limit) {
-            $projects = $dbForConsole->find('projects', [Query::limit($limit), Query::offset($chunk * $limit)]);
-
-            $chunk++;
-
-            /** @var string[] $projectIds */
-            $sum = count($projects);
-
-            Console::info('Executing delete function for chunk #' . $chunk . '. Found ' . $sum . ' projects');
-            foreach ($projects as $project) {
-                $callback($project);
-                $count++;
-            }
-        }
-
-        $executionEnd = \microtime(true);
-        Console::info("Found {$count} projects " . ($executionEnd - $executionStart) . " seconds");
     }
 
     /**
