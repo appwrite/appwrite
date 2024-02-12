@@ -222,6 +222,9 @@ App::post('/v1/account/sessions/email')
     ->inject('queueForEvents')
     ->inject('hooks')
     ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+        }
 
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
@@ -481,6 +484,9 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+        }
 
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -1447,6 +1453,10 @@ App::post('/v1/account/tokens/email')
     });
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+    if (!$user->isEmpty()) {
+        throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+    }
+
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -1505,7 +1515,8 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
-        ]));
+        ])
+    );
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
@@ -1804,6 +1815,9 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+        }
 
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
@@ -1812,10 +1826,6 @@ App::post('/v1/account/sessions/anonymous')
 
         if ('console' === $project->getId()) {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
-        }
-
-        if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;

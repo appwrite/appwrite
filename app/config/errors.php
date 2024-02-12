@@ -178,7 +178,7 @@ return [
     ],
     Exception::USER_SESSION_ALREADY_EXISTS => [
         'name' => Exception::USER_SESSION_ALREADY_EXISTS,
-        'description' => 'Creation of anonymous users is prohibited when a session is active.',
+        'description' => 'Creation of a session is prohibited when a session is active.',
         'code' => 401,
     ],
     Exception::USER_NOT_FOUND => [
