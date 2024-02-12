@@ -153,7 +153,7 @@ App::get('/v1/teams')
         }
 
         /**
-         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
@@ -711,7 +711,7 @@ App::get('/v1/teams/:teamId/memberships')
         $queries[] = Query::equal('teamId', [$teamId]);
 
         /**
-         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
          */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
