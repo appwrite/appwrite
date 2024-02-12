@@ -388,13 +388,13 @@ App::post('/v1/messaging/providers/telesign')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('username', '', new Text(0), 'Telesign username.', true)
-    ->param('password', '', new Text(0), 'Telesign password.', true)
+    ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
+    ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $password, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $customerId, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [];
@@ -405,18 +405,18 @@ App::post('/v1/messaging/providers/telesign')
 
         $credentials = [];
 
-        if (!empty($username)) {
-            $credentials['username'] = $username;
+        if (!empty($customerId)) {
+            $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($password)) {
-            $credentials['password'] = $password;
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
         }
 
         if (
             $enabled === true
-            && \array_key_exists('username', $credentials)
-            && \array_key_exists('password', $credentials)
+            && \array_key_exists('customerId', $credentials)
+            && \array_key_exists('apiKey', $credentials)
             && \array_key_exists('from', $options)
         ) {
             $enabled = true;
@@ -1400,13 +1400,13 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('username', '', new Text(0), 'Telesign username.', true)
-    ->param('password', '', new Text(0), 'Telesign password.', true)
+    ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
+    ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $password, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $customerId, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1430,12 +1430,12 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($username)) {
-            $credentials['username'] = $username;
+        if (!empty($customerId)) {
+            $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($password)) {
-            $credentials['password'] = $password;
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
         }
 
         $provider->setAttribute('credentials', $credentials);
@@ -1443,8 +1443,8 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         if (!\is_null($enabled)) {
             if ($enabled) {
                 if (
-                    \array_key_exists('username', $credentials) &&
-                    \array_key_exists('password', $credentials) &&
+                    \array_key_exists('customerId', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('from', $provider->getAttribute('options'))
                 ) {
                     $provider->setAttribute('enabled', true);

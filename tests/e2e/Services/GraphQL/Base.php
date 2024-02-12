@@ -1832,8 +1832,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TELESIGN_PROVIDER:
-                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $password: String!) {
-                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, username: $username, password: $password) {
+                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $customerId: String!, $apiKey: String!) {
+                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, customerId: $customerId, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1956,8 +1956,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TELESIGN_PROVIDER:
-                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
-                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $customerId: String!, $apiKey: String!) {
+                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, customerId: $customerId, apiKey: $apiKey) {
                         _id
                         name
                         provider

@@ -353,8 +353,8 @@ class Messaging extends Action
                     'apiKey' => $password
                 ],
                 'telesign' => [
-                    'username' => $user,
-                    'password' => $password
+                    'customerId' => $user,
+                    'apiKey' => $password
                 ],
                 'msg91' => [
                     'senderId' => $user,
@@ -409,7 +409,7 @@ class Messaging extends Action
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
-            'telesign' => new Telesign($credentials['username'], $credentials['password']),
+            'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
             default => null
