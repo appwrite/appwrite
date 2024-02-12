@@ -843,8 +843,12 @@ App::get('/v1/messaging/providers')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -1950,8 +1954,12 @@ App::get('/v1/messaging/topics')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2272,8 +2280,12 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
 
         \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2851,8 +2863,12 @@ App::get('/v1/messaging/messages')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2994,8 +3010,12 @@ App::get('/v1/messaging/messages/:messageId/targets')
 
         $queries[] = Query::equal('$id', $targetIDs);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {

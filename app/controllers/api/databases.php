@@ -493,7 +493,9 @@ App::get('/v1/databases')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -815,7 +817,9 @@ App::get('/v1/databases/:databaseId/collections')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1649,7 +1653,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
+        /** @var Document $database */
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -1666,22 +1670,23 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         \array_push(
             $queries,
-            Query::equal('collectionId', [$collectionId]),
-            Query::equal('databaseId', [$databaseId])
+            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('databaseInternalId', [$database->getInternalId()])
         );
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
-
         $cursor = \reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$attributeId]),
                 Query::limit(1),
             ]));
@@ -2491,7 +2496,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
+        /** @var Document $database */
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -2507,7 +2512,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         $queries = Query::parseQueries($queries);
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-         // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
          $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
          });
@@ -2516,8 +2523,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         if ($cursor) {
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
             ]));
@@ -2914,7 +2921,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
 
         $queries = Query::parseQueries($queries);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we user array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
