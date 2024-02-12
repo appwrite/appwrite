@@ -258,13 +258,13 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
+                $endpoint = App::getEnv('_APP_HOME', 'cloud.appwrite.io');
                 $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
-                    ->setParam('endpoint', 'https://HOSTNAME/v1')
+                    ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
                     ->setParam('version', APP_VERSION_STABLE)
                     ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)
