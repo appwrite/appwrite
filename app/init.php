@@ -71,6 +71,7 @@ use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
@@ -201,6 +202,7 @@ const MESSAGE_TYPE_PUSH = 'push';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
+const METRIC_MESSAGES  = 'messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -986,6 +988,7 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
+App::setResource('log', fn() => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -993,10 +996,6 @@ App::setResource('logger', function ($register) {
 App::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
-
-App::setResource('loggerBreadcrumbs', function () {
-    return [];
-});
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
