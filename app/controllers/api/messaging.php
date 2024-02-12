@@ -2987,9 +2987,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3028,7 +3026,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-
+var_dump($queries);
         $response->dynamic(new Document([
             'targets' => $dbForProject->find('targets', $queries),
             'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
