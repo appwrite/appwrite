@@ -72,12 +72,6 @@ App::init()
                 }
                 break;
 
-            case 'phone':
-                if (($auths['phone'] ?? true) === false) {
-                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
-                }
-                break;
-
             case 'email-otp':
                 if (($auths['emailOTP'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
@@ -86,6 +80,5 @@ App::init()
 
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
-                break;
         }
     });
