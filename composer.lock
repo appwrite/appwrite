@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e6e0d6874f4d718d96396d71a66864da",
+    "content-hash": "55d2ed1081591f2b3b3af9999236b109",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1748,16 +1748,16 @@
         },
         {
             "name": "utopia-php/image",
-            "version": "0.6.0",
+            "version": "0.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/image.git",
-                "reference": "88f7209172bdabd81e76ac981c95fac117dc6e08"
+                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/image/zipball/88f7209172bdabd81e76ac981c95fac117dc6e08",
-                "reference": "88f7209172bdabd81e76ac981c95fac117dc6e08",
+                "url": "https://api.github.com/repos/utopia-php/image/zipball/2d74c27e69e65a93cf94a16586598a04fe435bf0",
+                "reference": "2d74c27e69e65a93cf94a16586598a04fe435bf0",
                 "shasum": ""
             },
             "require": {
@@ -1790,9 +1790,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/image/issues",
-                "source": "https://github.com/utopia-php/image/tree/0.6.0"
+                "source": "https://github.com/utopia-php/image/tree/0.6.1"
             },
-            "time": "2024-01-24T06:59:44+00:00"
+            "time": "2024-02-05T13:31:44+00:00"
         },
         {
             "name": "utopia-php/locale",
