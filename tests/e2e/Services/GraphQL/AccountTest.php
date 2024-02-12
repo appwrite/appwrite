@@ -89,9 +89,9 @@ class AccountTest extends Scope
 
         $this->assertArrayNotHasKey('errors', $session['body']);
         $this->assertIsArray($session['body']['data']);
-        $this->assertIsArray($session['body']['data']['accountCreateMagicURLSession']);
+        $this->assertIsArray($session['body']['data']['accountCreateMagicURLToken']);
 
-        return $session['body']['data']['accountCreateMagicURLSession'];
+        return $session['body']['data']['accountCreateMagicURLToken'];
     }
 
     public function testCreateEmailVerification(): array

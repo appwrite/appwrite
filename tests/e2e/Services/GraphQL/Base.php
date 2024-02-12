@@ -1208,7 +1208,7 @@ trait Base
                 }';
             case self::$CREATE_MAGIC_URL:
                 return 'mutation createMagicURL($userId: String!, $email: String!){
-                    accountCreateMagicURLSession(userId: $userId, email: $email) {
+                    accountCreateMagicURLToken(userId: $userId, email: $email) {
                         userId
                         expire
                     }

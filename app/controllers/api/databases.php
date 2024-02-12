@@ -2416,6 +2416,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
+            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
                 throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
@@ -2426,8 +2427,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // set attribute size as index length only for strings
-            $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
+            $lengths[$i] = null;
+
+            if ($attributeType === Database::VAR_STRING) {
+                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
+            }
+
+            if ($attributeArray === true) {
+                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $orders[$i] = null;
+            }
         }
 
         $index = new Document([
