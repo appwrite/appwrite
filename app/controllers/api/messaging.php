@@ -3026,7 +3026,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
 
             $cursor->setValue($cursorDocument);
         }
-var_dump($queries);
+
         $response->dynamic(new Document([
             'targets' => $dbForProject->find('targets', $queries),
             'total' => $dbForProject->count('targets', $queries, APP_LIMIT_COUNT),
