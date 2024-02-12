@@ -14,6 +14,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Auth\Phrase;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Host;
 use Utopia\Validator\URL;
 use Utopia\Validator\Boolean;
@@ -907,7 +908,11 @@ App::get('/v1/account/identities')
     ->inject('dbForProject')
     ->action(function (array $queries, Response $response, Document $user, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $queries[] = Query::equal('userInternalId', [$user->getInternalId()]);
 
@@ -2066,7 +2071,12 @@ App::get('/v1/account/logs')
     ->inject('dbForProject')
     ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;

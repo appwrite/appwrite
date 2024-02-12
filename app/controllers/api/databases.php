@@ -487,7 +487,11 @@ App::get('/v1/databases')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -567,7 +571,12 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -809,7 +818,11 @@ App::get('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -908,7 +921,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -1662,7 +1680,11 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         \array_push(
             $queries,
@@ -2513,7 +2535,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
          // Get cursor document if there was a cursor query
@@ -2922,10 +2949,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         try {
-            $queries = Query::parseQueries($queries); // todo: make this to all  parseQueries places?
+            $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
-            // question: should this throw GENERAL_ARGUMENT_INVALID like all QueryException and get 500 ?
-            // or GENERAL_QUERY_INVALID and get 400?
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
@@ -2954,7 +2979,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage()); //  Should this be GENERAL_QUERY_INVALID? or 500 is ok?
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         // Add $collectionId and $databaseId for all documents
@@ -3052,14 +3077,18 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         try {
             $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         if ($document->isEmpty()) {
@@ -3148,7 +3177,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
