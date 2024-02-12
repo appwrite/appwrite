@@ -130,6 +130,24 @@ class V20 extends Migration
                     $this->createCollection('challenges');
 
                     break;
+                case 'cache':
+                    // Create resourceType attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create mimeType attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mimeType');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
                 case 'stats':
                     try {
                         /**
