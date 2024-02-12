@@ -35,6 +35,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;

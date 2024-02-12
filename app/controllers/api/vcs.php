@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Host;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -969,7 +970,11 @@ App::get('/v1/vcs/installations')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
