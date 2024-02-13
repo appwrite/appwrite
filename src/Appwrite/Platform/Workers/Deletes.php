@@ -11,7 +11,6 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Database\Database;
-use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
@@ -585,7 +584,7 @@ class Deletes extends Action
         // Delete metadata tables
         try {
             $dbForProject->deleteCollection('_metadata');
-        } catch (Exception) {
+        } catch (\Throwable) {
             // Ignore: deleteCollection tries to delete a metadata entry after the collection is deleted,
             // which will throw an exception here because the metadata collection is already deleted.
         }
@@ -630,12 +629,7 @@ class Deletes extends Action
                 $teamId = $document->getAttribute('teamId');
                 $team = $dbForProject->getDocument('teams', $teamId);
                 if (!$team->isEmpty()) {
-                    $team = $dbForProject->updateDocument(
-                        'teams',
-                        $teamId,
-                        // Ensure that total >= 0
-                        $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0))
-                    );
+                    $dbForProject->decreaseDocumentAttribute('teams', $teamId, 'total', 1, 0);
                 }
             }
         });

@@ -5,6 +5,7 @@ namespace Tests\E2E\Services\Messaging;
 use Appwrite\Messaging\Status as MessageStatus;
 use Tests\E2E\Client;
 use Utopia\App;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
@@ -50,8 +51,8 @@ trait MessagingBase
             'telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'textmagic' => [
@@ -141,8 +142,8 @@ trait MessagingBase
             ],
             'telesign' => [
                 'name' => 'Telesign2',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',
@@ -176,6 +177,7 @@ trait MessagingBase
                 'bundleId' => 'my-bundleid',
             ],
         ];
+
         foreach (\array_keys($providersParams) as $index => $key) {
             $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
                 'content-type' => 'application/json',
@@ -201,7 +203,9 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+
         $providers[1] = $response['body'];
+
         return $providers;
     }
 
@@ -682,12 +686,27 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ]);
 
-        $this->assertEquals(200, $response['headers']['status-code']);
-
         $targetList = $response['body'];
-        $this->assertEquals(1, $targetList['total']);
-        $this->assertEquals(1, count($targetList['targets']));
+        $this->assertEquals(2, $targetList['total']);
+        $this->assertEquals(2, count($targetList['targets']));
         $this->assertEquals($message['targets'][0], $targetList['targets'][0]['$id']);
+        $this->assertEquals($message['targets'][1], $targetList['targets'][1]['$id']);
+
+        /**
+         * Cursor Test
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/messaging/messages/' . $message['$id'] . '/targets', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'queries' => [
+                Query::cursorAfter(new Document(['$id' => $targetList['targets'][0]['$id']]))->toString(),
+            ]
+        ]);
+        $this->assertEquals(2, $response['body']['total']);
+        $this->assertEquals(1, count($response['body']['targets']));
+        $this->assertEquals($targetList['targets'][1]['$id'], $response['body']['targets'][0]['$id']);
 
         // Test for empty targets
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
@@ -719,7 +738,7 @@ trait MessagingBase
 
     public function testCreateDraftEmail()
     {
-        // Create User
+        // Create User 1
         $response = $this->client->call(Client::METHOD_POST, '/users', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -728,15 +747,33 @@ trait MessagingBase
             'userId' => ID::unique(),
             'email' => uniqid() . "@example.com",
             'password' => 'password',
-            'name' => 'Messaging User',
+            'name' => 'Messaging User 1',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
 
-        $user = $response['body'];
+        $user1 = $response['body'];
 
-        $this->assertEquals(1, \count($user['targets']));
-        $targetId = $user['targets'][0]['$id'];
+        $this->assertEquals(1, \count($user1['targets']));
+        $targetId1 = $user1['targets'][0]['$id'];
+
+        // Create User 2
+        $response = $this->client->call(Client::METHOD_POST, '/users', [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'userId' => ID::unique(),
+            'email' => uniqid() . "@example.com",
+            'password' => 'password',
+            'name' => 'Messaging User 2',
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code'], "Error creating user: " . var_export($response['body'], true));
+        $user2 = $response['body'];
+
+        $this->assertEquals(1, \count($user2['targets']));
+        $targetId2 = $user2['targets'][0]['$id'];
 
         // Create Email
         $response = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
@@ -745,13 +782,12 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'targets' => [$targetId],
+            'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
-
         $message = $response['body'];
         $this->assertEquals(MessageStatus::DRAFT, $message['status']);
 

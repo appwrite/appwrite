@@ -75,7 +75,7 @@ class Certificates extends Action
 
         $log->addTag('domain', $domain->get());
 
-        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $skipRenewCheck);
+        $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
     }
 
     /**
@@ -89,7 +89,7 @@ class Certificates extends Action
      * @throws Throwable
      * @throws \Utopia\Database\Exception
      */
-    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, bool $skipRenewCheck = false): void
+    private function execute(Domain $domain, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log, bool $skipRenewCheck = false): void
     {
         /**
          * 1. Read arguments and validate domain
@@ -143,11 +143,11 @@ class Certificates extends Action
             if (!$skipRenewCheck) {
                 $mainDomain = $this->getMainDomain();
                 $isMainDomain = !isset($mainDomain) || $domain->get() === $mainDomain;
-                $this->validateDomain($domain, $isMainDomain);
+                $this->validateDomain($domain, $isMainDomain, $log);
             }
 
             // If certificate exists already, double-check expiry date. Skip if job is forced
-            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get())) {
+            if (!$skipRenewCheck && !$this->isRenewRequired($domain->get(), $log)) {
                 throw new Exception('Renew isn\'t required.');
             }
 
@@ -185,6 +185,8 @@ class Certificates extends Action
 
             // Send email to security email
             $this->notifyError($domain->get(), $e->getMessage(), $attempts, $queueForMails);
+
+            throw $e;
         } finally {
             // All actions result in new updatedAt date
             $certificate->setAttribute('updated', DateTime::now());
@@ -252,7 +254,7 @@ class Certificates extends Action
      * @return void
      * @throws Exception
      */
-    private function validateDomain(Domain $domain, bool $isMainDomain): void
+    private function validateDomain(Domain $domain, bool $isMainDomain, Log $log): void
     {
         if (empty($domain->get())) {
             throw new Exception('Missing certificate domain.');
@@ -272,8 +274,15 @@ class Certificates extends Action
             }
 
             // Verify domain with DNS records
+            $validationStart = \microtime(true);
             $validator = new CNAME($target->get());
             if (!$validator->isValid($domain->get())) {
+                $log->addExtra('dnsTiming', \strval(\microtime(true) - $validationStart));
+                $log->addTag('dnsDomain', $domain->get());
+
+                $error = $validator->getLogs();
+                $log->addExtra('dnsResponse', \is_array($error) ? \json_encode($error) : \strval($error));
+
                 throw new Exception('Failed to verify domain DNS records.');
             }
         } else {
@@ -289,7 +298,7 @@ class Certificates extends Action
      * @return bool True, if certificate needs to be renewed
      * @throws Exception
      */
-    private function isRenewRequired(string $domain): bool
+    private function isRenewRequired(string $domain, Log $log): bool
     {
         $certPath = APP_STORAGE_CERTIFICATES . '/' . $domain . '/cert.pem';
         if (\file_exists($certPath)) {
@@ -299,12 +308,15 @@ class Certificates extends Action
             $validTo = $certData['validTo_time_t'] ?? 0;
 
             if (empty($validTo)) {
+                $log->addTag('certificateDomain', $domain);
                 throw new Exception('Unable to read certificate file (cert.pem).');
             }
 
             // LetsEncrypt allows renewal 30 days before expiry
             $expiryInAdvance = (60 * 60 * 24 * 30);
             if ($validTo - $expiryInAdvance > \time()) {
+                $log->addTag('certificateDomain', $domain);
+                $log->addExtra('certificateData', \is_array($certData) ? \json_encode($certData) : \strval($certData));
                 return false;
             }
         }
