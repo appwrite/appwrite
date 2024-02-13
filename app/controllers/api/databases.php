@@ -1649,7 +1649,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
                 // Console should provider a unique twoWayKey input!
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'TwoWayKey already exist in related collection');
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
             }
 
             if (
