@@ -138,8 +138,8 @@ class MessagingTest extends Scope
             'Telesign' => [
                 'providerId' => $providers[3]['_id'],
                 'name' => 'Telesign2',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
             ],
             'Textmagic' => [
                 'providerId' => $providers[4]['_id'],
