@@ -177,14 +177,26 @@ trait MessagingBase
                 'bundleId' => 'my-bundleid',
             ],
         ];
-        foreach (\array_keys($providersParams) as $index => $key) {
-            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
+
+        foreach (\array_keys($providersParams) as $index => $name) {
+            $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $name . '/' . $providers[$index]['$id'], [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ], $providersParams[$key]);
+            ], $providersParams[$name]);
+
             $this->assertEquals(200, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
+            $this->assertEquals($providersParams[$name]['name'], $response['body']['name']);
+
+            if ($name === 'smtp') {
+                $this->assertArrayHasKey('encryption', $response['body']['options']);
+                $this->assertArrayHasKey('autoTLS', $response['body']['options']);
+                $this->assertArrayHasKey('mailer', $response['body']['options']);
+                $this->assertArrayNotHasKey('encryption', $response['body']['credentials']);
+                $this->assertArrayNotHasKey('autoTLS', $response['body']['credentials']);
+                $this->assertArrayNotHasKey('mailer', $response['body']['credentials']);
+            }
+
             $providers[$index] = $response['body'];
         }
 
@@ -199,10 +211,13 @@ trait MessagingBase
             'isEuRegion' => true,
             'enabled' => false,
         ]);
+
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+
         $providers[1] = $response['body'];
+
         return $providers;
     }
 
