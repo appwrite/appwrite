@@ -1614,7 +1614,6 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         Event $queueForEvents
     ) {
         $key ??= $relatedCollectionId;
-        $twoWayKeyNull = is_null($twoWayKey);
         $twoWayKey ??= $collectionId;
 
         $databaseDocument = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
@@ -1649,8 +1648,8 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
                 \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
                 $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
             ) {
-                // Currently, we always throw an Exception even when, We do not want to change $twoWayKsy on $twoWayKeyNull
-                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+                // Console should provider a unique twoWayKey input!
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'TwoWayKey already exist in related collection');
             }
 
             if (
