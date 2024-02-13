@@ -264,7 +264,7 @@ class Messaging extends Action
                                 }
                             }
                         } catch (\Throwable $e) {
-                            $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
+                            $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . ' of ' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
                             $batchIndex++;
 
@@ -286,6 +286,10 @@ class Messaging extends Action
         foreach ($results as $result) {
             $deliveredTotal += $result['deliveredTotal'];
             $deliveryErrors = \array_merge($deliveryErrors, $result['deliveryErrors']);
+        }
+
+        if (empty($deliveryErrors) && $deliveredTotal === 0) {
+            $deliveryErrors[] = 'Unknown error';
         }
 
         $message->setAttribute('deliveryErrors', $deliveryErrors);
