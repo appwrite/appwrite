@@ -2,23 +2,22 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Helpers\ID;
 use Utopia\DSN\DSN;
-use Utopia\Logger\Log;
-use Utopia\Platform\Action;
-use Utopia\Queue\Message;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Email\SMTP;
+use Utopia\Messaging\Adapter\Email\Sendgrid;
 use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\APNS;
 use Utopia\Messaging\Adapter\Push\FCM;
@@ -32,7 +31,8 @@ use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
-use Utopia\Messaging\Response;
+use Utopia\Platform\Action;
+use Utopia\Queue\Message;
 
 use function Swoole\Coroutine\batch;
 
@@ -53,23 +53,26 @@ class Messaging extends Action
             ->inject('message')
             ->inject('log')
             ->inject('dbForProject')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject) => $this->action($message, $log, $dbForProject));
+            ->inject('queueForUsage')
+            ->callback(fn(Message $message, Log $log, Database $dbForProject, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $queueForUsage));
     }
 
     /**
      * @param Message $message
      * @param Log $log
      * @param Database $dbForProject
+     * @param Usage $queueForUsage
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Log $log, Database $dbForProject): void
+    public function action(Message $message, Log $log, Database $dbForProject, Usage $queueForUsage): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new \Exception('Payload not found.');
+            throw new Exception('Missing payload');
         }
+
 
         if (
             !\is_null($payload['message'])
@@ -77,7 +80,13 @@ class Messaging extends Action
             && $payload['providerType'] === MESSAGE_TYPE_SMS
         ) {
             // Message was triggered internally
-            $this->processInternalSMSMessage($log, new Document($payload['message']), $payload['recipients']);
+            $this->processInternalSMSMessage(
+                new Document($payload['message']),
+                new Document($payload['project'] ?? []),
+                $payload['recipients'],
+                $queueForUsage,
+                $log,
+            );
         } else {
             $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
@@ -299,10 +308,24 @@ class Messaging extends Action
         $dbForProject->updateDocument('messages', $message->getId(), $message);
     }
 
-    private function processInternalSMSMessage(Log $log, Document $message, array $recipients): void
+    private function processInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
         if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
+        }
+
+        if ($project->isEmpty()) {
+            throw new Exception('Project not set in payload');
+        }
+
+        Console::log('Project: ' . $project->getId());
+
+        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = explode(',', $denyList);
+
+        if (\in_array($project->getId(), $denyList)) {
+            Console::error('Project is in the deny list. Skipping...');
+            return;
         }
 
         $smsDSN = new DSN(App::getEnv('_APP_SMS_PROVIDER'));
@@ -330,8 +353,8 @@ class Messaging extends Action
                     'apiKey' => $password
                 ],
                 'telesign' => [
-                    'username' => $user,
-                    'password' => $password
+                    'customerId' => $user,
+                    'apiKey' => $password
                 ],
                 'msg91' => [
                     'senderId' => $user,
@@ -354,16 +377,21 @@ class Messaging extends Action
         $batches = \array_chunk($recipients, $maxBatchSize);
         $batchIndex = 0;
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex) {
-            return function () use ($batch, $message, $provider, $adapter, $batchIndex) {
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $project, $queueForUsage) {
+            return function () use ($batch, $message, $provider, $adapter, $batchIndex, $project, $queueForUsage) {
                 $message->setAttribute('to', $batch);
 
                 $data = $this->buildSMSMessage($message, $provider);
 
                 try {
                     $adapter->send($data);
+
+                    $queueForUsage
+                        ->setProject($project)
+                        ->addMetric(METRIC_MESSAGES, 1)
+                        ->trigger();
                 } catch (\Exception $e) {
-                    Console::error('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage()); // TODO: Find a way to log into Sentry
+                    throw new Exception('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage(), 500);
                 }
             };
         }, $batches));
@@ -376,11 +404,12 @@ class Messaging extends Action
     private function sms(Document $provider): ?SMSAdapter
     {
         $credentials = $provider->getAttribute('credentials');
+
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'twilio' => new Twilio($credentials['accountSid'], $credentials['authToken']),
             'textmagic' => new Textmagic($credentials['username'], $credentials['apiKey']),
-            'telesign' => new Telesign($credentials['username'], $credentials['password']),
+            'telesign' => new Telesign($credentials['customerId'], $credentials['apiKey']),
             'msg91' => new Msg91($credentials['senderId'], $credentials['authKey'], $credentials['templateId']),
             'vonage' => new Vonage($credentials['apiKey'], $credentials['apiSecret']),
             default => null
@@ -390,6 +419,7 @@ class Messaging extends Action
     private function push(Document $provider): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
+
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'apns' => new APNS(
@@ -407,6 +437,7 @@ class Messaging extends Action
     {
         $credentials = $provider->getAttribute('credentials', []);
         $options = $provider->getAttribute('options', []);
+
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
             'smtp' => new SMTP(

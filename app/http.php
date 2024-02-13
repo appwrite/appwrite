@@ -264,10 +264,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
                 // All good, user is optional information for logger
             }
 
-            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
             $route = $app->getRoute();
 
-            $log = new Utopia\Logger\Log();
+            $log = $app->getResource("log");
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
@@ -298,10 +297,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                $log->addBreadcrumb($loggerBreadcrumb);
-            }
 
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);

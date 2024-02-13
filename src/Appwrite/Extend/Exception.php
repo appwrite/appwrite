@@ -244,7 +244,9 @@ class Exception extends \Exception
     public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
 
     /** Health */
-    public const QUEUE_SIZE_EXCEEDED                 = 'queue_size_exceeded';
+    public const HEALTH_QUEUE_SIZE_EXCEEDED          = 'health_queue_size_exceeded';
+    public const HEALTH_CERTIFICATE_EXPIRED          = 'health_certificate_expired';
+    public const HEALTH_INVALID_HOST                 = 'health_invalid_host';
 
     /** Provider */
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
@@ -264,6 +266,8 @@ class Exception extends \Exception
     public const MESSAGE_NOT_FOUND                  = 'message_not_found';
     public const MESSAGE_MISSING_TARGET             = 'message_missing_target';
     public const MESSAGE_ALREADY_SENT               = 'message_already_sent';
+    public const MESSAGE_ALREADY_PROCESSING         = 'message_already_processing';
+    public const MESSAGE_ALREADY_FAILED             = 'message_already_failed';
     public const MESSAGE_ALREADY_SCHEDULED          = 'message_already_scheduled';
     public const MESSAGE_TARGET_NOT_EMAIL           = 'message_target_not_email';
     public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
@@ -276,21 +280,16 @@ class Exception extends \Exception
 
     protected string $type = '';
     protected array $errors = [];
-    protected bool $publish = true;
+    protected bool $publish;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
+        $this->code = $code ?? $this->errors[$type]['code'];
+        $this->message = $message ?? $this->errors[$type]['description'];
 
-        if (isset($this->errors[$type])) {
-            $this->code = $this->errors[$type]['code'];
-            $this->message = $this->errors[$type]['description'];
-            $this->publish = $this->errors[$type]['publish'] ?? true;
-        }
-
-        $this->message = $message ?? $this->message;
-        $this->code = $code ?? $this->code;
+        $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 
         parent::__construct($this->message, $this->code, $previous);
     }
