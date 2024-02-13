@@ -27,7 +27,7 @@ class V20 extends Migration
         /**
          * Disable SubQueries for Performance.
          */
-        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables'] as $name) {
+        foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables', 'subQueryChallenges', 'subQueryProjectVariables', 'subQueryTargets', 'subQueryTopicTargets'] as $name) {
             Database::addFilter(
                 $name,
                 fn() => null,
@@ -75,24 +75,25 @@ class V20 extends Migration
         };
 
         // Support database array type migration (user collections)
-        $attributes = $this->projectDB->find('attributes', [
+        foreach (
+            $this->documentsIterator('attributes', [
             Query::equal('array', [true]),
-        ]);
-
-        foreach ($attributes as $attribute) {
-            $indexes = $this->projectDB->find('indexes', [
+            ]) as $attribute
+        ) {
+            $foundIndex = false;
+            foreach (
+                $this->documentsIterator('indexes', [
                 Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
                 Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
-            ]);
-            $foundIndex = 0;
-            foreach ($indexes as $index) {
+                ]) as $index
+            ) {
                 if (in_array($attribute['key'], $index['attributes'])) {
                     $this->projectDB->deleteIndex($index['collectionId'], $index['_uid']);
-                    $foundIndex = 1;
+                    $foundIndex = true;
                 }
             }
-            if ($foundIndex === 1) {
-                $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], Database::VAR_STRING);
+            if ($foundIndex === true) {
+                $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
             }
         }
 
@@ -105,17 +106,17 @@ class V20 extends Migration
             $this->projectDB->setNamespace("_$internalProjectId");
 
             // Support database array type migration
-             $foundIndex = 0;
+            $foundIndex = false;
             foreach ($collection['attributes'] ?? [] as $attribute) {
                 if ($attribute['array'] === true) {
                     foreach ($collection['indexes'] ?? [] as $index) {
                         if (in_array($attribute['$id'], $index['attributes'])) {
                             $this->projectDB->deleteIndex($id, $index['$id']);
-                              $foundIndex = 1;
+                            $foundIndex = true;
                         }
                     }
-                    if ($foundIndex === 1) {
-                        $this->projectDB->updateAttribute($id, $attribute['$id'], Database::VAR_STRING);
+                    if ($foundIndex === true) {
+                        $this->projectDB->updateAttribute($id, $attribute['$id'], $attribute['type']);
                     }
                 }
             }
@@ -157,7 +158,7 @@ class V20 extends Migration
                         /**
                          * Alter `signed`  internal type on `value` attr
                          */
-                        $this->projectDB->updateAttribute($id, 'value', null, null, null, null, true);
+                        $this->projectDB->updateAttribute(collection: $id, id: 'value', signed: true);
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'type' from {$id}: {$th->getMessage()}");
@@ -254,14 +255,6 @@ class V20 extends Migration
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'oAuthProviders' from {$id}: {$th->getMessage()}");
-                    }
-                    break;
-                case 'schedules':
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceCollection');
-                        $this->projectDB->purgeCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'schedules' from {$id}: {$th->getMessage()}");
                     }
                     break;
                 case 'webhooks':
@@ -469,7 +462,7 @@ class V20 extends Migration
                 Console::log("Migrating Collections of {$collectionTable} {$collection->getId()} ({$collection->getAttribute('name')})");
 
                 // Collection level
-                $collectionId =  $collection->getId() ;
+                $collectionId =  $collection->getId();
                 $collectionInternalId =  $collection->getInternalId();
 
                 $this->migrateUsageMetrics("documents.$databaseId/$collectionId.count.total", "$databaseInternalId.$collectionInternalId.documents");
@@ -518,9 +511,6 @@ class V20 extends Migration
                  * Bump version number.
                  */
                 $document->setAttribute('version', '1.5.0');
-                break;
-            case 'schedules':
-                $document->setAttribute('resourceCollection', 'functions');
                 break;
             case 'users':
                 if ($document->getAttribute('email', '') !== '') {
