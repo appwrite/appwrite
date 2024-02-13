@@ -77,7 +77,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
             }
 
             $ready = true;
-        } catch (\Exception $err) {
+        } catch (\Throwable $err) {
             Console::warning($err->getMessage());
             $pools->get('console')->reclaim();
             sleep($sleep);

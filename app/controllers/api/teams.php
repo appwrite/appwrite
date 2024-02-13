@@ -1068,7 +1068,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 

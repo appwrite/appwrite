@@ -401,7 +401,7 @@ abstract class Migration
 
         try {
             $stmt->execute();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage());
         }
     }
