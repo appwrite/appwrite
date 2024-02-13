@@ -46,6 +46,12 @@ class Token extends Model
                 'default' => '',
                 'example' => 'Golden Fox',
             ])
+            ->addRule('resource', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Token affiliated resource. In case of OAuth2 tokens, this will be a the OAuth2 provider authentication URL',
+                'default' => '',
+                'example' => '',
+            ])
         ;
     }
 

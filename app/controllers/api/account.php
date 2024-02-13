@@ -379,7 +379,6 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
-            'token' => false,
         ], $scopes);
 
         $response
@@ -410,7 +409,9 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function (string $provider, string $success, string $failure, mixed $token, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $provider, string $success, string $failure, mixed $token, array $scopes, Request $request, Response $response, Document $project, Database $dbForProject, Event $queueForEvents) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = $request->getProtocol();
 
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -446,16 +447,32 @@ App::get('/v1/account/tokens/oauth2/:provider')
             $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
         }
 
+        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
+        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_OAUTH2);
+
+        $token = new Document([
+            '$id' => ID::unique(),
+            'type' => Auth::TOKEN_TYPE_OAUTH2,
+            'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
+            'expire' => $expire,
+            'userAgent' => $request->getUserAgent('UNKNOWN'),
+            'ip' => $request->getIP(),
+        ]);
+
+        $token = $dbForProject->createDocument('tokens', $token);
+
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
             'token' => true,
         ], $scopes);
 
+        $token->setAttribute('resource', $oauth2->getLoginURL());
+
         $response
-            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-            ->addHeader('Pragma', 'no-cache')
-            ->redirect($oauth2->getLoginURL());
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($token, Response::MODEL_TOKEN);
     });
 
 App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
@@ -853,42 +870,27 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         $state['success'] = URLParser::parse($state['success']);
         $query = URLParser::parseQuery($state['success']['query']);
 
-        $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
-
-        // If the `token` param is set, we will return the token in the query string
+        // If the `token` param is set, we return the token from the database
         if ($state['token']) {
-            $secret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_OAUTH2);
-            $token = new Document([
-                '$id' => ID::unique(),
-                'userId' => $user->getId(),
-                'userInternalId' => $user->getInternalId(),
-                'type' => Auth::TOKEN_TYPE_OAUTH2,
-                'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
-                'expire' => $expire,
-                'userAgent' => $request->getUserAgent('UNKNOWN'),
-                'ip' => $request->getIP(),
+            $token = $dbForProject->getDocument('tokens', $state['token']);
+            if ($token->isEmpty()) {
+                $failureRedirect(Exception::GENERAL_SERVER_ERROR, 'Token not found in the database');
+            }
+    
+            $token->setAttribute('userId', $user->getId());
+            $token->setAttribute('userInternalId', $user->getInternalId());
+            $token->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ]);
 
-            Authorization::setRole(Role::user($user->getId())->toString());
+            $dbForProject->updateDocument('tokens', $token->getId(), $token);
 
-            $token = $dbForProject->createDocument('tokens', $token
-                ->setAttribute('$permissions', [
-                    Permission::read(Role::user($user->getId())),
-                    Permission::update(Role::user($user->getId())),
-                    Permission::delete(Role::user($user->getId())),
-                ]));
-
-            $queueForEvents
-                ->setEvent('users.[userId].tokens.[tokenId].create')
-                ->setParam('userId', $user->getId())
-                ->setParam('tokenId', $token->getId())
-            ;
-
-            $query['secret'] = $secret;
+            $query['secret'] = $token->getAttribute('secret');
             $query['userId'] = $user->getId();
 
-        // If the `token` param is not set, we persist the session in a cookie
+        // If the `token` param is not set, we return a new session
         } else {
             $detector = new Detector($request->getUserAgent('UNKNOWN'));
             $record = $geodb->get($request->getIP());
