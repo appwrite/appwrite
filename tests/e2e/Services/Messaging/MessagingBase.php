@@ -51,8 +51,8 @@ trait MessagingBase
             'telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'textmagic' => [
@@ -142,8 +142,8 @@ trait MessagingBase
             ],
             'telesign' => [
                 'name' => 'Telesign2',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',
