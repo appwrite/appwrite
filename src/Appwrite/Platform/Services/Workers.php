@@ -12,6 +12,9 @@ use Appwrite\Platform\Workers\Databases;
 use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
+use Appwrite\Platform\Workers\Hamster;
+use Appwrite\Platform\Workers\Usage;
+use Appwrite\Platform\Workers\UsageHook;
 use Appwrite\Platform\Workers\Migrations;
 
 class Workers extends Service
@@ -21,14 +24,17 @@ class Workers extends Service
         $this->type = self::TYPE_WORKER;
         $this
             ->addAction(Audits::getName(), new Audits())
-            ->addAction(Webhooks::getName(), new Webhooks())
-            ->addAction(Mails::getName(), new Mails())
-            ->addAction(Messaging::getName(), new Messaging())
+            ->addAction(Builds::getName(), new Builds())
             ->addAction(Certificates::getName(), new Certificates())
             ->addAction(Databases::getName(), new Databases())
-            ->addAction(Functions::getName(), new Functions())
-            ->addAction(Builds::getName(), new Builds())
             ->addAction(Deletes::getName(), new Deletes())
+            ->addAction(Functions::getName(), new Functions())
+            ->addAction(Mails::getName(), new Mails())
+            ->addAction(Messaging::getName(), new Messaging())
+            ->addAction(Webhooks::getName(), new Webhooks())
+            ->addAction(Hamster::getName(), new Hamster())
+            ->addAction(UsageHook::getName(), new UsageHook())
+            ->addAction(Usage::getName(), new Usage())
             ->addAction(Migrations::getName(), new Migrations())
 
         ;

@@ -145,7 +145,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -171,7 +171,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -197,7 +197,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -223,7 +223,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -249,7 +249,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -280,7 +280,7 @@ class HealthCustomServerTest extends Scope
             'name' => 'database_db_main',
             'threshold' => '0'
         ]);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -306,7 +306,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -332,7 +332,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -358,7 +358,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -384,7 +384,7 @@ class HealthCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), []);
-        $this->assertEquals(500, $response['headers']['status-code']);
+        $this->assertEquals(503, $response['headers']['status-code']);
 
         return [];
     }
@@ -421,6 +421,76 @@ class HealthCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['status']);
         $this->assertIsString($response['body']['status']);
         $this->assertIsString($response['body']['version']);
+
+        return [];
+    }
+
+    public function testCertificateValidity(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=www.google.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('/CN=www.google.com', $response['body']['name']);
+        $this->assertEquals('www.google.com', $response['body']['subjectSN']);
+        $this->assertEquals('Google Trust Services LLC', $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=appwrite.io', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('/CN=appwrite.io', $response['body']['name']);
+        $this->assertEquals('appwrite.io', $response['body']['subjectSN']);
+        $this->assertEquals("Let's Encrypt", $response['body']['issuerOrganisation']);
+        $this->assertIsInt($response['body']['validFrom']);
+        $this->assertIsInt($response['body']['validTo']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=https://google.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=localhost', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=doesnotexist.com', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(404, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=www.google.com/usr/src/local', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_GET, '/health/certificate?domain=', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return [];
     }

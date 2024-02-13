@@ -14,6 +14,7 @@ class PersonalData extends Password
         protected ?string $phone = null,
         protected bool $strict = false
     ) {
+        parent::__construct();
     }
 
     /**
@@ -43,10 +44,10 @@ class PersonalData extends Password
 
         if (!$this->strict) {
             $password = strtolower($password);
-            $this->userId = strtolower($this->userId);
-            $this->email = strtolower($this->email);
-            $this->name = strtolower($this->name);
-            $this->phone = strtolower($this->phone);
+            $this->userId = strtolower($this->userId ?? '');
+            $this->email = strtolower($this->email ?? '');
+            $this->name = strtolower($this->name ?? '');
+            $this->phone = strtolower($this->phone ?? '');
         }
 
         if ($this->userId && strpos($password, $this->userId) !== false) {

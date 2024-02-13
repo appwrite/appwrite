@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
@@ -17,23 +18,23 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
-use Utopia\Registry\Registry;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\Integer;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
@@ -159,7 +160,7 @@ App::post('/v1/projects')
                 'legalTaxId' => ID::custom($legalTaxId),
                 'services' => new stdClass(),
                 'platforms' => null,
-                'authProviders' => [],
+                'oAuthProviders' => [],
                 'webhooks' => null,
                 'keys' => null,
                 'auths' => $auths,
@@ -238,15 +239,21 @@ App::get('/v1/projects')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Database $dbForConsole) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -291,120 +298,6 @@ App::get('/v1/projects/:projectId')
         }
 
         $response->dynamic($project, Response::MODEL_PROJECT);
-    });
-
-App::get('/v1/projects/:projectId/usage')
-    ->desc('Get usage stats for a project')
-    ->groups(['api', 'projects', 'usage'])
-    ->label('scope', 'projects.read')
-    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'getUsage')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USAGE_PROJECT)
-    ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('range', '30d', new WhiteList(['24h', '7d', '30d', '90d'], true), 'Date range.', true)
-    ->inject('response')
-    ->inject('dbForConsole')
-    ->inject('dbForProject')
-    ->inject('register')
-    ->action(function (string $projectId, string $range, Response $response, Database $dbForConsole, Database $dbForProject, Registry $register) {
-
-        $project = $dbForConsole->getDocument('projects', $projectId);
-
-        if ($project->isEmpty()) {
-            throw new Exception(Exception::PROJECT_NOT_FOUND);
-        }
-
-        $usage = [];
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled') {
-            $periods = [
-                '24h' => [
-                    'period' => '1h',
-                    'limit' => 24,
-                ],
-                '7d' => [
-                    'period' => '1d',
-                    'limit' => 7,
-                ],
-                '30d' => [
-                    'period' => '1d',
-                    'limit' => 30,
-                ],
-                '90d' => [
-                    'period' => '1d',
-                    'limit' => 90,
-                ],
-            ];
-
-            $dbForProject->setNamespace("_{$project->getInternalId()}");
-
-            $metrics = [
-                'project.$all.network.requests',
-                'project.$all.network.bandwidth',
-                'project.$all.storage.size',
-                'users.$all.count.total',
-                'databases.$all.count.total',
-                'documents.$all.count.total',
-                'executions.$all.compute.total',
-                'buckets.$all.count.total'
-            ];
-
-            $stats = [];
-
-            Authorization::skip(function () use ($dbForProject, $periods, $range, $metrics, &$stats) {
-                foreach ($metrics as $metric) {
-                    $limit = $periods[$range]['limit'];
-                    $period = $periods[$range]['period'];
-
-                    $requestDocs = $dbForProject->find('stats', [
-                        Query::equal('period', [$period]),
-                        Query::equal('metric', [$metric]),
-                        Query::limit($limit),
-                        Query::orderDesc('time'),
-                    ]);
-
-                    $stats[$metric] = [];
-                    foreach ($requestDocs as $requestDoc) {
-                        $stats[$metric][] = [
-                            'value' => $requestDoc->getAttribute('value'),
-                            'date' => $requestDoc->getAttribute('time'),
-                        ];
-                    }
-
-                    // backfill metrics with empty values for graphs
-                    $backfill = $limit - \count($requestDocs);
-                    while ($backfill > 0) {
-                        $last = $limit - $backfill - 1; // array index of last added metric
-                        $diff = match ($period) { // convert period to seconds for unix timestamp math
-                            '1h' => 3600,
-                            '1d' => 86400,
-                        };
-                        $stats[$metric][] = [
-                            'value' => 0,
-                            'date' => DateTime::formatTz(DateTime::addSeconds(new \DateTime($stats[$metric][$last]['date'] ?? null), -1 * $diff)),
-                        ];
-                        $backfill--;
-                    }
-                    $stats[$metric] = array_reverse($stats[$metric]);
-                }
-            });
-
-            $usage = new Document([
-                'range' => $range,
-                'requests' => $stats[$metrics[0]] ?? [],
-                'network' => $stats[$metrics[1]] ?? [],
-                'storage' => $stats[$metrics[2]] ?? [],
-                'users' => $stats[$metrics[3]] ?? [],
-                'databases' => $stats[$metrics[4]] ?? [],
-                'documents' => $stats[$metrics[5]] ?? [],
-                'executions' => $stats[$metrics[6]] ?? [],
-                'buckets' => $stats[$metrics[7]] ?? [],
-            ]);
-        }
-
-        $response->dynamic($usage, Response::MODEL_USAGE_PROJECT);
     });
 
 App::patch('/v1/projects/:projectId')
@@ -598,7 +491,7 @@ App::patch('/v1/projects/:projectId/oauth2')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
     ->param('projectId', '', new UID(), 'Project unique ID.')
-    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('providers')), true), 'Provider Name')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'Provider Name')
     ->param('appId', null, new Text(256), 'Provider app ID. Max length: 256 chars.', true)
     ->param('secret', null, new text(512), 'Provider secret key. Max length: 512 chars.', true)
     ->param('enabled', null, new Boolean(), 'Provider status. Set to \'false\' to disable new session creation.', true)
@@ -612,7 +505,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             throw new Exception(Exception::PROJECT_NOT_FOUND);
         }
 
-        $providers = $project->getAttribute('authProviders', []);
+        $providers = $project->getAttribute('oAuthProviders', []);
 
         if ($appId !== null) {
             $providers[$provider . 'Appid'] = $appId;
@@ -626,7 +519,7 @@ App::patch('/v1/projects/:projectId/oauth2')
             $providers[$provider . 'Enabled'] = $enabled;
         }
 
-        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('authProviders', $providers));
+        $project = $dbForConsole->updateDocument('projects', $project->getId(), $project->setAttribute('oAuthProviders', $providers));
 
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
@@ -897,14 +790,15 @@ App::post('/v1/projects/:projectId/webhooks')
     ->label('sdk.response.model', Response::MODEL_WEBHOOK)
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -930,11 +824,12 @@ App::post('/v1/projects/:projectId/webhooks')
             'httpUser' => $httpUser,
             'httpPass' => $httpPass,
             'signatureKey' => \bin2hex(\random_bytes(64)),
+            'enabled' => $enabled,
         ]);
 
         $webhook = $dbForConsole->createDocument('webhooks', $webhook);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1020,14 +915,15 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('webhookId', '', new UID(), 'Webhook unique ID.')
     ->param('name', null, new Text(128), 'Webhook name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(true), 'Enable or disable a webhook.', true)
     ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('url', null, new URL(['http', 'https']), 'Webhook URL.')
+    ->param('url', '', fn ($request) => new Multiple([new URL(['http', 'https']), new PublicDomain()], Multiple::TYPE_STRING), 'Webhook URL.', false, ['request'])
     ->param('security', false, new Boolean(true), 'Certificate verification, false for disabled or true for enabled.')
     ->param('httpUser', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
     ->param('httpPass', '', new Text(256), 'Webhook HTTP password. Max length: 256 chars.', true)
     ->inject('response')
     ->inject('dbForConsole')
-    ->action(function (string $projectId, string $webhookId, string $name, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
+    ->action(function (string $projectId, string $webhookId, string $name, bool $enabled, array $events, string $url, bool $security, string $httpUser, string $httpPass, Response $response, Database $dbForConsole) {
 
         $project = $dbForConsole->getDocument('projects', $projectId);
 
@@ -1052,10 +948,15 @@ App::put('/v1/projects/:projectId/webhooks/:webhookId')
             ->setAttribute('url', $url)
             ->setAttribute('security', $security)
             ->setAttribute('httpUser', $httpUser)
-            ->setAttribute('httpPass', $httpPass);
+            ->setAttribute('httpPass', $httpPass)
+            ->setAttribute('enabled', $enabled);
+
+        if ($enabled) {
+            $webhook->setAttribute('attempts', 0);
+        }
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -1094,7 +995,7 @@ App::patch('/v1/projects/:projectId/webhooks/:webhookId/signature')
         $webhook->setAttribute('signatureKey', \bin2hex(\random_bytes(64)));
 
         $dbForConsole->updateDocument('webhooks', $webhook->getId(), $webhook);
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($webhook, Response::MODEL_WEBHOOK);
     });
@@ -1131,7 +1032,7 @@ App::delete('/v1/projects/:projectId/webhooks/:webhookId')
 
         $dbForConsole->deleteDocument('webhooks', $webhook->getId());
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1151,7 +1052,7 @@ App::post('/v1/projects/:projectId/keys')
     ->param('projectId', '', new UID(), 'Project unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
@@ -1181,7 +1082,7 @@ App::post('/v1/projects/:projectId/keys')
 
         $key = $dbForConsole->createDocument('keys', $key);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1268,7 +1169,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
     ->param('keyId', '', new UID(), 'Key unique ID.')
     ->param('name', null, new Text(128), 'Key name. Max length: 128 chars.')
     ->param('scopes', null, new ArrayList(new WhiteList(array_keys(Config::getParam('scopes')), true), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Key scopes list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.')
-    ->param('expire', null, new DatetimeValidator(), 'Expiration time in ISO 8601 format. Use null for unlimited expiration.', true)
+    ->param('expire', null, new DatetimeValidator(), 'Expiration time in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. Use null for unlimited expiration.', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, string $keyId, string $name, array $scopes, ?string $expire, Response $response, Database $dbForConsole) {
@@ -1295,7 +1196,7 @@ App::put('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->updateDocument('keys', $key->getId(), $key);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($key, Response::MODEL_KEY);
     });
@@ -1332,7 +1233,7 @@ App::delete('/v1/projects/:projectId/keys/:keyId')
 
         $dbForConsole->deleteDocument('keys', $key->getId());
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1382,7 +1283,7 @@ App::post('/v1/projects/:projectId/platforms')
 
         $platform = $dbForConsole->createDocument('platforms', $platform);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -1497,7 +1398,7 @@ App::put('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->updateDocument('platforms', $platform->getId(), $platform);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->dynamic($platform, Response::MODEL_PLATFORM);
     });
@@ -1534,7 +1435,7 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
         $dbForConsole->deleteDocument('platforms', $platformId);
 
-        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         $response->noContent();
     });
@@ -1542,12 +1443,12 @@ App::delete('/v1/projects/:projectId/platforms/:platformId')
 
 // CUSTOM SMTP and Templates
 App::patch('/v1/projects/:projectId/smtp')
-    ->desc('Update SMTP configuration')
+    ->desc('Update SMTP')
     ->groups(['api', 'projects'])
     ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'projects')
-    ->label('sdk.method', 'updateSmtpConfiguration')
+    ->label('sdk.method', 'updateSmtp')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROJECT)
@@ -1631,6 +1532,65 @@ App::patch('/v1/projects/:projectId/smtp')
         $response->dynamic($project, Response::MODEL_PROJECT);
     });
 
+App::post('/v1/projects/:projectId/smtp/tests')
+    ->desc('Create SMTP test')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'projects')
+    ->label('sdk.method', 'createSmtpTest')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('projectId', '', new UID(), 'Project unique ID.')
+    ->param('emails', [], new ArrayList(new Email(), 10), 'Array of emails to send test email to. Maximum of 10 emails are allowed.')
+    ->param('senderName', App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server'), new Text(255, 0), 'Name of the email sender')
+    ->param('senderEmail', App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), new Email(), 'Email of the sender')
+    ->param('replyTo', '', new Email(), 'Reply to email', true)
+    ->param('host', '', new HostName(), 'SMTP server host name')
+    ->param('port', 587, new Integer(), 'SMTP server port', true)
+    ->param('username', '', new Text(0, 0), 'SMTP server username', true)
+    ->param('password', '', new Text(0, 0), 'SMTP server password', true)
+    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->inject('response')
+    ->inject('dbForConsole')
+    ->inject('queueForMails')
+    ->action(function (string $projectId, array $emails, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole, Mail $queueForMails) {
+        $project = $dbForConsole->getDocument('projects', $projectId);
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        $replyToEmail = !empty($replyTo) ? $replyTo : $senderEmail;
+
+        $subject = 'Custom SMTP email sample';
+        $template = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-smtp-test.tpl');
+        $template
+            ->setParam('{{from}}', "{$senderName} ({$senderEmail})")
+            ->setParam('{{replyTo}}', "{$senderName} ({$replyToEmail})");
+
+        foreach ($emails as $email) {
+            $queueForMails
+                ->setSmtpHost($host)
+                ->setSmtpPort($port)
+                ->setSmtpUsername($username)
+                ->setSmtpPassword($password)
+                ->setSmtpSecure($secure)
+                ->setSmtpReplyTo($replyTo)
+                ->setSmtpSenderEmail($senderEmail)
+                ->setSmtpSenderName($senderName)
+                ->setRecipient($email)
+                ->setName('')
+                ->setbodyTemplate(__DIR__ . '/../../config/locale/templates/email-base-styled.tpl')
+                ->setBody($template->render())
+                ->setVariables([])
+                ->setSubject($subject)
+                ->trigger();
+        }
+
+        return $response->noContent();
+    });
+
 App::get('/v1/projects/:projectId/templates/sms/:type/:locale')
     ->desc('Get custom SMS template')
     ->groups(['api', 'projects'])
@@ -1704,7 +1664,7 @@ App::get('/v1/projects/:projectId/templates/email/:type/:locale')
             $message
                 ->setParam('{{hello}}', $localeObj->getText("emails.{$type}.hello"))
                 ->setParam('{{footer}}', $localeObj->getText("emails.{$type}.footer"))
-                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'))
+                ->setParam('{{body}}', $localeObj->getText('emails.' . $type . '.body'), escapeHtml: false)
                 ->setParam('{{thanks}}', $localeObj->getText("emails.{$type}.thanks"))
                 ->setParam('{{signature}}', $localeObj->getText("emails.{$type}.signature"))
                 ->setParam('{{direction}}', $localeObj->getText('settings.direction'));

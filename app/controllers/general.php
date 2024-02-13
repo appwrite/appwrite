@@ -9,8 +9,6 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Cache\Cache;
-use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
@@ -210,12 +208,13 @@ App::init()
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
+    ->inject('session')
+    ->inject('mode')
     ->inject('queueForCertificates')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, ?Document $session, string $mode, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
-
         $host = $request->getHostname() ?? '';
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
@@ -425,8 +424,8 @@ App::init()
             ->addHeader('Server', 'Appwrite')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma')
-            ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $refDomain)
             ->addHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -511,7 +510,7 @@ App::init()
                 if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
                     $key->setAttribute('accessedAt', DateTime::now());
                     $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
                 }
 
                 $sdkValidator = new WhiteList($servers, true);
@@ -525,7 +524,7 @@ App::init()
                         /** Update access time as well */
                         $key->setAttribute('accessedAt', Datetime::now());
                         $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
                     }
                 }
             }
@@ -563,6 +562,21 @@ App::init()
         if ($user->getAttribute('reset')) {
             throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
         }
+
+        if ($mode !== APP_MODE_ADMIN) {
+            $mfaEnabled = $user->getAttribute('mfa', false);
+            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
+            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+
+            if (!in_array('mfa', $route->getGroups())) {
+                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                    throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
+                }
+            }
+        }
     });
 
 App::options()
@@ -589,8 +603,8 @@ App::options()
         $response
             ->addHeader('Server', 'Appwrite')
             ->addHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE')
-            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Fallback-Cookies')
-            ->addHeader('Access-Control-Expose-Headers', 'X-Fallback-Cookies')
+            ->addHeader('Access-Control-Allow-Headers', 'Origin, Cookie, Set-Cookie, X-Requested-With, Content-Type, Access-Control-Allow-Origin, Access-Control-Request-Headers, Accept, X-Appwrite-Project, X-Appwrite-Key, X-Appwrite-Locale, X-Appwrite-Mode, X-Appwrite-JWT, X-Appwrite-Response-Format, X-Appwrite-Timeout, X-SDK-Version, X-SDK-Name, X-SDK-Language, X-SDK-Platform, X-SDK-GraphQL, X-Appwrite-ID, X-Appwrite-Timestamp, Content-Range, Range, Cache-Control, Expires, Pragma, X-Appwrite-Session, X-Fallback-Cookies, X-Forwarded-For, X-Forwarded-User-Agent')
+            ->addHeader('Access-Control-Expose-Headers', 'X-Appwrite-Session, X-Fallback-Cookies')
             ->addHeader('Access-Control-Allow-Origin', $origin)
             ->addHeader('Access-Control-Allow-Credentials', 'true')
             ->noContent();
@@ -603,61 +617,58 @@ App::error()
     ->inject('response')
     ->inject('project')
     ->inject('logger')
-    ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
-
+    ->inject('log')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
 
-        if ($logger) {
-            if ($error->getCode() >= 500 || $error->getCode() === 0) {
-                try {
-                    /** @var Utopia\Database\Document $user */
-                    $user = $utopia->getResource('user');
-                } catch (\Throwable $th) {
-                    // All good, user is optional information for logger
-                }
+        if ($error instanceof AppwriteException) {
+            $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
+        }
 
-                $log = new Utopia\Logger\Log();
-
-                if (isset($user) && !$user->isEmpty()) {
-                    $log->setUser(new User($user->getId()));
-                }
-
-                $log->setNamespace("http");
-                $log->setServer(\gethostname());
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->addTag('database', $project->getAttribute('database', 'console'));
-                $log->addTag('method', $route->getMethod());
-                $log->addTag('url', $route->getPath());
-                $log->addTag('verboseType', get_class($error));
-                $log->addTag('code', $error->getCode());
-                $log->addTag('projectId', $project->getId());
-                $log->addTag('hostname', $request->getHostname());
-                $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-                $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::getRoles());
-
-                $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
-                $log->setAction($action);
-
-                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                    $log->addBreadcrumb($loggerBreadcrumb);
-                }
-
-                $responseCode = $logger->addLog($log);
-                Console::info('Log pushed with status code: ' . $responseCode);
+        if ($logger && ($publish || $error->getCode() === 0)) {
+            try {
+                /** @var Utopia\Database\Document $user */
+                $user = $utopia->getResource('user');
+            } catch (\Throwable $th) {
+                // All good, user is optional information for logger
             }
+
+            if (isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('database', $project->getAttribute('database', 'console'));
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url', $route->getPath());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId());
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', Authorization::getRoles());
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: ' . $responseCode);
         }
 
         $code = $error->getCode();
@@ -717,6 +728,7 @@ App::error()
             case 412: // Error allowed publicly
             case 416: // Error allowed publicly
             case 429: // Error allowed publicly
+            case 451: // Error allowed publicly
             case 501: // Error allowed publicly
             case 503: // Error allowed publicly
                 break;
@@ -734,7 +746,7 @@ App::error()
             'code' => $code,
             'file' => $file,
             'line' => $line,
-            'trace' => $trace,
+            'trace' => \json_encode($trace, JSON_UNESCAPED_UNICODE) === false ? [] : $trace, // check for failing encode
             'version' => $version,
             'type' => $type,
         ] : [

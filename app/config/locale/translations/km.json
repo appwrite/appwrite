@@ -228,5 +228,18 @@
     "continents.eu": "អឺរ៉ុប",
     "continents.na": "អាមេរិកខាងជើង",
     "continents.oc": "អូសេអានី",
-    "continents.sa": "អាមេរិកខាងត្បូង"
+    "continents.sa": "អាមេរិកខាងត្បូង",
+    "emails.magicSession.optionButton": "ចុចប៊ូតុងខាងក្រោមដើម្បីចូលប្រើគណនី {{project}} របស់អ្នកដោយសុវត្ថិភាព។ វានឹងផុតកំណត់ក្នុងរយៈពេល 1 ម៉ោង។",
+    "emails.magicSession.buttonText": "ចូលទៅកាន់ {{project}}",
+    "emails.magicSession.clientInfo": "ការចូលប្រើនេះត្រូវបានស្នើរអោយប្រើ {{agentClient}} នៅលើ {{agentDevice}} {{agentOs}}។ ប្រសិនបើអ្នកមិនបានស្នើរការចូលប្រើនេះ អ្នកអាចមិនអើពើនឹងអ៊ីម៉ែលនេះបាន។",
+    "sms.verification.body": "{{secret}} ជាលេខកូដផ្ទៀងផ្ទាត់សម្រាប់{{project}}របស់អ្នក។",
+    "emails.magicSession.securityPhrase": "ឃ្លាសម្ងាត់សម្រាប់អ៊ីមែលនេះគឺ {{phrase}}។ អ្នកអាចទុកចិត្តលើអ៊ីមែលនេះប្រសិនបើឃ្លានេះត្រូវគ្នាជាមួយឃ្លាដែលបង្ហាញឡើងពេលចូលប្រើ។",
+    "emails.magicSession.optionUrl": "ប្រសិនបើអ្នកមិនអាចចូលប្រើប្រាស់ដោយប្រើប៊ូតុងខាងលើនេះទេ សូមចូលទៅកាន់តំណភ្ជាប់ខាងក្រោម៖",
+    "emails.otpSession.subject": "ការចូល {{project}}",
+    "emails.otpSession.hello": "ជំរាបសួរ,",
+    "emails.otpSession.description": "បញ្ចូលលេខកូដផ្ទៀងផ្ទាត់ខាងក្រោមនេះនៅពេលដែលបានស្នើ ដើម្បីចូលទៅកាន់គណនី {{project}} របស់អ្នកដោយមានសុវត្ថិភាព។ វានឹងផុតកំណត់ក្នុងរយៈពេល 15 នាទី។",
+    "emails.otpSession.clientInfo": "ការចូលប្រព័ន្ធនេះត្រូវបានស្នើរបស់អ្នកប្រើប្រាស់តាមរយៈ {{agentClient}} នៅលើ {{agentDevice}} {{agentOs}}។ ប្រសិនបើអ្នកមិនបានស្នើរការចូលប្រព័ន្ធនេះទេ អ្នកអាចមិនអើពើអ៊ីម៉ែលនេះបាន។",
+    "emails.otpSession.securityPhrase": "ឃ្លាសម្រាប់សុវត្ថិភាពអ៊ីមែលនេះគឺ {{phrase}}។ អ្នកអាចទុកចិត្តនូវអ៊ីមែលនេះប្រសិនបើឃ្លានេះត្រូវគ្នាជាមួយឃ្លាដែលបានបង្ហាញពេលចូលគណនី។",
+    "emails.otpSession.thanks": "អរគុណ,",
+    "emails.otpSession.signature": "ក្រុម {{project}}"
 }

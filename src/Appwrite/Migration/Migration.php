@@ -76,7 +76,9 @@ abstract class Migration
         '1.4.9' => 'V19',
         '1.4.10' => 'V19',
         '1.4.11' => 'V19',
-        '1.4.12' => 'V19'
+        '1.4.12' => 'V19',
+        '1.4.13' => 'V19',
+        '1.4.14' => 'V20'
     ];
 
     /**
@@ -194,17 +196,24 @@ abstract class Migration
      * @return iterable<Document>
      * @throws \Exception
      */
-    public function documentsIterator(string $collectionId): iterable
+    public function documentsIterator(string $collectionId, $queries = []): iterable
     {
         $sum = 0;
         $nextDocument = null;
         $collectionCount = $this->projectDB->count($collectionId);
+        $queries[] = Query::limit($this->limit);
 
         do {
-            $queries = [Query::limit($this->limit)];
             if ($nextDocument !== null) {
-                $queries[] = Query::cursorAfter($nextDocument);
+                $cursorQueryIndex = \array_search('cursorAfter', \array_map(fn (Query $query) => $query->getMethod(), $queries));
+
+                if ($cursorQueryIndex !== false) {
+                    $queries[$cursorQueryIndex] = Query::cursorAfter($nextDocument);
+                } else {
+                    $queries[] = Query::cursorAfter($nextDocument);
+                }
             }
+
             $documents = $this->projectDB->find($collectionId, $queries);
             $count = count($documents);
             $sum += $count;
@@ -388,11 +397,11 @@ abstract class Migration
      */
     protected function changeAttributeInternalType(string $collection, string $attribute, string $type): void
     {
-        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDefaultDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
+        $stmt = $this->pdo->prepare("ALTER TABLE `{$this->projectDB->getDatabase()}`.`_{$this->project->getInternalId()}_{$collection}` MODIFY `$attribute` $type;");
 
         try {
             $stmt->execute();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage());
         }
     }

@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -31,6 +30,7 @@ use Appwrite\Utopia\Response\Model\AttributeIP;
 use Appwrite\Utopia\Response\Model\AttributeURL;
 use Appwrite\Utopia\Response\Model\AttributeDatetime;
 use Appwrite\Utopia\Response\Model\AttributeRelationship;
+use Appwrite\Utopia\Response\Model\AuthProvider;
 use Appwrite\Utopia\Response\Model\BaseList;
 use Appwrite\Utopia\Response\Model\Branch;
 use Appwrite\Utopia\Response\Model\Collection;
@@ -39,7 +39,6 @@ use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -60,11 +59,9 @@ use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Utopia\Response\Model\Detection;
 use Appwrite\Utopia\Response\Model\Headers;
@@ -73,15 +70,24 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthCertificate;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
+use Appwrite\Utopia\Response\Model\MFAChallenge;
+use Appwrite\Utopia\Response\Model\MFAProvider;
+use Appwrite\Utopia\Response\Model\MFAProviders;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
+use Appwrite\Utopia\Response\Model\MetricBreakdown;
 use Appwrite\Utopia\Response\Model\Provider;
+use Appwrite\Utopia\Response\Model\Message;
+use Appwrite\Utopia\Response\Model\Subscriber;
+use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Runtime;
+use Appwrite\Utopia\Response\Model\Target;
 use Appwrite\Utopia\Response\Model\TemplateSMS;
 use Appwrite\Utopia\Response\Model\UsageBuckets;
 use Appwrite\Utopia\Response\Model\UsageCollection;
@@ -98,6 +104,7 @@ use Appwrite\Utopia\Response\Model\MigrationFirebaseProject;
 use Appwrite\Utopia\Response\Model\MigrationReport;
 // Keep last
 use Appwrite\Utopia\Response\Model\Mock;
+use Appwrite\Utopia\Response\Model\Rule;
 
 /**
  * @method int getStatusCode()
@@ -113,6 +120,7 @@ class Response extends SwooleResponse
     public const MODEL_ERROR = 'error';
     public const MODEL_METRIC = 'metric';
     public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
@@ -161,6 +169,12 @@ class Response extends SwooleResponse
     public const MODEL_JWT = 'jwt';
     public const MODEL_PREFERENCES = 'preferences';
 
+    // MFA
+    public const MODEL_MFA_PROVIDER = 'mfaProvider';
+    public const MODEL_MFA_PROVIDERS = 'mfaProviders';
+    public const MODEL_MFA_OTP = 'mfaTotp';
+    public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
     public const MODEL_ALGO_SHA = 'algoSha';
@@ -190,6 +204,18 @@ class Response extends SwooleResponse
     public const MODEL_LANGUAGE_LIST = 'languageList';
     public const MODEL_PHONE = 'phone';
     public const MODEL_PHONE_LIST = 'phoneList';
+
+    // Messaging
+    public const MODEL_PROVIDER = 'provider';
+    public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_MESSAGE = 'message';
+    public const MODEL_MESSAGE_LIST = 'messageList';
+    public const MODEL_TOPIC = 'topic';
+    public const MODEL_TOPIC_LIST = 'topicList';
+    public const MODEL_SUBSCRIBER = 'subscriber';
+    public const MODEL_SUBSCRIBER_LIST = 'subscriberList';
+    public const MODEL_TARGET = 'target';
+    public const MODEL_TARGET_LIST = 'targetList';
 
     // Teams
     public const MODEL_TEAM = 'team';
@@ -238,8 +264,8 @@ class Response extends SwooleResponse
     public const MODEL_WEBHOOK_LIST = 'webhookList';
     public const MODEL_KEY = 'key';
     public const MODEL_KEY_LIST = 'keyList';
-    public const MODEL_PROVIDER = 'provider';
-    public const MODEL_PROVIDER_LIST = 'providerList';
+    public const MODEL_AUTH_PROVIDER = 'authProvider';
+    public const MODEL_AUTH_PROVIDER_LIST = 'authProviderList';
     public const MODEL_PLATFORM = 'platform';
     public const MODEL_PLATFORM_LIST = 'platformList';
     public const MODEL_VARIABLE = 'variable';
@@ -254,6 +280,7 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+    public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
     // Console
@@ -316,7 +343,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Projects List', self::MODEL_PROJECT_LIST, 'projects', self::MODEL_PROJECT, true, false))
             ->setModel(new BaseList('Webhooks List', self::MODEL_WEBHOOK_LIST, 'webhooks', self::MODEL_WEBHOOK, true, false))
             ->setModel(new BaseList('API Keys List', self::MODEL_KEY_LIST, 'keys', self::MODEL_KEY, true, false))
-            ->setModel(new BaseList('Providers List', self::MODEL_PROVIDER_LIST, 'platforms', self::MODEL_PROVIDER, true, false))
+            ->setModel(new BaseList('Auth Providers List', self::MODEL_AUTH_PROVIDER_LIST, 'platforms', self::MODEL_AUTH_PROVIDER, true, false))
             ->setModel(new BaseList('Platforms List', self::MODEL_PLATFORM_LIST, 'platforms', self::MODEL_PLATFORM, true, false))
             ->setModel(new BaseList('Countries List', self::MODEL_COUNTRY_LIST, 'countries', self::MODEL_COUNTRY))
             ->setModel(new BaseList('Continents List', self::MODEL_CONTINENT_LIST, 'continents', self::MODEL_CONTINENT))
@@ -328,6 +355,11 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Status List', self::MODEL_HEALTH_STATUS_LIST, 'statuses', self::MODEL_HEALTH_STATUS))
             ->setModel(new BaseList('Rule List', self::MODEL_PROXY_RULE_LIST, 'rules', self::MODEL_PROXY_RULE))
             ->setModel(new BaseList('Locale codes list', self::MODEL_LOCALE_CODE_LIST, 'localeCodes', self::MODEL_LOCALE_CODE))
+            ->setModel(new BaseList('Provider list', self::MODEL_PROVIDER_LIST, 'providers', self::MODEL_PROVIDER))
+            ->setModel(new BaseList('Message list', self::MODEL_MESSAGE_LIST, 'messages', self::MODEL_MESSAGE))
+            ->setModel(new BaseList('Topic list', self::MODEL_TOPIC_LIST, 'topics', self::MODEL_TOPIC))
+            ->setModel(new BaseList('Subscriber list', self::MODEL_SUBSCRIBER_LIST, 'subscribers', self::MODEL_SUBSCRIBER))
+            ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
             // Entities
@@ -380,7 +412,7 @@ class Response extends SwooleResponse
             ->setModel(new Project())
             ->setModel(new Webhook())
             ->setModel(new Key())
-            ->setModel(new Provider())
+            ->setModel(new AuthProvider())
             ->setModel(new Platform())
             ->setModel(new Variable())
             ->setModel(new Country())
@@ -391,9 +423,11 @@ class Response extends SwooleResponse
             ->setModel(new HealthAntivirus())
             ->setModel(new HealthQueue())
             ->setModel(new HealthStatus())
+            ->setModel(new HealthCertificate())
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
             ->setModel(new Metric())
+            ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
@@ -408,11 +442,17 @@ class Response extends SwooleResponse
             ->setModel(new TemplateSMS())
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
+            ->setModel(new MFAChallenge())
+            ->setModel(new MFAProvider())
+            ->setModel(new MFAProviders())
+            ->setModel(new Provider())
+            ->setModel(new Message())
+            ->setModel(new Topic())
+            ->setModel(new Subscriber())
+            ->setModel(new Target())
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
-            // Verification
-            // Recovery
             // Tests (keep last)
             ->setModel(new Mock());
 
@@ -627,7 +667,7 @@ class Response extends SwooleResponse
 
         $this
             ->setContentType(Response::CONTENT_TYPE_YAML)
-            ->send(yaml_emit($data, YAML_UTF8_ENCODING));
+            ->send(\yaml_emit($data, YAML_UTF8_ENCODING));
     }
 
     /**

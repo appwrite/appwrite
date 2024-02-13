@@ -8,7 +8,9 @@ $member = [
     'home',
     'console',
     'graphql',
-    'account',
+    'sessions.write',
+    'accounts.read',
+    'accounts.write',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -21,12 +23,17 @@ $member = [
     'avatars.read',
     'execution.read',
     'execution.write',
+    'targets.read',
+    'targets.write',
+    'subscribers.write',
+    'subscribers.read',
     'assistant.read',
 ];
 
 $admins = [
     'global',
     'graphql',
+    'sessions.write',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -60,6 +67,16 @@ $admins = [
     'migrations.write',
     'vcs.read',
     'vcs.write',
+    'targets.read',
+    'targets.write',
+    'providers.write',
+    'providers.read',
+    'messages.write',
+    'messages.read',
+    'topics.write',
+    'topics.read',
+    'subscribers.write',
+    'subscribers.read'
 ];
 
 return [
@@ -71,6 +88,7 @@ return [
             'home',
             'console',
             'graphql',
+            'sessions.write',
             'documents.read',
             'documents.write',
             'files.read',

@@ -228,5 +228,18 @@
     "continents.eu": "Європа",
     "continents.na": "Північна Америка",
     "continents.oc": "Океанія",
-    "continents.sa": "Південна Америка"
+    "continents.sa": "Південна Америка",
+    "emails.magicSession.optionButton": "Натисніть кнопку нижче, щоб безпечно увійти в свій обліковий запис {{project}}. Термін дії закінчиться через 1 годину.",
+    "emails.magicSession.buttonText": "Увійти в {{project}}",
+    "emails.magicSession.clientInfo": "Цей запит на вхід було здійснено за допомогою {{agentClient}} на {{agentDevice}} {{agentOs}}. Якщо ви не надсилали запит на вхід, ви можете сміливо ігнорувати цей електронний лист.",
+    "sms.verification.body": "{{secret}} є вашим кодом підтвердження для {{project}}.",
+    "emails.magicSession.securityPhrase": "Фраза безпеки для цього листа - {{phrase}}. Ви можете довіряти цьому листу, якщо ця фраза збігається з фразою, показаною під час входу в систему.",
+    "emails.magicSession.optionUrl": "Якщо вам не вдається увійти, використовуючи кнопку вище, будь ласка, перейдіть за наступним посиланням:",
+    "emails.otpSession.subject": "вхід в {{project}}",
+    "emails.otpSession.hello": "Вітаю,",
+    "emails.otpSession.description": "Введіть наступний код підтвердження, коли будете запрошені, щоб безпечно увійти до вашого облікового запису {{project}}. Його дія закінчиться через 15 хвилин.",
+    "emails.otpSession.clientInfo": "Цей запит на вхід було здійснено за допомогою {{agentClient}} на {{agentDevice}} {{agentOs}}. Якщо ви не запитували вхід, можете спокійно ігнорувати цей електронний лист.",
+    "emails.otpSession.securityPhrase": "Фраза безпеки для цього електронного листа - {{phrase}}. Ви можете довіряти цьому електронному листу, якщо ця фраза відповідає фразі, показаній під час входу в систему.",
+    "emails.otpSession.thanks": "Дякую,",
+    "emails.otpSession.signature": "команда {{project}}"
 }
