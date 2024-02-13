@@ -51,8 +51,8 @@ trait MessagingBase
             'telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'textmagic' => [
@@ -142,8 +142,8 @@ trait MessagingBase
             ],
             'telesign' => [
                 'name' => 'Telesign2',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
             ],
             'textmagic' => [
                 'name' => 'Textmagic2',
@@ -177,6 +177,7 @@ trait MessagingBase
                 'bundleId' => 'my-bundleid',
             ],
         ];
+
         foreach (\array_keys($providersParams) as $index => $key) {
             $response = $this->client->call(Client::METHOD_PATCH, '/messaging/providers/' . $key . '/' . $providers[$index]['$id'], [
                 'content-type' => 'application/json',
@@ -202,7 +203,9 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('Mailgun2', $response['body']['name']);
         $this->assertEquals(false, $response['body']['enabled']);
+
         $providers[1] = $response['body'];
+
         return $providers;
     }
 
