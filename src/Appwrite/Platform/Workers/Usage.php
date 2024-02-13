@@ -46,7 +46,6 @@ class Usage extends Action
     /**
      * @param Message $message
      * @param callable $getProjectDB
-     * @param UsageDump $queueForUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
