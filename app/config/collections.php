@@ -1892,6 +1892,17 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('subscribe'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 128,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => true,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('total'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',

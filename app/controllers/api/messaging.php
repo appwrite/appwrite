@@ -30,6 +30,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
@@ -1917,15 +1918,17 @@ App::post('/v1/messaging/topics')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
         $topic = new Document([
             '$id' => $topicId,
             'name' => $name,
+            'subscribe' => $subscribe,
         ]);
 
         try {
@@ -2217,6 +2220,12 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
+        $validator = new Authorization('subscribe');
+
+        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        }
+
         $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -2225,25 +2234,23 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
-        $userId = $user->getId();
-
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
+                Permission::read(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
-            'userId' => $userId,
+            'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
             'search' => implode(' ', [
                 $subscriberId,
                 $targetId,
-                $userId,
+                $user->getId(),
                 $target->getAttribute('providerType'),
             ]),
         ]);
