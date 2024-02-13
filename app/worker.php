@@ -246,7 +246,7 @@ try {
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 

@@ -2,7 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Exception;
 use League\Csv\CannotInsertRecord;
 use Utopia\App;
 use Utopia\Platform\Action;
@@ -180,7 +179,7 @@ class GetMigrationStats extends Action
             $mail->Body = "Please find the migration report atttached";
             $mail->send();
             Console::success('Email has been sent!');
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Console::error("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
         }
     }

@@ -733,7 +733,7 @@ App::get('/v1/health/anti-virus')
             try {
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
             }
         }

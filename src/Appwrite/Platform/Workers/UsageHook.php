@@ -94,7 +94,7 @@ class UsageHook extends Usage
                             }
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     console::error(DateTime::now() . ' ' . $projectInternalId . ' ' . $e->getMessage());
                 }
             }

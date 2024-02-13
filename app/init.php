@@ -1410,7 +1410,7 @@ function getDevice($root): Device
             $accessSecret = $dsn->getPassword() ?? '';
             $bucket = $dsn->getPath() ?? '';
             $region = $dsn->getParam('region');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 

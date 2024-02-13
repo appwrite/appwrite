@@ -218,7 +218,7 @@ class Usage extends Action
                 default:
                     break;
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             console::error("[reducer] " . " {DateTime::now()} " . " {$project->getInternalId()} " . " {$e->getMessage()}");
         }
     }

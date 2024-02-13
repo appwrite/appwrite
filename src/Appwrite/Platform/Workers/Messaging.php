@@ -263,7 +263,7 @@ class Messaging extends Action
                                     }
                                 }
                             }
-                        } catch (\Exception $e) {
+                        } catch (\Throwable $e) {
                             $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage();
                         } finally {
                             $batchIndex++;
@@ -390,7 +390,7 @@ class Messaging extends Action
                         ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
                         ->trigger();
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     throw new Exception('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage(), 500);
                 }
             };
