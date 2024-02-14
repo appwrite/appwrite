@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55d2ed1081591f2b3b3af9999236b109",
+    "content-hash": "609062319cc652e2760367f39604ac77",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -162,6 +162,12 @@
                 "url": "https://github.com/appwrite/runtimes.git",
                 "reference": "214a37c2c66e0f2bc9c30fdfde66955d9fd084a1"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/214a37c2c66e0f2bc9c30fdfde66955d9fd084a1",
+                "reference": "214a37c2c66e0f2bc9c30fdfde66955d9fd084a1",
+                "shasum": ""
+            },
             "require": {
                 "php": ">=8.0",
                 "utopia-php/system": "0.7.*"
@@ -176,6 +182,7 @@
                     "Appwrite\\Runtimes\\": "src/Runtimes"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "BSD-3-Clause"
             ],
@@ -195,6 +202,10 @@
                 "php",
                 "runtimes"
             ],
+            "support": {
+                "issues": "https://github.com/appwrite/runtimes/issues",
+                "source": "https://github.com/appwrite/runtimes/tree/0.13.2"
+            },
             "time": "2023-11-22T15:36:00+00:00"
         },
         {

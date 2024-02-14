@@ -77,12 +77,6 @@
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*"
     },
-    "repositories": [
-        {
-            "url": "https://github.com/appwrite/runtimes.git",
-            "type": "git"
-        }
-    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.36.*",
