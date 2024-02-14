@@ -1204,6 +1204,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('password', '', new Text(0), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
     ->param('autoTLS', null, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
@@ -1212,16 +1213,14 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        $providerAttr = $provider->getAttribute('provider');
-
-        if ($providerAttr !== 'smtp') {
+        if ($provider->getAttribute('provider') !== 'smtp') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
@@ -1230,6 +1229,18 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
         }
 
         $options = $provider->getAttribute('options');
+
+        if (!empty($encryption)) {
+            $options['encryption'] = $encryption === 'none' ? '' : $encryption;
+        }
+
+        if (!\is_null($autoTLS)) {
+            $options['autoTLS'] = $autoTLS;
+        }
+
+        if (!empty($mailer)) {
+            $options['mailer'] = $mailer;
+        }
 
         if (!empty($fromName)) {
             $options['fromName'] = $fromName;
@@ -1265,14 +1276,6 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
 
         if (!empty($password)) {
             $credentials['password'] = $password;
-        }
-
-        if (!empty($encryption)) {
-            $credentials['encryption'] = $encryption === 'none' ? '' : $encryption;
-        }
-
-        if (!\is_null($autoTLS)) {
-            $credentials['autoTLS'] = $autoTLS;
         }
 
         $provider->setAttribute('credentials', $credentials);
