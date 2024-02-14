@@ -64,7 +64,7 @@ class UsageDump extends Action
                 continue;
             }
 
-            console::log('[' . DateTime::now() . '] ProjectId [' . $project->getInternalId()  . '] receivedAt [' . $receivedAt . '] ' . $numberOfKeys . ' keys');
+            console::log('[' . DateTime::now() . '] ProjectId [' . $project->getInternalId()  . '] ReceivedAt [' . $receivedAt . '] ' . $numberOfKeys . ' keys');
 
             try {
                 $dbForProject = $getProjectDB($project);
