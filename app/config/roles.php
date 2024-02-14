@@ -8,9 +8,7 @@ $member = [
     'home',
     'console',
     'graphql',
-    'sessions.write',
-    'accounts.read',
-    'accounts.write',
+    'account',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -33,7 +31,6 @@ $member = [
 $admins = [
     'global',
     'graphql',
-    'sessions.write',
     'teams.read',
     'teams.write',
     'documents.read',
@@ -88,7 +85,6 @@ return [
             'home',
             'console',
             'graphql',
-            'sessions.write',
             'documents.read',
             'documents.write',
             'files.read',
@@ -116,6 +112,6 @@ return [
     ],
     Auth::USER_ROLE_APPS => [
         'label' => 'Applications',
-        'scopes' => ['global', 'health.read', 'graphql'],
+        'scopes' => ['public', 'global', 'health.read', 'graphql'],
     ],
 ];

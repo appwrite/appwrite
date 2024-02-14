@@ -60,6 +60,8 @@ trait ProjectCustom
         ], [
             'name' => 'Demo Project Key',
             'scopes' => [
+                'public',
+                'account',
                 'users.read',
                 'users.write',
                 'teams.read',
@@ -83,9 +85,6 @@ trait ProjectCustom
                 'health.read',
                 'rules.read',
                 'rules.write',
-                'sessions.write',
-                'accounts.write',
-                'accounts.read',
                 'targets.read',
                 'targets.write',
                 'providers.read',

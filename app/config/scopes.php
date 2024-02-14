@@ -1,15 +1,6 @@
 <?php
 
 return [ // List of publicly visible scopes
-    'accounts.read' => [
-        'description' => 'Access to read your active user account',
-    ],
-    'accounts.write' => [
-        'description' => 'Access to create, update, and delete your active user account',
-    ],
-    'sessions.write' => [
-        'description' => 'Access to create, update, and delete user sessions',
-    ],
     'users.read' => [
         'description' => 'Access to read your project\'s users',
     ],
