@@ -84,6 +84,9 @@ class Exception extends \Exception
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
+    public const USER_EMAIL_ALREADY_VERIFIED       = 'user_email_alread_verified';
+    public const USER_PHONE_ALREADY_VERIFIED       = 'user_phone_already_verified';
+    public const USER_DELETION_PROHIBITED          = 'user_deletion_prohibited';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
@@ -227,25 +230,27 @@ class Exception extends \Exception
     public const MIGRATION_PROVIDER_ERROR            = 'migration_provider_error';
 
     /** Realtime */
-    public const REALTIME_MESSAGE_FORMAT_INVALID = 'realtime_message_format_invalid';
-    public const REALTIME_TOO_MANY_MESSAGES = 'realtime_too_many_messages';
-    public const REALTIME_POLICY_VIOLATION = 'realtime_policy_violation';
+    public const REALTIME_MESSAGE_FORMAT_INVALID    = 'realtime_message_format_invalid';
+    public const REALTIME_TOO_MANY_MESSAGES         = 'realtime_too_many_messages';
+    public const REALTIME_POLICY_VIOLATION          = 'realtime_policy_violation';
+
+    /** Health */
+    public const HEALTH_QUEUE_SIZE_EXCEEDED          = 'health_queue_size_exceeded';
+    public const HEALTH_CERTIFICATE_EXPIRED          = 'health_certificate_expired';
+    public const HEALTH_INVALID_HOST                 = 'health_invalid_host';
 
     protected string $type = '';
     protected array $errors = [];
+    protected bool $publish;
 
     public function __construct(string $type = Exception::GENERAL_UNKNOWN, string $message = null, int $code = null, \Throwable $previous = null)
     {
         $this->errors = Config::getParam('errors');
         $this->type = $type;
+        $this->code = $code ?? $this->errors[$type]['code'];
+        $this->message = $message ?? $this->errors[$type]['description'];
 
-        if (isset($this->errors[$type])) {
-            $this->code = $this->errors[$type]['code'];
-            $this->message = $this->errors[$type]['description'];
-        }
-
-        $this->message = $message ?? $this->message;
-        $this->code = $code ?? $this->code;
+        $this->publish = $this->errors[$type]['publish'] ?? ($this->code >= 500);
 
         parent::__construct($this->message, $this->code, $previous);
     }
@@ -270,5 +275,15 @@ class Exception extends \Exception
     public function setType(string $type): void
     {
         $this->type = $type;
+    }
+
+    /**
+     * Check whether the log is publishable for the exception.
+     *
+     * @return bool
+     */
+    public function isPublishable(): bool
+    {
+        return $this->publish;
     }
 }

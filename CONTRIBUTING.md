@@ -210,7 +210,6 @@ Appwrite's current structure is a combination of both [Monolithic](https://en.wi
 │       ├── Task
 │       ├── Template
 │       ├── URL
-│       ├── Usage
 │       └── Utopia
 └── tests # End to end & unit tests
     ├── e2e

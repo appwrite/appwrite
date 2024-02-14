@@ -115,18 +115,19 @@ return [
                 'question' => '',
                 'filter' => ''
             ],
-            // [
-            //     'name' => '_APP_CONSOLE_WHITELIST_DOMAINS',
-            //     'description' => 'This option allows you to limit creation of users to Appwrite console for users sharing the same email domains. This option is very useful for team working with company emails domain.\n\nTo enable this option, pass a list of allowed email domains separated by a comma.',
-            //     'introduction' => '',
-            //     'default' => '',
-            //     'required' => false,
-            //     'question' => '',
-            // ],
             [
                 'name' => '_APP_CONSOLE_WHITELIST_IPS',
                 'description' => "This last option allows you to limit creation of users in Appwrite console for users sharing the same set of IP addresses. This option is very useful for team working with a VPN service or a company IP.\n\nTo enable/activate this option, pass a list of allowed IP addresses separated by a comma.",
                 'introduction' => '',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_HOSTNAMES',
+                'description' => 'This option allows you to add additional hostnames to your Appwrite console. This option is very useful for allowing access to the console project from additional domains. To enable it, pass a list of allowed hostnames separated by a comma.',
+                'introduction' => '1.5.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -337,7 +338,7 @@ return [
     ],
     [
         'category' => 'InfluxDB',
-        'description' => 'Appwrite uses an InfluxDB server for managing time-series data and server stats. The InfluxDB env vars are used to allow Appwrite server to connect to the InfluxDB container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_INFLUXDB_HOST',
@@ -361,7 +362,7 @@ return [
     ],
     [
         'category' => 'StatsD',
-        'description' => 'Appwrite uses a StatsD server for aggregating and sending stats data over a fast UDP connection. The StatsD env vars are used to allow Appwrite server to connect to the StatsD container.',
+        'description' => 'Deprecated since 1.4.8.',
         'variables' => [
             [
                 'name' => '_APP_STATSD_HOST',
@@ -943,6 +944,15 @@ return [
                 'description' => 'Interval value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 86400 seconds (1 day).',
                 'introduction' => '0.7.0',
                 'default' => '86400',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_MAINTENANCE_DELAY',
+                'description' => 'Delay value containing the number of seconds that the Appwrite maintenance process should wait before executing system cleanups and optimizations. The default value is 0 seconds.',
+                'introduction' => '1.5.0',
+                'default' => '0',
                 'required' => false,
                 'question' => '',
                 'filter' => ''
