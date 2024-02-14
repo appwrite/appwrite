@@ -59,12 +59,12 @@ class UsageDump extends Action
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;
-
+            $receivedAt = $stats['receivedAt'] ?? 'NONE';
             if ($numberOfKeys === 0) {
                 continue;
             }
 
-            console::log('[' . DateTime::now() . '] ProjectId [' . $project->getInternalId() . '] Database [' . $project['database'] . '] ' . $numberOfKeys . ' keys');
+            console::log('[' . DateTime::now() . '] ProjectId [' . $project->getInternalId()  . '] receivedAt [' . $receivedAt . '] ' . $numberOfKeys . ' keys');
 
             try {
                 $dbForProject = $getProjectDB($project);
