@@ -39,7 +39,7 @@ class MockNumber extends Validator
             $this->message = 'Invalid payload structure. Please check the "phone" and "otp" fields';
             return false;
         }
-        
+
         $phone = new Phone();
         if (!$phone->isValid($value['phone'])) {
             $this->message = $phone->getDescription();

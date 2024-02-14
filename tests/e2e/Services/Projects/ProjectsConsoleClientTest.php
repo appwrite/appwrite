@@ -19,7 +19,7 @@ class ProjectsConsoleClientTest extends Scope
     use SideClient;
 
     /**
-     * @group testing 
+     * @group testing
      * */
     public function testCreateProject(): array
     {
@@ -1387,7 +1387,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'numbers' => [
-                'phone'=> '+1655513432',
+                'phone' => '+1655513432',
                 'otp' => '123456'
             ]
         ]);
@@ -1401,7 +1401,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'numbers' => [
                 [
-                    'phone'=> '+1655513432',
+                    'phone' => '+1655513432',
                     'otp' => '12345678'
                 ]
             ]
@@ -1416,7 +1416,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'numbers' => [
                 [
-                    'phone'=> '+1655513432',
+                    'phone' => '+1655513432',
                     'otp' => '123'
                 ]
             ]
@@ -1431,7 +1431,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'numbers' => [
                 [
-                    'phone'=> '1655234',
+                    'phone' => '1655234',
                     'otp' => '123456'
                 ]
             ]
@@ -1446,7 +1446,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'numbers' => [
                 [
-                    'phone'=> '+1234567890987654',
+                    'phone' => '+1234567890987654',
                     'otp' => '123456'
                 ]
             ]
@@ -1457,11 +1457,11 @@ class ProjectsConsoleClientTest extends Scope
         $numbers = [];
         for ($i = 0; $i < 11; $i++) {
             $numbers[] = [
-                'phone'=> '+1655513432',
+                'phone' => '+1655513432',
                 'otp' => '123456'
             ];
         }
-        
+
         var_dump($numbers);
 
         /** Trying to pass more than 10 values */
@@ -1492,7 +1492,7 @@ class ProjectsConsoleClientTest extends Scope
         ], $this->getHeaders()), [
             'numbers' => [
                 [
-                    'phone'=> '+1655513432',
+                    'phone' => '+1655513432',
                     'otp' => '123456'
                 ]
             ]
