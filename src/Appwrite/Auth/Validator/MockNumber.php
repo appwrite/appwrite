@@ -35,6 +35,11 @@ class MockNumber extends Validator
      */
     public function isValid($value): bool
     {
+        if (!\is_array($value) || !isset($value['phone']) || !isset($value['otp'])) {
+            $this->message = 'Invalid payload structure. Please check the "phone" and "otp" fields';
+            return false;
+        }
+        
         $phone = new Phone();
         if (!$phone->isValid($value['phone'])) {
             $this->message = $phone->getDescription();
@@ -43,7 +48,7 @@ class MockNumber extends Validator
 
         $otp = new Text(6, 6);
         if (!$otp->isValid($value['otp'])) {
-            $this->message = $otp->getDescription();
+            $this->message = 'OTP must be a valid string and exactly 6 characters.';
             return false;
         }
 
