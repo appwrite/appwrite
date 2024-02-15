@@ -70,18 +70,19 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthCertificate;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\MFAChallenge;
-use Appwrite\Utopia\Response\Model\MFAProvider;
-use Appwrite\Utopia\Response\Model\MFAProviders;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
 use Appwrite\Utopia\Response\Model\MetricBreakdown;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Message;
+use Appwrite\Utopia\Response\Model\MFAFactors;
+use Appwrite\Utopia\Response\Model\MFAType;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
@@ -169,8 +170,8 @@ class Response extends SwooleResponse
     public const MODEL_PREFERENCES = 'preferences';
 
     // MFA
-    public const MODEL_MFA_PROVIDER = 'mfaProvider';
-    public const MODEL_MFA_PROVIDERS = 'mfaProviders';
+    public const MODEL_MFA_TYPE = 'mfaType';
+    public const MODEL_MFA_FACTORS = 'mfaFactors';
     public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
 
@@ -279,6 +280,7 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+    public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
     // Console
@@ -421,6 +423,7 @@ class Response extends SwooleResponse
             ->setModel(new HealthAntivirus())
             ->setModel(new HealthQueue())
             ->setModel(new HealthStatus())
+            ->setModel(new HealthCertificate())
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
             ->setModel(new Metric())
@@ -440,8 +443,8 @@ class Response extends SwooleResponse
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
             ->setModel(new MFAChallenge())
-            ->setModel(new MFAProvider())
-            ->setModel(new MFAProviders())
+            ->setModel(new MFAType())
+            ->setModel(new MFAFactors())
             ->setModel(new Provider())
             ->setModel(new Message())
             ->setModel(new Topic())

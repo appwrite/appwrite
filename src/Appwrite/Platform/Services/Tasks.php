@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Services;
 
 use Appwrite\Platform\Tasks\CalcTierStats;
+use Appwrite\Platform\Tasks\CreateInfMetric;
 use Appwrite\Platform\Tasks\DeleteOrphanedProjects;
 use Appwrite\Platform\Tasks\DevGenerateTranslations;
 use Appwrite\Platform\Tasks\Doctor;
@@ -12,6 +13,8 @@ use Appwrite\Platform\Tasks\Install;
 use Appwrite\Platform\Tasks\Maintenance;
 use Appwrite\Platform\Tasks\Migrate;
 use Appwrite\Platform\Tasks\PatchRecreateRepositoriesDocuments;
+use Appwrite\Platform\Tasks\QueueCount;
+use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\SSL;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
@@ -21,7 +24,6 @@ use Appwrite\Platform\Tasks\Upgrade;
 use Appwrite\Platform\Tasks\Vars;
 use Appwrite\Platform\Tasks\Version;
 use Appwrite\Platform\Tasks\VolumeSync;
-use Appwrite\Platform\Tasks\CreateInfMetric;
 use Utopia\Platform\Service;
 
 class Tasks extends Service
@@ -30,19 +32,8 @@ class Tasks extends Service
     {
         $this->type = self::TYPE_CLI;
         $this
-            ->addAction(Version::getName(), new Version())
-            ->addAction(Vars::getName(), new Vars())
-            ->addAction(SSL::getName(), new SSL())
-            ->addAction(Hamster::getName(), new Hamster())
-            ->addAction(Doctor::getName(), new Doctor())
-            ->addAction(Install::getName(), new Install())
-            ->addAction(Upgrade::getName(), new Upgrade())
-            ->addAction(Maintenance::getName(), new Maintenance())
-            ->addAction(Migrate::getName(), new Migrate())
-            ->addAction(SDKs::getName(), new SDKs())
-            ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(Specs::getName(), new Specs())
             ->addAction(CalcTierStats::getName(), new CalcTierStats())
+            ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
             ->addAction(DeleteOrphanedProjects::getName(), new DeleteOrphanedProjects())
             ->addAction(DevGenerateTranslations::getName(), new DevGenerateTranslations())
             ->addAction(Doctor::getName(), new Doctor())
@@ -51,7 +42,10 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
+            ->addAction(Migrate::getName(), new Migrate())
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
+            ->addAction(QueueCount::getName(), new QueueCount())
+            ->addAction(QueueRetry::getName(), new QueueRetry())
             ->addAction(SDKs::getName(), new SDKs())
             ->addAction(SSL::getName(), new SSL())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
@@ -61,7 +55,6 @@ class Tasks extends Service
             ->addAction(Vars::getName(), new Vars())
             ->addAction(Version::getName(), new Version())
             ->addAction(VolumeSync::getName(), new VolumeSync())
-            ->addAction(CreateInfMetric::getName(), new CreateInfMetric())
         ;
     }
 }

@@ -39,6 +39,13 @@ class Topic extends Model
                 'description' => 'Total count of subscribers subscribed to topic.',
                 'default' => 0,
                 'example' => 100,
+            ])
+            ->addRule('subscribe', [
+                'type' => self::TYPE_STRING,
+                'description' => 'Subscribe permissions.',
+                'default' => ['users'],
+                'example' => 'users',
+                'array' => true,
             ]);
     }
 

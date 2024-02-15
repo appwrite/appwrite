@@ -57,14 +57,6 @@ class UsageHook extends Usage
 
                 try {
                     $dbForProject = $getProjectDB($data['project']);
-                    if ($projectInternalId == 85293) {
-                        var_dump([
-                            'project' => $projectInternalId,
-                            'database' => $database,
-                            'time' => DateTime::now(),
-                            'data' => $data['keys']
-                        ]);
-                    }
                     foreach ($data['keys'] ?? [] as $key => $value) {
                         if ($value == 0) {
                             continue;
@@ -75,15 +67,6 @@ class UsageHook extends Usage
                             $id = \md5("{$time}_{$period}_{$key}");
 
                             try {
-                                if ($projectInternalId == self::DEBUG_PROJECT_ID) {
-                                    var_dump([
-                                        'type' => 'create',
-                                        'period' => $period,
-                                        'metric' => $key,
-                                        'id' => $id,
-                                        'value' => $value
-                                    ]);
-                                }
                                 $dbForProject->createDocument('stats_v2', new Document([
                                     '$id' => $id,
                                     'period' => $period,
@@ -94,15 +77,6 @@ class UsageHook extends Usage
                                 ]));
                             } catch (Duplicate $th) {
                                 if ($value < 0) {
-                                    if ($projectInternalId == self::DEBUG_PROJECT_ID) {
-                                        var_dump([
-                                            'type' => 'decrease',
-                                            'period' => $period,
-                                            'metric' => $key,
-                                            'id' => $id,
-                                            'value' => $value
-                                        ]);
-                                    }
                                     $dbForProject->decreaseDocumentAttribute(
                                         'stats_v2',
                                         $id,
@@ -110,15 +84,6 @@ class UsageHook extends Usage
                                         abs($value)
                                     );
                                 } else {
-                                    if ($projectInternalId == self::DEBUG_PROJECT_ID) {
-                                        var_dump([
-                                            'type' => 'increase',
-                                            'period' => $period,
-                                            'metric' => $key,
-                                            'id' => $id,
-                                            'value' => $value
-                                        ]);
-                                    }
                                     $dbForProject->increaseDocumentAttribute(
                                         'stats_v2',
                                         $id,
@@ -129,7 +94,7 @@ class UsageHook extends Usage
                             }
                         }
                     }
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     console::error(DateTime::now() . ' ' . $projectInternalId . ' ' . $e->getMessage());
                 }
             }

@@ -130,7 +130,7 @@ class Mails extends Action
 
         try {
             $mail->send();
-        } catch (\Exception $error) {
+        } catch (\Throwable $error) {
             throw new Exception('Error sending mail: ' . $error->getMessage(), 500);
         }
     }

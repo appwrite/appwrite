@@ -12,7 +12,7 @@ RUN composer install --ignore-platform-reqs --optimize-autoloader \
     --no-plugins --no-scripts --prefer-dist \
     `if [ "$TESTING" != "true" ]; then echo "--no-dev"; fi`
 
-FROM --platform=$BUILDPLATFORM node:16.14.2-alpine3.15 as node
+FROM --platform=$BUILDPLATFORM node:20.11.0-alpine3.19 as node
 
 COPY app/console /usr/local/src/console
 
@@ -89,6 +89,10 @@ RUN chmod +x /usr/local/bin/doctor && \
     chmod +x /usr/local/bin/test && \
     chmod +x /usr/local/bin/upgrade && \
     chmod +x /usr/local/bin/vars && \
+    chmod +x /usr/local/bin/queue-retry && \
+    chmod +x /usr/local/bin/queue-count-failed && \
+    chmod +x /usr/local/bin/queue-count-processing && \
+    chmod +x /usr/local/bin/queue-count-success && \
     chmod +x /usr/local/bin/worker-audits && \
     chmod +x /usr/local/bin/worker-builds && \
     chmod +x /usr/local/bin/worker-certificates && \

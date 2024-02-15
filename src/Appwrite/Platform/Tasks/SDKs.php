@@ -18,8 +18,6 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Exception;
-use Throwable;
 use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
@@ -242,9 +240,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
                 try {
                     $sdk->generate($result);
-                } catch (Exception $exception) {
-                    Console::error($exception->getMessage());
-                } catch (Throwable $exception) {
+                } catch (\Throwable $exception) {
                     Console::error($exception->getMessage());
                 }
 
