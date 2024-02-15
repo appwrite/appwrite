@@ -3524,7 +3524,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            $pushData['image'] = "{$protocol}://{$host}/v1/storage/files/{$image->getId()}/view";;
+            $pushData['image'] = "{$protocol}://{$host}/v1/storage/files/{$image->getId()}/view";
         }
 
         $message->setAttribute('data', $pushData);
