@@ -284,7 +284,7 @@ $worker
             $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
-            $log->addTag('projectId', $project->getInternalId());
+            $log->addTag('projectId', $project->getInternalId() ?? 'n/a');
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
