@@ -129,7 +129,7 @@ class Messaging extends Action
 
                 $queueForUsage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
             } catch (\libphonenumber\NumberParseException $e) {
-                console::error("Error parsing number: " . $e->getMessage());
+                Console::error("Error parsing number: " . $e->getMessage());
             }
 
             $queueForUsage
