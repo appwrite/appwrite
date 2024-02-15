@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Exception;
+use libphonenumber\NumberParseException;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
@@ -128,7 +129,7 @@ class Messaging extends Action
                     ->getCountryCode();
 
                 $queueForUsage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
-            } catch (\libphonenumber\NumberParseException $e) {
+            } catch (NumberParseException $e) {
                 Console::error("Error parsing number: " . $e->getMessage());
             }
 
