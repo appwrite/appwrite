@@ -872,7 +872,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID is missing a target (Topics or Users or Targets).',
+        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [
@@ -919,5 +919,12 @@ return [
         'name' => Exception::SCHEDULE_NOT_FOUND,
         'description' => 'Schedule with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Targets */
+    Exception::TARGET_PROVIDER_INVALID_TYPE => [
+        'name' => Exception::PROVIDER_INVALID_TYPE,
+        'description' => 'Target has an invalid provider type.',
+        'code' => 400,
     ],
 ];

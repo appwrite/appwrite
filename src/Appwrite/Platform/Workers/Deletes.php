@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Auth\Auth;
+use Appwrite\Extend\Exception;
 use Executor\Executor;
 use Throwable;
 use Utopia\Abuse\Abuse;
@@ -263,12 +264,23 @@ class Deletes extends Action
                 Query::equal('targetInternalId', [$target->getInternalId()])
             ],
             $dbForProject,
-            function (Document $subscriber) use ($dbForProject) {
+            function (Document $subscriber) use ($dbForProject, $target) {
                 $topicId = $subscriber->getAttribute('topicId');
                 $topicInternalId = $subscriber->getAttribute('topicInternalId');
                 $topic = $dbForProject->getDocument('topics', $topicId);
                 if (!$topic->isEmpty() && $topic->getInternalId() === $topicInternalId) {
-                    $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', min: 0);
+                    $totalAttribute = match ($target->getAttribute('providerType')) {
+                        MESSAGE_TYPE_EMAIL => 'emailTotal',
+                        MESSAGE_TYPE_SMS => 'smsTotal',
+                        MESSAGE_TYPE_PUSH => 'pushTotal',
+                        default => throw new Exception('Invalid target provider type'),
+                    };
+                    $dbForProject->decreaseDocumentAttribute(
+                        'topics',
+                        $topicId,
+                        $totalAttribute,
+                        min: 0
+                    );
                 }
             }
         );
