@@ -17,6 +17,7 @@ use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 use Appwrite\Event\Usage;
+use libphonenumber\PhoneNumberUtil;
 
 class Messaging extends Action
 {
@@ -118,6 +119,18 @@ class Messaging extends Action
 
         try {
             $sms->send($message);
+
+            $phoneUtil = PhoneNumberUtil::getInstance();
+
+            try {
+                $countryCode = $phoneUtil
+                    ->parse($payload['recipient'])
+                    ->getCountryCode();
+
+                $queueForUsage->addMetric(str_replace('{countryCode}', $countryCode, METRIC_MESSAGES_COUNTRY_CODE), 1);
+            } catch (\libphonenumber\NumberParseException $e) {
+                console::error("Error parsing number: " . $e->getMessage());
+            }
 
             $queueForUsage
                 ->setProject($project)
