@@ -702,6 +702,43 @@ App::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
+App::get('/v1/health/storage')
+    ->desc('Get storage')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getStorage')
+    ->label('sdk.description', '/docs/references/health/get-storage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('deviceFiles')
+    ->action(function (Response $response, Device $deviceFiles) {
+
+        $checkStart = \microtime(true);
+
+        if (!$deviceFiles->write($deviceFiles->getPath('health.txt'), 'test', '')) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file');
+        }
+
+        if ($deviceFiles->read($deviceFiles->getPath('health.txt')) !== 'test') {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file');
+        }
+
+        if (!$deviceFiles->delete($deviceFiles->getPath('health.txt'))) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file');
+        }
+
+        $output = [
+            'status' => 'pass',
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+    });
+
 App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])
