@@ -923,7 +923,7 @@ return [
 
     /** Targets */
     Exception::TARGET_PROVIDER_INVALID_TYPE => [
-        'name' => Exception::PROVIDER_INVALID_TYPE,
+        'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
         'description' => 'Target has an invalid provider type.',
         'code' => 400,
     ],

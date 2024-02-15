@@ -2323,7 +2323,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+        $queries[] = Query::equal('topicInternalId', [$topic->getInternalId()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
