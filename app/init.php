@@ -940,7 +940,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
