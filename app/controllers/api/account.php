@@ -3425,10 +3425,10 @@ App::get('/v1/account/mfa/factors')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listFactors')
-    ->label('sdk.description', '/docs/references/account/get.md')
+    ->label('sdk.description', '/docs/references/account/list-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDERS)
+    ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->inject('response')
@@ -3441,10 +3441,10 @@ App::get('/v1/account/mfa/factors')
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
+        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
     });
 
-App::post('/v1/account/mfa/:factor')
+App::post('/v1/account/mfa/:type')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3455,24 +3455,24 @@ App::post('/v1/account/mfa/:factor')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'addAuthenticator')
-    ->label('sdk.description', '/docs/references/account/update-mfa.md')
+    ->label('sdk.description', '/docs/references/account/add-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDER)
+    ->label('sdk.response.model', Response::MODEL_MFA_TYPE)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
+    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $factor, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $otp = match ($factor) {
+        $otp = match ($type) {
             'totp' => new TOTP(),
-            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown provider.')
+            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown type.')
         };
 
         $otp->setLabel($user->getAttribute('email'));
@@ -3481,7 +3481,7 @@ App::post('/v1/account/mfa/:factor')
         $backups = Provider::generateBackupCodes();
 
     if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists.');
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists on this account.');
     }
 
         $user
@@ -3500,10 +3500,10 @@ App::post('/v1/account/mfa/:factor')
 
         $queueForEvents->setParam('userId', $user->getId());
 
-        $response->dynamic($model, Response::MODEL_MFA_PROVIDER);
+        $response->dynamic($model, Response::MODEL_MFA_TYPE);
     });
 
-App::put('/v1/account/mfa/:factor')
+App::put('/v1/account/mfa/:type')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3514,13 +3514,13 @@ App::put('/v1/account/mfa/:factor')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'verifyAuthenticator')
-    ->label('sdk.description', '/docs/references/account/update-mfa.md')
+    ->label('sdk.description', '/docs/references/account/verify-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('factor', null, new WhiteList(['totp']), 'Factor.')
+    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
@@ -3528,9 +3528,9 @@ App::put('/v1/account/mfa/:factor')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $factor, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
-        $success = match ($factor) {
+        $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
         };
@@ -3540,9 +3540,9 @@ App::put('/v1/account/mfa/:factor')
     }
 
     if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator needs to be added first.');
     } elseif ($user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already verified.');
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
     }
 
         $user->setAttribute('totpVerification', true);
@@ -3552,14 +3552,14 @@ App::put('/v1/account/mfa/:factor')
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
 
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account/mfa/:provider')
+App::delete('/v1/account/mfa/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -3574,16 +3574,16 @@ App::delete('/v1/account/mfa/:provider')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $success = match ($provider) {
+        $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
         };
@@ -3610,40 +3610,38 @@ App::delete('/v1/account/mfa/:provider')
     });
 
 App::post('/v1/account/mfa/challenge')
-    ->desc('Create MFA Challenge')
+    ->desc('Create 2FA Challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')
-    ->label('auth.type', 'createChallenge')
     ->label('audits.event', 'challenge.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createChallenge')
-    ->label('sdk.description', '/docs/references/account/create-challenge.md')
+    ->label('sdk.method', 'create2FAChallenge')
+    ->label('sdk.description', '/docs/references/account/create-2fa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('provider', '', new WhiteList(['totp', 'phone', 'email']), 'provider.')
+    ->param('factor', '', new WhiteList(['totp', 'phone', 'email']), 'Factor used for verification.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
-    ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
     ->inject('locale')
-    ->action(function (string $provider, Response $response, Database $dbForProject, Document $user, Document $project, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'provider' => $provider,
+            'provider' => $factor,
             'token' => Auth::tokenGenerator(),
             'code' => $code,
             'expire' => $expire,
@@ -3656,7 +3654,7 @@ App::post('/v1/account/mfa/challenge')
 
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
-        switch ($provider) {
+        switch ($factor) {
             case 'phone':
                 if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
@@ -3720,7 +3718,7 @@ App::put('/v1/account/mfa/challenge')
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'userId:{param-userId}')
-    ->param('challengeId', '', new Text(256), 'Valid verification token.')
+    ->param('challengeId', '', new Text(256), 'ID of the challenge.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('project')
     ->inject('response')

@@ -1523,18 +1523,18 @@ App::patch('/v1/users/:userId/mfa')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users/:userId/providers')
-    ->desc('List Providers')
+App::get('/v1/users/:userId/mfa/factors')
+    ->desc('List Factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listProviders')
-    ->label('sdk.description', '/docs/references/users/list-providers.md')
+    ->label('sdk.method', 'listFactors')
+    ->label('sdk.description', '/docs/references/users/list-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDERS)
+    ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1551,10 +1551,10 @@ App::get('/v1/users/:userId/providers')
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
+        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
     });
 
-App::delete('/v1/users/:userId/mfa/:provider')
+App::delete('/v1/users/:userId/mfa/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -1571,20 +1571,20 @@ App::delete('/v1/users/:userId/mfa/:provider')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $success = match ($provider) {
+        $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
         };
