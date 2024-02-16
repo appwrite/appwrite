@@ -571,6 +571,7 @@ services:
       - _APP_REDIS_PASS
       - _APP_SMS_PROVIDER
       - _APP_SMS_FROM
+      - _APP_SMS_PROJECTS_DENY_LIST
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
 
@@ -644,6 +645,7 @@ services:
       - _APP_MAINTENANCE_RETENTION_AUDIT
       - _APP_MAINTENANCE_RETENTION_USAGE_HOURLY
       - _APP_MAINTENANCE_RETENTION_SCHEDULES
+      - _APP_MAINTENANCE_DELAY
 
   appwrite-worker-usage:
     entrypoint: worker-usage
@@ -675,6 +677,38 @@ services:
       - _APP_LOGGING_PROVIDER
       - _APP_LOGGING_CONFIG
       - _APP_USAGE_AGGREGATION_INTERVAL
+
+  appwrite-worker-usage-dump:
+    entrypoint: worker-usage-dump
+    <<: *x-logging
+    container_name: appwrite-worker-usage-dump
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_USAGE_STATS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+      - _APP_USAGE_AGGREGATION_INTERVAL
+
 
   appwrite-schedule:
     entrypoint: schedule
