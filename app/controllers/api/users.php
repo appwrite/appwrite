@@ -115,6 +115,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($email) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => 'email',
@@ -132,6 +137,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($phone) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => 'sms',
@@ -498,6 +508,11 @@ App::post('/v1/users/:userId/targets')
         try {
             $target = $dbForProject->createDocument('targets', new Document([
                 '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'providerId' => $providerId ?? null,
                 'providerInternalId' => $provider->getInternalId() ?? null,
                 'providerType' =>  $providerType,
@@ -1227,6 +1242,11 @@ App::patch('/v1/users/:userId/email')
             } else {
                 if (\strlen($email) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
                         'userId' => $user->getId(),
                         'userInternalId' => $user->getInternalId(),
                         'providerType' => 'email',
@@ -1305,6 +1325,11 @@ App::patch('/v1/users/:userId/phone')
             } else {
                 if (\strlen($number) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
                         'userId' => $user->getId(),
                         'userInternalId' => $user->getInternalId(),
                         'providerType' => 'sms',

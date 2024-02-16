@@ -252,6 +252,7 @@ class Exception extends \Exception
     public const PROVIDER_NOT_FOUND                 = 'provider_not_found';
     public const PROVIDER_ALREADY_EXISTS            = 'provider_already_exists';
     public const PROVIDER_INCORRECT_TYPE            = 'provider_incorrect_type';
+
     public const PROVIDER_MISSING_CREDENTIALS       = 'provider_missing_credentials';
 
     /** Topic */
@@ -273,6 +274,9 @@ class Exception extends \Exception
     public const MESSAGE_TARGET_NOT_SMS             = 'message_target_not_sms';
     public const MESSAGE_TARGET_NOT_PUSH            = 'message_target_not_push';
     public const MESSAGE_MISSING_SCHEDULE           = 'message_missing_schedule';
+
+    /** Targets */
+    public const TARGET_PROVIDER_INVALID_TYPE       = 'target_provider_invalid_type';
 
     /** Schedules */
     public const SCHEDULE_NOT_FOUND                 = 'schedule_not_found';

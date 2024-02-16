@@ -249,7 +249,7 @@ class Messaging extends Action
                                 }
 
                                 // Deleting push targets when token has expired.
-                                if (($result['error'] ??  '') === 'Expired device token.') {
+                                if (($result['error'] ??  '') === 'Expired device token') {
                                     $target = $dbForProject->findOne('targets', [
                                         Query::equal('identifier', [$result['recipient']])
                                     ]);
