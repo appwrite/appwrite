@@ -1911,16 +1911,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "df54ba51570e886724590edeb03dbd455bb0464d"
+                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/df54ba51570e886724590edeb03dbd455bb0464d",
-                "reference": "df54ba51570e886724590edeb03dbd455bb0464d",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
+                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
                 "shasum": ""
             },
             "require": {
@@ -1955,9 +1955,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.9.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.9.1"
             },
-            "time": "2024-01-31T11:51:27+00:00"
+            "time": "2024-02-15T03:44:44+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2779,16 +2779,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.2",
+            "version": "0.36.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "0aa67479d75f0e0cb7b60454031534d7f0abaece"
+                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0aa67479d75f0e0cb7b60454031534d7f0abaece",
-                "reference": "0aa67479d75f0e0cb7b60454031534d7f0abaece",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d308f7f492545da3e51ea5b91c0778392c40b93",
+                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93",
                 "shasum": ""
             },
             "require": {
@@ -2824,9 +2824,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.3"
             },
-            "time": "2024-01-19T01:04:35+00:00"
+            "time": "2024-02-14T06:33:38+00:00"
         },
         {
             "name": "doctrine/deprecations",
