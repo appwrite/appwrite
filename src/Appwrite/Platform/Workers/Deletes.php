@@ -469,7 +469,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
         // Delete Usage stats
-        $this->deleteByGroup('stats_v2', [
+        $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::equal('period', ['1h']),
         ], $dbForProject);
