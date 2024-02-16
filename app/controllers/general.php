@@ -563,25 +563,27 @@ App::init()
             throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
         }
 
-        if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new AppwriteException(AppwriteException::USER_BLOCKED);
-        }
+        if (in_array('api', $route->getGroups())) {
+            if (false === $user->getAttribute('status')) { // Account is blocked
+                throw new AppwriteException(AppwriteException::USER_BLOCKED);
+            }
 
-        if ($user->getAttribute('reset')) {
-            throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
-        }
+            if ($user->getAttribute('reset')) {
+                throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
+            }
 
-        if ($mode !== APP_MODE_ADMIN) {
-            $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
-            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+            if ($mode !== APP_MODE_ADMIN) {
+                $mfaEnabled = $user->getAttribute('mfa', false);
+                $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
+                $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+                $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+                $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+                $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 
-            if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
-                    throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
+                if (!in_array('mfa', $route->getGroups())) {
+                    if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                        throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
+                    }
                 }
             }
         }
