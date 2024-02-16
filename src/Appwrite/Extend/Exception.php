@@ -192,7 +192,6 @@ class Exception extends \Exception
 
     /** Projects */
     public const PROJECT_NOT_FOUND                 = 'project_not_found';
-    public const PROJECT_UNKNOWN                   = 'project_unknown';
     public const PROJECT_PROVIDER_DISABLED         = 'project_provider_disabled';
     public const PROJECT_PROVIDER_UNSUPPORTED      = 'project_provider_unsupported';
     public const PROJECT_ALREADY_EXISTS            = 'project_already_exists';

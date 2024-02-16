@@ -245,7 +245,7 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
-        'code' => 400,
+        'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
         'name' => Exception::USER_OAUTH2_BAD_REQUEST,
@@ -646,11 +646,6 @@ return [
         'name' => Exception::PROJECT_ALREADY_EXISTS,
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
-    ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
     ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
