@@ -42,7 +42,7 @@ class V17 extends Filter
 
     protected function parseToken(array $content)
     {
-        unset($content['securityPhrase']);
+        unset($content['phrase']);
         return $content;
     }
 }

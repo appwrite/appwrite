@@ -97,7 +97,7 @@ class V17Test extends TestCase
         return [
             'remove securityPhrase' => [
                 [
-                    'securityPhrase' => 'Lorum Ipsum',
+                    'phrase' => 'Lorum Ipsum',
                 ],
                 [
                 ],
