@@ -647,11 +647,6 @@ return [
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
-    ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
         'description' => 'The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console.',

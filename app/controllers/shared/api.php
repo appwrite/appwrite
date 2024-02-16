@@ -157,6 +157,10 @@ App::init()
     ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode) {
         $route = $utopia->getRoute();
 
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
         /**
          * ACL Check
          */
@@ -307,10 +311,6 @@ App::init()
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
-
-        if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-            throw new Exception(Exception::PROJECT_UNKNOWN);
-        }
 
         /*
         * Abuse Check

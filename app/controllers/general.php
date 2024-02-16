@@ -316,14 +316,6 @@ App::init()
             $locale->setDefault($localeParam);
         }
 
-        if ($project->isEmpty()) {
-            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-        }
-
-        if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-            throw new AppwriteException(AppwriteException::PROJECT_UNKNOWN);
-        }
-
         $referrer = $request->getReferer();
         $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
         $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
