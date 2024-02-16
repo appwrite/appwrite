@@ -67,7 +67,7 @@ class UsageHook extends Usage
                             $id = \md5("{$time}_{$period}_{$key}");
 
                             try {
-                                $dbForProject->createDocument('stats_v2', new Document([
+                                $dbForProject->createDocument('stats', new Document([
                                     '$id' => $id,
                                     'period' => $period,
                                     'time' => $time,
@@ -78,14 +78,14 @@ class UsageHook extends Usage
                             } catch (Duplicate $th) {
                                 if ($value < 0) {
                                     $dbForProject->decreaseDocumentAttribute(
-                                        'stats_v2',
+                                        'stats',
                                         $id,
                                         'value',
                                         abs($value)
                                     );
                                 } else {
                                     $dbForProject->increaseDocumentAttribute(
-                                        'stats_v2',
+                                        'stats',
                                         $id,
                                         'value',
                                         $value

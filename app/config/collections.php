@@ -1507,10 +1507,10 @@ $commonCollections = [
         ]
     ],
 
-    'stats_v2' => [
+    'stats' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('stats_v2'),
-        'name' => 'stats_v2',
+        '$id' => ID::custom('stats'),
+        'name' => 'Stats',
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),
@@ -1903,7 +1903,29 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => ID::custom('total'),
+                '$id' => ID::custom('emailTotal'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('smsTotal'),
+                'type' => Database::VAR_INTEGER,
+                'format' => '',
+                'size' => 0,
+                'signed' => true,
+                'required' => false,
+                'default' => 0,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('pushTotal'),
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 0,

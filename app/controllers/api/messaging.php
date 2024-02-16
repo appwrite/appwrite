@@ -2260,7 +2260,19 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         try {
             $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+            $totalAttribute = match ($target->getAttribute('providerType')) {
+                MESSAGE_TYPE_EMAIL => 'emailTotal',
+                MESSAGE_TYPE_SMS => 'smsTotal',
+                MESSAGE_TYPE_PUSH => 'pushTotal',
+                default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+            };
+
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+                'topics',
+                $topicId,
+                $totalAttribute,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
@@ -2311,7 +2323,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+        $queries[] = Query::equal('topicInternalId', [$topic->getInternalId()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -2512,8 +2524,23 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
+        $target = $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId'));
+
         $dbForProject->deleteDocument('subscribers', $subscriberId);
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+        $totalAttribute = match ($target->getAttribute('providerType')) {
+            MESSAGE_TYPE_EMAIL => 'emailTotal',
+            MESSAGE_TYPE_SMS => 'smsTotal',
+            MESSAGE_TYPE_PUSH => 'pushTotal',
+            default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+        };
+
+        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+            'topics',
+            $topicId,
+            $totalAttribute,
+            min: 0
+        ));
 
         $queueForEvents
             ->setParam('topicId', $topic->getId())
