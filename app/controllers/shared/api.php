@@ -358,7 +358,8 @@ App::init()
                 $response
                     ->addHeader('X-RateLimit-Limit', $limit)
                     ->addHeader('X-RateLimit-Remaining', $remaining)
-                    ->addHeader('X-RateLimit-Reset', $time);
+                    ->addHeader('X-RateLimit-Reset', $time)
+                ;
             }
 
             $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
@@ -398,7 +399,8 @@ App::init()
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
-            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject));
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+        ;
 
         $useCache = $route->getLabel('cache', false);
 
@@ -452,7 +454,8 @@ App::init()
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
                     ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']));
+                    ->send(base64_decode($data['payload']))
+                ;
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
             }
