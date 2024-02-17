@@ -245,7 +245,7 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
-        'code' => 400,
+        'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
         'name' => Exception::USER_OAUTH2_BAD_REQUEST,
@@ -647,11 +647,6 @@ return [
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
-    ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
         'description' => 'The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console.',
@@ -872,7 +867,7 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID is missing a target (Topics or Users or Targets).',
+        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [
@@ -919,5 +914,12 @@ return [
         'name' => Exception::SCHEDULE_NOT_FOUND,
         'description' => 'Schedule with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Targets */
+    Exception::TARGET_PROVIDER_INVALID_TYPE => [
+        'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
+        'description' => 'Target has an invalid provider type.',
+        'code' => 400,
     ],
 ];

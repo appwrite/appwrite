@@ -2026,6 +2026,9 @@ trait Base
                     messagingCreateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$LIST_TOPICS:
@@ -2035,6 +2038,9 @@ trait Base
                         topics {
                             _id
                             name
+                            emailTotal
+                            smsTotal
+                            pushTotal
                         }
                     }
                 }';
@@ -2043,6 +2049,9 @@ trait Base
                     messagingGetTopic(topicId: $topicId) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$UPDATE_TOPIC:
@@ -2050,6 +2059,9 @@ trait Base
                     messagingUpdateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$DELETE_TOPIC:

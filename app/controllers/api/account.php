@@ -163,6 +163,11 @@ App::post('/v1/account')
             $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => MESSAGE_TYPE_EMAIL,
@@ -707,7 +712,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
-                            Permission::read(Role::any()),
+                            Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
                             Permission::delete(Role::user($user->getId())),
                         ],
@@ -1699,6 +1704,11 @@ App::post('/v1/account/tokens/phone')
             Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => MESSAGE_TYPE_SMS,
