@@ -30,8 +30,8 @@ class V20 extends Migration
         foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables', 'subQueryChallenges', 'subQueryProjectVariables', 'subQueryTargets', 'subQueryTopicTargets'] as $name) {
             Database::addFilter(
                 $name,
-                fn() => null,
-                fn() => []
+                fn () => null,
+                fn () => []
             );
         }
 
@@ -47,14 +47,16 @@ class V20 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Functions');
-        $this->migrateFunctions();
+        if ($this->project->getInternalId() !== 'console') {
+            Console::info('Migrating Functions');
+            $this->migrateFunctions();
 
-        Console::info('Migrating Databases');
-        $this->migrateDatabases();
+            Console::info('Migrating Databases');
+            $this->migrateDatabases();
 
-        Console::info('Migrating Buckets');
-        $this->migrateBuckets();
+            Console::info('Migrating Buckets');
+            $this->migrateBuckets();
+        }
 
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
@@ -75,25 +77,23 @@ class V20 extends Migration
         };
 
         // Support database array type migration (user collections)
-        foreach (
-            $this->documentsIterator('attributes', [
+        if ($collectionType === 'projects') {
+            foreach ($this->documentsIterator('attributes', [
                 Query::equal('array', [true]),
-            ]) as $attribute
-        ) {
-            $foundIndex = false;
-            foreach (
-                $this->documentsIterator('indexes', [
-                    Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
-                    Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
-                ]) as $index
-            ) {
-                if (in_array($attribute['key'], $index['attributes'])) {
-                    $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
-                    $foundIndex = true;
+            ]) as $attribute) {
+                $foundIndex = false;
+                foreach ($this->documentsIterator('indexes', [
+                        Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
+                        Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
+                    ]) as $index) {
+                    if (in_array($attribute['key'], $index['attributes'])) {
+                        $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
+                        $foundIndex = true;
+                    }
                 }
-            }
-            if ($foundIndex === true) {
-                $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
+                if ($foundIndex === true) {
+                    $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
+                }
             }
         }
 
@@ -323,7 +323,6 @@ class V20 extends Migration
      */
     protected function createInfMetric(string $metric, int $value): void
     {
-
         try {
             /**
              * Creating inf metric
@@ -351,7 +350,6 @@ class V20 extends Migration
      */
     protected function migrateUsageMetrics(string $from, string $to): void
     {
-
         /**
          * inf metric
          */
@@ -411,7 +409,6 @@ class V20 extends Migration
      */
     private function migrateFunctions(): void
     {
-
         $this->migrateUsageMetrics('deployment.$all.storage.size', 'deployments.storage');
         $this->migrateUsageMetrics('builds.$all.compute.total', 'builds');
         $this->migrateUsageMetrics('builds.$all.compute.time', 'builds.compute');
