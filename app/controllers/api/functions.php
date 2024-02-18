@@ -1477,15 +1477,16 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
 App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Cancel build')
+    ->desc('Update build status to cancelled')
     ->label('scope', 'functions.write')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'functions')
     ->label('sdk.method', 'cancelBuild')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BUILD)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
     ->param('buildId', '', new UID(), 'Build unique ID.')
@@ -1521,7 +1522,7 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
             ->setParam('functionId', $function->getId())
             ->setParam('deploymentId', $deployment->getId());
 
-        $response->noContent();
+        $response->dynamic($build, Response::MODEL_BUILD);
     });
 
 App::post('/v1/functions/:functionId/executions')
