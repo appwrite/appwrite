@@ -21,6 +21,20 @@ use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
+$checkStorageHealth = function (Device $device) {
+    if (!$device->write($device->getPath('health.txt'), 'test', '')) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
+    }
+
+    if ($device->read($device->getPath('health.txt')) !== 'test') {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+    }
+
+    if (!$device->delete($device->getPath('health.txt'))) {
+        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+    }
+};
+
 App::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
@@ -715,20 +729,18 @@ App::get('/v1/health/storage')
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
     ->inject('deviceFiles')
-    ->action(function (Response $response, Device $deviceFiles) {
-
+    ->inject('deviceFunctions')
+    ->inject('deviceBuilds')
+    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) use ($checkStorageHealth) {
+        $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
         $checkStart = \microtime(true);
 
-        if (!$deviceFiles->write($deviceFiles->getPath('health.txt'), 'test', '')) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file');
-        }
-
-        if ($deviceFiles->read($deviceFiles->getPath('health.txt')) !== 'test') {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file');
-        }
-
-        if (!$deviceFiles->delete($deviceFiles->getPath('health.txt'))) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file');
+        try {
+            foreach ($devices as $device) {
+                $checkStorageHealth($device);
+            }
+        } catch (Exception $e) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
         }
 
         $output = [
