@@ -1475,6 +1475,55 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $response->noContent();
     });
 
+App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
+    ->groups(['api', 'functions'])
+    ->desc('Cancel build')
+    ->label('scope', 'functions.write')
+    ->label('audits.event', 'deployment.update')
+    ->label('audits.resource', 'function/{request.functionId}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'functions')
+    ->label('sdk.method', 'cancelBuild')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('functionId', '', new UID(), 'Function ID.')
+    ->param('deploymentId', '', new UID(), 'Deployment ID.')
+    ->param('buildId', '', new UID(), 'Build unique ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('queueForEvents')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents) {
+        $function = $dbForProject->getDocument('functions', $functionId);
+
+        if ($function->isEmpty()) {
+            throw new Exception(Exception::FUNCTION_NOT_FOUND);
+        }
+
+        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
+
+        if ($deployment->isEmpty()) {
+            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
+        }
+
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+
+        if ($build->isEmpty()) {
+            throw new Exception(Exception::BUILD_NOT_FOUND);
+        }
+
+        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
+
+        $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
+
+        $queueForEvents
+            ->setParam('functionId', $function->getId())
+            ->setParam('deploymentId', $deployment->getId());
+
+        $response->noContent();
+    });
+
 App::post('/v1/functions/:functionId/executions')
     ->groups(['api', 'functions'])
     ->desc('Create execution')

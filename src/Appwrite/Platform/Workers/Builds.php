@@ -390,6 +390,9 @@ class Builds extends Action
             $response = null;
             $err = null;
 
+            if ($build->getAttribute('status') === 'cancelled')
+                return;
+
             Co::join([
                 Co\go(function () use ($executor, &$response, $project, $deployment, $source, $function, $runtime, $vars, $command, &$err) {
                     try {
@@ -456,6 +459,8 @@ class Builds extends Action
                 ]);
 
             if ($err) {
+                if ($build->getAttribute('status') === 'cancelled')
+                    return;
                 throw $err;
             }
 
