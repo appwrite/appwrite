@@ -1513,10 +1513,10 @@ App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
             throw new Exception(Exception::BUILD_NOT_FOUND);
         }
 
+        $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
+
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
         $deleteBuild = $executor->deleteRuntime($project->getId(), $deploymentId . "-build");
-
-        $build = $dbForProject->updateDocument('builds', $build->getId(), $build->setAttribute('status', 'cancelled'));
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
