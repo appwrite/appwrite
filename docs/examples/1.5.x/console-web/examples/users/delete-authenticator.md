@@ -1,4 +1,4 @@
-import { Client, , Users } from "@appwrite.io/console";
+import { Client, AuthenticatorType, Users } from "@appwrite.io/console";
 
 const client = new Client();
 
@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = users.deleteAuthenticator('[USER_ID]', .Totp, '[OTP]');
+const promise = users.deleteAuthenticator('[USER_ID]', AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response); // Success

@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = account.addAuthenticator(AuthenticatorFactor.Totp);
+let promise = account.addAuthenticator(AuthenticatorType.Totp);
 
 promise.then(function (response) {
     console.log(response);

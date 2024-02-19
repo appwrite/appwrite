@@ -7,5 +7,5 @@ let client = Client()
 
 let account = Account(client)
 
-let mfaProviders = try await account.listFactors()
+let mfaFactors = try await account.listFactors()
 

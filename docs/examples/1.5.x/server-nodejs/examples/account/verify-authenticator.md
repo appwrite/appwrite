@@ -11,7 +11,7 @@ client
     .setSession('') // The user session to authenticate with
 ;
 
-const promise = account.verifyAuthenticator(sdk.AuthenticatorFactor.Totp, '[OTP]');
+const promise = account.verifyAuthenticator(sdk.AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response);

@@ -1,7 +1,7 @@
 import io.appwrite.Client
 import io.appwrite.coroutines.CoroutineCallback
 import io.appwrite.services.Account
-import io.appwrite.enums.AuthenticatorFactor
+import io.appwrite.enums.AuthenticatorType
 
 val client = Client(context)
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -10,5 +10,5 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.addAuthenticator(
-    factor = AuthenticatorFactor.TOTP,
+    type = AuthenticatorType.TOTP,
 )

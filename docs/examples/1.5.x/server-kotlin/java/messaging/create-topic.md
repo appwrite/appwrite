@@ -11,7 +11,7 @@ Messaging messaging = new Messaging(client);
 
 messaging.createTopic(
     "[TOPIC_ID]",
-    "[NAME]"
+    "[NAME]",
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

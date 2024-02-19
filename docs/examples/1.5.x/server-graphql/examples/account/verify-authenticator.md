@@ -1,6 +1,6 @@
 mutation {
     accountVerifyAuthenticator(
-        factor: "totp",
+        type: "totp",
         otp: "[OTP]"
     ) {
         _id

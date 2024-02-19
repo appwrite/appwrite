@@ -1,6 +1,6 @@
 mutation {
     accountAddAuthenticator(
-        factor: "totp"
+        type: "totp"
     ) {
         backups
         secret

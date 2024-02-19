@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Users;
-use Appwrite\Enums\AuthenticatorProvider;
+use Appwrite\Enums\AuthenticatorType;
 
 $client = new Client();
 
@@ -14,4 +14,4 @@ $client
 
 $users = new Users($client);
 
-$result = $users->deleteAuthenticator('[USER_ID]', AuthenticatorProvider::TOTP(), '[OTP]');
+$result = $users->deleteAuthenticator('[USER_ID]', AuthenticatorType::TOTP(), '[OTP]');

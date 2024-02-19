@@ -10,6 +10,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.delete_authenticator(provider: AuthenticatorProvider::TOTP, otp: '[OTP]')
+response = account.delete_authenticator(type: AuthenticatorType::TOTP, otp: '[OTP]')
 
 puts response.inspect

@@ -1,4 +1,4 @@
 appwrite users deleteAuthenticator \
         --userId [USER_ID] \
-        --provider totp \
+        --type totp \
         --otp [OTP]

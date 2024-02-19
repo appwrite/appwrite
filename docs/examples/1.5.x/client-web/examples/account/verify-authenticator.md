@@ -1,4 +1,4 @@
-import { Client, AuthenticatorFactor, Account } from "appwrite";
+import { Client, AuthenticatorType, Account } from "appwrite";
 
 const client = new Client();
 
@@ -9,7 +9,7 @@ client
     .setProject('5df5acd0d48c2') // Your project ID
 ;
 
-const promise = account.verifyAuthenticator(AuthenticatorFactor.Totp, '[OTP]');
+const promise = account.verifyAuthenticator(AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response); // Success

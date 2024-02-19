@@ -1,2 +1,2 @@
 appwrite account addAuthenticator \
-        --factor totp
+        --type totp

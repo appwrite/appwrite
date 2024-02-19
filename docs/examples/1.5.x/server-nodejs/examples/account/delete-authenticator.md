@@ -11,7 +11,7 @@ client
     .setSession('') // The user session to authenticate with
 ;
 
-const promise = account.deleteAuthenticator(sdk.AuthenticatorProvider.Totp, '[OTP]');
+const promise = account.deleteAuthenticator(sdk.AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response);

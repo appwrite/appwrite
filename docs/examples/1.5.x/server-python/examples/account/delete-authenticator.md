@@ -1,5 +1,5 @@
 from appwrite.client import Client
-from Appwrite.enums import AuthenticatorProvider
+from Appwrite.enums import AuthenticatorType
 
 client = Client()
 
@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.delete_authenticator(AuthenticatorProvider.TOTP, '[OTP]')
+result = account.delete_authenticator(AuthenticatorType.TOTP, '[OTP]')

@@ -1,6 +1,6 @@
 mutation {
     accountDeleteAuthenticator(
-        provider: "totp",
+        type: "totp",
         otp: "[OTP]"
     ) {
         _id

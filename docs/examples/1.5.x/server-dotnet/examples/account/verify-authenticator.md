@@ -12,5 +12,5 @@ var client = new Client()
 var account = new Account(client);
 
 User result = await account.VerifyAuthenticator(
-    factor: AuthenticatorFactor.Totp,
+    type: AuthenticatorType.Totp,
     otp: "[OTP]");

@@ -12,5 +12,5 @@ var client = new Client()
 var account = new Account(client);
 
 await account.DeleteAuthenticator(
-    provider: AuthenticatorProvider.Totp,
+    type: AuthenticatorType.Totp,
     otp: "[OTP]");

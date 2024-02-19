@@ -11,5 +11,5 @@ val messaging = Messaging(client)
 
 val response = messaging.createTopic(
     topicId = "[TOPIC_ID]",
-    name = "[NAME]"
+    name = "[NAME]",
 )

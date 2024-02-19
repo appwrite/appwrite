@@ -10,5 +10,5 @@ var client = new Client()
 
 var account = new Account(client);
 
-MfaProvider result = await account.AddAuthenticator(
-    factor: AuthenticatorFactor.Totp);
+MfaType result = await account.AddAuthenticator(
+    type: AuthenticatorType.Totp);

@@ -1,3 +1,3 @@
 appwrite account deleteAuthenticator \
-        --provider totp \
+        --type totp \
         --otp [OTP]

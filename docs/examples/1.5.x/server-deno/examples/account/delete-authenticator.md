@@ -12,7 +12,7 @@ client
 ;
 
 
-let promise = account.deleteAuthenticator(AuthenticatorProvider.Totp, '[OTP]');
+let promise = account.deleteAuthenticator(AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response);

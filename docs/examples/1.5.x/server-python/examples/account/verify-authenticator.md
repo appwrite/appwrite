@@ -1,5 +1,5 @@
 from appwrite.client import Client
-from Appwrite.enums import AuthenticatorFactor
+from Appwrite.enums import AuthenticatorType
 
 client = Client()
 
@@ -11,4 +11,4 @@ client = Client()
 
 account = Account(client)
 
-result = account.verify_authenticator(AuthenticatorFactor.TOTP, '[OTP]')
+result = account.verify_authenticator(AuthenticatorType.TOTP, '[OTP]')

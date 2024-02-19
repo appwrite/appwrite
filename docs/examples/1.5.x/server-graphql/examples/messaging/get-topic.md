@@ -6,6 +6,9 @@ query {
         _createdAt
         _updatedAt
         name
-        total
+        emailTotal
+        smsTotal
+        pushTotal
+        subscribe
     }
 }

@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Account;
-use Appwrite\Enums\AuthenticatorFactor;
+use Appwrite\Enums\AuthenticatorType;
 
 $client = new Client();
 
@@ -14,4 +14,4 @@ $client
 
 $account = new Account($client);
 
-$result = $account->addAuthenticator(AuthenticatorFactor::TOTP());
+$result = $account->addAuthenticator(AuthenticatorType::TOTP());

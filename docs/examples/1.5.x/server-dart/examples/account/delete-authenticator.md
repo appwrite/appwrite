@@ -11,7 +11,7 @@ void main() { // Init SDK
   ;
 
   Future result = account.deleteAuthenticator(
-    provider: AuthenticatorProvider.totp,
+    type: AuthenticatorType.totp,
     otp:'[OTP]' ,
   );
 

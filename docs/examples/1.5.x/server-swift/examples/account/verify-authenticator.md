@@ -9,7 +9,7 @@ let client = Client()
 let account = Account(client)
 
 let user = try await account.verifyAuthenticator(
-    factor: .totp,
+    type: .totp,
     otp: "[OTP]"
 )
 

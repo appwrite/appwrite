@@ -10,6 +10,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.verify_authenticator(factor: AuthenticatorFactor::TOTP, otp: '[OTP]')
+response = account.verify_authenticator(type: AuthenticatorType::TOTP, otp: '[OTP]')
 
 puts response.inspect

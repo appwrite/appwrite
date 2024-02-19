@@ -1,3 +1,3 @@
 appwrite account verifyAuthenticator \
-        --factor totp \
+        --type totp \
         --otp [OTP]

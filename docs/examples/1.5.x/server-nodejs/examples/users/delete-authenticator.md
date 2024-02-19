@@ -11,7 +11,7 @@ client
     .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
 ;
 
-const promise = users.deleteAuthenticator('[USER_ID]', sdk.AuthenticatorProvider.Totp, '[OTP]');
+const promise = users.deleteAuthenticator('[USER_ID]', sdk.AuthenticatorType.Totp, '[OTP]');
 
 promise.then(function (response) {
     console.log(response);

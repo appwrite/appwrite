@@ -8,7 +8,7 @@ let client = Client()
 let account = Account(client)
 
 let user = try await account.deleteAuthenticator(
-    provider: .totp,
+    type: .totp,
     otp: "[OTP]"
 )
 

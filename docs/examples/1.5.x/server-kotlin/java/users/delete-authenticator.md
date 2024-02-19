@@ -1,7 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Users;
-import io.appwrite.enums.AuthenticatorProvider;
+import io.appwrite.enums.AuthenticatorType;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -12,7 +12,7 @@ Users users = new Users(client);
 
 users.deleteAuthenticator(
     "[USER_ID]",
-    AuthenticatorProvider.TOTP,
+    AuthenticatorType.TOTP,
     "[OTP]"
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

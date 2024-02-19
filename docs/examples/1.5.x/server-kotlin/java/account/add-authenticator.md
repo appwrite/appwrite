@@ -1,7 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Account;
-import io.appwrite.enums.AuthenticatorFactor;
+import io.appwrite.enums.AuthenticatorType;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -11,7 +11,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.addAuthenticator(
-    AuthenticatorFactor.TOTP
+    AuthenticatorType.TOTP
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
