@@ -44,6 +44,7 @@ services:
       - appwrite
 
   appwrite:
+    container_name: appwrite
     <<: *x-logging
     image: appwrite-dev
     build:
@@ -52,6 +53,8 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
+    ports:
+      - 9501:80
     networks:
       - appwrite
     labels:
