@@ -56,7 +56,10 @@ App::get('/v1/health/version')
     ->action(function (mixed $http, Response $response) {
         $stats = $http->stats();
 
-        if (($stats['idle_worker_num'] ?? 0) <= 1) {
+        $idleWorkers = $stats['idle_worker_num'] ?? 0;
+        $minIdleWorkers = \intval(App::getEnv('_APP_HEALTHCHECK_MIN_IDLE_WORKERS', '2'));
+
+        if ($idleWorkers < $minIdleWorkers) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Can not process more requests at the moment.');
         }
 
