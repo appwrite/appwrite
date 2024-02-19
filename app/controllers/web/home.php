@@ -10,7 +10,6 @@ App::get('/versions')
     ->label('scope', 'public')
     ->inject('response')
     ->action(function (Response $response) {
-        \sleep(60);
         $platforms = Config::getParam('platforms');
 
         $versions = [
