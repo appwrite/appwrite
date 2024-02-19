@@ -337,6 +337,37 @@ class Messaging extends Action
         $message->setAttribute('deliveredAt', DateTime::now());
 
         $dbForProject->updateDocument('messages', $message->getId(), $message);
+
+        // Delete any attachments that were downloaded to the local cache
+        if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+            if ($deviceFiles->getType() === Storage::DEVICE_LOCAL) {
+                return;
+            }
+
+            $data = $message->getAttribute('data');
+            $attachments = $data['attachments'] ?? [];
+
+            foreach ($attachments as $attachment) {
+                $bucketId = $attachment['bucketId'];
+                $fileId = $attachment['fileId'];
+
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+                if ($bucket->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
+
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
+                $path = $file->getAttribute('path', '');
+
+                if ($localCache->exists($path)) {
+                    $localCache->delete($path);
+                }
+            }
+        }
     }
 
     private function processInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
