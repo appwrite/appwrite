@@ -479,7 +479,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         // Check if file size is exceeding allowed limit
         $fileSizeValidator = new FileSize($maximumFileSize);
         if (!$fileSizeValidator->isValid($fileSize)) {
-            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, 'File size not allowed');
+            throw new Exception(Exception::STORAGE_INVALID_FILE_SIZE, "File size ($fileSize bytes) exceeds the maximum ($maximumFileSize bytes)");
         }
 
         $upload = new Upload();
