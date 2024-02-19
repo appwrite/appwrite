@@ -2856,7 +2856,9 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), $image->getRead())) {
+            $bucket = $dbForProject->getDocument('buckets', $image->getAttribute('bucketId'));
+
+            if (!\in_array(Permission::read(Role::any()), \array_merge($image->getRead(), $bucket->getRead()))) {
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
@@ -2872,7 +2874,7 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            $image = "{$protocol}://{$host}/v1/storage/files/{$image->getId()}/view";
+            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$image->getId()}/view?project={$project->getId()}";
         }
 
         $pushData = [];
