@@ -21,20 +21,6 @@ use Utopia\Validator\Multiple;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
-$checkStorageHealth = function (Device $device) {
-    if (!$device->write($device->getPath('health.txt'), 'test', '')) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
-    }
-
-    if ($device->read($device->getPath('health.txt')) !== 'test') {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
-    }
-
-    if (!$device->delete($device->getPath('health.txt'))) {
-        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
-    }
-};
-
 App::get('/v1/health')
     ->desc('Get HTTP')
     ->groups(['api', 'health'])
@@ -731,16 +717,22 @@ App::get('/v1/health/storage')
     ->inject('deviceFiles')
     ->inject('deviceFunctions')
     ->inject('deviceBuilds')
-    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) use ($checkStorageHealth) {
+    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) {
         $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
         $checkStart = \microtime(true);
 
-        try {
-            foreach ($devices as $device) {
-                $checkStorageHealth($device);
+        foreach ($devices as $device) {
+            if (!$device->write($device->getPath('health.txt'), 'test', '')) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
             }
-        } catch (Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, $e->getMessage());
+
+            if ($device->read($device->getPath('health.txt')) !== 'test') {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+            }
+
+            if (!$device->delete($device->getPath('health.txt'))) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+            }
         }
 
         $output = [
