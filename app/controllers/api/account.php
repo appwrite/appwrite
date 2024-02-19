@@ -2307,7 +2307,6 @@ App::delete('/v1/account/sessions')
     ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
-    ->label('event', 'users.[userId].sessions.delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
     ->label('usage.metric', 'sessions.{scope}.requests.delete')
@@ -2363,12 +2362,6 @@ App::delete('/v1/account/sessions')
         }
 
         $dbForProject->deleteCachedDocument('users', $user->getId());
-
-        $queueForEvents
-            ->reset()
-            ->setEvent('users.[userId].sessions.delete')
-            ->setParam('userId', $user->getId())
-            ->setPayload($response->output($user, Response::MODEL_USER));
 
         $response->noContent();
     });
