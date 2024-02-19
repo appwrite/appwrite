@@ -56,7 +56,7 @@ App::get('/v1/health/version')
     ->action(function (mixed $http, Response $response) {
         $stats = $http->stats();
 
-        if(($stats['idle_worker_num'] ?? 0) <= 1) {
+        if (($stats['idle_worker_num'] ?? 0) <= 1) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Can not process more requests at the moment.');
         }
 
