@@ -44,7 +44,9 @@ services:
       - appwrite
 
   appwrite:
-    container_name: appwrite
+    deploy:
+      mode: replicated
+      replicas: 3
     <<: *x-logging
     image: appwrite-dev
     build:
@@ -53,8 +55,6 @@ services:
         DEBUG: false
         TESTING: true
         VERSION: dev
-    ports:
-      - 9501:80
     networks:
       - appwrite
     labels:
@@ -62,6 +62,9 @@ services:
       - "traefik.constraint-label-stack=appwrite"
       - "traefik.docker.network=appwrite"
       - "traefik.http.services.appwrite_api.loadbalancer.server.port=80"
+      - "traefik.http.services.appwrite_api.loadbalancer.healthcheck.path=/v1/health/version"
+      - "traefik.http.services.appwrite_api.loadbalancer.healthcheck.interval=3s"
+      - "traefik.http.services.appwrite_api.loadbalancer.healthcheck.timeout=2s"
       #http
       - traefik.http.routers.appwrite_api_http.entrypoints=appwrite_web
       - traefik.http.routers.appwrite_api_http.rule=PathPrefix(`/`)
