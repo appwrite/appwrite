@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class MFAProvider extends Model
+class MFAType extends Model
 {
     public function __construct()
     {
@@ -39,7 +39,7 @@ class MFAProvider extends Model
      */
     public function getName(): string
     {
-        return 'MFAProvider';
+        return 'MFAType';
     }
 
     /**
@@ -49,6 +49,6 @@ class MFAProvider extends Model
      */
     public function getType(): string
     {
-        return Response::MODEL_MFA_PROVIDER;
+        return Response::MODEL_MFA_TYPE;
     }
 }

@@ -34,9 +34,21 @@ class Topic extends Model
                 'default' => '',
                 'example' => 'events',
             ])
-            ->addRule('total', [
+            ->addRule('emailTotal', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Total count of subscribers subscribed to topic.',
+                'description' => 'Total count of email subscribers subscribed to the topic.',
+                'default' => 0,
+                'example' => 100,
+            ])
+            ->addRule('smsTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total count of SMS subscribers subscribed to the topic.',
+                'default' => 0,
+                'example' => 100,
+            ])
+            ->addRule('pushTotal', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Total count of push subscribers subscribed to the topic.',
                 'default' => 0,
                 'example' => 100,
             ])

@@ -6,7 +6,6 @@ use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
-use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Event\Usage;
@@ -22,7 +21,9 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use MaxMind\Db\Reader;
+use Utopia\Config\Config;
+use Utopia\Database\Helpers\Role;
+use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -135,13 +136,162 @@ $databaseListener = function (string $event, Document $document, Document $proje
             $queueForUsage
                 ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
                 ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
-                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value)// per function
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value) // per function
                 ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
             break;
         default:
             break;
     }
 };
+
+App::init()
+    ->groups(['api'])
+    ->inject('utopia')
+    ->inject('request')
+    ->inject('dbForConsole')
+    ->inject('project')
+    ->inject('user')
+    ->inject('session')
+    ->inject('servers')
+    ->inject('mode')
+    ->action(function (App $utopia, Request $request, Database $dbForConsole, Document $project, Document $user, ?Document $session, array $servers, string $mode) {
+        $route = $utopia->getRoute();
+
+        if ($project->isEmpty()) {
+            throw new Exception(Exception::PROJECT_NOT_FOUND);
+        }
+
+        /**
+         * ACL Check
+         */
+        $role = ($user->isEmpty())
+            ? Role::guests()->toString()
+            : Role::users()->toString();
+
+        // Add user roles
+        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
+
+        if ($memberships) {
+            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
+                switch ($memberRole) {
+                    case 'owner':
+                        $role = Auth::USER_ROLE_OWNER;
+                        break;
+                    case 'admin':
+                        $role = Auth::USER_ROLE_ADMIN;
+                        break;
+                    case 'developer':
+                        $role = Auth::USER_ROLE_DEVELOPER;
+                        break;
+                }
+            }
+        }
+
+        $roles = Config::getParam('roles', []);
+        $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
+        $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
+
+        $authKey = $request->getHeader('x-appwrite-key', '');
+
+        if (!empty($authKey)) { // API Key authentication
+            // Check if given key match project API keys
+            $key = $project->find('secret', $authKey, 'keys');
+
+            /*
+                * Try app auth when we have project key and no user
+                *  Mock user to app and grant API key scopes in addition to default app scopes
+                */
+            if ($key && $user->isEmpty()) {
+                $user = new Document([
+                    '$id' => '',
+                    'status' => true,
+                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
+                    'password' => '',
+                    'name' => $project->getAttribute('name', 'Untitled'),
+                ]);
+
+                $role = Auth::USER_ROLE_APPS;
+                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
+
+                $expire = $key->getAttribute('expire');
+                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
+                    throw new Exception(Exception::PROJECT_KEY_EXPIRED);
+                }
+
+                Authorization::setRole(Auth::USER_ROLE_APPS);
+                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
+
+                $accessedAt = $key->getAttribute('accessedAt', '');
+                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
+                    $key->setAttribute('accessedAt', DateTime::now());
+                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                }
+
+                $sdkValidator = new WhiteList($servers, true);
+                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
+                if ($sdkValidator->isValid($sdk)) {
+                    $sdks = $key->getAttribute('sdks', []);
+                    if (!in_array($sdk, $sdks)) {
+                        array_push($sdks, $sdk);
+                        $key->setAttribute('sdks', $sdks);
+
+                        /** Update access time as well */
+                        $key->setAttribute('accessedAt', Datetime::now());
+                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
+                    }
+                }
+            }
+        }
+
+        Authorization::setRole($role);
+
+        foreach (Auth::getRoles($user) as $authRole) {
+            Authorization::setRole($authRole);
+        }
+
+        $service = $route->getLabel('sdk.namespace', '');
+        if (!empty($service)) {
+            if (
+                array_key_exists($service, $project->getAttribute('services', []))
+                && !$project->getAttribute('services', [])[$service]
+                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
+            ) {
+                throw new Exception(Exception::GENERAL_SERVICE_DISABLED);
+            }
+        }
+        if (!\in_array($scope, $scopes)) {
+            if ($project->isEmpty()) { // Check if permission is denied because project is missing
+                throw new Exception(Exception::PROJECT_NOT_FOUND);
+            }
+
+            throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
+        }
+
+        if (false === $user->getAttribute('status')) { // Account is blocked
+            throw new Exception(Exception::USER_BLOCKED);
+        }
+
+        if ($user->getAttribute('reset')) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
+        }
+
+        if ($mode !== APP_MODE_ADMIN) {
+            $mfaEnabled = $user->getAttribute('mfa', false);
+            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
+            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
+            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
+            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
+
+            if (!in_array('mfa', $route->getGroups())) {
+                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
+                    throw new Exception(Exception::USER_MORE_FACTORS_REQUIRED);
+                }
+            }
+        }
+    });
 
 App::init()
     ->groups(['api'])
@@ -161,10 +311,6 @@ App::init()
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
-
-        if ($project->isEmpty() && $route->getLabel('abuse-limit', 0) > 0) { // Abuse limit requires an active project scope
-            throw new Exception(Exception::PROJECT_UNKNOWN);
-        }
 
         /*
         * Abuse Check
@@ -296,7 +442,7 @@ App::init()
                     if ($fileSecurity && !$valid) {
                         $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                     } else {
-                        $file = Authorization::skip(fn() => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
+                        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
                     }
 
                     if ($file->isEmpty()) {
@@ -497,7 +643,7 @@ App::shutdown()
                     'resource' => $resource,
                     'contentType' => $response->getContentType(),
                     'payload' => base64_encode($data['payload']),
-                ]) ;
+                ]);
 
                 $signature = md5($data);
                 $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
@@ -505,10 +651,10 @@ App::shutdown()
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'resource' => $resource,
-                    'accessedAt' => $now,
-                    'signature' => $signature,
+                        '$id' => $key,
+                        'resource' => $resource,
+                        'accessedAt' => $now,
+                        'signature' => $signature,
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);

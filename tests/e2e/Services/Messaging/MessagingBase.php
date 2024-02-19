@@ -355,7 +355,9 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                Query::equal('total', [0])->toString(),
+                Query::equal('emailTotal', [0])->toString(),
+                Query::equal('smsTotal', [0])->toString(),
+                Query::equal('pushTotal', [0])->toString(),
             ],
         ]);
 
@@ -368,7 +370,9 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'queries' => [
-                Query::greaterThan('total', 0)->toString(),
+                Query::greaterThan('emailTotal', 0)->toString(),
+                Query::greaterThan('smsTotal', 0)->toString(),
+                Query::greaterThan('pushTotal', 0)->toString(),
             ],
         ]);
 
@@ -390,7 +394,9 @@ trait MessagingBase
         ]);
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
-        $this->assertEquals(0, $response['body']['total']);
+        $this->assertEquals(0, $response['body']['emailTotal']);
+        $this->assertEquals(0, $response['body']['smsTotal']);
+        $this->assertEquals(0, $response['body']['pushTotal']);
     }
 
     /**
@@ -446,7 +452,9 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals(1, $topic['body']['total']);
+        $this->assertEquals(1, $topic['body']['emailTotal']);
+        $this->assertEquals(0, $topic['body']['smsTotal']);
+        $this->assertEquals(0, $topic['body']['pushTotal']);
 
         $response2 = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['private']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
@@ -695,7 +703,9 @@ trait MessagingBase
 
         $this->assertEquals(200, $topic['headers']['status-code']);
         $this->assertEquals('android-app', $topic['body']['name']);
-        $this->assertEquals(0, $topic['body']['total']);
+        $this->assertEquals(0, $topic['body']['emailTotal']);
+        $this->assertEquals(0, $topic['body']['smsTotal']);
+        $this->assertEquals(0, $topic['body']['pushTotal']);
     }
 
     /**
