@@ -51,8 +51,16 @@ App::get('/v1/health/version')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
+    ->inject('http')
     ->inject('response')
-    ->action(function (Response $response) {
+    ->action(function (mixed $http, Response $response) {
+        $stats = $http->stats();
+        \var_dump(\gethostname() . ': ' . $stats['idle_worker_num'] . '/' . $stats['worker_num']);
+
+        if(($stats['idle_worker_num'] ?? 0) <= 1) {
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Can not process more requests at the moment.');
+        }
+
         $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
     });
 

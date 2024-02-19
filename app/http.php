@@ -327,4 +327,11 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     }
 });
 
+$register->set('http', function () use ($http) {
+    return $http;
+});
+App::setResource('http', function ($register) {
+    return $register->get('http');
+}, ['register']);
+
 $http->start();
