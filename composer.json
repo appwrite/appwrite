@@ -1,4 +1,5 @@
 {
+
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
@@ -52,8 +53,8 @@
         "utopia-php/database": "0.45.*",
         "utopia-php/domains": "0.3.*",
         "utopia-php/dsn": "0.1.*",
-        "utopia-php/framework": "0.31.0",
-        "utopia-php/image": "0.5.*",
+        "utopia-php/framework": "0.31.1",
+        "utopia-php/image": "0.6.*",
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.2.*",
@@ -86,7 +87,7 @@
     ],
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.35.*",
+        "appwrite/sdk-generator": "0.36.*",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.7",
         "swoole/ide-helper": "5.0.2",
