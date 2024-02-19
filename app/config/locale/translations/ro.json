@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "America de Nord",
     "continents.oc": "Oceania",
-    "continents.sa": "America de Sud"
+    "continents.sa": "America de Sud",
+    "emails.magicSession.optionButton": "Faceți clic pe butonul de mai jos pentru a vă autentifica în siguranță în contul dvs. {{project}}. Va expira în 1 oră.",
+    "emails.magicSession.buttonText": "Conectați-vă la {{project}}",
+    "emails.magicSession.clientInfo": "Această autentificare a fost solicitată folosind {{agentClient}} pe {{agentDevice}} {{agentOs}}. Dacă nu ați solicitat autentificarea, puteți ignora în siguranță acest email.",
+    "sms.verification.body": "{{secret}} este codul de verificare pentru {{project}}.",
+    "emails.magicSession.securityPhrase": "Frază de securitate pentru acest e-mail este {{phrase}}. Puteți avea încredere în acest e-mail dacă fraza se potrivește cu fraza afișată în timpul autentificării.",
+    "emails.magicSession.optionUrl": "Dacă nu puteți să vă autentificați folosind butonul de mai sus, vă rugăm să vizitați următorul link:",
+    "emails.otpSession.subject": "Conectare {{project}}",
+    "emails.otpSession.hello": "Bună,",
+    "emails.otpSession.description": "Introduceți următorul cod de verificare atunci când vi se solicită pentru a vă autentifica în siguranță la contul dvs. {{project}}. Acesta va expira în 15 minute.",
+    "emails.otpSession.clientInfo": "Această solicitare de autentificare a fost efectuată folosind {{agentClient}} pe {{agentDevice}} {{agentOs}}. Dacă nu ați cerut autentificarea, puteți ignora în siguranță acest email.",
+    "emails.otpSession.securityPhrase": "Fraza de securitate pentru acest e-mail este {{phrase}}. Puteți avea încredere în acest e-mail dacă fraza se potrivește cu cea afișată în timpul autentificării.",
+    "emails.otpSession.thanks": "Mulțumesc,",
+    "emails.otpSession.signature": "echipa {{project}}"
 }

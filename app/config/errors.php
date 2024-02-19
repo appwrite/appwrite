@@ -5,6 +5,7 @@
  */
 
 use Appwrite\Extend\Exception;
+use Appwrite\Messaging\Status as MessageStatus;
 
 return [
     /** General Errors */
@@ -102,6 +103,21 @@ return [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
+    ],
+    Exception::GENERAL_INVALID_EMAIL => [
+        'name' => Exception::GENERAL_INVALID_EMAIL,
+        'description' => 'Value must be a valid email address.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_INVALID_PHONE => [
+        'name' => Exception::GENERAL_INVALID_PHONE,
+        'description' => 'Value must be a valid phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.',
+        'code' => 400,
+    ],
+    Exception::GENERAL_REGION_ACCESS_DENIED => [
+        'name' => Exception::GENERAL_REGION_ACCESS_DENIED,
+        'description' => 'Your location is not supported due to legal requirements.',
+        'code' => 451,
     ],
 
     /** User Errors */
@@ -226,6 +242,11 @@ return [
         'description' => 'Missing ID from OAuth2 provider.',
         'code' => 400,
     ],
+    Exception::USER_MORE_FACTORS_REQUIRED => [
+        'name' => Exception::USER_MORE_FACTORS_REQUIRED,
+        'description' => 'More factors are required to complete the sign in process.',
+        'code' => 401,
+    ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
         'name' => Exception::USER_OAUTH2_BAD_REQUEST,
         'description' => 'OAuth2 provider rejected the bad request.',
@@ -250,6 +271,16 @@ return [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
         'description' => 'User phone is already verified',
         'code' => 409
+    ],
+    Exception::USER_TARGET_NOT_FOUND => [
+        'name' => Exception::USER_TARGET_NOT_FOUND,
+        'description' => 'The target could not be found.',
+        'code' => 404,
+    ],
+    Exception::USER_TARGET_ALREADY_EXISTS => [
+        'name' => Exception::USER_TARGET_ALREADY_EXISTS,
+        'description' => 'A target with the same ID already exists.',
+        'code' => 409,
     ],
 
     /** Teams */
@@ -616,11 +647,6 @@ return [
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
-    ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
         'description' => 'The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console.',
@@ -680,6 +706,7 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 401,
+        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -767,10 +794,132 @@ return [
     ],
 
     /** Health */
-    Exception::QUEUE_SIZE_EXCEEDED => [
-        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+    Exception::HEALTH_QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::HEALTH_QUEUE_SIZE_EXCEEDED,
         'description' => 'Queue size threshold hit.',
         'code' => 503,
         'publish' => false
+    ],
+
+    Exception::HEALTH_CERTIFICATE_EXPIRED => [
+        'name' => Exception::HEALTH_CERTIFICATE_EXPIRED,
+        'description' => 'The SSL certificate for the specified domain has expired and is no longer valid.',
+        'code' => 404,
+    ],
+
+    Exception::HEALTH_INVALID_HOST => [
+        'name' => Exception::HEALTH_INVALID_HOST,
+        'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
+        'code' => 404,
+    ],
+
+    /** Providers */
+    Exception::PROVIDER_NOT_FOUND => [
+        'name' => Exception::PROVIDER_NOT_FOUND,
+        'description' => 'Provider with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::PROVIDER_ALREADY_EXISTS => [
+        'name' => Exception::PROVIDER_ALREADY_EXISTS,
+        'description' => 'Provider with the requested ID already exists.',
+        'code' => 409,
+    ],
+    Exception::PROVIDER_INCORRECT_TYPE => [
+        'name' => Exception::PROVIDER_INCORRECT_TYPE,
+        'description' => 'Provider with the requested ID is of the incorrect type.',
+        'code' => 400,
+    ],
+    Exception::PROVIDER_MISSING_CREDENTIALS => [
+        'name' => Exception::PROVIDER_MISSING_CREDENTIALS,
+        'description' => 'Provider with the requested ID is missing credentials.',
+        'code' => 400,
+    ],
+
+    /** Topics */
+    Exception::TOPIC_NOT_FOUND => [
+        'name' => Exception::TOPIC_NOT_FOUND,
+        'description' => 'Topic with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::TOPIC_ALREADY_EXISTS => [
+        'name' => Exception::TOPIC_ALREADY_EXISTS,
+        'description' => 'Topic with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Subscribers */
+    Exception::SUBSCRIBER_NOT_FOUND => [
+        'name' => Exception::SUBSCRIBER_NOT_FOUND,
+        'description' => 'Subscriber with the request ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::SUBSCRIBER_ALREADY_EXISTS => [
+        'name' => Exception::SUBSCRIBER_ALREADY_EXISTS,
+        'description' => 'Subscriber with the request ID already exists.',
+        'code' => 409,
+    ],
+
+    /** Messages */
+    Exception::MESSAGE_NOT_FOUND => [
+        'name' => Exception::MESSAGE_NOT_FOUND,
+        'description' => 'Message with the requested ID could not be found.',
+        'code' => 404,
+    ],
+    Exception::MESSAGE_MISSING_TARGET => [
+        'name' => Exception::MESSAGE_MISSING_TARGET,
+        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SENT => [
+        'name' => Exception::MESSAGE_ALREADY_SENT,
+        'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_PROCESSING => [
+        'name' => Exception::MESSAGE_ALREADY_PROCESSING,
+        'description' => 'Message with the requested ID is already being processed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_FAILED => [
+        'name' => Exception::MESSAGE_ALREADY_FAILED,
+        'description' => 'Message with the requested ID has already failed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_SCHEDULED => [
+        'name' => Exception::MESSAGE_ALREADY_SCHEDULED,
+        'description' => 'Message with the requested ID has already been scheduled for delivery.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_EMAIL => [
+        'name' => Exception::MESSAGE_TARGET_NOT_EMAIL,
+        'description' => 'Message with the target ID is not an email target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_SMS => [
+        'name' => Exception::MESSAGE_TARGET_NOT_SMS,
+        'description' => 'Message with the target ID is not an SMS target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_TARGET_NOT_PUSH => [
+        'name' => Exception::MESSAGE_TARGET_NOT_PUSH,
+        'description' => 'Message with the target ID is not a push target.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_MISSING_SCHEDULE => [
+        'name' => Exception::MESSAGE_MISSING_SCHEDULE,
+        'description' => 'Message can not have status ' . MessageStatus::SCHEDULED . ' without a schedule.',
+        'code' => 400,
+    ],
+    Exception::SCHEDULE_NOT_FOUND => [
+        'name' => Exception::SCHEDULE_NOT_FOUND,
+        'description' => 'Schedule with the requested ID could not be found.',
+        'code' => 404,
+    ],
+
+    /** Targets */
+    Exception::TARGET_PROVIDER_INVALID_TYPE => [
+        'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
+        'description' => 'Target has an invalid provider type.',
+        'code' => 400,
     ],
 ];

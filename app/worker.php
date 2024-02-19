@@ -14,8 +14,8 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
+use Appwrite\Event\Usage;
 use Appwrite\Platform\Appwrite;
-use Appwrite\Usage\Stats;
 use Swoole\Runtime;
 use Utopia\App;
 use Utopia\Cache\Adapter\Sharding;
@@ -23,6 +23,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Service;
@@ -73,6 +74,17 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
     return $adapter;
 }, ['cache', 'register', 'message', 'dbForConsole']);
 
+Server::setResource('project', function (Message $message, Database $dbForConsole) {
+    $payload = $message->getPayload() ?? [];
+    $project = new Document($payload['project'] ?? []);
+
+    if ($project->getId() === 'console') {
+        return $project;
+    }
+    return $dbForConsole->getDocument('projects', $project->getId());
+    ;
+}, ['message', 'dbForConsole']);
+
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
@@ -104,6 +116,18 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
     };
 }, ['pools', 'dbForConsole', 'cache']);
 
+Server::setResource('abuseRetention', function () {
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
+});
+
+Server::setResource('auditRetention', function () {
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_AUDIT', 1209600));
+});
+
+Server::setResource('executionRetention', function () {
+    return DateTime::addSeconds(new \DateTime(), -1 * App::getEnv('_APP_MAINTENANCE_RETENTION_EXECUTION', 1209600));
+});
+
 Server::setResource('cache', function (Registry $register) {
     $pools = $register->get('pools');
     $list = Config::getParam('pools-cache', []);
@@ -120,9 +144,9 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 Server::setResource('log', fn() => new Log());
-Server::setResource('usage', function ($register) {
-    return new Stats($register->get('statsd'));
-}, ['register']);
+Server::setResource('queueForUsage', function (Connection $queue) {
+    return new Usage($queue);
+}, ['queue']);
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
@@ -130,7 +154,7 @@ Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
 Server::setResource('queueForMessaging', function (Connection $queue) {
-    return new Phone($queue);
+    return new Messaging($queue);
 }, ['queue']);
 Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
@@ -203,6 +227,12 @@ if (!empty($workerIndex)) {
     $workerName .= '_' . $workerIndex;
 }
 
+if (\str_starts_with($workerName, 'databases')) {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
+} else {
+    $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
+}
+
 try {
     /**
      * Any worker can be configured with the following env vars:
@@ -210,19 +240,13 @@ try {
      * - _APP_WORKER_PER_CORE       The number of worker processes per core (ignored if _APP_WORKERS_NUM is set)
      * - _APP_QUEUE_NAME  The name of the queue to read for database events
      */
-    if ($workerName === 'databases') {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'database_db_main');
-    } else {
-        $queueName = App::getEnv('_APP_QUEUE_NAME', 'v1-' . strtolower($workerName));
-    }
-
     $platform->init(Service::TYPE_WORKER, [
         'workersNum' => App::getEnv('_APP_WORKERS_NUM', 1),
         'connection' => $pools->get('queue')->pop()->getResource(),
         'workerName' => strtolower($workerName) ?? null,
         'queueName' => $queueName
     ]);
-} catch (\Exception $e) {
+} catch (\Throwable $e) {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
@@ -241,20 +265,23 @@ $worker
     ->inject('error')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log) {
+    ->inject('pools')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools) use ($queueName) {
+        $pools->reclaim();
+
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
             throw $error;
         }
 
-        if ($logger && ($error->getCode() >= 500 || $error->getCode() === 0)) {
+        if ($logger) {
             $log->setNamespace("appwrite-worker");
             $log->setServer(\gethostname());
             $log->setVersion($version);
             $log->setType(Log::TYPE_ERROR);
             $log->setMessage($error->getMessage());
-            $log->setAction('appwrite-queue-' . App::getEnv('QUEUE'));
+            $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
             $log->addExtra('file', $error->getFile());
@@ -276,9 +303,12 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-     $worker->workerStart()
-         ->action(function () use ($workerName) {
-             Console::info("Worker $workerName  started");
-         });
+try {
+    $workerStart = $worker->getWorkerStart();
+} catch (\Throwable $error) {
+    $worker->workerStart();
+} finally {
+    Console::info("Worker $workerName  started");
+}
 
-     $worker->start();
+$worker->start();

@@ -6,13 +6,24 @@ use Utopia\App;
 use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use MaxMind\Db\Reader;
 
 App::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
-    ->action(function (App $utopia, Request $request, Document $project) {
+    ->inject('geodb')
+    ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
+        $denylist = App::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
+        if (!empty($denylist && $project->getId() === 'console')) {
+            $countries = explode(',', $denylist);
+            $record = $geodb->get($request->getIP()) ?? [];
+            $country = $record['country']['iso_code'] ?? '';
+            if (in_array($country, $countries)) {
+                throw new Exception(Exception::GENERAL_REGION_ACCESS_DENIED);
+            }
+        }
 
         $route = $utopia->match($request);
 
@@ -32,7 +43,7 @@ App::init()
                 break;
 
             case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
+                if (($auths['usersAuthMagicURL'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
@@ -40,6 +51,12 @@ App::init()
             case 'anonymous':
                 if (($auths['anonymous'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
+                }
+                break;
+
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
                 }
                 break;
 
@@ -55,8 +72,13 @@ App::init()
                 }
                 break;
 
+            case 'email-otp':
+                if (($auths['emailOTP'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Email OTP authentication is disabled for this project');
+                }
+                break;
+
             default:
                 throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
-                break;
         }
     });

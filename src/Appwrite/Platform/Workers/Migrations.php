@@ -17,6 +17,7 @@ use Appwrite\Role;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
+use Utopia\Logger\Log;
 use Utopia\Migration\Destinations\Appwrite as DestinationsAppwrite;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Source;
@@ -46,17 +47,19 @@ class Migrations extends Action
             ->inject('message')
             ->inject('dbForProject')
             ->inject('dbForConsole')
-            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole) => $this->action($message, $dbForProject, $dbForConsole));
+            ->inject('log')
+            ->callback(fn(Message $message, Database $dbForProject, Database $dbForConsole, Log $log) => $this->action($message, $dbForProject, $dbForConsole, $log));
     }
 
     /**
      * @param Message $message
      * @param Database $dbForProject
      * @param Database $dbForConsole
+     * @param Log $log
      * @return void
      * @throws Exception
      */
-    public function action(Message $message, Database $dbForProject, Database $dbForConsole): void
+    public function action(Message $message, Database $dbForProject, Database $dbForConsole, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -82,7 +85,9 @@ class Migrations extends Action
             return;
         }
 
-        $this->processMigration($project, $migration);
+        $log->addTag('projectId', $project->getId());
+
+        $this->processMigration($project, $migration, $log);
     }
 
     /**
@@ -220,7 +225,7 @@ class Migrations extends Action
         ]);
 
         $this->dbForConsole->createDocument('keys', $key);
-        $this->dbForConsole->deleteCachedDocument('projects', $project->getId());
+        $this->dbForConsole->purgeCachedDocument('projects', $project->getId());
 
         return $key;
     }
@@ -228,6 +233,7 @@ class Migrations extends Action
     /**
      * @param Document $project
      * @param Document $migration
+     * @param Log $log
      * @return void
      * @throws Authorization
      * @throws Conflict
@@ -235,7 +241,7 @@ class Migrations extends Action
      * @throws Structure
      * @throws \Utopia\Database\Exception
      */
-    protected function processMigration(Document $project, Document $migration): void
+    protected function processMigration(Document $project, Document $migration, Log $log): void
     {
         /**
          * @var Document $migrationDocument
@@ -251,6 +257,8 @@ class Migrations extends Action
             $migrationDocument->setAttribute('stage', 'processing');
             $migrationDocument->setAttribute('status', 'processing');
             $this->updateMigrationDocument($migrationDocument, $projectDocument);
+
+            $log->addTag('type', $migrationDocument->getAttribute('source'));
 
             $source = $this->processSource($migrationDocument->getAttribute('source'), $migrationDocument->getAttribute('credentials'));
 

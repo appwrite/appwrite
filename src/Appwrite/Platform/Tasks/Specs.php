@@ -82,6 +82,12 @@ class Specs extends Action
                     'description' => '',
                     'in' => 'header',
                 ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ]
             ],
             APP_PLATFORM_SERVER => [
                 'Project' => [
@@ -106,6 +112,24 @@ class Specs extends Action
                     'type' => 'apiKey',
                     'name' => 'X-Appwrite-Locale',
                     'description' => '',
+                    'in' => 'header',
+                ],
+                'Session' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Appwrite-Session',
+                    'description' => 'The user session to authenticate with',
+                    'in' => 'header',
+                ],
+                'ForwardedFor' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-For',
+                    'description' => 'The IP address of the client that made the request',
+                    'in' => 'header',
+                ],
+                'ForwardedUserAgent' => [
+                    'type' => 'apiKey',
+                    'name' => 'X-Forwarded-User-Agent',
+                    'description' => 'The user agent string of the client that made the request',
                     'in' => 'header',
                 ],
             ],
@@ -173,6 +197,7 @@ class Specs extends Action
 
                     if (empty($routeSecurity)) {
                         $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                        $sdkPlaforms[] = APP_PLATFORM_SERVER;
                     }
 
                     if (!$route->getLabel('docs', true)) {
@@ -239,7 +264,7 @@ class Specs extends Action
                 $formatInstance
                     ->setParam('name', APP_NAME)
                     ->setParam('description', 'Appwrite backend as a service cuts up to 70% of the time and costs required for building a modern application. We abstract and simplify common development tasks behind a REST APIs, to help you develop your app in a fast and secure way. For full API documentation and tutorials go to [https://appwrite.io/docs](https://appwrite.io/docs)')
-                    ->setParam('endpoint', 'https://HOSTNAME/v1')
+                    ->setParam('endpoint', 'https://cloud.appwrite.io/v1')
                     ->setParam('version', APP_VERSION_STABLE)
                     ->setParam('terms', $endpoint . '/policy/terms')
                     ->setParam('support.email', $email)

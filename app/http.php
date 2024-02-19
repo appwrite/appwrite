@@ -20,6 +20,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
+use Swoole\Coroutine;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
@@ -76,7 +77,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
                 $dbForConsole = $app->getResource('dbForConsole');
                 /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Console::warning("Database not ready. Retrying connection ({$attempts})...");
                 if ($attempts >= $max) {
                     throw new \Exception('Failed to connect to database: ' . $e->getMessage());
@@ -90,7 +91,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
         try {
             Console::success('[Setup] - Creating database: appwrite...');
             $dbForConsole->create();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::success('[Setup] - Skip: metadata table already exists');
         }
 
@@ -147,7 +148,7 @@ $http->on('start', function (Server $http) use ($payloadSize, $register) {
             $dbForConsole->createCollection($key, $attributes, $indexes);
         }
 
-        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDefaultDatabase(), 'bucket_1')) {
+        if ($dbForConsole->getDocument('buckets', 'default')->isEmpty() && !$dbForConsole->exists($dbForConsole->getDatabase(), 'bucket_1')) {
             Console::success('[Setup] - Creating default bucket...');
             $dbForConsole->createDocument('buckets', new Document([
                 '$id' => ID::custom('default'),
@@ -263,10 +264,9 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
                 // All good, user is optional information for logger
             }
 
-            $loggerBreadcrumbs = $app->getResource("loggerBreadcrumbs");
             $route = $app->getRoute();
 
-            $log = new Utopia\Logger\Log();
+            $log = $app->getResource("log");
 
             if (isset($user) && !$user->isEmpty()) {
                 $log->setUser(new User($user->getId()));
@@ -297,10 +297,6 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
             $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-            foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                $log->addBreadcrumb($loggerBreadcrumb);
-            }
 
             $responseCode = $logger->addLog($log);
             Console::info('Log pushed with status code: ' . $responseCode);

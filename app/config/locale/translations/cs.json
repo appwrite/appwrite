@@ -228,5 +228,18 @@
     "continents.eu": "Evropa",
     "continents.na": "Severní Amerika",
     "continents.oc": "Oceánie",
-    "continents.sa": "Jižní Amerika"
+    "continents.sa": "Jižní Amerika",
+    "emails.magicSession.optionButton": "Klikněte na tlačítko níže pro bezpečné přihlášení do vašeho účtu {{project}}. Platnost vyprší za 1 hodinu.",
+    "emails.magicSession.buttonText": "Přihlaste se k {{project}}",
+    "emails.magicSession.clientInfo": "Toto přihlášení bylo požadováno prostřednictvím {{agentClient}} na {{agentDevice}} {{agentOs}}. Pokud jste se nepřihlašovali, můžete tento e-mail bezpečně ignorovat.",
+    "sms.verification.body": "{{secret}} je váš ověřovací kód pro {{project}}.",
+    "emails.magicSession.securityPhrase": "Bezpečnostní fráze pro tento e-mail je {{phrase}}. Tomuto e-mailu můžete důvěřovat, pokud tato fráze odpovídá frázi zobrazené při přihlášení.",
+    "emails.magicSession.optionUrl": "Pokud se nemůžete přihlásit pomocí výše uvedeného tlačítka, prosím navštivte následující odkaz:",
+    "emails.otpSession.subject": "{{project}} Přihlášení",
+    "emails.otpSession.hello": "Ahoj,",
+    "emails.otpSession.description": "Zadejte následující ověřovací kód, když budete vyzváni, abyste se bezpečně přihlásili ke svému účtu {{project}}. Platnost kódu vyprší za 15 minut.",
+    "emails.otpSession.clientInfo": "Tento přihlašovací pokus byl proveden pomocí {{agentClient}} na zařízení {{agentDevice}} {{agentOs}}. Pokud jste se nepřihlašovali, tento e-mail můžete bezpečně ignorovat.",
+    "emails.otpSession.securityPhrase": "Bezpečnostní fráze pro tento e-mail je {{phrase}}. Tomuto e-mailu můžete důvěřovat, pokud se tato fráze shoduje s frází zobrazenou při přihlášení.",
+    "emails.otpSession.thanks": "Děkuji,",
+    "emails.otpSession.signature": "tým {{project}}"
 }

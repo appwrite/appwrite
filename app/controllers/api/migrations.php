@@ -14,6 +14,7 @@ use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
@@ -384,15 +385,21 @@ App::get('/v1/migrations')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
-            return \in_array($query->getMethod(), [Query::TYPE_CURSORAFTER, Query::TYPE_CURSORBEFORE]);
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
         $cursor = reset($cursor);
         if ($cursor) {
@@ -610,7 +617,7 @@ App::get('/v1/migrations/firebase/report/oauth')
 
         try {
             $report = $firebase->report($resources);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
         }
 
@@ -822,7 +829,7 @@ App::get('/v1/migrations/firebase/projects')
             if ($isExpired) {
                 try {
                     $firebase->refreshTokens($refreshToken);
-                } catch (\Exception $e) {
+                } catch (\Throwable $e) {
                     throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
                 }
 
@@ -852,7 +859,7 @@ App::get('/v1/migrations/firebase/projects')
                     'projectId' => $project['projectId'],
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             throw new Exception(Exception::USER_IDENTITY_NOT_FOUND);
         }
 
