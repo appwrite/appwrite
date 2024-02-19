@@ -51,6 +51,18 @@ App::get('/v1/health/version')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_VERSION)
+    ->inject('response')
+    ->action(function (Response $response) {
+        $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
+    });
+
+App::get('/v1/health/workers')
+    ->desc('Get version')
+    ->groups(['api', 'health'])
+    ->label('scope', 'public')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('http')
     ->inject('response')
     ->action(function (mixed $http, Response $response) {
@@ -60,10 +72,16 @@ App::get('/v1/health/version')
         $minIdleWorkers = \intval(App::getEnv('_APP_HEALTHCHECK_MIN_IDLE_WORKERS', '1'));
 
         if ($minIdleWorkers !== 0 && $idleWorkers < $minIdleWorkers) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Can not process more requests at the moment.');
+            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Workers cannot process more requests at the moment.');
         }
 
-        $response->dynamic(new Document([ 'version' => APP_VERSION_STABLE ]), Response::MODEL_HEALTH_VERSION);
+        $output = [
+            'name' => 'workers',
+            'status' => 'pass',
+            'ping' => 0
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
 App::get('/v1/health/db')
