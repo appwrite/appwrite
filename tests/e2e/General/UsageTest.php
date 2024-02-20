@@ -286,10 +286,7 @@ class UsageTest extends Scope
         $res = $this->client->call(
             Client::METHOD_GET,
             '/project/usage',
-            array_merge(
-                $data['headers'],
-                $data['consoleHeaders']
-            ),
+            $data['headers'],
             [
                 'period' => '1d',
                 'startDate' => self::getToday(),
@@ -307,10 +304,7 @@ class UsageTest extends Scope
         $res = $this->client->call(
             Client::METHOD_GET,
             '/storage/usage?range=30d',
-            array_merge(
-                $data['headers'],
-                $data['consoleHeaders']
-            )
+            $data['headers']
         );
 
         $res = $res['body'];
@@ -324,10 +318,7 @@ class UsageTest extends Scope
         $res = $this->client->call(
             Client::METHOD_GET,
             '/storage/' . $bucketId . '/usage?range=30d',
-            array_merge(
-                $data['headers'],
-                $data['consoleHeaders']
-            )
+            $data['headers'],
         );
 
         $res = $res['body'];
