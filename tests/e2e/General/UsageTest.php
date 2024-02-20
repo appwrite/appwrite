@@ -584,7 +584,7 @@ class UsageTest extends Scope
         $this->assertEquals($documentsTotal, $response['body']['documents'][array_key_last($response['body']['documents'])]['value']);
         $this->validateDates($response['body']['documents']);
 
-        return $requestsTotal;
+        return $data;
     }
 
 
