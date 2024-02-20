@@ -285,15 +285,19 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
             });
 
-            $errors = $transfer->getReport(Resource::STATUS_ERROR);
+            $sourceErrors = $source->getErrors();
+            $destinationErrors = $destination->getErrors();
 
-            if (count($errors) > 0) {
+            if (count($sourceErrors) > 0 || count($destinationErrors) > 0) {
                 $migrationDocument->setAttribute('status', 'failed');
                 $migrationDocument->setAttribute('stage', 'finished');
 
                 $errorMessages = [];
-                foreach ($errors as $error) {
-                    $errorMessages[] = "Failed to transfer resource '{$error['id']}:{$error['resource']}' with message '{$error['message']}'";
+                foreach ($sourceErrors as $error) {
+                    $errorMessages[] = "[Source] Failed to transfer resource '{$error->getResourceId()}:{$error->getResourceType()}' with message '{$error->getMessage()}'";
+                }
+                foreach ($destinationErrors as $error) {
+                    $errorMessages[] = "[Destination] Failed to transfer resource '{$error->getResourceId()}:{$error->getResourceType()}' with message '{$error->getMessage()}'";
                 }
 
                 $migrationDocument->setAttribute('errors', $errorMessages);
