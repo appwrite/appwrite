@@ -2663,8 +2663,8 @@ App::post('/v1/messaging/messages/email')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -2772,8 +2772,8 @@ App::post('/v1/messaging/messages/sms')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -2931,8 +2931,8 @@ App::post('/v1/messaging/messages/push')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -3324,8 +3324,8 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3443,8 +3443,8 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3629,8 +3629,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents

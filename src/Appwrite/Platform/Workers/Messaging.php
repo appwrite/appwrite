@@ -50,7 +50,7 @@ class Messaging extends Action
     }
 
     /**
-     * @throws Exception
+     * @throws \Exception
      */
     public function __construct()
     {
@@ -59,9 +59,10 @@ class Messaging extends Action
             ->inject('message')
             ->inject('log')
             ->inject('dbForProject')
-            ->inject('getLocalCache')
+            ->inject('deviceForFiles')
+            ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, callable $getLocalCache, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $getLocalCache, $queueForUsage));
+            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
     }
 
     /**
@@ -71,14 +72,14 @@ class Messaging extends Action
      * @param callable $getLocalCache
      * @param Usage $queueForUsage
      * @return void
-     * @throws Exception
-     * @throws \Utopia\Database\Exception
+     * @throws \Exception
      */
     public function action(
         Message $message,
         Log $log,
         Database $dbForProject,
-        callable $getLocalCache,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
         Usage $queueForUsage
     ): void {
         $payload = $message->getPayload() ?? [];
@@ -87,38 +88,31 @@ class Messaging extends Action
             throw new Exception('Missing payload');
         }
 
+        $type = $payload['type'] ?? '';
         $project = new Document($payload['project'] ?? []);
 
-        if (
-            !\is_null($payload['message'])
-            && !\is_null($payload['recipients'])
-            && $payload['providerType'] === MESSAGE_TYPE_SMS
-        ) {
-            // Message was triggered internally
-            $this->processInternalSMSMessage(
-                new Document($payload['message']),
-                $project,
-                $payload['recipients'],
-                $queueForUsage,
-                $log,
-            );
-        } else {
-            $message = $dbForProject->getDocument('messages', $payload['messageId']);
+        switch ($type) {
+            case MESSAGE_SEND_TYPE_INTERNAL:
+                $message = new Document($payload['message'] ?? []);
+                $recipients = $payload['recipients'] ?? [];
 
-            $this->processMessage(
-                $dbForProject,
-                $message,
-                getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()),
-                $getLocalCache($project->getId())
-            );
+                $this->sendInternalSMSMessage($message, $project, $recipients, $queueForUsage, $log);
+                break;
+            case MESSAGE_SEND_TYPE_EXTERNAL:
+                $message = $dbForProject->getDocument('messages', $payload['messageId']);
+
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
+                break;
+            default:
+                throw new Exception('Unknown message type: ' . $type);
         }
     }
 
-    private function processMessage(
+    private function sendExternalMessage(
         Database $dbForProject,
         Document $message,
-        Device $deviceFiles,
-        Device $localCache,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -223,8 +217,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $localCache, $deviceFiles) {
-            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $localCache, $deviceFiles) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -240,9 +234,9 @@ class Messaging extends Action
                 $identifiers = $identifiers[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
-                    MESSAGE_TYPE_SMS => $this->sms($provider),
-                    MESSAGE_TYPE_PUSH => $this->push($provider),
-                    MESSAGE_TYPE_EMAIL => $this->email($provider),
+                    MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
+                    MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
+                    MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
@@ -250,17 +244,17 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $localCache, $deviceFiles) {
-                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $localCache, $deviceFiles) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
                         $messageData->setAttribute('to', $batch);
 
                         $data = match ($provider->getAttribute('type')) {
-                            MESSAGE_TYPE_SMS => $this->buildSMSMessage($messageData, $provider),
+                            MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceFiles, $localCache),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $deviceForLocalFiles),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -337,7 +331,7 @@ class Messaging extends Action
 
         // Delete any attachments that were downloaded to the local cache
         if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
-            if ($deviceFiles->getType() === Storage::DEVICE_LOCAL) {
+            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 return;
             }
 
@@ -360,14 +354,14 @@ class Messaging extends Action
 
                 $path = $file->getAttribute('path', '');
 
-                if ($localCache->exists($path)) {
-                    $localCache->delete($path);
+                if ($deviceForLocalFiles->exists($path)) {
+                    $deviceForLocalFiles->delete($path);
                 }
             }
         }
     }
 
-    private function processInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
+    private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
     {
         if (empty(App::getEnv('_APP_SMS_PROVIDER')) || empty(App::getEnv('_APP_SMS_FROM'))) {
             throw new \Exception('Skipped SMS processing. Missing "_APP_SMS_PROVIDER" or "_APP_SMS_FROM" environment variables.');
@@ -430,7 +424,7 @@ class Messaging extends Action
             ]
         ]);
 
-        $adapter = $this->sms($provider);
+        $adapter = $this->getSmsAdapter($provider);
 
         $maxBatchSize = $adapter->getMaxMessagesPerRequest();
         $batches = \array_chunk($recipients, $maxBatchSize);
@@ -440,7 +434,7 @@ class Messaging extends Action
             return function () use ($batch, $message, $provider, $adapter, $batchIndex, $project, $queueForUsage) {
                 $message->setAttribute('to', $batch);
 
-                $data = $this->buildSMSMessage($message, $provider);
+                $data = $this->buildSmsMessage($message, $provider);
 
                 try {
                     $adapter->send($data);
@@ -456,11 +450,7 @@ class Messaging extends Action
         }, $batches));
     }
 
-    public function shutdown(): void
-    {
-    }
-
-    private function sms(Document $provider): ?SMSAdapter
+    private function getSmsAdapter(Document $provider): ?SMSAdapter
     {
         $credentials = $provider->getAttribute('credentials');
 
@@ -475,7 +465,7 @@ class Messaging extends Action
         };
     }
 
-    private function push(Document $provider): ?PushAdapter
+    private function getPushAdapter(Document $provider): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
 
@@ -492,7 +482,7 @@ class Messaging extends Action
         };
     }
 
-    private function email(Document $provider): ?EmailAdapter
+    private function getEmailAdapter(Document $provider): ?EmailAdapter
     {
         $credentials = $provider->getAttribute('credentials', []);
         $options = $provider->getAttribute('options', []);
@@ -522,8 +512,8 @@ class Messaging extends Action
         Database $dbForProject,
         Document $message,
         Document $provider,
-        Device $deviceFiles,
-        Device $localCache,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -574,7 +564,7 @@ class Messaging extends Action
                 $mimes = Config::getParam('storage-mimes');
                 $path = $file->getAttribute('path', '');
 
-                if (!$deviceFiles->exists($path)) {
+                if (!$deviceForFiles->exists($path)) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
                 }
 
@@ -584,8 +574,8 @@ class Messaging extends Action
                     $contentType = $file->getAttribute('mimeType');
                 }
 
-                if ($deviceFiles->getType() !== Storage::DEVICE_LOCAL) {
-                    $deviceFiles->transfer($path, $path, $localCache);
+                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
+                    $deviceForFiles->transfer($path, $path, $deviceForLocalFiles);
                 }
 
                 $attachment = new Attachment(
@@ -616,7 +606,7 @@ class Messaging extends Action
         );
     }
 
-    private function buildSMSMessage(Document $message, Document $provider): SMS
+    private function buildSmsMessage(Document $message, Document $provider): SMS
     {
         $to = $message['to'];
         $content = $message['data']['content'];

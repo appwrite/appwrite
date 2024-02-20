@@ -78,11 +78,16 @@ App::post('/v1/projects')
     ->inject('pools')
     ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
 
-
         $team = $dbForConsole->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
             throw new Exception(Exception::TEAM_NOT_FOUND);
+        }
+
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_PROJECT_REGIONS', '')));
+
+        if (!empty($allowList) && !\in_array($region, $allowList)) {
+            throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
         }
 
         $auth = Config::getParam('auth', []);
