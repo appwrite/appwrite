@@ -202,23 +202,23 @@ Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-Server::setResource('functionsDevice', function (Document $project) {
+Server::setResource('deviceForFunctions', function (Document $project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('filesDevice', function (Document $project) {
+Server::setResource('deviceForFiles', function (Document $project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('buildsDevice', function (Document $project) {
+Server::setResource('deviceForBuilds', function (Document $project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('cacheDevice', function (Document $project) {
+Server::setResource('deviceForCache', function (Document $project) {
     return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('filesLocalDevice', function (Document $project) {
+Server::setResource('deviceForLocalFiles', function (Document $project) {
     return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 

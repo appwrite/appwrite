@@ -1383,19 +1383,19 @@ App::setResource('cache', function (Group $pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-App::setResource('deviceLocal', function () {
+App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceFiles', function ($project) {
+App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceFunctions', function ($project) {
+App::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceBuilds', function ($project) {
+App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 

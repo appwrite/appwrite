@@ -59,10 +59,10 @@ class Messaging extends Action
             ->inject('message')
             ->inject('log')
             ->inject('dbForProject')
-            ->inject('filesDevice')
-            ->inject('filesLocalDevice')
+            ->inject('deviceForFiles')
+            ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $filesDevice, Device $filesLocalDevice, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $filesDevice, $filesLocalDevice, $queueForUsage));
+            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
     }
 
     /**
@@ -78,8 +78,8 @@ class Messaging extends Action
         Message $message,
         Log $log,
         Database $dbForProject,
-        Device $filesDevice,
-        Device $filesLocalDevice,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
         Usage $queueForUsage
     ): void {
         $payload = $message->getPayload() ?? [];
@@ -101,7 +101,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $filesDevice, $filesLocalDevice,);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
                 break;
             default:
                 throw new Exception('Unknown message type: ' . $type);
@@ -111,8 +111,8 @@ class Messaging extends Action
     private function sendExternalMessage(
         Database $dbForProject,
         Document $message,
-        Device $filesDevice,
-        Device $filesLocalDevice,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
     ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
@@ -217,8 +217,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $filesDevice, $filesLocalDevice) {
-            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $filesDevice, $filesLocalDevice) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -244,8 +244,8 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $filesDevice, $filesLocalDevice) {
-                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $filesDevice, $filesLocalDevice) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -254,7 +254,7 @@ class Messaging extends Action
                         $data = match ($provider->getAttribute('type')) {
                             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $filesDevice, $filesLocalDevice),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $deviceForLocalFiles),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -331,7 +331,7 @@ class Messaging extends Action
 
         // Delete any attachments that were downloaded to the local cache
         if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
-            if ($filesDevice->getType() === Storage::DEVICE_LOCAL) {
+            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 return;
             }
 
@@ -354,8 +354,8 @@ class Messaging extends Action
 
                 $path = $file->getAttribute('path', '');
 
-                if ($filesLocalDevice->exists($path)) {
-                    $filesLocalDevice->delete($path);
+                if ($deviceForLocalFiles->exists($path)) {
+                    $deviceForLocalFiles->delete($path);
                 }
             }
         }
@@ -512,8 +512,8 @@ class Messaging extends Action
         Database $dbForProject,
         Document $message,
         Document $provider,
-        Device $filesDevice,
-        Device $filesLocalDevice,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
     ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
@@ -564,7 +564,7 @@ class Messaging extends Action
                 $mimes = Config::getParam('storage-mimes');
                 $path = $file->getAttribute('path', '');
 
-                if (!$filesDevice->exists($path)) {
+                if (!$deviceForFiles->exists($path)) {
                     throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
                 }
 
@@ -574,8 +574,8 @@ class Messaging extends Action
                     $contentType = $file->getAttribute('mimeType');
                 }
 
-                if ($filesDevice->getType() !== Storage::DEVICE_LOCAL) {
-                    $filesDevice->transfer($path, $path, $filesLocalDevice);
+                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
+                    $deviceForFiles->transfer($path, $path, $deviceForLocalFiles);
                 }
 
                 $attachment = new Attachment(
