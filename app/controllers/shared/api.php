@@ -625,7 +625,7 @@ App::shutdown()
         }
 
         if (!empty($queueForMessaging->getType())) {
-            $queueForBuilds->trigger();
+            $queueForMessaging->trigger();
         }
 
         /**
