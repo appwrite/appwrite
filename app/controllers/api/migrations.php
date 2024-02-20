@@ -51,8 +51,9 @@ App::post('/v1/migrations/appwrite')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $endpoint, string $projectId, string $apiKey, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -69,11 +70,10 @@ App::post('/v1/migrations/appwrite')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -104,9 +104,10 @@ App::post('/v1/migrations/firebase/oauth')
     ->inject('dbForConsole')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
     ->inject('request')
-    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $events, Request $request) {
+    ->action(function (array $resources, string $projectId, Response $response, Database $dbForProject, Database $dbForConsole, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations, Request $request) {
         $firebase = new OAuth2Firebase(
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_ID', ''),
             App::getEnv('_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET', ''),
@@ -171,11 +172,10 @@ App::post('/v1/migrations/firebase/oauth')
             'errors' => []
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -205,8 +205,19 @@ App::post('/v1/migrations/firebase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $serviceAccount, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
+        $serviceAccountData = json_decode($serviceAccount, true);
+
+        if (empty($serviceAccountData)) {
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
+        }
+
+        if (!isset($serviceAccountData['project_id']) || !isset($serviceAccountData['client_email']) || !isset($serviceAccountData['private_key'])) {
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
+        }
+
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -221,11 +232,10 @@ App::post('/v1/migrations/firebase')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -260,8 +270,9 @@ App::post('/v1/migrations/supabase')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -281,11 +292,10 @@ App::post('/v1/migrations/supabase')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -321,8 +331,9 @@ App::post('/v1/migrations/nhost')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $events) {
+    ->inject('queueForEvents')
+    ->inject('queueForMigrations')
+    ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Migration $queueForMigrations) {
         $migration = $dbForProject->createDocument('migrations', new Document([
             '$id' => ID::unique(),
             'status' => 'pending',
@@ -343,11 +354,10 @@ App::post('/v1/migrations/nhost')
             'errors' => [],
         ]));
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         // Trigger Transfer
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -449,15 +459,26 @@ App::get('/v1/migrations/appwrite/report')
     ->inject('project')
     ->inject('user')
     ->action(function (array $resources, string $endpoint, string $projectID, string $key, Response $response) {
-        try {
-            $appwrite = new Appwrite($projectID, $endpoint, $key);
+        $appwrite = new Appwrite($projectID, $endpoint, $key);
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($appwrite->report($resources)), Response::MODEL_MIGRATION_REPORT);
+        try {
+            $report = $appwrite->report($resources);
         } catch (\Throwable $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
+            switch ($e->getCode()) {
+                case 401:
+                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
+                case 429:
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
+                case 500:
+                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            }
+
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
         }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
 App::get('/v1/migrations/firebase/report')
@@ -475,15 +496,36 @@ App::get('/v1/migrations/firebase/report')
     ->param('serviceAccount', '', new Text(65536), 'JSON of the Firebase service account credentials')
     ->inject('response')
     ->action(function (array $resources, string $serviceAccount, Response $response) {
-        try {
-            $firebase = new Firebase(json_decode($serviceAccount, true));
+        $serviceAccount = json_decode($serviceAccount, true);
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($firebase->report($resources)), Response::MODEL_MIGRATION_REPORT);
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
+        if (empty($serviceAccount)) {
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
         }
+
+        if (!isset($serviceAccount['project_id']) || !isset($serviceAccount['client_email']) || !isset($serviceAccount['private_key'])) {
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Invalid Service Account JSON');
+        }
+
+        $firebase = new Firebase($serviceAccount);
+
+        try {
+            $report = $firebase->report($resources);
+        } catch (\Throwable $e) {
+            switch ($e->getCode()) {
+                case 401:
+                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
+                case 429:
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
+                case 500:
+                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            }
+
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+        }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
 App::get('/v1/migrations/firebase/report/oauth')
@@ -869,15 +911,26 @@ App::get('/v1/migrations/supabase/report')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (array $resources, string $endpoint, string $apiKey, string $databaseHost, string $username, string $password, int $port, Response $response) {
-        try {
-            $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
+        $supabase = new Supabase($endpoint, $apiKey, $databaseHost, 'postgres', $username, $password, $port);
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($supabase->report($resources)), Response::MODEL_MIGRATION_REPORT);
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
+        try {
+            $report = $supabase->report($resources);
+        } catch (\Throwable $e) {
+            switch ($e->getCode()) {
+                case 401:
+                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
+                case 429:
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
+                case 500:
+                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            }
+
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
         }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
 App::get('/v1/migrations/nhost/report')
@@ -901,15 +954,26 @@ App::get('/v1/migrations/nhost/report')
     ->param('port', 5432, new Integer(true), 'Source\'s Database Port.', true)
     ->inject('response')
     ->action(function (array $resources, string $subdomain, string $region, string $adminSecret, string $database, string $username, string $password, int $port, Response $response) {
-        try {
-            $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
+        $nhost = new NHost($subdomain, $region, $adminSecret, $database, $username, $password, $port);
 
-            $response
-                ->setStatusCode(Response::STATUS_CODE_OK)
-                ->dynamic(new Document($nhost->report($resources)), Response::MODEL_MIGRATION_REPORT);
-        } catch (\Exception $e) {
-            throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Source Error: ' . $e->getMessage());
+        try {
+            $report = $nhost->report($resources);
+        } catch (\Throwable $e) {
+            switch ($e->getCode()) {
+                case 401:
+                    throw new Exception(Exception::GENERAL_UNAUTHORIZED_SCOPE, 'Source Error: ' . $e->getMessage());
+                case 429:
+                    throw new Exception(Exception::GENERAL_RATE_LIMIT_EXCEEDED, 'Source Error: Rate Limit Exceeded, Is your Cloud Provider blocking Appwrite\'s IP?');
+                case 500:
+                    throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
+            }
+
+            throw new Exception(Exception::MIGRATION_PROVIDER_ERROR, 'Source Error: ' . $e->getMessage());
         }
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_OK)
+            ->dynamic(new Document($report), Response::MODEL_MIGRATION_REPORT);
     });
 
 App::patch('/v1/migrations/:migrationId')
@@ -931,8 +995,8 @@ App::patch('/v1/migrations/:migrationId')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Event $eventInstance) {
+    ->inject('queueForMigrations')
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Document $project, Document $user, Migration $queueForMigrations) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -948,8 +1012,7 @@ App::patch('/v1/migrations/:migrationId')
             ->setAttribute('dateUpdated', \time());
 
         // Trigger Migration
-        $event = new Migration();
-        $event
+        $queueForMigrations
             ->setMigration($migration)
             ->setProject($project)
             ->setUser($user)
@@ -974,8 +1037,8 @@ App::delete('/v1/migrations/:migrationId')
     ->param('migrationId', '', new UID(), 'Migration ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('events')
-    ->action(function (string $migrationId, Response $response, Database $dbForProject, Event $events) {
+    ->inject('queueForEvents')
+    ->action(function (string $migrationId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $migration = $dbForProject->getDocument('migrations', $migrationId);
 
         if ($migration->isEmpty()) {
@@ -986,7 +1049,7 @@ App::delete('/v1/migrations/:migrationId')
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove migration from DB');
         }
 
-        $events->setParam('migrationId', $migration->getId());
+        $queueForEvents->setParam('migrationId', $migration->getId());
 
         $response->noContent();
     });

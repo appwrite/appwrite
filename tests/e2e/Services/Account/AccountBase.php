@@ -126,7 +126,7 @@ trait AccountBase
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         // apiKey is only available in custom client test
         $apiKey = $this->getProject()['apiKey'];
@@ -948,6 +948,32 @@ trait AccountBase
     /**
      * @depends testUpdateAccountVerification
      */
+    public function testCreateAccountVerificationForVerifiedEmail($data): array
+    {
+        $email = $data['email'] ?? '';
+        $name = $data['name'] ?? '';
+        $session = $data['session'] ?? '';
+
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/verification', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+        ]), [
+            'url' => 'http://localhost/verification',
+        ]);
+
+        $this->assertEquals(409, $response['headers']['status-code']);
+
+        return $data;
+    }
+
+    /**
+     * @depends testUpdateAccountVerification
+     */
     public function testDeleteAccountSession($data): array
     {
         $email = $data['email'] ?? '';
@@ -967,7 +993,7 @@ trait AccountBase
         ]);
 
         $sessionNewId = $response['body']['$id'];
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1033,7 +1059,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $sessionNew = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $sessionNew = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $this->assertEquals($response['headers']['status-code'], 201);
 
@@ -1115,7 +1141,7 @@ trait AccountBase
             'password' => $password,
         ]);
 
-        $data['session'] = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $data['session'] = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         return $data;
     }
@@ -1391,7 +1417,7 @@ trait AccountBase
         $this->assertNotEmpty($response['body']['userId']);
 
         $sessionId = $response['body']['$id'];
-        $session = $this->client->parseCookie((string)$response['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
 
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'origin' => 'http://localhost',
@@ -1527,5 +1553,47 @@ trait AccountBase
         $data['password'] = 'new-password';
 
         return $data;
+    }
+
+    public function testDeleteAccount(): void
+    {
+         $email = uniqid() . 'user@localhost.test';
+         $password = 'password';
+         $name = 'User Name';
+
+         $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+         ]), [
+             'userId' => ID::unique(),
+             'email' => $email,
+             'password' => $password,
+             'name' => $name,
+         ]);
+
+         $this->assertEquals($response['headers']['status-code'], 201);
+
+         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+         ]), [
+             'email' => $email,
+             'password' => $password,
+         ]);
+
+         $this->assertEquals($response['headers']['status-code'], 201);
+
+         $session = $response['cookies']['a_session_' . $this->getProject()['$id']];
+
+         $response = $this->client->call(Client::METHOD_DELETE, '/account', array_merge([
+             'origin' => 'http://localhost',
+             'content-type' => 'application/json',
+             'x-appwrite-project' => $this->getProject()['$id'],
+             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
+         ]));
+
+         $this->assertEquals($response['headers']['status-code'], 204);
     }
 }

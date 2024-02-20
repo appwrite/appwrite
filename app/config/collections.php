@@ -18,6 +18,85 @@ $auth = Config::getParam('auth', []);
  */
 
 $commonCollections = [
+    'cache' => [
+        '$collection' => Database::METADATA,
+        '$id' => 'cache',
+        'name' => 'Cache',
+        'attributes' => [
+            [
+                '$id' => 'resource',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'resourceType',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => ID::custom('mimeType'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255, // https://tools.ietf.org/html/rfc4288#section-4.2
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+            [
+                '$id' => 'accessedAt',
+                'type' => Database::VAR_DATETIME,
+                'format' => '',
+                'size' => 0,
+                'signed' => false,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => ['datetime'],
+            ],
+            [
+                '$id' => 'signature',
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 255,
+                'signed' => true,
+                'required' => false,
+                'default' => null,
+                'array' => false,
+                'filters' => [],
+            ],
+        ],
+        'indexes' => [
+            [
+                '$id' => '_key_accessedAt',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['accessedAt'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
+                '$id' => '_key_resource',
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['resource'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+        ],
+    ],
+
     'users' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('users'),
@@ -1273,7 +1352,7 @@ $commonCollections = [
     'stats' => [
         '$collection' => ID::custom(Database::METADATA),
         '$id' => ID::custom('stats'),
-        'name' => 'Stats',
+        'name' => 'stats',
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),
@@ -1302,7 +1381,7 @@ $commonCollections = [
                 'type' => Database::VAR_INTEGER,
                 'format' => '',
                 'size' => 8,
-                'signed' => false,
+                'signed' => true,
                 'required' => true,
                 'default' => null,
                 'array' => false,
@@ -1330,17 +1409,6 @@ $commonCollections = [
                 'array' => false,
                 'filters' => [],
             ],
-            [
-                '$id' => ID::custom('type'),
-                'type' => Database::VAR_INTEGER,
-                'format' => '',
-                'size' => 1,
-                'signed' => false,
-                'required' => true,
-                'default' => 0, // 0 -> count, 1 -> sum
-                'array' => false,
-                'filters' => [],
-            ],
         ],
         'indexes' => [
             [
@@ -1359,7 +1427,7 @@ $commonCollections = [
             ],
             [
                 '$id' => ID::custom('_key_metric_period_time'),
-                'type' => Database::INDEX_KEY,
+                'type' => Database::INDEX_UNIQUE,
                 'attributes' => ['metric', 'period', 'time'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
@@ -2879,63 +2947,6 @@ $projectCollections = array_merge([
                 'attributes' => ['duration'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_ASC],
-            ],
-        ],
-    ],
-
-    'cache' => [
-        '$collection' => Database::METADATA,
-        '$id' => 'cache',
-        'name' => 'Cache',
-        'attributes' => [
-            [
-                '$id' => 'resource',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => 'accessedAt',
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
-                '$id' => 'signature',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-        ],
-        'indexes' => [
-            [
-                '$id' => '_key_accessedAt',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['accessedAt'],
-                'lengths' => [],
-                'orders' => [],
-            ],
-            [
-                '$id' => '_key_resource',
-                'type' => Database::INDEX_KEY,
-                'attributes' => ['resource'],
-                'lengths' => [],
-                'orders' => [],
             ],
         ],
     ],

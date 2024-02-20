@@ -8,8 +8,8 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Mail;
 use Appwrite\Extend\Exception;
+use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Usage\Stats;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
 use Utopia\App;
@@ -48,43 +48,95 @@ $parseLabel = function (string $label, array $responsePayload, array $requestPar
     return $label;
 };
 
-$databaseListener = function (string $event, Document $document, Stats $usage) {
-    $multiplier = 1;
+$databaseListener = function (string $event, Document $document, Document $project, Usage $queueForUsage, Database $dbForProject) {
+
+    $value = 1;
     if ($event === Database::EVENT_DOCUMENT_DELETE) {
-        $multiplier = -1;
+        $value = -1;
     }
 
-    $collection = $document->getCollection();
-    switch ($collection) {
-        case 'users':
-            $usage->setParam('users.{scope}.count.total', 1 * $multiplier);
+    switch (true) {
+        case $document->getCollection() === 'teams':
+            $queueForUsage
+                ->addMetric(METRIC_TEAMS, $value); // per project
             break;
-        case 'databases':
-            $usage->setParam('databases.{scope}.count.total', 1 * $multiplier);
+        case $document->getCollection() === 'users':
+            $queueForUsage
+                ->addMetric(METRIC_USERS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
             break;
-        case 'buckets':
-            $usage->setParam('buckets.{scope}.count.total', 1 * $multiplier);
+        case $document->getCollection() === 'sessions': // sessions
+            $queueForUsage
+                ->addMetric(METRIC_SESSIONS, $value); //per project
             break;
-        case 'deployments':
-            $usage->setParam('deployments.{scope}.storage.size', $document->getAttribute('size') * $multiplier);
+        case $document->getCollection() === 'databases': // databases
+            $queueForUsage
+                ->addMetric(METRIC_DATABASES, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'database_') && !str_contains($document->getCollection(), 'collection'): //collections
+            $parts = explode('_', $document->getCollection());
+            $databaseInternalId = $parts[1] ?? 0;
+            $queueForUsage
+                ->addMetric(METRIC_COLLECTIONS, $value) // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_COLLECTIONS), $value) // per database
+            ;
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'database_') && str_contains($document->getCollection(), '_collection_'): //documents
+            $parts = explode('_', $document->getCollection());
+            $databaseInternalId   = $parts[1] ?? 0;
+            $collectionInternalId = $parts[3] ?? 0;
+            $queueForUsage
+                ->addMetric(METRIC_DOCUMENTS, $value)  // per project
+                ->addMetric(str_replace('{databaseInternalId}', $databaseInternalId, METRIC_DATABASE_ID_DOCUMENTS), $value) // per database
+                ->addMetric(str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$databaseInternalId, $collectionInternalId], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS), $value);  // per collection
+            break;
+        case $document->getCollection() === 'buckets': //buckets
+            $queueForUsage
+                ->addMetric(METRIC_BUCKETS, $value); // per project
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case str_starts_with($document->getCollection(), 'bucket_'): // files
+            $parts = explode('_', $document->getCollection());
+            $bucketInternalId  = $parts[1];
+            $queueForUsage
+                ->addMetric(METRIC_FILES, $value) // per project
+                ->addMetric(METRIC_FILES_STORAGE, $document->getAttribute('sizeOriginal') * $value) // per project
+                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES), $value) // per bucket
+                ->addMetric(str_replace('{bucketInternalId}', $bucketInternalId, METRIC_BUCKET_ID_FILES_STORAGE), $document->getAttribute('sizeOriginal') * $value); // per bucket
+            break;
+        case $document->getCollection() === 'functions':
+            $queueForUsage
+                ->addMetric(METRIC_FUNCTIONS, $value); // per project
+
+            if ($event === Database::EVENT_DOCUMENT_DELETE) {
+                $queueForUsage
+                    ->addReduce($document);
+            }
+            break;
+        case $document->getCollection() === 'deployments':
+            $queueForUsage
+                ->addMetric(METRIC_DEPLOYMENTS, $value) // per project
+                ->addMetric(METRIC_DEPLOYMENTS_STORAGE, $document->getAttribute('size') * $value) // per project
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS), $value)// per function
+                ->addMetric(str_replace(['{resourceType}', '{resourceInternalId}'], [$document->getAttribute('resourceType'), $document->getAttribute('resourceInternalId')], METRIC_FUNCTION_ID_DEPLOYMENTS_STORAGE), $document->getAttribute('size') * $value);
             break;
         default:
-            if (strpos($collection, 'bucket_') === 0) {
-                $usage
-                    ->setParam('bucketId', $document->getAttribute('bucketId'))
-                    ->setParam('files.{scope}.storage.size', $document->getAttribute('sizeOriginal') * $multiplier)
-                    ->setParam('files.{scope}.count.total', 1 * $multiplier);
-            } elseif (strpos($collection, 'database_') === 0) {
-                $usage
-                    ->setParam('databaseId', $document->getAttribute('databaseId'));
-                if (strpos($collection, '_collection_') !== false) {
-                    $usage
-                        ->setParam('collectionId', $document->getAttribute('$collectionId'))
-                        ->setParam('documents.{scope}.count.total', 1 * $multiplier);
-                } else {
-                    $usage->setParam('collections.{scope}.count.total', 1 * $multiplier);
-                }
-            }
             break;
     }
 };
@@ -96,15 +148,15 @@ App::init()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->inject('audits')
-    ->inject('deletes')
-    ->inject('database')
+    ->inject('queueForEvents')
+    ->inject('queueForAudits')
+    ->inject('queueForDeletes')
+    ->inject('queueForDatabase')
     ->inject('dbForProject')
     ->inject('mode')
-    ->inject('mails')
-    ->inject('usage')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Delete $deletes, EventDatabase $database, Database $dbForProject, string $mode, Mail $mails, Stats $usage) use ($databaseListener) {
+    ->inject('queueForMails')
+    ->inject('queueForUsage')
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, string $mode, Mail $queueForMails, Usage $queueForUsage) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -121,13 +173,17 @@ App::init()
         $abuseKeyLabel = (!is_array($abuseKeyLabel)) ? [$abuseKeyLabel] : $abuseKeyLabel;
 
         foreach ($abuseKeyLabel as $abuseKey) {
+            $start = $request->getContentRangeStart();
+            $end = $request->getContentRangeEnd();
             $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
             $timeLimit
+                ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
                 ->setParam('{userAgent}', $request->getUserAgent(''))
                 ->setParam('{ip}', $request->getIP())
                 ->setParam('{url}', $request->getHostname() . $route->getPath())
-                ->setParam('{method}', $request->getMethod());
+                ->setParam('{method}', $request->getMethod())
+                ->setParam('{chunkId}', (int) ($start / ($end + 1 - $start)));
             $timeLimitArray[] = $timeLimit;
         }
 
@@ -173,12 +229,12 @@ App::init()
         /*
         * Background Jobs
         */
-        $events
+        $queueForEvents
             ->setEvent($route->getLabel('event', ''))
             ->setProject($project)
             ->setUser($user);
 
-        $audits
+        $queueForAudits
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
             ->setIP($request->getIP())
@@ -186,39 +242,32 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $usage
-            ->setParam('projectInternalId', $project->getInternalId())
-            ->setParam('projectId', $project->getId())
-            ->setParam('project.{scope}.network.requests', 1)
-            ->setParam('httpMethod', $request->getMethod())
-            ->setParam('project.{scope}.network.inbound', 0)
-            ->setParam('project.{scope}.network.outbound', 0);
 
-        $deletes->setProject($project);
-        $database->setProject($project);
+        $queueForDeletes->setProject($project);
+        $queueForDatabase->setProject($project);
 
-        $dbForProject->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
-        $dbForProject->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, Document $document) => $databaseListener($event, $document, $usage));
+        $dbForProject
+            ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+            ->on(Database::EVENT_DOCUMENT_DELETE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
+        ;
 
         $useCache = $route->getLabel('cache', false);
-
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data)) {
-                $data = json_decode($data, true);
-                $parts = explode('/', $data['resourceType']);
+            if (!empty($data) && !$cacheLog->isEmpty()) {
+                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
-
-                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -230,11 +279,12 @@ App::init()
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
+
                     if (!$fileSecurity && !$valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
-                    $parts = explode('/', $data['resource']);
+                    $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
                     if ($fileSecurity && !$valid) {
@@ -251,8 +301,8 @@ App::init()
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
+                    ->setContentType($cacheLog->getAttribute('mimeType'))
+                    ->send($data)
                 ;
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
@@ -285,7 +335,7 @@ App::init()
                 break;
 
             case 'magic-url':
-                if ($project->getAttribute('usersAuthMagicURL', true) === false) {
+                if (($auths['usersAuthMagicURL'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Magic URL authentication is disabled for this project');
                 }
                 break;
@@ -293,6 +343,12 @@ App::init()
             case 'anonymous':
                 if (($auths['anonymous'] ?? true) === false) {
                     throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Anonymous authentication is disabled for this project');
+                }
+                break;
+
+            case 'phone':
+                if (($auths['phone'] ?? true) === false) {
+                    throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Phone authentication is disabled for this project');
                 }
                 break;
 
@@ -309,7 +365,7 @@ App::init()
                 break;
 
             default:
-                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication route');
+                throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Unsupported authentication type: ' . $route->getLabel('auth.type', ''));
                 break;
         }
     });
@@ -360,35 +416,35 @@ App::shutdown()
     ->inject('response')
     ->inject('project')
     ->inject('user')
-    ->inject('events')
-    ->inject('audits')
-    ->inject('usage')
-    ->inject('deletes')
-    ->inject('database')
+    ->inject('queueForEvents')
+    ->inject('queueForAudits')
+    ->inject('queueForUsage')
+    ->inject('queueForDeletes')
+    ->inject('queueForDatabase')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $events, Audit $audits, Stats $usage, Delete $deletes, EventDatabase $database, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
-        if (!empty($events->getEvent())) {
-            if (empty($events->getPayload())) {
-                $events->setPayload($responsePayload);
+        if (!empty($queueForEvents->getEvent())) {
+            if (empty($queueForEvents->getPayload())) {
+                $queueForEvents->setPayload($responsePayload);
             }
 
             /**
              * Trigger functions.
              */
             $queueForFunctions
-                ->from($events)
+                ->from($queueForEvents)
                 ->trigger();
 
             /**
              * Trigger webhooks.
              */
-            $events
+            $queueForEvents
                 ->setClass(Event::WEBHOOK_CLASS_NAME)
                 ->setQueue(Event::WEBHOOK_QUEUE_NAME)
                 ->trigger();
@@ -397,12 +453,12 @@ App::shutdown()
              * Trigger realtime.
              */
             if ($project->getId() !== 'console') {
-                $allEvents = Event::generateEvents($events->getEvent(), $events->getParams());
-                $payload = new Document($events->getPayload());
+                $allEvents = Event::generateEvents($queueForEvents->getEvent(), $queueForEvents->getParams());
+                $payload = new Document($queueForEvents->getPayload());
 
-                $db = $events->getContext('database');
-                $collection = $events->getContext('collection');
-                $bucket = $events->getContext('bucket');
+                $db = $queueForEvents->getContext('database');
+                $collection = $queueForEvents->getContext('collection');
+                $bucket = $queueForEvents->getContext('bucket');
 
                 $target = Realtime::fromPayload(
                     // Pass first, most verbose event pattern
@@ -416,13 +472,13 @@ App::shutdown()
 
                 Realtime::send(
                     projectId: $target['projectId'] ?? $project->getId(),
-                    payload: $events->getPayload(),
+                    payload: $queueForEvents->getPayload(),
                     events: $allEvents,
                     channels: $target['channels'],
                     roles: $target['roles'],
                     options: [
                         'permissionsChanged' => $target['permissionsChanged'],
-                        'userId' => $events->getParam('userId')
+                        'userId' => $queueForEvents->getParam('userId')
                     ]
                 );
             }
@@ -438,36 +494,36 @@ App::shutdown()
         if (!empty($pattern)) {
             $resource = $parseLabel($pattern, $responsePayload, $requestParams, $user);
             if (!empty($resource) && $resource !== $pattern) {
-                $audits->setResource($resource);
+                $queueForAudits->setResource($resource);
             }
         }
 
         if (!$user->isEmpty()) {
-            $audits->setUser($user);
+            $queueForAudits->setUser($user);
         }
 
-        if (!empty($audits->getResource()) && !empty($audits->getUser()->getId())) {
+        if (!empty($queueForAudits->getResource()) && !empty($queueForAudits->getUser()->getId())) {
             /**
              * audits.payload is switched to default true
              * in order to auto audit payload for all endpoints
              */
             $pattern = $route->getLabel('audits.payload', true);
             if (!empty($pattern)) {
-                $audits->setPayload($responsePayload);
+                $queueForAudits->setPayload($responsePayload);
             }
 
-            foreach ($events->getParams() as $key => $value) {
-                $audits->setParam($key, $value);
+            foreach ($queueForEvents->getParams() as $key => $value) {
+                $queueForAudits->setParam($key, $value);
             }
-            $audits->trigger();
+            $queueForAudits->trigger();
         }
 
-        if (!empty($deletes->getType())) {
-            $deletes->trigger();
+        if (!empty($queueForDeletes->getType())) {
+            $queueForDeletes->trigger();
         }
 
-        if (!empty($database->getType())) {
-            $database->trigger();
+        if (!empty($queueForDatabase->getType())) {
+            $queueForDatabase->trigger();
         }
 
         /**
@@ -477,7 +533,6 @@ App::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -489,22 +544,17 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
-                $data = json_encode([
-                    'resourceType' => $resourceType,
-                    'resource' => $resource,
-                    'contentType' => $response->getContentType(),
-                    'payload' => base64_encode($data['payload']),
-                ]) ;
-
-                $signature = md5($data);
-                $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $signature = md5($data['payload']);
+                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
                     '$id' => $key,
                     'resource' => $resource,
+                    'resourceType' => $resourceType,
+                    'mimeType' => $response->getContentType(),
                     'accessedAt' => $now,
                     'signature' => $signature,
                     ])));
@@ -517,40 +567,53 @@ App::shutdown()
                     $cache = new Cache(
                         new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                     );
-                    $cache->save($key, $data);
+                    $cache->save($key, $data['payload']);
                 }
             }
         }
 
-        if (
-            App::getEnv('_APP_USAGE_STATS', 'enabled') == 'enabled'
-            && $project->getId()
-            && !empty($route->getLabel('sdk.namespace', null))
-        ) { // Don't calculate console usage on admin mode
-            $metric = $route->getLabel('usage.metric', '');
-            $usageParams = $route->getLabel('usage.params', []);
 
-            if (!empty($metric)) {
-                $usage->setParam($metric, 1);
-                foreach ($usageParams as $param) {
-                    $param = $parseLabel($param, $responsePayload, $requestParams, $user);
-                    $parts = explode(':', $param);
-                    if (count($parts) != 2) {
-                        throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Usage params not properly set');
-                    }
-                    $usage->setParam($parts[0], $parts[1]);
+
+        if ($project->getId() !== 'console') {
+            if ($mode !== APP_MODE_ADMIN) {
+                $fileSize = 0;
+                $file = $request->getFiles('file');
+                if (!empty($file)) {
+                    $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
+                }
+
+                $queueForUsage
+                    ->addMetric(METRIC_NETWORK_REQUESTS, 1)
+                    ->addMetric(METRIC_NETWORK_INBOUND, $request->getSize() + $fileSize)
+                    ->addMetric(METRIC_NETWORK_OUTBOUND, $response->getSize());
+            }
+
+            $queueForUsage
+                ->setProject($project)
+                ->trigger();
+        }
+
+        /**
+         * Update user last activity
+         */
+        if (!$user->isEmpty()) {
+            $accessedAt = $user->getAttribute('accessedAt', '');
+            if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_USER_ACCCESS)) > $accessedAt) {
+                $user->setAttribute('accessedAt', DateTime::now());
+
+                if (APP_MODE_ADMIN !== $mode) {
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+                } else {
+                    $dbForConsole->updateDocument('users', $user->getId(), $user);
                 }
             }
+        }
+    });
 
-            $fileSize = 0;
-            $file = $request->getFiles('file');
-            if (!empty($file)) {
-                $fileSize = (\is_array($file['size']) && isset($file['size'][0])) ? $file['size'][0] : $file['size'];
-            }
-
-            $usage
-                ->setParam('project.{scope}.network.inbound', $request->getSize() + $fileSize)
-                ->setParam('project.{scope}.network.outbound', $response->getSize())
-                ->submit();
+App::init()
+    ->groups(['usage'])
+    ->action(function () {
+        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+            throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

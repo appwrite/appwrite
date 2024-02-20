@@ -3,8 +3,9 @@
 namespace Appwrite\Event;
 
 use InvalidArgumentException;
-use Resque;
 use Utopia\Database\Document;
+use Utopia\Queue\Client;
+use Utopia\Queue\Connection;
 
 class Event
 {
@@ -26,6 +27,9 @@ class Event
     public const USAGE_QUEUE_NAME = 'v1-usage';
     public const USAGE_CLASS_NAME = 'UsageV1';
 
+    public const USAGE_DUMP_QUEUE_NAME = 'v1-usage-dump';
+    public const USAGE_DUMP_CLASS_NAME = 'UsageDumpV1';
+
     public const WEBHOOK_QUEUE_NAME = 'v1-webhooks';
     public const WEBHOOK_CLASS_NAME = 'WebhooksV1';
 
@@ -41,6 +45,9 @@ class Event
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
     public const MIGRATIONS_CLASS_NAME = 'MigrationsV1';
 
+    public const HAMSTER_QUEUE_NAME = 'v1-hamster';
+    public const HAMSTER_CLASS_NAME = 'HamsterV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
@@ -52,14 +59,11 @@ class Event
     protected bool $paused = false;
 
     /**
-     * @param string $queue
-     * @param string $class
+     * @param Connection $connection
      * @return void
      */
-    public function __construct(string $queue, string $class)
+    public function __construct(protected Connection $connection)
     {
-        $this->queue = $queue;
-        $this->class = $class;
     }
 
     /**
@@ -271,7 +275,9 @@ class Event
             return false;
         }
 
-        return Resque::enqueue($this->queue, $this->class, [
+        $client = new Client($this->queue, $this->connection);
+
+        return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
             'payload' => $this->payload,

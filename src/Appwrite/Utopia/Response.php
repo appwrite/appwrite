@@ -3,7 +3,6 @@
 namespace Appwrite\Utopia;
 
 use Exception;
-use Swoole\Http\Request as SwooleRequest;
 use Utopia\Swoole\Response as SwooleResponse;
 use Swoole\Http\Response as SwooleHTTPResponse;
 use Utopia\Database\Document;
@@ -39,7 +38,6 @@ use Appwrite\Utopia\Response\Model\Continent;
 use Appwrite\Utopia\Response\Model\Country;
 use Appwrite\Utopia\Response\Model\Currency;
 use Appwrite\Utopia\Response\Model\Document as ModelDocument;
-use Appwrite\Utopia\Response\Model\Domain;
 use Appwrite\Utopia\Response\Model\Error;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\Execution;
@@ -60,7 +58,6 @@ use Appwrite\Utopia\Response\Model\Locale;
 use Appwrite\Utopia\Response\Model\Log;
 use Appwrite\Utopia\Response\Model\Membership;
 use Appwrite\Utopia\Response\Model\Metric;
-use Appwrite\Utopia\Response\Model\Permissions;
 use Appwrite\Utopia\Response\Model\Phone;
 use Appwrite\Utopia\Response\Model\Platform;
 use Appwrite\Utopia\Response\Model\Project;
@@ -73,12 +70,14 @@ use Appwrite\Utopia\Response\Model\Token;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\Preferences;
 use Appwrite\Utopia\Response\Model\HealthAntivirus;
+use Appwrite\Utopia\Response\Model\HealthCertificate;
 use Appwrite\Utopia\Response\Model\HealthQueue;
 use Appwrite\Utopia\Response\Model\HealthStatus;
 use Appwrite\Utopia\Response\Model\HealthTime;
 use Appwrite\Utopia\Response\Model\HealthVersion;
 use Appwrite\Utopia\Response\Model\Installation;
 use Appwrite\Utopia\Response\Model\LocaleCode;
+use Appwrite\Utopia\Response\Model\MetricBreakdown;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\ProviderRepository;
 use Appwrite\Utopia\Response\Model\Runtime;
@@ -113,6 +112,7 @@ class Response extends SwooleResponse
     public const MODEL_ERROR = 'error';
     public const MODEL_METRIC = 'metric';
     public const MODEL_METRIC_LIST = 'metricList';
+    public const MODEL_METRIC_BREAKDOWN = 'metricBreakdown';
     public const MODEL_ERROR_DEV = 'errorDev';
     public const MODEL_BASE_LIST = 'baseList';
     public const MODEL_USAGE_DATABASES = 'usageDatabases';
@@ -254,6 +254,7 @@ class Response extends SwooleResponse
     public const MODEL_HEALTH_QUEUE = 'healthQueue';
     public const MODEL_HEALTH_TIME = 'healthTime';
     public const MODEL_HEALTH_ANTIVIRUS = 'healthAntivirus';
+    public const MODEL_HEALTH_CERTIFICATE = 'healthCertificate';
     public const MODEL_HEALTH_STATUS_LIST = 'healthStatusList';
 
     // Console
@@ -391,9 +392,11 @@ class Response extends SwooleResponse
             ->setModel(new HealthAntivirus())
             ->setModel(new HealthQueue())
             ->setModel(new HealthStatus())
+            ->setModel(new HealthCertificate())
             ->setModel(new HealthTime())
             ->setModel(new HealthVersion())
             ->setModel(new Metric())
+            ->setModel(new MetricBreakdown())
             ->setModel(new UsageDatabases())
             ->setModel(new UsageDatabase())
             ->setModel(new UsageCollection())
