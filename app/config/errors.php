@@ -245,7 +245,7 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
-        'code' => 400,
+        'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
         'name' => Exception::USER_OAUTH2_BAD_REQUEST,
@@ -647,11 +647,6 @@ return [
         'description' => 'Project with the requested ID already exists. Try again with a different ID or use ID.unique() to generate a unique ID.',
         'code' => 409,
     ],
-    Exception::PROJECT_UNKNOWN => [
-        'name' => Exception::PROJECT_UNKNOWN,
-        'description' => 'The project ID is either missing or not valid. Please check the value of the X-Appwrite-Project header to ensure the correct project ID is being used.',
-        'code' => 400,
-    ],
     Exception::PROJECT_PROVIDER_DISABLED => [
         'name' => Exception::PROJECT_PROVIDER_DISABLED,
         'description' => 'The chosen OAuth provider is disabled. You can enable the OAuth provider using the Appwrite console.',
@@ -711,6 +706,7 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 401,
+        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -721,6 +717,11 @@ return [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
         'code' => 401,
+    ],
+    Exception::PROJECT_REGION_UNSUPPORTED => [
+        'name' => Exception::PROJECT_REGION_UNSUPPORTED,
+        'description' => 'The requested region is either inactive or unsupported. Please check the value of the _APP_REGIONS environment variable.',
+        'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,
@@ -798,11 +799,23 @@ return [
     ],
 
     /** Health */
-    Exception::QUEUE_SIZE_EXCEEDED => [
-        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+    Exception::HEALTH_QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::HEALTH_QUEUE_SIZE_EXCEEDED,
         'description' => 'Queue size threshold hit.',
         'code' => 503,
         'publish' => false
+    ],
+
+    Exception::HEALTH_CERTIFICATE_EXPIRED => [
+        'name' => Exception::HEALTH_CERTIFICATE_EXPIRED,
+        'description' => 'The SSL certificate for the specified domain has expired and is no longer valid.',
+        'code' => 404,
+    ],
+
+    Exception::HEALTH_INVALID_HOST => [
+        'name' => Exception::HEALTH_INVALID_HOST,
+        'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
+        'code' => 404,
     ],
 
     /** Providers */
@@ -859,12 +872,22 @@ return [
     ],
     Exception::MESSAGE_MISSING_TARGET => [
         'name' => Exception::MESSAGE_MISSING_TARGET,
-        'description' => 'Message with the requested ID is missing a target (Topics or Users or Targets).',
+        'description' => 'Message with the requested ID has no recipients (topics or users or targets).',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SENT => [
         'name' => Exception::MESSAGE_ALREADY_SENT,
         'description' => 'Message with the requested ID has already been sent.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_PROCESSING => [
+        'name' => Exception::MESSAGE_ALREADY_PROCESSING,
+        'description' => 'Message with the requested ID is already being processed.',
+        'code' => 400,
+    ],
+    Exception::MESSAGE_ALREADY_FAILED => [
+        'name' => Exception::MESSAGE_ALREADY_FAILED,
+        'description' => 'Message with the requested ID has already failed.',
         'code' => 400,
     ],
     Exception::MESSAGE_ALREADY_SCHEDULED => [
@@ -896,5 +919,12 @@ return [
         'name' => Exception::SCHEDULE_NOT_FOUND,
         'description' => 'Schedule with the requested ID could not be found.',
         'code' => 404,
+    ],
+
+    /** Targets */
+    Exception::TARGET_PROVIDER_INVALID_TYPE => [
+        'name' => Exception::TARGET_PROVIDER_INVALID_TYPE,
+        'description' => 'Target has an invalid provider type.',
+        'code' => 400,
     ],
 ];

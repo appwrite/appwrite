@@ -286,7 +286,7 @@ class Hamster extends Action
                         $limit = $periodValue['limit'];
                         $period = $periodValue['period'];
 
-                        $requestDocs = $dbForProject->find('stats_v2', [
+                        $requestDocs = $dbForProject->find('stats', [
                             Query::equal('period', [$period]),
                             Query::equal('metric', [$metric]),
                             Query::limit($limit),
@@ -340,7 +340,7 @@ class Hamster extends Action
             if (!$res) {
                 Console::error('Failed to create event for project: ' . $project->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error('Failed to send stats for project: ' . $project->getId());
             Console::error($e->getMessage());
         } finally {
@@ -410,7 +410,7 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create event for organization : ' . $organization->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
     }
@@ -464,7 +464,7 @@ class Hamster extends Action
             if (!$res) {
                 throw new \Exception('Failed to create user profile for user: ' . $user->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::error($e->getMessage());
         }
     }

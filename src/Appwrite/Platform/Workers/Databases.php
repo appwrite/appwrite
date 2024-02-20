@@ -165,7 +165,7 @@ class Databases extends Action
             }
 
             $dbForProject->updateDocument('attributes', $attribute->getId(), $attribute->setAttribute('status', 'available'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
@@ -269,7 +269,7 @@ class Databases extends Action
             if (!$relatedAttribute->isEmpty()) {
                 $dbForProject->deleteDocument('attributes', $relatedAttribute->getId());
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
@@ -397,7 +397,7 @@ class Databases extends Action
                 throw new DatabaseException('Failed to create Index');
             }
             $dbForProject->updateDocument('indexes', $index->getId(), $index->setAttribute('status', 'available'));
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 
@@ -455,7 +455,7 @@ class Databases extends Action
             }
             $dbForProject->deleteDocument('indexes', $index->getId());
             $index->setAttribute('status', 'deleted');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             // TODO: Send non DatabaseExceptions to Sentry
             Console::error($e->getMessage());
 

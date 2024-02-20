@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Assoc;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -120,9 +121,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTemplate($template)
-        ->setProject($project)
-        ->trigger();
+        ->setTemplate($template);
 };
 
 App::post('/v1/functions')
@@ -170,6 +169,12 @@ App::post('/v1/functions')
     ->inject('gitHub')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
+        }
 
         // build from template
         $template = new Document([]);
@@ -366,13 +371,19 @@ App::get('/v1/functions')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -485,7 +496,7 @@ App::get('/v1/functions/:functionId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -493,7 +504,7 @@ App::get('/v1/functions/:functionId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -577,7 +588,7 @@ App::get('/v1/functions/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -585,7 +596,7 @@ App::get('/v1/functions/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -1189,9 +1200,7 @@ App::post('/v1/functions/:functionId/deployments')
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1256,7 +1265,11 @@ App::get('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1266,7 +1279,9 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceId', [$function->getId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1465,9 +1480,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+            ->setDeployment($deployment);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1794,7 +1807,11 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1803,7 +1820,9 @@ App::get('/v1/functions/:functionId/executions')
         // Set internal queries
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });

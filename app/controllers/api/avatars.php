@@ -291,7 +291,7 @@ App::get('/v1/avatars/image')
 
         try {
             $image = new Image($fetch);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Unable to parse image');
         }
 

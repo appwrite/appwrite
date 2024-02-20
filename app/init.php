@@ -35,6 +35,7 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
 use Utopia\App;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
@@ -71,6 +72,7 @@ use Appwrite\Hooks\Hooks;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
+use Utopia\Logger\Log;
 use Utopia\Queue;
 use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
@@ -110,8 +112,8 @@ const APP_LIMIT_LIST_DEFAULT = 25; // Default maximum number of items to return 
 const APP_KEY_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_USER_ACCCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
-const APP_CACHE_BUSTER = 329;
-const APP_VERSION_STABLE = '1.4.13';
+const APP_CACHE_BUSTER = 330;
+const APP_VERSION_STABLE = '1.5.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -140,9 +142,11 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
+
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
@@ -150,9 +154,11 @@ const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
 const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
+
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
+
 // Deletion Types
 const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
@@ -178,6 +184,10 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+
+// Message types
+const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
+const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -201,6 +211,7 @@ const MESSAGE_TYPE_PUSH = 'push';
 // Usage metrics
 const METRIC_TEAMS = 'teams';
 const METRIC_USERS = 'users';
+const METRIC_MESSAGES  = 'messages';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -937,7 +948,7 @@ $register->set('smtp', function () {
     return $mail;
 });
 $register->set('geodb', function () {
-    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2023-01.mmdb');
+    return new Reader(__DIR__ . '/assets/dbip/dbip-country-lite-2024-02.mmdb');
 });
 $register->set('passwordsDictionary', function () {
     $content = \file_get_contents(__DIR__ . '/assets/security/10k-common-passwords');
@@ -986,6 +997,7 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
+App::setResource('log', fn() => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -993,10 +1005,6 @@ App::setResource('logger', function ($register) {
 App::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
-
-App::setResource('loggerBreadcrumbs', function () {
-    return [];
-});
 
 App::setResource('register', fn() => $register);
 App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
@@ -1410,7 +1418,7 @@ function getDevice($root): Device
             $accessSecret = $dsn->getPassword() ?? '';
             $bucket = $dsn->getPath() ?? '';
             $region = $dsn->getParam('region');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Console::warning($e->getMessage() . 'Invalid DSN. Defaulting to Local device.');
         }
 

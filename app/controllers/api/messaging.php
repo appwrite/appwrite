@@ -22,6 +22,7 @@ use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -29,6 +30,7 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
@@ -387,13 +389,13 @@ App::post('/v1/messaging/providers/telesign')
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
     ->param('from', '', new Phone(), 'Sender Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
-    ->param('username', '', new Text(0), 'Telesign username.', true)
-    ->param('password', '', new Text(0), 'Telesign password.', true)
+    ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
+    ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $from, string $username, string $password, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $from, string $customerId, string $apiKey, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $options = [];
@@ -404,18 +406,18 @@ App::post('/v1/messaging/providers/telesign')
 
         $credentials = [];
 
-        if (!empty($username)) {
-            $credentials['username'] = $username;
+        if (!empty($customerId)) {
+            $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($password)) {
-            $credentials['password'] = $password;
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
         }
 
         if (
             $enabled === true
-            && \array_key_exists('username', $credentials)
-            && \array_key_exists('password', $credentials)
+            && \array_key_exists('customerId', $credentials)
+            && \array_key_exists('apiKey', $credentials)
             && \array_key_exists('from', $options)
         ) {
             $enabled = true;
@@ -837,14 +839,22 @@ App::get('/v1/messaging/providers')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -888,7 +898,12 @@ App::get('/v1/messaging/providers/:providerId/logs')
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -1190,6 +1205,7 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->param('password', '', new Text(0), 'Authentication password.', true)
     ->param('encryption', '', new WhiteList(['none', 'ssl', 'tls']), 'Encryption type. Can be \'ssl\' or \'tls\'', true)
     ->param('autoTLS', null, new Boolean(), 'Enable SMTP AutoTLS feature.', true)
+    ->param('mailer', '', new Text(0), 'The value to use for the X-Mailer header.', true)
     ->param('fromName', '', new Text(128), 'Sender Name.', true)
     ->param('fromEmail', '', new Email(), 'Sender email address.', true)
     ->param('replyToName', '', new Text(128), 'Name set in the Reply To field for the mail. Default value is Sender Name.', true)
@@ -1198,16 +1214,14 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $host, ?int $port, string $username, string $password, string $encryption, ?bool $autoTLS, string $mailer, string $fromName, string $fromEmail, string $replyToName, string $replyToEmail, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
             throw new Exception(Exception::PROVIDER_NOT_FOUND);
         }
 
-        $providerAttr = $provider->getAttribute('provider');
-
-        if ($providerAttr !== 'smtp') {
+        if ($provider->getAttribute('provider') !== 'smtp') {
             throw new Exception(Exception::PROVIDER_INCORRECT_TYPE);
         }
 
@@ -1216,6 +1230,18 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
         }
 
         $options = $provider->getAttribute('options');
+
+        if (!empty($encryption)) {
+            $options['encryption'] = $encryption === 'none' ? '' : $encryption;
+        }
+
+        if (!\is_null($autoTLS)) {
+            $options['autoTLS'] = $autoTLS;
+        }
+
+        if (!empty($mailer)) {
+            $options['mailer'] = $mailer;
+        }
 
         if (!empty($fromName)) {
             $options['fromName'] = $fromName;
@@ -1251,14 +1277,6 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
 
         if (!empty($password)) {
             $credentials['password'] = $password;
-        }
-
-        if (!empty($encryption)) {
-            $credentials['encryption'] = $encryption === 'none' ? '' : $encryption;
-        }
-
-        if (!\is_null($autoTLS)) {
-            $credentials['autoTLS'] = $autoTLS;
         }
 
         $provider->setAttribute('credentials', $credentials);
@@ -1386,13 +1404,13 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
-    ->param('username', '', new Text(0), 'Telesign username.', true)
-    ->param('password', '', new Text(0), 'Telesign password.', true)
+    ->param('customerId', '', new Text(0), 'Telesign customer ID.', true)
+    ->param('apiKey', '', new Text(0), 'Telesign API key.', true)
     ->param('from', '', new Text(256), 'Sender number.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $username, string $password, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $customerId, string $apiKey, string $from, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1416,12 +1434,12 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
 
         $credentials = $provider->getAttribute('credentials');
 
-        if (!empty($username)) {
-            $credentials['username'] = $username;
+        if (!empty($customerId)) {
+            $credentials['customerId'] = $customerId;
         }
 
-        if (!empty($password)) {
-            $credentials['password'] = $password;
+        if (!empty($apiKey)) {
+            $credentials['apiKey'] = $apiKey;
         }
 
         $provider->setAttribute('credentials', $credentials);
@@ -1429,8 +1447,8 @@ App::patch('/v1/messaging/providers/telesign/:providerId')
         if (!\is_null($enabled)) {
             if ($enabled) {
                 if (
-                    \array_key_exists('username', $credentials) &&
-                    \array_key_exists('password', $credentials) &&
+                    \array_key_exists('customerId', $credentials) &&
+                    \array_key_exists('apiKey', $credentials) &&
                     \array_key_exists('from', $provider->getAttribute('options'))
                 ) {
                     $provider->setAttribute('enabled', true);
@@ -1903,15 +1921,17 @@ App::post('/v1/messaging/topics')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
         $topic = new Document([
             '$id' => $topicId,
             'name' => $name,
+            'subscribe' => $subscribe,
         ]);
 
         try {
@@ -1944,14 +1964,22 @@ App::get('/v1/messaging/topics')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -1995,7 +2023,12 @@ App::get('/v1/messaging/topics/:topicId/logs')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -2190,6 +2223,12 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
+        $validator = new Authorization('subscribe');
+
+        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        }
+
         $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -2198,32 +2237,42 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
-        $userId = $user->getId();
-
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
+                Permission::read(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
-            'userId' => $userId,
+            'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
             'search' => implode(' ', [
                 $subscriberId,
                 $targetId,
-                $userId,
+                $user->getId(),
                 $target->getAttribute('providerType'),
             ]),
         ]);
 
         try {
             $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+            $totalAttribute = match ($target->getAttribute('providerType')) {
+                MESSAGE_TYPE_EMAIL => 'emailTotal',
+                MESSAGE_TYPE_SMS => 'smsTotal',
+                MESSAGE_TYPE_PUSH => 'pushTotal',
+                default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+            };
+
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+                'topics',
+                $topicId,
+                $totalAttribute,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
@@ -2258,7 +2307,11 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -2270,10 +2323,14 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+        $queries[] = Query::equal('topicInternalId', [$topic->getInternalId()]);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2331,7 +2388,12 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -2462,8 +2524,23 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
+        $target = $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId'));
+
         $dbForProject->deleteDocument('subscribers', $subscriberId);
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+        $totalAttribute = match ($target->getAttribute('providerType')) {
+            MESSAGE_TYPE_EMAIL => 'emailTotal',
+            MESSAGE_TYPE_SMS => 'smsTotal',
+            MESSAGE_TYPE_PUSH => 'pushTotal',
+            default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+        };
+
+        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+            'topics',
+            $topicId,
+            $totalAttribute,
+            min: 0
+        ));
 
         $queueForEvents
             ->setParam('topicId', $topic->getId())
@@ -2558,8 +2635,8 @@ App::post('/v1/messaging/messages/email')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -2667,8 +2744,8 @@ App::post('/v1/messaging/messages/sms')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -2793,8 +2870,8 @@ App::post('/v1/messaging/messages/push')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
@@ -2845,14 +2922,22 @@ App::get('/v1/messaging/messages')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -2896,7 +2981,12 @@ App::get('/v1/messaging/messages/:messageId/logs')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -2971,9 +3061,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
     ->param('queries', [], new Targets(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Targets::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('locale')
-    ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -2990,12 +3078,20 @@ App::get('/v1/messaging/messages/:messageId/targets')
             return;
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $queries[] = Query::equal('$id', $targetIDs);
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
 
         if ($cursor) {
@@ -3077,8 +3173,13 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === MessageStatus::SENT) {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!\is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3136,7 +3237,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3150,7 +3251,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3162,8 +3263,8 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3207,8 +3308,13 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3250,7 +3356,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3264,7 +3370,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3274,10 +3380,10 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3329,8 +3435,13 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
-        if ($message->getAttribute('status') === 'sent') {
-            throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+        switch ($message->getAttribute('status')) {
+            case MessageStatus::PROCESSING:
+                throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
+            case MessageStatus::SENT:
+                throw new Exception(Exception::MESSAGE_ALREADY_SENT);
+            case MessageStatus::FAILED:
+                throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
         if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
@@ -3404,7 +3515,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                     'resourceUpdatedAt' => DateTime::now(),
                     'projectId' => $project->getId(),
                     'schedule'  => $scheduledAt,
-                    'active' => $status === 'processing',
+                    'active' => $status === MessageStatus::SCHEDULED,
                 ]));
 
                 $message->setAttribute('scheduleId', $schedule->getId());
@@ -3418,7 +3529,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule
                     ->setAttribute('resourceUpdatedAt', DateTime::now())
                     ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === 'processing');
+                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
 
                 $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
             }
@@ -3428,10 +3539,10 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        if ($status === 'processing' && \is_null($message->getAttribute('scheduledAt'))) {
+        if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents

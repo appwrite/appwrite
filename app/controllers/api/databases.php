@@ -19,7 +19,6 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -151,7 +150,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
     } catch (LimitException) {
         throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
         $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $collectionId);
         $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $collection->getInternalId());
         throw $e;
@@ -195,7 +194,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
         } catch (LimitException) {
             $dbForProject->deleteDocument('attributes', $attribute->getId());
             throw new Exception(Exception::ATTRIBUTE_LIMIT_EXCEEDED, 'Attribute limit exceeded');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $dbForProject->purgeCachedDocument('database_' . $db->getInternalId(), $relatedCollection->getId());
             $dbForProject->purgeCachedCollection('database_' . $db->getInternalId() . '_collection_' . $relatedCollection->getInternalId());
             throw $e;
@@ -487,13 +486,19 @@ App::get('/v1/databases')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -567,7 +572,12 @@ App::get('/v1/databases/:databaseId/logs')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -809,13 +819,19 @@ App::get('/v1/databases/:databaseId/collections')
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -908,7 +924,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/logs')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -1649,7 +1670,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
+        /** @var Document $database */
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -1662,26 +1683,31 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         \array_push(
             $queries,
-            Query::equal('collectionId', [$collectionId]),
-            Query::equal('databaseId', [$databaseId])
+            Query::equal('collectionInternalId', [$collection->getInternalId()]),
+            Query::equal('databaseInternalId', [$database->getInternalId()])
         );
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
-
         $cursor = \reset($cursor);
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn() => $dbForProject->find('attributes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$attributeId]),
                 Query::limit(1),
             ]));
@@ -2411,6 +2437,7 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
             $attributeStatus = $oldAttributes[$attributeIndex]['status'];
             $attributeType = $oldAttributes[$attributeIndex]['type'];
             $attributeSize = $oldAttributes[$attributeIndex]['size'];
+            $attributeArray = $oldAttributes[$attributeIndex]['array'] ?? false;
 
             if ($attributeType === Database::VAR_RELATIONSHIP) {
                 throw new Exception(Exception::ATTRIBUTE_TYPE_INVALID, 'Cannot create an index for a relationship attribute: ' . $oldAttributes[$attributeIndex]['key']);
@@ -2421,8 +2448,16 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
                 throw new Exception(Exception::ATTRIBUTE_NOT_AVAILABLE, 'Attribute not available: ' . $oldAttributes[$attributeIndex]['key']);
             }
 
-            // set attribute size as index length only for strings
-            $lengths[$i] = ($attributeType === Database::VAR_STRING) ? $attributeSize : null;
+            $lengths[$i] = null;
+
+            if ($attributeType === Database::VAR_STRING) {
+                $lengths[$i] = $attributeSize; // set attribute size as index length only for strings
+            }
+
+            if ($attributeArray === true) {
+                $lengths[$i] = Database::ARRAY_INDEX_LENGTH;
+                $orders[$i] = null;
+            }
         }
 
         $index = new Document([
@@ -2491,7 +2526,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
-
+        /** @var Document $database */
         $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
@@ -2504,10 +2539,17 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         \array_push($queries, Query::equal('collectionId', [$collectionId]), Query::equal('databaseId', [$databaseId]));
 
-         // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
          $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
          });
@@ -2516,8 +2558,8 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
         if ($cursor) {
             $indexId = $cursor->getValue();
             $cursorDocument = Authorization::skip(fn() => $dbForProject->find('indexes', [
-                Query::equal('collectionId', [$collectionId]),
-                Query::equal('databaseId', [$databaseId]),
+                Query::equal('collectionInternalId', [$collection->getInternalId()]),
+                Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
                 Query::limit(1)
             ]));
@@ -2912,9 +2954,15 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -2933,14 +2981,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $cursor->setValue($cursorDocument);
         }
 
-
         try {
             $documents = $dbForProject->find('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries);
             $total = $dbForProject->count('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $queries, APP_LIMIT_COUNT);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         // Add $collectionId and $databaseId for all documents
@@ -3038,14 +3085,13 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
-
         try {
+            $queries = Query::parseQueries($queries);
             $document = $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId, $queries);
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         } catch (QueryException $e) {
-            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, $e->getMessage());
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
 
         if ($document->isEmpty()) {
@@ -3134,7 +3180,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents/:documen
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
@@ -3561,7 +3612,7 @@ App::get('/v1/databases/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3569,7 +3620,7 @@ App::get('/v1/databases/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -3645,7 +3696,7 @@ App::get('/v1/databases/:databaseId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3653,7 +3704,7 @@ App::get('/v1/databases/:databaseId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -3731,7 +3782,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3739,7 +3790,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),

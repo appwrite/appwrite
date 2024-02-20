@@ -1208,7 +1208,7 @@ trait Base
                 }';
             case self::$CREATE_MAGIC_URL:
                 return 'mutation createMagicURL($userId: String!, $email: String!){
-                    accountCreateMagicURLSession(userId: $userId, email: $email) {
+                    accountCreateMagicURLToken(userId: $userId, email: $email) {
                         userId
                         expire
                     }
@@ -1832,8 +1832,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_TELESIGN_PROVIDER:
-                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $username: String!, $password: String!) {
-                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, username: $username, password: $password) {
+                return 'mutation createTelesignProvider($providerId: String!, $name: String!, $from: String!, $customerId: String!, $apiKey: String!) {
+                    messagingCreateTelesignProvider(providerId: $providerId, name: $name, from: $from, customerId: $customerId, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -1956,8 +1956,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_TELESIGN_PROVIDER:
-                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $username: String!, $password: String!) {
-                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, username: $username, password: $password) {
+                return 'mutation updateTelesignProvider($providerId: String!, $name: String!, $customerId: String!, $apiKey: String!) {
+                    messagingUpdateTelesignProvider(providerId: $providerId, name: $name, customerId: $customerId, apiKey: $apiKey) {
                         _id
                         name
                         provider
@@ -2026,6 +2026,9 @@ trait Base
                     messagingCreateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$LIST_TOPICS:
@@ -2035,6 +2038,9 @@ trait Base
                         topics {
                             _id
                             name
+                            emailTotal
+                            smsTotal
+                            pushTotal
                         }
                     }
                 }';
@@ -2043,6 +2049,9 @@ trait Base
                     messagingGetTopic(topicId: $topicId) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$UPDATE_TOPIC:
@@ -2050,6 +2059,9 @@ trait Base
                     messagingUpdateTopic(topicId: $topicId, name: $name) {
                         _id
                         name
+                        emailTotal
+                        smsTotal
+                        pushTotal
                     }
                 }';
             case self::$DELETE_TOPIC:
