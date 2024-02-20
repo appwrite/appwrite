@@ -2830,7 +2830,7 @@ App::post('/v1/messaging/messages/push')
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
-    ->param('image', '', new Key(), 'Image for push notification. Must be the ID of a jpeg or png image in Appwrite Storage.', true)
+    ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
     ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
@@ -2876,19 +2876,23 @@ App::post('/v1/messaging/messages/push')
         }
 
         if (!empty($image)) {
-            $image = $dbForProject->getDocument('files', $image);
+            [$bucketId, $fileId] = CompoundUID::parse($image);
 
-            if ($image->isEmpty()) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+            if ($bucket->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            $bucket = $dbForProject->getDocument('buckets', $image->getAttribute('bucketId'));
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($file->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($image->getRead(), $bucket->getRead()))) {
+            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            if (!\in_array($image->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
 
@@ -2900,7 +2904,7 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$image->getId()}/view?project={$project->getId()}";
+            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
         }
 
         $pushData = [];
