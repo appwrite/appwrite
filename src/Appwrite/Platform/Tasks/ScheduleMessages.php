@@ -50,6 +50,7 @@ class ScheduleMessages extends ScheduleBase
                 $queueForMessaging = new Messaging($connection);
 
                 $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
                     ->setMessageId($schedule['resourceId'])
                     ->setProject($schedule['project'])
                     ->trigger();

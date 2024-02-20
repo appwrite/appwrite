@@ -658,10 +658,10 @@ App::post('/v1/teams/:teamId/memberships')
                 ]);
 
                 $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
-                    ->setProviderType('SMS')
-                    ->trigger();
+                    ->setProviderType('SMS');
             }
         }
 

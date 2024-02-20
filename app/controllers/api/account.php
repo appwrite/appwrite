@@ -1773,10 +1773,10 @@ App::post('/v1/account/tokens/phone')
         ]);
 
         $queueForMessaging
+            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
             ->setMessage($messageDoc)
             ->setRecipients([$phone])
-            ->setProviderType(MESSAGE_TYPE_SMS)
-            ->trigger();
+            ->setProviderType(MESSAGE_TYPE_SMS);
 
         $queueForEvents->setPayload(
             $response->output(
@@ -3314,10 +3314,10 @@ App::post('/v1/account/verification/phone')
         ]);
 
         $queueForMessaging
+            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
             ->setMessage($messageDoc)
             ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType(MESSAGE_TYPE_SMS)
-            ->trigger();
+            ->setProviderType(MESSAGE_TYPE_SMS);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3677,14 +3677,14 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage(new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
                             'content' => $code,
                         ],
                     ]))
-                    ->setRecipients([$user->getAttribute('phone')])
-                    ->trigger();
+                    ->setRecipients([$user->getAttribute('phone')]);
                 break;
             case 'email':
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {

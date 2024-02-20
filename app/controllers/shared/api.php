@@ -384,9 +384,6 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $queueForMessaging
-            ->setProject($project);
-
         $queueForAudits
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
@@ -395,10 +392,10 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
         $queueForBuilds->setProject($project);
+        $queueForMessaging->setProject($project);
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
@@ -517,11 +514,12 @@ App::shutdown()
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
     ->inject('queueForBuilds')
+    ->inject('queueForMessaging')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -623,6 +621,10 @@ App::shutdown()
         }
 
         if (!empty($queueForBuilds->getType())) {
+            $queueForBuilds->trigger();
+        }
+
+        if (!empty($queueForMessaging->getType())) {
             $queueForBuilds->trigger();
         }
 
