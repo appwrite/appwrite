@@ -2,11 +2,14 @@
 
 namespace Appwrite\Platform\Workers;
 
+use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -29,10 +32,13 @@ use Utopia\Messaging\Adapter\SMS\Textmagic;
 use Utopia\Messaging\Adapter\SMS\Twilio;
 use Utopia\Messaging\Adapter\SMS\Vonage;
 use Utopia\Messaging\Messages\Email;
+use Utopia\Messaging\Messages\Email\Attachment;
 use Utopia\Messaging\Messages\Push;
 use Utopia\Messaging\Messages\SMS;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Device;
+use Utopia\Storage\Storage;
 
 use function Swoole\Coroutine\batch;
 
@@ -53,20 +59,29 @@ class Messaging extends Action
             ->inject('message')
             ->inject('log')
             ->inject('dbForProject')
+            ->inject('deviceForFiles')
+            ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $queueForUsage));
+            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
     }
 
     /**
      * @param Message $message
      * @param Log $log
      * @param Database $dbForProject
+     * @param callable $getLocalCache
      * @param Usage $queueForUsage
      * @return void
      * @throws \Exception
      */
-    public function action(Message $message, Log $log, Database $dbForProject, Usage $queueForUsage): void
-    {
+    public function action(
+        Message $message,
+        Log $log,
+        Database $dbForProject,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
+        Usage $queueForUsage
+    ): void {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
@@ -86,15 +101,19 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
                 break;
             default:
                 throw new Exception('Unknown message type: ' . $type);
         }
     }
 
-    private function sendExternalMessage(Database $dbForProject, Document $message): void
-    {
+    private function sendExternalMessage(
+        Database $dbForProject,
+        Document $message,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
+    ): void {
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
@@ -198,8 +217,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject) {
-            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -225,8 +244,8 @@ class Messaging extends Action
                 $batches = \array_chunk($identifiers, $maxBatchSize);
                 $batchIndex = 0;
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject) {
-                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -235,7 +254,7 @@ class Messaging extends Action
                         $data = match ($provider->getAttribute('type')) {
                             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
-                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider),
+                            MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $deviceForLocalFiles),
                             default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                         };
 
@@ -309,6 +328,37 @@ class Messaging extends Action
         $message->setAttribute('deliveredAt', DateTime::now());
 
         $dbForProject->updateDocument('messages', $message->getId(), $message);
+
+        // Delete any attachments that were downloaded to the local cache
+        if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
+            if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
+                return;
+            }
+
+            $data = $message->getAttribute('data');
+            $attachments = $data['attachments'] ?? [];
+
+            foreach ($attachments as $attachment) {
+                $bucketId = $attachment['bucketId'];
+                $fileId = $attachment['fileId'];
+
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+                if ($bucket->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
+
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
+                $path = $file->getAttribute('path', '');
+
+                if ($deviceForLocalFiles->exists($path)) {
+                    $deviceForLocalFiles->delete($path);
+                }
+            }
+        }
     }
 
     private function sendInternalSMSMessage(Document $message, Document $project, array $recipients, Usage $queueForUsage, Log $log): void
@@ -458,8 +508,13 @@ class Messaging extends Action
         };
     }
 
-    private function buildEmailMessage(Database $dbForProject, Document $message, Document $provider): Email
-    {
+    private function buildEmailMessage(
+        Database $dbForProject,
+        Document $message,
+        Document $provider,
+        Device $deviceForFiles,
+        Device $deviceForLocalFiles,
+    ): Email {
         $fromName = $provider['options']['fromName'] ?? null;
         $fromEmail = $provider['options']['fromEmail'] ?? null;
         $replyToEmail = $provider['options']['replyToEmail'] ?? null;
@@ -469,8 +524,9 @@ class Messaging extends Action
         $bccTargets = $data['bcc'] ?? [];
         $cc = [];
         $bcc = [];
+        $attachments = $data['attachments'] ?? [];
 
-        if (\count($ccTargets) > 0) {
+        if (!empty($ccTargets)) {
             $ccTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $ccTargets),
                 Query::limit(\count($ccTargets)),
@@ -480,7 +536,7 @@ class Messaging extends Action
             }
         }
 
-        if (\count($bccTargets) > 0) {
+        if (!empty($bccTargets)) {
             $bccTargets = $dbForProject->find('targets', [
                 Query::equal('$id', $bccTargets),
                 Query::limit(\count($bccTargets)),
@@ -490,12 +546,64 @@ class Messaging extends Action
             }
         }
 
+        if (!empty($attachments)) {
+            foreach ($attachments as &$attachment) {
+                $bucketId = $attachment['bucketId'];
+                $fileId = $attachment['fileId'];
+
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+                if ($bucket->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
+
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
+                $mimes = Config::getParam('storage-mimes');
+                $path = $file->getAttribute('path', '');
+
+                if (!$deviceForFiles->exists($path)) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+                }
+
+                $contentType = 'text/plain';
+
+                if (\in_array($file->getAttribute('mimeType'), $mimes)) {
+                    $contentType = $file->getAttribute('mimeType');
+                }
+
+                if ($deviceForFiles->getType() !== Storage::DEVICE_LOCAL) {
+                    $deviceForFiles->transfer($path, $path, $deviceForLocalFiles);
+                }
+
+                $attachment = new Attachment(
+                    $file->getAttribute('name'),
+                    $path,
+                    $contentType
+                );
+            }
+        }
+
         $to = $message['to'];
         $subject = $data['subject'];
         $content = $data['content'];
         $html = $data['html'] ?? false;
 
-        return new Email($to, $subject, $content, $fromName, $fromEmail, $replyToName, $replyToEmail, $cc, $bcc, null, $html);
+        return new Email(
+            $to,
+            $subject,
+            $content,
+            $fromName,
+            $fromEmail,
+            $replyToName,
+            $replyToEmail,
+            $cc,
+            $bcc,
+            $attachments,
+            $html
+        );
     }
 
     private function buildSmsMessage(Document $message, Document $provider): SMS
@@ -504,7 +612,11 @@ class Messaging extends Action
         $content = $message['data']['content'];
         $from = $provider['options']['from'];
 
-        return new SMS($to, $content, $from);
+        return new SMS(
+            $to,
+            $content,
+            $from
+        );
     }
 
     private function buildPushMessage(Document $message): Push
@@ -520,6 +632,17 @@ class Messaging extends Action
         $tag = $message['data']['tag'] ?? null;
         $badge = $message['data']['badge'] ?? null;
 
-        return new Push($to, $title, $body, $data, $action, $sound, $icon, $color, $tag, $badge);
+        return new Push(
+            $to,
+            $title,
+            $body,
+            $data,
+            $action,
+            $sound,
+            $icon,
+            $color,
+            $tag,
+            $badge
+        );
     }
 }

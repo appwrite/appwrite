@@ -451,6 +451,10 @@ class OpenAPI3 extends Format
                             $node['format'] = 'int32';
                         }
                         break;
+                    case 'Appwrite\Utopia\Database\Validator\CompoundUID':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '[ID1:ID2]';
+                        break;
                     default:
                         $node['schema']['type'] = 'string';
                         break;
