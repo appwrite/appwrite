@@ -203,8 +203,13 @@ class Deletes extends Action
                     return;
                 }
 
+                $collectionId = match ($document->getAttribute('resourceType')) {
+                    'function' => 'functions',
+                    'message' => 'messages'
+                };
+
                 $resource = $getProjectDB($project)->getDocument(
-                    $document->getAttribute('resourceCollection'),
+                    $collectionId,
                     $document->getAttribute('resourceId')
                 );
 
