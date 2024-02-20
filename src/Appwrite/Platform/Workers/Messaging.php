@@ -59,17 +59,15 @@ class Messaging extends Action
             ->inject('message')
             ->inject('log')
             ->inject('dbForProject')
-            ->inject('deviceFiles')
             ->inject('getLocalCache')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceFiles, callable $getLocalCache, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceFiles, $getLocalCache, $queueForUsage));
+            ->callback(fn(Message $message, Log $log, Database $dbForProject, callable $getLocalCache, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $getLocalCache, $queueForUsage));
     }
 
     /**
      * @param Message $message
      * @param Log $log
      * @param Database $dbForProject
-     * @param Device $deviceFiles
      * @param callable $getLocalCache
      * @param Usage $queueForUsage
      * @return void
@@ -80,7 +78,6 @@ class Messaging extends Action
         Message $message,
         Log $log,
         Database $dbForProject,
-        Device $deviceFiles,
         callable $getLocalCache,
         Usage $queueForUsage
     ): void {
@@ -111,7 +108,7 @@ class Messaging extends Action
             $this->processMessage(
                 $dbForProject,
                 $message,
-                $deviceFiles,
+                getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId()),
                 $getLocalCache($project->getId())
             );
         }
