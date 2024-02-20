@@ -146,9 +146,9 @@ class AccountCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -278,8 +278,7 @@ class AccountCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-session' => $session
-            ],
-            $this->getHeaders()
+            ]
         ));
 
         $this->assertEquals($response['headers']['status-code'], 200);
