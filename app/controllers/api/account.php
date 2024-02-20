@@ -1527,8 +1527,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             Permission::read(Role::user($user->getId())),
             Permission::update(Role::user($user->getId())),
             Permission::delete(Role::user($user->getId())),
-        ])
-    );
+        ]));
 
     $dbForProject->purgeCachedDocument('users', $user->getId());
     Authorization::skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
