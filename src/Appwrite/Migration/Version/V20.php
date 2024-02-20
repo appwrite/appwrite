@@ -78,14 +78,18 @@ class V20 extends Migration
 
         // Support database array type migration (user collections)
         if ($collectionType === 'projects') {
-            foreach ($this->documentsIterator('attributes', [
+            foreach (
+                $this->documentsIterator('attributes', [
                 Query::equal('array', [true]),
-            ]) as $attribute) {
+                ]) as $attribute
+            ) {
                 $foundIndex = false;
-                foreach ($this->documentsIterator('indexes', [
+                foreach (
+                    $this->documentsIterator('indexes', [
                         Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
                         Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
-                    ]) as $index) {
+                    ]) as $index
+                ) {
                     if (in_array($attribute['key'], $index['attributes'])) {
                         $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
                         $foundIndex = true;
