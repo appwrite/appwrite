@@ -34,6 +34,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
+use Utopia\Storage\Device\Local;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -207,6 +208,11 @@ Server::setResource('getBuildsDevice', function () {
 Server::setResource('getCacheDevice', function () {
     return function (string $projectId) {
         return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
+    };
+});
+Server::setResource('getLocalCache', function () {
+    return function (string $projectId) {
+        return new Local(APP_STORAGE_CACHE . '/app-' . $projectId);
     };
 });
 
