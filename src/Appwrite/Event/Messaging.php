@@ -185,6 +185,7 @@ class Messaging extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'type' => $this->type,
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,

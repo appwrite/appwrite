@@ -170,6 +170,12 @@ App::post('/v1/functions')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
 
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
+        }
+
         // build from template
         $template = new Document([]);
         if (
