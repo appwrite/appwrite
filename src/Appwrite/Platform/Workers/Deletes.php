@@ -68,6 +68,7 @@ class Deletes extends Action
         $datetime = $payload['datetime'] ?? null;
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
+        $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
 
@@ -135,7 +136,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
-                $this->deleteCacheByResource($project, $getProjectDB, $resource);
+                $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
                 break;
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
@@ -193,32 +194,37 @@ class Deletes extends Action
      * @param string $resource
      * @return void
      * @throws Authorization
+     * @param string|null $resourceType
+     * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
-        $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
-        if ($document) {
-            $cache = new Cache(
-                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-            );
+        $cache = new Cache(
+            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+        );
 
-            $this->deleteById(
-                $document,
-                $dbForProject,
-                function ($document) use ($cache, $projectId) {
-                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
-
-                    if ($cache->purge($document->getId())) {
-                        Console::success('Deleting cache file: ' . $path);
-                    } else {
-                        Console::error('Failed to delete cache file: ' . $path);
-                    }
-                }
-            );
+        $query[] = Query::equal('resource', [$resource]);
+        if (!empty($resourceType)) {
+            $query[] = Query::equal('resourceType', [$resourceType]);
         }
+
+        $this->deleteByGroup(
+            'cache',
+            $query,
+            $dbForProject,
+            function (Document $document) use ($cache, $projectId) {
+                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
+
+                if ($cache->purge($document->getId())) {
+                    Console::success('Deleting cache file: ' . $path);
+                } else {
+                    Console::error('Failed to delete cache file: ' . $path);
+                }
+            }
+        );
     }
 
     /**
@@ -269,7 +275,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
         // Delete Usage stats
-        $this->deleteByGroup('stats_v2', [
+        $this->deleteByGroup('stats', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::equal('period', ['1h']),
         ], $dbForProject);
