@@ -84,9 +84,7 @@ App::post('/v1/projects')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $allowList = empty(App::getEnv('_APP_PROJECT_REGIONS'))
-            ? []
-            : \explode(',', App::getEnv('_APP_PROJECT_REGIONS'));
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_PROJECT_REGIONS', '')));
 
         if (!empty($allowList) && !\in_array($region, $allowList)) {
             throw new Exception(Exception::PROJECT_REGION_UNSUPPORTED, 'Region "' . $region . '" is not supported');
