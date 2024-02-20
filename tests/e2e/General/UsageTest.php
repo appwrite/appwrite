@@ -36,7 +36,7 @@ class UsageTest extends Scope
     {
         return [
             'origin' => 'http://localhost',
-            'x-appwrite-project' => 'console',
+            'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-mode' => 'admin',
             'cookie' => 'a_session_console=' . $this->getRoot()['session'],
         ];
@@ -88,7 +88,7 @@ class UsageTest extends Scope
             $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertEquals($params['email'], $response['body']['email']);
             $this->assertNotEmpty($response['body']['$id']);
-            
+
             $usersTotal += 1;
             $requestsTotal += 1;
 
@@ -96,14 +96,14 @@ class UsageTest extends Scope
                 $userId = $response['body']['$id'];
 
                 $response = $this->client->call(
-                    Client::METHOD_DELETE, 
-                    '/users/' . $userId, 
+                    Client::METHOD_DELETE,
+                    '/users/' . $userId,
                     array_merge([
                         'content-type' => 'application/json',
                         'x-appwrite-project' => $this->getProject()['$id']
                     ], $this->getHeaders())
                 );
-                
+
                 $this->assertEquals(204, $response['headers']['status-code']);
                 $this->assertEmpty($response['body']);
 
@@ -127,7 +127,6 @@ class UsageTest extends Scope
         sleep(self::WAIT);
 
         $requestsTotal = $data['requestsTotal'];
-
 
         $response = $this->client->call(
             Client::METHOD_GET,
@@ -430,7 +429,7 @@ class UsageTest extends Scope
 
             $this->assertEquals($name, $response['body']['name']);
             $this->assertNotEmpty($response['body']['$id']);
-            
+
             $requestsTotal += 1;
             $collectionsTotal += 1;
 
@@ -580,8 +579,8 @@ class UsageTest extends Scope
         $this->validateDates($response['body']['documents']);
 
         $response = $this->client->call(
-            Client::METHOD_GET, 
-            '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d', 
+            Client::METHOD_GET,
+            '/databases/' . $databaseId . '/collections/' . $collectionId . '/usage?range=30d',
             $this->getConsoleHeaders()
         );
 
