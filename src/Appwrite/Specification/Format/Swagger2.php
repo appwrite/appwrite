@@ -446,6 +446,10 @@ class Swagger2 extends Format
                             $node['format'] = 'int32';
                         }
                         break;
+                    case 'Appwrite\Utopia\Database\Validator\CompoundUID':
+                        $node['type'] = $validator->getType();
+                        $node['x-example'] = '[ID1:ID2]';
+                        break;
                     default:
                         $node['type'] = 'string';
                         break;
