@@ -214,6 +214,7 @@ class UsageTest extends Scope
                     ], $this->getHeaders()),
                 );
 
+                $this->assertEquals(204, $response['headers']['status-code']);
                 $this->assertEmpty($response['body']);
 
                 $requestsTotal += 1;
@@ -257,13 +258,14 @@ class UsageTest extends Scope
                 ]
             );
 
+            $this->assertEquals(201, $response['headers']['status-code']);
             $this->assertNotEmpty($response['body']['$id']);
 
             $fileSize = $response['body']['sizeOriginal'];
 
             $storageTotal += $fileSize;
-            $filesTotal = $filesTotal + 1;
-            $requestsTotal = $requestsTotal + 1;
+            $filesTotal += 1;
+            $requestsTotal += 1;
 
             $fileId = $response['body']['$id'];
 
@@ -276,6 +278,7 @@ class UsageTest extends Scope
                     ], $this->getHeaders()),
                 );
 
+                $this->assertEquals(204, $response['headers']['status-code']);
                 $this->assertEmpty($response['body']);
 
                 $requestsTotal += 1;
@@ -310,9 +313,7 @@ class UsageTest extends Scope
         $response = $this->client->call(
             Client::METHOD_GET,
             '/project/usage',
-            array_merge([
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
+            $this->getConsoleHeaders(),
             [
                 'period' => '1d',
                 'startDate' => self::getToday(),
@@ -329,9 +330,7 @@ class UsageTest extends Scope
         $response = $this->client->call(
             Client::METHOD_GET,
             '/storage/usage?range=30d',
-            array_merge([
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
+            $this->getConsoleHeaders()
         );
 
         $this->assertEquals($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
@@ -344,9 +343,7 @@ class UsageTest extends Scope
         $response = $this->client->call(
             Client::METHOD_GET,
             '/storage/' . $bucketId . '/usage?range=30d',
-            array_merge([
-                'x-appwrite-project' => $this->getProject()['$id']
-            ], $this->getHeaders()),
+            $this->getConsoleHeaders()
         );
 
         $this->assertEquals($storageTotal, $response['body']['storage'][array_key_last($response['body']['storage'])]['value']);
