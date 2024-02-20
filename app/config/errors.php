@@ -282,6 +282,11 @@ return [
         'description' => 'A target with the same ID already exists.',
         'code' => 409,
     ],
+    Exception::USER_API_KEY_AND_SESSION_SET => [
+        'name' => Exception::USER_API_KEY_AND_SESSION_SET,
+        'description' => 'API key and a session used in the same request. For guest actions, use only API key. For user actions, use only a session.',
+        'code' => 403,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

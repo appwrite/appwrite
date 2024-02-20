@@ -194,14 +194,14 @@ App::init()
         $authKey = $request->getHeader('x-appwrite-key', '');
 
         if (!empty($authKey)) { // API Key authentication
+            // Do not allow API key and session to be set at the same time
+            if (!$user->isEmpty()) {
+                throw new Exception(Exception::USER_API_KEY_AND_SESSION_SET);
+            }
+
             // Check if given key match project API keys
             $key = $project->find('secret', $authKey, 'keys');
-
-            /*
-                * Try app auth when we have project key and no user
-                *  Mock user to app and grant API key scopes in addition to default app scopes
-                */
-            if ($key && $user->isEmpty()) {
+            if ($key) {
                 $user = new Document([
                     '$id' => '',
                     'status' => true,

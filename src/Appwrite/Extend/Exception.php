@@ -96,6 +96,7 @@ class Exception extends \Exception
     public const USER_PHONE_ALREADY_VERIFIED        = 'user_phone_already_verified';
     public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
     public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
+    public const USER_API_KEY_AND_SESSION_SET      = 'user_key_and_session_set';
 
     /** Teams */
     public const TEAM_NOT_FOUND                    = 'team_not_found';
