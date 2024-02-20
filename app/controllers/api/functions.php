@@ -121,9 +121,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTemplate($template)
-        ->setProject($project)
-        ->trigger();
+        ->setTemplate($template);
 };
 
 App::post('/v1/functions')
@@ -1196,9 +1194,7 @@ App::post('/v1/functions/:functionId/deployments')
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1478,9 +1474,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+            ->setDeployment($deployment);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

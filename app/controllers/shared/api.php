@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -305,10 +306,11 @@ App::init()
     ->inject('queueForAudits')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
+    ->inject('queueForBuilds')
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -396,6 +398,7 @@ App::init()
 
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
+        $queueForBuilds->setProject($project);
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
@@ -513,11 +516,12 @@ App::shutdown()
     ->inject('queueForUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
+    ->inject('queueForBuilds')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -616,6 +620,10 @@ App::shutdown()
 
         if (!empty($queueForDatabase->getType())) {
             $queueForDatabase->trigger();
+        }
+
+        if (!empty($queueForBuilds->getType())) {
+            $queueForBuilds->trigger();
         }
 
         /**
