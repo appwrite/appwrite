@@ -205,6 +205,8 @@ class Exception extends \Exception
 
     public const PROJECT_TEMPLATE_DEFAULT_DELETION = 'project_template_default_deletion';
 
+    public const PROJECT_REGION_UNSUPPORTED        = 'project_region_unsupported';
+
     /** Webhooks */
     public const WEBHOOK_NOT_FOUND                 = 'webhook_not_found';
 
