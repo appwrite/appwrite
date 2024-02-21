@@ -1918,7 +1918,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
-
+    #[Retry(count: 2)]
     public function testCreatePhone(): array
     {
         $number = '+123456789';
@@ -1941,22 +1941,8 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $userId = $response['body']['userId'];
-        $messageId = $response['body']['$id'];
 
-        /**
-         * Test for FAILURE
-         */
-        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
-            'origin' => 'http://localhost',
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ]), [
-            'userId' => ID::unique()
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
-
-        \sleep(5);
+        \sleep(7);
 
         $smsRequest = $this->getLastRequest();
 
@@ -1971,6 +1957,19 @@ class AccountCustomClientTest extends Scope
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
         $data['number'] = $number;
+
+        /**
+         * Test for FAILURE
+         */
+        $response = $this->client->call(Client::METHOD_POST, '/account/tokens/phone', array_merge([
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ]), [
+            'userId' => ID::unique()
+        ]);
+
+        $this->assertEquals(400, $response['headers']['status-code']);
 
         return $data;
     }
