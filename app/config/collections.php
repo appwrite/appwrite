@@ -2114,6 +2114,13 @@ $commonCollections = [
                 'orders' => [],
             ],
             [
+                '$id' => ID::custom('_unique_target_topic'),
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['targetInternalId', 'topicInternalId'],
+                'lengths' => [],
+                'orders' => [],
+            ],
+            [
                 '$id' => ID::custom('_fulltext_search'),
                 'type' => Database::INDEX_FULLTEXT,
                 'attributes' => ['search'],
