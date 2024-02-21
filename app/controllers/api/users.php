@@ -514,7 +514,7 @@ App::post('/v1/users/:userId/targets')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => $providerId ?? null,
-                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getInternalId(),
