@@ -420,6 +420,11 @@ return [
         'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is a valid id and not unique().',
         'code' => 400,
     ],
+    Exception::STORAGE_FILE_NOT_PUBLIC => [
+        'name' => Exception::STORAGE_FILE_NOT_PUBLIC,
+        'description' => 'The requested file is not publicly readable.',
+        'code' => 403,
+    ],
 
     /** VCS */
     Exception::INSTALLATION_NOT_FOUND => [
