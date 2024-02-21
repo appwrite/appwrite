@@ -3,7 +3,6 @@
 require_once __DIR__ . '/../init.php';
 
 use Utopia\App;
-use Utopia\Database\Helpers\Role;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
@@ -15,7 +14,6 @@ use Appwrite\Utopia\View;
 use Appwrite\Extend\Exception as AppwriteException;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
@@ -24,9 +22,9 @@ use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
 use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
+use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
@@ -36,8 +34,8 @@ use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
+use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -203,15 +201,11 @@ App::init()
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('user')
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('clients')
-    ->inject('servers')
-    ->inject('session')
-    ->inject('mode')
     ->inject('queueForCertificates')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, ?Document $session, string $mode, Certificate $queueForCertificates) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Locale $locale, array $localeCodes, array $clients, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
@@ -251,6 +245,9 @@ App::init()
                     break;
                 case version_compare($requestFormat, '1.4.0', '<'):
                     Request::setFilter(new RequestV16());
+                    break;
+                case version_compare($requestFormat, '1.5.0', '<'):
+                    Request::setFilter(new RequestV17());
                     break;
                 default:
                     Request::setFilter(null);
@@ -319,14 +316,6 @@ App::init()
             $locale->setDefault($localeParam);
         }
 
-        if ($project->isEmpty()) {
-            throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-        }
-
-        if (!empty($route->getLabel('sdk.auth', [])) && $project->isEmpty() && ($route->getLabel('scope', '') !== 'public')) {
-            throw new AppwriteException(AppwriteException::PROJECT_UNKNOWN);
-        }
-
         $referrer = $request->getReferer();
         $origin = \parse_url($request->getOrigin($referrer), PHP_URL_HOST);
         $protocol = \parse_url($request->getOrigin($referrer), PHP_URL_SCHEME);
@@ -393,6 +382,9 @@ App::init()
                 case version_compare($responseFormat, '1.4.0', '<'):
                     Response::setFilter(new ResponseV16());
                     break;
+                case version_compare($responseFormat, '1.5.0', '<'):
+                    Response::setFilter(new ResponseV17());
+                    break;
                 default:
                     Response::setFilter(null);
             }
@@ -445,138 +437,6 @@ App::init()
         ) {
             throw new AppwriteException(AppwriteException::GENERAL_UNKNOWN_ORIGIN, $originValidator->getDescription());
         }
-
-        /*
-        * ACL Check
-        */
-        $role = ($user->isEmpty())
-            ? Role::guests()->toString()
-            : Role::users()->toString();
-
-        // Add user roles
-        $memberships = $user->find('teamId', $project->getAttribute('teamId'), 'memberships');
-
-        if ($memberships) {
-            foreach ($memberships->getAttribute('roles', []) as $memberRole) {
-                switch ($memberRole) {
-                    case 'owner':
-                        $role = Auth::USER_ROLE_OWNER;
-                        break;
-                    case 'admin':
-                        $role = Auth::USER_ROLE_ADMIN;
-                        break;
-                    case 'developer':
-                        $role = Auth::USER_ROLE_DEVELOPER;
-                        break;
-                }
-            }
-        }
-
-        $roles = Config::getParam('roles', []);
-        $scope = $route->getLabel('scope', 'none'); // Allowed scope for chosen route
-        $scopes = $roles[$role]['scopes']; // Allowed scopes for user role
-
-        $authKey = $request->getHeader('x-appwrite-key', '');
-
-        if (!empty($authKey)) { // API Key authentication
-            // Check if given key match project API keys
-            $key = $project->find('secret', $authKey, 'keys');
-
-            /*
-            * Try app auth when we have project key and no user
-            *  Mock user to app and grant API key scopes in addition to default app scopes
-            */
-            if ($key && $user->isEmpty()) {
-                $user = new Document([
-                    '$id' => '',
-                    'status' => true,
-                    'email' => 'app.' . $project->getId() . '@service.' . $request->getHostname(),
-                    'password' => '',
-                    'name' => $project->getAttribute('name', 'Untitled'),
-                ]);
-
-                $role = Auth::USER_ROLE_APPS;
-                $scopes = \array_merge($roles[$role]['scopes'], $key->getAttribute('scopes', []));
-
-                $expire = $key->getAttribute('expire');
-                if (!empty($expire) && $expire < DateTime::formatTz(DateTime::now())) {
-                    throw new AppwriteException(AppwriteException::PROJECT_KEY_EXPIRED);
-                }
-
-                Authorization::setRole(Auth::USER_ROLE_APPS);
-                Authorization::setDefaultStatus(false);  // Cancel security segmentation for API keys.
-
-                $accessedAt = $key->getAttribute('accessedAt', '');
-                if (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_KEY_ACCCESS)) > $accessedAt) {
-                    $key->setAttribute('accessedAt', DateTime::now());
-                    $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                    $dbForConsole->purgeCachedDocument('projects', $project->getId());
-                }
-
-                $sdkValidator = new WhiteList($servers, true);
-                $sdk = $request->getHeader('x-sdk-name', 'UNKNOWN');
-                if ($sdkValidator->isValid($sdk)) {
-                    $sdks = $key->getAttribute('sdks', []);
-                    if (!in_array($sdk, $sdks)) {
-                        array_push($sdks, $sdk);
-                        $key->setAttribute('sdks', $sdks);
-
-                        /** Update access time as well */
-                        $key->setAttribute('accessedAt', Datetime::now());
-                        $dbForConsole->updateDocument('keys', $key->getId(), $key);
-                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
-                    }
-                }
-            }
-        }
-
-        Authorization::setRole($role);
-
-        foreach (Auth::getRoles($user) as $authRole) {
-            Authorization::setRole($authRole);
-        }
-
-        $service = $route->getLabel('sdk.namespace', '');
-        if (!empty($service)) {
-            if (
-                array_key_exists($service, $project->getAttribute('services', []))
-                && !$project->getAttribute('services', [])[$service]
-                && !(Auth::isPrivilegedUser(Authorization::getRoles()) || Auth::isAppUser(Authorization::getRoles()))
-            ) {
-                throw new AppwriteException(AppwriteException::GENERAL_SERVICE_DISABLED);
-            }
-        }
-
-        if (!\in_array($scope, $scopes)) {
-            if ($project->isEmpty()) { // Check if permission is denied because project is missing
-                throw new AppwriteException(AppwriteException::PROJECT_NOT_FOUND);
-            }
-
-            throw new AppwriteException(AppwriteException::GENERAL_UNAUTHORIZED_SCOPE, $user->getAttribute('email', 'User') . ' (role: ' . \strtolower($roles[$role]['label']) . ') missing scope (' . $scope . ')');
-        }
-
-        if (false === $user->getAttribute('status')) { // Account is blocked
-            throw new AppwriteException(AppwriteException::USER_BLOCKED);
-        }
-
-        if ($user->getAttribute('reset')) {
-            throw new AppwriteException(AppwriteException::USER_PASSWORD_RESET_REQUIRED);
-        }
-
-        if ($mode !== APP_MODE_ADMIN) {
-            $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
-            $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
-            $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
-            $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
-            $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
-
-            if (!in_array('mfa', $route->getGroups())) {
-                if ($session && \count($session->getAttribute('factors')) < $minimumFactors) {
-                    throw new AppwriteException(AppwriteException::USER_MORE_FACTORS_REQUIRED);
-                }
-            }
-        }
     });
 
 App::options()
@@ -617,66 +477,58 @@ App::error()
     ->inject('response')
     ->inject('project')
     ->inject('logger')
-    ->inject('loggerBreadcrumbs')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, array $loggerBreadcrumbs) {
-
+    ->inject('log')
+    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
-        $publish = true;
 
         if ($error instanceof AppwriteException) {
             $publish = $error->isPublishable();
+        } else {
+            $publish = $error->getCode() === 0 || $error->getCode() >= 500;
         }
 
-        if ($logger && $publish) {
-            if ($error->getCode() >= 500 || $error->getCode() === 0) {
-                try {
-                    /** @var Utopia\Database\Document $user */
-                    $user = $utopia->getResource('user');
-                } catch (\Throwable $th) {
-                    // All good, user is optional information for logger
-                }
-
-                $log = new Utopia\Logger\Log();
-
-                if (isset($user) && !$user->isEmpty()) {
-                    $log->setUser(new User($user->getId()));
-                }
-
-                $log->setNamespace("http");
-                $log->setServer(\gethostname());
-                $log->setVersion($version);
-                $log->setType(Log::TYPE_ERROR);
-                $log->setMessage($error->getMessage());
-
-                $log->addTag('database', $project->getAttribute('database', 'console'));
-                $log->addTag('method', $route->getMethod());
-                $log->addTag('url', $route->getPath());
-                $log->addTag('verboseType', get_class($error));
-                $log->addTag('code', $error->getCode());
-                $log->addTag('projectId', $project->getId());
-                $log->addTag('hostname', $request->getHostname());
-                $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
-
-                $log->addExtra('file', $error->getFile());
-                $log->addExtra('line', $error->getLine());
-                $log->addExtra('trace', $error->getTraceAsString());
-                $log->addExtra('detailedTrace', $error->getTrace());
-                $log->addExtra('roles', Authorization::getRoles());
-
-                $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
-                $log->setAction($action);
-
-                $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
-                $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
-
-                foreach ($loggerBreadcrumbs as $loggerBreadcrumb) {
-                    $log->addBreadcrumb($loggerBreadcrumb);
-                }
-
-                $responseCode = $logger->addLog($log);
-                Console::info('Log pushed with status code: ' . $responseCode);
+        if ($logger && ($publish || $error->getCode() === 0)) {
+            try {
+                /** @var Utopia\Database\Document $user */
+                $user = $utopia->getResource('user');
+            } catch (\Throwable $th) {
+                // All good, user is optional information for logger
             }
+
+            if (isset($user) && !$user->isEmpty()) {
+                $log->setUser(new User($user->getId()));
+            }
+
+            $log->setNamespace("http");
+            $log->setServer(\gethostname());
+            $log->setVersion($version);
+            $log->setType(Log::TYPE_ERROR);
+            $log->setMessage($error->getMessage());
+
+            $log->addTag('database', $project->getAttribute('database', 'console'));
+            $log->addTag('method', $route->getMethod());
+            $log->addTag('url', $route->getPath());
+            $log->addTag('verboseType', get_class($error));
+            $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId());
+            $log->addTag('hostname', $request->getHostname());
+            $log->addTag('locale', (string)$request->getParam('locale', $request->getHeader('x-appwrite-locale', '')));
+
+            $log->addExtra('file', $error->getFile());
+            $log->addExtra('line', $error->getLine());
+            $log->addExtra('trace', $error->getTraceAsString());
+            $log->addExtra('detailedTrace', $error->getTrace());
+            $log->addExtra('roles', Authorization::getRoles());
+
+            $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
+            $log->setAction($action);
+
+            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
+
+            $responseCode = $logger->addLog($log);
+            Console::info('Log pushed with status code: ' . $responseCode);
         }
 
         $code = $error->getCode();

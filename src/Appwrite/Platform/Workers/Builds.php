@@ -8,7 +8,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Exception;
 use Swoole\Coroutine as Co;
 use Executor\Executor;
 use Utopia\App;
@@ -26,6 +25,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\VCS\Adapter\Git\GitHub;
 
@@ -50,9 +50,9 @@ class Builds extends Action
             ->inject('queueForUsage')
             ->inject('cache')
             ->inject('dbForProject')
-            ->inject('getFunctionsDevice')
+            ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $getFunctionsDevice, $log));
+            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
@@ -63,12 +63,12 @@ class Builds extends Action
      * @param Usage $queueForUsage
      * @param Cache $cache
      * @param Database $dbForProject
-     * @param callable $getFunctionsDevice
+     * @param Device $deviceForFunctions
      * @param Log $log
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, callable $getFunctionsDevice, Log $log): void
+    public function action(Message $message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $queueForUsage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log): void
     {
         $payload = $message->getPayload() ?? [];
 
@@ -90,7 +90,7 @@ class Builds extends Action
             case BUILD_TYPE_RETRY:
                 Console::info('Creating build for deployment: ' . $deployment->getId());
                 $github = new GitHub($cache);
-                $this->buildDeployment($getFunctionsDevice, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
+                $this->buildDeployment($deviceForFunctions, $queueForFunctions, $queueForEvents, $queueForUsage, $dbForConsole, $dbForProject, $github, $project, $resource, $deployment, $template, $log);
                 break;
 
             default:
@@ -99,7 +99,7 @@ class Builds extends Action
     }
 
     /**
-     * @param callable $getFunctionsDevice
+     * @param Device $deviceForFunctions
      * @param Func $queueForFunctions
      * @param Event $queueForEvents
      * @param Usage $queueForUsage
@@ -115,7 +115,7 @@ class Builds extends Action
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    protected function buildDeployment(callable $getFunctionsDevice, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
+    protected function buildDeployment(Device $deviceForFunctions, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Database $dbForConsole, Database $dbForProject, GitHub $github, Document $project, Document $function, Document $deployment, Document $template, Log $log): void
     {
         $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
 
@@ -157,7 +157,6 @@ class Builds extends Action
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
         $isNewBuild = empty($buildId);
-        $deviceFunctions = $getFunctionsDevice($project->getId());
 
         if ($isNewBuild) {
             $buildId = ID::unique();
@@ -171,7 +170,7 @@ class Builds extends Action
                 'path' => '',
                 'runtime' => $function->getAttribute('runtime'),
                 'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower($deviceFunctions->getType()),
+                'sourceType' => strtolower($deviceForFunctions->getType()),
                 'logs' => '',
                 'endTime' => null,
                 'duration' => 0,
@@ -189,7 +188,7 @@ class Builds extends Action
         $installationId = $deployment->getAttribute('installationId', '');
         $providerRepositoryId = $deployment->getAttribute('providerRepositoryId', '');
         $providerCommitHash = $deployment->getAttribute('providerCommitHash', '');
-        $isVcsEnabled = $providerRepositoryId ? true : false;
+        $isVcsEnabled = !empty($providerRepositoryId);
         $owner = '';
         $repositoryName = '';
 
@@ -312,10 +311,8 @@ class Builds extends Action
 
                 Console::execute('tar --exclude code.tar.gz -czf ' . $tmpPathFile . ' -C /tmp/builds/' . \escapeshellcmd($buildId) . '/code' . (empty($rootDirectory) ? '' : '/' . $rootDirectory) . ' .', '', $stdout, $stderr);
 
-                $deviceFunctions = $getFunctionsDevice($project->getId());
-
-                $path = $deviceFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
-                $result = $localDevice->transfer($tmpPathFile, $path, $deviceFunctions);
+                $path = $deviceForFunctions->getPath($deployment->getId() . '.' . \pathinfo('code.tar.gz', PATHINFO_EXTENSION));
+                $result = $localDevice->transfer($tmpPathFile, $path, $deviceForFunctions);
 
                 if (!$result) {
                     throw new \Exception("Unable to move file");
@@ -420,7 +417,7 @@ class Builds extends Action
                             variables: $vars,
                             command: $command
                         );
-                    } catch (Exception $error) {
+                    } catch (\Throwable $error) {
                         $err = $error;
                     }
                 }),
@@ -459,7 +456,7 @@ class Builds extends Action
                                     }
                                 }
                             );
-                        } catch (Exception $error) {
+                        } catch (\Throwable $error) {
                             if (empty($err)) {
                                 $err = $error;
                             }
@@ -617,7 +614,7 @@ class Builds extends Action
                         '$id' => $commentId
                     ]));
                     break;
-                } catch (Exception $err) {
+                } catch (\Throwable $err) {
                     if ($retries >= 9) {
                         throw $err;
                     }

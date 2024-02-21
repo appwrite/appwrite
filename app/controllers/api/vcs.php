@@ -4,6 +4,7 @@ use Appwrite\Auth\OAuth2\Github as OAuth2Github;
 use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Host;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -237,9 +238,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
 
             //TODO: Add event?
         }
@@ -969,7 +968,11 @@ App::get('/v1/vcs/installations')
     ->inject('dbForProject')
     ->inject('dbForConsole')
     ->action(function (array $queries, string $search, Response $response, Document $project, Database $dbForProject, Database $dbForConsole) {
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         $queries[] = Query::equal('projectInternalId', [$project->getInternalId()]);
 
@@ -977,8 +980,12 @@ App::get('/v1/vcs/installations')
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
-        $cursor = Query::getByType($queries, [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
         $cursor = reset($cursor);
         if ($cursor) {
             /** @var Query $cursor */

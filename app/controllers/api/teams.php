@@ -9,6 +9,7 @@ use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Host;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Database\Validator\CustomId;
@@ -146,13 +147,19 @@ App::get('/v1/teams')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -534,8 +541,8 @@ App::post('/v1/teams/:teamId/memberships')
             } catch (Duplicate $th) {
                 throw new Exception(Exception::TEAM_INVITE_ALREADY_EXISTS);
             }
-            $team->setAttribute('total', $team->getAttribute('total', 0) + 1);
-            $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+
+            Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
             $dbForProject->purgeCachedDocument('users', $invitee->getId());
         } else {
@@ -651,10 +658,10 @@ App::post('/v1/teams/:teamId/memberships')
                 ]);
 
                 $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage($messageDoc)
                     ->setRecipients([$phone])
-                    ->setProviderType('SMS')
-                    ->trigger();
+                    ->setProviderType('SMS');
             }
         }
 
@@ -699,7 +706,11 @@ App::get('/v1/teams/:teamId/memberships')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -708,7 +719,9 @@ App::get('/v1/teams/:teamId/memberships')
         // Set internal queries
         $queries[] = Query::equal('teamId', [$teamId]);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1055,7 +1068,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
             $dbForProject->deleteDocument('memberships', $membership->getId());
         } catch (AuthorizationException $exception) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove membership from DB');
         }
 
@@ -1100,7 +1113,12 @@ App::get('/v1/teams/:teamId/logs')
             throw new Exception(Exception::TEAM_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
         $grouped = Query::groupByType($queries);
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;

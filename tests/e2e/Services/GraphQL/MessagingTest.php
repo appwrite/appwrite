@@ -45,8 +45,8 @@ class MessagingTest extends Scope
             'Telesign' => [
                 'providerId' => ID::unique(),
                 'name' => 'Telesign1',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
                 'from' => '+123456789',
             ],
             'Textmagic' => [
@@ -104,7 +104,7 @@ class MessagingTest extends Scope
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ]), $graphQLPayload);
 
-            \array_push($providers, $response['body']['data']['messagingCreate' . $key . 'Provider']);
+            $providers[] = $response['body']['data']['messagingCreate' . $key . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingCreate' . $key . 'Provider']['name']);
         }
@@ -138,8 +138,8 @@ class MessagingTest extends Scope
             'Telesign' => [
                 'providerId' => $providers[3]['_id'],
                 'name' => 'Telesign2',
-                'username' => 'my-username',
-                'password' => 'my-password',
+                'customerId' => 'my-username',
+                'apiKey' => 'my-password',
             ],
             'Textmagic' => [
                 'providerId' => $providers[4]['_id'],

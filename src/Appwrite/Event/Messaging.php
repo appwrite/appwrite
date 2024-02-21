@@ -8,12 +8,12 @@ use Utopia\Queue\Client;
 
 class Messaging extends Event
 {
+    protected string $type = '';
     protected ?string $messageId = null;
     protected ?Document $message = null;
     protected ?array $recipients = null;
     protected ?string $scheduledAt = null;
     protected ?string $providerType = null;
-
 
     public function __construct(protected Connection $connection)
     {
@@ -22,6 +22,29 @@ class Messaging extends Event
         $this
             ->setQueue(Event::MESSAGING_QUEUE_NAME)
             ->setClass(Event::MESSAGING_CLASS_NAME);
+    }
+
+    /**
+     * Sets type for the build event.
+     *
+     * @param string $type Can be `MESSAGE_TYPE_INTERNAL` or `MESSAGE_TYPE_EXTERNAL`.
+     * @return self
+     */
+    public function setType(string $type): self
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    /**
+     * Returns set type for the function event.
+     *
+     * @return string
+     */
+    public function getType(): string
+    {
+        return $this->type;
     }
 
     /**
@@ -162,6 +185,7 @@ class Messaging extends Event
         $client = new Client($this->queue, $this->connection);
 
         return $client->enqueue([
+            'type' => $this->type,
             'project' => $this->project,
             'user' => $this->user,
             'messageId' => $this->messageId,

@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Hamster as EventHamster;
-use Exception;
 use Utopia\App;
 use Utopia\Platform\Action;
 use Utopia\CLI\Console;
@@ -120,7 +119,7 @@ class Hamster extends Action
                     ->setType(EventHamster::TYPE_ORGANISATION)
                     ->setOrganization($organization)
                     ->trigger();
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 Console::error($e->getMessage());
             }
         });
@@ -135,7 +134,7 @@ class Hamster extends Action
                     ->setType(EventHamster::TYPE_PROJECT)
                     ->setProject($project)
                     ->trigger();
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 Console::error($e->getMessage());
             }
         });
@@ -150,7 +149,7 @@ class Hamster extends Action
                     ->setType(EventHamster::TYPE_USER)
                     ->setUser($user)
                     ->trigger();
-            } catch (Exception $e) {
+            } catch (\Throwable $e) {
                 Console::error($e->getMessage());
             }
         });

@@ -12,6 +12,7 @@ use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Validator\Assoc;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
@@ -120,9 +121,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTemplate($template)
-        ->setProject($project)
-        ->trigger();
+        ->setTemplate($template);
 };
 
 App::post('/v1/functions')
@@ -170,6 +169,12 @@ App::post('/v1/functions')
     ->inject('gitHub')
     ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, string $templateRepository, string $templateOwner, string $templateRootDirectory, string $templateBranch, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
         $functionId = ($functionId == 'unique()') ? ID::unique() : $functionId;
+
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        if (!empty($allowList) && !\in_array($runtime, $allowList)) {
+            throw new Exception(Exception::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $runtime . '" is not supported');
+        }
 
         // build from template
         $template = new Document([]);
@@ -228,7 +233,6 @@ App::post('/v1/functions')
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
-                'resourceCollection' => 'functions',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -366,13 +370,19 @@ App::get('/v1/functions')
     ->inject('dbForProject')
     ->action(function (array $queries, string $search, Response $response, Database $dbForProject) {
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
         }
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -485,7 +495,7 @@ App::get('/v1/functions/:functionId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -493,7 +503,7 @@ App::get('/v1/functions/:functionId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -577,7 +587,7 @@ App::get('/v1/functions/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -585,7 +595,7 @@ App::get('/v1/functions/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -834,8 +844,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceFunctions) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -852,7 +862,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
 
         $path = $deployment->getAttribute('path', '');
-        if (!$deviceFunctions->exists($path)) {
+        if (!$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -862,7 +872,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
-        $size = $deviceFunctions->getFileSize($path);
+        $size = $deviceForFunctions->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -884,13 +894,13 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceFunctions->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceForFunctions->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceFunctions->read(
+                    $deviceForFunctions->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -899,7 +909,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 );
             }
         } else {
-            $response->send($deviceFunctions->read($path));
+            $response->send($deviceForFunctions->read($path));
         }
     });
 
@@ -1038,10 +1048,10 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('project')
-    ->inject('deviceFunctions')
-    ->inject('deviceLocal')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
@@ -1122,11 +1132,11 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         // Save to storage
-        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
-        $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
+        $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('chunksTotal', 1);
             $metadata = $deployment->getAttribute('metadata', []);
@@ -1135,7 +1145,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
 
-        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -1158,7 +1168,7 @@ App::post('/v1/functions/:functionId/deployments')
                 }
             }
 
-            $fileSize = $deviceFunctions->getFileSize($path);
+            $fileSize = $deviceForFunctions->getFileSize($path);
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1189,9 +1199,7 @@ App::post('/v1/functions/:functionId/deployments')
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1256,7 +1264,11 @@ App::get('/v1/functions/:functionId/deployments')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1266,7 +1278,9 @@ App::get('/v1/functions/:functionId/deployments')
         $queries[] = Query::equal('resourceId', [$function->getId()]);
         $queries[] = Query::equal('resourceType', ['functions']);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
@@ -1363,8 +1377,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceFunctions) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -1385,7 +1399,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceFunctions->delete($deployment->getAttribute('path', '')))) {
+            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
@@ -1465,9 +1479,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+            ->setDeployment($deployment);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())
@@ -1794,7 +1806,11 @@ App::get('/v1/functions/:functionId/executions')
             throw new Exception(Exception::FUNCTION_NOT_FOUND);
         }
 
-        $queries = Query::parseQueries($queries);
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
 
         if (!empty($search)) {
             $queries[] = Query::search('search', $search);
@@ -1803,7 +1819,9 @@ App::get('/v1/functions/:functionId/executions')
         // Set internal queries
         $queries[] = Query::equal('functionId', [$function->getId()]);
 
-        // Get cursor document if there was a cursor query
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
         $cursor = \array_filter($queries, function ($query) {
             return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
         });
