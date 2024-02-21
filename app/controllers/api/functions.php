@@ -233,7 +233,6 @@ App::post('/v1/functions')
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
-                'resourceCollection' => 'functions',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
