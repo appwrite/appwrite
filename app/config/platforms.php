@@ -15,7 +15,7 @@ return [
             [
                 'key' => 'web',
                 'name' => 'Web',
-                'version' => '14.0.0-rc.4',
+                'version' => '14.0.0-rc.5',
                 'url' => 'https://github.com/appwrite/sdk-for-web',
                 'package' => 'https://www.npmjs.com/package/appwrite',
                 'enabled' => true,
