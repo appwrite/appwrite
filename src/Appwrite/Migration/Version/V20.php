@@ -47,6 +47,7 @@ class V20 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
+        // No need to migrate stats for console
         if ($this->project->getInternalId() !== 'console') {
             Console::info('Migrating Functions');
             $this->migrateFunctions();
