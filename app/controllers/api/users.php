@@ -1660,7 +1660,7 @@ App::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -1729,7 +1729,7 @@ App::post('/v1/users/:userId/tokens')
     ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
