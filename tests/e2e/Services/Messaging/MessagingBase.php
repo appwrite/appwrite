@@ -445,7 +445,7 @@ trait MessagingBase
         $this->assertEquals($target['body']['providerType'], $response['body']['target']['providerType']);
 
         // Test duplicate subscribers not allowed
-        $response = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
+        $failure = $this->client->call(Client::METHOD_POST, '/messaging/topics/' . $topics['public']['$id'] . '/subscribers', \array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -453,7 +453,7 @@ trait MessagingBase
             'targetId' => $target['body']['$id'],
         ]);
 
-        $this->assertEquals(409, $response['headers']['status-code']);
+        $this->assertEquals(409, $failure['headers']['status-code']);
 
         $topic = $this->client->call(Client::METHOD_GET, '/messaging/topics/' . $topics['public']['$id'], [
             'content-type' => 'application/json',
