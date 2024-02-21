@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd03f97115d752d1a94b533ccf570109",
+    "content-hash": "a8c299cb631eb98bbcf0a58a815f74ac",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1551,16 +1551,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/d488223876f88f97bb76fd6681fed0df80558f62",
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62",
                 "shasum": ""
             },
             "require": {
@@ -1593,9 +1593,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.3.0"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-11-14T21:02:37+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2417,16 +2417,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.2",
+            "version": "0.36.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "0aa67479d75f0e0cb7b60454031534d7f0abaece"
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/0aa67479d75f0e0cb7b60454031534d7f0abaece",
-                "reference": "0aa67479d75f0e0cb7b60454031534d7f0abaece",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d932098009d62d37dda73cfe4ebc11f83e21405",
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405",
                 "shasum": ""
             },
             "require": {
@@ -2462,9 +2462,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.2"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.4"
             },
-            "time": "2024-01-19T01:04:35+00:00"
+            "time": "2024-02-20T16:36:15+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3047,16 +3047,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.8.0",
+            "version": "1.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc"
+                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/fad452781b3d774e3337b0c0b245dd8e5a4455fc",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
+                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
                 "shasum": ""
             },
             "require": {
@@ -3099,9 +3099,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.1"
             },
-            "time": "2024-01-11T11:49:22+00:00"
+            "time": "2024-01-18T19:15:27+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -4657,16 +4657,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.8.1",
+            "version": "3.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7"
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/14f5fff1e64118595db5408e946f3a22c75807f7",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
                 "shasum": ""
             },
             "require": {
@@ -4733,7 +4733,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-01-11T20:47:48+00:00"
+            "time": "2024-02-16T15:06:51+00:00"
         },
         {
             "name": "swoole/ide-helper",
