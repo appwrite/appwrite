@@ -13,4 +13,13 @@ val response = messaging.createEmail(
     messageId = "[MESSAGE_ID]",
     subject = "[SUBJECT]",
     content = "[CONTENT]",
+    topics = listOf(), // optional
+    users = listOf(), // optional
+    targets = listOf(), // optional
+    cc = listOf(), // optional
+    bcc = listOf(), // optional
+    attachments = listOf(), // optional
+    status = "draft", // optional
+    html = false, // optional
+    scheduledAt = "" // optional
 )

@@ -9,6 +9,8 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_certificate()
+response = health.get_certificate(
+    domain: '' # optional
+)
 
 puts response.inspect

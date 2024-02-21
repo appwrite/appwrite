@@ -10,7 +10,22 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updatePush(
-    "[MESSAGE_ID]",
+    "[MESSAGE_ID]", // messageId
+    listOf(), // topics (optional)
+    listOf(), // users (optional)
+    listOf(), // targets (optional)
+    "[TITLE]", // title (optional)
+    "[BODY]", // body (optional)
+    mapOf( "a" to "b" ), // data (optional)
+    "[ACTION]", // action (optional)
+    "[ID1:ID2]", // image (optional)
+    "[ICON]", // icon (optional)
+    "[SOUND]", // sound (optional)
+    "[COLOR]", // color (optional)
+    "[TAG]", // tag (optional)
+    0, // badge (optional)
+    MessageStatus.DRAFT, // status (optional)
+    "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +35,4 @@ messaging.updatePush(
         System.out.println(result);
     })
 );
+

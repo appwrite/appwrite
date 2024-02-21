@@ -10,7 +10,17 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateEmail(
-    "[MESSAGE_ID]",
+    "[MESSAGE_ID]", // messageId
+    listOf(), // topics (optional)
+    listOf(), // users (optional)
+    listOf(), // targets (optional)
+    "[SUBJECT]", // subject (optional)
+    "[CONTENT]", // content (optional)
+    MessageStatus.DRAFT, // status (optional)
+    false, // html (optional)
+    listOf(), // cc (optional)
+    listOf(), // bcc (optional)
+    "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +30,4 @@ messaging.updateEmail(
         System.out.println(result);
     })
 );
+

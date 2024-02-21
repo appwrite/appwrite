@@ -1,21 +1,12 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Locale } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let locale = new sdk.Locale(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
+    .setSession(''); // The user session to authenticate with
 
+const locale = new Locale(client);
 
-let promise = locale.listCountriesPhones();
+const response = await locale.listCountriesPhones();
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

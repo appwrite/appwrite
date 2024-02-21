@@ -9,8 +9,8 @@ Client client = new Client(context)
 Teams teams = new Teams(client);
 
 teams.getMembership(
-    "[TEAM_ID]",
-    "[MEMBERSHIP_ID]",
+    "[TEAM_ID]", // teamId 
+    "[MEMBERSHIP_ID]", // membershipId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ teams.getMembership(
         Log.d("Appwrite", result.toString());
     })
 );
+

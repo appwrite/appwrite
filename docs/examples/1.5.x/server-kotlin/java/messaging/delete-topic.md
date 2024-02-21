@@ -10,7 +10,7 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.deleteTopic(
-    "[TOPIC_ID]"
+    "[TOPIC_ID]", // topicId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ messaging.deleteTopic(
         System.out.println(result);
     })
 );
+

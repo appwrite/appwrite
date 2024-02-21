@@ -9,8 +9,19 @@ Client client = new Client(context)
 Storage storage = new Storage(client);
 
 storage.getFilePreview(
-    "[BUCKET_ID]",
-    "[FILE_ID]",
+    "[BUCKET_ID]", // bucketId 
+    "[FILE_ID]", // fileId 
+    0, // width (optional)
+    0, // height (optional)
+    ImageGravity.CENTER, // gravity (optional)
+    0, // quality (optional)
+    0, // borderWidth (optional)
+    "", // borderColor (optional)
+    0, // borderRadius (optional)
+    0, // opacity (optional)
+    -360, // rotation (optional)
+    "", // background (optional)
+    ImageFormat.JPG, // output (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +31,4 @@ storage.getFilePreview(
         Log.d("Appwrite", result.toString());
     })
 );
+

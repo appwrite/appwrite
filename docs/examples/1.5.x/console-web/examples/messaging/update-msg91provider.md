@@ -1,18 +1,18 @@
-import { Client,  Messaging } from "@appwrite.io/console";
+import { Client, Messaging } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const messaging = new Messaging(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await messaging.updateMsg91Provider(
+    '[PROVIDER_ID]', // providerId
+    '[NAME]', // name (optional)
+    false, // enabled (optional)
+    '[SENDER_ID]', // senderId (optional)
+    '[AUTH_KEY]', // authKey (optional)
+    '[FROM]' // from (optional)
+);
 
-const promise = messaging.updateMsg91Provider('[PROVIDER_ID]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

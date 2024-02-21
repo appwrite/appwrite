@@ -11,4 +11,19 @@ val messaging = Messaging(client)
 
 val response = messaging.updatePush(
     messageId = "[MESSAGE_ID]",
+    topics = listOf(), // optional
+    users = listOf(), // optional
+    targets = listOf(), // optional
+    title = "[TITLE]", // optional
+    body = "[BODY]", // optional
+    data = mapOf( "a" to "b" ), // optional
+    action = "[ACTION]", // optional
+    image = "[ID1:ID2]", // optional
+    icon = "[ICON]", // optional
+    sound = "[SOUND]", // optional
+    color = "[COLOR]", // optional
+    tag = "[TAG]", // optional
+    badge = 0, // optional
+    status = "draft", // optional
+    scheduledAt = "" // optional
 )

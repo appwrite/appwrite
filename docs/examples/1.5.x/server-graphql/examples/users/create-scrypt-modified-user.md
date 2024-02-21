@@ -5,12 +5,16 @@ mutation {
         password: "password",
         passwordSalt: "[PASSWORD_SALT]",
         passwordSaltSeparator: "[PASSWORD_SALT_SEPARATOR]",
-        passwordSignerKey: "[PASSWORD_SIGNER_KEY]"
+        passwordSignerKey: "[PASSWORD_SIGNER_KEY]",
+        name: "[NAME]"
     ) {
         _id
         _createdAt
         _updatedAt
         name
+        password
+        hash
+        hashOptions
         registration
         status
         labels
@@ -30,6 +34,7 @@ mutation {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

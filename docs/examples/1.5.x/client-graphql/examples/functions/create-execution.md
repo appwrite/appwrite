@@ -1,6 +1,11 @@
 mutation {
     functionsCreateExecution(
-        functionId: "[FUNCTION_ID]"
+        functionId: "[FUNCTION_ID]",
+        body: "[BODY]",
+        async: false,
+        path: "[PATH]",
+        method: "GET",
+        headers: "{}"
     ) {
         _id
         _createdAt

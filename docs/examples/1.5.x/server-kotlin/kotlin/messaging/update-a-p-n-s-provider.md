@@ -11,4 +11,10 @@ val messaging = Messaging(client)
 
 val response = messaging.updateAPNSProvider(
     providerId = "[PROVIDER_ID]",
+    name = "[NAME]", // optional
+    enabled = false, // optional
+    authKey = "[AUTH_KEY]", // optional
+    authKeyId = "[AUTH_KEY_ID]", // optional
+    teamId = "[TEAM_ID]", // optional
+    bundleId = "[BUNDLE_ID]" // optional
 )

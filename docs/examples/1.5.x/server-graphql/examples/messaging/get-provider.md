@@ -10,5 +10,6 @@ query {
         enabled
         type
         credentials
+        options
     }
 }

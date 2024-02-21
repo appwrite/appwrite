@@ -1,18 +1,15 @@
-import { Client,  Databases } from "appwrite";
+import { Client, Databases } from "appwrite";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const databases = new Databases(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await databases.deleteDocument(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '[DOCUMENT_ID]' // documentId
+);
 
-const promise = databases.deleteDocument('[DATABASE_ID]', '[COLLECTION_ID]', '[DOCUMENT_ID]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

@@ -10,9 +10,10 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateRelationshipAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    RelationMutate.CASCADE, // onDelete (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +23,4 @@ databases.updateRelationshipAttribute(
         System.out.println(result);
     })
 );
+

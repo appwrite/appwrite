@@ -9,6 +9,8 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.list_identities()
+response = account.list_identities(
+    queries: [] # optional
+)
 
 puts response.inspect

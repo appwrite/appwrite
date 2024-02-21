@@ -10,8 +10,8 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.updateEmail(
-    "email@example.com",
-    "password"
+    "email@example.com", // email
+    "password", // password
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ account.updateEmail(
         System.out.println(result);
     })
 );
+

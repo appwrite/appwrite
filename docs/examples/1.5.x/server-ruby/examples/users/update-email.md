@@ -9,6 +9,9 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_email(user_id: '[USER_ID]', email: 'email@example.com')
+response = users.update_email(
+    user_id: '[USER_ID]',
+    email: 'email@example.com'
+)
 
 puts response.inspect

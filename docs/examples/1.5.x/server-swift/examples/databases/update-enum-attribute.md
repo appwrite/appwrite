@@ -12,7 +12,7 @@ let attributeEnum = try await databases.updateEnumAttribute(
     collectionId: "[COLLECTION_ID]",
     key: "",
     elements: [],
-    required: `false`,
+    required: false,
     default: "[DEFAULT]"
 )
 

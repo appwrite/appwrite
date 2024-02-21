@@ -11,9 +11,10 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.createFile(
-    "[BUCKET_ID]",
-    "[FILE_ID]",
-    InputFile.fromPath("file.png"),
+    "[BUCKET_ID]", // bucketId
+    "[FILE_ID]", // fileId
+    InputFile.fromPath("file.png"), // file
+    listOf("read("any")"), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -23,3 +24,4 @@ storage.createFile(
         System.out.println(result);
     })
 );
+

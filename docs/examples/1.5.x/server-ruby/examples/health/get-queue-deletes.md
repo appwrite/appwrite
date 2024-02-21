@@ -9,6 +9,8 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_queue_deletes()
+response = health.get_queue_deletes(
+    threshold: null # optional
+)
 
 puts response.inspect

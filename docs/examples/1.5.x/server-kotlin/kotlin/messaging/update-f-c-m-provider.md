@@ -11,4 +11,7 @@ val messaging = Messaging(client)
 
 val response = messaging.updateFCMProvider(
     providerId = "[PROVIDER_ID]",
+    name = "[NAME]", // optional
+    enabled = false, // optional
+    serviceAccountJSON = mapOf( "a" to "b" ) // optional
 )

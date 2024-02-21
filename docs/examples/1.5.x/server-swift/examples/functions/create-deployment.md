@@ -10,6 +10,8 @@ let functions = Functions(client)
 let deployment = try await functions.createDeployment(
     functionId: "[FUNCTION_ID]",
     code: InputFile.fromPath("file.png"),
-    activate: `false`
+    activate: false,
+    entrypoint: "[ENTRYPOINT]", // optional
+    commands: "[COMMANDS]" // optional
 )
 

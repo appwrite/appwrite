@@ -11,9 +11,11 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.createDeployment(
-    "[FUNCTION_ID]",
-    InputFile.fromPath("file.png"),
-    false,
+    "[FUNCTION_ID]", // functionId
+    InputFile.fromPath("file.png"), // code
+    false, // activate
+    "[ENTRYPOINT]", // entrypoint (optional)
+    "[COMMANDS]", // commands (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -23,3 +25,4 @@ functions.createDeployment(
         System.out.println(result);
     })
 );
+

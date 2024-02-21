@@ -12,4 +12,12 @@ val storage = Storage(client)
 val response = storage.createBucket(
     bucketId = "[BUCKET_ID]",
     name = "[NAME]",
+    permissions = listOf("read("any")"), // optional
+    fileSecurity = false, // optional
+    enabled = false, // optional
+    maximumFileSize = 1, // optional
+    allowedFileExtensions = listOf(), // optional
+    compression = "none", // optional
+    encryption = false, // optional
+    antivirus = false // optional
 )

@@ -9,9 +9,10 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.create(
-    "[USER_ID]",
-    "email@example.com",
-    "",
+    "[USER_ID]", // userId 
+    "email@example.com", // email 
+    "", // password 
+    "[NAME]", // name (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +22,4 @@ account.create(
         Log.d("Appwrite", result.toString());
     })
 );
+

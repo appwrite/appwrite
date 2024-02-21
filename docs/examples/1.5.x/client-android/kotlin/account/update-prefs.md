@@ -9,5 +9,5 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.updatePrefs(
-    prefs = mapOf( "a" to "b" ),
+    prefs = mapOf( "a" to "b" ), 
 )

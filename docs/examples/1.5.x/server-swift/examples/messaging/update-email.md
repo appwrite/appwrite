@@ -8,6 +8,16 @@ let client = Client()
 let messaging = Messaging(client)
 
 let message = try await messaging.updateEmail(
-    messageId: "[MESSAGE_ID]"
+    messageId: "[MESSAGE_ID]",
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    subject: "[SUBJECT]", // optional
+    content: "[CONTENT]", // optional
+    status: .draft, // optional
+    html: false, // optional
+    cc: [], // optional
+    bcc: [], // optional
+    scheduledAt: "" // optional
 )
 

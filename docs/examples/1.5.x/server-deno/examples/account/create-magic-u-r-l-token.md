@@ -1,20 +1,16 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Account } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let account = new sdk.Account(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+    .setProject('5df5acd0d48c2'); // Your project ID
 
+const account = new Account(client);
 
-let promise = account.createMagicURLToken('[USER_ID]', 'email@example.com');
+const response = await account.createMagicURLToken(
+    '[USER_ID]', // userId
+    'email@example.com', // email
+    'https://example.com', // url (optional)
+    false // phrase (optional)
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

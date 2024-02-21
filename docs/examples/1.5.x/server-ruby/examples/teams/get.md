@@ -9,6 +9,8 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.get(team_id: '[TEAM_ID]')
+response = teams.get(
+    team_id: '[TEAM_ID]'
+)
 
 puts response.inspect

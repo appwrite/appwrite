@@ -9,7 +9,7 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updateName(
-    "[NAME]",
+    "[NAME]", // name 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +19,4 @@ account.updateName(
         Log.d("Appwrite", result.toString());
     })
 );
+

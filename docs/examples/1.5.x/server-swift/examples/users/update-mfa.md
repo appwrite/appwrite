@@ -9,6 +9,6 @@ let users = Users(client)
 
 let user = try await users.updateMfa(
     userId: "[USER_ID]",
-    mfa: `false`
+    mfa: false
 )
 

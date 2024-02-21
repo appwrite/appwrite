@@ -7,5 +7,8 @@ let client = Client()
 
 let databases = Databases(client)
 
-let databaseList = try await databases.list()
+let databaseList = try await databases.list(
+    queries: [], // optional
+    search: "[SEARCH]" // optional
+)
 

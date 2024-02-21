@@ -9,6 +9,8 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.delete(message_id: '[MESSAGE_ID]')
+response = messaging.delete(
+    message_id: '[MESSAGE_ID]'
+)
 
 puts response.inspect

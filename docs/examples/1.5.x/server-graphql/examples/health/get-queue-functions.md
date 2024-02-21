@@ -1,5 +1,7 @@
 query {
-    healthGetQueueFunctions {
+    healthGetQueueFunctions(
+        threshold: 0
+    ) {
         size
     }
 }

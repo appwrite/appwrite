@@ -10,6 +10,15 @@ let messaging = Messaging(client)
 let message = try await messaging.createEmail(
     messageId: "[MESSAGE_ID]",
     subject: "[SUBJECT]",
-    content: "[CONTENT]"
+    content: "[CONTENT]",
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    cc: [], // optional
+    bcc: [], // optional
+    attachments: [], // optional
+    status: .draft, // optional
+    html: false, // optional
+    scheduledAt: "" // optional
 )
 

@@ -1,6 +1,9 @@
 mutation {
     messagingUpdateFCMProvider(
-        providerId: "[PROVIDER_ID]"
+        providerId: "[PROVIDER_ID]",
+        name: "[NAME]",
+        enabled: false,
+        serviceAccountJSON: "{}"
     ) {
         _id
         _createdAt
@@ -10,5 +13,6 @@ mutation {
         enabled
         type
         credentials
+        options
     }
 }

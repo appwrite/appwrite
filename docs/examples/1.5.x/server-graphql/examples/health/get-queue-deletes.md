@@ -1,5 +1,7 @@
 query {
-    healthGetQueueDeletes {
+    healthGetQueueDeletes(
+        threshold: 0
+    ) {
         size
     }
 }

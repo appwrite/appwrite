@@ -10,8 +10,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.verifyAuthenticator(
-    AuthenticatorType.TOTP,
-    "[OTP]",
+    AuthenticatorType.TOTP, // type 
+    "[OTP]", // otp 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ account.verifyAuthenticator(
         Log.d("Appwrite", result.toString());
     })
 );
+

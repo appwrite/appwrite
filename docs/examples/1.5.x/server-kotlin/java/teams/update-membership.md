@@ -10,9 +10,9 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.updateMembership(
-    "[TEAM_ID]",
-    "[MEMBERSHIP_ID]",
-    listOf()
+    "[TEAM_ID]", // teamId
+    "[MEMBERSHIP_ID]", // membershipId
+    listOf(), // roles
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +22,4 @@ teams.updateMembership(
         System.out.println(result);
     })
 );
+

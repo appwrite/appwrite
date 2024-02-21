@@ -9,6 +9,9 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.get_membership(team_id: '[TEAM_ID]', membership_id: '[MEMBERSHIP_ID]')
+response = teams.get_membership(
+    team_id: '[TEAM_ID]',
+    membership_id: '[MEMBERSHIP_ID]'
+)
 
 puts response.inspect

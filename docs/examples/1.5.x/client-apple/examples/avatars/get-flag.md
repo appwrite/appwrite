@@ -8,6 +8,9 @@ let client = Client()
 let avatars = Avatars(client)
 
 let bytes = try await avatars.getFlag(
-    code: .afghanistan
+    code: .afghanistan,
+    width: 0, // optional
+    height: 0, // optional
+    quality: 0 // optional
 )
 

@@ -10,6 +10,8 @@ Client client = new Client()
 Health health = new Health(client);
 
 health.getQueueDatabases(
+    "[NAME]", // name (optional)
+    0, // threshold (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +21,4 @@ health.getQueueDatabases(
         System.out.println(result);
     })
 );
+

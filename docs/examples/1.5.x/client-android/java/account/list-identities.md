@@ -9,6 +9,7 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.listIdentities(
+    listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -18,3 +19,4 @@ account.listIdentities(
         Log.d("Appwrite", result.toString());
     })
 );
+

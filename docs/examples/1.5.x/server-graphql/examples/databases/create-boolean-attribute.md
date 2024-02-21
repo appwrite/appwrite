@@ -3,12 +3,16 @@ mutation {
         databaseId: "[DATABASE_ID]",
         collectionId: "[COLLECTION_ID]",
         key: "",
-        required: false
+        required: false,
+        default: false,
+        array: false
     ) {
         key
         type
         status
         error
         required
+        array
+        default
     }
 }

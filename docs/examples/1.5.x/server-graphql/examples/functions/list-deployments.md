@@ -1,6 +1,8 @@
 query {
     functionsListDeployments(
-        functionId: "[FUNCTION_ID]"
+        functionId: "[FUNCTION_ID]",
+        queries: [],
+        search: "[SEARCH]"
     ) {
         total
         deployments {

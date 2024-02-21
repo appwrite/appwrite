@@ -11,4 +11,8 @@ val users = Users(client)
 
 val response = users.create(
     userId = "[USER_ID]",
+    email = "email@example.com", // optional
+    phone = "+12065550100", // optional
+    password = "", // optional
+    name = "[NAME]" // optional
 )

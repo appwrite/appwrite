@@ -9,4 +9,5 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.listLogs(
+    queries = listOf(), // (optional)
 )

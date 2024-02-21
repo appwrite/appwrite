@@ -1,13 +1,14 @@
 from appwrite.client import Client
 
 client = Client()
-
-(client
-  .set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-  .set_project('5df5acd0d48c2') # Your project ID
-  .set_session('') # The user session to authenticate with
-)
+client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('5df5acd0d48c2') # Your project ID
+client.set_session('') # The user session to authenticate with
 
 teams = Teams(client)
 
-result = teams.update_membership('[TEAM_ID]', '[MEMBERSHIP_ID]', [])
+result = teams.update_membership(
+    team_id = '[TEAM_ID]',
+    membership_id = '[MEMBERSHIP_ID]',
+    roles = []
+)

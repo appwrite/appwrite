@@ -9,6 +9,9 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.list_identities()
+response = users.list_identities(
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

@@ -9,6 +9,11 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_initials()
+response = avatars.get_initials(
+    name: '[NAME]', # optional
+    width: 0, # optional
+    height: 0, # optional
+    background: '' # optional
+)
 
 puts response.inspect

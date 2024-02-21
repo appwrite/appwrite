@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.create2FAChallenge(
-    AuthenticationFactor.TOTP
+    AuthenticationFactor.TOTP, // factor
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.create2FAChallenge(
         System.out.println(result);
     })
 );
+

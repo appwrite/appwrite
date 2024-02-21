@@ -9,6 +9,8 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_verification(url: 'https://example.com')
+response = account.create_verification(
+    url: 'https://example.com'
+)
 
 puts response.inspect

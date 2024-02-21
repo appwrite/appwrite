@@ -10,7 +10,16 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateMailgunProvider(
-    "[PROVIDER_ID]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name (optional)
+    "[API_KEY]", // apiKey (optional)
+    "[DOMAIN]", // domain (optional)
+    false, // isEuRegion (optional)
+    false, // enabled (optional)
+    "[FROM_NAME]", // fromName (optional)
+    "email@example.com", // fromEmail (optional)
+    "[REPLY_TO_NAME]", // replyToName (optional)
+    "[REPLY_TO_EMAIL]", // replyToEmail (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +29,4 @@ messaging.updateMailgunProvider(
         System.out.println(result);
     })
 );
+

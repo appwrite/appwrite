@@ -11,4 +11,5 @@ val account = Account(client)
 
 val response = account.updatePassword(
     password = "",
+    oldPassword = "password" // optional
 )

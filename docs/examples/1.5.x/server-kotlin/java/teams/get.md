@@ -10,7 +10,7 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.get(
-    "[TEAM_ID]"
+    "[TEAM_ID]", // teamId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ teams.get(
         System.out.println(result);
     })
 );
+

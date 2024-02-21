@@ -9,6 +9,8 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.get_topic(topic_id: '[TOPIC_ID]')
+response = messaging.get_topic(
+    topic_id: '[TOPIC_ID]'
+)
 
 puts response.inspect

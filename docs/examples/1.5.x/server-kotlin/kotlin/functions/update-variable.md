@@ -13,4 +13,5 @@ val response = functions.updateVariable(
     functionId = "[FUNCTION_ID]",
     variableId = "[VARIABLE_ID]",
     key = "[KEY]",
+    value = "[VALUE]" // optional
 )

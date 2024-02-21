@@ -1,20 +1,17 @@
 const sdk = require('node-appwrite');
 
-// Init SDK
-const client = new sdk.Client();
+const client = new sdk.Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2') // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
 
 const databases = new sdk.Databases(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
-;
-
-const promise = databases.createIndex('[DATABASE_ID]', '[COLLECTION_ID]', '', sdk.IndexType.Key, []);
-
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+const response = await databases.createIndex(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '', // key
+    sdk.IndexType.Key, // type
+    [], // attributes
+    [] // orders (optional)
+);

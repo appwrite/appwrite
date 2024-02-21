@@ -5,14 +5,24 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-var messaging = new Messaging(client);
+Messaging messaging = new Messaging(client);
 
 Message result = await messaging.CreateEmail(
     messageId: "[MESSAGE_ID]",
     subject: "[SUBJECT]",
-    content: "[CONTENT]");
+    content: "[CONTENT]",
+    topics: new List<string>(), // optional
+    users: new List<string>(), // optional
+    targets: new List<string>(), // optional
+    cc: new List<string>(), // optional
+    bcc: new List<string>(), // optional
+    attachments: new List<string>(), // optional
+    status: MessageStatus.Draft, // optional
+    html: false, // optional
+    scheduledAt: "" // optional
+);

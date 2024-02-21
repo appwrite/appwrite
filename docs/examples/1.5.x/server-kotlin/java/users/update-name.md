@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateName(
-    "[USER_ID]",
-    "[NAME]"
+    "[USER_ID]", // userId
+    "[NAME]", // name
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updateName(
         System.out.println(result);
     })
 );
+

@@ -10,7 +10,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.deleteSessions(
-    "[USER_ID]"
+    "[USER_ID]", // userId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ users.deleteSessions(
         System.out.println(result);
     })
 );
+

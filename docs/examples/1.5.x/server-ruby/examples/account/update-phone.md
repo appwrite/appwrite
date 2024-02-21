@@ -9,6 +9,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_phone(phone: '+12065550100', password: 'password')
+response = account.update_phone(
+    phone: '+12065550100',
+    password: 'password'
+)
 
 puts response.inspect

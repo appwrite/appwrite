@@ -10,7 +10,7 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.listVariables(
-    "[FUNCTION_ID]"
+    "[FUNCTION_ID]", // functionId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ functions.listVariables(
         System.out.println(result);
     })
 );
+

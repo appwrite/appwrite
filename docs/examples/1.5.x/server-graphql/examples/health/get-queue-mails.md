@@ -1,5 +1,7 @@
 query {
-    healthGetQueueMails {
+    healthGetQueueMails(
+        threshold: 0
+    ) {
         size
     }
 }

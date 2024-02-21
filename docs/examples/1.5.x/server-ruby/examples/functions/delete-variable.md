@@ -9,6 +9,9 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.delete_variable(function_id: '[FUNCTION_ID]', variable_id: '[VARIABLE_ID]')
+response = functions.delete_variable(
+    function_id: '[FUNCTION_ID]',
+    variable_id: '[VARIABLE_ID]'
+)
 
 puts response.inspect

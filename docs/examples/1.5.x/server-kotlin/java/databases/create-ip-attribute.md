@@ -10,10 +10,12 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createIpAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    "", // default (optional)
+    false, // array (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -23,3 +25,4 @@ databases.createIpAttribute(
         System.out.println(result);
     })
 );
+

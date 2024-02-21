@@ -9,6 +9,9 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_prefs(user_id: '[USER_ID]', prefs: {})
+response = users.update_prefs(
+    user_id: '[USER_ID]',
+    prefs: {}
+)
 
 puts response.inspect

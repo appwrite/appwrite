@@ -11,11 +11,12 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createIndex(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    IndexType.KEY,
-    listOf(),
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    IndexType.KEY, // type
+    listOf(), // attributes
+    listOf(), // orders (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -25,3 +26,4 @@ databases.createIndex(
         System.out.println(result);
     })
 );
+

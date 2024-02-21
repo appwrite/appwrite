@@ -10,11 +10,11 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateBooleanAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
-    false
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    false, // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +24,4 @@ databases.updateBooleanAttribute(
         System.out.println(result);
     })
 );
+

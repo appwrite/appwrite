@@ -9,6 +9,10 @@ let messaging = Messaging(client)
 
 let provider = try await messaging.createMsg91Provider(
     providerId: "[PROVIDER_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    from: "+12065550100", // optional
+    senderId: "[SENDER_ID]", // optional
+    authKey: "[AUTH_KEY]", // optional
+    enabled: false // optional
 )
 

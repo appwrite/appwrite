@@ -11,7 +11,10 @@ Client client = new Client()
 Avatars avatars = new Avatars(client);
 
 avatars.getBrowser(
-    Browser.AVANT_BROWSER,
+    Browser.AVANT_BROWSER, // code
+    0, // width (optional)
+    0, // height (optional)
+    0, // quality (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +24,4 @@ avatars.getBrowser(
         System.out.println(result);
     })
 );
+

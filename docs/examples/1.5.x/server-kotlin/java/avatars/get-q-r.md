@@ -10,7 +10,10 @@ Client client = new Client()
 Avatars avatars = new Avatars(client);
 
 avatars.getQR(
-    "[TEXT]",
+    "[TEXT]", // text
+    1, // size (optional)
+    0, // margin (optional)
+    false, // download (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +23,4 @@ avatars.getQR(
         System.out.println(result);
     })
 );
+

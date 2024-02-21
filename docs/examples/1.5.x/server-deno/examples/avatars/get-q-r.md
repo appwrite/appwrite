@@ -1,21 +1,17 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Avatars } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let avatars = new sdk.Avatars(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
+    .setSession(''); // The user session to authenticate with
 
+const avatars = new Avatars(client);
 
-let promise = avatars.getQR('[TEXT]');
+const result = avatars.getQR(
+    '[TEXT]', // text
+    1, // size (optional)
+    0, // margin (optional)
+    false // download (optional)
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(result);

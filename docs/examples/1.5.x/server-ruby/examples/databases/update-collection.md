@@ -9,6 +9,13 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.update_collection(database_id: '[DATABASE_ID]', collection_id: '[COLLECTION_ID]', name: '[NAME]')
+response = databases.update_collection(
+    database_id: '[DATABASE_ID]',
+    collection_id: '[COLLECTION_ID]',
+    name: '[NAME]',
+    permissions: ["read("any")"], # optional
+    document_security: false, # optional
+    enabled: false # optional
+)
 
 puts response.inspect

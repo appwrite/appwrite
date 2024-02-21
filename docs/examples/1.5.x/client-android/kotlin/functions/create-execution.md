@@ -9,5 +9,10 @@ val client = Client(context)
 val functions = Functions(client)
 
 val response = functions.createExecution(
-    functionId = "[FUNCTION_ID]",
+    functionId = "[FUNCTION_ID]", 
+    body = "[BODY]", // (optional)
+    async = false, // (optional)
+    path = "[PATH]", // (optional)
+    method = ExecutionMethod.GET, // (optional)
+    headers = mapOf( "a" to "b" ), // (optional)
 )

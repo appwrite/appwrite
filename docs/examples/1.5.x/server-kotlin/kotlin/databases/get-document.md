@@ -13,4 +13,5 @@ val response = databases.getDocument(
     databaseId = "[DATABASE_ID]",
     collectionId = "[COLLECTION_ID]",
     documentId = "[DOCUMENT_ID]",
+    queries = listOf() // optional
 )

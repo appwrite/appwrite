@@ -10,13 +10,13 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateFloatAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
-    0,
-    0,
-    0
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    0, // min
+    0, // max
+    0, // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -26,3 +26,4 @@ databases.updateFloatAttribute(
         System.out.println(result);
     })
 );
+

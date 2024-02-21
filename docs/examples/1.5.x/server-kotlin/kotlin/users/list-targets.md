@@ -11,4 +11,5 @@ val users = Users(client)
 
 val response = users.listTargets(
     userId = "[USER_ID]",
+    queries = listOf() // optional
 )

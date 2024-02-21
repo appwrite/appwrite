@@ -9,6 +9,11 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_qr(text: '[TEXT]')
+response = avatars.get_qr(
+    text: '[TEXT]',
+    size: 1, # optional
+    margin: 0, # optional
+    download: false # optional
+)
 
 puts response.inspect

@@ -9,6 +9,17 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.update_bucket(bucket_id: '[BUCKET_ID]', name: '[NAME]')
+response = storage.update_bucket(
+    bucket_id: '[BUCKET_ID]',
+    name: '[NAME]',
+    permissions: ["read("any")"], # optional
+    file_security: false, # optional
+    enabled: false, # optional
+    maximum_file_size: 1, # optional
+    allowed_file_extensions: [], # optional
+    compression: ::NONE, # optional
+    encryption: false, # optional
+    antivirus: false # optional
+)
 
 puts response.inspect

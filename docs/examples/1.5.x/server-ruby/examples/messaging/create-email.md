@@ -9,6 +9,19 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_email(message_id: '[MESSAGE_ID]', subject: '[SUBJECT]', content: '[CONTENT]')
+response = messaging.create_email(
+    message_id: '[MESSAGE_ID]',
+    subject: '[SUBJECT]',
+    content: '[CONTENT]',
+    topics: [], # optional
+    users: [], # optional
+    targets: [], # optional
+    cc: [], # optional
+    bcc: [], # optional
+    attachments: [], # optional
+    status: MessageStatus::DRAFT, # optional
+    html: false, # optional
+    scheduled_at: '' # optional
+)
 
 puts response.inspect

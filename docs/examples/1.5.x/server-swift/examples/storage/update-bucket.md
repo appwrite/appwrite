@@ -9,6 +9,14 @@ let storage = Storage(client)
 
 let bucket = try await storage.updateBucket(
     bucketId: "[BUCKET_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    permissions: ["read("any")"], // optional
+    fileSecurity: false, // optional
+    enabled: false, // optional
+    maximumFileSize: 1, // optional
+    allowedFileExtensions: [], // optional
+    compression: .none, // optional
+    encryption: false, // optional
+    antivirus: false // optional
 )
 

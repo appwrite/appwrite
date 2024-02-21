@@ -7,5 +7,7 @@ let client = Client()
 
 let health = Health(client)
 
-let healthQueue = try await health.getQueueBuilds()
+let healthQueue = try await health.getQueueBuilds(
+    threshold: 0 // optional
+)
 

@@ -9,6 +9,8 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.createMagicURLToken(
-    userId = "[USER_ID]",
-    email = "email@example.com",
+    userId = "[USER_ID]", 
+    email = "email@example.com", 
+    url = "https://example.com", // (optional)
+    phrase = false, // (optional)
 )

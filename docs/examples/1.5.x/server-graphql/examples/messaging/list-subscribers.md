@@ -1,6 +1,8 @@
 query {
     messagingListSubscribers(
-        topicId: "[TOPIC_ID]"
+        topicId: "[TOPIC_ID]",
+        queries: [],
+        search: "[SEARCH]"
     ) {
         total
         subscribers {
@@ -14,6 +16,7 @@ query {
                 _updatedAt
                 name
                 userId
+                providerId
                 providerType
                 identifier
             }

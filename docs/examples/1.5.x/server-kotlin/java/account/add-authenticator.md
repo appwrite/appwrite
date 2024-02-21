@@ -11,7 +11,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.addAuthenticator(
-    AuthenticatorType.TOTP
+    AuthenticatorType.TOTP, // type
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ account.addAuthenticator(
         System.out.println(result);
     })
 );
+

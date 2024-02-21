@@ -9,9 +9,9 @@ Client client = new Client(context)
 Messaging messaging = new Messaging(client);
 
 messaging.createSubscriber(
-    "[TOPIC_ID]",
-    "[SUBSCRIBER_ID]",
-    "[TARGET_ID]",
+    "[TOPIC_ID]", // topicId 
+    "[SUBSCRIBER_ID]", // subscriberId 
+    "[TARGET_ID]", // targetId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ messaging.createSubscriber(
         Log.d("Appwrite", result.toString());
     })
 );
+

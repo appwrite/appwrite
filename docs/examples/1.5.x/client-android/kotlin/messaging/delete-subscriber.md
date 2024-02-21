@@ -9,6 +9,6 @@ val client = Client(context)
 val messaging = Messaging(client)
 
 val response = messaging.deleteSubscriber(
-    topicId = "[TOPIC_ID]",
-    subscriberId = "[SUBSCRIBER_ID]",
+    topicId = "[TOPIC_ID]", 
+    subscriberId = "[SUBSCRIBER_ID]", 
 )

@@ -10,7 +10,7 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.addAuthenticator(
-    AuthenticatorType.TOTP,
+    AuthenticatorType.TOTP, // type 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.addAuthenticator(
         Log.d("Appwrite", result.toString());
     })
 );
+

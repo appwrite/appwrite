@@ -7,5 +7,8 @@ let client = Client()
 
 let users = Users(client)
 
-let userList = try await users.list()
+let userList = try await users.list(
+    queries: [], // optional
+    search: "[SEARCH]" // optional
+)
 

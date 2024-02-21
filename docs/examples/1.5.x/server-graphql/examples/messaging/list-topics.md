@@ -1,5 +1,8 @@
 query {
-    messagingListTopics {
+    messagingListTopics(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         topics {
             _id

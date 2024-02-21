@@ -8,6 +8,7 @@ mutation {
         _updatedAt
         name
         userId
+        providerId
         providerType
         identifier
     }

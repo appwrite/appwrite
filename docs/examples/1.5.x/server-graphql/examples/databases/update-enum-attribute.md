@@ -12,7 +12,9 @@ mutation {
         status
         error
         required
+        array
         elements
         format
+        default
     }
 }

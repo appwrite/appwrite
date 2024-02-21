@@ -6,5 +6,7 @@ let client = Client()
 
 let account = Account(client)
 
-let logList = try await account.listLogs()
+let logList = try await account.listLogs(
+    queries: [] // optional
+)
 

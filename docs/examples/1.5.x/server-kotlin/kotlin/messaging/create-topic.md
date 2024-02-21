@@ -12,4 +12,5 @@ val messaging = Messaging(client)
 val response = messaging.createTopic(
     topicId = "[TOPIC_ID]",
     name = "[NAME]",
+    subscribe = listOf("any") // optional
 )

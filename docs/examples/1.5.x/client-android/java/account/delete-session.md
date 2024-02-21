@@ -9,7 +9,7 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.deleteSession(
-    "[SESSION_ID]",
+    "[SESSION_ID]", // sessionId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +19,4 @@ account.deleteSession(
         Log.d("Appwrite", result.toString());
     })
 );
+

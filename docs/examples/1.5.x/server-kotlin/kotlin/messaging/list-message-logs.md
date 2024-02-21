@@ -11,4 +11,5 @@ val messaging = Messaging(client)
 
 val response = messaging.listMessageLogs(
     messageId = "[MESSAGE_ID]",
+    queries = listOf() // optional
 )

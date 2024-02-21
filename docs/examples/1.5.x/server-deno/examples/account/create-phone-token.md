@@ -1,20 +1,14 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Account } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let account = new sdk.Account(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+    .setProject('5df5acd0d48c2'); // Your project ID
 
+const account = new Account(client);
 
-let promise = account.createPhoneToken('[USER_ID]', '+12065550100');
+const response = await account.createPhoneToken(
+    '[USER_ID]', // userId
+    '+12065550100' // phone
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

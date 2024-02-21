@@ -7,5 +7,8 @@ let client = Client()
 
 let functions = Functions(client)
 
-let functionList = try await functions.list()
+let functionList = try await functions.list(
+    queries: [], // optional
+    search: "[SEARCH]" // optional
+)
 

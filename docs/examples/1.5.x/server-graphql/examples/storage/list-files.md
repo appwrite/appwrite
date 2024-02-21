@@ -1,6 +1,8 @@
 query {
     storageListFiles(
-        bucketId: "[BUCKET_ID]"
+        bucketId: "[BUCKET_ID]",
+        queries: [],
+        search: "[SEARCH]"
     ) {
         total
         files {

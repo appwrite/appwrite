@@ -1,5 +1,7 @@
 query {
-    healthGetQueueCertificates {
+    healthGetQueueCertificates(
+        threshold: 0
+    ) {
         size
     }
 }

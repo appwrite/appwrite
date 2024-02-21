@@ -1,6 +1,7 @@
 query {
     usersListTargets(
-        userId: "[USER_ID]"
+        userId: "[USER_ID]",
+        queries: []
     ) {
         total
         targets {
@@ -9,6 +10,7 @@ query {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

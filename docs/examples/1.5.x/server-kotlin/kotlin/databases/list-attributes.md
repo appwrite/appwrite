@@ -12,4 +12,5 @@ val databases = Databases(client)
 val response = databases.listAttributes(
     databaseId = "[DATABASE_ID]",
     collectionId = "[COLLECTION_ID]",
+    queries = listOf() // optional
 )

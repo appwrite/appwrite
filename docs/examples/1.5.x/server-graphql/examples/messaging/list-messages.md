@@ -1,5 +1,8 @@
 query {
-    messagingListMessages {
+    messagingListMessages(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         messages {
             _id
@@ -9,6 +12,9 @@ query {
             topics
             users
             targets
+            scheduledAt
+            deliveredAt
+            deliveryErrors
             deliveredTotal
             data
             status

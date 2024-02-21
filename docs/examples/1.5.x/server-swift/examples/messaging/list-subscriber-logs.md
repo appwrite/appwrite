@@ -8,6 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let logList = try await messaging.listSubscriberLogs(
-    subscriberId: "[SUBSCRIBER_ID]"
+    subscriberId: "[SUBSCRIBER_ID]",
+    queries: [] // optional
 )
 

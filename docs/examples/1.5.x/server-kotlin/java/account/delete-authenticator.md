@@ -11,8 +11,8 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.deleteAuthenticator(
-    AuthenticatorType.TOTP,
-    "[OTP]"
+    AuthenticatorType.TOTP, // type
+    "[OTP]", // otp
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +22,4 @@ account.deleteAuthenticator(
         System.out.println(result);
     })
 );
+

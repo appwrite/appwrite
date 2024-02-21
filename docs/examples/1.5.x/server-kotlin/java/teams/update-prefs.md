@@ -10,8 +10,8 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.updatePrefs(
-    "[TEAM_ID]",
-    mapOf( "a" to "b" )
+    "[TEAM_ID]", // teamId
+    mapOf( "a" to "b" ), // prefs
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ teams.updatePrefs(
         System.out.println(result);
     })
 );
+

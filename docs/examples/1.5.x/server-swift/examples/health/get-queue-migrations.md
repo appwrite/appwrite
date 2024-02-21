@@ -7,5 +7,7 @@ let client = Client()
 
 let health = Health(client)
 
-let healthQueue = try await health.getQueueMigrations()
+let healthQueue = try await health.getQueueMigrations(
+    threshold: 0 // optional
+)
 

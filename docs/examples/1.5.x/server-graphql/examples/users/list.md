@@ -1,11 +1,17 @@
 query {
-    usersList {
+    usersList(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         users {
             _id
             _createdAt
             _updatedAt
             name
+            password
+            hash
+            hashOptions
             registration
             status
             labels
@@ -25,6 +31,7 @@ query {
                 _updatedAt
                 name
                 userId
+                providerId
                 providerType
                 identifier
             }

@@ -1,5 +1,8 @@
 query {
-    usersListIdentities {
+    usersListIdentities(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         identities {
             _id

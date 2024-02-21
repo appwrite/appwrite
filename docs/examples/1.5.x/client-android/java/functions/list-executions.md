@@ -9,7 +9,9 @@ Client client = new Client(context)
 Functions functions = new Functions(client);
 
 functions.listExecutions(
-    "[FUNCTION_ID]",
+    "[FUNCTION_ID]", // functionId 
+    listOf(), // queries (optional)
+    "[SEARCH]", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +21,4 @@ functions.listExecutions(
         Log.d("Appwrite", result.toString());
     })
 );
+

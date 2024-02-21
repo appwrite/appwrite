@@ -10,6 +10,8 @@ let users = Users(client)
 let user = try await users.createSHAUser(
     userId: "[USER_ID]",
     email: "email@example.com",
-    password: "password"
+    password: "password",
+    passwordVersion: .sha1, // optional
+    name: "[NAME]" // optional
 )
 

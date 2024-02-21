@@ -1,18 +1,14 @@
-import { Client, AuthenticatorType, Account } from "appwrite";
+import { Client, Account, AuthenticatorType } from "appwrite";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const account = new Account(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await account.verifyAuthenticator(
+    AuthenticatorType.Totp, // type
+    '[OTP]' // otp
+);
 
-const promise = account.verifyAuthenticator(AuthenticatorType.Totp, '[OTP]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

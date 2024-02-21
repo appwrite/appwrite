@@ -2,12 +2,17 @@ mutation {
     usersCreateSHAUser(
         userId: "[USER_ID]",
         email: "email@example.com",
-        password: "password"
+        password: "password",
+        passwordVersion: "sha1",
+        name: "[NAME]"
     ) {
         _id
         _createdAt
         _updatedAt
         name
+        password
+        hash
+        hashOptions
         registration
         status
         labels
@@ -27,6 +32,7 @@ mutation {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

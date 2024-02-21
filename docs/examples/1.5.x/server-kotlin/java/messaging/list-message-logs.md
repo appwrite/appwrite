@@ -10,7 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listMessageLogs(
-    "[MESSAGE_ID]",
+    "[MESSAGE_ID]", // messageId
+    listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +21,4 @@ messaging.listMessageLogs(
         System.out.println(result);
     })
 );
+

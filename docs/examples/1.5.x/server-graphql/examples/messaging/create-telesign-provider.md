@@ -1,7 +1,11 @@
 mutation {
     messagingCreateTelesignProvider(
         providerId: "[PROVIDER_ID]",
-        name: "[NAME]"
+        name: "[NAME]",
+        from: "+12065550100",
+        customerId: "[CUSTOMER_ID]",
+        apiKey: "[API_KEY]",
+        enabled: false
     ) {
         _id
         _createdAt
@@ -11,5 +15,6 @@ mutation {
         enabled
         type
         credentials
+        options
     }
 }

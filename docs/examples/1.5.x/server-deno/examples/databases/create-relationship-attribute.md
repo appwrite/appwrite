@@ -1,21 +1,21 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Databases, RelationshipType, RelationMutate } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let databases = new sdk.Databases(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
-;
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
 
+const databases = new Databases(client);
 
-let promise = databases.createRelationshipAttribute('[DATABASE_ID]', '[COLLECTION_ID]', '[RELATED_COLLECTION_ID]', RelationshipType.OneToOne);
+const response = await databases.createRelationshipAttribute(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '[RELATED_COLLECTION_ID]', // relatedCollectionId
+    RelationshipType.OneToOne, // type
+    false, // twoWay (optional)
+    '', // key (optional)
+    '', // twoWayKey (optional)
+    RelationMutate.Cascade // onDelete (optional)
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

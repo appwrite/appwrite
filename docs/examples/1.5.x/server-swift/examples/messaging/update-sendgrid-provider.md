@@ -8,6 +8,13 @@ let client = Client()
 let messaging = Messaging(client)
 
 let provider = try await messaging.updateSendgridProvider(
-    providerId: "[PROVIDER_ID]"
+    providerId: "[PROVIDER_ID]",
+    name: "[NAME]", // optional
+    enabled: false, // optional
+    apiKey: "[API_KEY]", // optional
+    fromName: "[FROM_NAME]", // optional
+    fromEmail: "email@example.com", // optional
+    replyToName: "[REPLY_TO_NAME]", // optional
+    replyToEmail: "[REPLY_TO_EMAIL]" // optional
 )
 

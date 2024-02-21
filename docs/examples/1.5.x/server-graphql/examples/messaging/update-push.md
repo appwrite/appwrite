@@ -1,6 +1,21 @@
 mutation {
     messagingUpdatePush(
-        messageId: "[MESSAGE_ID]"
+        messageId: "[MESSAGE_ID]",
+        topics: [],
+        users: [],
+        targets: [],
+        title: "[TITLE]",
+        body: "[BODY]",
+        data: "{}",
+        action: "[ACTION]",
+        image: "[ID1:ID2]",
+        icon: "[ICON]",
+        sound: "[SOUND]",
+        color: "[COLOR]",
+        tag: "[TAG]",
+        badge: 0,
+        status: "draft",
+        scheduledAt: ""
     ) {
         _id
         _createdAt
@@ -9,6 +24,9 @@ mutation {
         topics
         users
         targets
+        scheduledAt
+        deliveredAt
+        deliveryErrors
         deliveredTotal
         data
         status

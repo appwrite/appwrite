@@ -9,6 +9,10 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_topic(topic_id: '[TOPIC_ID]', name: '[NAME]')
+response = messaging.create_topic(
+    topic_id: '[TOPIC_ID]',
+    name: '[NAME]',
+    subscribe: ["any"] # optional
+)
 
 puts response.inspect

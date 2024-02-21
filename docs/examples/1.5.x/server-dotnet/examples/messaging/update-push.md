@@ -3,12 +3,28 @@ using Appwrite.Services;
 using Appwrite.Models;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-var messaging = new Messaging(client);
+Messaging messaging = new Messaging(client);
 
 Message result = await messaging.UpdatePush(
-    messageId: "[MESSAGE_ID]");
+    messageId: "[MESSAGE_ID]",
+    topics: new List<string>(), // optional
+    users: new List<string>(), // optional
+    targets: new List<string>(), // optional
+    title: "[TITLE]", // optional
+    body: "[BODY]", // optional
+    data: [object], // optional
+    action: "[ACTION]", // optional
+    image: "[ID1:ID2]", // optional
+    icon: "[ICON]", // optional
+    sound: "[SOUND]", // optional
+    color: "[COLOR]", // optional
+    tag: "[TAG]", // optional
+    badge: 0, // optional
+    status: MessageStatus.Draft, // optional
+    scheduledAt: "" // optional
+);

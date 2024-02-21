@@ -11,4 +11,5 @@ val messaging = Messaging(client)
 
 val response = messaging.listSubscriberLogs(
     subscriberId = "[SUBSCRIBER_ID]",
+    queries = listOf() // optional
 )

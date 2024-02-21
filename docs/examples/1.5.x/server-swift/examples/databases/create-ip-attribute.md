@@ -11,6 +11,8 @@ let attributeIp = try await databases.createIpAttribute(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
     key: "",
-    required: `false`
+    required: false,
+    default: "", // optional
+    array: false // optional
 )
 

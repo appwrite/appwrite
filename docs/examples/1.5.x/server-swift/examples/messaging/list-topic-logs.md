@@ -8,6 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let logList = try await messaging.listTopicLogs(
-    topicId: "[TOPIC_ID]"
+    topicId: "[TOPIC_ID]",
+    queries: [] // optional
 )
 

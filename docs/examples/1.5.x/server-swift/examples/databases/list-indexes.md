@@ -9,6 +9,7 @@ let databases = Databases(client)
 
 let indexList = try await databases.listIndexes(
     databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]"
+    collectionId: "[COLLECTION_ID]",
+    queries: [] // optional
 )
 

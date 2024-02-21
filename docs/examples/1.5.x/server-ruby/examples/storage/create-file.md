@@ -9,6 +9,11 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.create_file(bucket_id: '[BUCKET_ID]', file_id: '[FILE_ID]', file: InputFile.from_path('dir/file.png'))
+response = storage.create_file(
+    bucket_id: '[BUCKET_ID]',
+    file_id: '[FILE_ID]',
+    file: InputFile.from_path('dir/file.png'),
+    permissions: ["read("any")"] # optional
+)
 
 puts response.inspect

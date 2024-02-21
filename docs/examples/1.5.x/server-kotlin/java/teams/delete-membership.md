@@ -10,8 +10,8 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.deleteMembership(
-    "[TEAM_ID]",
-    "[MEMBERSHIP_ID]"
+    "[TEAM_ID]", // teamId
+    "[MEMBERSHIP_ID]", // membershipId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ teams.deleteMembership(
         System.out.println(result);
     })
 );
+

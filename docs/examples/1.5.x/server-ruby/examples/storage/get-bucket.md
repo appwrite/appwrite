@@ -9,6 +9,8 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.get_bucket(bucket_id: '[BUCKET_ID]')
+response = storage.get_bucket(
+    bucket_id: '[BUCKET_ID]'
+)
 
 puts response.inspect

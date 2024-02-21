@@ -9,5 +9,7 @@ val client = Client(context)
 val functions = Functions(client)
 
 val response = functions.listExecutions(
-    functionId = "[FUNCTION_ID]",
+    functionId = "[FUNCTION_ID]", 
+    queries = listOf(), // (optional)
+    search = "[SEARCH]", // (optional)
 )

@@ -1,5 +1,8 @@
 query {
-    messagingListProviders {
+    messagingListProviders(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         providers {
             _id
@@ -10,6 +13,7 @@ query {
             enabled
             type
             credentials
+            options
         }
     }
 }

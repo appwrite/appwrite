@@ -13,4 +13,7 @@ val response = databases.updateCollection(
     databaseId = "[DATABASE_ID]",
     collectionId = "[COLLECTION_ID]",
     name = "[NAME]",
+    permissions = listOf("read("any")"), // optional
+    documentSecurity = false, // optional
+    enabled = false // optional
 )

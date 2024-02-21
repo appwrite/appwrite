@@ -9,6 +9,10 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.delete_document(database_id: '[DATABASE_ID]', collection_id: '[COLLECTION_ID]', document_id: '[DOCUMENT_ID]')
+response = databases.delete_document(
+    database_id: '[DATABASE_ID]',
+    collection_id: '[COLLECTION_ID]',
+    document_id: '[DOCUMENT_ID]'
+)
 
 puts response.inspect

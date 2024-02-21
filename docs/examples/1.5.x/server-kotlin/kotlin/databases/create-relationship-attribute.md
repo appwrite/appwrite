@@ -15,4 +15,8 @@ val response = databases.createRelationshipAttribute(
     collectionId = "[COLLECTION_ID]",
     relatedCollectionId = "[RELATED_COLLECTION_ID]",
     type =  RelationshipType.ONE_TO_ONE,
+    twoWay = false, // optional
+    key = "", // optional
+    twoWayKey = "", // optional
+    onDelete = "cascade" // optional
 )

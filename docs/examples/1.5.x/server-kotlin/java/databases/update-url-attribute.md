@@ -10,11 +10,11 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateUrlAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
-    "https://example.com"
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    "https://example.com", // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +24,4 @@ databases.updateUrlAttribute(
         System.out.println(result);
     })
 );
+

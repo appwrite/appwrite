@@ -14,4 +14,5 @@ val response = databases.createDocument(
     collectionId = "[COLLECTION_ID]",
     documentId = "[DOCUMENT_ID]",
     data = mapOf( "a" to "b" ),
+    permissions = listOf("read("any")") // optional
 )

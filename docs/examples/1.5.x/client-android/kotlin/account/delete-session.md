@@ -9,5 +9,5 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.deleteSession(
-    sessionId = "[SESSION_ID]",
+    sessionId = "[SESSION_ID]", 
 )

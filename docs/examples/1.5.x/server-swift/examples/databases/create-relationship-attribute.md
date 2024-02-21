@@ -12,6 +12,10 @@ let attributeRelationship = try await databases.createRelationshipAttribute(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
     relatedCollectionId: "[RELATED_COLLECTION_ID]",
-    type: .oneToOne
+    type: .oneToOne,
+    twoWay: false, // optional
+    key: "", // optional
+    twoWayKey: "", // optional
+    onDelete: .cascade // optional
 )
 

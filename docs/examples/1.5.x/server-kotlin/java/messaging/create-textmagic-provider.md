@@ -10,8 +10,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createTextmagicProvider(
-    "[PROVIDER_ID]",
-    "[NAME]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name
+    "+12065550100", // from (optional)
+    "[USERNAME]", // username (optional)
+    "[API_KEY]", // apiKey (optional)
+    false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +25,4 @@ messaging.createTextmagicProvider(
         System.out.println(result);
     })
 );
+

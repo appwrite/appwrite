@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateMfa(
-    "[USER_ID]",
-    false
+    "[USER_ID]", // userId
+    false, // mfa
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updateMfa(
         System.out.println(result);
     })
 );
+

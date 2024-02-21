@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateEmail(
-    "[USER_ID]",
-    "email@example.com"
+    "[USER_ID]", // userId
+    "email@example.com", // email
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updateEmail(
         System.out.println(result);
     })
 );
+

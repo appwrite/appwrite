@@ -9,6 +9,11 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_fcm_provider(provider_id: '[PROVIDER_ID]')
+response = messaging.update_fcm_provider(
+    provider_id: '[PROVIDER_ID]',
+    name: '[NAME]', # optional
+    enabled: false, # optional
+    service_account_json: {} # optional
+)
 
 puts response.inspect

@@ -1,13 +1,12 @@
 from appwrite.client import Client
 
 client = Client()
-
-(client
-  .set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
-  .set_project('5df5acd0d48c2') # Your project ID
-  .set_session('') # The user session to authenticate with
-)
+client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('5df5acd0d48c2') # Your project ID
+client.set_session('') # The user session to authenticate with
 
 account = Account(client)
 
-result = account.create_verification('https://example.com')
+result = account.create_verification(
+    url = 'https://example.com'
+)

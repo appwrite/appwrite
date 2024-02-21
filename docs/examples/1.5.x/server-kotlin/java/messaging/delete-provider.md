@@ -10,7 +10,7 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.deleteProvider(
-    "[PROVIDER_ID]"
+    "[PROVIDER_ID]", // providerId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ messaging.deleteProvider(
         System.out.println(result);
     })
 );
+

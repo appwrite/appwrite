@@ -10,7 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateTopic(
-    "[TOPIC_ID]",
+    "[TOPIC_ID]", // topicId
+    "[NAME]", // name (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +21,4 @@ messaging.updateTopic(
         System.out.println(result);
     })
 );
+

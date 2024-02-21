@@ -11,10 +11,14 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createRelationshipAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "[RELATED_COLLECTION_ID]",
-    RelationshipType.ONE_TO_ONE,
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "[RELATED_COLLECTION_ID]", // relatedCollectionId
+    RelationshipType.ONE_TO_ONE, // type
+    false, // twoWay (optional)
+    "", // key (optional)
+    "", // twoWayKey (optional)
+    RelationMutate.CASCADE, // onDelete (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +28,4 @@ databases.createRelationshipAttribute(
         System.out.println(result);
     })
 );
+

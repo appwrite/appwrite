@@ -10,8 +10,8 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.getExecution(
-    "[FUNCTION_ID]",
-    "[EXECUTION_ID]"
+    "[FUNCTION_ID]", // functionId
+    "[EXECUTION_ID]", // executionId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ functions.getExecution(
         System.out.println(result);
     })
 );
+

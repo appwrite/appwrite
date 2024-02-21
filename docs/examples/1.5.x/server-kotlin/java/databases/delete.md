@@ -10,7 +10,7 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.delete(
-    "[DATABASE_ID]"
+    "[DATABASE_ID]", // databaseId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ databases.delete(
         System.out.println(result);
     })
 );
+

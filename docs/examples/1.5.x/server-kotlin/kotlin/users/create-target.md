@@ -15,4 +15,6 @@ val response = users.createTarget(
     targetId = "[TARGET_ID]",
     providerType =  MessagingProviderType.EMAIL,
     identifier = "[IDENTIFIER]",
+    providerId = "[PROVIDER_ID]", // optional
+    name = "[NAME]" // optional
 )

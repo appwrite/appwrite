@@ -7,12 +7,16 @@ mutation {
         passwordCpu: 0,
         passwordMemory: 0,
         passwordParallel: 0,
-        passwordLength: 0
+        passwordLength: 0,
+        name: "[NAME]"
     ) {
         _id
         _createdAt
         _updatedAt
         name
+        password
+        hash
+        hashOptions
         registration
         status
         labels
@@ -32,6 +36,7 @@ mutation {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

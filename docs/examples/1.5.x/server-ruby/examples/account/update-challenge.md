@@ -9,6 +9,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_challenge(challenge_id: '[CHALLENGE_ID]', otp: '[OTP]')
+response = account.update_challenge(
+    challenge_id: '[CHALLENGE_ID]',
+    otp: '[OTP]'
+)
 
 puts response.inspect

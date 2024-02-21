@@ -9,6 +9,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_email(email: 'email@example.com', password: 'password')
+response = account.update_email(
+    email: 'email@example.com',
+    password: 'password'
+)
 
 puts response.inspect

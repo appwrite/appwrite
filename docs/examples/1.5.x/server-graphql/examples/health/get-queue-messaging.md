@@ -1,5 +1,7 @@
 query {
-    healthGetQueueMessaging {
+    healthGetQueueMessaging(
+        threshold: 0
+    ) {
         size
     }
 }

@@ -9,7 +9,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updatePassword(
-    "",
+    "", // password 
+    "password", // oldPassword (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +20,4 @@ account.updatePassword(
         Log.d("Appwrite", result.toString());
     })
 );
+

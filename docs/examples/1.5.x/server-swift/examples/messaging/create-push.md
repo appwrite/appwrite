@@ -10,6 +10,19 @@ let messaging = Messaging(client)
 let message = try await messaging.createPush(
     messageId: "[MESSAGE_ID]",
     title: "[TITLE]",
-    body: "[BODY]"
+    body: "[BODY]",
+    topics: [], // optional
+    users: [], // optional
+    targets: [], // optional
+    data: [:], // optional
+    action: "[ACTION]", // optional
+    image: "[ID1:ID2]", // optional
+    icon: "[ICON]", // optional
+    sound: "[SOUND]", // optional
+    color: "[COLOR]", // optional
+    tag: "[TAG]", // optional
+    badge: "[BADGE]", // optional
+    status: .draft, // optional
+    scheduledAt: "" // optional
 )
 

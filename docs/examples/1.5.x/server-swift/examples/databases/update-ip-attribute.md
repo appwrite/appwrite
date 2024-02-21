@@ -11,7 +11,7 @@ let attributeIp = try await databases.updateIpAttribute(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
     key: "",
-    required: `false`,
+    required: false,
     default: ""
 )
 

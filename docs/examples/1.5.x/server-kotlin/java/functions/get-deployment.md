@@ -10,8 +10,8 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.getDeployment(
-    "[FUNCTION_ID]",
-    "[DEPLOYMENT_ID]"
+    "[FUNCTION_ID]", // functionId
+    "[DEPLOYMENT_ID]", // deploymentId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ functions.getDeployment(
         System.out.println(result);
     })
 );
+

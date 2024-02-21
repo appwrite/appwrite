@@ -10,11 +10,11 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateEmailAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
-    "email@example.com"
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    "email@example.com", // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +24,4 @@ databases.updateEmailAttribute(
         System.out.println(result);
     })
 );
+

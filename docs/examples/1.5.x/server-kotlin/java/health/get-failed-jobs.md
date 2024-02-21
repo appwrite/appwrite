@@ -11,7 +11,8 @@ Client client = new Client()
 Health health = new Health(client);
 
 health.getFailedJobs(
-    .V1DATABASE,
+    .V1DATABASE, // name
+    0, // threshold (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +22,4 @@ health.getFailedJobs(
         System.out.println(result);
     })
 );
+

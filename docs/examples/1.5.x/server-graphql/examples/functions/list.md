@@ -1,5 +1,8 @@
 query {
-    functionsList {
+    functionsList(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         functions {
             _id

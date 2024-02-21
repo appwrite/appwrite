@@ -12,4 +12,7 @@ val users = Users(client)
 val response = users.updateTarget(
     userId = "[USER_ID]",
     targetId = "[TARGET_ID]",
+    identifier = "[IDENTIFIER]", // optional
+    providerId = "[PROVIDER_ID]", // optional
+    name = "[NAME]" // optional
 )

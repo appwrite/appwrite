@@ -11,6 +11,8 @@ mutation {
         status
         error
         required
+        array
         size
+        default
     }
 }

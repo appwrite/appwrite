@@ -15,6 +15,7 @@ let user = try await users.createScryptUser(
     passwordCpu: 0,
     passwordMemory: 0,
     passwordParallel: 0,
-    passwordLength: 0
+    passwordLength: 0,
+    name: "[NAME]" // optional
 )
 

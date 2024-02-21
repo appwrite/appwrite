@@ -9,7 +9,7 @@ Client client = new Client(context)
 Teams teams = new Teams(client);
 
 teams.delete(
-    "[TEAM_ID]",
+    "[TEAM_ID]", // teamId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +19,4 @@ teams.delete(
         Log.d("Appwrite", result.toString());
     })
 );
+

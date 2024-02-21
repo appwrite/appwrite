@@ -10,8 +10,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createMsg91Provider(
-    "[PROVIDER_ID]",
-    "[NAME]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name
+    "+12065550100", // from (optional)
+    "[SENDER_ID]", // senderId (optional)
+    "[AUTH_KEY]", // authKey (optional)
+    false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +25,4 @@ messaging.createMsg91Provider(
         System.out.println(result);
     })
 );
+

@@ -1,24 +1,19 @@
 import 'package:dart_appwrite/dart_appwrite.dart';
 
-void main() { // Init SDK
-  Client client = Client();
-  Messaging messaging = Messaging(client);
+Client client = Client()
+  .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+  .setProject('5df5acd0d48c2') // Your project ID
+  .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...'); // Your secret JSON Web Token
 
-  client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setJWT('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') // Your secret JSON Web Token
-  ;
+Messaging messaging = Messaging(client);
 
-  Future result = messaging.deleteSubscriber(
-    topicId:'[TOPIC_ID]' ,
-    subscriberId:'[SUBSCRIBER_ID]' ,
-  );
+Future result = messaging.deleteSubscriber(
+  topicId: '[TOPIC_ID]',
+  subscriberId: '[SUBSCRIBER_ID]',
+);
 
-  result
-    .then((response) {
-      print(response);
-    }).catchError((error) {
-      print(error.response);
-  });
-}}
+result.then((response) {
+  print(response);
+}).catchError((error) {
+  print(error.response);
+});

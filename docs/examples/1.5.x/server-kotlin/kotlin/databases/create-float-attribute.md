@@ -14,4 +14,8 @@ val response = databases.createFloatAttribute(
     collectionId = "[COLLECTION_ID]",
     key = "",
     required = false,
+    min = 0, // optional
+    max = 0, // optional
+    default = 0, // optional
+    array = false // optional
 )

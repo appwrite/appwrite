@@ -9,6 +9,15 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_sendgrid_provider(provider_id: '[PROVIDER_ID]')
+response = messaging.update_sendgrid_provider(
+    provider_id: '[PROVIDER_ID]',
+    name: '[NAME]', # optional
+    enabled: false, # optional
+    api_key: '[API_KEY]', # optional
+    from_name: '[FROM_NAME]', # optional
+    from_email: 'email@example.com', # optional
+    reply_to_name: '[REPLY_TO_NAME]', # optional
+    reply_to_email: '[REPLY_TO_EMAIL]' # optional
+)
 
 puts response.inspect

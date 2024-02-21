@@ -9,8 +9,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updateChallenge(
-    "[CHALLENGE_ID]",
-    "[OTP]",
+    "[CHALLENGE_ID]", // challengeId 
+    "[OTP]", // otp 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.updateChallenge(
         Log.d("Appwrite", result.toString());
     })
 );
+

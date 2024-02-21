@@ -7,5 +7,8 @@ let client = Client()
 
 let storage = Storage(client)
 
-let bucketList = try await storage.listBuckets()
+let bucketList = try await storage.listBuckets(
+    queries: [], // optional
+    search: "[SEARCH]" // optional
+)
 

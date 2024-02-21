@@ -1,7 +1,11 @@
 mutation {
     messagingCreateTwilioProvider(
         providerId: "[PROVIDER_ID]",
-        name: "[NAME]"
+        name: "[NAME]",
+        from: "+12065550100",
+        accountSid: "[ACCOUNT_SID]",
+        authToken: "[AUTH_TOKEN]",
+        enabled: false
     ) {
         _id
         _createdAt
@@ -11,5 +15,6 @@ mutation {
         enabled
         type
         credentials
+        options
     }
 }

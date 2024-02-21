@@ -9,6 +9,9 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_name(user_id: '[USER_ID]', name: '[NAME]')
+response = users.update_name(
+    user_id: '[USER_ID]',
+    name: '[NAME]'
+)
 
 puts response.inspect

@@ -1,21 +1,15 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Functions } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let functions = new sdk.Functions(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
+    .setSession(''); // The user session to authenticate with
 
+const functions = new Functions(client);
 
-let promise = functions.getExecution('[FUNCTION_ID]', '[EXECUTION_ID]');
+const response = await functions.getExecution(
+    '[FUNCTION_ID]', // functionId
+    '[EXECUTION_ID]' // executionId
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

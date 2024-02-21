@@ -1,7 +1,11 @@
 mutation {
     messagingCreateVonageProvider(
         providerId: "[PROVIDER_ID]",
-        name: "[NAME]"
+        name: "[NAME]",
+        from: "+12065550100",
+        apiKey: "[API_KEY]",
+        apiSecret: "[API_SECRET]",
+        enabled: false
     ) {
         _id
         _createdAt
@@ -11,5 +15,6 @@ mutation {
         enabled
         type
         credentials
+        options
     }
 }

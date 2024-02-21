@@ -9,6 +9,9 @@ query {
         topics
         users
         targets
+        scheduledAt
+        deliveredAt
+        deliveryErrors
         deliveredTotal
         data
         status

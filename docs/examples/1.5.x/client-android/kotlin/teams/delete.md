@@ -9,5 +9,5 @@ val client = Client(context)
 val teams = Teams(client)
 
 val response = teams.delete(
-    teamId = "[TEAM_ID]",
+    teamId = "[TEAM_ID]", 
 )

@@ -9,6 +9,11 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.update_membership_status(team_id: '[TEAM_ID]', membership_id: '[MEMBERSHIP_ID]', user_id: '[USER_ID]', secret: '[SECRET]')
+response = teams.update_membership_status(
+    team_id: '[TEAM_ID]',
+    membership_id: '[MEMBERSHIP_ID]',
+    user_id: '[USER_ID]',
+    secret: '[SECRET]'
+)
 
 puts response.inspect

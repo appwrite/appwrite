@@ -9,6 +9,6 @@ let users = Users(client)
 
 let user = try await users.updateEmailVerification(
     userId: "[USER_ID]",
-    emailVerification: `false`
+    emailVerification: false
 )
 

@@ -9,6 +9,8 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_queue_messaging()
+response = health.get_queue_messaging(
+    threshold: null # optional
+)
 
 puts response.inspect

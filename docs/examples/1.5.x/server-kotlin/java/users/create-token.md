@@ -10,7 +10,9 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.createToken(
-    "[USER_ID]",
+    "[USER_ID]", // userId
+    4, // length (optional)
+    60, // expire (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +22,4 @@ users.createToken(
         System.out.println(result);
     })
 );
+

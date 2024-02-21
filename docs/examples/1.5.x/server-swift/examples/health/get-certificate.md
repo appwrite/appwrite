@@ -7,5 +7,7 @@ let client = Client()
 
 let health = Health(client)
 
-let healthCertificate = try await health.getCertificate()
+let healthCertificate = try await health.getCertificate(
+    domain: "" // optional
+)
 

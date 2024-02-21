@@ -9,8 +9,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updateVerification(
-    "[USER_ID]",
-    "[SECRET]",
+    "[USER_ID]", // userId 
+    "[SECRET]", // secret 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.updateVerification(
         Log.d("Appwrite", result.toString());
     })
 );
+

@@ -9,6 +9,7 @@ let databases = Databases(client)
 
 let documentList = try await databases.listDocuments(
     databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]"
+    collectionId: "[COLLECTION_ID]",
+    queries: [] // optional
 )
 

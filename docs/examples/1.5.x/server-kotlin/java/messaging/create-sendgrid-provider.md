@@ -10,8 +10,14 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createSendgridProvider(
-    "[PROVIDER_ID]",
-    "[NAME]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name
+    "[API_KEY]", // apiKey (optional)
+    "[FROM_NAME]", // fromName (optional)
+    "email@example.com", // fromEmail (optional)
+    "[REPLY_TO_NAME]", // replyToName (optional)
+    "email@example.com", // replyToEmail (optional)
+    false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +27,4 @@ messaging.createSendgridProvider(
         System.out.println(result);
     })
 );
+

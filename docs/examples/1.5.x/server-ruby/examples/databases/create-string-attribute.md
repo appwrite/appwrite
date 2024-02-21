@@ -9,6 +9,15 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_string_attribute(database_id: '[DATABASE_ID]', collection_id: '[COLLECTION_ID]', key: '', size: 1, required: false)
+response = databases.create_string_attribute(
+    database_id: '[DATABASE_ID]',
+    collection_id: '[COLLECTION_ID]',
+    key: '',
+    size: 1,
+    required: false,
+    default: '[DEFAULT]', # optional
+    array: false, # optional
+    encrypt: false # optional
+)
 
 puts response.inspect

@@ -9,6 +9,15 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_integer_attribute(database_id: '[DATABASE_ID]', collection_id: '[COLLECTION_ID]', key: '', required: false)
+response = databases.create_integer_attribute(
+    database_id: '[DATABASE_ID]',
+    collection_id: '[COLLECTION_ID]',
+    key: '',
+    required: false,
+    min: null, # optional
+    max: null, # optional
+    default: null, # optional
+    array: false # optional
+)
 
 puts response.inspect

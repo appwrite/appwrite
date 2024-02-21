@@ -9,6 +9,9 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.list_subscriber_logs(subscriber_id: '[SUBSCRIBER_ID]')
+response = messaging.list_subscriber_logs(
+    subscriber_id: '[SUBSCRIBER_ID]',
+    queries: [] # optional
+)
 
 puts response.inspect

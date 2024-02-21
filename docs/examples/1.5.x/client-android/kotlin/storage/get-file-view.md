@@ -9,6 +9,6 @@ val client = Client(context)
 val storage = Storage(client)
 
 val result =storage.getFileView(
-    bucketId = "[BUCKET_ID]",
-    fileId = "[FILE_ID]",
+    bucketId = "[BUCKET_ID]", 
+    fileId = "[FILE_ID]", 
 )

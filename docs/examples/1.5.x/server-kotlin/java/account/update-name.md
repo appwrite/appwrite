@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.updateName(
-    "[NAME]"
+    "[NAME]", // name
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.updateName(
         System.out.println(result);
     })
 );
+

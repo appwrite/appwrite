@@ -9,6 +9,9 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.get_execution(function_id: '[FUNCTION_ID]', execution_id: '[EXECUTION_ID]')
+response = functions.get_execution(
+    function_id: '[FUNCTION_ID]',
+    execution_id: '[EXECUTION_ID]'
+)
 
 puts response.inspect

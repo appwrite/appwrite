@@ -10,9 +10,12 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateCollection(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "[NAME]",
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "[NAME]", // name
+    listOf("read("any")"), // permissions (optional)
+    false, // documentSecurity (optional)
+    false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +25,4 @@ databases.updateCollection(
         System.out.println(result);
     })
 );
+

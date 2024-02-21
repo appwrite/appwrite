@@ -10,11 +10,13 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createEnumAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    listOf(),
-    false,
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    listOf(), // elements
+    false, // required
+    "[DEFAULT]", // default (optional)
+    false, // array (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +26,4 @@ databases.createEnumAttribute(
         System.out.println(result);
     })
 );
+

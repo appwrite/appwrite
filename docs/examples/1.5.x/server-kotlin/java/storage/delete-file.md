@@ -10,8 +10,8 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.deleteFile(
-    "[BUCKET_ID]",
-    "[FILE_ID]"
+    "[BUCKET_ID]", // bucketId
+    "[FILE_ID]", // fileId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ storage.deleteFile(
         System.out.println(result);
     })
 );
+

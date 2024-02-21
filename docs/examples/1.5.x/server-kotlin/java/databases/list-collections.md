@@ -10,7 +10,9 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.listCollections(
-    "[DATABASE_ID]",
+    "[DATABASE_ID]", // databaseId
+    listOf(), // queries (optional)
+    "[SEARCH]", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +22,4 @@ databases.listCollections(
         System.out.println(result);
     })
 );
+

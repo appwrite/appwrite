@@ -1,6 +1,11 @@
 mutation {
     messagingUpdateTextmagicProvider(
-        providerId: "[PROVIDER_ID]"
+        providerId: "[PROVIDER_ID]",
+        name: "[NAME]",
+        enabled: false,
+        username: "[USERNAME]",
+        apiKey: "[API_KEY]",
+        from: "[FROM]"
     ) {
         _id
         _createdAt
@@ -10,5 +15,6 @@ mutation {
         enabled
         type
         credentials
+        options
     }
 }

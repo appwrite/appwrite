@@ -1,18 +1,16 @@
-import { Client,  Teams } from "appwrite";
+import { Client, Teams } from "appwrite";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const teams = new Teams(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await teams.updateMembershipStatus(
+    '[TEAM_ID]', // teamId
+    '[MEMBERSHIP_ID]', // membershipId
+    '[USER_ID]', // userId
+    '[SECRET]' // secret
+);
 
-const promise = teams.updateMembershipStatus('[TEAM_ID]', '[MEMBERSHIP_ID]', '[USER_ID]', '[SECRET]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

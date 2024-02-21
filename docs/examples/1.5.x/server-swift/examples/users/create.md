@@ -8,6 +8,10 @@ let client = Client()
 let users = Users(client)
 
 let user = try await users.create(
-    userId: "[USER_ID]"
+    userId: "[USER_ID]",
+    email: "email@example.com", // optional
+    phone: "+12065550100", // optional
+    password: "", // optional
+    name: "[NAME]" // optional
 )
 

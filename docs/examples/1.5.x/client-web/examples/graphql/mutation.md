@@ -1,18 +1,13 @@
-import { Client,  Graphql } from "appwrite";
+import { Client, Graphql } from "appwrite";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const graphql = new Graphql(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await graphql.mutation(
+    {} // query
+);
 
-const promise = graphql.mutation({});
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

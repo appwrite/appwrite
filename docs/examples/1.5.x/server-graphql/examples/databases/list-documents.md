@@ -1,7 +1,8 @@
 query {
     databasesListDocuments(
         databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]"
+        collectionId: "[COLLECTION_ID]",
+        queries: []
     ) {
         total
         documents {

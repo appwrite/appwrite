@@ -14,4 +14,6 @@ val response = databases.createIpAttribute(
     collectionId = "[COLLECTION_ID]",
     key = "",
     required = false,
+    default = "", // optional
+    array = false // optional
 )

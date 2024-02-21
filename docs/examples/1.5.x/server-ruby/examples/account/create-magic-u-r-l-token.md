@@ -8,6 +8,11 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_magic_url_token(user_id: '[USER_ID]', email: 'email@example.com')
+response = account.create_magic_url_token(
+    user_id: '[USER_ID]',
+    email: 'email@example.com',
+    url: 'https://example.com', # optional
+    phrase: false # optional
+)
 
 puts response.inspect

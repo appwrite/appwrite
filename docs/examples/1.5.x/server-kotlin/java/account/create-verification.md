@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.createVerification(
-    "https://example.com"
+    "https://example.com", // url
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.createVerification(
         System.out.println(result);
     })
 );
+

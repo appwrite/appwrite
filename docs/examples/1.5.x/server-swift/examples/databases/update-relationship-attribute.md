@@ -10,6 +10,7 @@ let databases = Databases(client)
 let attributeRelationship = try await databases.updateRelationshipAttribute(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
-    key: ""
+    key: "",
+    onDelete: .cascade // optional
 )
 

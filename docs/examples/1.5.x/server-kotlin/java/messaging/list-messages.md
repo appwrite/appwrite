@@ -10,6 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listMessages(
+    listOf(), // queries (optional)
+    "[SEARCH]", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +21,4 @@ messaging.listMessages(
         System.out.println(result);
     })
 );
+

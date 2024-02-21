@@ -1,21 +1,18 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Databases } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let databases = new sdk.Databases(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
-;
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
 
+const databases = new Databases(client);
 
-let promise = databases.updateUrlAttribute('[DATABASE_ID]', '[COLLECTION_ID]', '', false, 'https://example.com');
+const response = await databases.updateUrlAttribute(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '', // key
+    false, // required
+    'https://example.com' // default
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

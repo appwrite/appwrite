@@ -10,8 +10,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createVonageProvider(
-    "[PROVIDER_ID]",
-    "[NAME]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name
+    "+12065550100", // from (optional)
+    "[API_KEY]", // apiKey (optional)
+    "[API_SECRET]", // apiSecret (optional)
+    false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +25,4 @@ messaging.createVonageProvider(
         System.out.println(result);
     })
 );
+

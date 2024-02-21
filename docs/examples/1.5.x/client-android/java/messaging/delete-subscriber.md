@@ -9,8 +9,8 @@ Client client = new Client(context)
 Messaging messaging = new Messaging(client);
 
 messaging.deleteSubscriber(
-    "[TOPIC_ID]",
-    "[SUBSCRIBER_ID]",
+    "[TOPIC_ID]", // topicId 
+    "[SUBSCRIBER_ID]", // subscriberId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ messaging.deleteSubscriber(
         Log.d("Appwrite", result.toString());
     })
 );
+

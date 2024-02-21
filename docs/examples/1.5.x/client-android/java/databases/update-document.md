@@ -9,9 +9,11 @@ Client client = new Client(context)
 Databases databases = new Databases(client);
 
 databases.updateDocument(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "[DOCUMENT_ID]",
+    "[DATABASE_ID]", // databaseId 
+    "[COLLECTION_ID]", // collectionId 
+    "[DOCUMENT_ID]", // documentId 
+    mapOf( "a" to "b" ), // data (optional)
+    listOf("read("any")"), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +23,4 @@ databases.updateDocument(
         Log.d("Appwrite", result.toString());
     })
 );
+

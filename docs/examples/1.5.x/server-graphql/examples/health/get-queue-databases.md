@@ -1,5 +1,8 @@
 query {
-    healthGetQueueDatabases {
+    healthGetQueueDatabases(
+        name: "[NAME]",
+        threshold: 0
+    ) {
         size
     }
 }

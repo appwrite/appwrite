@@ -10,11 +10,14 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createStringAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    1,
-    false,
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    1, // size
+    false, // required
+    "[DEFAULT]", // default (optional)
+    false, // array (optional)
+    false, // encrypt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +27,4 @@ databases.createStringAttribute(
         System.out.println(result);
     })
 );
+

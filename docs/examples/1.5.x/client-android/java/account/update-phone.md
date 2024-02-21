@@ -9,8 +9,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updatePhone(
-    "+12065550100",
-    "password",
+    "+12065550100", // phone 
+    "password", // password 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.updatePhone(
         Log.d("Appwrite", result.toString());
     })
 );
+

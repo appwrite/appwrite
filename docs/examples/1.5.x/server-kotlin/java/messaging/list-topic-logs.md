@@ -10,7 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listTopicLogs(
-    "[TOPIC_ID]",
+    "[TOPIC_ID]", // topicId
+    listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +21,4 @@ messaging.listTopicLogs(
         System.out.println(result);
     })
 );
+

@@ -6,6 +6,9 @@ query {
         _createdAt
         _updatedAt
         name
+        password
+        hash
+        hashOptions
         registration
         status
         labels
@@ -25,6 +28,7 @@ query {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

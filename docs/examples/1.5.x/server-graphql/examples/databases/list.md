@@ -1,5 +1,8 @@
 query {
-    databasesList {
+    databasesList(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         databases {
             _id

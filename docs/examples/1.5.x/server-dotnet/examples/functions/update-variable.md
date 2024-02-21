@@ -5,14 +5,16 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-var functions = new Functions(client);
+Functions functions = new Functions(client);
 
 Variable result = await functions.UpdateVariable(
     functionId: "[FUNCTION_ID]",
     variableId: "[VARIABLE_ID]",
-    key: "[KEY]");
+    key: "[KEY]",
+    value: "[VALUE]" // optional
+);

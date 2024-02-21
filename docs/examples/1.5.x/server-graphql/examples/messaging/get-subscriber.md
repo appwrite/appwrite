@@ -13,6 +13,7 @@ query {
             _updatedAt
             name
             userId
+            providerId
             providerType
             identifier
         }

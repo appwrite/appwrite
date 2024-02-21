@@ -10,4 +10,5 @@ val client = Client()
 val health = Health(client)
 
 val response = health.getQueueCertificates(
+    threshold = 0 // optional
 )

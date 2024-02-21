@@ -4,12 +4,14 @@ mutation {
         collectionId: "[COLLECTION_ID]",
         key: "",
         type: "key",
-        attributes: []
+        attributes: [],
+        orders: []
     ) {
         key
         type
         status
         error
         attributes
+        orders
     }
 }

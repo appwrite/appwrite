@@ -9,6 +9,8 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.get(database_id: '[DATABASE_ID]')
+response = databases.get(
+    database_id: '[DATABASE_ID]'
+)
 
 puts response.inspect

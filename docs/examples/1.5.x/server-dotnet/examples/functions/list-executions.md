@@ -3,12 +3,15 @@ using Appwrite.Services;
 using Appwrite.Models;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetSession(""); // The user session to authenticate with
 
-var functions = new Functions(client);
+Functions functions = new Functions(client);
 
 ExecutionList result = await functions.ListExecutions(
-    functionId: "[FUNCTION_ID]");
+    functionId: "[FUNCTION_ID]",
+    queries: new List<string>(), // optional
+    search: "[SEARCH]" // optional
+);

@@ -1,5 +1,8 @@
 query {
-    teamsList {
+    teamsList(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         teams {
             _id

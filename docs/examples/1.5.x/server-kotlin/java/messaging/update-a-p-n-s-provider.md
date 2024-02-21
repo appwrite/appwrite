@@ -10,7 +10,13 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateAPNSProvider(
-    "[PROVIDER_ID]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name (optional)
+    false, // enabled (optional)
+    "[AUTH_KEY]", // authKey (optional)
+    "[AUTH_KEY_ID]", // authKeyId (optional)
+    "[TEAM_ID]", // teamId (optional)
+    "[BUNDLE_ID]", // bundleId (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +26,4 @@ messaging.updateAPNSProvider(
         System.out.println(result);
     })
 );
+

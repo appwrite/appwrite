@@ -12,4 +12,12 @@ val messaging = Messaging(client)
 val response = messaging.createMailgunProvider(
     providerId = "[PROVIDER_ID]",
     name = "[NAME]",
+    apiKey = "[API_KEY]", // optional
+    domain = "[DOMAIN]", // optional
+    isEuRegion = false, // optional
+    fromName = "[FROM_NAME]", // optional
+    fromEmail = "email@example.com", // optional
+    replyToName = "[REPLY_TO_NAME]", // optional
+    replyToEmail = "email@example.com", // optional
+    enabled = false // optional
 )

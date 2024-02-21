@@ -8,6 +8,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_magic_url_session(user_id: '[USER_ID]', secret: '[SECRET]')
+response = account.update_magic_url_session(
+    user_id: '[USER_ID]',
+    secret: '[SECRET]'
+)
 
 puts response.inspect

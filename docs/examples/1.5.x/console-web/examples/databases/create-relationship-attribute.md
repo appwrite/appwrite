@@ -1,18 +1,20 @@
-import { Client, RelationshipType, Databases } from "@appwrite.io/console";
+import { Client, Databases, RelationshipType, RelationMutate } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const databases = new Databases(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await databases.createRelationshipAttribute(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '[RELATED_COLLECTION_ID]', // relatedCollectionId
+    RelationshipType.OneToOne, // type
+    false, // twoWay (optional)
+    '', // key (optional)
+    '', // twoWayKey (optional)
+    RelationMutate.Cascade // onDelete (optional)
+);
 
-const promise = databases.createRelationshipAttribute('[DATABASE_ID]', '[COLLECTION_ID]', '[RELATED_COLLECTION_ID]', RelationshipType.OneToOne);
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

@@ -1,7 +1,8 @@
 mutation {
     teamsCreate(
         teamId: "[TEAM_ID]",
-        name: "[NAME]"
+        name: "[NAME]",
+        roles: []
     ) {
         _id
         _createdAt

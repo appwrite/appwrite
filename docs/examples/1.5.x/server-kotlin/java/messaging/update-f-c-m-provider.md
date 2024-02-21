@@ -10,7 +10,10 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateFCMProvider(
-    "[PROVIDER_ID]",
+    "[PROVIDER_ID]", // providerId
+    "[NAME]", // name (optional)
+    false, // enabled (optional)
+    mapOf( "a" to "b" ), // serviceAccountJSON (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +23,4 @@ messaging.updateFCMProvider(
         System.out.println(result);
     })
 );
+

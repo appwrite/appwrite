@@ -10,9 +10,9 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.getIndex(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    ""
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +22,4 @@ databases.getIndex(
         System.out.println(result);
     })
 );
+

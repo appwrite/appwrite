@@ -1,18 +1,22 @@
-import { Client,  Messaging } from "@appwrite.io/console";
+import { Client, Messaging } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const messaging = new Messaging(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await messaging.createMailgunProvider(
+    '[PROVIDER_ID]', // providerId
+    '[NAME]', // name
+    '[API_KEY]', // apiKey (optional)
+    '[DOMAIN]', // domain (optional)
+    false, // isEuRegion (optional)
+    '[FROM_NAME]', // fromName (optional)
+    'email@example.com', // fromEmail (optional)
+    '[REPLY_TO_NAME]', // replyToName (optional)
+    'email@example.com', // replyToEmail (optional)
+    false // enabled (optional)
+);
 
-const promise = messaging.createMailgunProvider('[PROVIDER_ID]', '[NAME]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.updatePrefs(
-    mapOf( "a" to "b" )
+    mapOf( "a" to "b" ), // prefs
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.updatePrefs(
         System.out.println(result);
     })
 );
+

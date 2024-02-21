@@ -13,5 +13,9 @@ mutation {
         status
         error
         required
+        array
+        min
+        max
+        default
     }
 }

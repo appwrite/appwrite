@@ -10,8 +10,8 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.deleteVariable(
-    "[FUNCTION_ID]",
-    "[VARIABLE_ID]"
+    "[FUNCTION_ID]", // functionId
+    "[VARIABLE_ID]", // variableId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ functions.deleteVariable(
         System.out.println(result);
     })
 );
+

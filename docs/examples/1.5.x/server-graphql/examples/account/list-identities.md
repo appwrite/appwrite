@@ -1,5 +1,7 @@
 query {
-    accountListIdentities {
+    accountListIdentities(
+        queries: []
+    ) {
         total
         identities {
             _id

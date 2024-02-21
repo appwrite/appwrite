@@ -10,14 +10,15 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.createScryptUser(
-    "[USER_ID]",
-    "email@example.com",
-    "password",
-    "[PASSWORD_SALT]",
-    0,
-    0,
-    0,
-    0,
+    "[USER_ID]", // userId
+    "email@example.com", // email
+    "password", // password
+    "[PASSWORD_SALT]", // passwordSalt
+    0, // passwordCpu
+    0, // passwordMemory
+    0, // passwordParallel
+    0, // passwordLength
+    "[NAME]", // name (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -27,3 +28,4 @@ users.createScryptUser(
         System.out.println(result);
     })
 );
+

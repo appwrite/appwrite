@@ -10,6 +10,7 @@ Client client = new Client()
 Health health = new Health(client);
 
 health.getQueueMails(
+    0, // threshold (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +20,4 @@ health.getQueueMails(
         System.out.println(result);
     })
 );
+

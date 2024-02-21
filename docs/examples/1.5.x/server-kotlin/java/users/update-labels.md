@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateLabels(
-    "[USER_ID]",
-    listOf()
+    "[USER_ID]", // userId
+    listOf(), // labels
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updateLabels(
         System.out.println(result);
     })
 );
+

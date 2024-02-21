@@ -16,4 +16,5 @@ val response = databases.createIndex(
     key = "",
     type =  IndexType.KEY,
     attributes = listOf(),
+    orders = listOf() // optional
 )

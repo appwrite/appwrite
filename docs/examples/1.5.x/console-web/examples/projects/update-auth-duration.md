@@ -1,18 +1,14 @@
-import { Client,  Projects } from "@appwrite.io/console";
+import { Client, Projects } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const projects = new Projects(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await projects.updateAuthDuration(
+    '[PROJECT_ID]', // projectId
+    0 // duration
+);
 
-const promise = projects.updateAuthDuration('[PROJECT_ID]', 0);
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

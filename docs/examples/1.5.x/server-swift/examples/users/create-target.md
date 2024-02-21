@@ -12,6 +12,8 @@ let target = try await users.createTarget(
     userId: "[USER_ID]",
     targetId: "[TARGET_ID]",
     providerType: .email,
-    identifier: "[IDENTIFIER]"
+    identifier: "[IDENTIFIER]",
+    providerId: "[PROVIDER_ID]", // optional
+    name: "[NAME]" // optional
 )
 

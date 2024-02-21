@@ -11,4 +11,6 @@ val databases = Databases(client)
 
 val response = databases.listCollections(
     databaseId = "[DATABASE_ID]",
+    queries = listOf(), // optional
+    search = "[SEARCH]" // optional
 )

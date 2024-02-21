@@ -1,18 +1,18 @@
-import { Client,  Projects } from "@appwrite.io/console";
+import { Client, Projects } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const projects = new Projects(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await projects.updatePlatform(
+    '[PROJECT_ID]', // projectId
+    '[PLATFORM_ID]', // platformId
+    '[NAME]', // name
+    '[KEY]', // key (optional)
+    '[STORE]', // store (optional)
+    '' // hostname (optional)
+);
 
-const promise = projects.updatePlatform('[PROJECT_ID]', '[PLATFORM_ID]', '[NAME]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

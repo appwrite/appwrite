@@ -14,4 +14,6 @@ val response = databases.createBooleanAttribute(
     collectionId = "[COLLECTION_ID]",
     key = "",
     required = false,
+    default = false, // optional
+    array = false // optional
 )

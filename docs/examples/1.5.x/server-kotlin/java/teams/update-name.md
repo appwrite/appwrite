@@ -10,8 +10,8 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.updateName(
-    "[TEAM_ID]",
-    "[NAME]"
+    "[TEAM_ID]", // teamId
+    "[NAME]", // name
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ teams.updateName(
         System.out.println(result);
     })
 );
+

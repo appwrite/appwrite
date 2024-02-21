@@ -8,6 +8,8 @@ let client = Client()
 let functions = Functions(client)
 
 let deploymentList = try await functions.listDeployments(
-    functionId: "[FUNCTION_ID]"
+    functionId: "[FUNCTION_ID]",
+    queries: [], // optional
+    search: "[SEARCH]" // optional
 )
 

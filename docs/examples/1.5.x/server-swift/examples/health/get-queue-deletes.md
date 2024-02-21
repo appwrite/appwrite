@@ -7,5 +7,7 @@ let client = Client()
 
 let health = Health(client)
 
-let healthQueue = try await health.getQueueDeletes()
+let healthQueue = try await health.getQueueDeletes(
+    threshold: 0 // optional
+)
 

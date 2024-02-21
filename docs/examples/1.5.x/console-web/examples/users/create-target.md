@@ -1,18 +1,18 @@
-import { Client, MessagingProviderType, Users } from "@appwrite.io/console";
+import { Client, Users, MessagingProviderType } from "@appwrite.io/console";
 
-const client = new Client();
+const client = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2'); // Your project ID
 
 const users = new Users(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-;
+const result = await users.createTarget(
+    '[USER_ID]', // userId
+    '[TARGET_ID]', // targetId
+    MessagingProviderType.Email, // providerType
+    '[IDENTIFIER]', // identifier
+    '[PROVIDER_ID]', // providerId (optional)
+    '[NAME]' // name (optional)
+);
 
-const promise = users.createTarget('[USER_ID]', '[TARGET_ID]', MessagingProviderType.Email, '[IDENTIFIER]');
-
-promise.then(function (response) {
-    console.log(response); // Success
-}, function (error) {
-    console.log(error); // Failure
-});
+console.log(response);

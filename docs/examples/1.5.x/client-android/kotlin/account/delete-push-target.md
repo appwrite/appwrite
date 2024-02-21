@@ -9,5 +9,5 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.deletePushTarget(
-    targetId = "[TARGET_ID]",
+    targetId = "[TARGET_ID]", 
 )

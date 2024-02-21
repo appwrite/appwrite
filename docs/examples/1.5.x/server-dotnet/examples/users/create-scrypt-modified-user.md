@@ -8,12 +8,12 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-var users = new Users(client);
+Users users = new Users(client);
 
 User result = await users.CreateScryptModifiedUser(
     userId: "[USER_ID]",
@@ -21,4 +21,6 @@ User result = await users.CreateScryptModifiedUser(
     password: "password",
     passwordSalt: "[PASSWORD_SALT]",
     passwordSaltSeparator: "[PASSWORD_SALT_SEPARATOR]",
-    passwordSignerKey: "[PASSWORD_SIGNER_KEY]");
+    passwordSignerKey: "[PASSWORD_SIGNER_KEY]",
+    name: "[NAME]" // optional
+);

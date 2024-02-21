@@ -1,6 +1,8 @@
 query {
     databasesListCollections(
-        databaseId: "[DATABASE_ID]"
+        databaseId: "[DATABASE_ID]",
+        queries: [],
+        search: "[SEARCH]"
     ) {
         total
         collections {
@@ -19,6 +21,7 @@ query {
                 status
                 error
                 attributes
+                orders
             }
         }
     }

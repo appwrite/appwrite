@@ -9,6 +9,10 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.list_files(bucket_id: '[BUCKET_ID]')
+response = storage.list_files(
+    bucket_id: '[BUCKET_ID]',
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

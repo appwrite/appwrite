@@ -10,8 +10,9 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.create(
-    "[TEAM_ID]",
-    "[NAME]",
+    "[TEAM_ID]", // teamId
+    "[NAME]", // name
+    listOf(), // roles (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +22,4 @@ teams.create(
         System.out.println(result);
     })
 );
+

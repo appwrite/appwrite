@@ -10,6 +10,11 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_flag(code: Flag::AFGHANISTAN)
+response = avatars.get_flag(
+    code: Flag::AFGHANISTAN,
+    width: 0, # optional
+    height: 0, # optional
+    quality: 0 # optional
+)
 
 puts response.inspect

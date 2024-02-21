@@ -8,6 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let topic = try await messaging.updateTopic(
-    topicId: "[TOPIC_ID]"
+    topicId: "[TOPIC_ID]",
+    name: "[NAME]" // optional
 )
 

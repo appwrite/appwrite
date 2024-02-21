@@ -9,6 +9,10 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.list_subscribers(topic_id: '[TOPIC_ID]')
+response = messaging.list_subscribers(
+    topic_id: '[TOPIC_ID]',
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

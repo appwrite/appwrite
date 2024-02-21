@@ -9,7 +9,7 @@ Client client = new Client(context)
 Graphql graphql = new Graphql(client);
 
 graphql.query(
-    mapOf( "a" to "b" ),
+    mapOf( "a" to "b" ), // query 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +19,4 @@ graphql.query(
         Log.d("Appwrite", result.toString());
     })
 );
+

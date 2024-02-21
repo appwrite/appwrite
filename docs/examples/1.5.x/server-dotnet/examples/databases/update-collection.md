@@ -5,14 +5,18 @@ using Appwrite.Enums;
 using Appwrite.Enums;
 using Appwrite.Enums;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
 
-var databases = new Databases(client);
+Databases databases = new Databases(client);
 
 Collection result = await databases.UpdateCollection(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
-    name: "[NAME]");
+    name: "[NAME]",
+    permissions: ["read("any")"], // optional
+    documentSecurity: false, // optional
+    enabled: false // optional
+);

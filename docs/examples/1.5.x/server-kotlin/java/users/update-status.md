@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateStatus(
-    "[USER_ID]",
-    false
+    "[USER_ID]", // userId
+    false, // status
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updateStatus(
         System.out.println(result);
     })
 );
+

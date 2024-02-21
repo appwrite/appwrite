@@ -10,6 +10,8 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.listBuckets(
+    listOf(), // queries (optional)
+    "[SEARCH]", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -19,3 +21,4 @@ storage.listBuckets(
         System.out.println(result);
     })
 );
+

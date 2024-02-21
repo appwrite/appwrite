@@ -9,6 +9,7 @@ let databases = Databases(client)
 let document = try await databases.getDocument(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
-    documentId: "[DOCUMENT_ID]"
+    documentId: "[DOCUMENT_ID]",
+    queries: [] // optional
 )
 

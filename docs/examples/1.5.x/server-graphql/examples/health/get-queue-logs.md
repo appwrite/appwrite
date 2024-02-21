@@ -1,5 +1,7 @@
 query {
-    healthGetQueueLogs {
+    healthGetQueueLogs(
+        threshold: 0
+    ) {
         size
     }
 }

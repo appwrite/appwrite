@@ -10,7 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.listLogs(
-    "[USER_ID]",
+    "[USER_ID]", // userId
+    listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +21,4 @@ users.listLogs(
         System.out.println(result);
     })
 );
+

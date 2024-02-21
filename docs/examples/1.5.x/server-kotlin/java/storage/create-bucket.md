@@ -10,8 +10,16 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.createBucket(
-    "[BUCKET_ID]",
-    "[NAME]",
+    "[BUCKET_ID]", // bucketId
+    "[NAME]", // name
+    listOf("read("any")"), // permissions (optional)
+    false, // fileSecurity (optional)
+    false, // enabled (optional)
+    1, // maximumFileSize (optional)
+    listOf(), // allowedFileExtensions (optional)
+    .NONE, // compression (optional)
+    false, // encryption (optional)
+    false, // antivirus (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +29,4 @@ storage.createBucket(
         System.out.println(result);
     })
 );
+

@@ -9,6 +9,10 @@ let messaging = Messaging(client)
 
 let provider = try await messaging.createTextmagicProvider(
     providerId: "[PROVIDER_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    from: "+12065550100", // optional
+    username: "[USERNAME]", // optional
+    apiKey: "[API_KEY]", // optional
+    enabled: false // optional
 )
 

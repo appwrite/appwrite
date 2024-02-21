@@ -18,4 +18,5 @@ val response = users.createScryptUser(
     passwordMemory = 0,
     passwordParallel = 0,
     passwordLength = 0,
+    name = "[NAME]" // optional
 )

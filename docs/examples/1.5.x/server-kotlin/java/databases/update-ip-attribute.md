@@ -10,11 +10,11 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateIpAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    false,
-    ""
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    false, // required
+    "", // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -24,3 +24,4 @@ databases.updateIpAttribute(
         System.out.println(result);
     })
 );
+

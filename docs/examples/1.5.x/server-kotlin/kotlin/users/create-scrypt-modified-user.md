@@ -16,4 +16,5 @@ val response = users.createScryptModifiedUser(
     passwordSalt = "[PASSWORD_SALT]",
     passwordSaltSeparator = "[PASSWORD_SALT_SEPARATOR]",
     passwordSignerKey = "[PASSWORD_SIGNER_KEY]",
+    name = "[NAME]" // optional
 )

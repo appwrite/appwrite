@@ -10,4 +10,6 @@ val client = Client()
 val storage = Storage(client)
 
 val response = storage.listBuckets(
+    queries = listOf(), // optional
+    search = "[SEARCH]" // optional
 )

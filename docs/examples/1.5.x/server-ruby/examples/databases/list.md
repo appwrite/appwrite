@@ -9,6 +9,9 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.list()
+response = databases.list(
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

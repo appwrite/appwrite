@@ -9,6 +9,8 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_mfa(mfa: false)
+response = account.update_mfa(
+    mfa: false
+)
 
 puts response.inspect

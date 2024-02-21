@@ -9,6 +9,10 @@ Client client = new Client(context)
 Avatars avatars = new Avatars(client);
 
 avatars.getInitials(
+    "[NAME]", // name (optional)
+    0, // width (optional)
+    0, // height (optional)
+    "", // background (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -18,3 +22,4 @@ avatars.getInitials(
         Log.d("Appwrite", result.toString());
     })
 );
+

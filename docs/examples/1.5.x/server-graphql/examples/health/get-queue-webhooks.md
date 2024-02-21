@@ -1,5 +1,7 @@
 query {
-    healthGetQueueWebhooks {
+    healthGetQueueWebhooks(
+        threshold: 0
+    ) {
         size
     }
 }

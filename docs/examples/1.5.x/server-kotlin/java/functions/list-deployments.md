@@ -10,7 +10,9 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.listDeployments(
-    "[FUNCTION_ID]",
+    "[FUNCTION_ID]", // functionId
+    listOf(), // queries (optional)
+    "[SEARCH]", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +22,4 @@ functions.listDeployments(
         System.out.println(result);
     })
 );
+

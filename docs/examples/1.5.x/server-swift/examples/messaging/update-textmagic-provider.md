@@ -8,6 +8,11 @@ let client = Client()
 let messaging = Messaging(client)
 
 let provider = try await messaging.updateTextmagicProvider(
-    providerId: "[PROVIDER_ID]"
+    providerId: "[PROVIDER_ID]",
+    name: "[NAME]", // optional
+    enabled: false, // optional
+    username: "[USERNAME]", // optional
+    apiKey: "[API_KEY]", // optional
+    from: "[FROM]" // optional
 )
 

@@ -1,5 +1,7 @@
 query {
-    healthGetQueueMigrations {
+    healthGetQueueMigrations(
+        threshold: 0
+    ) {
         size
     }
 }

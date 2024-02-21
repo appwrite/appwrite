@@ -10,9 +10,18 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createEmail(
-    "[MESSAGE_ID]",
-    "[SUBJECT]",
-    "[CONTENT]",
+    "[MESSAGE_ID]", // messageId
+    "[SUBJECT]", // subject
+    "[CONTENT]", // content
+    listOf(), // topics (optional)
+    listOf(), // users (optional)
+    listOf(), // targets (optional)
+    listOf(), // cc (optional)
+    listOf(), // bcc (optional)
+    listOf(), // attachments (optional)
+    MessageStatus.DRAFT, // status (optional)
+    false, // html (optional)
+    "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -22,3 +31,4 @@ messaging.createEmail(
         System.out.println(result);
     })
 );
+

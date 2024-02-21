@@ -1,21 +1,15 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Account, AuthenticatorType } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let account = new sdk.Account(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
+    .setSession(''); // The user session to authenticate with
 
+const account = new Account(client);
 
-let promise = account.verifyAuthenticator(AuthenticatorType.Totp, '[OTP]');
+const response = await account.verifyAuthenticator(
+    AuthenticatorType.Totp, // type
+    '[OTP]' // otp
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

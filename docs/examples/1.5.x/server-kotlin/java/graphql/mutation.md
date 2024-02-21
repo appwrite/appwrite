@@ -10,7 +10,7 @@ Client client = new Client()
 Graphql graphql = new Graphql(client);
 
 graphql.mutation(
-    mapOf( "a" to "b" )
+    mapOf( "a" to "b" ), // query
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ graphql.mutation(
         System.out.println(result);
     })
 );
+

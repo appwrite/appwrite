@@ -1,6 +1,7 @@
 query {
     messagingListProviderLogs(
-        providerId: "[PROVIDER_ID]"
+        providerId: "[PROVIDER_ID]",
+        queries: []
     ) {
         total
         logs {

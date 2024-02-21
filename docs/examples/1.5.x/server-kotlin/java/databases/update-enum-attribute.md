@@ -10,12 +10,12 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateEnumAttribute(
-    "[DATABASE_ID]",
-    "[COLLECTION_ID]",
-    "",
-    listOf(),
-    false,
-    "[DEFAULT]"
+    "[DATABASE_ID]", // databaseId
+    "[COLLECTION_ID]", // collectionId
+    "", // key
+    listOf(), // elements
+    false, // required
+    "[DEFAULT]", // default
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -25,3 +25,4 @@ databases.updateEnumAttribute(
         System.out.println(result);
     })
 );
+

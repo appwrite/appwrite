@@ -9,9 +9,9 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updateRecovery(
-    "[USER_ID]",
-    "[SECRET]",
-    "",
+    "[USER_ID]", // userId 
+    "[SECRET]", // secret 
+    "", // password 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ account.updateRecovery(
         Log.d("Appwrite", result.toString());
     })
 );
+

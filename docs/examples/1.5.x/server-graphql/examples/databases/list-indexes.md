@@ -1,7 +1,8 @@
 query {
     databasesListIndexes(
         databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]"
+        collectionId: "[COLLECTION_ID]",
+        queries: []
     ) {
         total
         indexes {
@@ -10,6 +11,7 @@ query {
             status
             error
             attributes
+            orders
         }
     }
 }

@@ -1,5 +1,8 @@
 query {
-    storageListBuckets {
+    storageListBuckets(
+        queries: [],
+        search: "[SEARCH]"
+    ) {
         total
         buckets {
             _id

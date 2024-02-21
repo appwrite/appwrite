@@ -10,6 +10,9 @@ let databases = Databases(client)
 let collection = try await databases.updateCollection(
     databaseId: "[DATABASE_ID]",
     collectionId: "[COLLECTION_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    permissions: ["read("any")"], // optional
+    documentSecurity: false, // optional
+    enabled: false // optional
 )
 

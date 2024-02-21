@@ -9,6 +9,8 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.delete(team_id: '[TEAM_ID]')
+response = teams.delete(
+    team_id: '[TEAM_ID]'
+)
 
 puts response.inspect

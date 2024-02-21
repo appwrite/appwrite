@@ -9,6 +9,6 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.createRecovery(
-    email = "email@example.com",
-    url = "https://example.com",
+    email = "email@example.com", 
+    url = "https://example.com", 
 )

@@ -9,6 +9,10 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.create_build(function_id: '[FUNCTION_ID]', deployment_id: '[DEPLOYMENT_ID]', build_id: '[BUILD_ID]')
+response = functions.create_build(
+    function_id: '[FUNCTION_ID]',
+    deployment_id: '[DEPLOYMENT_ID]',
+    build_id: '[BUILD_ID]'
+)
 
 puts response.inspect

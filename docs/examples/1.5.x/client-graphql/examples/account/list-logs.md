@@ -1,5 +1,7 @@
 query {
-    accountListLogs {
+    accountListLogs(
+        queries: []
+    ) {
         total
         logs {
             event

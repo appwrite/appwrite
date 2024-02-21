@@ -14,6 +14,7 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "targets": [],
   "data": {},
   "action": "[ACTION]",
+  "image": "[ID1:ID2]",
   "icon": "[ICON]",
   "sound": "[SOUND]",
   "color": "[COLOR]",

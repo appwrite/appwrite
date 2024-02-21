@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updatePhoneVerification(
-    "[USER_ID]",
-    false
+    "[USER_ID]", // userId
+    false, // phoneVerification
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updatePhoneVerification(
         System.out.println(result);
     })
 );
+

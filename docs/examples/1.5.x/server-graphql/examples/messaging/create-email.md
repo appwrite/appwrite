@@ -2,7 +2,16 @@ mutation {
     messagingCreateEmail(
         messageId: "[MESSAGE_ID]",
         subject: "[SUBJECT]",
-        content: "[CONTENT]"
+        content: "[CONTENT]",
+        topics: [],
+        users: [],
+        targets: [],
+        cc: [],
+        bcc: [],
+        attachments: [],
+        status: "draft",
+        html: false,
+        scheduledAt: ""
     ) {
         _id
         _createdAt
@@ -11,6 +20,9 @@ mutation {
         topics
         users
         targets
+        scheduledAt
+        deliveredAt
+        deliveryErrors
         deliveredTotal
         data
         status

@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updatePassword(
-    "[USER_ID]",
-    ""
+    "[USER_ID]", // userId
+    "", // password
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ users.updatePassword(
         System.out.println(result);
     })
 );
+

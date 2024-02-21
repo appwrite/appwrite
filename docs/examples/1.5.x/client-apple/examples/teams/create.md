@@ -8,6 +8,7 @@ let teams = Teams(client)
 
 let team = try await teams.create(
     teamId: "[TEAM_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    roles: [] // optional
 )
 

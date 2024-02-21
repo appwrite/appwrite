@@ -8,6 +8,7 @@ let account = Account(client)
 
 let target = try await account.createPushTarget(
     targetId: "[TARGET_ID]",
-    identifier: "[IDENTIFIER]"
+    identifier: "[IDENTIFIER]",
+    providerId: "[PROVIDER_ID]" // optional
 )
 

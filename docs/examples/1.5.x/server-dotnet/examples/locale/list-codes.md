@@ -2,11 +2,11 @@ using Appwrite;
 using Appwrite.Services;
 using Appwrite.Models;
 
-var client = new Client()
+Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
     .SetProject("5df5acd0d48c2") // Your project ID
     .SetSession(""); // The user session to authenticate with
 
-var locale = new Locale(client);
+Locale locale = new Locale(client);
 
 LocaleCodeList result = await locale.ListCodes();

@@ -7,5 +7,8 @@ let client = Client()
 
 let users = Users(client)
 
-let identityList = try await users.listIdentities()
+let identityList = try await users.listIdentities(
+    queries: [], // optional
+    search: "[SEARCH]" // optional
+)
 

@@ -10,7 +10,7 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.get(
-    "[DATABASE_ID]"
+    "[DATABASE_ID]", // databaseId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ databases.get(
         System.out.println(result);
     })
 );
+

@@ -9,5 +9,5 @@ val client = Client(context)
 val graphql = Graphql(client)
 
 val response = graphql.query(
-    query = mapOf( "a" to "b" ),
+    query = mapOf( "a" to "b" ), 
 )

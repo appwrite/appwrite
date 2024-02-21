@@ -9,6 +9,10 @@ let messaging = Messaging(client)
 
 let provider = try await messaging.createVonageProvider(
     providerId: "[PROVIDER_ID]",
-    name: "[NAME]"
+    name: "[NAME]",
+    from: "+12065550100", // optional
+    apiKey: "[API_KEY]", // optional
+    apiSecret: "[API_SECRET]", // optional
+    enabled: false // optional
 )
 

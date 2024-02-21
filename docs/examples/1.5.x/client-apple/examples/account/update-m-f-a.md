@@ -7,6 +7,6 @@ let client = Client()
 let account = Account(client)
 
 let user = try await account.updateMFA(
-    mfa: `false`
+    mfa: false
 )
 

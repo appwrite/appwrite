@@ -11,4 +11,9 @@ val messaging = Messaging(client)
 
 val response = messaging.updateVonageProvider(
     providerId = "[PROVIDER_ID]",
+    name = "[NAME]", // optional
+    enabled = false, // optional
+    apiKey = "[API_KEY]", // optional
+    apiSecret = "[API_SECRET]", // optional
+    from = "[FROM]" // optional
 )

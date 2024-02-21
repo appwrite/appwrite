@@ -1,5 +1,7 @@
 query {
-    healthGetCertificate {
+    healthGetCertificate(
+        domain: ""
+    ) {
         name
         subjectSN
         issuerOrganisation

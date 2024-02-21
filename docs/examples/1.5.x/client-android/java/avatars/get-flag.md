@@ -10,7 +10,10 @@ Client client = new Client(context)
 Avatars avatars = new Avatars(client);
 
 avatars.getFlag(
-    Flag.AFGHANISTAN,
+    Flag.AFGHANISTAN, // code 
+    0, // width (optional)
+    0, // height (optional)
+    0, // quality (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +23,4 @@ avatars.getFlag(
         Log.d("Appwrite", result.toString());
     })
 );
+

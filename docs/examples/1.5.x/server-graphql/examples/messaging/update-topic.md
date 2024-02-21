@@ -1,6 +1,7 @@
 mutation {
     messagingUpdateTopic(
-        topicId: "[TOPIC_ID]"
+        topicId: "[TOPIC_ID]",
+        name: "[NAME]"
     ) {
         _id
         _createdAt

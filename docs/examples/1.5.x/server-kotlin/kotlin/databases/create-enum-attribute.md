@@ -15,4 +15,6 @@ val response = databases.createEnumAttribute(
     key = "",
     elements = listOf(),
     required = false,
+    default = "[DEFAULT]", // optional
+    array = false // optional
 )

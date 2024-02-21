@@ -9,6 +9,6 @@ let users = Users(client)
 
 let user = try await users.updatePhoneVerification(
     userId: "[USER_ID]",
-    phoneVerification: `false`
+    phoneVerification: false
 )
 

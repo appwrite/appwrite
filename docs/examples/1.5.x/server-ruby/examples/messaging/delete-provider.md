@@ -9,6 +9,8 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.delete_provider(provider_id: '[PROVIDER_ID]')
+response = messaging.delete_provider(
+    provider_id: '[PROVIDER_ID]'
+)
 
 puts response.inspect

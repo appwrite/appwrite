@@ -9,6 +9,9 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.list()
+response = teams.list(
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

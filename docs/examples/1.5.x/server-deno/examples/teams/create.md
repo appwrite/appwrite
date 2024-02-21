@@ -1,21 +1,16 @@
-import * as sdk from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Teams } from "https://deno.land/x/appwrite/mod.ts";
 
-// Init SDK
-let client = new sdk.Client();
-
-let teams = new sdk.Teams(client);
-
-client
+const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
     .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
+    .setSession(''); // The user session to authenticate with
 
+const teams = new Teams(client);
 
-let promise = teams.create('[TEAM_ID]', '[NAME]');
+const response = await teams.create(
+    '[TEAM_ID]', // teamId
+    '[NAME]', // name
+    [] // roles (optional)
+);
 
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+console.log(response);

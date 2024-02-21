@@ -9,6 +9,9 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.list_messages()
+response = messaging.list_messages(
+    queries: [], # optional
+    search: '[SEARCH]' # optional
+)
 
 puts response.inspect

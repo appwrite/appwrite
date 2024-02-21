@@ -10,8 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.getSubscriber(
-    "[TOPIC_ID]",
-    "[SUBSCRIBER_ID]"
+    "[TOPIC_ID]", // topicId
+    "[SUBSCRIBER_ID]", // subscriberId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -21,3 +21,4 @@ messaging.getSubscriber(
         System.out.println(result);
     })
 );
+

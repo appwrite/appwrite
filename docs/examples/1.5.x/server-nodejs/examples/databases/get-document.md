@@ -1,20 +1,15 @@
 const sdk = require('node-appwrite');
 
-// Init SDK
-const client = new sdk.Client();
+const client = new sdk.Client()
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2') // Your project ID
+    .setSession(''); // The user session to authenticate with
 
 const databases = new sdk.Databases(client);
 
-client
-    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-    .setProject('5df5acd0d48c2') // Your project ID
-    .setSession('') // The user session to authenticate with
-;
-
-const promise = databases.getDocument('[DATABASE_ID]', '[COLLECTION_ID]', '[DOCUMENT_ID]');
-
-promise.then(function (response) {
-    console.log(response);
-}, function (error) {
-    console.log(error);
-});
+const response = await databases.getDocument(
+    '[DATABASE_ID]', // databaseId
+    '[COLLECTION_ID]', // collectionId
+    '[DOCUMENT_ID]', // documentId
+    [] // queries (optional)
+);
