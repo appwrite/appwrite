@@ -540,7 +540,14 @@ class V20 extends Migration
                 $duration = $this->project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
                 $expire = DateTime::addSeconds(new \DateTime(), $duration);
                 $document->setAttribute('expire', $expire);
-                $document->setAttribute('factors', ['email']);
+
+                $factors = match ($document->getAttribute('provider')) {
+                    Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
+                    Auth::SESSION_PROVIDER_PHONE => ['phone'],
+                    default => ['email'],
+                };
+
+                $document->setAttribute('factors', $factors);
                 break;
         }
         return $document;
