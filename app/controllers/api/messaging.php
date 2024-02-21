@@ -28,11 +28,13 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -2826,6 +2828,7 @@ App::post('/v1/messaging/messages/push')
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
+    ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
     ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
@@ -2839,7 +2842,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2870,9 +2873,41 @@ App::post('/v1/messaging/messages/push')
             }
         }
 
+        if (!empty($image)) {
+            [$bucketId, $fileId] = CompoundUID::parse($image);
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+            if ($bucket->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($file->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            }
+
+            $host = App::getEnv('_APP_DOMAIN', 'localhost');
+            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
+            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+        }
+
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'icon', 'sound', 'color', 'tag', 'badge'];
+        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge'];
 
         foreach ($keys as $key) {
             if (!empty($$key)) {
@@ -3436,6 +3471,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('body', null, new Text(64230), 'Body for push notification.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', null, new Text(256), 'Action for push notification.', true)
+    ->param('image', null, new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage.', true)
     ->param('icon', null, new Text(256), 'Icon for push notification. Available only for Android and Web platforms.', true)
     ->param('sound', null, new Text(256), 'Sound for push notification. Available only for Android and iOS platforms.', true)
     ->param('color', null, new Text(256), 'Color for push notification. Available only for Android platforms.', true)
@@ -3449,7 +3485,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3517,6 +3553,38 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (!\is_null($badge)) {
             $pushData['badge'] = $badge;
+        }
+
+        if (!\is_null($image)) {
+            [$bucketId, $fileId] = CompoundUID::parse($image);
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+            if ($bucket->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($file->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            }
+
+            $host = App::getEnv('_APP_DOMAIN', 'localhost');
+            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
+            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            $pushData['image'] = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
         }
 
         $message->setAttribute('data', $pushData);
