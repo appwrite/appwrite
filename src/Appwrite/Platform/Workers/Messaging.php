@@ -88,14 +88,29 @@ class Messaging extends Action
             return;
         }
 
-        $sms =  match ($this->dsn->getHost()) {
-            'mock' => new Mock($this->user, $this->secret), // used for tests
-            'twilio' => new Twilio($this->user, $this->secret),
-            'text-magic' => new TextMagic($this->user, $this->secret),
-            'telesign' => new Telesign($this->user, $this->secret),
-            'msg91' => new Msg91($this->user, $this->secret),
-            'vonage' => new Vonage($this->user, $this->secret),
-            default => null
+
+        switch ($this->dsn->getHost()) {
+            case 'mock':
+                 $sms = new Mock($this->user, $this->secret); // used for tests
+                break;
+            case 'twilio':
+                 $sms = new Twilio($this->user, $this->secret);
+                break;
+            case 'text-magic':
+                $sms = new TextMagic($this->user, $this->secret);
+                break;
+            case 'telesign':
+                $sms = new Telesign($this->user, $this->secret);
+                break;
+            case 'msg91':
+                $sms = new Msg91($this->user, $this->secret);
+                $sms->setTemplate($this->dsn->getParam('template'));
+                break;
+            case 'vonage':
+                $sms = new Vonage($this->user, $this->secret);
+                break;
+            default:
+                $sms = null;
         };
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
