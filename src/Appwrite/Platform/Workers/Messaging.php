@@ -69,7 +69,8 @@ class Messaging extends Action
      * @param Message $message
      * @param Log $log
      * @param Database $dbForProject
-     * @param callable $getLocalCache
+     * @param Device $deviceForFiles
+     * @param Device $deviceForLocalFiles
      * @param Usage $queueForUsage
      * @return void
      * @throws \Exception
