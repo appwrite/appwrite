@@ -205,10 +205,10 @@ abstract class Format
                                 return 'MessagingUsageRange';
                         }
                         break;
-                    case 'createSMS':
+                    case 'createSms':
                     case 'createPush':
                     case 'createEmail':
-                    case 'updateSMS':
+                    case 'updateSms':
                     case 'updatePush':
                     case 'updateEmail':
                         switch ($param) {
@@ -252,9 +252,9 @@ abstract class Format
                     case 'deleteSmsTemplate':
                         switch ($param) {
                             case 'type':
-                                return 'SMSTemplateType';
+                                return 'SmsTemplateType';
                             case 'locale':
-                                return 'SMSTemplateLocale';
+                                return 'SmsTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
@@ -285,7 +285,7 @@ abstract class Format
                     case 'updateServiceStatus':
                         switch ($param) {
                             case 'service':
-                                return 'APIService';
+                                return 'ApiService';
                         }
                         break;
                 }
