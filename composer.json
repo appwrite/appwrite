@@ -79,7 +79,7 @@
     },
     "require-dev": {
         "ext-fileinfo": "*",
-        "appwrite/sdk-generator": "0.37.0-rc.3",
+        "appwrite/sdk-generator": "0.37.0-rc.4",
         "phpunit/phpunit": "9.5.20",
         "squizlabs/php_codesniffer": "^3.7",
         "swoole/ide-helper": "5.0.2",
