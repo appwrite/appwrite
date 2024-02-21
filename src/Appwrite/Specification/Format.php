@@ -129,7 +129,7 @@ abstract class Format
                                 return 'AuthenticatorType';
                         }
                         break;
-                    case 'create2FAChallenge':
+                    case 'createChallenge':
                         switch ($param) {
                             case 'factor':
                                 return 'AuthenticationFactor';
