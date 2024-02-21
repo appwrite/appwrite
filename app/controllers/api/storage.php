@@ -1482,6 +1482,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($deviceDeleted) {
             $queueForDeletes
                 ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
+                ->setResourceType('bucket/' . $bucket->getId())
                 ->setResource('file/' . $fileId)
             ;
 

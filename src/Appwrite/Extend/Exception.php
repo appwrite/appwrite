@@ -94,6 +94,7 @@ class Exception extends \Exception
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';
     public const USER_EMAIL_ALREADY_VERIFIED       = 'user_email_already_verified';
     public const USER_PHONE_ALREADY_VERIFIED       = 'user_phone_already_verified';
+    public const USER_DELETION_PROHIBITED          = 'user_deletion_prohibited';
     public const USER_TARGET_NOT_FOUND             = 'user_target_not_found';
     public const USER_TARGET_ALREADY_EXISTS        = 'user_target_already_exists';
 

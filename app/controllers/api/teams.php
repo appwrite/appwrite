@@ -995,7 +995,7 @@ App::patch('/v1/teams/:teamId/memberships/:membershipId/status')
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
-        $team = Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team->setAttribute('total', $team->getAttribute('total', 0) + 1)));
+        Authorization::skip(fn() => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
 
         $queueForEvents
             ->setParam('teamId', $team->getId())
@@ -1075,8 +1075,7 @@ App::delete('/v1/teams/:teamId/memberships/:membershipId')
         $dbForProject->purgeCachedDocument('users', $user->getId());
 
         if ($membership->getAttribute('confirm')) { // Count only confirmed members
-            $team->setAttribute('total', \max($team->getAttribute('total', 0) - 1, 0));
-            Authorization::skip(fn() => $dbForProject->updateDocument('teams', $team->getId(), $team));
+            Authorization::skip(fn() => $dbForProject->decreaseDocumentAttribute('teams', $team->getId(), 'total', 1, 0));
         }
 
         $queueForEvents

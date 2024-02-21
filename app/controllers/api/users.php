@@ -192,7 +192,6 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -806,6 +805,9 @@ App::get('/v1/users/:userId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -834,7 +836,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
