@@ -88,14 +88,14 @@ class Messaging extends Action
             return;
         }
 
-        
+
         switch ($this->dsn->getHost()) {
             case 'mock':
                  $sms = new Mock($this->user, $this->secret); // used for tests
-                 break;
+                break;
             case 'twilio':
                  $sms = new Twilio($this->user, $this->secret);
-                 break;
+                break;
             case 'text-magic':
                 $sms = new TextMagic($this->user, $this->secret);
                 break;
