@@ -35,12 +35,6 @@ class V20 extends Migration
             );
         }
 
-        $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
-        $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
-        $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
-        $this->migrateUsageMetrics('users.$all.count.total', 'users');
-        $this->migrateSessionsMetric();
-
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
 
@@ -49,6 +43,12 @@ class V20 extends Migration
 
         // No need to migrate stats for console
         if ($this->project->getInternalId() !== 'console') {
+            $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
+            $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
+            $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
+            $this->migrateUsageMetrics('users.$all.count.total', 'users');
+            $this->migrateSessionsMetric();
+
             Console::info('Migrating Functions');
             $this->migrateFunctions();
 
