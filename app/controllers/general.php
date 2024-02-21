@@ -48,7 +48,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, Database $dbForProject, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
+function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -125,6 +125,10 @@ function router(App $utopia, Database $dbForConsole, Database $dbForProject, Swo
         $method = $swooleRequest->server['request_method'];
 
         $requestHeaders = $request->getHeaders();
+
+        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+
+        $dbForProject = $getProjectDB($project);
 
         $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -372,7 +376,7 @@ App::init()
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
+    ->inject('getProjectDB')
     ->inject('user')
     ->inject('locale')
     ->inject('localeCodes')
@@ -382,7 +386,7 @@ App::init()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Database $dbForProject, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         /*
         * Appwrite Router
         */
@@ -391,7 +395,7 @@ App::init()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $dbForProject, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
                 return;
             }
         }
@@ -742,11 +746,11 @@ App::options()
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('dbForProject')
+    ->inject('getProjectDB')
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, Database $dbForProject, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
         /*
         * Appwrite Router
         */
@@ -754,7 +758,7 @@ App::options()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $dbForProject, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
                 return;
             }
         }
