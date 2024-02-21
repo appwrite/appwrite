@@ -284,7 +284,7 @@ return [
     ],
     Exception::USER_API_KEY_AND_SESSION_SET => [
         'name' => Exception::USER_API_KEY_AND_SESSION_SET,
-        'description' => 'API key and a session used in the same request. For guest actions, use only API key. For user actions, use only a session.',
+        'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
         'code' => 403,
     ],
 
