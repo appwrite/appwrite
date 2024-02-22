@@ -287,6 +287,11 @@ return [
         'description' => 'A target with the same ID already exists.',
         'code' => 409,
     ],
+    Exception::USER_API_KEY_AND_SESSION_SET => [
+        'name' => Exception::USER_API_KEY_AND_SESSION_SET,
+        'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
+    ],
 
     /** Teams */
     Exception::TEAM_NOT_FOUND => [

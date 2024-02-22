@@ -27,7 +27,6 @@ class AccountCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -43,7 +42,6 @@ class AccountCustomServerTest extends Scope
         $userId = $response['body']['userId'];
 
         $response = $this->client->call(Client::METHOD_GET, '/users/' . $userId, array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()));
@@ -53,7 +51,6 @@ class AccountCustomServerTest extends Scope
         $this->assertNotEmpty($response['body']['accessedAt']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -67,11 +64,10 @@ class AccountCustomServerTest extends Scope
 
         // already logged in
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-session' => $session,
-        ], $this->getHeaders()), [
+        ]), [
             'email' => $email,
             'password' => $password,
         ]);
@@ -82,7 +78,6 @@ class AccountCustomServerTest extends Scope
          * Test for FAILURE
          */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -93,7 +88,6 @@ class AccountCustomServerTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -104,7 +98,6 @@ class AccountCustomServerTest extends Scope
         $this->assertEquals(401, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
@@ -133,7 +126,6 @@ class AccountCustomServerTest extends Scope
          * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
-            'origin' => 'http://localhost',
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-session' => $session,
@@ -154,9 +146,9 @@ class AccountCustomServerTest extends Scope
         $response = $this->client->call(Client::METHOD_GET, '/account', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()));
+        ]));
 
-        $this->assertEquals(404, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
         return $data;
     }
@@ -286,8 +278,7 @@ class AccountCustomServerTest extends Scope
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-session' => $session
-            ],
-            $this->getHeaders()
+            ]
         ));
 
         $this->assertEquals($response['headers']['status-code'], 200);
