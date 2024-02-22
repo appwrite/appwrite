@@ -272,6 +272,11 @@ return [
         'description' => 'User phone is already verified',
         'code' => 409
     ],
+    Exception::USER_DELETION_PROHIBITED => [
+        'name' => Exception::USER_DELETION_PROHIBITED,
+        'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
+        'code' => 400
+    ],
     Exception::USER_TARGET_NOT_FOUND => [
         'name' => Exception::USER_TARGET_NOT_FOUND,
         'description' => 'The target could not be found.',
@@ -419,6 +424,11 @@ return [
         'name' => Exception::STORAGE_INVALID_APPWRITE_ID,
         'description' => 'The value for x-appwrite-id header is invalid. Please check the value of the x-appwrite-id header is a valid id and not unique().',
         'code' => 400,
+    ],
+    Exception::STORAGE_FILE_NOT_PUBLIC => [
+        'name' => Exception::STORAGE_FILE_NOT_PUBLIC,
+        'description' => 'The requested file is not publicly readable.',
+        'code' => 403,
     ],
 
     /** VCS */
@@ -717,6 +727,11 @@ return [
         'name' => Exception::PROJECT_TEMPLATE_DEFAULT_DELETION,
         'description' => 'You can\'t delete default template. If you are trying to reset your template changes, you can ignore this error as it\'s already been reset.',
         'code' => 401,
+    ],
+    Exception::PROJECT_REGION_UNSUPPORTED => [
+        'name' => Exception::PROJECT_REGION_UNSUPPORTED,
+        'description' => 'The requested region is either inactive or unsupported. Please check the value of the _APP_REGIONS environment variable.',
+        'code' => 400,
     ],
     Exception::WEBHOOK_NOT_FOUND => [
         'name' => Exception::WEBHOOK_NOT_FOUND,

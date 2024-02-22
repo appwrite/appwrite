@@ -1872,8 +1872,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_FCM_PROVIDER:
-                return 'mutation createFCMProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
-                    messagingCreateFCMProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
+                return 'mutation createFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
+                    messagingCreateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
                         name
                         provider
@@ -1882,8 +1882,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_APNS_PROVIDER:
-                return 'mutation createAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
-                    messagingCreateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
+                return 'mutation createApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingCreateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider
@@ -1996,8 +1996,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_FCM_PROVIDER:
-                return 'mutation updateFCMProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
-                    messagingUpdateFCMProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
+                return 'mutation updateFcmProvider($providerId: String!, $name: String!, $serviceAccountJSON: Json) {
+                    messagingUpdateFcmProvider(providerId: $providerId, name: $name, serviceAccountJSON: $serviceAccountJSON) {
                         _id
                         name
                         provider
@@ -2006,8 +2006,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_APNS_PROVIDER:
-                return 'mutation updateAPNSProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
-                    messagingUpdateAPNSProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
+                return 'mutation updateApnsProvider($providerId: String!, $name: String!, $authKey: String!, $authKeyId: String!, $teamId: String!, $bundleId: String!) {
+                    messagingUpdateApnsProvider(providerId: $providerId, name: $name, authKey: $authKey, authKeyId: $authKeyId, teamId: $teamId, bundleId: $bundleId) {
                         _id
                         name
                         provider

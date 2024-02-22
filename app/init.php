@@ -142,9 +142,11 @@ const APP_SOCIAL_DEV = 'https://dev.to/appwrite';
 const APP_SOCIAL_STACKSHARE = 'https://stackshare.io/appwrite';
 const APP_SOCIAL_YOUTUBE = 'https://www.youtube.com/c/appwrite?sub_confirmation=1';
 const APP_HOSTNAME_INTERNAL = 'appwrite';
+
 // Database Reconnect
 const DATABASE_RECONNECT_SLEEP = 2;
 const DATABASE_RECONNECT_MAX_ATTEMPTS = 10;
+
 // Database Worker Types
 const DATABASE_TYPE_CREATE_ATTRIBUTE = 'createAttribute';
 const DATABASE_TYPE_CREATE_INDEX = 'createIndex';
@@ -152,9 +154,11 @@ const DATABASE_TYPE_DELETE_ATTRIBUTE = 'deleteAttribute';
 const DATABASE_TYPE_DELETE_INDEX = 'deleteIndex';
 const DATABASE_TYPE_DELETE_COLLECTION = 'deleteCollection';
 const DATABASE_TYPE_DELETE_DATABASE = 'deleteDatabase';
+
 // Build Worker Types
 const BUILD_TYPE_DEPLOYMENT = 'deployment';
 const BUILD_TYPE_RETRY = 'retry';
+
 // Deletion Types
 const DELETE_TYPE_DATABASES = 'databases';
 const DELETE_TYPE_DOCUMENT = 'document';
@@ -180,6 +184,10 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+
+// Message types
+const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
+const MESSAGE_SEND_TYPE_EXTERNAL = 'external';
 // Mail Types
 const MAIL_TYPE_VERIFICATION = 'verification';
 const MAIL_TYPE_MAGIC_SESSION = 'magicSession';
@@ -1375,19 +1383,19 @@ App::setResource('cache', function (Group $pools) {
     return new Cache(new Sharding($adapters));
 }, ['pools']);
 
-App::setResource('deviceLocal', function () {
+App::setResource('deviceForLocal', function () {
     return new Local();
 });
 
-App::setResource('deviceFiles', function ($project) {
+App::setResource('deviceForFiles', function ($project) {
     return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceFunctions', function ($project) {
+App::setResource('deviceForFunctions', function ($project) {
     return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
 }, ['project']);
 
-App::setResource('deviceBuilds', function ($project) {
+App::setResource('deviceForBuilds', function ($project) {
     return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
 }, ['project']);
 

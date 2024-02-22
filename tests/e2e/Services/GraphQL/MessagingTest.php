@@ -70,7 +70,7 @@ class MessagingTest extends Scope
                 'apiSecret' => 'my-apisecret',
                 'from' => '+123456789',
             ],
-            'FCM' => [
+            'Fcm' => [
                 'providerId' => ID::unique(),
                 'name' => 'FCM1',
                 'serviceAccountJSON' => [
@@ -80,7 +80,7 @@ class MessagingTest extends Scope
                     "private_key" => "test-private-key",
                 ]
             ],
-            'APNS' => [
+            'Apns' => [
                 'providerId' => ID::unique(),
                 'name' => 'APNS1',
                 'authKey' => 'my-authkey',
@@ -159,7 +159,7 @@ class MessagingTest extends Scope
                 'apiKey' => 'my-apikey',
                 'apiSecret' => 'my-apisecret',
             ],
-            'FCM' => [
+            'Fcm' => [
                 'providerId' => $providers[7]['_id'],
                 'name' => 'FCM2',
                 'serviceAccountJSON' => [
@@ -169,7 +169,7 @@ class MessagingTest extends Scope
                     'private_key' => "test-private-key",
                 ]
             ],
-            'APNS' => [
+            'Apns' => [
                 'providerId' => $providers[8]['_id'],
                 'name' => 'APNS2',
                 'authKey' => 'my-authkey',
@@ -180,15 +180,18 @@ class MessagingTest extends Scope
         ];
         foreach (\array_keys($providersParams) as $index => $key) {
             $query = $this->getQuery('update_' . \strtolower($key) . '_provider');
+
             $graphQLPayload = [
                 'query' => $query,
                 'variables' => $providersParams[$key],
             ];
+
             $response = $this->client->call(Client::METHOD_POST, '/graphql', [
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
             ], $graphQLPayload);
+
             $providers[$index] = $response['body']['data']['messagingUpdate' . $key . 'Provider'];
             $this->assertEquals(200, $response['headers']['status-code']);
             $this->assertEquals($providersParams[$key]['name'], $response['body']['data']['messagingUpdate' . $key . 'Provider']['name']);
@@ -991,7 +994,7 @@ class MessagingTest extends Scope
 
         $this->assertEquals(200, $provider['headers']['status-code']);
 
-        $providerId = $provider['body']['data']['messagingCreateFCMProvider']['_id'];
+        $providerId = $provider['body']['data']['messagingCreateFcmProvider']['_id'];
 
         $query = $this->getQuery(self::$CREATE_TOPIC);
         $graphQLPayload = [

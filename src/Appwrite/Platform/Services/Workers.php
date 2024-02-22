@@ -14,7 +14,7 @@ use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
 use Appwrite\Platform\Workers\Hamster;
 use Appwrite\Platform\Workers\Usage;
-use Appwrite\Platform\Workers\UsageHook;
+use Appwrite\Platform\Workers\UsageDump;
 use Appwrite\Platform\Workers\Migrations;
 
 class Workers extends Service
@@ -33,7 +33,7 @@ class Workers extends Service
             ->addAction(Messaging::getName(), new Messaging())
             ->addAction(Webhooks::getName(), new Webhooks())
             ->addAction(Hamster::getName(), new Hamster())
-            ->addAction(UsageHook::getName(), new UsageHook())
+            ->addAction(UsageDump::getName(), new UsageDump())
             ->addAction(Usage::getName(), new Usage())
             ->addAction(Migrations::getName(), new Migrations())
 

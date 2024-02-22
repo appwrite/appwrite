@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "609062319cc652e2760367f39604ac77",
+    "content-hash": "510f3498b35c5ec3289b7bed6a2ef9c9",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -885,16 +885,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.8.0",
+            "version": "v6.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "df16b615e371d81fb79e506277faea67a1be18f1"
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/df16b615e371d81fb79e506277faea67a1be18f1",
-                "reference": "df16b615e371d81fb79e506277faea67a1be18f1",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/039de174cd9c17a8389754d3b877a2ed22743e18",
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18",
                 "shasum": ""
             },
             "require": {
@@ -904,16 +904,17 @@
                 "php": ">=5.5.0"
             },
             "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
                 "doctrine/annotations": "^1.2.6 || ^1.13.3",
                 "php-parallel-lint/php-console-highlighter": "^1.0.0",
                 "php-parallel-lint/php-parallel-lint": "^1.3.2",
                 "phpcompatibility/php-compatibility": "^9.3.5",
                 "roave/security-advisories": "dev-latest",
-                "squizlabs/php_codesniffer": "^3.7.1",
+                "squizlabs/php_codesniffer": "^3.7.2",
                 "yoast/phpunit-polyfills": "^1.0.4"
             },
             "suggest": {
+                "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
                 "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
                 "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
                 "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
@@ -953,7 +954,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.8.0"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.9.1"
             },
             "funding": [
                 {
@@ -961,7 +962,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-03-06T14:43:22+00:00"
+            "time": "2023-11-25T22:23:28+00:00"
         },
         {
             "name": "spomky-labs/otphp",
@@ -1911,28 +1912,28 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.9.1",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf"
+                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
-                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/71dce00ad43eb278a877cb2c329f7b8d677adfeb",
+                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-openssl": "*",
-                "php": ">=8.0.0"
+                "php": ">=8.0.0",
+                "phpmailer/phpmailer": "6.9.1"
             },
             "require-dev": {
-                "laravel/pint": "1.13.*",
-                "phpmailer/phpmailer": "6.8.*",
-                "phpstan/phpstan": "1.10.*",
-                "phpunit/phpunit": "9.6.10"
+                "laravel/pint": "1.13.11",
+                "phpstan/phpstan": "1.10.58",
+                "phpunit/phpunit": "10.5.10"
             },
             "type": "library",
             "autoload": {
@@ -1955,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.9.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.10.0"
             },
-            "time": "2024-02-15T03:44:44+00:00"
+            "time": "2024-02-20T07:30:15+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2779,16 +2780,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.3",
+            "version": "0.36.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93"
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d308f7f492545da3e51ea5b91c0778392c40b93",
-                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d932098009d62d37dda73cfe4ebc11f83e21405",
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405",
                 "shasum": ""
             },
             "require": {
@@ -2824,9 +2825,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.4"
             },
-            "time": "2024-02-14T06:33:38+00:00"
+            "time": "2024-02-20T16:36:15+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3409,16 +3410,16 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.8.0",
+            "version": "1.8.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc"
+                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/fad452781b3d774e3337b0c0b245dd8e5a4455fc",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
+                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
                 "shasum": ""
             },
             "require": {
@@ -3461,9 +3462,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.1"
             },
-            "time": "2024-01-11T11:49:22+00:00"
+            "time": "2024-01-18T19:15:27+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5019,16 +5020,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.8.1",
+            "version": "3.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7"
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/14f5fff1e64118595db5408e946f3a22c75807f7",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
                 "shasum": ""
             },
             "require": {
@@ -5095,7 +5096,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-01-11T20:47:48+00:00"
+            "time": "2024-02-16T15:06:51+00:00"
         },
         {
             "name": "swoole/ide-helper",

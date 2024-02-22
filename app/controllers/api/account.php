@@ -266,7 +266,7 @@ App::post('/v1/account/sessions/email')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
+                'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
@@ -1773,10 +1773,10 @@ App::post('/v1/account/tokens/phone')
         ]);
 
         $queueForMessaging
+            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
             ->setMessage($messageDoc)
             ->setRecipients([$phone])
-            ->setProviderType(MESSAGE_TYPE_SMS)
-            ->trigger();
+            ->setProviderType(MESSAGE_TYPE_SMS);
 
         $queueForEvents->setPayload(
             $response->output(
@@ -2124,7 +2124,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -3314,10 +3314,10 @@ App::post('/v1/account/verification/phone')
         ]);
 
         $queueForMessaging
+            ->setType(MESSAGE_SEND_TYPE_INTERNAL)
             ->setMessage($messageDoc)
             ->setRecipients([$user->getAttribute('phone')])
-            ->setProviderType(MESSAGE_TYPE_SMS)
-            ->trigger();
+            ->setProviderType(MESSAGE_TYPE_SMS);
 
         $queueForEvents
             ->setParam('userId', $user->getId())
@@ -3677,14 +3677,14 @@ App::post('/v1/account/mfa/challenge')
                 }
 
                 $queueForMessaging
+                    ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage(new Document([
                         '$id' => $challenge->getId(),
                         'data' => [
                             'content' => $code,
                         ],
                     ]))
-                    ->setRecipients([$user->getAttribute('phone')])
-                    ->trigger();
+                    ->setRecipients([$user->getAttribute('phone')]);
                 break;
             case 'email':
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {
@@ -3791,13 +3791,25 @@ App::delete('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('user')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if ($project->getId() === 'console') {
+            // get all memberships
+            $memberships = $user->getAttribute('memberships', []);
+            foreach ($memberships as $membership) {
+                // prevent deletion if at least one active membership
+                if ($membership->getAttribute('confirm', false)) {
+                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                }
+            }
         }
 
         $dbForProject->deleteDocument('users', $user->getId());
