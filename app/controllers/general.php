@@ -9,8 +9,9 @@ use Utopia\Logger\Logger;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Swoole\Http\Request as SwooleRequest;
+use Utopia\Cache\Cache;
+use Utopia\Pools\Group;
 use Appwrite\Utopia\Request;
-use MaxMind\Db\Reader;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\View;
 use Appwrite\Extend\Exception as AppwriteException;
@@ -18,9 +19,6 @@ use Utopia\Config\Config;
 use Utopia\Domains\Domain;
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
-use Appwrite\Event\Event;
-use Appwrite\Event\Usage;
-use Appwrite\ID;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
@@ -40,7 +38,6 @@ use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
 use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
 use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
-use Executor\Executor;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -48,7 +45,7 @@ Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
+function router(App $utopia, Database $dbForConsole, SwooleRequest $swooleRequest, Request $request, Response $response)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -120,226 +117,49 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             $path .= '?' . $query;
         }
 
-
-        $body = $swooleRequest->getContent() ?? '';
-        $method = $swooleRequest->server['request_method'];
-
         $requestHeaders = $request->getHeaders();
 
-        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
-
-        $dbForProject = $getProjectDB($project);
-
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
-
-        if ($function->isEmpty() || !$function->getAttribute('enabled')) {
-            throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
-        }
-
-        $version = $function->getAttribute('version', 'v2');
-        $runtimes = Config::getParam($version === 'v2' ? 'runtimes-v2' : 'runtimes', []);
-
-        $runtime = (isset($runtimes[$function->getAttribute('runtime', '')])) ? $runtimes[$function->getAttribute('runtime', '')] : null;
-
-        if (\is_null($runtime)) {
-            throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
-        }
-
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
-
-        if ($deployment->getAttribute('resourceId') !== $function->getId()) {
-            throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
-        }
-
-        if ($deployment->isEmpty()) {
-            throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
-        }
-
-        /** Check if build has completed */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
-        if ($build->isEmpty()) {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
-        }
-
-        if ($build->getAttribute('status') !== 'ready') {
-            throw new AppwriteException(AppwriteException::BUILD_NOT_READY);
-        }
-
-        $permissions = $function->getAttribute('execute');
-
-        if (!(\in_array('any', $permissions)) && (\in_array('guests', $permissions))) {
-            throw new AppwriteException(AppwriteException::USER_UNAUTHORIZED, 'To execute function using domain, execute permissions must include "any" or "guests"');
-        }
-
-        $headers = \array_merge([], $requestHeaders);
-        $headers['x-appwrite-trigger'] = 'http';
-        $headers['x-appwrite-user-id'] = '';
-        $headers['x-appwrite-user-jwt'] = '';
-        $headers['x-appwrite-country-code'] = '';
-        $headers['x-appwrite-continent-code'] = '';
-        $headers['x-appwrite-continent-eu'] = 'false';
-
-        $ip = $headers['x-real-ip'] ?? '';
-        if (!empty($ip)) {
-            $record = $geodb->get($ip);
-
-            if ($record) {
-                $eu = Config::getParam('locale-eu');
-
-                $headers['x-appwrite-country-code'] = $record['country']['iso_code'] ?? '';
-                $headers['x-appwrite-continent-code'] = $record['continent']['code'] ?? '';
-                $headers['x-appwrite-continent-eu'] = (\in_array($record['country']['iso_code'], $eu)) ? 'true' : 'false';
-            }
-        }
-
-        $headersFiltered = [];
-        foreach ($headers as $key => $value) {
-            if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_REQUEST)) {
-                $headersFiltered[] = ['name' => $key, 'value' => $value];
-            }
-        }
-
-        $executionId = ID::unique();
-
-        $execution = new Document([
-            '$id' => $executionId,
-            '$permissions' => [],
-            'functionInternalId' => $function->getInternalId(),
-            'functionId' => $function->getId(),
-            'deploymentInternalId' => $deployment->getInternalId(),
-            'deploymentId' => $deployment->getId(),
-            'trigger' => 'http', // http / schedule / event
-            'status' =>  'processing', // waiting / processing / completed / failed
-            'responseStatusCode' => 0,
-            'responseHeaders' => [],
-            'requestPath' => $path,
-            'requestMethod' => $method,
-            'requestHeaders' => $headersFiltered,
-            'errors' => '',
-            'logs' => '',
-            'duration' => 0.0,
-            'search' => implode(' ', [$functionId, $executionId]),
+        $body = \json_encode([
+            'async' => false,
+            'body' => $swooleRequest->getContent() ?? '',
+            'method' => $swooleRequest->server['request_method'],
+            'path' => $path,
+            'headers' => $requestHeaders
         ]);
 
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('executionId', $execution->getId())
-            ->setContext('function', $function);
+        $headers = [
+            'Content-Type: application/json',
+            'Content-Length: ' . \strlen($body),
+            'X-Appwrite-Project: ' . $projectId
+        ];
 
-        $durationStart = \microtime(true);
+        $ch = \curl_init();
+        \curl_setopt($ch, CURLOPT_URL, "http://localhost/v1/functions/{$functionId}/executions");
+        \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+        \curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // \curl_setopt($ch, CURLOPT_HEADER, true);
+        \curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+        \curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
-        $vars = [];
+        $executionResponse = \curl_exec($ch);
+        $statusCode = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = \curl_error($ch);
+        $errNo = \curl_errno($ch);
 
-        // V2 vars
-        if ($version === 'v2') {
-            $vars = \array_merge($vars, [
-                'APPWRITE_FUNCTION_TRIGGER' => $headers['x-appwrite-trigger'] ?? '',
-                'APPWRITE_FUNCTION_DATA' => $body ?? '',
-                'APPWRITE_FUNCTION_USER_ID' => $headers['x-appwrite-user-id'] ?? '',
-                'APPWRITE_FUNCTION_JWT' => $headers['x-appwrite-user-jwt'] ?? ''
-            ]);
+        \curl_close($ch);
+
+        if ($errNo !== 0) {
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Internal error: " . $error);
         }
 
-        // Shared vars
-        foreach ($function->getAttribute('varsProject', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
+        if ($statusCode >= 400) {
+            $error = \json_decode($executionResponse, true)['message'];
+            throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, "Execution error: " . $error);
         }
 
-        // Function vars
-        foreach ($function->getAttribute('vars', []) as $var) {
-            $vars[$var->getAttribute('key')] = $var->getAttribute('value', '');
-        }
-
-        // Appwrite vars
-        $vars = \array_merge($vars, [
-            'APPWRITE_FUNCTION_ID' => $functionId,
-            'APPWRITE_FUNCTION_NAME' => $function->getAttribute('name'),
-            'APPWRITE_FUNCTION_DEPLOYMENT' => $deployment->getId(),
-            'APPWRITE_FUNCTION_PROJECT_ID' => $project->getId(),
-            'APPWRITE_FUNCTION_RUNTIME_NAME' => $runtime['name'] ?? '',
-            'APPWRITE_FUNCTION_RUNTIME_VERSION' => $runtime['version'] ?? '',
-        ]);
-
-        /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
-        try {
-            $version = $function->getAttribute('version', 'v2');
-            $command = $runtime['startCommand'];
-            $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
-            $executionResponse = $executor->createExecution(
-                projectId: $project->getId(),
-                deploymentId: $deployment->getId(),
-                body: \strlen($body) > 0 ? $body : null,
-                variables: $vars,
-                timeout: $function->getAttribute('timeout', 0),
-                image: $runtime['image'],
-                source: $build->getAttribute('path', ''),
-                entrypoint: $deployment->getAttribute('entrypoint', ''),
-                version: $version,
-                path: $path,
-                method: $method,
-                headers: $headers,
-                runtimeEntrypoint: $command,
-                requestTimeout: 30
-            );
-
-            $headersFiltered = [];
-            foreach ($executionResponse['headers'] as $key => $value) {
-                if (\in_array(\strtolower($key), FUNCTION_ALLOWLIST_HEADERS_RESPONSE)) {
-                    $headersFiltered[] = ['name' => $key, 'value' => $value];
-                }
-            }
-
-            /** Update execution status */
-            $status = $executionResponse['statusCode'] >= 400 ? 'failed' : 'completed';
-            $execution->setAttribute('status', $status);
-            $execution->setAttribute('responseStatusCode', $executionResponse['statusCode']);
-            $execution->setAttribute('responseHeaders', $headersFiltered);
-            $execution->setAttribute('logs', $executionResponse['logs']);
-            $execution->setAttribute('errors', $executionResponse['errors']);
-            $execution->setAttribute('duration', $executionResponse['duration']);
-        } catch (\Throwable $th) {
-            $durationEnd = \microtime(true);
-
-            $execution
-                ->setAttribute('duration', $durationEnd - $durationStart)
-                ->setAttribute('status', 'failed')
-                ->setAttribute('responseStatusCode', 500)
-                ->setAttribute('errors', $th->getMessage() . '\nError Code: ' . $th->getCode());
-            Console::error($th->getMessage());
-        } finally {
-            $queueForUsage
-                ->addMetric(METRIC_EXECUTIONS, 1)
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS), 1)
-                ->addMetric(METRIC_EXECUTIONS_COMPUTE, (int)($execution->getAttribute('duration') * 1000)) // per project
-                ->addMetric(str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE), (int)($execution->getAttribute('duration') * 1000)) // per function
-            ;
-        }
-
-        if ($function->getAttribute('logging')) {
-            /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
-        }
-
-        $execution->setAttribute('logs', '');
-        $execution->setAttribute('errors', '');
-
-        $headers = [];
-        foreach (($executionResponse['headers'] ?? []) as $key => $value) {
-            $headers[] = ['name' => $key, 'value' => $value];
-        }
-
-        $execution->setAttribute('responseBody', $executionResponse['body'] ?? '');
-        $execution->setAttribute('responseHeaders', $headers);
-
-        $body = $execution['responseBody'] ?? '';
-
-        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
-        if ($encodingKey !== false) {
-            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
-                $body = \base64_decode($body);
-            }
-        }
+        $execution = \json_decode($executionResponse, true);
 
         $contentType = 'text/plain';
         foreach ($execution['responseHeaders'] as $header) {
@@ -348,6 +168,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             }
 
             $response->setHeader($header['name'], $header['value']);
+        }
+
+        $body = $execution['responseBody'] ?? '';
+
+        $encodingKey = \array_search('x-open-runtimes-encoding', \array_column($execution['responseHeaders'], 'name'));
+        if ($encodingKey !== false) {
+            if (($execution['responseHeaders'][$encodingKey]['value'] ?? '') === 'base64') {
+                $body = \base64_decode($body);
+            }
         }
 
         $response
@@ -376,17 +205,13 @@ App::init()
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
-    ->inject('getProjectDB')
     ->inject('user')
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('clients')
     ->inject('servers')
     ->inject('queueForCertificates')
-    ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Document $user, Locale $locale, array $localeCodes, array $clients, array $servers, Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
@@ -395,7 +220,7 @@ App::init()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
         }
@@ -746,11 +571,7 @@ App::options()
     ->inject('request')
     ->inject('response')
     ->inject('dbForConsole')
-    ->inject('getProjectDB')
-    ->inject('queueForEvents')
-    ->inject('queueForUsage')
-    ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole) {
         /*
         * Appwrite Router
         */
@@ -758,7 +579,7 @@ App::options()
         $mainDomain = App::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $swooleRequest, $request, $response)) {
                 return;
             }
         }
