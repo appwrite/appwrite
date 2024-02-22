@@ -1,4 +1,4 @@
-<p>{{hello}}</p>
+<p>{{hello}},</p>
 <p>{{body}}</p>
 <p><a href="{{redirect}}" target="_blank">{{redirect}}</a></p>
 <p>{{footer}}</p>
