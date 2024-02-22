@@ -3743,7 +3743,7 @@ App::post('/v1/account/mfa/challenge')
 
                 $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
 
-                $customTemplate = $project->getAttribute('templates', [])['sms.mfa-challenge-' . $locale->default] ?? [];
+                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
                 if (!empty($customTemplate)) {
                     $message = $customTemplate['message'] ?? $message;
                 }
