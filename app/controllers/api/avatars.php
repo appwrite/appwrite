@@ -76,7 +76,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         }
 
         if (empty($gitHubSession)) {
-            throw new Exception(Exception::USER_SESSION_NOT_FOUND, 'GitHub session not found.');
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'GitHub session not found.');
         }
 
         $provider = $gitHubSession->getAttribute('provider', '');

@@ -35,28 +35,6 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
-                '$id' => 'resourceType',
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255,
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
-                '$id' => ID::custom('mimeType'),
-                'type' => Database::VAR_STRING,
-                'format' => '',
-                'size' => 255, // https://tools.ietf.org/html/rfc4288#section-4.2
-                'signed' => true,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => [],
-            ],
-            [
                 '$id' => 'accessedAt',
                 'type' => Database::VAR_DATETIME,
                 'format' => '',
@@ -1349,10 +1327,10 @@ $commonCollections = [
         ]
     ],
 
-    'stats' => [
+    'stats_v2' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('stats'),
-        'name' => 'stats',
+        '$id' => ID::custom('stats_v2'),
+        'name' => 'stats_v2',
         'attributes' => [
             [
                 '$id' => ID::custom('metric'),

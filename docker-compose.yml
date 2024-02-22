@@ -928,7 +928,6 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
-
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
@@ -937,9 +936,8 @@ services:
   #
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
-  # Redis Insight - A nice UI for exploring Redis data
-  # Adminer - A nice UI for exploring MariaDB data
-  # GraphQl Explorer - A nice UI for exploring GraphQL API
+  # RedisCommander - A nice UI for exploring Redis data
+  # Webgrind - A nice UI for exploring and debugging code-level stuff
 
   maildev: # used mainly for dev tests
     image: appwrite/mailcatcher:1.0.0
@@ -969,15 +967,21 @@ services:
     networks:
       - appwrite
 
-  redis-insight:
-    image: redis/redisinsight:latest
-    restart: unless-stopped
-    networks:
-    - appwrite
-    environment:
-    - REDIS_HOSTS=redis
-    ports:
-    - "8081:5540"
+  # redis-commander:
+  #   image: rediscommander/redis-commander:latest
+  #   restart: unless-stopped
+  #   networks:
+  #   - appwrite
+  #   environment:
+  #   - REDIS_HOSTS=redis
+  #   ports:
+  #   - "8081:8081"
+  # webgrind:
+  #   image: 'jokkedk/webgrind:latest'
+  #   volumes:
+  #     - './debug:/tmp'
+  #   ports:
+  #     - '3001:80'
 
   graphql-explorer:
     container_name: appwrite-graphql-explorer

@@ -78,7 +78,7 @@ class UsageDump extends Action
                         $id = \md5("{$time}_{$period}_{$key}");
 
                         try {
-                            $dbForProject->createDocument('stats', new Document([
+                            $dbForProject->createDocument('stats_v2', new Document([
                                 '$id' => $id,
                                 'period' => $period,
                                 'time' => $time,
@@ -89,14 +89,14 @@ class UsageDump extends Action
                         } catch (Duplicate $th) {
                             if ($value < 0) {
                                 $dbForProject->decreaseDocumentAttribute(
-                                    'stats',
+                                    'stats_v2',
                                     $id,
                                     'value',
                                     abs($value)
                                 );
                             } else {
                                 $dbForProject->increaseDocumentAttribute(
-                                    'stats',
+                                    'stats_v2',
                                     $id,
                                     'value',
                                     $value
