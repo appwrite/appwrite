@@ -792,8 +792,8 @@ App::get('/v1/health/stats') // Currently only used internally
     ->label('docs', false)
     ->inject('response')
     ->inject('register')
-    ->inject('deviceFiles')
-    ->action(function (Response $response, Registry $register, Device $deviceFiles) {
+    ->inject('deviceForFiles')
+    ->action(function (Response $response, Registry $register, Device $deviceForFiles) {
 
         $cache = $register->get('cache');
 
@@ -802,9 +802,9 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
-                    'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
-                    'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
+                    'used' => Storage::human($deviceForFiles->getDirectorySize($deviceForFiles->getRoot() . '/')),
+                    'partitionTotal' => Storage::human($deviceForFiles->getPartitionTotalSpace()),
+                    'partitionFree' => Storage::human($deviceForFiles->getPartitionFreeSpace()),
                 ],
                 'cache' => [
                     'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,

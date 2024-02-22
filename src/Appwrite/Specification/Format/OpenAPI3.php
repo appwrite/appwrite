@@ -302,7 +302,7 @@ class OpenAPI3 extends Format
                     case 'Utopia\Database\Validator\UID':
                     case 'Utopia\Validator\Text':
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['schema']['type'] = $validator->getType();
@@ -313,7 +313,7 @@ class OpenAPI3 extends Format
                             $node['schema']['x-upload-id'] = true;
                         }
                         $node['schema']['type'] = $validator->getType();
-                        $node['schema']['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
+                        $node['schema']['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['schema']['type'] = $validator->getType();
@@ -450,6 +450,10 @@ class OpenAPI3 extends Format
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
                         }
+                        break;
+                    case 'Appwrite\Utopia\Database\Validator\CompoundUID':
+                        $node['schema']['type'] = $validator->getType();
+                        $node['schema']['x-example'] = '[ID1:ID2]';
                         break;
                     default:
                         $node['schema']['type'] = 'string';

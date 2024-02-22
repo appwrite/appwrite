@@ -582,7 +582,6 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
-      - _APP_SMS_PROJECTS_DENY_LIST
       - _APP_DB_HOST
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
@@ -592,6 +591,7 @@ services:
       - _APP_LOGGING_CONFIG
       - _APP_SMS_FROM
       - _APP_SMS_PROVIDER
+      - _APP_SMS_PROJECTS_DENY_LIST
 
   appwrite-worker-migrations:
     entrypoint: worker-migrations
@@ -669,6 +669,37 @@ services:
     entrypoint: worker-usage
     <<: *x-logging
     container_name: appwrite-worker-usage
+    image: appwrite-dev
+    networks:
+      - appwrite
+    volumes:
+      - ./app:/usr/src/code/app
+      - ./src:/usr/src/code/src
+    depends_on:
+      - redis
+      - mariadb
+    environment:
+      - _APP_ENV
+      - _APP_WORKER_PER_CORE
+      - _APP_OPENSSL_KEY_V1
+      - _APP_DB_HOST
+      - _APP_DB_PORT
+      - _APP_DB_SCHEMA
+      - _APP_DB_USER
+      - _APP_DB_PASS
+      - _APP_REDIS_HOST
+      - _APP_REDIS_PORT
+      - _APP_REDIS_USER
+      - _APP_REDIS_PASS
+      - _APP_USAGE_STATS
+      - _APP_LOGGING_PROVIDER
+      - _APP_LOGGING_CONFIG
+      - _APP_USAGE_AGGREGATION_INTERVAL
+
+  appwrite-worker-usage-dump:
+    entrypoint: worker-usage-dump
+    <<: *x-logging
+    container_name: appwrite-worker-usage-dump
     image: appwrite-dev
     networks:
       - appwrite
@@ -941,6 +972,7 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
+
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack
@@ -949,8 +981,9 @@ services:
   #
   # MailCatcher - An SMTP server. Catches all system emails and displays them in a nice UI.
   # RequestCatcher - An HTTP server. Catches all system https calls and displays them using a simple HTTP API. Used to debug & tests webhooks and HTTP tasks
-  # RedisCommander - A nice UI for exploring Redis data
-  # Webgrind - A nice UI for exploring and debugging code-level stuff
+  # Redis Insight - A nice UI for exploring Redis data
+  # Adminer - A nice UI for exploring MariaDB data
+  # GraphQl Explorer - A nice UI for exploring GraphQL API
 
   maildev: # used mainly for dev tests
     image: appwrite/mailcatcher:1.0.0
@@ -980,21 +1013,15 @@ services:
     networks:
       - appwrite
 
-  # redis-commander:
-  #   image: rediscommander/redis-commander:latest
-  #   restart: unless-stopped
-  #   networks:
-  #   - appwrite
-  #   environment:
-  #   - REDIS_HOSTS=redis
-  #   ports:
-  #   - "8081:8081"
-  # webgrind:
-  #   image: 'jokkedk/webgrind:latest'
-  #   volumes:
-  #     - './debug:/tmp'
-  #   ports:
-  #     - '3001:80'
+  redis-insight:
+    image: redis/redisinsight:latest
+    restart: unless-stopped
+    networks:
+    - appwrite
+    environment:
+    - REDIS_HOSTS=redis
+    ports:
+    - "8081:5540"
 
   graphql-explorer:
     container_name: appwrite-graphql-explorer

@@ -47,7 +47,7 @@ class Phone extends Validator
             return true;
         }
 
-        return !!\preg_match('/^\+[1-9]\d{1,14}$/', $value);
+        return !!\preg_match('/^\+[1-9]\d{6,14}$/', $value);
     }
 
     /**

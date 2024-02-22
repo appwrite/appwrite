@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Event\Audit;
+use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
@@ -305,10 +306,11 @@ App::init()
     ->inject('queueForAudits')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
+    ->inject('queueForBuilds')
     ->inject('queueForUsage')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Audit $queueForAudits, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Usage $queueForUsage, Database $dbForProject, string $mode) use ($databaseListener) {
 
         $route = $utopia->getRoute();
 
@@ -382,9 +384,6 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-        $queueForMessaging
-            ->setProject($project);
-
         $queueForAudits
             ->setMode($mode)
             ->setUserAgent($request->getUserAgent(''))
@@ -393,9 +392,10 @@ App::init()
             ->setProject($project)
             ->setUser($user);
 
-
         $queueForDeletes->setProject($project);
         $queueForDatabase->setProject($project);
+        $queueForBuilds->setProject($project);
+        $queueForMessaging->setProject($project);
 
         $dbForProject
             ->on(Database::EVENT_DOCUMENT_CREATE, 'calculate-usage', fn ($event, $document) => $databaseListener($event, $document, $project, $queueForUsage, $dbForProject))
@@ -403,24 +403,22 @@ App::init()
         ;
 
         $useCache = $route->getLabel('cache', false);
-
         if ($useCache) {
             $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
+            $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
             $cache = new Cache(
                 new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
             );
             $timestamp = 60 * 60 * 24 * 30;
             $data = $cache->load($key, $timestamp);
 
-            if (!empty($data)) {
-                $data = json_decode($data, true);
-                $parts = explode('/', $data['resourceType']);
+            if (!empty($data) && !$cacheLog->isEmpty()) {
+                $parts = explode('/', $cacheLog->getAttribute('resourceType'));
                 $type = $parts[0] ?? null;
 
                 if ($type === 'bucket') {
                     $bucketId = $parts[1] ?? null;
-
-                    $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
+                    $bucket   = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
                     $isAPIKey = Auth::isAppUser(Authorization::getRoles());
                     $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
@@ -432,11 +430,12 @@ App::init()
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
                     $validator = new Authorization(Database::PERMISSION_READ);
                     $valid = $validator->isValid($bucket->getRead());
+
                     if (!$fileSecurity && !$valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
 
-                    $parts = explode('/', $data['resource']);
+                    $parts = explode('/', $cacheLog->getAttribute('resource'));
                     $fileId = $parts[1] ?? null;
 
                     if ($fileSecurity && !$valid) {
@@ -453,8 +452,8 @@ App::init()
                 $response
                     ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + $timestamp) . ' GMT')
                     ->addHeader('X-Appwrite-Cache', 'hit')
-                    ->setContentType($data['contentType'])
-                    ->send(base64_decode($data['payload']))
+                    ->setContentType($cacheLog->getAttribute('mimeType'))
+                    ->send($data)
                 ;
             } else {
                 $response->addHeader('X-Appwrite-Cache', 'miss');
@@ -513,11 +512,13 @@ App::shutdown()
     ->inject('queueForUsage')
     ->inject('queueForDeletes')
     ->inject('queueForDatabase')
+    ->inject('queueForBuilds')
+    ->inject('queueForMessaging')
     ->inject('dbForProject')
     ->inject('queueForFunctions')
     ->inject('mode')
     ->inject('dbForConsole')
-    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
+    ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
 
         $responsePayload = $response->getPayload();
 
@@ -618,6 +619,14 @@ App::shutdown()
             $queueForDatabase->trigger();
         }
 
+        if (!empty($queueForBuilds->getType())) {
+            $queueForBuilds->trigger();
+        }
+
+        if (!empty($queueForMessaging->getType())) {
+            $queueForMessaging->trigger();
+        }
+
         /**
          * Cache label
          */
@@ -625,7 +634,6 @@ App::shutdown()
         if ($useCache) {
             $resource = $resourceType = null;
             $data = $response->getPayload();
-
             if (!empty($data['payload'])) {
                 $pattern = $route->getLabel('cache.resource', null);
                 if (!empty($pattern)) {
@@ -637,24 +645,19 @@ App::shutdown()
                     $resourceType = $parseLabel($pattern, $responsePayload, $requestParams, $user);
                 }
 
-                $key = md5($request->getURI() . implode('*', $request->getParams()) . '*' . APP_CACHE_BUSTER);
-                $data = json_encode([
-                    'resourceType' => $resourceType,
-                    'resource' => $resource,
-                    'contentType' => $response->getContentType(),
-                    'payload' => base64_encode($data['payload']),
-                ]);
-
-                $signature = md5($data);
-                $cacheLog  = Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
+                $key = md5($request->getURI() . '*' . implode('*', $request->getParams())) . '*' . APP_CACHE_BUSTER;
+                $signature = md5($data['payload']);
+                $cacheLog  =  Authorization::skip(fn () => $dbForProject->getDocument('cache', $key));
                 $accessedAt = $cacheLog->getAttribute('accessedAt', '');
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                        '$id' => $key,
-                        'resource' => $resource,
-                        'accessedAt' => $now,
-                        'signature' => $signature,
+                    '$id' => $key,
+                    'resource' => $resource,
+                    'resourceType' => $resourceType,
+                    'mimeType' => $response->getContentType(),
+                    'accessedAt' => $now,
+                    'signature' => $signature,
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);
@@ -665,7 +668,7 @@ App::shutdown()
                     $cache = new Cache(
                         new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $project->getId())
                     );
-                    $cache->save($key, $data);
+                    $cache->save($key, $data['payload']);
                 }
             }
         }

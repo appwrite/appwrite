@@ -121,9 +121,7 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
         ->setDeployment($deployment)
-        ->setTemplate($template)
-        ->setProject($project)
-        ->trigger();
+        ->setTemplate($template);
 };
 
 App::post('/v1/functions')
@@ -235,7 +233,6 @@ App::post('/v1/functions')
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => 'function',
-                'resourceCollection' => 'functions',
                 'resourceId' => $function->getId(),
                 'resourceInternalId' => $function->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -847,8 +844,8 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceFunctions) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Request $request, Database $dbForProject, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -865,7 +862,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
         }
 
         $path = $deployment->getAttribute('path', '');
-        if (!$deviceFunctions->exists($path)) {
+        if (!$deviceForFunctions->exists($path)) {
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
@@ -875,7 +872,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
             ->addHeader('X-Peak', \memory_get_peak_usage())
             ->addHeader('Content-Disposition', 'attachment; filename="' . $deploymentId . '.tar.gz"');
 
-        $size = $deviceFunctions->getFileSize($path);
+        $size = $deviceForFunctions->getFileSize($path);
         $rangeHeader = $request->getHeader('range');
 
         if (!empty($rangeHeader)) {
@@ -897,13 +894,13 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 ->addHeader('Content-Length', $end - $start + 1)
                 ->setStatusCode(Response::STATUS_CODE_PARTIALCONTENT);
 
-            $response->send($deviceFunctions->read($path, $start, ($end - $start + 1)));
+            $response->send($deviceForFunctions->read($path, $start, ($end - $start + 1)));
         }
 
         if ($size > APP_STORAGE_READ_BUFFER) {
             for ($i = 0; $i < ceil($size / MAX_OUTPUT_CHUNK_SIZE); $i++) {
                 $response->chunk(
-                    $deviceFunctions->read(
+                    $deviceForFunctions->read(
                         $path,
                         ($i * MAX_OUTPUT_CHUNK_SIZE),
                         min(MAX_OUTPUT_CHUNK_SIZE, $size - ($i * MAX_OUTPUT_CHUNK_SIZE))
@@ -912,7 +909,7 @@ App::get('/v1/functions/:functionId/deployments/:deploymentId/download')
                 );
             }
         } else {
-            $response->send($deviceFunctions->read($path));
+            $response->send($deviceForFunctions->read($path));
         }
     });
 
@@ -1051,10 +1048,10 @@ App::post('/v1/functions/:functionId/deployments')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('project')
-    ->inject('deviceFunctions')
-    ->inject('deviceLocal')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForLocal')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceFunctions, Device $deviceLocal, Build $queueForBuilds) {
+    ->action(function (string $functionId, ?string $entrypoint, ?string $commands, mixed $code, bool $activate, Request $request, Response $response, Database $dbForProject, Event $queueForEvents, Document $project, Device $deviceForFunctions, Device $deviceForLocal, Build $queueForBuilds) {
 
         $activate = filter_var($activate, FILTER_VALIDATE_BOOLEAN);
 
@@ -1135,11 +1132,11 @@ App::post('/v1/functions/:functionId/deployments')
         }
 
         // Save to storage
-        $fileSize ??= $deviceLocal->getFileSize($fileTmpName);
-        $path = $deviceFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
+        $fileSize ??= $deviceForLocal->getFileSize($fileTmpName);
+        $path = $deviceForFunctions->getPath($deploymentId . '.' . \pathinfo($fileName, PATHINFO_EXTENSION));
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
 
-        $metadata = ['content_type' => $deviceLocal->getFileMimeType($fileTmpName)];
+        $metadata = ['content_type' => $deviceForLocal->getFileMimeType($fileTmpName)];
         if (!$deployment->isEmpty()) {
             $chunks = $deployment->getAttribute('chunksTotal', 1);
             $metadata = $deployment->getAttribute('metadata', []);
@@ -1148,7 +1145,7 @@ App::post('/v1/functions/:functionId/deployments')
             }
         }
 
-        $chunksUploaded = $deviceFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
+        $chunksUploaded = $deviceForFunctions->upload($fileTmpName, $path, $chunk, $chunks, $metadata);
 
         if (empty($chunksUploaded)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed moving file');
@@ -1171,7 +1168,7 @@ App::post('/v1/functions/:functionId/deployments')
                 }
             }
 
-            $fileSize = $deviceFunctions->getFileSize($path);
+            $fileSize = $deviceForFunctions->getFileSize($path);
 
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1202,9 +1199,7 @@ App::post('/v1/functions/:functionId/deployments')
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
         } else {
             if ($deployment->isEmpty()) {
                 $deployment = $dbForProject->createDocument('deployments', new Document([
@@ -1382,8 +1377,8 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
-    ->inject('deviceFunctions')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceFunctions) {
+    ->inject('deviceForFunctions')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Device $deviceForFunctions) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         if ($function->isEmpty()) {
@@ -1404,7 +1399,7 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         }
 
         if (!empty($deployment->getAttribute('path', ''))) {
-            if (!($deviceFunctions->delete($deployment->getAttribute('path', '')))) {
+            if (!($deviceForFunctions->delete($deployment->getAttribute('path', '')))) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed to remove deployment from storage');
             }
         }
@@ -1484,9 +1479,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
         $queueForBuilds
             ->setType(BUILD_TYPE_DEPLOYMENT)
             ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
+            ->setDeployment($deployment);
 
         $queueForEvents
             ->setParam('functionId', $function->getId())

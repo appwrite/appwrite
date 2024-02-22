@@ -15,6 +15,7 @@ use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
+use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
 use Utopia\App;
@@ -34,6 +35,7 @@ use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
+use Utopia\Storage\Device\Local;
 
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
@@ -45,34 +47,13 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
     $database = $pools
         ->get('console')
         ->pop()
-        ->getResource()
-    ;
+        ->getResource();
 
     $adapter = new Database($database, $cache);
     $adapter->setNamespace('_console');
 
     return $adapter;
 }, ['cache', 'register']);
-
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Database $dbForConsole) {
-    $payload = $message->getPayload() ?? [];
-    $project = new Document($payload['project'] ?? []);
-
-    if ($project->isEmpty() || $project->getId() === 'console') {
-        return $dbForConsole;
-    }
-
-    $pools = $register->get('pools');
-    $database = $pools
-        ->get($project->getAttribute('database'))
-        ->pop()
-        ->getResource()
-    ;
-
-    $adapter = new Database($database, $cache);
-    $adapter->setNamespace('_' . $project->getInternalId());
-    return $adapter;
-}, ['cache', 'register', 'message', 'dbForConsole']);
 
 Server::setResource('project', function (Message $message, Database $dbForConsole) {
     $payload = $message->getPayload() ?? [];
@@ -81,9 +62,25 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     if ($project->getId() === 'console') {
         return $project;
     }
+
     return $dbForConsole->getDocument('projects', $project->getId());
-    ;
 }, ['message', 'dbForConsole']);
+
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
+    if ($project->isEmpty() || $project->getId() === 'console') {
+        return $dbForConsole;
+    }
+
+    $pools = $register->get('pools');
+    $database = $pools
+        ->get($project->getAttribute('database'))
+        ->pop()
+        ->getResource();
+
+    $adapter = new Database($database, $cache);
+    $adapter->setNamespace('_' . $project->getInternalId());
+    return $adapter;
+}, ['cache', 'register', 'message', 'project', 'dbForConsole']);
 
 Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
@@ -143,72 +140,92 @@ Server::setResource('cache', function (Registry $register) {
 
     return new Cache(new Sharding($adapters));
 }, ['register']);
+
 Server::setResource('log', fn() => new Log());
+
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
 }, ['queue']);
+
+Server::setResource('queueForUsageDump', function (Connection $queue) {
+    return new UsageDump($queue);
+}, ['queue']);
+
 Server::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
 }, ['pools']);
+
 Server::setResource('queueForDatabase', function (Connection $queue) {
     return new EventDatabase($queue);
 }, ['queue']);
+
 Server::setResource('queueForMessaging', function (Connection $queue) {
     return new Messaging($queue);
 }, ['queue']);
+
 Server::setResource('queueForMails', function (Connection $queue) {
     return new Mail($queue);
 }, ['queue']);
+
 Server::setResource('queueForBuilds', function (Connection $queue) {
     return new Build($queue);
 }, ['queue']);
+
 Server::setResource('queueForDeletes', function (Connection $queue) {
     return new Delete($queue);
 }, ['queue']);
+
 Server::setResource('queueForEvents', function (Connection $queue) {
     return new Event($queue);
 }, ['queue']);
+
 Server::setResource('queueForAudits', function (Connection $queue) {
     return new Audit($queue);
 }, ['queue']);
+
 Server::setResource('queueForFunctions', function (Connection $queue) {
     return new Func($queue);
 }, ['queue']);
+
 Server::setResource('queueForCertificates', function (Connection $queue) {
     return new Certificate($queue);
 }, ['queue']);
+
 Server::setResource('queueForMigrations', function (Connection $queue) {
     return new Migration($queue);
 }, ['queue']);
+
 Server::setResource('queueForHamster', function (Connection $queue) {
     return new Hamster($queue);
 }, ['queue']);
+
 Server::setResource('logger', function (Registry $register) {
     return $register->get('logger');
 }, ['register']);
+
 Server::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
-Server::setResource('getFunctionsDevice', function () {
-    return function (string $projectId) {
-        return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $projectId);
-    };
-});
-Server::setResource('getFilesDevice', function () {
-    return function (string $projectId) {
-        return getDevice(APP_STORAGE_UPLOADS . '/app-' . $projectId);
-    };
-});
-Server::setResource('getBuildsDevice', function () {
-    return function (string $projectId) {
-        return getDevice(APP_STORAGE_BUILDS . '/app-' . $projectId);
-    };
-});
-Server::setResource('getCacheDevice', function () {
-    return function (string $projectId) {
-        return getDevice(APP_STORAGE_CACHE . '/app-' . $projectId);
-    };
-});
+
+Server::setResource('deviceForFunctions', function (Document $project) {
+    return getDevice(APP_STORAGE_FUNCTIONS . '/app-' . $project->getId());
+}, ['project']);
+
+Server::setResource('deviceForFiles', function (Document $project) {
+    return getDevice(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
+
+Server::setResource('deviceForBuilds', function (Document $project) {
+    return getDevice(APP_STORAGE_BUILDS . '/app-' . $project->getId());
+}, ['project']);
+
+Server::setResource('deviceForCache', function (Document $project) {
+    return getDevice(APP_STORAGE_CACHE . '/app-' . $project->getId());
+}, ['project']);
+
+Server::setResource('deviceForLocalFiles', function (Document $project) {
+    return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
+}, ['project']);
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
@@ -303,12 +320,9 @@ $worker
         Console::error('[Error] Line: ' . $error->getLine());
     });
 
-try {
-    $workerStart = $worker->getWorkerStart();
-} catch (\Throwable $error) {
-    $worker->workerStart();
-} finally {
-    Console::info("Worker $workerName  started");
-}
+$worker->workerStart()
+    ->action(function () use ($workerName) {
+        Console::info("Worker $workerName  started");
+    });
 
 $worker->start();
