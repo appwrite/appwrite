@@ -407,6 +407,24 @@ class HealthCustomServerTest extends Scope
         return [];
     }
 
+    public function testStorageSuccess(): array
+    {
+        /**
+         * Test for SUCCESS
+         */
+        $response = $this->client->call(Client::METHOD_GET, '/health/storage', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), []);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('pass', $response['body']['status']);
+        $this->assertIsInt($response['body']['ping']);
+        $this->assertLessThan(100, $response['body']['ping']);
+
+        return [];
+    }
+
     public function testStorageAntiVirusSuccess(): array
     {
         /**
