@@ -1467,7 +1467,6 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         if ($deviceDeleted) {
             $queueForDeletes
                 ->setType(DELETE_TYPE_CACHE_BY_RESOURCE)
-                ->setResourceType('bucket/' . $bucket->getId())
                 ->setResource('file/' . $fileId)
             ;
 
@@ -1525,7 +1524,7 @@ App::get('/v1/storage/usage')
         $total = [];
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $result =  $dbForProject->findOne('stats_v2', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1533,7 +1532,7 @@ App::get('/v1/storage/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $dbForProject->find('stats_v2', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -1610,7 +1609,7 @@ App::get('/v1/storage/:bucketId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats', [
+                $result =  $dbForProject->findOne('stats_v2', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1618,7 +1617,7 @@ App::get('/v1/storage/:bucketId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats', [
+                $results = $dbForProject->find('stats_v2', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
