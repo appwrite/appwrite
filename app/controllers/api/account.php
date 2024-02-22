@@ -3640,11 +3640,13 @@ App::post('/v1/account/mfa/challenge')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
+    ->inject('locale')
+    ->inject('project')
+    ->inject('request')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
-    ->inject('locale')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -3697,9 +3699,85 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_EMAIL_NOT_VERIFIED);
                 }
 
+                $subject = $locale->getText("emails.mfaChallenge.subject");
+                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+
+                $detector = new Detector($request->getUserAgent('UNKNOWN'));
+                $agentOs = $detector->getOS();
+                $agentClient = $detector->getClient();
+                $agentDevice = $detector->getDevice();
+
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
+                $message
+                    ->setParam('{{hello}}', $locale->getText("emails.mfaChallenge.hello"))
+                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description"))
+                    ->setParam('{{clientInfo}}', $locale->getText("emails.mfaChallenge.clientInfo"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.mfaChallenge.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
+
+                $body = $message->render();
+
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $queueForMails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $queueForMails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
+                }
+
+                $emailVariables = [
+                    'direction' => $locale->getText('settings.direction'),
+                    /* {{user}}, {{project}} and {{otp}} are required in the templates */
+                    'user' => $user->getAttribute('name'),
+                    'project' => $project->getAttribute('name'),
+                    'otp' => $code,
+                    'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                    'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                ];
+
                 $queueForMails
-                    ->setSubject("{$code} is your 6-digit code")
-                    ->setBody($code)
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
                 break;

@@ -32,6 +32,11 @@ class Mails extends Action
             ->callback(fn (Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
     }
 
+    protected array $richTextParams = [
+        'b' => '<strong>',
+        '/b' => '</strong>',
+    ];
+
     /**
      * @param Message $message
      * @param Registry $register
@@ -80,6 +85,9 @@ class Mails extends Action
         foreach ($variables as $key => $value) {
             // TODO: hotfix for redirect param
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+        }
+        foreach ($this->richTextParams as $key => $value) {
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
         $body = $bodyTemplate->render();
 
