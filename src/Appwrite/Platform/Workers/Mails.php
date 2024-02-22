@@ -32,6 +32,9 @@ class Mails extends Action
             ->callback(fn (Message $message, Registry $register, Log $log) => $this->action($message, $register, $log));
     }
 
+    /**
+     * @var array<string, string>
+     */
     protected array $richTextParams = [
         'b' => '<strong>',
         '/b' => '</strong>',
