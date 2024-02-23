@@ -1259,14 +1259,16 @@ App::post('/v1/account/tokens/magic-url')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'redirect' => $url,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
-            'phrase' => !empty($phrase) ? $phrase : ''
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -1486,14 +1488,16 @@ App::post('/v1/account/tokens/email')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{project}} and {{otp}} are required in the templates */
+            // {{user}}, {{project}} and {{otp}} are required in the templates
             'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'otp' => $tokenSecret,
             'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
             'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
             'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
-            'phrase' => !empty($phrase) ? $phrase : ''
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -2951,10 +2955,12 @@ App::post('/v1/account/recovery')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $profile->getAttribute('name'),
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => ''
         ];
 
         $queueForMails
@@ -3197,10 +3203,12 @@ App::post('/v1/account/verification')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -3845,7 +3853,7 @@ App::post('/v1/account/mfa/challenge')
 
                 $emailVariables = [
                     'direction' => $locale->getText('settings.direction'),
-                    /* {{user}}, {{project}} and {{otp}} are required in the templates */
+                    // {{user}}, {{project}} and {{otp}} are required in the templates
                     'user' => $user->getAttribute('name'),
                     'project' => $project->getAttribute('name'),
                     'otp' => $code,
