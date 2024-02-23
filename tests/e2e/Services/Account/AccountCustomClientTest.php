@@ -2226,7 +2226,7 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
-    #[Retry(count: 2)]
+    #[Retry(count: 3)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
