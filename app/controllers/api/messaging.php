@@ -2133,19 +2133,24 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('name', null, new Text(128), 'Topic Name.', true)
+    ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, ?string $name, ?array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if (!empty($name)) {
+        if (!\is_null($name)) {
             $topic->setAttribute('name', $name);
+        }
+
+        if (!\is_null($subscribe)) {
+            $topic->setAttribute('subscribe', $subscribe);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
