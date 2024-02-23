@@ -210,6 +210,12 @@ class Builds extends Action
                 $stdout = '';
                 $stderr = '';
                 Console::execute('mkdir -p /tmp/builds/' . \escapeshellcmd($buildId), '', $stdout, $stderr);
+
+                $build = $dbForProject->getDocument('builds', $buildId);
+                if ($build->getAttribute('status') === 'cancelled') {
+                    return;
+                }
+
                 $exit = Console::execute($gitCloneCommand, '', $stdout, $stderr);
 
                 if ($exit !== 0) {
@@ -390,6 +396,7 @@ class Builds extends Action
             $response = null;
             $err = null;
 
+            $build = $dbForProject->getDocument('builds', $buildId);
             if ($build->getAttribute('status') === 'cancelled') {
                 return;
             }
@@ -460,6 +467,7 @@ class Builds extends Action
                 ]);
 
             if ($err) {
+                $build = $dbForProject->getDocument('builds', $buildId);
                 if ($build->getAttribute('status') === 'cancelled') {
                     return;
                 }
