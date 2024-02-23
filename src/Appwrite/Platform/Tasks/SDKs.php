@@ -260,7 +260,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
                         git fetch origin ' . $gitBranch . ' && \
                         git pull origin ' . $gitBranch . ' && \
                         rm -rf ' . $target . '/* && \
-                        cp -r ' . $result . '/* ' . $target . '/ && \
+                        cp -r ' . $result . '/. ' . $target . '/ && \
                         git add . && \
                         git commit -m "' . $message . '" && \
                         git push -u origin ' . $gitBranch . '
