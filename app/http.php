@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Appwrite\Utopia\Response;
+use Swoole\Constant;
 use Swoole\Process;
 use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
@@ -20,12 +21,15 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Swoole\Files;
 use Appwrite\Utopia\Request;
-use Swoole\Coroutine;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
 
-$http = new Server("0.0.0.0", App::getEnv('PORT', 80));
+$http = new Server(
+    host: "0.0.0.0",
+    port: App::getEnv('PORT', 80),
+    mode: SWOOLE_PROCESS,
+);
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
 $workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -34,23 +38,21 @@ $http
     ->set([
         'worker_num' => $workerNumber,
         'open_http2_protocol' => true,
-        // 'document_root' => __DIR__.'/../public',
-        // 'enable_static_handler' => true,
         'http_compression' => true,
         'http_compression_level' => 6,
         'package_max_length' => $payloadSize,
         'buffer_output_size' => $payloadSize,
     ]);
 
-$http->on('WorkerStart', function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
     Console::success('Worker ' . ++$workerId . ' started successfully');
 });
 
-$http->on('BeforeReload', function ($server, $workerId) {
+$http->on(Constant::EVENT_BEFORE_RELOAD, function ($server, $workerId) {
     Console::success('Starting reload...');
 });
 
-$http->on('AfterReload', function ($server, $workerId) {
+$http->on(Constant::EVENT_AFTER_RELOAD, function ($server, $workerId) {
     Console::success('Reload completed...');
 });
 
@@ -58,7 +60,7 @@ Files::load(__DIR__ . '/../console');
 
 include __DIR__ . '/controllers/general.php';
 
-$http->on('start', function (Server $http) use ($payloadSize, $register) {
+$http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $register) {
     $app = new App('UTC');
 
     go(function () use ($register, $app) {

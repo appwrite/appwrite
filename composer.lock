@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1cf29cdafc7eb9a8b46227a8ecb31708",
+    "content-hash": "36c4412b5422eaf921f20524107be5bb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1552,16 +1552,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.48.3",
+            "version": "0.48.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "c7dd97d92f52a0aec9951e0b02309a100f3f24a9"
+                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/c7dd97d92f52a0aec9951e0b02309a100f3f24a9",
-                "reference": "c7dd97d92f52a0aec9951e0b02309a100f3f24a9",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
+                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
                 "shasum": ""
             },
             "require": {
@@ -1569,7 +1569,7 @@
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.9.*",
-                "utopia-php/framework": "0.33.*",
+                "utopia-php/framework": "0.*.*",
                 "utopia-php/mongo": "0.3.*"
             },
             "require-dev": {
@@ -1602,9 +1602,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.48.3"
+                "source": "https://github.com/utopia-php/database/tree/0.48.2"
             },
-            "time": "2024-02-21T08:32:09+00:00"
+            "time": "2024-02-02T14:10:14+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3131,16 +3131,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.0.0",
+            "version": "v5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "4a21235f7e56e713259a6f76bf4b5ea08502b9dc"
+                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/4a21235f7e56e713259a6f76bf4b5ea08502b9dc",
-                "reference": "4a21235f7e56e713259a6f76bf4b5ea08502b9dc",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/2218c2252c874a4624ab2f613d86ac32d227bc69",
+                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69",
                 "shasum": ""
             },
             "require": {
@@ -3183,9 +3183,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.1"
             },
-            "time": "2024-01-07T17:17:35+00:00"
+            "time": "2024-02-21T19:24:10+00:00"
         },
         {
             "name": "phar-io/manifest",
