@@ -722,7 +722,7 @@ App::get('/v1/health/storage')
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
-            if (!$device->write($device->getPath('health.txt'), 'test', '')) {
+            if (!$device->write($device->getPath('health.txt'), 'test', 'text/plain')) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
             }
 
