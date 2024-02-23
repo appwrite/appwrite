@@ -92,7 +92,6 @@ services:
       - php
       - -e
       - app/http.php
-      - -dopcache.preload=opcache.preload=/usr/src/code/app/preload.php
     environment:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
