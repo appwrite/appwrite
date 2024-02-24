@@ -25,7 +25,7 @@ return [
                 'family' => APP_PLATFORM_CLIENT,
                 'prism' => 'javascript',
                 'source' => \realpath(__DIR__ . '/../sdks/client-web'),
-                'gitUrl' => 'https://github.com/appwrite/sdk-for-web.git',
+                'gitUrl' => 'git@github.com:appwrite/sdk-for-web.git',
                 'gitRepoName' => 'sdk-for-web',
                 'gitUserName' => 'appwrite',
                 'gitBranch' => 'dev',
