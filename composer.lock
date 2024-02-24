@@ -1552,16 +1552,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.48.2",
+            "version": "0.48.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4"
+                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
-                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
+                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
                 "shasum": ""
             },
             "require": {
@@ -1569,7 +1569,7 @@
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.9.*",
-                "utopia-php/framework": "0.*.*",
+                "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.3.*"
             },
             "require-dev": {
@@ -1602,9 +1602,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.48.2"
+                "source": "https://github.com/utopia-php/database/tree/0.48.4"
             },
-            "time": "2024-02-02T14:10:14+00:00"
+            "time": "2024-02-23T03:22:55+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -2217,59 +2217,6 @@
                 "source": "https://github.com/utopia-php/pools/tree/0.4.2"
             },
             "time": "2022-11-22T07:55:45+00:00"
-        },
-        {
-            "name": "utopia-php/preloader",
-            "version": "0.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/preloader.git",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Preloader\\": "src/Preloader"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
-            "keywords": [
-                "framework",
-                "php",
-                "preload",
-                "preloader",
-                "preloading",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/preloader/issues",
-                "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
-            },
-            "time": "2020-10-24T07:04:59+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -3410,21 +3357,21 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.8.1",
+            "version": "1.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353"
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
-                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/153ae662783729388a584b4361f2545e4d841e3c",
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c",
                 "shasum": ""
             },
             "require": {
                 "doctrine/deprecations": "^1.0",
-                "php": "^7.4 || ^8.0",
+                "php": "^7.3 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0",
                 "phpstan/phpdoc-parser": "^1.13"
             },
@@ -3462,9 +3409,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.2"
             },
-            "time": "2024-01-18T19:15:27+00:00"
+            "time": "2024-02-23T11:10:43+00:00"
         },
         {
             "name": "phpspec/prophecy",

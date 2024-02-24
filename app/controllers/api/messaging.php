@@ -766,11 +766,12 @@ App::post('/v1/messaging/providers/apns')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', false, new Boolean(), 'Use APNS sandbox environment.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, bool $sandbox, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -803,6 +804,10 @@ App::post('/v1/messaging/providers/apns')
             $enabled = false;
         }
 
+        $options = [
+            'sandbox' => $sandbox
+        ];
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
@@ -810,6 +815,7 @@ App::post('/v1/messaging/providers/apns')
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials,
+            'options' => $options
         ]);
 
         try {
@@ -1808,10 +1814,11 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', null, new Boolean(), 'Use APNS sandbox environment.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $sandbox, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1846,6 +1853,14 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        $options = $provider->getAttribute('options');
+
+        if (!\is_null($sandbox)) {
+            $options['sandbox'] = $sandbox;
+        }
+
+        $provider->setAttribute('options', $options);
 
         if (!\is_null($enabled)) {
             if ($enabled) {
@@ -2133,19 +2148,24 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('name', null, new Text(128), 'Topic Name.', true)
+    ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, ?string $name, ?array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if (!empty($name)) {
+        if (!\is_null($name)) {
             $topic->setAttribute('name', $name);
+        }
+
+        if (!\is_null($subscribe)) {
+            $topic->setAttribute('subscribe', $subscribe);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);

@@ -116,6 +116,7 @@ abstract class Format
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
+                    case 'createOAuth2Token':
                         switch ($param) {
                             case 'provider':
                                 return 'OAuthProvider';
@@ -216,11 +217,11 @@ abstract class Format
                                 return 'MessageStatus';
                         }
                         break;
-                    case 'createSMTPProvider':
-                    case 'updateSMTPProvider':
+                    case 'createSmtpProvider':
+                    case 'updateSmtpProvider':
                         switch ($param) {
                             case 'encryption':
-                                return 'SMTPEncryption';
+                                return 'SmtpEncryption';
                         }
                         break;
                 }
