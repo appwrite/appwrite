@@ -341,6 +341,17 @@ trait MessagingBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals('android-app', $response['body']['name']);
 
+        $response2 = $this->client->call(Client::METHOD_PATCH, '/messaging/topics/' . $topics['private']['$id'], [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'name' => 'ios-app',
+            'subscribe' => [Role::user('some-user')->toString()],
+        ]);
+        $this->assertEquals(200, $response2['headers']['status-code']);
+        $this->assertEquals('ios-app', $response2['body']['name']);
+
         return $response['body']['$id'];
     }
 
