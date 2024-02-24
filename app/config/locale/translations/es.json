@@ -236,10 +236,10 @@
     "emails.magicSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo electrónico si esta frase coincide con la frase que se muestra durante el inicio de sesión.",
     "emails.magicSession.optionUrl": "Si no puedes iniciar sesión utilizando el botón anterior, visita el siguiente enlace:",
     "emails.otpSession.subject": "Inicio de sesión en {{project}}",
-    "emails.otpSession.hello": "Hola,",
+    "emails.otpSession.hello": "Hola.",
     "emails.otpSession.description": "Ingrese el siguiente código de verificación cuando se le solicite para iniciar sesión de forma segura en su cuenta de {{project}}. Expirará en 15 minutos.",
     "emails.otpSession.clientInfo": "Este inicio de sesión fue solicitado usando {{agentClient}} en {{agentDevice}} {{agentOs}}. Si no solicitaste el inicio de sesión, puedes ignorar este correo electrónico de forma segura.",
     "emails.otpSession.securityPhrase": "La frase de seguridad para este correo electrónico es {{phrase}}. Puedes confiar en este correo si esta frase coincide con la frase mostrada durante el inicio de sesión.",
-    "emails.otpSession.thanks": "Gracias,",
-    "emails.otpSession.signature": "equipo {{project}}"
+    "emails.otpSession.thanks": "Gracias.",
+    "emails.otpSession.signature": "El equipo de {{project}}"
 }
