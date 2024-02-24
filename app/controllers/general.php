@@ -936,10 +936,10 @@ App::error()
                 ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
-                ->setParam('message', $error->getMessage())
-                ->setParam('type', $type)
-                ->setParam('code', $code)
-                ->setParam('trace', $trace);
+                ->setParam('message', $output['message'] ?? '')
+                ->setParam('type', $output['type'] ?? '')
+                ->setParam('code', $output['code'] ?? '')
+                ->setParam('trace', $output['trace'] ?? []);
 
             $response->html($layout->render());
         }
