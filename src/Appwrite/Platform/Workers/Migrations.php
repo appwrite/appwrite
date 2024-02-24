@@ -295,7 +295,7 @@ class Migrations extends Action
                 $errorMessages = [];
                 foreach ($sourceErrors as $error) {
                     /** @var MigrationException $error */
-                    $errorMessages[] = "Error occured while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message '{$error->getMessage()}'";
+                    $errorMessages[] = "Error occurred while fetching '{$error->getResourceType()}:{$error->getResourceId()}' from source with message: '{$error->getMessage()}'";
                 }
                 foreach ($destinationErrors as $error) {
                     /** @var MigrationException $error */
