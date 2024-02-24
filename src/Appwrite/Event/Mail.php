@@ -359,7 +359,7 @@ class Mail extends Event
 
     /**
      * Get attachment
-     * 
+     *
      * @return array
      */
     public function getAttachment(): array
@@ -369,7 +369,7 @@ class Mail extends Event
 
     /**
      * Reset attachment
-     * 
+     *
      * @return self
      */
     public function resetAttachment(): self
