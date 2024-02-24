@@ -1812,8 +1812,8 @@ trait Base
                     }
                 }';
             case self::$CREATE_SMTP_PROVIDER:
-                return 'mutation createSMTPProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean! $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
-                    messagingCreateSMTPProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
+                return 'mutation createSmtpProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean! $fromName: String!, $fromEmail: String!, $replyToName: String, $replyToEmail: String) {
+                    messagingCreateSmtpProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, replyToName: $replyToName, replyToEmail: $replyToEmail) {
                         _id
                         name
                         provider
@@ -1936,8 +1936,8 @@ trait Base
                     }
                 }';
             case self::$UPDATE_SMTP_PROVIDER:
-                return 'mutation updateSMTPProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean!, $fromName: String, $fromEmail: String, $enabled: Boolean) {
-                    messagingUpdateSMTPProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, enabled: $enabled) {
+                return 'mutation updateSmtpProvider($providerId: String!, $name: String!, $host: String!, $port: Int!, $username: String!, $password: String!, $encryption: String!, $autoTLS: Boolean!, $fromName: String, $fromEmail: String, $enabled: Boolean) {
+                    messagingUpdateSmtpProvider(providerId: $providerId, name: $name, host: $host, port: $port, username: $username, password: $password, encryption: $encryption, autoTLS: $autoTLS, fromName: $fromName, fromEmail: $fromEmail, enabled: $enabled) {
                         _id
                         name
                         provider

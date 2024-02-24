@@ -59,6 +59,10 @@ class V17 extends Filter
 
     private function convertOldQueries(array $content): array
     {
+        if (!isset($content['queries'])) {
+            return $content;
+        }
+
         $parsed = [];
         foreach ($content['queries'] as $query) {
             try {

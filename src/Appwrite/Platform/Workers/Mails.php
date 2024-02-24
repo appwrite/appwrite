@@ -33,6 +33,14 @@ class Mails extends Action
     }
 
     /**
+     * @var array<string, string>
+     */
+    protected array $richTextParams = [
+        'b' => '<strong>',
+        '/b' => '</strong>',
+    ];
+
+    /**
      * @param Message $message
      * @param Registry $register
      * @param Log $log
@@ -80,6 +88,9 @@ class Mails extends Action
         foreach ($variables as $key => $value) {
             // TODO: hotfix for redirect param
             $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: $key !== 'redirect');
+        }
+        foreach ($this->richTextParams as $key => $value) {
+            $bodyTemplate->setParam('{{' . $key . '}}', $value, escapeHtml: false);
         }
         $body = $bodyTemplate->render();
 

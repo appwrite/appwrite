@@ -1259,15 +1259,16 @@ App::post('/v1/account/tokens/magic-url')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
-            'user' => '',
-            'team' => '',
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
+            'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'redirect' => $url,
-            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
-            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
-            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -1487,15 +1488,16 @@ App::post('/v1/account/tokens/email')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}}, {{project}} and {{otp}} are required in the templates */
-            'user' => '',
-            'team' => '',
+            // {{user}}, {{project}} and {{otp}} are required in the templates
+            'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'otp' => $tokenSecret,
-            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
-            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
-            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -2953,11 +2955,12 @@ App::post('/v1/account/recovery')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $profile->getAttribute('name'),
-            'team' => '',
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => ''
         ];
 
         $queueForMails
@@ -3200,11 +3203,12 @@ App::post('/v1/account/verification')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
-            'team' => '',
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -3696,7 +3700,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'create2FAChallenge')
+    ->label('sdk.method', 'createChallenge')
     ->label('sdk.description', '/docs/references/account/create-2fa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3707,11 +3711,13 @@ App::post('/v1/account/mfa/challenge')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
+    ->inject('locale')
+    ->inject('project')
+    ->inject('request')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
-    ->inject('locale')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -3743,6 +3749,22 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_PHONE_NOT_VERIFIED);
                 }
 
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
+                if (!empty($customTemplate)) {
+                    $message = $customTemplate['message'] ?? $message;
+                }
+
+                $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+                $messageContent
+                    ->setParam('{{project}}', $project->getAttribute('name'))
+                    ->setParam('{{secret}}', $code);
+                $messageContent = \strip_tags($messageContent->render());
+                $message = $message->setParam('{{token}}', $messageContent);
+
+                $message = $message->render();
+
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage(new Document([
@@ -3751,7 +3773,8 @@ App::post('/v1/account/mfa/challenge')
                             'content' => $code,
                         ],
                     ]))
-                    ->setRecipients([$user->getAttribute('phone')]);
+                    ->setRecipients([$user->getAttribute('phone')])
+                    ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
             case 'email':
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {
@@ -3764,9 +3787,85 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_EMAIL_NOT_VERIFIED);
                 }
 
+                $subject = $locale->getText("emails.mfaChallenge.subject");
+                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+
+                $detector = new Detector($request->getUserAgent('UNKNOWN'));
+                $agentOs = $detector->getOS();
+                $agentClient = $detector->getClient();
+                $agentDevice = $detector->getDevice();
+
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
+                $message
+                    ->setParam('{{hello}}', $locale->getText("emails.mfaChallenge.hello"))
+                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description"))
+                    ->setParam('{{clientInfo}}', $locale->getText("emails.mfaChallenge.clientInfo"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.mfaChallenge.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
+
+                $body = $message->render();
+
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $queueForMails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $queueForMails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
+                }
+
+                $emailVariables = [
+                    'direction' => $locale->getText('settings.direction'),
+                    // {{user}}, {{project}} and {{otp}} are required in the templates
+                    'user' => $user->getAttribute('name'),
+                    'project' => $project->getAttribute('name'),
+                    'otp' => $code,
+                    'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                    'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                ];
+
                 $queueForMails
-                    ->setSubject("{$code} is your 6-digit code")
-                    ->setBody($code)
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
                 break;
