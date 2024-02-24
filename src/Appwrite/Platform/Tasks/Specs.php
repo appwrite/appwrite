@@ -190,8 +190,12 @@ class Specs extends Action
                     }
 
                     if (empty($routeSecurity)) {
-                        $sdkPlaforms[] = APP_PLATFORM_CLIENT;
-                        $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                        if (!$route->getLabel('sdk.hideServer', false)) {
+                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                        }
+                        if (!$route->getLabel('sdk.hideClient', false)) {
+                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                        }
                     }
 
                     if (!$route->getLabel('docs', true)) {
