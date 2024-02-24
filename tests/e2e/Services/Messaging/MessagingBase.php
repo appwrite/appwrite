@@ -98,16 +98,22 @@ trait MessagingBase
         ];
         $providers = [];
 
-        foreach (\array_keys($providersParams) as $key) {
+        foreach ($providersParams as $key => $params) {
             $response = $this->client->call(Client::METHOD_POST, '/messaging/providers/' . $key, \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
                 'x-appwrite-key' => $this->getProject()['apiKey'],
-            ]), $providersParams[$key]);
+            ]), $params);
 
             $this->assertEquals(201, $response['headers']['status-code']);
-            $this->assertEquals($providersParams[$key]['name'], $response['body']['name']);
-            \array_push($providers, $response['body']);
+            $this->assertEquals($params['name'], $response['body']['name']);
+            $providers[] = $response['body'];
+
+            switch ($key) {
+                case 'apns':
+                    $this->assertEquals(false, $response['body']['options']['sandbox']);
+                    break;
+            }
         }
 
         return $providers;
