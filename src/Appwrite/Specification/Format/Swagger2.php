@@ -157,7 +157,7 @@ class Swagger2 extends Format
                     $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                 }
             }
-            
+
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
