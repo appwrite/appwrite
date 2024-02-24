@@ -2923,7 +2923,9 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         $cursor = \reset($cursor);
 
         if ($cursor) {
-            $documentId = $cursor->getValue();
+            $value = $cursor->getValue();
+            $documentId = (string) $value;
+
 
             $cursorDocument = Authorization::skip(fn() => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
