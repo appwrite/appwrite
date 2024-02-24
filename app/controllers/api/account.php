@@ -3940,6 +3940,9 @@ App::put('/v1/account/mfa/challenge')
 
         $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
 
+        $queueForEvents
+            ->setParam('userId', $user->getId());
+
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
