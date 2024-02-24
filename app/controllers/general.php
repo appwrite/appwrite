@@ -20,7 +20,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
-use Appwrite\ID;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
@@ -33,6 +32,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\Hostname;
 use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
@@ -936,10 +936,10 @@ App::error()
                 ->setParam('development', App::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
-                ->setParam('message', $error->getMessage())
-                ->setParam('type', $type)
-                ->setParam('code', $code)
-                ->setParam('trace', $trace);
+                ->setParam('message', $output['message'] ?? '')
+                ->setParam('type', $output['type'] ?? '')
+                ->setParam('code', $output['code'] ?? '')
+                ->setParam('trace', $output['trace'] ?? []);
 
             $response->html($layout->render());
         }
