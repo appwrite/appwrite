@@ -8,7 +8,7 @@ Client client = Client()
 Health health = Health(client);
 
 Future result = health.getQueueDatabases(
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
   threshold: 0, // (optional)
 );
 

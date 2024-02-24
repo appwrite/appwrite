@@ -8,9 +8,9 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.listSubscribers(
-  topicId: '[TOPIC_ID]',
+  topicId: '<TOPIC_ID>',
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

@@ -1,9 +1,9 @@
 appwrite projects updateEmailTemplate \
-        --projectId [PROJECT_ID] \
+        --projectId <PROJECT_ID> \
         --type verification \
         --locale af \
-        --subject [SUBJECT] \
-        --message [MESSAGE] \
+        --subject <SUBJECT> \
+        --message <MESSAGE> \
 
 
 

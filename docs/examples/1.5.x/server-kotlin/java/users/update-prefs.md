@@ -10,7 +10,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updatePrefs(
-    "[USER_ID]", // userId
+    "<USER_ID>", // userId
     mapOf( "a" to "b" ), // prefs
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

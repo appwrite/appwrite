@@ -11,9 +11,9 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.createRelationshipAttribute(
-    databaseId = "[DATABASE_ID]",
-    collectionId = "[COLLECTION_ID]",
-    relatedCollectionId = "[RELATED_COLLECTION_ID]",
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    relatedCollectionId = "<RELATED_COLLECTION_ID>",
     type =  RelationshipType.ONE_TO_ONE,
     twoWay = false, // optional
     key = "", // optional

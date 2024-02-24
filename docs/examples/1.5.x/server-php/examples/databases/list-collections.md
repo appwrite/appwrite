@@ -11,7 +11,7 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->listCollections(
-    databaseId: '[DATABASE_ID]',
+    databaseId: '<DATABASE_ID>',
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

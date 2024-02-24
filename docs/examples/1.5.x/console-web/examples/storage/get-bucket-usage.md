@@ -7,7 +7,7 @@ const client = new Client()
 const storage = new Storage(client);
 
 const result = await storage.getBucketUsage(
-    '[BUCKET_ID]', // bucketId
+    '<BUCKET_ID>', // bucketId
     StorageUsageRange.TwentyFourHours // range (optional)
 );
 

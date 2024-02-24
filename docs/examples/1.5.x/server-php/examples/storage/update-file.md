@@ -11,8 +11,8 @@ $client = (new Client())
 $storage = new Storage($client);
 
 $result = $storage->updateFile(
-    bucketId: '[BUCKET_ID]',
-    fileId: '[FILE_ID]',
-    name: '[NAME]', // optional
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: '<NAME>', // optional
     permissions: ["read("any")"] // optional
 );

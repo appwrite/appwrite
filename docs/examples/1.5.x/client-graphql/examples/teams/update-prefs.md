@@ -1,6 +1,6 @@
 mutation {
     teamsUpdatePrefs(
-        teamId: "[TEAM_ID]",
+        teamId: "<TEAM_ID>",
         prefs: "{}"
     ) {
         data

@@ -9,10 +9,10 @@ const migrations = new Migrations(client);
 const result = await migrations.getSupabaseReport(
     [], // resources
     'https://example.com', // endpoint
-    '[API_KEY]', // apiKey
-    '[DATABASE_HOST]', // databaseHost
-    '[USERNAME]', // username
-    '[PASSWORD]', // password
+    '<API_KEY>', // apiKey
+    '<DATABASE_HOST>', // databaseHost
+    '<USERNAME>', // username
+    '<PASSWORD>', // password
     null // port (optional)
 );
 

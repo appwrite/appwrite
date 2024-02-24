@@ -1,7 +1,7 @@
 query {
     messagingListMessages(
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         messages {

@@ -8,9 +8,9 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "body": "[BODY]",
+  "body": "<BODY>",
   "async": false,
-  "path": "[PATH]",
+  "path": "<PATH>",
   "method": "GET",
   "headers": {}
 }

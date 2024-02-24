@@ -8,6 +8,6 @@ client.set_session('') # The user session to authenticate with
 storage = Storage(client)
 
 result = storage.get_file_download(
-    bucket_id = '[BUCKET_ID]',
-    file_id = '[FILE_ID]'
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>'
 )

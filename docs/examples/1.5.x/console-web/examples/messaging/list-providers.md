@@ -8,7 +8,7 @@ const messaging = new Messaging(client);
 
 const result = await messaging.listProviders(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

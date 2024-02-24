@@ -7,7 +7,7 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.listProviderLogs(
-    '[PROVIDER_ID]', // providerId
+    '<PROVIDER_ID>', // providerId
     [] // queries (optional)
 );
 

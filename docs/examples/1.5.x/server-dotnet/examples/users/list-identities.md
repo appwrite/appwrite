@@ -11,5 +11,5 @@ Users users = new Users(client);
 
 IdentityList result = await users.ListIdentities(
     queries: new List<string>(), // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 );

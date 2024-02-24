@@ -10,7 +10,7 @@ client = Client.new
 users = Users.new(client)
 
 response = users.update_phone(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     number: '+12065550100'
 )
 

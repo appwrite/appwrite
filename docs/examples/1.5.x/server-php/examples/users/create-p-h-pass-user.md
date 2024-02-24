@@ -11,8 +11,8 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->createPHPassUser(
-    userId: '[USER_ID]',
+    userId: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
-    name: '[NAME]' // optional
+    name: '<NAME>' // optional
 );

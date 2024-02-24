@@ -9,5 +9,5 @@ const account = new sdk.Account(client);
 
 const response = await account.verifyAuthenticator(
     sdk.AuthenticatorType.Totp, // type
-    '[OTP]' // otp
+    '<OTP>' // otp
 );

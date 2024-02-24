@@ -1,6 +1,6 @@
 mutation {
     usersDelete(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         status
     }

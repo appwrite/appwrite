@@ -8,9 +8,9 @@ const client = new Client()
 const databases = new Databases(client);
 
 const response = await databases.getDocument(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[DOCUMENT_ID]', // documentId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<DOCUMENT_ID>', // documentId
     [] // queries (optional)
 );
 

@@ -10,13 +10,13 @@ client = Client.new
 users = Users.new(client)
 
 response = users.create_scrypt_modified_user(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
-    password_salt: '[PASSWORD_SALT]',
-    password_salt_separator: '[PASSWORD_SALT_SEPARATOR]',
-    password_signer_key: '[PASSWORD_SIGNER_KEY]',
-    name: '[NAME]' # optional
+    password_salt: '<PASSWORD_SALT>',
+    password_salt_separator: '<PASSWORD_SALT_SEPARATOR>',
+    password_signer_key: '<PASSWORD_SIGNER_KEY>',
+    name: '<NAME>' # optional
 )
 
 puts response.inspect

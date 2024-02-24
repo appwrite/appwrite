@@ -10,8 +10,8 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.getDocument(
-    databaseId = "[DATABASE_ID]",
-    collectionId = "[COLLECTION_ID]",
-    documentId = "[DOCUMENT_ID]",
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    documentId = "<DOCUMENT_ID>",
     queries = listOf() // optional
 )

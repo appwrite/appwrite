@@ -10,7 +10,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.get(
-    "[USER_ID]", // userId
+    "<USER_ID>", // userId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

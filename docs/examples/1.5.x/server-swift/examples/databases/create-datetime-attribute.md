@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeDatetime = try await databases.createDatetimeAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     default: "", // optional

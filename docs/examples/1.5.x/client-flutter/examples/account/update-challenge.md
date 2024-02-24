@@ -7,8 +7,8 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.updateChallenge(
-  challengeId: '[CHALLENGE_ID]',
-  otp: '[OTP]',
+  challengeId: '<CHALLENGE_ID>',
+  otp: '<OTP>',
 );
 
 result.then((response) {

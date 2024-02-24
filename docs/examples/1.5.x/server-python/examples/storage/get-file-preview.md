@@ -8,8 +8,8 @@ client.set_session('') # The user session to authenticate with
 storage = Storage(client)
 
 result = storage.get_file_preview(
-    bucket_id = '[BUCKET_ID]',
-    file_id = '[FILE_ID]',
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
     width = 0, # optional
     height = 0, # optional
     gravity = ImageGravity.CENTER, # optional

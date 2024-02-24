@@ -10,8 +10,8 @@ val client = Client()
 val storage = Storage(client)
 
 val response = storage.updateBucket(
-    bucketId = "[BUCKET_ID]",
-    name = "[NAME]",
+    bucketId = "<BUCKET_ID>",
+    name = "<NAME>",
     permissions = listOf("read("any")"), // optional
     fileSecurity = false, // optional
     enabled = false, // optional

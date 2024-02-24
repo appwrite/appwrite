@@ -11,6 +11,7 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateTopic(
-    topicId: '[TOPIC_ID]',
-    name: '[NAME]' // optional
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>', // optional
+    subscribe: ["any"] // optional
 );

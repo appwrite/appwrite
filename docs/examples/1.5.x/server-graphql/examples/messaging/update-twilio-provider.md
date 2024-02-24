@@ -1,11 +1,11 @@
 mutation {
     messagingUpdateTwilioProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         enabled: false,
-        accountSid: "[ACCOUNT_SID]",
-        authToken: "[AUTH_TOKEN]",
-        from: "[FROM]"
+        accountSid: "<ACCOUNT_SID>",
+        authToken: "<AUTH_TOKEN>",
+        from: "<FROM>"
     ) {
         _id
         _createdAt

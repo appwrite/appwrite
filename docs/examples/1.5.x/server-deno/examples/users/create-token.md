@@ -8,7 +8,7 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.createToken(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     4, // length (optional)
     60 // expire (optional)
 );

@@ -11,6 +11,6 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->getCollection(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]'
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>'
 );

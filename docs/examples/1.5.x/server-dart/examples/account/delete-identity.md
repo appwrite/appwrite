@@ -8,7 +8,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.deleteIdentity(
-  identityId: '[IDENTITY_ID]',
+  identityId: '<IDENTITY_ID>',
 );
 
 result.then((response) {

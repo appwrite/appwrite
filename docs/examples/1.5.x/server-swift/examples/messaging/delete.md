@@ -8,6 +8,6 @@ let client = Client()
 let messaging = Messaging(client)
 
 let result = try await messaging.delete(
-    messageId: "[MESSAGE_ID]"
+    messageId: "<MESSAGE_ID>"
 )
 

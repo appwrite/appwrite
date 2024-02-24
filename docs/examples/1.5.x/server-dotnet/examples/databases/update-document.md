@@ -13,9 +13,9 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 Document result = await databases.UpdateDocument(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
-    documentId: "[DOCUMENT_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>",
     data: [object], // optional
     permissions: ["read("any")"] // optional
 );

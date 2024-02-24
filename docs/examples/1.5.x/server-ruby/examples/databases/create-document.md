@@ -10,9 +10,9 @@ client = Client.new
 databases = Databases.new(client)
 
 response = databases.create_document(
-    database_id: '[DATABASE_ID]',
-    collection_id: '[COLLECTION_ID]',
-    document_id: '[DOCUMENT_ID]',
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    document_id: '<DOCUMENT_ID>',
     data: {},
     permissions: ["read("any")"] # optional
 )

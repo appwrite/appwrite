@@ -10,9 +10,9 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_email(
-    message_id: '[MESSAGE_ID]',
-    subject: '[SUBJECT]',
-    content: '[CONTENT]',
+    message_id: '<MESSAGE_ID>',
+    subject: '<SUBJECT>',
+    content: '<CONTENT>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional

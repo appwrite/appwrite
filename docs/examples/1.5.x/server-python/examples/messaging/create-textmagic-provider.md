@@ -8,10 +8,10 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 messaging = Messaging(client)
 
 result = messaging.create_textmagic_provider(
-    provider_id = '[PROVIDER_ID]',
-    name = '[NAME]',
+    provider_id = '<PROVIDER_ID>',
+    name = '<NAME>',
     from = '+12065550100', # optional
-    username = '[USERNAME]', # optional
-    api_key = '[API_KEY]', # optional
+    username = '<USERNAME>', # optional
+    api_key = '<API_KEY>', # optional
     enabled = False # optional
 )

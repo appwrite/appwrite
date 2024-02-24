@@ -12,6 +12,6 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 await teams.DeleteMembership(
-    teamId: "[TEAM_ID]",
-    membershipId: "[MEMBERSHIP_ID]"
+    teamId: "<TEAM_ID>",
+    membershipId: "<MEMBERSHIP_ID>"
 );

@@ -10,7 +10,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.updateEmailVerification(
-    "[USER_ID]", // userId
+    "<USER_ID>", // userId
     false, // emailVerification
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

@@ -11,5 +11,5 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->getPrefs(
-    userId: '[USER_ID]'
+    userId: '<USER_ID>'
 );

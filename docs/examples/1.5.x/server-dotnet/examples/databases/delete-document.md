@@ -13,7 +13,7 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 await databases.DeleteDocument(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
-    documentId: "[DOCUMENT_ID]"
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    documentId: "<DOCUMENT_ID>"
 );

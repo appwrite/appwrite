@@ -10,9 +10,9 @@ client = Client.new
 databases = Databases.new(client)
 
 response = databases.create_collection(
-    database_id: '[DATABASE_ID]',
-    collection_id: '[COLLECTION_ID]',
-    name: '[NAME]',
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    name: '<NAME>',
     permissions: ["read("any")"], # optional
     document_security: false, # optional
     enabled: false # optional

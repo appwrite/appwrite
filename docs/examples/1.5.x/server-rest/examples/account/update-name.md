@@ -7,5 +7,5 @@ X-Appwrite-Session:
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "name": "[NAME]"
+  "name": "<NAME>"
 }

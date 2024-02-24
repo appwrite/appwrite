@@ -1,18 +1,18 @@
 mutation {
     messagingUpdateSmtpProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
-        host: "[HOST]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
+        host: "<HOST>",
         port: 1,
-        username: "[USERNAME]",
-        password: "[PASSWORD]",
+        username: "<USERNAME>",
+        password: "<PASSWORD>",
         encryption: "none",
         autoTLS: false,
-        mailer: "[MAILER]",
-        fromName: "[FROM_NAME]",
+        mailer: "<MAILER>",
+        fromName: "<FROM_NAME>",
         fromEmail: "email@example.com",
-        replyToName: "[REPLY_TO_NAME]",
-        replyToEmail: "[REPLY_TO_EMAIL]",
+        replyToName: "<REPLY_TO_NAME>",
+        replyToEmail: "<REPLY_TO_EMAIL>",
         enabled: false
     ) {
         _id

@@ -10,8 +10,8 @@ val client = Client()
 val users = Users(client)
 
 val response = users.createBcryptUser(
-    userId = "[USER_ID]",
+    userId = "<USER_ID>",
     email = "email@example.com",
     password = "password",
-    name = "[NAME]" // optional
+    name = "<NAME>" // optional
 )

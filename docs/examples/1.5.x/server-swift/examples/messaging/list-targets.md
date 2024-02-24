@@ -8,7 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let targetList = try await messaging.listTargets(
-    messageId: "[MESSAGE_ID]",
+    messageId: "<MESSAGE_ID>",
     queries: [] // optional
 )
 

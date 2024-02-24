@@ -10,7 +10,7 @@ val client = Client()
 val teams = Teams(client)
 
 val response = teams.updateMembership(
-    teamId = "[TEAM_ID]",
-    membershipId = "[MEMBERSHIP_ID]",
+    teamId = "<TEAM_ID>",
+    membershipId = "<MEMBERSHIP_ID>",
     roles = listOf()
 )

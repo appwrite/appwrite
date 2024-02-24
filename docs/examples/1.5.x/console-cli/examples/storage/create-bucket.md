@@ -1,6 +1,6 @@
 appwrite storage createBucket \
-        --bucketId [BUCKET_ID] \
-        --name [NAME] \
+        --bucketId <BUCKET_ID> \
+        --name <NAME> \
 
 
 

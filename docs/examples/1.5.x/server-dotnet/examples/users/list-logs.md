@@ -11,6 +11,6 @@ Client client = new Client()
 Users users = new Users(client);
 
 LogList result = await users.ListLogs(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     queries: new List<string>() // optional
 );

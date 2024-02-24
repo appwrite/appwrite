@@ -1,6 +1,6 @@
 query {
     messagingGetMessage(
-        messageId: "[MESSAGE_ID]"
+        messageId: "<MESSAGE_ID>"
     ) {
         _id
         _createdAt

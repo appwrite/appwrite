@@ -8,8 +8,8 @@ let client = Client()
 let messaging = Messaging(client)
 
 let message = try await messaging.createSms(
-    messageId: "[MESSAGE_ID]",
-    content: "[CONTENT]",
+    messageId: "<MESSAGE_ID>",
+    content: "<CONTENT>",
     topics: [], // optional
     users: [], // optional
     targets: [], // optional

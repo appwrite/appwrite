@@ -9,7 +9,7 @@ Messaging messaging = Messaging(client);
 
 Future result = messaging.listMessages(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

@@ -10,6 +10,6 @@ val client = Client()
 val teams = Teams(client)
 
 val response = teams.deleteMembership(
-    teamId = "[TEAM_ID]",
-    membershipId = "[MEMBERSHIP_ID]"
+    teamId = "<TEAM_ID>",
+    membershipId = "<MEMBERSHIP_ID>"
 )

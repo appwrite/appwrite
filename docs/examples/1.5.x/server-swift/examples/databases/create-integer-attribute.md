@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeInteger = try await databases.createIntegerAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     min: 0, // optional

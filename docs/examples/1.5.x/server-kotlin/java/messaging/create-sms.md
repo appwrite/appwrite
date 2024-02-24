@@ -10,8 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createSms(
-    "[MESSAGE_ID]", // messageId
-    "[CONTENT]", // content
+    "<MESSAGE_ID>", // messageId
+    "<CONTENT>", // content
     listOf(), // topics (optional)
     listOf(), // users (optional)
     listOf(), // targets (optional)

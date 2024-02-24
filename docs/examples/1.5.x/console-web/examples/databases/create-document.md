@@ -7,9 +7,9 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.createDocument(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[DOCUMENT_ID]', // documentId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<DOCUMENT_ID>', // documentId
     {}, // data
     ["read("any")"] // permissions (optional)
 );

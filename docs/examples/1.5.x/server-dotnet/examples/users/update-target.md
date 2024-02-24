@@ -12,9 +12,9 @@ Client client = new Client()
 Users users = new Users(client);
 
 Target result = await users.UpdateTarget(
-    userId: "[USER_ID]",
-    targetId: "[TARGET_ID]",
-    identifier: "[IDENTIFIER]", // optional
-    providerId: "[PROVIDER_ID]", // optional
-    name: "[NAME]" // optional
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>",
+    identifier: "<IDENTIFIER>", // optional
+    providerId: "<PROVIDER_ID>", // optional
+    name: "<NAME>" // optional
 );

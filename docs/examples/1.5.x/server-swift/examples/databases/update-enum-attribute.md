@@ -8,11 +8,11 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeEnum = try await databases.updateEnumAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     elements: [],
     required: false,
-    default: "[DEFAULT]"
+    default: "<DEFAULT>"
 )
 

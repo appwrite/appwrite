@@ -11,8 +11,8 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->updateVariable(
-    functionId: '[FUNCTION_ID]',
-    variableId: '[VARIABLE_ID]',
-    key: '[KEY]',
-    value: '[VALUE]' // optional
+    functionId: '<FUNCTION_ID>',
+    variableId: '<VARIABLE_ID>',
+    key: '<KEY>',
+    value: '<VALUE>' // optional
 );

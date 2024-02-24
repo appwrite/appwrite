@@ -9,5 +9,5 @@ const users = new sdk.Users(client);
 
 const response = await users.list(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

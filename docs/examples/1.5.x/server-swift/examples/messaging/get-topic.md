@@ -8,6 +8,6 @@ let client = Client()
 let messaging = Messaging(client)
 
 let topic = try await messaging.getTopic(
-    topicId: "[TOPIC_ID]"
+    topicId: "<TOPIC_ID>"
 )
 

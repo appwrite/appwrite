@@ -12,10 +12,10 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->createTarget(
-    userId: '[USER_ID]',
-    targetId: '[TARGET_ID]',
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
     providerType: MessagingProviderType::EMAIL(),
-    identifier: '[IDENTIFIER]',
-    providerId: '[PROVIDER_ID]', // optional
-    name: '[NAME]' // optional
+    identifier: '<IDENTIFIER>',
+    providerId: '<PROVIDER_ID>', // optional
+    name: '<NAME>' // optional
 );

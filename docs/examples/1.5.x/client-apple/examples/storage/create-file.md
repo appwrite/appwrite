@@ -7,8 +7,8 @@ let client = Client()
 let storage = Storage(client)
 
 let file = try await storage.createFile(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
     file: InputFile.fromPath("file.png"),
     permissions: ["read("any")"] // optional
 )

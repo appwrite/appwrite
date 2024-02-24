@@ -8,11 +8,11 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.createDeployment(
-    '[FUNCTION_ID]', // functionId
+    '<FUNCTION_ID>', // functionId
     InputFile.fromPath('/path/to/file.png', 'file.png'), // code
     false, // activate
-    '[ENTRYPOINT]', // entrypoint (optional)
-    '[COMMANDS]' // commands (optional)
+    '<ENTRYPOINT>', // entrypoint (optional)
+    '<COMMANDS>' // commands (optional)
 );
 
 console.log(response);

@@ -10,7 +10,7 @@ client = Client.new
 users = Users.new(client)
 
 response = users.delete_identity(
-    identity_id: '[IDENTITY_ID]'
+    identity_id: '<IDENTITY_ID>'
 )
 
 puts response.inspect

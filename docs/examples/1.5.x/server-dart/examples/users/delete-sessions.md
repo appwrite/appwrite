@@ -8,7 +8,7 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.deleteSessions(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
 );
 
 result.then((response) {

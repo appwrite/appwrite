@@ -10,8 +10,8 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.createIntegerAttribute(
-    databaseId = "[DATABASE_ID]",
-    collectionId = "[COLLECTION_ID]",
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
     key = "",
     required = false,
     min = 0, // optional

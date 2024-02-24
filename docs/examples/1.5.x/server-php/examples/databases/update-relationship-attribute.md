@@ -11,8 +11,8 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->updateRelationshipAttribute(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
     key: '',
     onDelete: RelationMutate::CASCADE() // optional
 );

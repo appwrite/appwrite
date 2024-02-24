@@ -11,9 +11,9 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->updateTarget(
-    userId: '[USER_ID]',
-    targetId: '[TARGET_ID]',
-    identifier: '[IDENTIFIER]', // optional
-    providerId: '[PROVIDER_ID]', // optional
-    name: '[NAME]' // optional
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
+    identifier: '<IDENTIFIER>', // optional
+    providerId: '<PROVIDER_ID>', // optional
+    name: '<NAME>' // optional
 );

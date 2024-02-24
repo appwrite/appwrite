@@ -11,7 +11,6 @@ let success = try await account.createOAuth2Session(
     provider: .amazon,
     success: "https://example.com", // optional
     failure: "https://example.com", // optional
-    token: false, // optional
     scopes: [] // optional
 )
 

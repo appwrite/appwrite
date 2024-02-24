@@ -10,15 +10,15 @@ client = Client.new
 users = Users.new(client)
 
 response = users.create_scrypt_user(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
-    password_salt: '[PASSWORD_SALT]',
+    password_salt: '<PASSWORD_SALT>',
     password_cpu: null,
     password_memory: null,
     password_parallel: null,
     password_length: null,
-    name: '[NAME]' # optional
+    name: '<NAME>' # optional
 )
 
 puts response.inspect

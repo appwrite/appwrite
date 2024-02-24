@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.deleteIdentity(
-    "[IDENTITY_ID]", // identityId
+    "<IDENTITY_ID>", // identityId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

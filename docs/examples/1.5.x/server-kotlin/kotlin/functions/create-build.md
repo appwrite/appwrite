@@ -10,7 +10,7 @@ val client = Client()
 val functions = Functions(client)
 
 val response = functions.createBuild(
-    functionId = "[FUNCTION_ID]",
-    deploymentId = "[DEPLOYMENT_ID]",
-    buildId = "[BUILD_ID]"
+    functionId = "<FUNCTION_ID>",
+    deploymentId = "<DEPLOYMENT_ID>",
+    buildId = "<BUILD_ID>"
 )

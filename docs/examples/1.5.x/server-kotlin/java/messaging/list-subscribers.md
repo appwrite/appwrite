@@ -10,9 +10,9 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listSubscribers(
-    "[TOPIC_ID]", // topicId
+    "<TOPIC_ID>", // topicId
     listOf(), // queries (optional)
-    "[SEARCH]", // search (optional)
+    "<SEARCH>", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

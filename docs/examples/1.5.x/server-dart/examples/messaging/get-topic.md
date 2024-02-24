@@ -8,7 +8,7 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.getTopic(
-  topicId: '[TOPIC_ID]',
+  topicId: '<TOPIC_ID>',
 );
 
 result.then((response) {

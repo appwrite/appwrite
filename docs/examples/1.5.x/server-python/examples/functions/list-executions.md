@@ -8,7 +8,7 @@ client.set_session('') # The user session to authenticate with
 functions = Functions(client)
 
 result = functions.list_executions(
-    function_id = '[FUNCTION_ID]',
+    function_id = '<FUNCTION_ID>',
     queries = [], # optional
-    search = '[SEARCH]' # optional
+    search = '<SEARCH>' # optional
 )

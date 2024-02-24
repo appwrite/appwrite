@@ -7,6 +7,6 @@ X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 X-Appwrite-Session: 
 
 {
-  "subscriberId": "[SUBSCRIBER_ID]",
-  "targetId": "[TARGET_ID]"
+  "subscriberId": "<SUBSCRIBER_ID>",
+  "targetId": "<TARGET_ID>"
 }

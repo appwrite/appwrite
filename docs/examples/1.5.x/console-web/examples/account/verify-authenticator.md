@@ -8,7 +8,7 @@ const account = new Account(client);
 
 const result = await account.verifyAuthenticator(
     AuthenticatorType.Totp, // type
-    '[OTP]' // otp
+    '<OTP>' // otp
 );
 
 console.log(response);

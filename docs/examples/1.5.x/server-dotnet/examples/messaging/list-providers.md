@@ -11,5 +11,5 @@ Messaging messaging = new Messaging(client);
 
 ProviderList result = await messaging.ListProviders(
     queries: new List<string>(), // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 );

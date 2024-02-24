@@ -8,6 +8,6 @@ let client = Client()
 let functions = Functions(client)
 
 let result = try await functions.delete(
-    functionId: "[FUNCTION_ID]"
+    functionId: "<FUNCTION_ID>"
 )
 

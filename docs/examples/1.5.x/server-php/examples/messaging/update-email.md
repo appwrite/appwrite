@@ -11,12 +11,12 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateEmail(
-    messageId: '[MESSAGE_ID]',
+    messageId: '<MESSAGE_ID>',
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
-    subject: '[SUBJECT]', // optional
-    content: '[CONTENT]', // optional
+    subject: '<SUBJECT>', // optional
+    content: '<CONTENT>', // optional
     status: MessageStatus::DRAFT(), // optional
     html: false, // optional
     cc: [], // optional

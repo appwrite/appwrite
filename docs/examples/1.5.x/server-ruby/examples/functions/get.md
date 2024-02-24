@@ -10,7 +10,7 @@ client = Client.new
 functions = Functions.new(client)
 
 response = functions.get(
-    function_id: '[FUNCTION_ID]'
+    function_id: '<FUNCTION_ID>'
 )
 
 puts response.inspect

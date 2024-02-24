@@ -11,5 +11,5 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->getSession(
-    sessionId: '[SESSION_ID]'
+    sessionId: '<SESSION_ID>'
 );

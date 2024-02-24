@@ -10,12 +10,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateEmail(
-    "[MESSAGE_ID]", // messageId
+    "<MESSAGE_ID>", // messageId
     listOf(), // topics (optional)
     listOf(), // users (optional)
     listOf(), // targets (optional)
-    "[SUBJECT]", // subject (optional)
-    "[CONTENT]", // content (optional)
+    "<SUBJECT>", // subject (optional)
+    "<CONTENT>", // content (optional)
     MessageStatus.DRAFT, // status (optional)
     false, // html (optional)
     listOf(), // cc (optional)

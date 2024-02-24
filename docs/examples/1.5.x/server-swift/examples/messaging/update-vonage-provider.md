@@ -8,11 +8,11 @@ let client = Client()
 let messaging = Messaging(client)
 
 let provider = try await messaging.updateVonageProvider(
-    providerId: "[PROVIDER_ID]",
-    name: "[NAME]", // optional
+    providerId: "<PROVIDER_ID>",
+    name: "<NAME>", // optional
     enabled: false, // optional
-    apiKey: "[API_KEY]", // optional
-    apiSecret: "[API_SECRET]", // optional
-    from: "[FROM]" // optional
+    apiKey: "<API_KEY>", // optional
+    apiSecret: "<API_SECRET>", // optional
+    from: "<FROM>" // optional
 )
 

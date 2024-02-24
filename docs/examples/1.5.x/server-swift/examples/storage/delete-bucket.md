@@ -8,6 +8,6 @@ let client = Client()
 let storage = Storage(client)
 
 let result = try await storage.deleteBucket(
-    bucketId: "[BUCKET_ID]"
+    bucketId: "<BUCKET_ID>"
 )
 

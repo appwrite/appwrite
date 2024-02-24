@@ -9,7 +9,7 @@ Teams teams = Teams(client);
 
 Future result = teams.list(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

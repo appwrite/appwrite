@@ -9,5 +9,5 @@ const functions = new sdk.Functions(client);
 
 const response = await functions.list(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

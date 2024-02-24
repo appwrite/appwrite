@@ -10,6 +10,6 @@ val client = Client()
 val users = Users(client)
 
 val response = users.getTarget(
-    userId = "[USER_ID]",
-    targetId = "[TARGET_ID]"
+    userId = "<USER_ID>",
+    targetId = "<TARGET_ID>"
 )

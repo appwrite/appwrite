@@ -1,2 +1,2 @@
 appwrite teams get \
-        --teamId [TEAM_ID]
+        --teamId <TEAM_ID>

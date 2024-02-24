@@ -8,9 +8,9 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.listExecutions(
-  functionId: '[FUNCTION_ID]',
+  functionId: '<FUNCTION_ID>',
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

@@ -8,7 +8,7 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.listTopicLogs(
-    '[TOPIC_ID]', // topicId
+    '<TOPIC_ID>', // topicId
     [] // queries (optional)
 );
 

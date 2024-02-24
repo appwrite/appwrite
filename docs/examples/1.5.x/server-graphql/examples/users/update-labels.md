@@ -1,6 +1,6 @@
 mutation {
     usersUpdateLabels(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         labels: []
     ) {
         _id

@@ -8,5 +8,5 @@ const client = new sdk.Client()
 const storage = new sdk.Storage(client);
 
 const response = await storage.getBucket(
-    '[BUCKET_ID]' // bucketId
+    '<BUCKET_ID>' // bucketId
 );

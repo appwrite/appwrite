@@ -1,7 +1,7 @@
 mutation {
     messagingCreateSms(
-        messageId: "[MESSAGE_ID]",
-        content: "[CONTENT]",
+        messageId: "<MESSAGE_ID>",
+        content: "<CONTENT>",
         topics: [],
         users: [],
         targets: [],

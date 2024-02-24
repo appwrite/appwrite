@@ -10,7 +10,7 @@ Client client = new Client()
 Health health = new Health(client);
 
 health.getQueueDatabases(
-    "[NAME]", // name (optional)
+    "<NAME>", // name (optional)
     0, // threshold (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

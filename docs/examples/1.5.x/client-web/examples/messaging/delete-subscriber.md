@@ -7,8 +7,8 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.deleteSubscriber(
-    '[TOPIC_ID]', // topicId
-    '[SUBSCRIBER_ID]' // subscriberId
+    '<TOPIC_ID>', // topicId
+    '<SUBSCRIBER_ID>' // subscriberId
 );
 
 console.log(response);

@@ -1,3 +1,3 @@
 appwrite teams updatePrefs \
-        --teamId [TEAM_ID] \
+        --teamId <TEAM_ID> \
         --prefs '{ "key": "value" }'

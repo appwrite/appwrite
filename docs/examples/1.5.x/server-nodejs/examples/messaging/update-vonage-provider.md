@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updateVonageProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name (optional)
     false, // enabled (optional)
-    '[API_KEY]', // apiKey (optional)
-    '[API_SECRET]', // apiSecret (optional)
-    '[FROM]' // from (optional)
+    '<API_KEY>', // apiKey (optional)
+    '<API_SECRET>', // apiSecret (optional)
+    '<FROM>' // from (optional)
 );

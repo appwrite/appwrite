@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.deleteEmailTemplate(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     EmailTemplateType.Verification, // type
     EmailTemplateLocale.Af // locale
 );

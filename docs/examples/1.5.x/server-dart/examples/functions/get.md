@@ -8,7 +8,7 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.get(
-  functionId: '[FUNCTION_ID]',
+  functionId: '<FUNCTION_ID>',
 );
 
 result.then((response) {

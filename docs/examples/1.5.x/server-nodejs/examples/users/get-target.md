@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const response = await users.getTarget(
-    '[USER_ID]', // userId
-    '[TARGET_ID]' // targetId
+    '<USER_ID>', // userId
+    '<TARGET_ID>' // targetId
 );

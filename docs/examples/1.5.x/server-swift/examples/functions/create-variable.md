@@ -8,8 +8,8 @@ let client = Client()
 let functions = Functions(client)
 
 let variable = try await functions.createVariable(
-    functionId: "[FUNCTION_ID]",
-    key: "[KEY]",
-    value: "[VALUE]"
+    functionId: "<FUNCTION_ID>",
+    key: "<KEY>",
+    value: "<VALUE>"
 )
 

@@ -10,9 +10,9 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createCollection(
-    "[DATABASE_ID]", // databaseId
-    "[COLLECTION_ID]", // collectionId
-    "[NAME]", // name
+    "<DATABASE_ID>", // databaseId
+    "<COLLECTION_ID>", // collectionId
+    "<NAME>", // name
     listOf("read("any")"), // permissions (optional)
     false, // documentSecurity (optional)
     false, // enabled (optional)

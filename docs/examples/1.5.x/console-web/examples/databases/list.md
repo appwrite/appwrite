@@ -8,7 +8,7 @@ const databases = new Databases(client);
 
 const result = await databases.list(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

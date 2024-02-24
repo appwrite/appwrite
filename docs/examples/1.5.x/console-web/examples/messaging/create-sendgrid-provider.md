@@ -7,12 +7,12 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.createSendgridProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name
-    '[API_KEY]', // apiKey (optional)
-    '[FROM_NAME]', // fromName (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name
+    '<API_KEY>', // apiKey (optional)
+    '<FROM_NAME>', // fromName (optional)
     'email@example.com', // fromEmail (optional)
-    '[REPLY_TO_NAME]', // replyToName (optional)
+    '<REPLY_TO_NAME>', // replyToName (optional)
     'email@example.com', // replyToEmail (optional)
     false // enabled (optional)
 );

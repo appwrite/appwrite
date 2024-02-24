@@ -17,8 +17,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 AttributeInteger result = await databases.UpdateIntegerAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     min: 0,

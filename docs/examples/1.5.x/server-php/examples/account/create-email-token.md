@@ -10,7 +10,7 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->createEmailToken(
-    userId: '[USER_ID]',
+    userId: '<USER_ID>',
     email: 'email@example.com',
     phrase: false // optional
 );

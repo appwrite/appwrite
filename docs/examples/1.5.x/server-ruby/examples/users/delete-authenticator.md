@@ -11,9 +11,9 @@ client = Client.new
 users = Users.new(client)
 
 response = users.delete_authenticator(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     type: AuthenticatorType::TOTP,
-    otp: '[OTP]'
+    otp: '<OTP>'
 )
 
 puts response.inspect

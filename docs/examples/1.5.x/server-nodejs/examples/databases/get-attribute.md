@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.getAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '' // key
 );

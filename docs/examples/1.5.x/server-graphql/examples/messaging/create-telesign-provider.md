@@ -1,10 +1,10 @@
 mutation {
     messagingCreateTelesignProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         from: "+12065550100",
-        customerId: "[CUSTOMER_ID]",
-        apiKey: "[API_KEY]",
+        customerId: "<CUSTOMER_ID>",
+        apiKey: "<API_KEY>",
         enabled: false
     ) {
         _id

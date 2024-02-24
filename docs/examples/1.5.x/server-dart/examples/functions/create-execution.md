@@ -8,10 +8,10 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.createExecution(
-  functionId: '[FUNCTION_ID]',
-  body: '[BODY]', // (optional)
+  functionId: '<FUNCTION_ID>',
+  body: '<BODY>', // (optional)
   xasync: false, // (optional)
-  path: '[PATH]', // (optional)
+  path: '<PATH>', // (optional)
   method:  ExecutionMethod.gET, // (optional)
   headers: {}, // (optional)
 );

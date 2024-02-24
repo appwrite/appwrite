@@ -11,6 +11,6 @@ Client client = new Client()
 Account account = new Account(client);
 
 Token result = await account.CreatePhoneToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     phone: "+12065550100"
 );

@@ -10,11 +10,11 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateSms(
-    "[MESSAGE_ID]", // messageId
+    "<MESSAGE_ID>", // messageId
     listOf(), // topics (optional)
     listOf(), // users (optional)
     listOf(), // targets (optional)
-    "[CONTENT]", // content (optional)
+    "<CONTENT>", // content (optional)
     MessageStatus.DRAFT, // status (optional)
     "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {

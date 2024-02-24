@@ -10,6 +10,6 @@ Client client = new Client()
 Health health = new Health(client);
 
 HealthQueue result = await health.GetQueueDatabases(
-    name: "[NAME]", // optional
+    name: "<NAME>", // optional
     threshold: 0 // optional
 );

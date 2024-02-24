@@ -7,7 +7,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.createPhoneToken(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   phone: '+12065550100',
 );
 

@@ -8,12 +8,12 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.createEnumAttribute(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
   key: '',
   elements: [],
   xrequired: false,
-  xdefault: '[DEFAULT]', // (optional)
+  xdefault: '<DEFAULT>', // (optional)
   array: false, // (optional)
 );
 

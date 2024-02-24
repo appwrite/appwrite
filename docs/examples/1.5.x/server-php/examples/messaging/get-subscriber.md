@@ -11,6 +11,6 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->getSubscriber(
-    topicId: '[TOPIC_ID]',
-    subscriberId: '[SUBSCRIBER_ID]'
+    topicId: '<TOPIC_ID>',
+    subscriberId: '<SUBSCRIBER_ID>'
 );

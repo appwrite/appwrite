@@ -7,17 +7,17 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.update(
-    '[PROJECT_ID]', // projectId
-    '[NAME]', // name
-    '[DESCRIPTION]', // description (optional)
-    '[LOGO]', // logo (optional)
+    '<PROJECT_ID>', // projectId
+    '<NAME>', // name
+    '<DESCRIPTION>', // description (optional)
+    '<LOGO>', // logo (optional)
     'https://example.com', // url (optional)
-    '[LEGAL_NAME]', // legalName (optional)
-    '[LEGAL_COUNTRY]', // legalCountry (optional)
-    '[LEGAL_STATE]', // legalState (optional)
-    '[LEGAL_CITY]', // legalCity (optional)
-    '[LEGAL_ADDRESS]', // legalAddress (optional)
-    '[LEGAL_TAX_ID]' // legalTaxId (optional)
+    '<LEGAL_NAME>', // legalName (optional)
+    '<LEGAL_COUNTRY>', // legalCountry (optional)
+    '<LEGAL_STATE>', // legalState (optional)
+    '<LEGAL_CITY>', // legalCity (optional)
+    '<LEGAL_ADDRESS>', // legalAddress (optional)
+    '<LEGAL_TAX_ID>' // legalTaxId (optional)
 );
 
 console.log(response);

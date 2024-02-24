@@ -6,8 +6,8 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 
 {
-  "messageId": "[MESSAGE_ID]",
-  "content": "[CONTENT]",
+  "messageId": "<MESSAGE_ID>",
+  "content": "<CONTENT>",
   "topics": [],
   "users": [],
   "targets": [],

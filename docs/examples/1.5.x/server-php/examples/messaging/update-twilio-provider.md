@@ -11,10 +11,10 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateTwilioProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]', // optional
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
     enabled: false, // optional
-    accountSid: '[ACCOUNT_SID]', // optional
-    authToken: '[AUTH_TOKEN]', // optional
-    from: '[FROM]' // optional
+    accountSid: '<ACCOUNT_SID>', // optional
+    authToken: '<AUTH_TOKEN>', // optional
+    from: '<FROM>' // optional
 );

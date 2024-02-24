@@ -1,7 +1,7 @@
 mutation {
     messagingCreateFcmProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         serviceAccountJSON: "{}",
         enabled: false
     ) {

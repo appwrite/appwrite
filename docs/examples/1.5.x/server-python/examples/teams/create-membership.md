@@ -8,11 +8,11 @@ client.set_session('') # The user session to authenticate with
 teams = Teams(client)
 
 result = teams.create_membership(
-    team_id = '[TEAM_ID]',
+    team_id = '<TEAM_ID>',
     roles = [],
     email = 'email@example.com', # optional
-    user_id = '[USER_ID]', # optional
+    user_id = '<USER_ID>', # optional
     phone = '+12065550100', # optional
     url = 'https://example.com', # optional
-    name = '[NAME]' # optional
+    name = '<NAME>' # optional
 )

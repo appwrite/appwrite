@@ -12,6 +12,6 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 await functions.DeleteVariable(
-    functionId: "[FUNCTION_ID]",
-    variableId: "[VARIABLE_ID]"
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
 );

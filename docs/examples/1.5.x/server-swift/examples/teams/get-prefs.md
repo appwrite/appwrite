@@ -8,6 +8,6 @@ let client = Client()
 let teams = Teams(client)
 
 let preferences = try await teams.getPrefs(
-    teamId: "[TEAM_ID]"
+    teamId: "<TEAM_ID>"
 )
 

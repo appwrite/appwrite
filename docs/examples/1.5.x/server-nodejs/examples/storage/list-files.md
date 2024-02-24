@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const storage = new sdk.Storage(client);
 
 const response = await storage.listFiles(
-    '[BUCKET_ID]', // bucketId
+    '<BUCKET_ID>', // bucketId
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

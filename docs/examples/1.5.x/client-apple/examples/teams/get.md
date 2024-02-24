@@ -7,6 +7,6 @@ let client = Client()
 let teams = Teams(client)
 
 let team = try await teams.get(
-    teamId: "[TEAM_ID]"
+    teamId: "<TEAM_ID>"
 )
 

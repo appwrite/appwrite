@@ -9,5 +9,5 @@ const messaging = new sdk.Messaging(client);
 
 const response = await messaging.listProviders(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

@@ -1,3 +1,3 @@
 appwrite users updatePrefs \
-        --userId [USER_ID] \
+        --userId <USER_ID> \
         --prefs '{ "key": "value" }'

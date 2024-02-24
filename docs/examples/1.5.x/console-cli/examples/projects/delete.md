@@ -1,2 +1,2 @@
 appwrite projects delete \
-        --projectId [PROJECT_ID]
+        --projectId <PROJECT_ID>

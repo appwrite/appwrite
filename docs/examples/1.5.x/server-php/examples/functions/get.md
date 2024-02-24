@@ -11,5 +11,5 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->get(
-    functionId: '[FUNCTION_ID]'
+    functionId: '<FUNCTION_ID>'
 );

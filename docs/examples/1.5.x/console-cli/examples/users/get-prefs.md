@@ -1,2 +1,2 @@
 appwrite users getPrefs \
-        --userId [USER_ID]
+        --userId <USER_ID>

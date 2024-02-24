@@ -1,6 +1,6 @@
 query {
     teamsGet(
-        teamId: "[TEAM_ID]"
+        teamId: "<TEAM_ID>"
     ) {
         _id
         _createdAt

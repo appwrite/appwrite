@@ -1,6 +1,6 @@
 appwrite projects update \
-        --projectId [PROJECT_ID] \
-        --name [NAME] \
+        --projectId <PROJECT_ID> \
+        --name <NAME> \
 
 
 

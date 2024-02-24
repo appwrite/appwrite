@@ -8,9 +8,9 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.createCollection(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
-  name: '[NAME]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  name: '<NAME>',
   permissions: ["read("any")"], // (optional)
   documentSecurity: false, // (optional)
   enabled: false, // (optional)

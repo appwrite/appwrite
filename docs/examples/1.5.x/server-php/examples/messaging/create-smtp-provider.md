@@ -11,18 +11,18 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createSmtpProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]',
-    host: '[HOST]',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    host: '<HOST>',
     port: 1, // optional
-    username: '[USERNAME]', // optional
-    password: '[PASSWORD]', // optional
-    encryption: ::NONE(), // optional
+    username: '<USERNAME>', // optional
+    password: '<PASSWORD>', // optional
+    encryption: SmtpEncryption::NONE(), // optional
     autoTLS: false, // optional
-    mailer: '[MAILER]', // optional
-    fromName: '[FROM_NAME]', // optional
+    mailer: '<MAILER>', // optional
+    fromName: '<FROM_NAME>', // optional
     fromEmail: 'email@example.com', // optional
-    replyToName: '[REPLY_TO_NAME]', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
     replyToEmail: 'email@example.com', // optional
     enabled: false // optional
 );

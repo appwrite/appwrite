@@ -1,7 +1,7 @@
 query {
     storageGetFile(
-        bucketId: "[BUCKET_ID]",
-        fileId: "[FILE_ID]"
+        bucketId: "<BUCKET_ID>",
+        fileId: "<FILE_ID>"
     ) {
         _id
         bucketId

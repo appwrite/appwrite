@@ -10,9 +10,9 @@ client = Client.new
 teams = Teams.new(client)
 
 response = teams.list_memberships(
-    team_id: '[TEAM_ID]',
+    team_id: '<TEAM_ID>',
     queries: [], # optional
-    search: '[SEARCH]' # optional
+    search: '<SEARCH>' # optional
 )
 
 puts response.inspect

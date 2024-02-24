@@ -9,5 +9,5 @@ const storage = new sdk.Storage(client);
 
 const response = await storage.listBuckets(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

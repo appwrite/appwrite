@@ -6,20 +6,20 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 
 {
-  "messageId": "[MESSAGE_ID]",
-  "title": "[TITLE]",
-  "body": "[BODY]",
+  "messageId": "<MESSAGE_ID>",
+  "title": "<TITLE>",
+  "body": "<BODY>",
   "topics": [],
   "users": [],
   "targets": [],
   "data": {},
-  "action": "[ACTION]",
+  "action": "<ACTION>",
   "image": "[ID1:ID2]",
-  "icon": "[ICON]",
-  "sound": "[SOUND]",
-  "color": "[COLOR]",
-  "tag": "[TAG]",
-  "badge": "[BADGE]",
+  "icon": "<ICON>",
+  "sound": "<SOUND>",
+  "color": "<COLOR>",
+  "tag": "<TAG>",
+  "badge": "<BADGE>",
   "status": "draft",
   "scheduledAt": 
 }

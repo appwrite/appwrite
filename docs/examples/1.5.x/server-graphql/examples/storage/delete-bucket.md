@@ -1,6 +1,6 @@
 mutation {
     storageDeleteBucket(
-        bucketId: "[BUCKET_ID]"
+        bucketId: "<BUCKET_ID>"
     ) {
         status
     }

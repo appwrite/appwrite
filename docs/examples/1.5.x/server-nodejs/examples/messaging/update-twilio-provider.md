@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updateTwilioProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name (optional)
     false, // enabled (optional)
-    '[ACCOUNT_SID]', // accountSid (optional)
-    '[AUTH_TOKEN]', // authToken (optional)
-    '[FROM]' // from (optional)
+    '<ACCOUNT_SID>', // accountSid (optional)
+    '<AUTH_TOKEN>', // authToken (optional)
+    '<FROM>' // from (optional)
 );

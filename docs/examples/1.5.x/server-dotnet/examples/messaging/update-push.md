@@ -11,19 +11,19 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 Message result = await messaging.UpdatePush(
-    messageId: "[MESSAGE_ID]",
+    messageId: "<MESSAGE_ID>",
     topics: new List<string>(), // optional
     users: new List<string>(), // optional
     targets: new List<string>(), // optional
-    title: "[TITLE]", // optional
-    body: "[BODY]", // optional
+    title: "<TITLE>", // optional
+    body: "<BODY>", // optional
     data: [object], // optional
-    action: "[ACTION]", // optional
+    action: "<ACTION>", // optional
     image: "[ID1:ID2]", // optional
-    icon: "[ICON]", // optional
-    sound: "[SOUND]", // optional
-    color: "[COLOR]", // optional
-    tag: "[TAG]", // optional
+    icon: "<ICON>", // optional
+    sound: "<SOUND>", // optional
+    color: "<COLOR>", // optional
+    tag: "<TAG>", // optional
     badge: 0, // optional
     status: MessageStatus.Draft, // optional
     scheduledAt: "" // optional

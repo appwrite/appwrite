@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateServiceStatus(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     ApiService.Account, // service
     false // status
 );

@@ -8,8 +8,8 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.getVariable(
-    '[FUNCTION_ID]', // functionId
-    '[VARIABLE_ID]' // variableId
+    '<FUNCTION_ID>', // functionId
+    '<VARIABLE_ID>' // variableId
 );
 
 console.log(response);

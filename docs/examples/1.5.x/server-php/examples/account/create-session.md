@@ -10,6 +10,6 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->createSession(
-    userId: '[USER_ID]',
-    secret: '[SECRET]'
+    userId: '<USER_ID>',
+    secret: '<SECRET>'
 );

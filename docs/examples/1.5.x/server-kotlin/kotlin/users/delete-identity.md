@@ -10,5 +10,5 @@ val client = Client()
 val users = Users(client)
 
 val response = users.deleteIdentity(
-    identityId = "[IDENTITY_ID]"
+    identityId = "<IDENTITY_ID>"
 )

@@ -11,9 +11,9 @@ client = Client.new
 databases = Databases.new(client)
 
 response = databases.create_relationship_attribute(
-    database_id: '[DATABASE_ID]',
-    collection_id: '[COLLECTION_ID]',
-    related_collection_id: '[RELATED_COLLECTION_ID]',
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
+    related_collection_id: '<RELATED_COLLECTION_ID>',
     type: RelationshipType::ONE_TO_ONE,
     two_way: false, # optional
     key: '', # optional

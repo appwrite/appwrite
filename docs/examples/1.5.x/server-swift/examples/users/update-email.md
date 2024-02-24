@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let user = try await users.updateEmail(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     email: "email@example.com"
 )
 

@@ -8,9 +8,9 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.createEmail(
-  messageId: '[MESSAGE_ID]',
-  subject: '[SUBJECT]',
-  content: '[CONTENT]',
+  messageId: '<MESSAGE_ID>',
+  subject: '<SUBJECT>',
+  content: '<CONTENT>',
   topics: [], // (optional)
   users: [], // (optional)
   targets: [], // (optional)

@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateAuthPasswordDictionary(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     false // enabled
 );
 

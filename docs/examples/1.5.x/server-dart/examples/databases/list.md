@@ -9,7 +9,7 @@ Databases databases = Databases(client);
 
 Future result = databases.list(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

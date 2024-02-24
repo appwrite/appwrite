@@ -7,8 +7,8 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.createKey(
-    '[PROJECT_ID]', // projectId
-    '[NAME]', // name
+    '<PROJECT_ID>', // projectId
+    '<NAME>', // name
     [], // scopes
     '' // expire (optional)
 );

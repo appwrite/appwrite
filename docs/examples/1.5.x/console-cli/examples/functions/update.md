@@ -1,6 +1,6 @@
 appwrite functions update \
-        --functionId [FUNCTION_ID] \
-        --name [NAME] \
+        --functionId <FUNCTION_ID> \
+        --name <NAME> \
 
 
 

@@ -1,11 +1,11 @@
 mutation {
     messagingUpdateTelesignProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         enabled: false,
-        customerId: "[CUSTOMER_ID]",
-        apiKey: "[API_KEY]",
-        from: "[FROM]"
+        customerId: "<CUSTOMER_ID>",
+        apiKey: "<API_KEY>",
+        from: "<FROM>"
     ) {
         _id
         _createdAt

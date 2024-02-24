@@ -8,7 +8,7 @@ const migrations = new Migrations(client);
 
 const result = await migrations.getFirebaseReportOAuth(
     [], // resources
-    '[PROJECT_ID]' // projectId
+    '<PROJECT_ID>' // projectId
 );
 
 console.log(response);

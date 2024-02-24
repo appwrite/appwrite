@@ -1,6 +1,6 @@
 query {
     messagingListTopicLogs(
-        topicId: "[TOPIC_ID]",
+        topicId: "<TOPIC_ID>",
         queries: []
     ) {
         total

@@ -8,7 +8,7 @@ let client = Client()
 let functions = Functions(client)
 
 let result = try await functions.deleteVariable(
-    functionId: "[FUNCTION_ID]",
-    variableId: "[VARIABLE_ID]"
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
 )
 

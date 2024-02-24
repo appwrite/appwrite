@@ -11,6 +11,6 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->getExecution(
-    functionId: '[FUNCTION_ID]',
-    executionId: '[EXECUTION_ID]'
+    functionId: '<FUNCTION_ID>',
+    executionId: '<EXECUTION_ID>'
 );

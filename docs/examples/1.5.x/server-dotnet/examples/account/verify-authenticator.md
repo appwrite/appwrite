@@ -13,5 +13,5 @@ Account account = new Account(client);
 
 User result = await account.VerifyAuthenticator(
     type: AuthenticatorType.Totp,
-    otp: "[OTP]"
+    otp: "<OTP>"
 );

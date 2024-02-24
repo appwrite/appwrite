@@ -1,2 +1,2 @@
 appwrite projects get \
-        --projectId [PROJECT_ID]
+        --projectId <PROJECT_ID>

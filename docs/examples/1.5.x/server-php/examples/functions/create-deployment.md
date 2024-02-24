@@ -12,9 +12,9 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->createDeployment(
-    functionId: '[FUNCTION_ID]',
+    functionId: '<FUNCTION_ID>',
     code: InputFile::withPath('file.png'),
     activate: false,
-    entrypoint: '[ENTRYPOINT]', // optional
-    commands: '[COMMANDS]' // optional
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>' // optional
 );

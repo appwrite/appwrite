@@ -1,6 +1,6 @@
 mutation {
     functionsDelete(
-        functionId: "[FUNCTION_ID]"
+        functionId: "<FUNCTION_ID>"
     ) {
         status
     }

@@ -8,7 +8,7 @@ Avatars avatars = Avatars(client);
 
 // Downloading file
 Future result = avatars.getInitials(
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
   width: 0, // (optional)
   height: 0, // (optional)
   background: '', // (optional)
@@ -22,7 +22,7 @@ Future result = avatars.getInitials(
 // Displaying image preview
 FutureBuilder(
   future: avatars.getInitials(
-  name:'[NAME]' , // (optional)
+  name:'<NAME>' , // (optional)
   width:0 , // (optional)
   height:0 , // (optional)
   background:'' , // (optional)

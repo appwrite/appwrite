@@ -7,6 +7,6 @@ let client = Client()
 let teams = Teams(client)
 
 let result = try await teams.delete(
-    teamId: "[TEAM_ID]"
+    teamId: "<TEAM_ID>"
 )
 

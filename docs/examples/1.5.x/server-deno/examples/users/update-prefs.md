@@ -8,7 +8,7 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.updatePrefs(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     {} // prefs
 );
 

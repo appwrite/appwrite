@@ -8,12 +8,12 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.updateTwilioProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name (optional)
     false, // enabled (optional)
-    '[ACCOUNT_SID]', // accountSid (optional)
-    '[AUTH_TOKEN]', // authToken (optional)
-    '[FROM]' // from (optional)
+    '<ACCOUNT_SID>', // accountSid (optional)
+    '<AUTH_TOKEN>', // authToken (optional)
+    '<FROM>' // from (optional)
 );
 
 console.log(response);

@@ -1,2 +1,2 @@
 appwrite migrations delete \
-        --migrationId [MIGRATION_ID]
+        --migrationId <MIGRATION_ID>

@@ -9,6 +9,6 @@ let messaging = Messaging(client)
 
 let providerList = try await messaging.listProviders(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

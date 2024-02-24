@@ -9,6 +9,6 @@ let storage = Storage(client)
 
 let bucketList = try await storage.listBuckets(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

@@ -7,7 +7,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.deleteSession(
-  sessionId: '[SESSION_ID]',
+  sessionId: '<SESSION_ID>',
 );
 
 result.then((response) {

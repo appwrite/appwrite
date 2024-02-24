@@ -7,8 +7,8 @@ const client = new Client()
 const vcs = new Vcs(client);
 
 const result = await vcs.createRepository(
-    '[INSTALLATION_ID]', // installationId
-    '[NAME]', // name
+    '<INSTALLATION_ID>', // installationId
+    '<NAME>', // name
     false // private
 );
 

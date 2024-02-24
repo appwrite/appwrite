@@ -11,5 +11,5 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->getProvider(
-    providerId: '[PROVIDER_ID]'
+    providerId: '<PROVIDER_ID>'
 );

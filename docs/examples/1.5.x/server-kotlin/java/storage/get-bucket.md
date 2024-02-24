@@ -10,7 +10,7 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.getBucket(
-    "[BUCKET_ID]", // bucketId
+    "<BUCKET_ID>", // bucketId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

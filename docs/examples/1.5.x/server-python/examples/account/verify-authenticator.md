@@ -10,5 +10,5 @@ account = Account(client)
 
 result = account.verify_authenticator(
     type = AuthenticatorType.TOTP,
-    otp = '[OTP]'
+    otp = '<OTP>'
 )

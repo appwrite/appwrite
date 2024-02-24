@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let preferences = try await users.updatePrefs(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     prefs: [:]
 )
 

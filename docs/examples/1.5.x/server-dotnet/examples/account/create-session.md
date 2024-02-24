@@ -11,6 +11,6 @@ Client client = new Client()
 Account account = new Account(client);
 
 Session result = await account.CreateSession(
-    userId: "[USER_ID]",
-    secret: "[SECRET]"
+    userId: "<USER_ID>",
+    secret: "<SECRET>"
 );

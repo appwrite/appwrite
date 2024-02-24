@@ -7,7 +7,7 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.getProvider(
-    '[PROVIDER_ID]' // providerId
+    '<PROVIDER_ID>' // providerId
 );
 
 console.log(response);

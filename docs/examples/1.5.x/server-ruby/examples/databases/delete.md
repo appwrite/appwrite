@@ -10,7 +10,7 @@ client = Client.new
 databases = Databases.new(client)
 
 response = databases.delete(
-    database_id: '[DATABASE_ID]'
+    database_id: '<DATABASE_ID>'
 )
 
 puts response.inspect

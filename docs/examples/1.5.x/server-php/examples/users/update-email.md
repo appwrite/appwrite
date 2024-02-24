@@ -11,6 +11,6 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->updateEmail(
-    userId: '[USER_ID]',
+    userId: '<USER_ID>',
     email: 'email@example.com'
 );

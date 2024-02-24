@@ -7,11 +7,11 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.createSHAUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
     PasswordHash.Sha1, // passwordVersion (optional)
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

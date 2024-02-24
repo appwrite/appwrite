@@ -10,7 +10,7 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.getIndex(
-    databaseId = "[DATABASE_ID]",
-    collectionId = "[COLLECTION_ID]",
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
     key = ""
 )

@@ -7,8 +7,8 @@ let client = Client()
 let storage = Storage(client)
 
 let bytes = try await storage.getFilePreview(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]",
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
     width: 0, // optional
     height: 0, // optional
     gravity: .center, // optional

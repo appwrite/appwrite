@@ -12,9 +12,9 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->createRelationshipAttribute(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
-    relatedCollectionId: '[RELATED_COLLECTION_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    relatedCollectionId: '<RELATED_COLLECTION_ID>',
     type: RelationshipType::ONE_TO_ONE(),
     twoWay: false, // optional
     key: '', // optional

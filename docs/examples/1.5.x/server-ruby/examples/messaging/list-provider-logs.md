@@ -10,7 +10,7 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.list_provider_logs(
-    provider_id: '[PROVIDER_ID]',
+    provider_id: '<PROVIDER_ID>',
     queries: [] # optional
 )
 

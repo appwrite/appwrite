@@ -8,9 +8,9 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const response = await users.createSHAUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
     sdk.PasswordHash.Sha1, // passwordVersion (optional)
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );

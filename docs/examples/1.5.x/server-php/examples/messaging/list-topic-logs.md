@@ -11,6 +11,6 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->listTopicLogs(
-    topicId: '[TOPIC_ID]',
+    topicId: '<TOPIC_ID>',
     queries: [] // optional
 );

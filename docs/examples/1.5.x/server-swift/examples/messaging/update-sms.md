@@ -8,11 +8,11 @@ let client = Client()
 let messaging = Messaging(client)
 
 let message = try await messaging.updateSms(
-    messageId: "[MESSAGE_ID]",
+    messageId: "<MESSAGE_ID>",
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
-    content: "[CONTENT]", // optional
+    content: "<CONTENT>", // optional
     status: .draft, // optional
     scheduledAt: "" // optional
 )

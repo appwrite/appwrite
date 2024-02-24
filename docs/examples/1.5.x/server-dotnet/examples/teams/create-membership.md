@@ -12,11 +12,11 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 Membership result = await teams.CreateMembership(
-    teamId: "[TEAM_ID]",
+    teamId: "<TEAM_ID>",
     roles: new List<string>(),
     email: "email@example.com", // optional
-    userId: "[USER_ID]", // optional
+    userId: "<USER_ID>", // optional
     phone: "+12065550100", // optional
     url: "https://example.com", // optional
-    name: "[NAME]" // optional
+    name: "<NAME>" // optional
 );

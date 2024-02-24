@@ -7,8 +7,8 @@ const client = new Client()
 const vcs = new Vcs(client);
 
 const result = await vcs.listRepositories(
-    '[INSTALLATION_ID]', // installationId
-    '[SEARCH]' // search (optional)
+    '<INSTALLATION_ID>', // installationId
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

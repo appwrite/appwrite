@@ -11,5 +11,5 @@ Client client = new Client()
 Account account = new Account(client);
 
 await account.DeleteSession(
-    sessionId: "[SESSION_ID]"
+    sessionId: "<SESSION_ID>"
 );

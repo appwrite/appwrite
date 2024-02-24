@@ -7,8 +7,8 @@ let client = Client()
 let account = Account(client)
 
 let token = try await account.updateRecovery(
-    userId: "[USER_ID]",
-    secret: "[SECRET]",
+    userId: "<USER_ID>",
+    secret: "<SECRET>",
     password: ""
 )
 

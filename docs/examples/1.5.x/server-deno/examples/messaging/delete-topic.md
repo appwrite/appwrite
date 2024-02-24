@@ -8,7 +8,7 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.deleteTopic(
-    '[TOPIC_ID]' // topicId
+    '<TOPIC_ID>' // topicId
 );
 
 console.log(response);

@@ -8,7 +8,7 @@ let client = Client()
 let functions = Functions(client)
 
 let function = try await functions.updateDeployment(
-    functionId: "[FUNCTION_ID]",
-    deploymentId: "[DEPLOYMENT_ID]"
+    functionId: "<FUNCTION_ID>",
+    deploymentId: "<DEPLOYMENT_ID>"
 )
 

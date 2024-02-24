@@ -1,10 +1,10 @@
 mutation {
     usersCreateSHAUser(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         email: "email@example.com",
         password: "password",
         passwordVersion: "sha1",
-        name: "[NAME]"
+        name: "<NAME>"
     ) {
         _id
         _createdAt

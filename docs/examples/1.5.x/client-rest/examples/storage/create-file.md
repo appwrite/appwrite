@@ -10,7 +10,7 @@ Content-Length: *Length of your entity body in bytes*
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="fileId"
 
-"[FILE_ID]"
+"<FILE_ID>"
 
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="file"

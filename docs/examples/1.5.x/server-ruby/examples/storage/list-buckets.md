@@ -11,7 +11,7 @@ storage = Storage.new(client)
 
 response = storage.list_buckets(
     queries: [], # optional
-    search: '[SEARCH]' # optional
+    search: '<SEARCH>' # optional
 )
 
 puts response.inspect

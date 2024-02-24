@@ -1,7 +1,7 @@
 query {
     storageGetFilePreview(
-        bucketId: "[BUCKET_ID]",
-        fileId: "[FILE_ID]",
+        bucketId: "<BUCKET_ID>",
+        fileId: "<FILE_ID>",
         width: 0,
         height: 0,
         gravity: "center",

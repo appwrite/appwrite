@@ -8,12 +8,12 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.createTarget(
-  userId: '[USER_ID]',
-  targetId: '[TARGET_ID]',
+  userId: '<USER_ID>',
+  targetId: '<TARGET_ID>',
   providerType:  MessagingProviderType.email,
-  identifier: '[IDENTIFIER]',
-  providerId: '[PROVIDER_ID]', // (optional)
-  name: '[NAME]', // (optional)
+  identifier: '<IDENTIFIER>',
+  providerId: '<PROVIDER_ID>', // (optional)
+  name: '<NAME>', // (optional)
 );
 
 result.then((response) {

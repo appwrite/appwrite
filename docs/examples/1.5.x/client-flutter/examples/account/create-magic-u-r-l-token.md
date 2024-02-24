@@ -7,7 +7,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.createMagicURLToken(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   email: 'email@example.com',
   url: 'https://example.com', // (optional)
   phrase: false, // (optional)

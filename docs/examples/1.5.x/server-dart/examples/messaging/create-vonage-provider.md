@@ -8,11 +8,11 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.createVonageProvider(
-  providerId: '[PROVIDER_ID]',
-  name: '[NAME]',
+  providerId: '<PROVIDER_ID>',
+  name: '<NAME>',
   from: '+12065550100', // (optional)
-  apiKey: '[API_KEY]', // (optional)
-  apiSecret: '[API_SECRET]', // (optional)
+  apiKey: '<API_KEY>', // (optional)
+  apiSecret: '<API_SECRET>', // (optional)
   enabled: false, // (optional)
 );
 

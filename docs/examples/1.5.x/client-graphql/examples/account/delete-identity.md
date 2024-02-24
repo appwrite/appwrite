@@ -1,6 +1,6 @@
 mutation {
     accountDeleteIdentity(
-        identityId: "[IDENTITY_ID]"
+        identityId: "<IDENTITY_ID>"
     ) {
         status
     }

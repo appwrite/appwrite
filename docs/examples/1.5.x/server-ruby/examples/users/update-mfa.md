@@ -10,7 +10,7 @@ client = Client.new
 users = Users.new(client)
 
 response = users.update_mfa(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     mfa: false
 )
 

@@ -8,7 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let logList = try await messaging.listProviderLogs(
-    providerId: "[PROVIDER_ID]",
+    providerId: "<PROVIDER_ID>",
     queries: [] // optional
 )
 

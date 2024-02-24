@@ -8,7 +8,7 @@ client.set_session('') # The user session to authenticate with
 teams = Teams(client)
 
 result = teams.update_membership(
-    team_id = '[TEAM_ID]',
-    membership_id = '[MEMBERSHIP_ID]',
+    team_id = '<TEAM_ID>',
+    membership_id = '<MEMBERSHIP_ID>',
     roles = []
 )

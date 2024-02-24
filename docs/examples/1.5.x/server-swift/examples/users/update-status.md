@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let user = try await users.updateStatus(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     status: false
 )
 

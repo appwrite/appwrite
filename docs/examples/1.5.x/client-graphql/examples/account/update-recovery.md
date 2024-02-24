@@ -1,7 +1,7 @@
 mutation {
     accountUpdateRecovery(
-        userId: "[USER_ID]",
-        secret: "[SECRET]",
+        userId: "<USER_ID>",
+        secret: "<SECRET>",
         password: ""
     ) {
         _id

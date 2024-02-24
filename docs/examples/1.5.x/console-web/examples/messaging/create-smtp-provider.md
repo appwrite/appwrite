@@ -1,4 +1,4 @@
-import { Client, Messaging,  } from "@appwrite.io/console";
+import { Client, Messaging, SmtpEncryption } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -7,18 +7,18 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.createSmtpProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name
-    '[HOST]', // host
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name
+    '<HOST>', // host
     1, // port (optional)
-    '[USERNAME]', // username (optional)
-    '[PASSWORD]', // password (optional)
-    .None, // encryption (optional)
+    '<USERNAME>', // username (optional)
+    '<PASSWORD>', // password (optional)
+    SmtpEncryption.None, // encryption (optional)
     false, // autoTLS (optional)
-    '[MAILER]', // mailer (optional)
-    '[FROM_NAME]', // fromName (optional)
+    '<MAILER>', // mailer (optional)
+    '<FROM_NAME>', // fromName (optional)
     'email@example.com', // fromEmail (optional)
-    '[REPLY_TO_NAME]', // replyToName (optional)
+    '<REPLY_TO_NAME>', // replyToName (optional)
     'email@example.com', // replyToEmail (optional)
     false // enabled (optional)
 );

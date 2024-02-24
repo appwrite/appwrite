@@ -10,8 +10,8 @@ client = Client.new
 storage = Storage.new(client)
 
 response = storage.update_bucket(
-    bucket_id: '[BUCKET_ID]',
-    name: '[NAME]',
+    bucket_id: '<BUCKET_ID>',
+    name: '<NAME>',
     permissions: ["read("any")"], # optional
     file_security: false, # optional
     enabled: false, # optional

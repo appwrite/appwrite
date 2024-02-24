@@ -8,8 +8,8 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.getCollection(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
 );
 
 result.then((response) {

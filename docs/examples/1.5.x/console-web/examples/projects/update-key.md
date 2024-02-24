@@ -7,9 +7,9 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateKey(
-    '[PROJECT_ID]', // projectId
-    '[KEY_ID]', // keyId
-    '[NAME]', // name
+    '<PROJECT_ID>', // projectId
+    '<KEY_ID>', // keyId
+    '<NAME>', // name
     [], // scopes
     '' // expire (optional)
 );

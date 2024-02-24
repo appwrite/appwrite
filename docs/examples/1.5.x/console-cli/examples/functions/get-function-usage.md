@@ -1,3 +1,3 @@
 appwrite functions getFunctionUsage \
-        --functionId [FUNCTION_ID] \
+        --functionId <FUNCTION_ID> \
 

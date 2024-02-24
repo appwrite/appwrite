@@ -10,6 +10,7 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.updateTopic(
-    topicId = "[TOPIC_ID]",
-    name = "[NAME]" // optional
+    topicId = "<TOPIC_ID>",
+    name = "<NAME>", // optional
+    subscribe = listOf("any") // optional
 )

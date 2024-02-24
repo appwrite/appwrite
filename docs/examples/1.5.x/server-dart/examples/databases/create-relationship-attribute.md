@@ -8,9 +8,9 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.createRelationshipAttribute(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
-  relatedCollectionId: '[RELATED_COLLECTION_ID]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
+  relatedCollectionId: '<RELATED_COLLECTION_ID>',
   type:  RelationshipType.oneToOne,
   twoWay: false, // (optional)
   key: '', // (optional)

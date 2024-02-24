@@ -9,6 +9,6 @@ let users = Users(client)
 
 let userList = try await users.list(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

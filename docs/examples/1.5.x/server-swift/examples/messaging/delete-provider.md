@@ -8,6 +8,6 @@ let client = Client()
 let messaging = Messaging(client)
 
 let result = try await messaging.deleteProvider(
-    providerId: "[PROVIDER_ID]"
+    providerId: "<PROVIDER_ID>"
 )
 

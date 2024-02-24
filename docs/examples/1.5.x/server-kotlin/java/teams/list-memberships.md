@@ -10,9 +10,9 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 teams.listMemberships(
-    "[TEAM_ID]", // teamId
+    "<TEAM_ID>", // teamId
     listOf(), // queries (optional)
-    "[SEARCH]", // search (optional)
+    "<SEARCH>", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

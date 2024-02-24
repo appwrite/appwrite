@@ -7,7 +7,7 @@ const client = new Client()
 const migrations = new Migrations(client);
 
 const result = await migrations.get(
-    '[MIGRATION_ID]' // migrationId
+    '<MIGRATION_ID>' // migrationId
 );
 
 console.log(response);

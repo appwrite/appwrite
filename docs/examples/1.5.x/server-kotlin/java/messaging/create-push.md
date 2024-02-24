@@ -10,20 +10,20 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createPush(
-    "[MESSAGE_ID]", // messageId
-    "[TITLE]", // title
-    "[BODY]", // body
+    "<MESSAGE_ID>", // messageId
+    "<TITLE>", // title
+    "<BODY>", // body
     listOf(), // topics (optional)
     listOf(), // users (optional)
     listOf(), // targets (optional)
     mapOf( "a" to "b" ), // data (optional)
-    "[ACTION]", // action (optional)
+    "<ACTION>", // action (optional)
     "[ID1:ID2]", // image (optional)
-    "[ICON]", // icon (optional)
-    "[SOUND]", // sound (optional)
-    "[COLOR]", // color (optional)
-    "[TAG]", // tag (optional)
-    "[BADGE]", // badge (optional)
+    "<ICON>", // icon (optional)
+    "<SOUND>", // sound (optional)
+    "<COLOR>", // color (optional)
+    "<TAG>", // tag (optional)
+    "<BADGE>", // badge (optional)
     MessageStatus.DRAFT, // status (optional)
     "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {

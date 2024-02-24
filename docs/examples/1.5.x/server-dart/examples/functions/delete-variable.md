@@ -8,8 +8,8 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.deleteVariable(
-  functionId: '[FUNCTION_ID]',
-  variableId: '[VARIABLE_ID]',
+  functionId: '<FUNCTION_ID>',
+  variableId: '<VARIABLE_ID>',
 );
 
 result.then((response) {

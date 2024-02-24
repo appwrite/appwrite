@@ -8,18 +8,18 @@ const projects = new Projects(client);
 
 const result = await projects.create(
     '', // projectId
-    '[NAME]', // name
-    '[TEAM_ID]', // teamId
+    '<NAME>', // name
+    '<TEAM_ID>', // teamId
     .Default, // region (optional)
-    '[DESCRIPTION]', // description (optional)
-    '[LOGO]', // logo (optional)
+    '<DESCRIPTION>', // description (optional)
+    '<LOGO>', // logo (optional)
     'https://example.com', // url (optional)
-    '[LEGAL_NAME]', // legalName (optional)
-    '[LEGAL_COUNTRY]', // legalCountry (optional)
-    '[LEGAL_STATE]', // legalState (optional)
-    '[LEGAL_CITY]', // legalCity (optional)
-    '[LEGAL_ADDRESS]', // legalAddress (optional)
-    '[LEGAL_TAX_ID]' // legalTaxId (optional)
+    '<LEGAL_NAME>', // legalName (optional)
+    '<LEGAL_COUNTRY>', // legalCountry (optional)
+    '<LEGAL_STATE>', // legalState (optional)
+    '<LEGAL_CITY>', // legalCity (optional)
+    '<LEGAL_ADDRESS>', // legalAddress (optional)
+    '<LEGAL_TAX_ID>' // legalTaxId (optional)
 );
 
 console.log(response);

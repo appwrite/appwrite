@@ -8,6 +8,6 @@ let client = Client()
 let users = Users(client)
 
 let session = try await users.createSession(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 )
 

@@ -8,9 +8,9 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.createVariable(
-  functionId: '[FUNCTION_ID]',
-  key: '[KEY]',
-  value: '[VALUE]',
+  functionId: '<FUNCTION_ID>',
+  key: '<KEY>',
+  value: '<VALUE>',
 );
 
 result.then((response) {

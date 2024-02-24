@@ -8,7 +8,7 @@ const client = new Client()
 const teams = new Teams(client);
 
 const response = await teams.getPrefs(
-    '[TEAM_ID]' // teamId
+    '<TEAM_ID>' // teamId
 );
 
 console.log(response);

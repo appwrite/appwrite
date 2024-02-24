@@ -9,7 +9,7 @@ const databases = new Databases(client);
 
 const response = await databases.list(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

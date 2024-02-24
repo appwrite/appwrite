@@ -10,5 +10,5 @@ val client = Client()
 val account = Account(client)
 
 val response = account.updateSession(
-    sessionId = "[SESSION_ID]"
+    sessionId = "<SESSION_ID>"
 )

@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeList = try await databases.listAttributes(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     queries: [] // optional
 )
 

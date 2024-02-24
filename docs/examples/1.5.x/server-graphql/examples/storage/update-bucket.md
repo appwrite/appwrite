@@ -1,7 +1,7 @@
 mutation {
     storageUpdateBucket(
-        bucketId: "[BUCKET_ID]",
-        name: "[NAME]",
+        bucketId: "<BUCKET_ID>",
+        name: "<NAME>",
         permissions: ["read("any")"],
         fileSecurity: false,
         enabled: false,

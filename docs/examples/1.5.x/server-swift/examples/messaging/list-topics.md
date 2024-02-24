@@ -9,6 +9,6 @@ let messaging = Messaging(client)
 
 let topicList = try await messaging.listTopics(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

@@ -10,7 +10,7 @@ client = Client.new
 users = Users.new(client)
 
 response = users.create_token(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     length: 4, # optional
     expire: 60 # optional
 )

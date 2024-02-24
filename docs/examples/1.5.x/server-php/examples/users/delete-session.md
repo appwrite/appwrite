@@ -11,6 +11,6 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->deleteSession(
-    userId: '[USER_ID]',
-    sessionId: '[SESSION_ID]'
+    userId: '<USER_ID>',
+    sessionId: '<SESSION_ID>'
 );

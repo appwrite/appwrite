@@ -1,12 +1,12 @@
 mutation {
     teamsCreateMembership(
-        teamId: "[TEAM_ID]",
+        teamId: "<TEAM_ID>",
         roles: [],
         email: "email@example.com",
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         phone: "+12065550100",
         url: "https://example.com",
-        name: "[NAME]"
+        name: "<NAME>"
     ) {
         _id
         _createdAt

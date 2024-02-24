@@ -1,6 +1,6 @@
 query {
     messagingListSubscriberLogs(
-        subscriberId: "[SUBSCRIBER_ID]",
+        subscriberId: "<SUBSCRIBER_ID>",
         queries: []
     ) {
         total

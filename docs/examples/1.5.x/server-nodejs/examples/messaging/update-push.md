@@ -8,19 +8,19 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updatePush(
-    '[MESSAGE_ID]', // messageId
+    '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
-    '[TITLE]', // title (optional)
-    '[BODY]', // body (optional)
+    '<TITLE>', // title (optional)
+    '<BODY>', // body (optional)
     {}, // data (optional)
-    '[ACTION]', // action (optional)
+    '<ACTION>', // action (optional)
     '[ID1:ID2]', // image (optional)
-    '[ICON]', // icon (optional)
-    '[SOUND]', // sound (optional)
-    '[COLOR]', // color (optional)
-    '[TAG]', // tag (optional)
+    '<ICON>', // icon (optional)
+    '<SOUND>', // sound (optional)
+    '<COLOR>', // color (optional)
+    '<TAG>', // tag (optional)
     null, // badge (optional)
     sdk.MessageStatus.Draft, // status (optional)
     '' // scheduledAt (optional)

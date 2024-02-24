@@ -10,9 +10,9 @@ val client = Client()
 val users = Users(client)
 
 val response = users.createSHAUser(
-    userId = "[USER_ID]",
+    userId = "<USER_ID>",
     email = "email@example.com",
     password = "password",
     passwordVersion = "sha1", // optional
-    name = "[NAME]" // optional
+    name = "<NAME>" // optional
 )

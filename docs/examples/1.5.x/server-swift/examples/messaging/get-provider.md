@@ -8,6 +8,6 @@ let client = Client()
 let messaging = Messaging(client)
 
 let provider = try await messaging.getProvider(
-    providerId: "[PROVIDER_ID]"
+    providerId: "<PROVIDER_ID>"
 )
 

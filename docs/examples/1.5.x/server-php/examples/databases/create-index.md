@@ -12,8 +12,8 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->createIndex(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
     key: '',
     type: IndexType::KEY(),
     attributes: [],

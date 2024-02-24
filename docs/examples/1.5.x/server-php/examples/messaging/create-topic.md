@@ -11,7 +11,7 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createTopic(
-    topicId: '[TOPIC_ID]',
-    name: '[NAME]',
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>',
     subscribe: ["any"] // optional
 );

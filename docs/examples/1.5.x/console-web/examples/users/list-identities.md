@@ -8,7 +8,7 @@ const users = new Users(client);
 
 const result = await users.listIdentities(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

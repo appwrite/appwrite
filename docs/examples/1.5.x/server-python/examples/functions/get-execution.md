@@ -8,6 +8,6 @@ client.set_session('') # The user session to authenticate with
 functions = Functions(client)
 
 result = functions.get_execution(
-    function_id = '[FUNCTION_ID]',
-    execution_id = '[EXECUTION_ID]'
+    function_id = '<FUNCTION_ID>',
+    execution_id = '<EXECUTION_ID>'
 )

@@ -11,6 +11,6 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->downloadDeployment(
-    functionId: '[FUNCTION_ID]',
-    deploymentId: '[DEPLOYMENT_ID]'
+    functionId: '<FUNCTION_ID>',
+    deploymentId: '<DEPLOYMENT_ID>'
 );

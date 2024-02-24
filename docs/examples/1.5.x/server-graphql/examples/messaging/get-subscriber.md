@@ -1,7 +1,7 @@
 query {
     messagingGetSubscriber(
-        topicId: "[TOPIC_ID]",
-        subscriberId: "[SUBSCRIBER_ID]"
+        topicId: "<TOPIC_ID>",
+        subscriberId: "<SUBSCRIBER_ID>"
     ) {
         _id
         _createdAt

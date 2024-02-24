@@ -7,8 +7,8 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.updatePushTarget(
-  targetId: '[TARGET_ID]',
-  identifier: '[IDENTIFIER]',
+  targetId: '<TARGET_ID>',
+  identifier: '<IDENTIFIER>',
 );
 
 result.then((response) {

@@ -12,5 +12,5 @@ val account = Account(client)
 
 val response = account.verifyAuthenticator(
     type =  AuthenticatorType.TOTP,
-    otp = "[OTP]"
+    otp = "<OTP>"
 )

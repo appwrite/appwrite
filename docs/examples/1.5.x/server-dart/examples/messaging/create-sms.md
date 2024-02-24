@@ -8,8 +8,8 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.createSms(
-  messageId: '[MESSAGE_ID]',
-  content: '[CONTENT]',
+  messageId: '<MESSAGE_ID>',
+  content: '<CONTENT>',
   topics: [], // (optional)
   users: [], // (optional)
   targets: [], // (optional)

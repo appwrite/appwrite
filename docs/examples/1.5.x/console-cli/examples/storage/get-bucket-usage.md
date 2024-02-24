@@ -1,3 +1,3 @@
 appwrite storage getBucketUsage \
-        --bucketId [BUCKET_ID] \
+        --bucketId <BUCKET_ID> \
 

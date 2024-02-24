@@ -7,11 +7,11 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updatePlatform(
-    '[PROJECT_ID]', // projectId
-    '[PLATFORM_ID]', // platformId
-    '[NAME]', // name
-    '[KEY]', // key (optional)
-    '[STORE]', // store (optional)
+    '<PROJECT_ID>', // projectId
+    '<PLATFORM_ID>', // platformId
+    '<NAME>', // name
+    '<KEY>', // key (optional)
+    '<STORE>', // store (optional)
     '' // hostname (optional)
 );
 

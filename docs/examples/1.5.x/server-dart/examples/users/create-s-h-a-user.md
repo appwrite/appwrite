@@ -8,11 +8,11 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.createSHAUser(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   email: 'email@example.com',
   password: 'password',
   passwordVersion:  PasswordHash.sha1, // (optional)
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
 );
 
 result.then((response) {

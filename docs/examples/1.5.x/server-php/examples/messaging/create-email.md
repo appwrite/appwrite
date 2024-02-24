@@ -11,9 +11,9 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createEmail(
-    messageId: '[MESSAGE_ID]',
-    subject: '[SUBJECT]',
-    content: '[CONTENT]',
+    messageId: '<MESSAGE_ID>',
+    subject: '<SUBJECT>',
+    content: '<CONTENT>',
     topics: [], // optional
     users: [], // optional
     targets: [], // optional

@@ -9,8 +9,8 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.createFile(
-  bucketId: '[BUCKET_ID]',
-  fileId: '[FILE_ID]',
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
   file: InputFile(path: './path-to-files/image.jpg', filename: 'image.jpg'),
   permissions: ["read("any")"], // (optional)
 );

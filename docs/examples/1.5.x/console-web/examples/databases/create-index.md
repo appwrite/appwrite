@@ -7,8 +7,8 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.createIndex(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     IndexType.Key, // type
     [], // attributes

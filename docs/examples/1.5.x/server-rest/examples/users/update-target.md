@@ -6,7 +6,7 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 
 {
-  "identifier": "[IDENTIFIER]",
-  "providerId": "[PROVIDER_ID]",
-  "name": "[NAME]"
+  "identifier": "<IDENTIFIER>",
+  "providerId": "<PROVIDER_ID>",
+  "name": "<NAME>"
 }

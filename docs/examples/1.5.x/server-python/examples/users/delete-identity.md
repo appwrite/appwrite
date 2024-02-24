@@ -8,5 +8,5 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 users = Users(client)
 
 result = users.delete_identity(
-    identity_id = '[IDENTITY_ID]'
+    identity_id = '<IDENTITY_ID>'
 )

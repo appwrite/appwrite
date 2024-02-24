@@ -8,8 +8,8 @@ const client = new Client()
 const storage = new Storage(client);
 
 const result = storage.getFilePreview(
-    '[BUCKET_ID]', // bucketId
-    '[FILE_ID]', // fileId
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
     0, // width (optional)
     0, // height (optional)
     ImageGravity.Center, // gravity (optional)

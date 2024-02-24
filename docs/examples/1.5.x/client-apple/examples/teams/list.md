@@ -8,6 +8,6 @@ let teams = Teams(client)
 
 let teamList = try await teams.list(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

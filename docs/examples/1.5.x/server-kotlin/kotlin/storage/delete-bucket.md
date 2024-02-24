@@ -10,5 +10,5 @@ val client = Client()
 val storage = Storage(client)
 
 val response = storage.deleteBucket(
-    bucketId = "[BUCKET_ID]"
+    bucketId = "<BUCKET_ID>"
 )

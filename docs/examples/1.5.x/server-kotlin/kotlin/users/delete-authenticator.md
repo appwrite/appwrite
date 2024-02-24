@@ -11,7 +11,7 @@ val client = Client()
 val users = Users(client)
 
 val response = users.deleteAuthenticator(
-    userId = "[USER_ID]",
+    userId = "<USER_ID>",
     type =  AuthenticatorType.TOTP,
-    otp = "[OTP]"
+    otp = "<OTP>"
 )

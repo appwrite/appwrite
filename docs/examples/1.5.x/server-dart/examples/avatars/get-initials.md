@@ -8,7 +8,7 @@ Client client = Client()
 Avatars avatars = Avatars(client);
 
 Future result = avatars.getInitials(
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
   width: 0, // (optional)
   height: 0, // (optional)
   background: '', // (optional)

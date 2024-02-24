@@ -7,9 +7,9 @@ const client = new Client()
 const vcs = new Vcs(client);
 
 const result = await vcs.createRepositoryDetection(
-    '[INSTALLATION_ID]', // installationId
-    '[PROVIDER_REPOSITORY_ID]', // providerRepositoryId
-    '[PROVIDER_ROOT_DIRECTORY]' // providerRootDirectory (optional)
+    '<INSTALLATION_ID>', // installationId
+    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId
+    '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
 );
 
 console.log(response);

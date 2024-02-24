@@ -10,10 +10,10 @@ client = Client.new
 functions = Functions.new(client)
 
 response = functions.create_execution(
-    function_id: '[FUNCTION_ID]',
-    body: '[BODY]', # optional
+    function_id: '<FUNCTION_ID>',
+    body: '<BODY>', # optional
     async: false, # optional
-    path: '[PATH]', # optional
+    path: '<PATH>', # optional
     method: ExecutionMethod::GET, # optional
     headers: {} # optional
 )

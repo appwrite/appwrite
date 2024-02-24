@@ -10,8 +10,8 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_sms(
-    message_id: '[MESSAGE_ID]',
-    content: '[CONTENT]',
+    message_id: '<MESSAGE_ID>',
+    content: '<CONTENT>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional

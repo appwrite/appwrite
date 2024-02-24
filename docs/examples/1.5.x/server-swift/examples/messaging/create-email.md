@@ -8,9 +8,9 @@ let client = Client()
 let messaging = Messaging(client)
 
 let message = try await messaging.createEmail(
-    messageId: "[MESSAGE_ID]",
-    subject: "[SUBJECT]",
-    content: "[CONTENT]",
+    messageId: "<MESSAGE_ID>",
+    subject: "<SUBJECT>",
+    content: "<CONTENT>",
     topics: [], // optional
     users: [], // optional
     targets: [], // optional

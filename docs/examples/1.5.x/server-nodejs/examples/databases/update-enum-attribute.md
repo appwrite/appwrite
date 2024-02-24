@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.updateEnumAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     [], // elements
     false, // required
-    '[DEFAULT]' // default
+    '<DEFAULT>' // default
 );

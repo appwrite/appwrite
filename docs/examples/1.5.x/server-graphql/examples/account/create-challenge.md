@@ -1,6 +1,6 @@
 mutation {
     accountCreateChallenge(
-        provider: "totp"
+        factor: "totp"
     ) {
         _id
         _createdAt

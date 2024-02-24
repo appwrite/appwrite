@@ -8,9 +8,9 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.createBuild(
-  functionId: '[FUNCTION_ID]',
-  deploymentId: '[DEPLOYMENT_ID]',
-  buildId: '[BUILD_ID]',
+  functionId: '<FUNCTION_ID>',
+  deploymentId: '<DEPLOYMENT_ID>',
+  buildId: '<BUILD_ID>',
 );
 
 result.then((response) {

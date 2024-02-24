@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.listPlatforms(
-    '[PROJECT_ID]' // projectId
+    '<PROJECT_ID>' // projectId
 );
 
 console.log(response);

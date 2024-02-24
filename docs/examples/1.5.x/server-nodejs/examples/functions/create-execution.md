@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.createExecution(
-    '[FUNCTION_ID]', // functionId
-    '[BODY]', // body (optional)
+    '<FUNCTION_ID>', // functionId
+    '<BODY>', // body (optional)
     false, // async (optional)
-    '[PATH]', // path (optional)
+    '<PATH>', // path (optional)
     sdk.ExecutionMethod.GET, // method (optional)
     {} // headers (optional)
 );

@@ -7,8 +7,8 @@ Client client = Client()
 Teams teams = Teams(client);
 
 Future result = teams.updateMembership(
-  teamId: '[TEAM_ID]',
-  membershipId: '[MEMBERSHIP_ID]',
+  teamId: '<TEAM_ID>',
+  membershipId: '<MEMBERSHIP_ID>',
   roles: [],
 );
 

@@ -11,6 +11,6 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 LogList result = await messaging.ListSubscriberLogs(
-    subscriberId: "[SUBSCRIBER_ID]",
+    subscriberId: "<SUBSCRIBER_ID>",
     queries: new List<string>() // optional
 );

@@ -9,7 +9,7 @@ client = Client.new
 account = Account.new(client)
 
 response = account.create_email_token(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     email: 'email@example.com',
     phrase: false # optional
 )

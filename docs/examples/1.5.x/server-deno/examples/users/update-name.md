@@ -8,8 +8,8 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.updateName(
-    '[USER_ID]', // userId
-    '[NAME]' // name
+    '<USER_ID>', // userId
+    '<NAME>' // name
 );
 
 console.log(response);

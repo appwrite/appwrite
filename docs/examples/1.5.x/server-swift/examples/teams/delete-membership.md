@@ -8,7 +8,7 @@ let client = Client()
 let teams = Teams(client)
 
 let result = try await teams.deleteMembership(
-    teamId: "[TEAM_ID]",
-    membershipId: "[MEMBERSHIP_ID]"
+    teamId: "<TEAM_ID>",
+    membershipId: "<MEMBERSHIP_ID>"
 )
 

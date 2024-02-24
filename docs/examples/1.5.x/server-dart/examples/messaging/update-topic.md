@@ -8,8 +8,9 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.updateTopic(
-  topicId: '[TOPIC_ID]',
-  name: '[NAME]', // (optional)
+  topicId: '<TOPIC_ID>',
+  name: '<NAME>', // (optional)
+  subscribe: ["any"], // (optional)
 );
 
 result.then((response) {

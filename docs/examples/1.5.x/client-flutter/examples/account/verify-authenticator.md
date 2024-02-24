@@ -8,7 +8,7 @@ Account account = Account(client);
 
 Future result = account.verifyAuthenticator(
   type: AuthenticatorType.totp,
-  otp: '[OTP]',
+  otp: '<OTP>',
 );
 
 result.then((response) {

@@ -8,8 +8,8 @@ Storage storage = Storage(client);
 
 // Downloading file
 Future result = storage.getFilePreview(
-  bucketId: '[BUCKET_ID]',
-  fileId: '[FILE_ID]',
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
   width: 0, // (optional)
   height: 0, // (optional)
   gravity: ImageGravity.center, // (optional)
@@ -31,8 +31,8 @@ Future result = storage.getFilePreview(
 // Displaying image preview
 FutureBuilder(
   future: storage.getFilePreview(
-  bucketId:'[BUCKET_ID]' ,
-  fileId:'[FILE_ID]' ,
+  bucketId:'<BUCKET_ID>' ,
+  fileId:'<FILE_ID>' ,
   width:0 , // (optional)
   height:0 , // (optional)
   gravity: ImageGravity.center.value, // (optional)

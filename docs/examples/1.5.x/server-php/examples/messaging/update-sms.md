@@ -11,11 +11,11 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateSms(
-    messageId: '[MESSAGE_ID]',
+    messageId: '<MESSAGE_ID>',
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
-    content: '[CONTENT]', // optional
+    content: '<CONTENT>', // optional
     status: MessageStatus::DRAFT(), // optional
     scheduledAt: '' // optional
 );

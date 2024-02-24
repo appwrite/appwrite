@@ -7,11 +7,11 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.updateTarget(
-    '[USER_ID]', // userId
-    '[TARGET_ID]', // targetId
-    '[IDENTIFIER]', // identifier (optional)
-    '[PROVIDER_ID]', // providerId (optional)
-    '[NAME]' // name (optional)
+    '<USER_ID>', // userId
+    '<TARGET_ID>', // targetId
+    '<IDENTIFIER>', // identifier (optional)
+    '<PROVIDER_ID>', // providerId (optional)
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

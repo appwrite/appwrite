@@ -7,7 +7,7 @@ let client = Client()
 let account = Account(client)
 
 let session = try await account.updateMagicURLSession(
-    userId: "[USER_ID]",
-    secret: "[SECRET]"
+    userId: "<USER_ID>",
+    secret: "<SECRET>"
 )
 

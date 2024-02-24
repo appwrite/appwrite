@@ -1,7 +1,7 @@
 query {
     usersList(
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         users {

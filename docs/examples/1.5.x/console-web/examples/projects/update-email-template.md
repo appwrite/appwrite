@@ -7,12 +7,12 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateEmailTemplate(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     EmailTemplateType.Verification, // type
     EmailTemplateLocale.Af, // locale
-    '[SUBJECT]', // subject
-    '[MESSAGE]', // message
-    '[SENDER_NAME]', // senderName (optional)
+    '<SUBJECT>', // subject
+    '<MESSAGE>', // message
+    '<SENDER_NAME>', // senderName (optional)
     'email@example.com', // senderEmail (optional)
     'email@example.com' // replyTo (optional)
 );

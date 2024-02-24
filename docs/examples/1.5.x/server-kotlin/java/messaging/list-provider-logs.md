@@ -10,7 +10,7 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listProviderLogs(
-    "[PROVIDER_ID]", // providerId
+    "<PROVIDER_ID>", // providerId
     listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

@@ -11,10 +11,10 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createTextmagicProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
     from: '+12065550100', // optional
-    username: '[USERNAME]', // optional
-    apiKey: '[API_KEY]', // optional
+    username: '<USERNAME>', // optional
+    apiKey: '<API_KEY>', // optional
     enabled: false // optional
 );

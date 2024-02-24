@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let user = try await users.updateName(
-    userId: "[USER_ID]",
-    name: "[NAME]"
+    userId: "<USER_ID>",
+    name: "<NAME>"
 )
 

@@ -1,7 +1,7 @@
 mutation {
     messagingCreateTopic(
-        topicId: "[TOPIC_ID]",
-        name: "[NAME]",
+        topicId: "<TOPIC_ID>",
+        name: "<NAME>",
         subscribe: ["any"]
     ) {
         _id

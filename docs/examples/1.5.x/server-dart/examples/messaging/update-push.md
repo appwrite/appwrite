@@ -8,19 +8,19 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.updatePush(
-  messageId: '[MESSAGE_ID]',
+  messageId: '<MESSAGE_ID>',
   topics: [], // (optional)
   users: [], // (optional)
   targets: [], // (optional)
-  title: '[TITLE]', // (optional)
-  body: '[BODY]', // (optional)
+  title: '<TITLE>', // (optional)
+  body: '<BODY>', // (optional)
   data: {}, // (optional)
-  action: '[ACTION]', // (optional)
+  action: '<ACTION>', // (optional)
   image: '[ID1:ID2]', // (optional)
-  icon: '[ICON]', // (optional)
-  sound: '[SOUND]', // (optional)
-  color: '[COLOR]', // (optional)
-  tag: '[TAG]', // (optional)
+  icon: '<ICON>', // (optional)
+  sound: '<SOUND>', // (optional)
+  color: '<COLOR>', // (optional)
+  tag: '<TAG>', // (optional)
   badge: 0, // (optional)
   status:  MessageStatus.draft, // (optional)
   scheduledAt: '', // (optional)

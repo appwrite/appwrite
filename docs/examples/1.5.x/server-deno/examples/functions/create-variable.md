@@ -8,9 +8,9 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.createVariable(
-    '[FUNCTION_ID]', // functionId
-    '[KEY]', // key
-    '[VALUE]' // value
+    '<FUNCTION_ID>', // functionId
+    '<KEY>', // key
+    '<VALUE>' // value
 );
 
 console.log(response);

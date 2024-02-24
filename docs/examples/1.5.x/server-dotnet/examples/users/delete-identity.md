@@ -11,5 +11,5 @@ Client client = new Client()
 Users users = new Users(client);
 
 await users.DeleteIdentity(
-    identityId: "[IDENTITY_ID]"
+    identityId: "<IDENTITY_ID>"
 );

@@ -1,4 +1,4 @@
 appwrite teams listMemberships \
-        --teamId [TEAM_ID] \
+        --teamId <TEAM_ID> \
 
 

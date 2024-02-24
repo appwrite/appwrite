@@ -7,8 +7,8 @@ let client = Client()
 let teams = Teams(client)
 
 let membershipList = try await teams.listMemberships(
-    teamId: "[TEAM_ID]",
+    teamId: "<TEAM_ID>",
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

@@ -1,8 +1,8 @@
 query {
     teamsListMemberships(
-        teamId: "[TEAM_ID]",
+        teamId: "<TEAM_ID>",
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         memberships {

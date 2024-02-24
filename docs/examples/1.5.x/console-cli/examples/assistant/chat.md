@@ -1,2 +1,2 @@
 appwrite assistant chat \
-        --prompt [PROMPT]
+        --prompt <PROMPT>

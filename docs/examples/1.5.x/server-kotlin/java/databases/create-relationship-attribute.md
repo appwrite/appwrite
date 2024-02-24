@@ -11,9 +11,9 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createRelationshipAttribute(
-    "[DATABASE_ID]", // databaseId
-    "[COLLECTION_ID]", // collectionId
-    "[RELATED_COLLECTION_ID]", // relatedCollectionId
+    "<DATABASE_ID>", // databaseId
+    "<COLLECTION_ID>", // collectionId
+    "<RELATED_COLLECTION_ID>", // relatedCollectionId
     RelationshipType.ONE_TO_ONE, // type
     false, // twoWay (optional)
     "", // key (optional)

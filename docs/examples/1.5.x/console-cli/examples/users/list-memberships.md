@@ -1,2 +1,2 @@
 appwrite users listMemberships \
-        --userId [USER_ID]
+        --userId <USER_ID>

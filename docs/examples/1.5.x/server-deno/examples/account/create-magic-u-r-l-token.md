@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.createMagicURLToken(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'https://example.com', // url (optional)
     false // phrase (optional)

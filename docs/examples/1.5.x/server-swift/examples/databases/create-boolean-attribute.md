@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeBoolean = try await databases.createBooleanAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     default: false, // optional

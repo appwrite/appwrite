@@ -10,7 +10,7 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.getMessage(
-    "[MESSAGE_ID]", // messageId
+    "<MESSAGE_ID>", // messageId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

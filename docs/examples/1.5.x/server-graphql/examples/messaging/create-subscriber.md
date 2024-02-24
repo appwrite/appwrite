@@ -1,8 +1,8 @@
 mutation {
     messagingCreateSubscriber(
-        topicId: "[TOPIC_ID]",
-        subscriberId: "[SUBSCRIBER_ID]",
-        targetId: "[TARGET_ID]"
+        topicId: "<TOPIC_ID>",
+        subscriberId: "<SUBSCRIBER_ID>",
+        targetId: "<TARGET_ID>"
     ) {
         _id
         _createdAt

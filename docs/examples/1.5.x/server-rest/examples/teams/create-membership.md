@@ -9,9 +9,9 @@ X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
   "email": "email@example.com",
-  "userId": "[USER_ID]",
+  "userId": "<USER_ID>",
   "phone": "+12065550100",
   "roles": [],
   "url": "https://example.com",
-  "name": "[NAME]"
+  "name": "<NAME>"
 }

@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let token = try await users.createToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     length: 4, // optional
     expire: 60 // optional
 )

@@ -1,2 +1,2 @@
 appwrite users listFactors \
-        --userId [USER_ID]
+        --userId <USER_ID>

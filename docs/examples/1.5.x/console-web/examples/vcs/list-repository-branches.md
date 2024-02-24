@@ -7,8 +7,8 @@ const client = new Client()
 const vcs = new Vcs(client);
 
 const result = await vcs.listRepositoryBranches(
-    '[INSTALLATION_ID]', // installationId
-    '[PROVIDER_REPOSITORY_ID]' // providerRepositoryId
+    '<INSTALLATION_ID>', // installationId
+    '<PROVIDER_REPOSITORY_ID>' // providerRepositoryId
 );
 
 console.log(response);

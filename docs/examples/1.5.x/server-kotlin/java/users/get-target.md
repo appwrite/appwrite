@@ -10,8 +10,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.getTarget(
-    "[USER_ID]", // userId
-    "[TARGET_ID]", // targetId
+    "<USER_ID>", // userId
+    "<TARGET_ID>", // targetId
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

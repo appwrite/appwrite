@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let target = try await users.getTarget(
-    userId: "[USER_ID]",
-    targetId: "[TARGET_ID]"
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>"
 )
 

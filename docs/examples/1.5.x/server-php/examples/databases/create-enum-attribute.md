@@ -11,11 +11,11 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->createEnumAttribute(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
     key: '',
     elements: [],
     required: false,
-    default: '[DEFAULT]', // optional
+    default: '<DEFAULT>', // optional
     array: false // optional
 );

@@ -1,7 +1,7 @@
 mutation {
     usersUpdateName(
-        userId: "[USER_ID]",
-        name: "[NAME]"
+        userId: "<USER_ID>",
+        name: "<NAME>"
     ) {
         _id
         _createdAt

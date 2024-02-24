@@ -7,11 +7,11 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.updateSms(
-    '[MESSAGE_ID]', // messageId
+    '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
-    '[CONTENT]', // content (optional)
+    '<CONTENT>', // content (optional)
     MessageStatus.Draft, // status (optional)
     '' // scheduledAt (optional)
 );

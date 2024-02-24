@@ -10,11 +10,11 @@ client = Client.new
 functions = Functions.new(client)
 
 response = functions.create_deployment(
-    function_id: '[FUNCTION_ID]',
+    function_id: '<FUNCTION_ID>',
     code: InputFile.from_path('dir/file.png'),
     activate: false,
-    entrypoint: '[ENTRYPOINT]', # optional
-    commands: '[COMMANDS]' # optional
+    entrypoint: '<ENTRYPOINT>', # optional
+    commands: '<COMMANDS>' # optional
 )
 
 puts response.inspect

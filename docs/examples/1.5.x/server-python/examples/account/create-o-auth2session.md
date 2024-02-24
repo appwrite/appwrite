@@ -11,6 +11,5 @@ result = account.create_o_auth2_session(
     provider = OAuthProvider.AMAZON,
     success = 'https://example.com', # optional
     failure = 'https://example.com', # optional
-    token = False, # optional
     scopes = [] # optional
 )

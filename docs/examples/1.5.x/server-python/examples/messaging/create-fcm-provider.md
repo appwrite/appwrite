@@ -8,8 +8,8 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 messaging = Messaging(client)
 
 result = messaging.create_fcm_provider(
-    provider_id = '[PROVIDER_ID]',
-    name = '[NAME]',
+    provider_id = '<PROVIDER_ID>',
+    name = '<NAME>',
     service_account_json = {}, # optional
     enabled = False # optional
 )

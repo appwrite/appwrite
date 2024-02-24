@@ -8,7 +8,7 @@ client.set_session('') # The user session to authenticate with
 teams = Teams(client)
 
 result = teams.list_memberships(
-    team_id = '[TEAM_ID]',
+    team_id = '<TEAM_ID>',
     queries = [], # optional
-    search = '[SEARCH]' # optional
+    search = '<SEARCH>' # optional
 )

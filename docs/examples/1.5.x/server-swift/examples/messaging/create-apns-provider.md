@@ -8,12 +8,13 @@ let client = Client()
 let messaging = Messaging(client)
 
 let provider = try await messaging.createApnsProvider(
-    providerId: "[PROVIDER_ID]",
-    name: "[NAME]",
-    authKey: "[AUTH_KEY]", // optional
-    authKeyId: "[AUTH_KEY_ID]", // optional
-    teamId: "[TEAM_ID]", // optional
-    bundleId: "[BUNDLE_ID]", // optional
+    providerId: "<PROVIDER_ID>",
+    name: "<NAME>",
+    authKey: "<AUTH_KEY>", // optional
+    authKeyId: "<AUTH_KEY_ID>", // optional
+    teamId: "<TEAM_ID>", // optional
+    bundleId: "<BUNDLE_ID>", // optional
+    sandbox: false, // optional
     enabled: false // optional
 )
 

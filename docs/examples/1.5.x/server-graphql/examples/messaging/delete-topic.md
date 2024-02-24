@@ -1,6 +1,6 @@
 mutation {
     messagingDeleteTopic(
-        topicId: "[TOPIC_ID]"
+        topicId: "<TOPIC_ID>"
     ) {
         status
     }

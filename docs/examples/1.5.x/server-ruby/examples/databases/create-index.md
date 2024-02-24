@@ -11,8 +11,8 @@ client = Client.new
 databases = Databases.new(client)
 
 response = databases.create_index(
-    database_id: '[DATABASE_ID]',
-    collection_id: '[COLLECTION_ID]',
+    database_id: '<DATABASE_ID>',
+    collection_id: '<COLLECTION_ID>',
     key: '',
     type: IndexType::KEY,
     attributes: [],

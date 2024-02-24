@@ -7,9 +7,9 @@ X-Appwrite-Session:
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "body": "[BODY]",
+  "body": "<BODY>",
   "async": false,
-  "path": "[PATH]",
+  "path": "<PATH>",
   "method": "GET",
   "headers": {}
 }

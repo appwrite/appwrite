@@ -7,8 +7,8 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.updateMagicURLSession(
-    '[USER_ID]', // userId
-    '[SECRET]' // secret
+    '<USER_ID>', // userId
+    '<SECRET>' // secret
 );
 
 console.log(response);

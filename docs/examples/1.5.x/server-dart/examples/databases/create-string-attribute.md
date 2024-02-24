@@ -8,12 +8,12 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.createStringAttribute(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
   key: '',
   size: 1,
   xrequired: false,
-  xdefault: '[DEFAULT]', // (optional)
+  xdefault: '<DEFAULT>', // (optional)
   array: false, // (optional)
   encrypt: false, // (optional)
 );

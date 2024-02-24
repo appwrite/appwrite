@@ -11,10 +11,10 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateMsg91Provider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]', // optional
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
     enabled: false, // optional
-    senderId: '[SENDER_ID]', // optional
-    authKey: '[AUTH_KEY]', // optional
-    from: '[FROM]' // optional
+    senderId: '<SENDER_ID>', // optional
+    authKey: '<AUTH_KEY>', // optional
+    from: '<FROM>' // optional
 );

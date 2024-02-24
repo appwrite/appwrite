@@ -8,6 +8,6 @@ let client = Client()
 let users = Users(client)
 
 let mfaFactors = try await users.listFactors(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 )
 

@@ -12,6 +12,6 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 byte[] result = await storage.GetFileView(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]"
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>"
 );

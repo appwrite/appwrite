@@ -12,8 +12,8 @@ $client = (new Client())
 $storage = new Storage($client);
 
 $result = $storage->createFile(
-    bucketId: '[BUCKET_ID]',
-    fileId: '[FILE_ID]',
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
     file: InputFile::withPath('file.png'),
     permissions: ["read("any")"] // optional
 );

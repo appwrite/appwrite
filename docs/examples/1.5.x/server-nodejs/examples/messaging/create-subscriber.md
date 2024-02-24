@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.createSubscriber(
-    '[TOPIC_ID]', // topicId
-    '[SUBSCRIBER_ID]', // subscriberId
-    '[TARGET_ID]' // targetId
+    '<TOPIC_ID>', // topicId
+    '<SUBSCRIBER_ID>', // subscriberId
+    '<TARGET_ID>' // targetId
 );

@@ -10,12 +10,12 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.updateEmail(
-    messageId = "[MESSAGE_ID]",
+    messageId = "<MESSAGE_ID>",
     topics = listOf(), // optional
     users = listOf(), // optional
     targets = listOf(), // optional
-    subject = "[SUBJECT]", // optional
-    content = "[CONTENT]", // optional
+    subject = "<SUBJECT>", // optional
+    content = "<CONTENT>", // optional
     status = "draft", // optional
     html = false, // optional
     cc = listOf(), // optional

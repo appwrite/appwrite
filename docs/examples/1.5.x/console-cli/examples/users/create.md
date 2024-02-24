@@ -1,5 +1,5 @@
 appwrite users create \
-        --userId [USER_ID] \
+        --userId <USER_ID> \
 
 
 

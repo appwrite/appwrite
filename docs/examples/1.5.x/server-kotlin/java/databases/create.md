@@ -10,8 +10,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.create(
-    "[DATABASE_ID]", // databaseId
-    "[NAME]", // name
+    "<DATABASE_ID>", // databaseId
+    "<NAME>", // name
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

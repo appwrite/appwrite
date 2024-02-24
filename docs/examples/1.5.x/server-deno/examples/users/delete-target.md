@@ -8,8 +8,8 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.deleteTarget(
-    '[USER_ID]', // userId
-    '[TARGET_ID]' // targetId
+    '<USER_ID>', // userId
+    '<TARGET_ID>' // targetId
 );
 
 console.log(response);

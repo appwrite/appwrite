@@ -12,6 +12,6 @@ Client client = new Client()
 Users users = new Users(client);
 
 User result = await users.UpdateEmailVerification(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     emailVerification: false
 );

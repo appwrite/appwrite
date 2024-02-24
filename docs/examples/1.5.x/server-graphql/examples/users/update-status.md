@@ -1,6 +1,6 @@
 mutation {
     usersUpdateStatus(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         status: false
     ) {
         _id

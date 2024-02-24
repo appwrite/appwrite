@@ -9,12 +9,12 @@ Content-Length: *Length of your entity body in bytes*
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="entrypoint"
 
-"[ENTRYPOINT]"
+"<ENTRYPOINT>"
 
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="commands"
 
-"[COMMANDS]"
+"<COMMANDS>"
 
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="code"

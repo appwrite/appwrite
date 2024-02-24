@@ -9,7 +9,7 @@ Storage storage = Storage(client);
 
 Future result = storage.listBuckets(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

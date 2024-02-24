@@ -7,10 +7,10 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.create(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   email: 'email@example.com',
   password: '',
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
 );
 
 result.then((response) {

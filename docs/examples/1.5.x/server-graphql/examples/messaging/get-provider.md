@@ -1,6 +1,6 @@
 query {
     messagingGetProvider(
-        providerId: "[PROVIDER_ID]"
+        providerId: "<PROVIDER_ID>"
     ) {
         _id
         _createdAt

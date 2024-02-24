@@ -10,5 +10,5 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.deleteTopic(
-    topicId = "[TOPIC_ID]"
+    topicId = "<TOPIC_ID>"
 )

@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const storage = new sdk.Storage(client);
 
 const response = await storage.getFileDownload(
-    '[BUCKET_ID]', // bucketId
-    '[FILE_ID]' // fileId
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>' // fileId
 );

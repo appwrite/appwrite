@@ -8,9 +8,9 @@ Client client = Client()
 Teams teams = Teams(client);
 
 Future result = teams.listMemberships(
-  teamId: '[TEAM_ID]',
+  teamId: '<TEAM_ID>',
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

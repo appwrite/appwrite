@@ -8,5 +8,5 @@ client.set_session('') # The user session to authenticate with
 teams = Teams(client)
 
 result = teams.get_prefs(
-    team_id = '[TEAM_ID]'
+    team_id = '<TEAM_ID>'
 )

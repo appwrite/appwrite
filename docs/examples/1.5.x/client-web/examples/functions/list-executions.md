@@ -7,9 +7,9 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.listExecutions(
-    '[FUNCTION_ID]', // functionId
+    '<FUNCTION_ID>', // functionId
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

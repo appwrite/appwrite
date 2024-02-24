@@ -8,11 +8,11 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updateSms(
-    '[MESSAGE_ID]', // messageId
+    '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
-    '[CONTENT]', // content (optional)
+    '<CONTENT>', // content (optional)
     sdk.MessageStatus.Draft, // status (optional)
     '' // scheduledAt (optional)
 );

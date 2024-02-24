@@ -8,7 +8,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.updateName(
-  name: '[NAME]',
+  name: '<NAME>',
 );
 
 result.then((response) {

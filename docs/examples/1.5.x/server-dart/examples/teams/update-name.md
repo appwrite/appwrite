@@ -8,8 +8,8 @@ Client client = Client()
 Teams teams = Teams(client);
 
 Future result = teams.updateName(
-  teamId: '[TEAM_ID]',
-  name: '[NAME]',
+  teamId: '<TEAM_ID>',
+  name: '<NAME>',
 );
 
 result.then((response) {

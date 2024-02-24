@@ -10,9 +10,9 @@ client = Client.new
 functions = Functions.new(client)
 
 response = functions.create_variable(
-    function_id: '[FUNCTION_ID]',
-    key: '[KEY]',
-    value: '[VALUE]'
+    function_id: '<FUNCTION_ID>',
+    key: '<KEY>',
+    value: '<VALUE>'
 )
 
 puts response.inspect

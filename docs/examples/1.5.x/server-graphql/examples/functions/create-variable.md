@@ -1,8 +1,8 @@
 mutation {
     functionsCreateVariable(
-        functionId: "[FUNCTION_ID]",
-        key: "[KEY]",
-        value: "[VALUE]"
+        functionId: "<FUNCTION_ID>",
+        key: "<KEY>",
+        value: "<VALUE>"
     ) {
         _id
         _createdAt

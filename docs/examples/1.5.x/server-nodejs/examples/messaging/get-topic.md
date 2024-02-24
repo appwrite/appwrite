@@ -8,5 +8,5 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.getTopic(
-    '[TOPIC_ID]' // topicId
+    '<TOPIC_ID>' // topicId
 );

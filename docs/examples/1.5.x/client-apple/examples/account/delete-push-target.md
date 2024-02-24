@@ -7,6 +7,6 @@ let client = Client()
 let account = Account(client)
 
 let result = try await account.deletePushTarget(
-    targetId: "[TARGET_ID]"
+    targetId: "<TARGET_ID>"
 )
 

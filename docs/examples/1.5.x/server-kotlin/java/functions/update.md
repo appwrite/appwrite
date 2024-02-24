@@ -10,8 +10,8 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.update(
-    "[FUNCTION_ID]", // functionId
-    "[NAME]", // name
+    "<FUNCTION_ID>", // functionId
+    "<NAME>", // name
     .NODE145, // runtime (optional)
     listOf("any"), // execute (optional)
     listOf(), // events (optional)
@@ -19,13 +19,13 @@ functions.update(
     1, // timeout (optional)
     false, // enabled (optional)
     false, // logging (optional)
-    "[ENTRYPOINT]", // entrypoint (optional)
-    "[COMMANDS]", // commands (optional)
-    "[INSTALLATION_ID]", // installationId (optional)
-    "[PROVIDER_REPOSITORY_ID]", // providerRepositoryId (optional)
-    "[PROVIDER_BRANCH]", // providerBranch (optional)
+    "<ENTRYPOINT>", // entrypoint (optional)
+    "<COMMANDS>", // commands (optional)
+    "<INSTALLATION_ID>", // installationId (optional)
+    "<PROVIDER_REPOSITORY_ID>", // providerRepositoryId (optional)
+    "<PROVIDER_BRANCH>", // providerBranch (optional)
     false, // providerSilentMode (optional)
-    "[PROVIDER_ROOT_DIRECTORY]", // providerRootDirectory (optional)
+    "<PROVIDER_ROOT_DIRECTORY>", // providerRootDirectory (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

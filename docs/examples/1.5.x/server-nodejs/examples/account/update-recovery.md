@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const response = await account.updateRecovery(
-    '[USER_ID]', // userId
-    '[SECRET]', // secret
+    '<USER_ID>', // userId
+    '<SECRET>', // secret
     '' // password
 );

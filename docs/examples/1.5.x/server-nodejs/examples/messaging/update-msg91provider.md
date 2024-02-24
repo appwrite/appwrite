@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updateMsg91Provider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name (optional)
     false, // enabled (optional)
-    '[SENDER_ID]', // senderId (optional)
-    '[AUTH_KEY]', // authKey (optional)
-    '[FROM]' // from (optional)
+    '<SENDER_ID>', // senderId (optional)
+    '<AUTH_KEY>', // authKey (optional)
+    '<FROM>' // from (optional)
 );

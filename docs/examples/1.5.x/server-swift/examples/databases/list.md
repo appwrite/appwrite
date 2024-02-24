@@ -9,6 +9,6 @@ let databases = Databases(client)
 
 let databaseList = try await databases.list(
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

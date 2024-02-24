@@ -9,5 +9,5 @@ const teams = new sdk.Teams(client);
 
 const response = await teams.list(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );

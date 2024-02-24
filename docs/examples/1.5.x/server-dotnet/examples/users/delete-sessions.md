@@ -11,5 +11,5 @@ Client client = new Client()
 Users users = new Users(client);
 
 await users.DeleteSessions(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 );

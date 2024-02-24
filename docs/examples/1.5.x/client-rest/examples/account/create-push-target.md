@@ -6,7 +6,7 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Session: 
 
 {
-  "targetId": "[TARGET_ID]",
-  "identifier": "[IDENTIFIER]",
-  "providerId": "[PROVIDER_ID]"
+  "targetId": "<TARGET_ID>",
+  "identifier": "<IDENTIFIER>",
+  "providerId": "<PROVIDER_ID>"
 }

@@ -1,7 +1,7 @@
 mutation {
     teamsUpdateName(
-        teamId: "[TEAM_ID]",
-        name: "[NAME]"
+        teamId: "<TEAM_ID>",
+        name: "<NAME>"
     ) {
         _id
         _createdAt

@@ -1,8 +1,8 @@
 mutation {
     usersDeleteAuthenticator(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         type: "totp",
-        otp: "[OTP]"
+        otp: "<OTP>"
     ) {
         _id
         _createdAt

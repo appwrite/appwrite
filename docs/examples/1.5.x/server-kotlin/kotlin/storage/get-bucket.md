@@ -10,5 +10,5 @@ val client = Client()
 val storage = Storage(client)
 
 val response = storage.getBucket(
-    bucketId = "[BUCKET_ID]"
+    bucketId = "<BUCKET_ID>"
 )

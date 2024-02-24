@@ -10,8 +10,8 @@ client = Client.new
 teams = Teams.new(client)
 
 response = teams.create(
-    team_id: '[TEAM_ID]',
-    name: '[NAME]',
+    team_id: '<TEAM_ID>',
+    name: '<NAME>',
     roles: [] # optional
 )
 

@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateAuthStatus(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     AuthMethod.EmailPassword, // method
     false // status
 );

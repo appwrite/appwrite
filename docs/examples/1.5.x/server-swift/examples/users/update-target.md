@@ -8,10 +8,10 @@ let client = Client()
 let users = Users(client)
 
 let target = try await users.updateTarget(
-    userId: "[USER_ID]",
-    targetId: "[TARGET_ID]",
-    identifier: "[IDENTIFIER]", // optional
-    providerId: "[PROVIDER_ID]", // optional
-    name: "[NAME]" // optional
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>",
+    identifier: "<IDENTIFIER>", // optional
+    providerId: "<PROVIDER_ID>", // optional
+    name: "<NAME>" // optional
 )
 

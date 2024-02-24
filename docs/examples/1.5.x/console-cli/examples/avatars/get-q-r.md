@@ -1,5 +1,5 @@
 appwrite avatars getQR \
-        --text [TEXT] \
+        --text <TEXT> \
 
 
 

@@ -7,7 +7,7 @@ let client = Client()
 let storage = Storage(client)
 
 let result = try await storage.deleteFile(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]"
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>"
 )
 

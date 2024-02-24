@@ -1,10 +1,10 @@
 mutation {
     messagingCreateTextmagicProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         from: "+12065550100",
-        username: "[USERNAME]",
-        apiKey: "[API_KEY]",
+        username: "<USERNAME>",
+        apiKey: "<API_KEY>",
         enabled: false
     ) {
         _id

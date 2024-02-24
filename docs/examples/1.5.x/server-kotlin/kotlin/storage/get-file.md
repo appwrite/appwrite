@@ -10,6 +10,6 @@ val client = Client()
 val storage = Storage(client)
 
 val response = storage.getFile(
-    bucketId = "[BUCKET_ID]",
-    fileId = "[FILE_ID]"
+    bucketId = "<BUCKET_ID>",
+    fileId = "<FILE_ID>"
 )

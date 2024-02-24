@@ -9,6 +9,6 @@ let account = Account(client)
 
 let user = try await account.verifyAuthenticator(
     type: .totp,
-    otp: "[OTP]"
+    otp: "<OTP>"
 )
 

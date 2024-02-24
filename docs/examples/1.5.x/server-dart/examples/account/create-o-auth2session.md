@@ -10,7 +10,6 @@ Future result = account.createOAuth2Session(
   provider:  OAuthProvider.amazon,
   success: 'https://example.com', // (optional)
   failure: 'https://example.com', // (optional)
-  token: false, // (optional)
   scopes: [], // (optional)
 );
 

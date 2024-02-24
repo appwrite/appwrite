@@ -8,6 +8,6 @@ client.set_session('') # The user session to authenticate with
 teams = Teams(client)
 
 result = teams.update_prefs(
-    team_id = '[TEAM_ID]',
+    team_id = '<TEAM_ID>',
     prefs = {}
 )

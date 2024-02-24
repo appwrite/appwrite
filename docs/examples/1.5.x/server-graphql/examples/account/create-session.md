@@ -1,7 +1,7 @@
 mutation {
     accountCreateSession(
-        userId: "[USER_ID]",
-        secret: "[SECRET]"
+        userId: "<USER_ID>",
+        secret: "<SECRET>"
     ) {
         _id
         _createdAt

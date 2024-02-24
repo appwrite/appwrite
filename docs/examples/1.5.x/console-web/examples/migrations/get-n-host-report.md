@@ -8,12 +8,12 @@ const migrations = new Migrations(client);
 
 const result = await migrations.getNHostReport(
     [], // resources
-    '[SUBDOMAIN]', // subdomain
-    '[REGION]', // region
-    '[ADMIN_SECRET]', // adminSecret
-    '[DATABASE]', // database
-    '[USERNAME]', // username
-    '[PASSWORD]', // password
+    '<SUBDOMAIN>', // subdomain
+    '<REGION>', // region
+    '<ADMIN_SECRET>', // adminSecret
+    '<DATABASE>', // database
+    '<USERNAME>', // username
+    '<PASSWORD>', // password
     null // port (optional)
 );
 

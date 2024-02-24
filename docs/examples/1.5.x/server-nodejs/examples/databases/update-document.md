@@ -8,9 +8,9 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.updateDocument(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[DOCUMENT_ID]', // documentId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<DOCUMENT_ID>', // documentId
     {}, // data (optional)
     ["read("any")"] // permissions (optional)
 );

@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.updateTelesignProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name (optional)
     false, // enabled (optional)
-    '[CUSTOMER_ID]', // customerId (optional)
-    '[API_KEY]', // apiKey (optional)
-    '[FROM]' // from (optional)
+    '<CUSTOMER_ID>', // customerId (optional)
+    '<API_KEY>', // apiKey (optional)
+    '<FROM>' // from (optional)
 );

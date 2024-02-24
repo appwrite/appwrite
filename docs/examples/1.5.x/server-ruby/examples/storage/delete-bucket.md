@@ -10,7 +10,7 @@ client = Client.new
 storage = Storage.new(client)
 
 response = storage.delete_bucket(
-    bucket_id: '[BUCKET_ID]'
+    bucket_id: '<BUCKET_ID>'
 )
 
 puts response.inspect

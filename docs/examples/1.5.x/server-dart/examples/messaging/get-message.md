@@ -8,7 +8,7 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.getMessage(
-  messageId: '[MESSAGE_ID]',
+  messageId: '<MESSAGE_ID>',
 );
 
 result.then((response) {

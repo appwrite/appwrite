@@ -8,8 +8,8 @@ let client = Client()
 let messaging = Messaging(client)
 
 let topic = try await messaging.createTopic(
-    topicId: "[TOPIC_ID]",
-    name: "[NAME]",
+    topicId: "<TOPIC_ID>",
+    name: "<NAME>",
     subscribe: ["any"] // optional
 )
 

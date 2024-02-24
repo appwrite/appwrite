@@ -11,5 +11,5 @@ Users users = new Users(client);
 
 UserList result = await users.List(
     queries: new List<string>(), // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 );

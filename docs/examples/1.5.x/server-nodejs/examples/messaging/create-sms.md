@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.createSms(
-    '[MESSAGE_ID]', // messageId
-    '[CONTENT]', // content
+    '<MESSAGE_ID>', // messageId
+    '<CONTENT>', // content
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)

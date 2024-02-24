@@ -8,5 +8,5 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.get(
-    '[DATABASE_ID]' // databaseId
+    '<DATABASE_ID>' // databaseId
 );

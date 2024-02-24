@@ -8,8 +8,8 @@ const client = new Client()
 const teams = new Teams(client);
 
 const response = await teams.create(
-    '[TEAM_ID]', // teamId
-    '[NAME]', // name
+    '<TEAM_ID>', // teamId
+    '<NAME>', // name
     [] // roles (optional)
 );
 

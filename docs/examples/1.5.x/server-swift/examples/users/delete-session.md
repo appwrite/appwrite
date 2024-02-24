@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let result = try await users.deleteSession(
-    userId: "[USER_ID]",
-    sessionId: "[SESSION_ID]"
+    userId: "<USER_ID>",
+    sessionId: "<SESSION_ID>"
 )
 

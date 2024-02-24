@@ -8,11 +8,11 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 messaging = Messaging(client)
 
 result = messaging.update_sms(
-    message_id = '[MESSAGE_ID]',
+    message_id = '<MESSAGE_ID>',
     topics = [], # optional
     users = [], # optional
     targets = [], # optional
-    content = '[CONTENT]', # optional
+    content = '<CONTENT>', # optional
     status = MessageStatus.DRAFT, # optional
     scheduled_at = '' # optional
 )

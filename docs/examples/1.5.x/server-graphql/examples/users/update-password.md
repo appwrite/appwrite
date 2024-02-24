@@ -1,6 +1,6 @@
 mutation {
     usersUpdatePassword(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         password: ""
     ) {
         _id

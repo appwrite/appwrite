@@ -7,7 +7,7 @@ X-Appwrite-Session:
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "teamId": "[TEAM_ID]",
-  "name": "[NAME]",
+  "teamId": "<TEAM_ID>",
+  "name": "<NAME>",
   "roles": []
 }

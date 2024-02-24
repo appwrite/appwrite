@@ -10,6 +10,6 @@ val client = Client()
 val functions = Functions(client)
 
 val result = functions.downloadDeployment(
-    functionId = "[FUNCTION_ID]",
-    deploymentId = "[DEPLOYMENT_ID]"
+    functionId = "<FUNCTION_ID>",
+    deploymentId = "<DEPLOYMENT_ID>"
 )

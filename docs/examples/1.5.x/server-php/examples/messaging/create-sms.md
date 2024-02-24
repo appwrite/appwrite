@@ -11,8 +11,8 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createSms(
-    messageId: '[MESSAGE_ID]',
-    content: '[CONTENT]',
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
     topics: [], // optional
     users: [], // optional
     targets: [], // optional

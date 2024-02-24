@@ -1,6 +1,6 @@
 query {
     usersGetPrefs(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         data
     }

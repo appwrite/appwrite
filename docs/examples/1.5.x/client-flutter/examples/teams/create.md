@@ -7,8 +7,8 @@ Client client = Client()
 Teams teams = Teams(client);
 
 Future result = teams.create(
-  teamId: '[TEAM_ID]',
-  name: '[NAME]',
+  teamId: '<TEAM_ID>',
+  name: '<NAME>',
   roles: [], // (optional)
 );
 

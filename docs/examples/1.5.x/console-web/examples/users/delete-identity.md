@@ -7,7 +7,7 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.deleteIdentity(
-    '[IDENTITY_ID]' // identityId
+    '<IDENTITY_ID>' // identityId
 );
 
 console.log(response);

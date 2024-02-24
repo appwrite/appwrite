@@ -1,4 +1,4 @@
 appwrite storage listFiles \
-        --bucketId [BUCKET_ID] \
+        --bucketId <BUCKET_ID> \
 
 

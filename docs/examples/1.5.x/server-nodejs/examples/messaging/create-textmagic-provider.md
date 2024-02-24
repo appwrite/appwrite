@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.createTextmagicProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name
     '+12065550100', // from (optional)
-    '[USERNAME]', // username (optional)
-    '[API_KEY]', // apiKey (optional)
+    '<USERNAME>', // username (optional)
+    '<API_KEY>', // apiKey (optional)
     false // enabled (optional)
 );

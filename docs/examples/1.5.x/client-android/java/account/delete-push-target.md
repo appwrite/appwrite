@@ -9,7 +9,7 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.deletePushTarget(
-    "[TARGET_ID]", // targetId 
+    "<TARGET_ID>", // targetId 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

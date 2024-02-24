@@ -12,8 +12,8 @@ Client client = new Client()
 Account account = new Account(client);
 
 User result = await account.Create(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     email: "email@example.com",
     password: "",
-    name: "[NAME]" // optional
+    name: "<NAME>" // optional
 );

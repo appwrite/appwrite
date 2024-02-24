@@ -7,6 +7,6 @@ X-Appwrite-Session:
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "challengeId": "[CHALLENGE_ID]",
-  "otp": "[OTP]"
+  "challengeId": "<CHALLENGE_ID>",
+  "otp": "<OTP>"
 }

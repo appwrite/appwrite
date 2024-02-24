@@ -7,6 +7,6 @@ let client = Client()
 let account = Account(client)
 
 let result = try await account.deleteSession(
-    sessionId: "[SESSION_ID]"
+    sessionId: "<SESSION_ID>"
 )
 

@@ -11,7 +11,7 @@ $client = (new Client())
 $teams = new Teams($client);
 
 $result = $teams->create(
-    teamId: '[TEAM_ID]',
-    name: '[NAME]',
+    teamId: '<TEAM_ID>',
+    name: '<NAME>',
     roles: [] // optional
 );

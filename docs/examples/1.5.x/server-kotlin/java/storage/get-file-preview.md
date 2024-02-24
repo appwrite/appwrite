@@ -10,8 +10,8 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 storage.getFilePreview(
-    "[BUCKET_ID]", // bucketId
-    "[FILE_ID]", // fileId
+    "<BUCKET_ID>", // bucketId
+    "<FILE_ID>", // fileId
     0, // width (optional)
     0, // height (optional)
     ImageGravity.CENTER, // gravity (optional)

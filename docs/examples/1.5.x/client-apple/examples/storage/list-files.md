@@ -7,8 +7,8 @@ let client = Client()
 let storage = Storage(client)
 
 let fileList = try await storage.listFiles(
-    bucketId: "[BUCKET_ID]",
+    bucketId: "<BUCKET_ID>",
     queries: [], // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 )
 

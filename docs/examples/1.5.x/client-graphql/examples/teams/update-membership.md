@@ -1,7 +1,7 @@
 mutation {
     teamsUpdateMembership(
-        teamId: "[TEAM_ID]",
-        membershipId: "[MEMBERSHIP_ID]",
+        teamId: "<TEAM_ID>",
+        membershipId: "<MEMBERSHIP_ID>",
         roles: []
     ) {
         _id

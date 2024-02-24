@@ -8,8 +8,8 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.getExecution(
-  functionId: '[FUNCTION_ID]',
-  executionId: '[EXECUTION_ID]',
+  functionId: '<FUNCTION_ID>',
+  executionId: '<EXECUTION_ID>',
 );
 
 result.then((response) {

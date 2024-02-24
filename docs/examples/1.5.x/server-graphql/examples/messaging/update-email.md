@@ -1,11 +1,11 @@
 mutation {
     messagingUpdateEmail(
-        messageId: "[MESSAGE_ID]",
+        messageId: "<MESSAGE_ID>",
         topics: [],
         users: [],
         targets: [],
-        subject: "[SUBJECT]",
-        content: "[CONTENT]",
+        subject: "<SUBJECT>",
+        content: "<CONTENT>",
         status: "draft",
         html: false,
         cc: [],

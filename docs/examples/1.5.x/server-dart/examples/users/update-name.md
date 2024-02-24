@@ -8,8 +8,8 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.updateName(
-  userId: '[USER_ID]',
-  name: '[NAME]',
+  userId: '<USER_ID>',
+  name: '<NAME>',
 );
 
 result.then((response) {

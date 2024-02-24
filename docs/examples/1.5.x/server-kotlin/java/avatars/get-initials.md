@@ -10,7 +10,7 @@ Client client = new Client()
 Avatars avatars = new Avatars(client);
 
 avatars.getInitials(
-    "[NAME]", // name (optional)
+    "<NAME>", // name (optional)
     0, // width (optional)
     0, // height (optional)
     "", // background (optional)

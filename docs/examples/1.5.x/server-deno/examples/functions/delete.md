@@ -8,7 +8,7 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.delete(
-    '[FUNCTION_ID]' // functionId
+    '<FUNCTION_ID>' // functionId
 );
 
 console.log(response);

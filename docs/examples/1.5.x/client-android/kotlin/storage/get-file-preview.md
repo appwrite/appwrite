@@ -9,8 +9,8 @@ val client = Client(context)
 val storage = Storage(client)
 
 val result =storage.getFilePreview(
-    bucketId = "[BUCKET_ID]", 
-    fileId = "[FILE_ID]", 
+    bucketId = "<BUCKET_ID>", 
+    fileId = "<FILE_ID>", 
     width = 0, // (optional)
     height = 0, // (optional)
     gravity = ImageGravity.CENTER, // (optional)

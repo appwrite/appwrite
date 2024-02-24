@@ -11,7 +11,7 @@ databases = Databases.new(client)
 
 response = databases.list(
     queries: [], # optional
-    search: '[SEARCH]' # optional
+    search: '<SEARCH>' # optional
 )
 
 puts response.inspect

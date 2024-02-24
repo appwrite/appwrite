@@ -8,10 +8,10 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const response = await users.createTarget(
-    '[USER_ID]', // userId
-    '[TARGET_ID]', // targetId
+    '<USER_ID>', // userId
+    '<TARGET_ID>', // targetId
     sdk.MessagingProviderType.Email, // providerType
-    '[IDENTIFIER]', // identifier
-    '[PROVIDER_ID]', // providerId (optional)
-    '[NAME]' // name (optional)
+    '<IDENTIFIER>', // identifier
+    '<PROVIDER_ID>', // providerId (optional)
+    '<NAME>' // name (optional)
 );

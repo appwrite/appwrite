@@ -8,6 +8,6 @@ let client = Client()
 let account = Account(client)
 
 let session = try await account.updateSession(
-    sessionId: "[SESSION_ID]"
+    sessionId: "<SESSION_ID>"
 )
 

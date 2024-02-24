@@ -7,8 +7,8 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const response = await account.create(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     '', // password
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );

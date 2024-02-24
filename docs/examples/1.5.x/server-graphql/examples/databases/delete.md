@@ -1,6 +1,6 @@
 mutation {
     databasesDelete(
-        databaseId: "[DATABASE_ID]"
+        databaseId: "<DATABASE_ID>"
     ) {
         status
     }

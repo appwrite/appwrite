@@ -1,4 +1,4 @@
 appwrite project updateVariable \
-        --variableId [VARIABLE_ID] \
-        --key [KEY] \
+        --variableId <VARIABLE_ID> \
+        --key <KEY> \
 

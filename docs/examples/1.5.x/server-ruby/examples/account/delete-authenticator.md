@@ -12,7 +12,7 @@ account = Account.new(client)
 
 response = account.delete_authenticator(
     type: AuthenticatorType::TOTP,
-    otp: '[OTP]'
+    otp: '<OTP>'
 )
 
 puts response.inspect

@@ -8,5 +8,5 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.delete_identity(
-    identity_id = '[IDENTITY_ID]'
+    identity_id = '<IDENTITY_ID>'
 )

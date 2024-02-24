@@ -11,7 +11,7 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->listExecutions(
-    functionId: '[FUNCTION_ID]',
+    functionId: '<FUNCTION_ID>',
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

@@ -7,8 +7,8 @@ let client = Client()
 let messaging = Messaging(client)
 
 let subscriber = try await messaging.createSubscriber(
-    topicId: "[TOPIC_ID]",
-    subscriberId: "[SUBSCRIBER_ID]",
-    targetId: "[TARGET_ID]"
+    topicId: "<TOPIC_ID>",
+    subscriberId: "<SUBSCRIBER_ID>",
+    targetId: "<TARGET_ID>"
 )
 

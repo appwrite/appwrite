@@ -8,7 +8,7 @@ let client = Client()
 let functions = Functions(client)
 
 let variable = try await functions.getVariable(
-    functionId: "[FUNCTION_ID]",
-    variableId: "[VARIABLE_ID]"
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>"
 )
 

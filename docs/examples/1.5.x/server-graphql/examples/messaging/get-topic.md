@@ -1,6 +1,6 @@
 query {
     messagingGetTopic(
-        topicId: "[TOPIC_ID]"
+        topicId: "<TOPIC_ID>"
     ) {
         _id
         _createdAt

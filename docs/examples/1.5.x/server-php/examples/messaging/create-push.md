@@ -11,20 +11,20 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createPush(
-    messageId: '[MESSAGE_ID]',
-    title: '[TITLE]',
-    body: '[BODY]',
+    messageId: '<MESSAGE_ID>',
+    title: '<TITLE>',
+    body: '<BODY>',
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
     data: [], // optional
-    action: '[ACTION]', // optional
+    action: '<ACTION>', // optional
     image: '[ID1:ID2]', // optional
-    icon: '[ICON]', // optional
-    sound: '[SOUND]', // optional
-    color: '[COLOR]', // optional
-    tag: '[TAG]', // optional
-    badge: '[BADGE]', // optional
+    icon: '<ICON>', // optional
+    sound: '<SOUND>', // optional
+    color: '<COLOR>', // optional
+    tag: '<TAG>', // optional
+    badge: '<BADGE>', // optional
     status: MessageStatus::DRAFT(), // optional
     scheduledAt: '' // optional
 );

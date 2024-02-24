@@ -8,6 +8,6 @@ let client = Client()
 let storage = Storage(client)
 
 let bucket = try await storage.getBucket(
-    bucketId: "[BUCKET_ID]"
+    bucketId: "<BUCKET_ID>"
 )
 

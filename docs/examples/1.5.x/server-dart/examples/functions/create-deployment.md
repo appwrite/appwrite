@@ -8,11 +8,11 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.createDeployment(
-  functionId: '[FUNCTION_ID]',
+  functionId: '<FUNCTION_ID>',
   code: InputFile(path: './path-to-files/image.jpg', filename: 'image.jpg'),
   activate: false,
-  entrypoint: '[ENTRYPOINT]', // (optional)
-  commands: '[COMMANDS]', // (optional)
+  entrypoint: '<ENTRYPOINT>', // (optional)
+  commands: '<COMMANDS>', // (optional)
 );
 
 result.then((response) {

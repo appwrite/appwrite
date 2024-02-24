@@ -11,9 +11,9 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->createDocument(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
-    documentId: '[DOCUMENT_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    documentId: '<DOCUMENT_ID>',
     data: [],
     permissions: ["read("any")"] // optional
 );

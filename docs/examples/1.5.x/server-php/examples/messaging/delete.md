@@ -11,5 +11,5 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->delete(
-    messageId: '[MESSAGE_ID]'
+    messageId: '<MESSAGE_ID>'
 );

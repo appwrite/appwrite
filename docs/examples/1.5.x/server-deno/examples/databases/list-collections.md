@@ -8,9 +8,9 @@ const client = new Client()
 const databases = new Databases(client);
 
 const response = await databases.listCollections(
-    '[DATABASE_ID]', // databaseId
+    '<DATABASE_ID>', // databaseId
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

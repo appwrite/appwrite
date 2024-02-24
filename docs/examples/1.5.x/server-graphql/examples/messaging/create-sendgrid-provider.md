@@ -1,11 +1,11 @@
 mutation {
     messagingCreateSendgridProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
-        apiKey: "[API_KEY]",
-        fromName: "[FROM_NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
+        apiKey: "<API_KEY>",
+        fromName: "<FROM_NAME>",
         fromEmail: "email@example.com",
-        replyToName: "[REPLY_TO_NAME]",
+        replyToName: "<REPLY_TO_NAME>",
         replyToEmail: "email@example.com",
         enabled: false
     ) {

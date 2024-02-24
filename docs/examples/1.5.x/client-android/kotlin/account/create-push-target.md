@@ -9,7 +9,7 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.createPushTarget(
-    targetId = "[TARGET_ID]", 
-    identifier = "[IDENTIFIER]", 
-    providerId = "[PROVIDER_ID]", // (optional)
+    targetId = "<TARGET_ID>", 
+    identifier = "<IDENTIFIER>", 
+    providerId = "<PROVIDER_ID>", // (optional)
 )

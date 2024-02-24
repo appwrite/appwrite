@@ -7,13 +7,13 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.createScryptModifiedUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
-    '[PASSWORD_SALT]', // passwordSalt
-    '[PASSWORD_SALT_SEPARATOR]', // passwordSaltSeparator
-    '[PASSWORD_SIGNER_KEY]', // passwordSignerKey
-    '[NAME]' // name (optional)
+    '<PASSWORD_SALT>', // passwordSalt
+    '<PASSWORD_SALT_SEPARATOR>', // passwordSaltSeparator
+    '<PASSWORD_SIGNER_KEY>', // passwordSignerKey
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

@@ -12,6 +12,6 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 await messaging.DeleteSubscriber(
-    topicId: "[TOPIC_ID]",
-    subscriberId: "[SUBSCRIBER_ID]"
+    topicId: "<TOPIC_ID>",
+    subscriberId: "<SUBSCRIBER_ID>"
 );

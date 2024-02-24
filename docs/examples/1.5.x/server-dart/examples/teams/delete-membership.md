@@ -8,8 +8,8 @@ Client client = Client()
 Teams teams = Teams(client);
 
 Future result = teams.deleteMembership(
-  teamId: '[TEAM_ID]',
-  membershipId: '[MEMBERSHIP_ID]',
+  teamId: '<TEAM_ID>',
+  membershipId: '<MEMBERSHIP_ID>',
 );
 
 result.then((response) {

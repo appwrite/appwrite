@@ -8,8 +8,8 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.createFcmProvider(
-  providerId: '[PROVIDER_ID]',
-  name: '[NAME]',
+  providerId: '<PROVIDER_ID>',
+  name: '<NAME>',
   serviceAccountJSON: {}, // (optional)
   enabled: false, // (optional)
 );

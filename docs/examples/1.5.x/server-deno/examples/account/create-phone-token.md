@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.createPhoneToken(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     '+12065550100' // phone
 );
 

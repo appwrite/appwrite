@@ -8,8 +8,8 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.update(
-  databaseId: '[DATABASE_ID]',
-  name: '[NAME]',
+  databaseId: '<DATABASE_ID>',
+  name: '<NAME>',
   enabled: false, // (optional)
 );
 

@@ -11,7 +11,7 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->update(
-    databaseId: '[DATABASE_ID]',
-    name: '[NAME]',
+    databaseId: '<DATABASE_ID>',
+    name: '<NAME>',
     enabled: false // optional
 );

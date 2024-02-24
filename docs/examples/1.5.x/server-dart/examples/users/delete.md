@@ -8,7 +8,7 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.delete(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
 );
 
 result.then((response) {

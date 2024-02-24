@@ -1,5 +1,5 @@
 appwrite messaging updateMailgunProvider \
-        --providerId [PROVIDER_ID] \
+        --providerId <PROVIDER_ID> \
 
 
 

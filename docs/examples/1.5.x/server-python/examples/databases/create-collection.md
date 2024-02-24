@@ -8,9 +8,9 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 databases = Databases(client)
 
 result = databases.create_collection(
-    database_id = '[DATABASE_ID]',
-    collection_id = '[COLLECTION_ID]',
-    name = '[NAME]',
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    name = '<NAME>',
     permissions = ["read("any")"], # optional
     document_security = False, # optional
     enabled = False # optional

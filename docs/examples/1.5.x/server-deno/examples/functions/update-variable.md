@@ -8,10 +8,10 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.updateVariable(
-    '[FUNCTION_ID]', // functionId
-    '[VARIABLE_ID]', // variableId
-    '[KEY]', // key
-    '[VALUE]' // value (optional)
+    '<FUNCTION_ID>', // functionId
+    '<VARIABLE_ID>', // variableId
+    '<KEY>', // key
+    '<VALUE>' // value (optional)
 );
 
 console.log(response);

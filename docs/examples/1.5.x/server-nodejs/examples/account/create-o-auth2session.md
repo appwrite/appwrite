@@ -10,6 +10,5 @@ const response = await account.createOAuth2Session(
     sdk.OAuthProvider.Amazon, // provider
     'https://example.com', // success (optional)
     'https://example.com', // failure (optional)
-    false, // token (optional)
     [] // scopes (optional)
 );

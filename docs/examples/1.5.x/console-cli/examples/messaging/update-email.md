@@ -1,5 +1,5 @@
 appwrite messaging updateEmail \
-        --messageId [MESSAGE_ID] \
+        --messageId <MESSAGE_ID> \
 
 
 

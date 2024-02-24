@@ -11,5 +11,5 @@ Messaging messaging = new Messaging(client);
 
 MessageList result = await messaging.ListMessages(
     queries: new List<string>(), // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 );

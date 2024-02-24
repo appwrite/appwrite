@@ -9,8 +9,8 @@ client.set_session('') # The user session to authenticate with
 storage = Storage(client)
 
 result = storage.create_file(
-    bucket_id = '[BUCKET_ID]',
-    file_id = '[FILE_ID]',
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
     file = InputFile.from_path('file.png'),
     permissions = ["read("any")"] # optional
 )

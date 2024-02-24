@@ -1,13 +1,13 @@
 mutation {
     messagingCreateMailgunProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
-        apiKey: "[API_KEY]",
-        domain: "[DOMAIN]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
+        apiKey: "<API_KEY>",
+        domain: "<DOMAIN>",
         isEuRegion: false,
-        fromName: "[FROM_NAME]",
+        fromName: "<FROM_NAME>",
         fromEmail: "email@example.com",
-        replyToName: "[REPLY_TO_NAME]",
+        replyToName: "<REPLY_TO_NAME>",
         replyToEmail: "email@example.com",
         enabled: false
     ) {

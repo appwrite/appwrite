@@ -10,7 +10,7 @@ client = Client.new
 account = Account.new(client)
 
 response = account.update_name(
-    name: '[NAME]'
+    name: '<NAME>'
 )
 
 puts response.inspect

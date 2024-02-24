@@ -10,7 +10,7 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.listSubscriberLogs(
-    "[SUBSCRIBER_ID]", // subscriberId
+    "<SUBSCRIBER_ID>", // subscriberId
     listOf(), // queries (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

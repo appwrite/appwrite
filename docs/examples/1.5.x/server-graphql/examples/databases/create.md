@@ -1,7 +1,7 @@
 mutation {
     databasesCreate(
-        databaseId: "[DATABASE_ID]",
-        name: "[NAME]",
+        databaseId: "<DATABASE_ID>",
+        name: "<NAME>",
         enabled: false
     ) {
         _id

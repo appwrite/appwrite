@@ -8,9 +8,9 @@ const client = new Client()
 const databases = new Databases(client);
 
 const response = await databases.createRelationshipAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[RELATED_COLLECTION_ID]', // relatedCollectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<RELATED_COLLECTION_ID>', // relatedCollectionId
     RelationshipType.OneToOne, // type
     false, // twoWay (optional)
     '', // key (optional)

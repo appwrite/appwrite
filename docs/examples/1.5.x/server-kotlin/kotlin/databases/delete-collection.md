@@ -10,6 +10,6 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.deleteCollection(
-    databaseId = "[DATABASE_ID]",
-    collectionId = "[COLLECTION_ID]"
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>"
 )

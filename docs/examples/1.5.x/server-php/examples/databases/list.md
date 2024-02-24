@@ -12,5 +12,5 @@ $databases = new Databases($client);
 
 $result = $databases->list(
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

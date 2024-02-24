@@ -9,7 +9,7 @@ Functions functions = Functions(client);
 
 Future result = functions.list(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

@@ -1,7 +1,7 @@
 mutation {
     accountUpdatePushTarget(
-        targetId: "[TARGET_ID]",
-        identifier: "[IDENTIFIER]"
+        targetId: "<TARGET_ID>",
+        identifier: "<IDENTIFIER>"
     ) {
         _id
         _createdAt

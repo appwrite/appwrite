@@ -9,8 +9,8 @@ const migrations = new Migrations(client);
 const result = await migrations.getAppwriteReport(
     [], // resources
     'https://example.com', // endpoint
-    '[PROJECT_ID]', // projectID
-    '[KEY]' // key
+    '<PROJECT_ID>', // projectID
+    '<KEY>' // key
 );
 
 console.log(response);

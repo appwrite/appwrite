@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.updateVariable(
-    '[FUNCTION_ID]', // functionId
-    '[VARIABLE_ID]', // variableId
-    '[KEY]', // key
-    '[VALUE]' // value (optional)
+    '<FUNCTION_ID>', // functionId
+    '<VARIABLE_ID>', // variableId
+    '<KEY>', // key
+    '<VALUE>' // value (optional)
 );

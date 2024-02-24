@@ -7,10 +7,10 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateOAuth2(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     OAuthProvider.Amazon, // provider
-    '[APP_ID]', // appId (optional)
-    '[SECRET]', // secret (optional)
+    '<APP_ID>', // appId (optional)
+    '<SECRET>', // secret (optional)
     false // enabled (optional)
 );
 

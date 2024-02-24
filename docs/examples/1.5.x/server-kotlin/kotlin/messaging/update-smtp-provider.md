@@ -10,18 +10,18 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.updateSmtpProvider(
-    providerId = "[PROVIDER_ID]",
-    name = "[NAME]", // optional
-    host = "[HOST]", // optional
+    providerId = "<PROVIDER_ID>",
+    name = "<NAME>", // optional
+    host = "<HOST>", // optional
     port = 1, // optional
-    username = "[USERNAME]", // optional
-    password = "[PASSWORD]", // optional
+    username = "<USERNAME>", // optional
+    password = "<PASSWORD>", // optional
     encryption = "none", // optional
     autoTLS = false, // optional
-    mailer = "[MAILER]", // optional
-    fromName = "[FROM_NAME]", // optional
+    mailer = "<MAILER>", // optional
+    fromName = "<FROM_NAME>", // optional
     fromEmail = "email@example.com", // optional
-    replyToName = "[REPLY_TO_NAME]", // optional
-    replyToEmail = "[REPLY_TO_EMAIL]", // optional
+    replyToName = "<REPLY_TO_NAME>", // optional
+    replyToEmail = "<REPLY_TO_EMAIL>", // optional
     enabled = false // optional
 )

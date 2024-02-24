@@ -7,8 +7,8 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.deleteSession(
-    '[USER_ID]', // userId
-    '[SESSION_ID]' // sessionId
+    '<USER_ID>', // userId
+    '<SESSION_ID>' // sessionId
 );
 
 console.log(response);

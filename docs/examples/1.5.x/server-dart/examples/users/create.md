@@ -8,11 +8,11 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.create(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   email: 'email@example.com', // (optional)
   phone: '+12065550100', // (optional)
   password: '', // (optional)
-  name: '[NAME]', // (optional)
+  name: '<NAME>', // (optional)
 );
 
 result.then((response) {

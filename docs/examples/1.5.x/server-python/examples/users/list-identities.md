@@ -9,5 +9,5 @@ users = Users(client)
 
 result = users.list_identities(
     queries = [], # optional
-    search = '[SEARCH]' # optional
+    search = '<SEARCH>' # optional
 )

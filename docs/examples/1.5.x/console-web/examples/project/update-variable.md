@@ -7,9 +7,9 @@ const client = new Client()
 const project = new Project(client);
 
 const result = await project.updateVariable(
-    '[VARIABLE_ID]', // variableId
-    '[KEY]', // key
-    '[VALUE]' // value (optional)
+    '<VARIABLE_ID>', // variableId
+    '<KEY>', // key
+    '<VALUE>' // value (optional)
 );
 
 console.log(response);

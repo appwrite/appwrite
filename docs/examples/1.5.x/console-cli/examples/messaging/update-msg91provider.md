@@ -1,5 +1,5 @@
 appwrite messaging updateMsg91Provider \
-        --providerId [PROVIDER_ID] \
+        --providerId <PROVIDER_ID> \
 
 
 

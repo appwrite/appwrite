@@ -11,5 +11,5 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 await databases.Delete(
-    databaseId: "[DATABASE_ID]"
+    databaseId: "<DATABASE_ID>"
 );

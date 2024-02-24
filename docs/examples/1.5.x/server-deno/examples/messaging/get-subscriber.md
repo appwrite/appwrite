@@ -8,8 +8,8 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.getSubscriber(
-    '[TOPIC_ID]', // topicId
-    '[SUBSCRIBER_ID]' // subscriberId
+    '<TOPIC_ID>', // topicId
+    '<SUBSCRIBER_ID>' // subscriberId
 );
 
 console.log(response);

@@ -1,10 +1,10 @@
 mutation {
     databasesUpdateStringAttribute(
-        databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]",
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
         key: "",
         required: false,
-        default: "[DEFAULT]"
+        default: "<DEFAULT>"
     ) {
         key
         type

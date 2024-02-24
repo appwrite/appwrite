@@ -1,2 +1,2 @@
 appwrite databases get \
-        --databaseId [DATABASE_ID]
+        --databaseId <DATABASE_ID>

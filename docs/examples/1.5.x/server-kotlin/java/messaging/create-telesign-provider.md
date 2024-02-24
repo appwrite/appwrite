@@ -10,11 +10,11 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createTelesignProvider(
-    "[PROVIDER_ID]", // providerId
-    "[NAME]", // name
+    "<PROVIDER_ID>", // providerId
+    "<NAME>", // name
     "+12065550100", // from (optional)
-    "[CUSTOMER_ID]", // customerId (optional)
-    "[API_KEY]", // apiKey (optional)
+    "<CUSTOMER_ID>", // customerId (optional)
+    "<API_KEY>", // apiKey (optional)
     false, // enabled (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

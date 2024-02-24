@@ -12,8 +12,8 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->create(
-    functionId: '[FUNCTION_ID]',
-    name: '[NAME]',
+    functionId: '<FUNCTION_ID>',
+    name: '<NAME>',
     runtime: ::NODE145(),
     execute: ["any"], // optional
     events: [], // optional
@@ -21,15 +21,15 @@ $result = $functions->create(
     timeout: 1, // optional
     enabled: false, // optional
     logging: false, // optional
-    entrypoint: '[ENTRYPOINT]', // optional
-    commands: '[COMMANDS]', // optional
-    installationId: '[INSTALLATION_ID]', // optional
-    providerRepositoryId: '[PROVIDER_REPOSITORY_ID]', // optional
-    providerBranch: '[PROVIDER_BRANCH]', // optional
+    entrypoint: '<ENTRYPOINT>', // optional
+    commands: '<COMMANDS>', // optional
+    installationId: '<INSTALLATION_ID>', // optional
+    providerRepositoryId: '<PROVIDER_REPOSITORY_ID>', // optional
+    providerBranch: '<PROVIDER_BRANCH>', // optional
     providerSilentMode: false, // optional
-    providerRootDirectory: '[PROVIDER_ROOT_DIRECTORY]', // optional
-    templateRepository: '[TEMPLATE_REPOSITORY]', // optional
-    templateOwner: '[TEMPLATE_OWNER]', // optional
-    templateRootDirectory: '[TEMPLATE_ROOT_DIRECTORY]', // optional
-    templateBranch: '[TEMPLATE_BRANCH]' // optional
+    providerRootDirectory: '<PROVIDER_ROOT_DIRECTORY>', // optional
+    templateRepository: '<TEMPLATE_REPOSITORY>', // optional
+    templateOwner: '<TEMPLATE_OWNER>', // optional
+    templateRootDirectory: '<TEMPLATE_ROOT_DIRECTORY>', // optional
+    templateBranch: '<TEMPLATE_BRANCH>' // optional
 );

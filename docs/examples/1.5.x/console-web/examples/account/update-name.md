@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const result = await account.updateName(
-    '[NAME]' // name
+    '<NAME>' // name
 );
 
 console.log(response);

@@ -13,7 +13,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 await users.DeleteAuthenticator(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     type: AuthenticatorType.Totp,
-    otp: "[OTP]"
+    otp: "<OTP>"
 );

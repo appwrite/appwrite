@@ -11,6 +11,6 @@ $client = (new Client())
 $health = new Health($client);
 
 $result = $health->getQueueDatabases(
-    name: '[NAME]', // optional
+    name: '<NAME>', // optional
     threshold: null // optional
 );

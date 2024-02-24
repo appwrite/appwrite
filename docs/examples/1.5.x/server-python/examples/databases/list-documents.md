@@ -8,7 +8,7 @@ client.set_session('') # The user session to authenticate with
 databases = Databases(client)
 
 result = databases.list_documents(
-    database_id = '[DATABASE_ID]',
-    collection_id = '[COLLECTION_ID]',
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
     queries = [] # optional
 )

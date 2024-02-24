@@ -13,6 +13,5 @@ account.createOAuth2Session(
     provider = OAuthProvider.AMAZON,
     success = "https://example.com", // (optional)
     failure = "https://example.com", // (optional)
-    token = false, // (optional)
     scopes = listOf(), // (optional)
 )

@@ -11,7 +11,7 @@ $client = (new Client())
 $storage = new Storage($client);
 
 $result = $storage->listFiles(
-    bucketId: '[BUCKET_ID]',
+    bucketId: '<BUCKET_ID>',
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

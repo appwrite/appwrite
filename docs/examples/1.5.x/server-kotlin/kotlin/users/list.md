@@ -11,5 +11,5 @@ val users = Users(client)
 
 val response = users.list(
     queries = listOf(), // optional
-    search = "[SEARCH]" // optional
+    search = "<SEARCH>" // optional
 )

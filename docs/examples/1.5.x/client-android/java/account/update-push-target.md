@@ -9,8 +9,8 @@ Client client = new Client(context)
 Account account = new Account(client);
 
 account.updatePushTarget(
-    "[TARGET_ID]", // targetId 
-    "[IDENTIFIER]", // identifier 
+    "<TARGET_ID>", // targetId 
+    "<IDENTIFIER>", // identifier 
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -8,9 +8,9 @@ Client client = Client()
 Users users = Users(client);
 
 Future result = users.deleteAuthenticator(
-  userId: '[USER_ID]',
+  userId: '<USER_ID>',
   type:  AuthenticatorType.totp,
-  otp: '[OTP]',
+  otp: '<OTP>',
 );
 
 result.then((response) {

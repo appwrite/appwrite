@@ -10,12 +10,12 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.update_textmagic_provider(
-    provider_id: '[PROVIDER_ID]',
-    name: '[NAME]', # optional
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>', # optional
     enabled: false, # optional
-    username: '[USERNAME]', # optional
-    api_key: '[API_KEY]', # optional
-    from: '[FROM]' # optional
+    username: '<USERNAME>', # optional
+    api_key: '<API_KEY>', # optional
+    from: '<FROM>' # optional
 )
 
 puts response.inspect

@@ -8,9 +8,9 @@ const client = new sdk.Client()
 const messaging = new sdk.Messaging(client);
 
 const response = await messaging.createEmail(
-    '[MESSAGE_ID]', // messageId
-    '[SUBJECT]', // subject
-    '[CONTENT]', // content
+    '<MESSAGE_ID>', // messageId
+    '<SUBJECT>', // subject
+    '<CONTENT>', // content
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)

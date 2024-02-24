@@ -1,2 +1,2 @@
 appwrite users listSessions \
-        --userId [USER_ID]
+        --userId <USER_ID>

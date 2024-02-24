@@ -10,5 +10,5 @@ val client = Client()
 val databases = Databases(client)
 
 val response = databases.get(
-    databaseId = "[DATABASE_ID]"
+    databaseId = "<DATABASE_ID>"
 )

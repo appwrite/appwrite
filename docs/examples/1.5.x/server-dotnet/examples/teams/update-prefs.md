@@ -12,6 +12,6 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 Preferences result = await teams.UpdatePrefs(
-    teamId: "[TEAM_ID]",
+    teamId: "<TEAM_ID>",
     prefs: [object]
 );

@@ -10,5 +10,5 @@ val client = Client()
 val users = Users(client)
 
 val response = users.getPrefs(
-    userId = "[USER_ID]"
+    userId = "<USER_ID>"
 )

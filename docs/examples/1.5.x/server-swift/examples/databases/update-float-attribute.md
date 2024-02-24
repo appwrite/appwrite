@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let attributeFloat = try await databases.updateFloatAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     min: 0,

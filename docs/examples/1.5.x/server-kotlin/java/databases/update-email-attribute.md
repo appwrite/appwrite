@@ -10,8 +10,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.updateEmailAttribute(
-    "[DATABASE_ID]", // databaseId
-    "[COLLECTION_ID]", // collectionId
+    "<DATABASE_ID>", // databaseId
+    "<COLLECTION_ID>", // collectionId
     "", // key
     false, // required
     "email@example.com", // default

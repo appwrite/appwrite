@@ -9,9 +9,9 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 databases = Databases(client)
 
 result = databases.create_relationship_attribute(
-    database_id = '[DATABASE_ID]',
-    collection_id = '[COLLECTION_ID]',
-    related_collection_id = '[RELATED_COLLECTION_ID]',
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    related_collection_id = '<RELATED_COLLECTION_ID>',
     type = RelationshipType.ONE_TO_ONE,
     two_way = False, # optional
     key = '', # optional

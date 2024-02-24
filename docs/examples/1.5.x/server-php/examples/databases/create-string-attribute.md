@@ -11,12 +11,12 @@ $client = (new Client())
 $databases = new Databases($client);
 
 $result = $databases->createStringAttribute(
-    databaseId: '[DATABASE_ID]',
-    collectionId: '[COLLECTION_ID]',
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
     key: '',
     size: 1,
     required: false,
-    default: '[DEFAULT]', // optional
+    default: '<DEFAULT>', // optional
     array: false, // optional
     encrypt: false // optional
 );

@@ -8,7 +8,7 @@ client.set_jwt('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...') # Your secret JSON
 messaging = Messaging(client)
 
 result = messaging.create_subscriber(
-    topic_id = '[TOPIC_ID]',
-    subscriber_id = '[SUBSCRIBER_ID]',
-    target_id = '[TARGET_ID]'
+    topic_id = '<TOPIC_ID>',
+    subscriber_id = '<SUBSCRIBER_ID>',
+    target_id = '<TARGET_ID>'
 )

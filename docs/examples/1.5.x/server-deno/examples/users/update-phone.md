@@ -8,7 +8,7 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.updatePhone(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     '+12065550100' // number
 );
 

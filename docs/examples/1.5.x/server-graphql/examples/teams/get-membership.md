@@ -1,7 +1,7 @@
 query {
     teamsGetMembership(
-        teamId: "[TEAM_ID]",
-        membershipId: "[MEMBERSHIP_ID]"
+        teamId: "<TEAM_ID>",
+        membershipId: "<MEMBERSHIP_ID>"
     ) {
         _id
         _createdAt

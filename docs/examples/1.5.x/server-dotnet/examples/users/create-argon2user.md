@@ -13,8 +13,8 @@ Client client = new Client()
 Users users = new Users(client);
 
 User result = await users.CreateArgon2User(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     email: "email@example.com",
     password: "password",
-    name: "[NAME]" // optional
+    name: "<NAME>" // optional
 );

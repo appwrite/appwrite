@@ -7,7 +7,7 @@ let client = Client()
 let account = Account(client)
 
 let token = try await account.createMagicURLToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     email: "email@example.com",
     url: "https://example.com", // optional
     phrase: false // optional

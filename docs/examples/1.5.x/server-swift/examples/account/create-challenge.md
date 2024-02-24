@@ -8,6 +8,6 @@ let client = Client()
 let account = Account(client)
 
 let mfaChallenge = try await account.createChallenge(
-    provider: .totp
+    factor: .totp
 )
 

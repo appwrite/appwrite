@@ -8,6 +8,6 @@ let client = Client()
 let messaging = Messaging(client)
 
 let result = try await messaging.deleteTopic(
-    topicId: "[TOPIC_ID]"
+    topicId: "<TOPIC_ID>"
 )
 

@@ -1,4 +1,4 @@
 appwrite users createToken \
-        --userId [USER_ID] \
+        --userId <USER_ID> \
 
 

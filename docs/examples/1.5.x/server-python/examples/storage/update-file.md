@@ -8,8 +8,8 @@ client.set_session('') # The user session to authenticate with
 storage = Storage(client)
 
 result = storage.update_file(
-    bucket_id = '[BUCKET_ID]',
-    file_id = '[FILE_ID]',
-    name = '[NAME]', # optional
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
+    name = '<NAME>', # optional
     permissions = ["read("any")"] # optional
 )

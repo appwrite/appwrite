@@ -11,7 +11,7 @@ $client = (new Client())
 $avatars = new Avatars($client);
 
 $result = $avatars->getQR(
-    text: '[TEXT]',
+    text: '<TEXT>',
     size: 1, // optional
     margin: 0, // optional
     download: false // optional

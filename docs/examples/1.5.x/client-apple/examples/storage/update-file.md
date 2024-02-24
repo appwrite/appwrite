@@ -7,9 +7,9 @@ let client = Client()
 let storage = Storage(client)
 
 let file = try await storage.updateFile(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]",
-    name: "[NAME]", // optional
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    name: "<NAME>", // optional
     permissions: ["read("any")"] // optional
 )
 

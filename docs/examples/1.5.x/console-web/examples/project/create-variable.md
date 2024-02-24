@@ -7,8 +7,8 @@ const client = new Client()
 const project = new Project(client);
 
 const result = await project.createVariable(
-    '[KEY]', // key
-    '[VALUE]' // value
+    '<KEY>', // key
+    '<VALUE>' // value
 );
 
 console.log(response);

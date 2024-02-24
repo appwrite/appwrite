@@ -1,6 +1,6 @@
 mutation {
     usersUpdateEmailVerification(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         emailVerification: false
     ) {
         _id

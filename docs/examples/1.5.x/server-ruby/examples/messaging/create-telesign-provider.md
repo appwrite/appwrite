@@ -10,11 +10,11 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_telesign_provider(
-    provider_id: '[PROVIDER_ID]',
-    name: '[NAME]',
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>',
     from: '+12065550100', # optional
-    customer_id: '[CUSTOMER_ID]', # optional
-    api_key: '[API_KEY]', # optional
+    customer_id: '<CUSTOMER_ID>', # optional
+    api_key: '<API_KEY>', # optional
     enabled: false # optional
 )
 

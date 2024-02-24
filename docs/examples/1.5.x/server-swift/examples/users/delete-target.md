@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let result = try await users.deleteTarget(
-    userId: "[USER_ID]",
-    targetId: "[TARGET_ID]"
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>"
 )
 

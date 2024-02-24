@@ -1,7 +1,7 @@
 mutation {
     teamsDeleteMembership(
-        teamId: "[TEAM_ID]",
-        membershipId: "[MEMBERSHIP_ID]"
+        teamId: "<TEAM_ID>",
+        membershipId: "<MEMBERSHIP_ID>"
     ) {
         status
     }

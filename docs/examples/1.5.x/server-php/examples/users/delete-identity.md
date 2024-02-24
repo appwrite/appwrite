@@ -11,5 +11,5 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->deleteIdentity(
-    identityId: '[IDENTITY_ID]'
+    identityId: '<IDENTITY_ID>'
 );

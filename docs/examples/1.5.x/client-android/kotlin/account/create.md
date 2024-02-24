@@ -9,8 +9,8 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.create(
-    userId = "[USER_ID]", 
+    userId = "<USER_ID>", 
     email = "email@example.com", 
     password = "", 
-    name = "[NAME]", // (optional)
+    name = "<NAME>", // (optional)
 )

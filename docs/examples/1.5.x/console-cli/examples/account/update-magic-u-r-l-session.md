@@ -1,3 +1,3 @@
 appwrite account updateMagicURLSession \
-        --userId [USER_ID] \
-        --secret [SECRET]
+        --userId <USER_ID> \
+        --secret <SECRET>

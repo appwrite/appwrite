@@ -7,9 +7,9 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.deleteDocument(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[DOCUMENT_ID]' // documentId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<DOCUMENT_ID>' // documentId
 );
 
 console.log(response);

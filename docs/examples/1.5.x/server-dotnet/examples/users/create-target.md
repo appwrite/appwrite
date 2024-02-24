@@ -14,10 +14,10 @@ Client client = new Client()
 Users users = new Users(client);
 
 Target result = await users.CreateTarget(
-    userId: "[USER_ID]",
-    targetId: "[TARGET_ID]",
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>",
     providerType: MessagingProviderType.Email,
-    identifier: "[IDENTIFIER]",
-    providerId: "[PROVIDER_ID]", // optional
-    name: "[NAME]" // optional
+    identifier: "<IDENTIFIER>",
+    providerId: "<PROVIDER_ID>", // optional
+    name: "<NAME>" // optional
 );

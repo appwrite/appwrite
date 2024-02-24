@@ -9,9 +9,9 @@ val client = Client(context)
 val databases = Databases(client)
 
 val response = databases.updateDocument(
-    databaseId = "[DATABASE_ID]", 
-    collectionId = "[COLLECTION_ID]", 
-    documentId = "[DOCUMENT_ID]", 
+    databaseId = "<DATABASE_ID>", 
+    collectionId = "<COLLECTION_ID>", 
+    documentId = "<DOCUMENT_ID>", 
     data = mapOf( "a" to "b" ), // (optional)
     permissions = listOf("read("any")"), // (optional)
 )

@@ -8,8 +8,8 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.getFilePreview(
-  bucketId: '[BUCKET_ID]',
-  fileId: '[FILE_ID]',
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
   width: 0, // (optional)
   height: 0, // (optional)
   gravity:  ImageGravity.center, // (optional)

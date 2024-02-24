@@ -7,7 +7,7 @@ let client = Client()
 let account = Account(client)
 
 let token = try await account.createEmailToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     email: "email@example.com",
     phrase: false // optional
 )

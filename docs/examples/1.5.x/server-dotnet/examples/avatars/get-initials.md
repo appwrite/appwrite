@@ -10,7 +10,7 @@ Client client = new Client()
 Avatars avatars = new Avatars(client);
 
 byte[] result = await avatars.GetInitials(
-    name: "[NAME]", // optional
+    name: "<NAME>", // optional
     width: 0, // optional
     height: 0, // optional
     background: "" // optional

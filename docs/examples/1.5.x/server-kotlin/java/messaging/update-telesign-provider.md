@@ -10,12 +10,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.updateTelesignProvider(
-    "[PROVIDER_ID]", // providerId
-    "[NAME]", // name (optional)
+    "<PROVIDER_ID>", // providerId
+    "<NAME>", // name (optional)
     false, // enabled (optional)
-    "[CUSTOMER_ID]", // customerId (optional)
-    "[API_KEY]", // apiKey (optional)
-    "[FROM]", // from (optional)
+    "<CUSTOMER_ID>", // customerId (optional)
+    "<API_KEY>", // apiKey (optional)
+    "<FROM>", // from (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -8,7 +8,7 @@ let client = Client()
 let health = Health(client)
 
 let healthQueue = try await health.getQueueDatabases(
-    name: "[NAME]", // optional
+    name: "<NAME>", // optional
     threshold: 0 // optional
 )
 

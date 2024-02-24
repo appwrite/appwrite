@@ -1,6 +1,6 @@
 mutation {
     messagingDeleteProvider(
-        providerId: "[PROVIDER_ID]"
+        providerId: "<PROVIDER_ID>"
     ) {
         status
     }

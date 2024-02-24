@@ -8,6 +8,6 @@ let client = Client()
 let databases = Databases(client)
 
 let result = try await databases.delete(
-    databaseId: "[DATABASE_ID]"
+    databaseId: "<DATABASE_ID>"
 )
 

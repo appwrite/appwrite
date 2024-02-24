@@ -1,6 +1,6 @@
 query {
     functionsGet(
-        functionId: "[FUNCTION_ID]"
+        functionId: "<FUNCTION_ID>"
     ) {
         _id
         _createdAt

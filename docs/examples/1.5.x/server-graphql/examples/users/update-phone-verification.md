@@ -1,6 +1,6 @@
 mutation {
     usersUpdatePhoneVerification(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         phoneVerification: false
     ) {
         _id

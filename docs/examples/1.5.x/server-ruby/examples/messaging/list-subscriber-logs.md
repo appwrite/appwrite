@@ -10,7 +10,7 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.list_subscriber_logs(
-    subscriber_id: '[SUBSCRIBER_ID]',
+    subscriber_id: '<SUBSCRIBER_ID>',
     queries: [] # optional
 )
 

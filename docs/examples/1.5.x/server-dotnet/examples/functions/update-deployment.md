@@ -12,6 +12,6 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 Function result = await functions.UpdateDeployment(
-    functionId: "[FUNCTION_ID]",
-    deploymentId: "[DEPLOYMENT_ID]"
+    functionId: "<FUNCTION_ID>",
+    deploymentId: "<DEPLOYMENT_ID>"
 );

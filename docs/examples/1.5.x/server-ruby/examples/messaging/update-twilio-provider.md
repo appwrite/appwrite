@@ -10,12 +10,12 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.update_twilio_provider(
-    provider_id: '[PROVIDER_ID]',
-    name: '[NAME]', # optional
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>', # optional
     enabled: false, # optional
-    account_sid: '[ACCOUNT_SID]', # optional
-    auth_token: '[AUTH_TOKEN]', # optional
-    from: '[FROM]' # optional
+    account_sid: '<ACCOUNT_SID>', # optional
+    auth_token: '<AUTH_TOKEN>', # optional
+    from: '<FROM>' # optional
 )
 
 puts response.inspect

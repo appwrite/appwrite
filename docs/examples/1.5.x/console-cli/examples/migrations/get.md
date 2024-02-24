@@ -1,2 +1,2 @@
 appwrite migrations get \
-        --migrationId [MIGRATION_ID]
+        --migrationId <MIGRATION_ID>

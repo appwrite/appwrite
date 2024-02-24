@@ -7,8 +7,8 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.getFile(
-  bucketId: '[BUCKET_ID]',
-  fileId: '[FILE_ID]',
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
 );
 
 result.then((response) {

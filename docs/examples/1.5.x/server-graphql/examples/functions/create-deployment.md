@@ -9,7 +9,7 @@ Content-Length: *Length of your entity body in bytes*
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="operations"
 
-{ "query": "mutation { functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate, entrypoint: $entrypoint, commands: $commands) { id }" }, "variables": { "functionId": "[FUNCTION_ID]", "code": null, "activate": false, "entrypoint": "[ENTRYPOINT]", "commands": "[COMMANDS]" } }
+{ "query": "mutation { functionsCreateDeployment(functionId: $functionId, code: $code, activate: $activate, entrypoint: $entrypoint, commands: $commands) { id }" }, "variables": { "functionId": "<FUNCTION_ID>", "code": null, "activate": false, "entrypoint": "<ENTRYPOINT>", "commands": "<COMMANDS>" } }
 
 --cec8e8123c05ba25
 Content-Disposition: form-data; name="map"

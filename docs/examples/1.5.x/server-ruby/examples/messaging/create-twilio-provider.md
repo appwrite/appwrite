@@ -10,11 +10,11 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_twilio_provider(
-    provider_id: '[PROVIDER_ID]',
-    name: '[NAME]',
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>',
     from: '+12065550100', # optional
-    account_sid: '[ACCOUNT_SID]', # optional
-    auth_token: '[AUTH_TOKEN]', # optional
+    account_sid: '<ACCOUNT_SID>', # optional
+    auth_token: '<AUTH_TOKEN>', # optional
     enabled: false # optional
 )
 

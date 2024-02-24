@@ -1,6 +1,6 @@
 query {
     avatarsGetInitials(
-        name: "[NAME]",
+        name: "<NAME>",
         width: 0,
         height: 0,
         background: ""

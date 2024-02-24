@@ -11,10 +11,10 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createTelesignProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
     from: '+12065550100', // optional
-    customerId: '[CUSTOMER_ID]', // optional
-    apiKey: '[API_KEY]', // optional
+    customerId: '<CUSTOMER_ID>', // optional
+    apiKey: '<API_KEY>', // optional
     enabled: false // optional
 );

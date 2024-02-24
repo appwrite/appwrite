@@ -15,8 +15,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 AttributeIp result = await databases.UpdateIpAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     default: ""

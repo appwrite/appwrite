@@ -1,5 +1,5 @@
 appwrite messaging updateVonageProvider \
-        --providerId [PROVIDER_ID] \
+        --providerId <PROVIDER_ID> \
 
 
 

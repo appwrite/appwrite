@@ -8,9 +8,9 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.createSubscriber(
-    '[TOPIC_ID]', // topicId
-    '[SUBSCRIBER_ID]', // subscriberId
-    '[TARGET_ID]' // targetId
+    '<TOPIC_ID>', // topicId
+    '<SUBSCRIBER_ID>', // subscriberId
+    '<TARGET_ID>' // targetId
 );
 
 console.log(response);

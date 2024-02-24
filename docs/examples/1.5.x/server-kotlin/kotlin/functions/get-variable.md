@@ -10,6 +10,6 @@ val client = Client()
 val functions = Functions(client)
 
 val response = functions.getVariable(
-    functionId = "[FUNCTION_ID]",
-    variableId = "[VARIABLE_ID]"
+    functionId = "<FUNCTION_ID>",
+    variableId = "<VARIABLE_ID>"
 )

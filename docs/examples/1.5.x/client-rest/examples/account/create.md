@@ -5,8 +5,8 @@ X-Appwrite-Response-Format: 1.5.0
 X-Appwrite-Project: 5df5acd0d48c2
 
 {
-  "userId": "[USER_ID]",
+  "userId": "<USER_ID>",
   "email": "email@example.com",
   "password": ,
-  "name": "[NAME]"
+  "name": "<NAME>"
 }

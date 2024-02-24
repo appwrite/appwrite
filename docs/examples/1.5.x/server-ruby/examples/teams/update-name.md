@@ -10,8 +10,8 @@ client = Client.new
 teams = Teams.new(client)
 
 response = teams.update_name(
-    team_id: '[TEAM_ID]',
-    name: '[NAME]'
+    team_id: '<TEAM_ID>',
+    name: '<NAME>'
 )
 
 puts response.inspect

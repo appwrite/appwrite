@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let database = try await databases.update(
-    databaseId: "[DATABASE_ID]",
-    name: "[NAME]",
+    databaseId: "<DATABASE_ID>",
+    name: "<NAME>",
     enabled: false // optional
 )
 

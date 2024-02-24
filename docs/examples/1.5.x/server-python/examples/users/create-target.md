@@ -9,10 +9,10 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 users = Users(client)
 
 result = users.create_target(
-    user_id = '[USER_ID]',
-    target_id = '[TARGET_ID]',
+    user_id = '<USER_ID>',
+    target_id = '<TARGET_ID>',
     provider_type = MessagingProviderType.EMAIL,
-    identifier = '[IDENTIFIER]',
-    provider_id = '[PROVIDER_ID]', # optional
-    name = '[NAME]' # optional
+    identifier = '<IDENTIFIER>',
+    provider_id = '<PROVIDER_ID>', # optional
+    name = '<NAME>' # optional
 )

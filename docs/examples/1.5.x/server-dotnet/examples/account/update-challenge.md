@@ -12,6 +12,6 @@ Client client = new Client()
 Account account = new Account(client);
 
  result = await account.UpdateChallenge(
-    challengeId: "[CHALLENGE_ID]",
-    otp: "[OTP]"
+    challengeId: "<CHALLENGE_ID>",
+    otp: "<OTP>"
 );

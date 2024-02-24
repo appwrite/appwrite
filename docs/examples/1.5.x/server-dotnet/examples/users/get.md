@@ -11,5 +11,5 @@ Client client = new Client()
 Users users = new Users(client);
 
 User result = await users.Get(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 );

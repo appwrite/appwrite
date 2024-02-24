@@ -7,6 +7,6 @@ client.set_project('5df5acd0d48c2') # Your project ID
 account = Account(client)
 
 result = account.create_phone_token(
-    user_id = '[USER_ID]',
+    user_id = '<USER_ID>',
     phone = '+12065550100'
 )

@@ -8,9 +8,9 @@ client.set_session('') # The user session to authenticate with
 databases = Databases(client)
 
 result = databases.update_document(
-    database_id = '[DATABASE_ID]',
-    collection_id = '[COLLECTION_ID]',
-    document_id = '[DOCUMENT_ID]',
+    database_id = '<DATABASE_ID>',
+    collection_id = '<COLLECTION_ID>',
+    document_id = '<DOCUMENT_ID>',
     data = {}, # optional
     permissions = ["read("any")"] # optional
 )

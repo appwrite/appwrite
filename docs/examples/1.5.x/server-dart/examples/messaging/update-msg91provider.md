@@ -8,12 +8,12 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.updateMsg91Provider(
-  providerId: '[PROVIDER_ID]',
-  name: '[NAME]', // (optional)
+  providerId: '<PROVIDER_ID>',
+  name: '<NAME>', // (optional)
   enabled: false, // (optional)
-  senderId: '[SENDER_ID]', // (optional)
-  authKey: '[AUTH_KEY]', // (optional)
-  from: '[FROM]', // (optional)
+  senderId: '<SENDER_ID>', // (optional)
+  authKey: '<AUTH_KEY>', // (optional)
+  from: '<FROM>', // (optional)
 );
 
 result.then((response) {

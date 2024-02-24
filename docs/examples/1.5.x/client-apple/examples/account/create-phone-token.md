@@ -7,7 +7,7 @@ let client = Client()
 let account = Account(client)
 
 let token = try await account.createPhoneToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     phone: "+12065550100"
 )
 

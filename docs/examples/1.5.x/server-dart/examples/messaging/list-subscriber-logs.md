@@ -8,7 +8,7 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.listSubscriberLogs(
-  subscriberId: '[SUBSCRIBER_ID]',
+  subscriberId: '<SUBSCRIBER_ID>',
   queries: [], // (optional)
 );
 

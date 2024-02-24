@@ -1,7 +1,7 @@
 query {
     messagingListProviders(
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         providers {

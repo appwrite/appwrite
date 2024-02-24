@@ -8,9 +8,9 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.listFiles(
-  bucketId: '[BUCKET_ID]',
+  bucketId: '<BUCKET_ID>',
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

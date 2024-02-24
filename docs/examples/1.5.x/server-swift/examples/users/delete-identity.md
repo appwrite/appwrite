@@ -8,6 +8,6 @@ let client = Client()
 let users = Users(client)
 
 let result = try await users.deleteIdentity(
-    identityId: "[IDENTITY_ID]"
+    identityId: "<IDENTITY_ID>"
 )
 

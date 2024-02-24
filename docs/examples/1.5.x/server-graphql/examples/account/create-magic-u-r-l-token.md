@@ -1,6 +1,6 @@
 mutation {
     accountCreateMagicURLToken(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         email: "email@example.com",
         url: "https://example.com",
         phrase: false

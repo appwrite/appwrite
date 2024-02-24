@@ -11,14 +11,14 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->updateMailgunProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]', // optional
-    apiKey: '[API_KEY]', // optional
-    domain: '[DOMAIN]', // optional
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>', // optional
+    apiKey: '<API_KEY>', // optional
+    domain: '<DOMAIN>', // optional
     isEuRegion: false, // optional
     enabled: false, // optional
-    fromName: '[FROM_NAME]', // optional
+    fromName: '<FROM_NAME>', // optional
     fromEmail: 'email@example.com', // optional
-    replyToName: '[REPLY_TO_NAME]', // optional
-    replyToEmail: '[REPLY_TO_EMAIL]' // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
+    replyToEmail: '<REPLY_TO_EMAIL>' // optional
 );

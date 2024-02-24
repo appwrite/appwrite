@@ -7,14 +7,14 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.createWebhook(
-    '[PROJECT_ID]', // projectId
-    '[NAME]', // name
+    '<PROJECT_ID>', // projectId
+    '<NAME>', // name
     [], // events
     '', // url
     false, // security
     false, // enabled (optional)
-    '[HTTP_USER]', // httpUser (optional)
-    '[HTTP_PASS]' // httpPass (optional)
+    '<HTTP_USER>', // httpUser (optional)
+    '<HTTP_PASS>' // httpPass (optional)
 );
 
 console.log(response);

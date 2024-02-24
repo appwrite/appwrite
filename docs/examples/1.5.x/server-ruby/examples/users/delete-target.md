@@ -10,8 +10,8 @@ client = Client.new
 users = Users.new(client)
 
 response = users.delete_target(
-    user_id: '[USER_ID]',
-    target_id: '[TARGET_ID]'
+    user_id: '<USER_ID>',
+    target_id: '<TARGET_ID>'
 )
 
 puts response.inspect

@@ -10,11 +10,11 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_vonage_provider(
-    provider_id: '[PROVIDER_ID]',
-    name: '[NAME]',
+    provider_id: '<PROVIDER_ID>',
+    name: '<NAME>',
     from: '+12065550100', # optional
-    api_key: '[API_KEY]', # optional
-    api_secret: '[API_SECRET]', # optional
+    api_key: '<API_KEY>', # optional
+    api_secret: '<API_SECRET>', # optional
     enabled: false # optional
 )
 

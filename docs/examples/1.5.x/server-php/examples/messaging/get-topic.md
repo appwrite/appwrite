@@ -11,5 +11,5 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->getTopic(
-    topicId: '[TOPIC_ID]'
+    topicId: '<TOPIC_ID>'
 );

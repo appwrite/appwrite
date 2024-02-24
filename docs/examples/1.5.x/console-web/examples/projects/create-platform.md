@@ -7,11 +7,11 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.createPlatform(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     PlatformType.Web, // type
-    '[NAME]', // name
-    '[KEY]', // key (optional)
-    '[STORE]', // store (optional)
+    '<NAME>', // name
+    '<KEY>', // key (optional)
+    '<STORE>', // store (optional)
     '' // hostname (optional)
 );
 

@@ -8,7 +8,7 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 databases = Databases(client)
 
 result = databases.list_collections(
-    database_id = '[DATABASE_ID]',
+    database_id = '<DATABASE_ID>',
     queries = [], # optional
-    search = '[SEARCH]' # optional
+    search = '<SEARCH>' # optional
 )

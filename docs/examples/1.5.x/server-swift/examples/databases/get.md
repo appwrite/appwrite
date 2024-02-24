@@ -8,6 +8,6 @@ let client = Client()
 let databases = Databases(client)
 
 let database = try await databases.get(
-    databaseId: "[DATABASE_ID]"
+    databaseId: "<DATABASE_ID>"
 )
 

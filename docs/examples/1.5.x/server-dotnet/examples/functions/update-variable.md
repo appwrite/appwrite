@@ -13,8 +13,8 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 Variable result = await functions.UpdateVariable(
-    functionId: "[FUNCTION_ID]",
-    variableId: "[VARIABLE_ID]",
-    key: "[KEY]",
-    value: "[VALUE]" // optional
+    functionId: "<FUNCTION_ID>",
+    variableId: "<VARIABLE_ID>",
+    key: "<KEY>",
+    value: "<VALUE>" // optional
 );

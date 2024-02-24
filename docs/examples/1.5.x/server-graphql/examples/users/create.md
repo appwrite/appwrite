@@ -1,10 +1,10 @@
 mutation {
     usersCreate(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         email: "email@example.com",
         phone: "+12065550100",
         password: "",
-        name: "[NAME]"
+        name: "<NAME>"
     ) {
         _id
         _createdAt

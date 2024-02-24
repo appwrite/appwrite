@@ -8,7 +8,7 @@ Avatars avatars = Avatars(client);
 
 // Downloading file
 Future result = avatars.getQR(
-  text: '[TEXT]',
+  text: '<TEXT>',
   size: 1, // (optional)
   margin: 0, // (optional)
   download: false, // (optional)
@@ -22,7 +22,7 @@ Future result = avatars.getQR(
 // Displaying image preview
 FutureBuilder(
   future: avatars.getQR(
-  text:'[TEXT]' ,
+  text:'<TEXT>' ,
   size:1 , // (optional)
   margin:0 , // (optional)
   download:false , // (optional)

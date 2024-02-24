@@ -8,7 +8,7 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.deleteBucket(
-  bucketId: '[BUCKET_ID]',
+  bucketId: '<BUCKET_ID>',
 );
 
 result.then((response) {

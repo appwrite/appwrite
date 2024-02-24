@@ -1,6 +1,6 @@
 mutation {
     usersUpdatePrefs(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         prefs: "{}"
     ) {
         data

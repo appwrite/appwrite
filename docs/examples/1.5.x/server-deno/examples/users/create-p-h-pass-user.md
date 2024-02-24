@@ -8,10 +8,10 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.createPHPassUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

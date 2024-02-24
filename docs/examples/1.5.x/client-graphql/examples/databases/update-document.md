@@ -1,8 +1,8 @@
 mutation {
     databasesUpdateDocument(
-        databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]",
-        documentId: "[DOCUMENT_ID]",
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
+        documentId: "<DOCUMENT_ID>",
         data: "{}",
         permissions: ["read("any")"]
     ) {

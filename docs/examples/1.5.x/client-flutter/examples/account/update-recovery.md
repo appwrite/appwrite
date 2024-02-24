@@ -7,8 +7,8 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.updateRecovery(
-  userId: '[USER_ID]',
-  secret: '[SECRET]',
+  userId: '<USER_ID>',
+  secret: '<SECRET>',
   password: '',
 );
 

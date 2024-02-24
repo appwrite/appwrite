@@ -11,5 +11,5 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 await messaging.DeleteTopic(
-    topicId: "[TOPIC_ID]"
+    topicId: "<TOPIC_ID>"
 );

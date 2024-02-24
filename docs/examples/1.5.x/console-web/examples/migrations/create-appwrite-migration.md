@@ -9,8 +9,8 @@ const migrations = new Migrations(client);
 const result = await migrations.createAppwriteMigration(
     [], // resources
     'https://example.com', // endpoint
-    '[PROJECT_ID]', // projectId
-    '[API_KEY]' // apiKey
+    '<PROJECT_ID>', // projectId
+    '<API_KEY>' // apiKey
 );
 
 console.log(response);

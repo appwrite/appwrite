@@ -1,3 +1,3 @@
 appwrite databases getDatabaseUsage \
-        --databaseId [DATABASE_ID] \
+        --databaseId <DATABASE_ID> \
 

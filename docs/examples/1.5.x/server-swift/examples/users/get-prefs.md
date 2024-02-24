@@ -8,6 +8,6 @@ let client = Client()
 let users = Users(client)
 
 let preferences = try await users.getPrefs(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 )
 

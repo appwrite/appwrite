@@ -1,10 +1,10 @@
 mutation {
     messagingUpdateSms(
-        messageId: "[MESSAGE_ID]",
+        messageId: "<MESSAGE_ID>",
         topics: [],
         users: [],
         targets: [],
-        content: "[CONTENT]",
+        content: "<CONTENT>",
         status: "draft",
         scheduledAt: ""
     ) {

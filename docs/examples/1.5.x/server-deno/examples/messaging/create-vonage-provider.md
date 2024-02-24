@@ -8,11 +8,11 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.createVonageProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name
     '+12065550100', // from (optional)
-    '[API_KEY]', // apiKey (optional)
-    '[API_SECRET]', // apiSecret (optional)
+    '<API_KEY>', // apiKey (optional)
+    '<API_SECRET>', // apiSecret (optional)
     false // enabled (optional)
 );
 

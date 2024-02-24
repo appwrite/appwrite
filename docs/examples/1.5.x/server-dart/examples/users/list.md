@@ -9,7 +9,7 @@ Users users = Users(client);
 
 Future result = users.list(
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

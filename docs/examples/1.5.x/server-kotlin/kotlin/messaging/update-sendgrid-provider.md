@@ -10,12 +10,12 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.updateSendgridProvider(
-    providerId = "[PROVIDER_ID]",
-    name = "[NAME]", // optional
+    providerId = "<PROVIDER_ID>",
+    name = "<NAME>", // optional
     enabled = false, // optional
-    apiKey = "[API_KEY]", // optional
-    fromName = "[FROM_NAME]", // optional
+    apiKey = "<API_KEY>", // optional
+    fromName = "<FROM_NAME>", // optional
     fromEmail = "email@example.com", // optional
-    replyToName = "[REPLY_TO_NAME]", // optional
-    replyToEmail = "[REPLY_TO_EMAIL]" // optional
+    replyToName = "<REPLY_TO_NAME>", // optional
+    replyToEmail = "<REPLY_TO_EMAIL>" // optional
 )

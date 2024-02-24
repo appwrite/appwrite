@@ -1,2 +1,2 @@
 appwrite vcs getInstallation \
-        --installationId [INSTALLATION_ID]
+        --installationId <INSTALLATION_ID>

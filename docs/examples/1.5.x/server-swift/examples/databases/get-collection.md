@@ -8,7 +8,7 @@ let client = Client()
 let databases = Databases(client)
 
 let collection = try await databases.getCollection(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]"
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>"
 )
 

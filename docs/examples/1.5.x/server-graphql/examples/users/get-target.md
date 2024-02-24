@@ -1,7 +1,7 @@
 query {
     usersGetTarget(
-        userId: "[USER_ID]",
-        targetId: "[TARGET_ID]"
+        userId: "<USER_ID>",
+        targetId: "<TARGET_ID>"
     ) {
         _id
         _createdAt

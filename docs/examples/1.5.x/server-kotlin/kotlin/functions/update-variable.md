@@ -10,8 +10,8 @@ val client = Client()
 val functions = Functions(client)
 
 val response = functions.updateVariable(
-    functionId = "[FUNCTION_ID]",
-    variableId = "[VARIABLE_ID]",
-    key = "[KEY]",
-    value = "[VALUE]" // optional
+    functionId = "<FUNCTION_ID>",
+    variableId = "<VARIABLE_ID>",
+    key = "<KEY>",
+    value = "<VALUE>" // optional
 )

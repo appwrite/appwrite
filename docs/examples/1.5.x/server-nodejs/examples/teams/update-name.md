@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const teams = new sdk.Teams(client);
 
 const response = await teams.updateName(
-    '[TEAM_ID]', // teamId
-    '[NAME]' // name
+    '<TEAM_ID>', // teamId
+    '<NAME>' // name
 );

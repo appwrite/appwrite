@@ -1,7 +1,7 @@
 mutation {
     accountVerifyAuthenticator(
         type: "totp",
-        otp: "[OTP]"
+        otp: "<OTP>"
     ) {
         _id
         _createdAt

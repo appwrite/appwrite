@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.deleteVariable(
-    '[FUNCTION_ID]', // functionId
-    '[VARIABLE_ID]' // variableId
+    '<FUNCTION_ID>', // functionId
+    '<VARIABLE_ID>' // variableId
 );

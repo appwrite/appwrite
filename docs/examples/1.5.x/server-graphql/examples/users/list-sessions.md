@@ -1,6 +1,6 @@
 query {
     usersListSessions(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         total
         sessions {

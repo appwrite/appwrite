@@ -8,9 +8,9 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.listCollections(
-  databaseId: '[DATABASE_ID]',
+  databaseId: '<DATABASE_ID>',
   queries: [], // (optional)
-  search: '[SEARCH]', // (optional)
+  search: '<SEARCH>', // (optional)
 );
 
 result.then((response) {

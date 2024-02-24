@@ -1,6 +1,6 @@
 query {
     usersListMemberships(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         total
         memberships {

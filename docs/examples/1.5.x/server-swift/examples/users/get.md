@@ -8,6 +8,6 @@ let client = Client()
 let users = Users(client)
 
 let user = try await users.get(
-    userId: "[USER_ID]"
+    userId: "<USER_ID>"
 )
 

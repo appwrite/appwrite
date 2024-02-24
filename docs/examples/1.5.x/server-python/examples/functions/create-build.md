@@ -8,7 +8,7 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 functions = Functions(client)
 
 result = functions.create_build(
-    function_id = '[FUNCTION_ID]',
-    deployment_id = '[DEPLOYMENT_ID]',
-    build_id = '[BUILD_ID]'
+    function_id = '<FUNCTION_ID>',
+    deployment_id = '<DEPLOYMENT_ID>',
+    build_id = '<BUILD_ID>'
 )

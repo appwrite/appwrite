@@ -11,5 +11,5 @@ Teams teams = new Teams(client);
 
 TeamList result = await teams.List(
     queries: new List<string>(), // optional
-    search: "[SEARCH]" // optional
+    search: "<SEARCH>" // optional
 );

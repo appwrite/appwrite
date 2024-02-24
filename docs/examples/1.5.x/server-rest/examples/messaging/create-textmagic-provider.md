@@ -6,10 +6,10 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
 
 {
-  "providerId": "[PROVIDER_ID]",
-  "name": "[NAME]",
+  "providerId": "<PROVIDER_ID>",
+  "name": "<NAME>",
   "from": "+12065550100",
-  "username": "[USERNAME]",
-  "apiKey": "[API_KEY]",
+  "username": "<USERNAME>",
+  "apiKey": "<API_KEY>",
   "enabled": false
 }

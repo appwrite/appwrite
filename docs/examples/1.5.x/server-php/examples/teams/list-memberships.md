@@ -11,7 +11,7 @@ $client = (new Client())
 $teams = new Teams($client);
 
 $result = $teams->listMemberships(
-    teamId: '[TEAM_ID]',
+    teamId: '<TEAM_ID>',
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

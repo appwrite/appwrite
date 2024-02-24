@@ -1,7 +1,7 @@
 import io.appwrite.Client;
 import io.appwrite.coroutines.CoroutineCallback;
 import io.appwrite.services.Account;
-import io.appwrite.enums.AuthenticatorProvider;
+import io.appwrite.enums.AuthenticationFactor;
 
 Client client = new Client()
     .setEndpoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -10,7 +10,7 @@ Client client = new Client()
 Account account = new Account(client);
 
 account.createChallenge(
-    AuthenticatorProvider.TOTP
+    AuthenticationFactor.TOTP, // factor
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();
@@ -20,3 +20,4 @@ account.createChallenge(
         System.out.println(result);
     })
 );
+

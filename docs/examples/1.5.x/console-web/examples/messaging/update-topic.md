@@ -7,8 +7,9 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const result = await messaging.updateTopic(
-    '[TOPIC_ID]', // topicId
-    '[NAME]' // name (optional)
+    '<TOPIC_ID>', // topicId
+    '<NAME>', // name (optional)
+    ["any"] // subscribe (optional)
 );
 
 console.log(response);

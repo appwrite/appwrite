@@ -11,7 +11,7 @@ Client client = new Client()
 Users users = new Users(client);
 
 Token result = await users.CreateToken(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     length: 4, // optional
     expire: 60 // optional
 );

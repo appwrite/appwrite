@@ -1,5 +1,5 @@
 appwrite messaging updateSendgridProvider \
-        --providerId [PROVIDER_ID] \
+        --providerId <PROVIDER_ID> \
 
 
 

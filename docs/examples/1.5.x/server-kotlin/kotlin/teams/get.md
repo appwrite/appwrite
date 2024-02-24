@@ -10,5 +10,5 @@ val client = Client()
 val teams = Teams(client)
 
 val response = teams.get(
-    teamId = "[TEAM_ID]"
+    teamId = "<TEAM_ID>"
 )

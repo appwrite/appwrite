@@ -8,6 +8,6 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.update_challenge(
-    challenge_id = '[CHALLENGE_ID]',
-    otp = '[OTP]'
+    challenge_id = '<CHALLENGE_ID>',
+    otp = '<OTP>'
 )

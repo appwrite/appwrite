@@ -1,6 +1,6 @@
 query {
     messagingListTargets(
-        messageId: "[MESSAGE_ID]",
+        messageId: "<MESSAGE_ID>",
         queries: []
     ) {
         total

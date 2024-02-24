@@ -8,7 +8,7 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.updateEmailVerification(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     false // emailVerification
 );
 

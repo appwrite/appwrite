@@ -9,7 +9,7 @@ const proxy = new Proxy(client);
 const result = await proxy.createRule(
     '', // domain
     .Api, // resourceType
-    '[RESOURCE_ID]' // resourceId (optional)
+    '<RESOURCE_ID>' // resourceId (optional)
 );
 
 console.log(response);

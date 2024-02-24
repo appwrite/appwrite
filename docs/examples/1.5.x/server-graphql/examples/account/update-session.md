@@ -1,6 +1,6 @@
 mutation {
     accountUpdateSession(
-        sessionId: "[SESSION_ID]"
+        sessionId: "<SESSION_ID>"
     ) {
         _id
         _createdAt

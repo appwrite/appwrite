@@ -1,7 +1,7 @@
 query {
     databasesListAttributes(
-        databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]",
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>",
         queries: []
     ) {
         total

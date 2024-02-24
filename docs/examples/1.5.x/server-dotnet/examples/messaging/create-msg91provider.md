@@ -12,10 +12,10 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 Provider result = await messaging.CreateMsg91Provider(
-    providerId: "[PROVIDER_ID]",
-    name: "[NAME]",
+    providerId: "<PROVIDER_ID>",
+    name: "<NAME>",
     from: "+12065550100", // optional
-    senderId: "[SENDER_ID]", // optional
-    authKey: "[AUTH_KEY]", // optional
+    senderId: "<SENDER_ID>", // optional
+    authKey: "<AUTH_KEY>", // optional
     enabled: false // optional
 );

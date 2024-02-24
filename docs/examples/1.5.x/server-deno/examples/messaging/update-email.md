@@ -8,12 +8,12 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.updateEmail(
-    '[MESSAGE_ID]', // messageId
+    '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
-    '[SUBJECT]', // subject (optional)
-    '[CONTENT]', // content (optional)
+    '<SUBJECT>', // subject (optional)
+    '<CONTENT>', // content (optional)
     MessageStatus.Draft, // status (optional)
     false, // html (optional)
     [], // cc (optional)

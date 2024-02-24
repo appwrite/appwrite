@@ -11,5 +11,5 @@ Client client = new Client()
 Teams teams = new Teams(client);
 
 await teams.Delete(
-    teamId: "[TEAM_ID]"
+    teamId: "<TEAM_ID>"
 );

@@ -9,7 +9,7 @@ client = Client.new
 account = Account.new(client)
 
 response = account.create_phone_token(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     phone: '+12065550100'
 )
 

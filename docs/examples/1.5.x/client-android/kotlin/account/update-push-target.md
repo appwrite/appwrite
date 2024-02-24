@@ -9,6 +9,6 @@ val client = Client(context)
 val account = Account(client)
 
 val response = account.updatePushTarget(
-    targetId = "[TARGET_ID]", 
-    identifier = "[IDENTIFIER]", 
+    targetId = "<TARGET_ID>", 
+    identifier = "<IDENTIFIER>", 
 )

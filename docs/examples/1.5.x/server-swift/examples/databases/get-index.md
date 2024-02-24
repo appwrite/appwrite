@@ -8,8 +8,8 @@ let client = Client()
 let databases = Databases(client)
 
 let index = try await databases.getIndex(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: ""
 )
 

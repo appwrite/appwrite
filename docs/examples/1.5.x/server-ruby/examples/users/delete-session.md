@@ -10,8 +10,8 @@ client = Client.new
 users = Users.new(client)
 
 response = users.delete_session(
-    user_id: '[USER_ID]',
-    session_id: '[SESSION_ID]'
+    user_id: '<USER_ID>',
+    session_id: '<SESSION_ID>'
 )
 
 puts response.inspect

@@ -7,10 +7,10 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.createExecution(
-    '[FUNCTION_ID]', // functionId
-    '[BODY]', // body (optional)
+    '<FUNCTION_ID>', // functionId
+    '<BODY>', // body (optional)
     false, // async (optional)
-    '[PATH]', // path (optional)
+    '<PATH>', // path (optional)
     ExecutionMethod.GET, // method (optional)
     {} // headers (optional)
 );

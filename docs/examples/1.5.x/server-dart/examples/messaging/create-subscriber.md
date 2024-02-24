@@ -8,9 +8,9 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.createSubscriber(
-  topicId: '[TOPIC_ID]',
-  subscriberId: '[SUBSCRIBER_ID]',
-  targetId: '[TARGET_ID]',
+  topicId: '<TOPIC_ID>',
+  subscriberId: '<SUBSCRIBER_ID>',
+  targetId: '<TARGET_ID>',
 );
 
 result.then((response) {

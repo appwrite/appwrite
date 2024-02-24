@@ -7,7 +7,7 @@ const client = new Client()
 const proxy = new Proxy(client);
 
 const result = await proxy.updateRuleVerification(
-    '[RULE_ID]' // ruleId
+    '<RULE_ID>' // ruleId
 );
 
 console.log(response);

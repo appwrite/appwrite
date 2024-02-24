@@ -7,7 +7,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.deletePushTarget(
-  targetId: '[TARGET_ID]',
+  targetId: '<TARGET_ID>',
 );
 
 result.then((response) {

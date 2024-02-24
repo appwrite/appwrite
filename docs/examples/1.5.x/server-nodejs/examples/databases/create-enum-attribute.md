@@ -8,11 +8,11 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.createEnumAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     [], // elements
     false, // required
-    '[DEFAULT]', // default (optional)
+    '<DEFAULT>', // default (optional)
     false // array (optional)
 );

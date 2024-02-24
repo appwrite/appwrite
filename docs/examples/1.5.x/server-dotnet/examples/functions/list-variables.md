@@ -11,5 +11,5 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 VariableList result = await functions.ListVariables(
-    functionId: "[FUNCTION_ID]"
+    functionId: "<FUNCTION_ID>"
 );

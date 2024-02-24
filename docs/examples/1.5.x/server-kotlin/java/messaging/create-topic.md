@@ -10,8 +10,8 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 messaging.createTopic(
-    "[TOPIC_ID]", // topicId
-    "[NAME]", // name
+    "<TOPIC_ID>", // topicId
+    "<NAME>", // name
     listOf("any"), // subscribe (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

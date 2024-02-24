@@ -6,5 +6,5 @@ X-Appwrite-Project: 5df5acd0d48c2
 X-Appwrite-Session: 
 
 {
-  "identifier": "[IDENTIFIER]"
+  "identifier": "<IDENTIFIER>"
 }

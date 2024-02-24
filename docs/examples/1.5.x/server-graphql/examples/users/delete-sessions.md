@@ -1,6 +1,6 @@
 mutation {
     usersDeleteSessions(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         status
     }

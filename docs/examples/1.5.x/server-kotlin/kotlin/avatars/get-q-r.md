@@ -10,7 +10,7 @@ val client = Client()
 val avatars = Avatars(client)
 
 val result = avatars.getQR(
-    text = "[TEXT]",
+    text = "<TEXT>",
     size = 1, // optional
     margin = 0, // optional
     download = false // optional

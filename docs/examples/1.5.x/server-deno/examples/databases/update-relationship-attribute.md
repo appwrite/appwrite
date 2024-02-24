@@ -8,8 +8,8 @@ const client = new Client()
 const databases = new Databases(client);
 
 const response = await databases.updateRelationshipAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     RelationMutate.Cascade // onDelete (optional)
 );

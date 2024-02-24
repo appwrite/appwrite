@@ -1,2 +1,2 @@
 appwrite messaging getProvider \
-        --providerId [PROVIDER_ID]
+        --providerId <PROVIDER_ID>

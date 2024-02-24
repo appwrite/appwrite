@@ -7,15 +7,15 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateSmtp(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     false, // enabled
-    '[SENDER_NAME]', // senderName (optional)
+    '<SENDER_NAME>', // senderName (optional)
     'email@example.com', // senderEmail (optional)
     'email@example.com', // replyTo (optional)
     '', // host (optional)
     null, // port (optional)
-    '[USERNAME]', // username (optional)
-    '[PASSWORD]', // password (optional)
+    '<USERNAME>', // username (optional)
+    '<PASSWORD>', // password (optional)
     SMTPSecure.Tls // secure (optional)
 );
 

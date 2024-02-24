@@ -11,12 +11,12 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createSendgridProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]',
-    apiKey: '[API_KEY]', // optional
-    fromName: '[FROM_NAME]', // optional
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
+    apiKey: '<API_KEY>', // optional
+    fromName: '<FROM_NAME>', // optional
     fromEmail: 'email@example.com', // optional
-    replyToName: '[REPLY_TO_NAME]', // optional
+    replyToName: '<REPLY_TO_NAME>', // optional
     replyToEmail: 'email@example.com', // optional
     enabled: false // optional
 );

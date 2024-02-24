@@ -10,5 +10,5 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.getProvider(
-    providerId = "[PROVIDER_ID]"
+    providerId = "<PROVIDER_ID>"
 )

@@ -11,8 +11,8 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->createFcmProvider(
-    providerId: '[PROVIDER_ID]',
-    name: '[NAME]',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>',
     serviceAccountJSON: [], // optional
     enabled: false // optional
 );

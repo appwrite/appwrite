@@ -8,8 +8,8 @@ Client client = Client()
 Storage storage = Storage(client);
 
 Future result = storage.getFileView(
-  bucketId: '[BUCKET_ID]',
-  fileId: '[FILE_ID]',
+  bucketId: '<BUCKET_ID>',
+  fileId: '<FILE_ID>',
 );
 
 result.then((response) {

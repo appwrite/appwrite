@@ -8,8 +8,8 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.updateChallenge(
-    '[CHALLENGE_ID]', // challengeId
-    '[OTP]' // otp
+    '<CHALLENGE_ID>', // challengeId
+    '<OTP>' // otp
 );
 
 console.log(response);

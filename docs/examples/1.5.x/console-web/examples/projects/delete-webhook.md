@@ -7,8 +7,8 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.deleteWebhook(
-    '[PROJECT_ID]', // projectId
-    '[WEBHOOK_ID]' // webhookId
+    '<PROJECT_ID>', // projectId
+    '<WEBHOOK_ID>' // webhookId
 );
 
 console.log(response);

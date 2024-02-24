@@ -1,6 +1,6 @@
 query {
     usersListLogs(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         queries: []
     ) {
         total

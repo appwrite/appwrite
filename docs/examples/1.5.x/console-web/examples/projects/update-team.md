@@ -7,8 +7,8 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateTeam(
-    '[PROJECT_ID]', // projectId
-    '[TEAM_ID]' // teamId
+    '<PROJECT_ID>', // projectId
+    '<TEAM_ID>' // teamId
 );
 
 console.log(response);

@@ -10,6 +10,6 @@ val client = Client()
 val users = Users(client)
 
 val response = users.deleteSession(
-    userId = "[USER_ID]",
-    sessionId = "[SESSION_ID]"
+    userId = "<USER_ID>",
+    sessionId = "<SESSION_ID>"
 )

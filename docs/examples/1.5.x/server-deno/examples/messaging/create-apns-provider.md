@@ -8,12 +8,13 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.createApnsProvider(
-    '[PROVIDER_ID]', // providerId
-    '[NAME]', // name
-    '[AUTH_KEY]', // authKey (optional)
-    '[AUTH_KEY_ID]', // authKeyId (optional)
-    '[TEAM_ID]', // teamId (optional)
-    '[BUNDLE_ID]', // bundleId (optional)
+    '<PROVIDER_ID>', // providerId
+    '<NAME>', // name
+    '<AUTH_KEY>', // authKey (optional)
+    '<AUTH_KEY_ID>', // authKeyId (optional)
+    '<TEAM_ID>', // teamId (optional)
+    '<BUNDLE_ID>', // bundleId (optional)
+    false, // sandbox (optional)
     false // enabled (optional)
 );
 

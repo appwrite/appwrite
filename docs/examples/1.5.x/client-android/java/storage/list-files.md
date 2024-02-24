@@ -9,9 +9,9 @@ Client client = new Client(context)
 Storage storage = new Storage(client);
 
 storage.listFiles(
-    "[BUCKET_ID]", // bucketId 
+    "<BUCKET_ID>", // bucketId 
     listOf(), // queries (optional)
-    "[SEARCH]", // search (optional)
+    "<SEARCH>", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

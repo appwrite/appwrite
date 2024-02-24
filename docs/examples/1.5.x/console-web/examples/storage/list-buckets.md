@@ -8,7 +8,7 @@ const storage = new Storage(client);
 
 const result = await storage.listBuckets(
     [], // queries (optional)
-    '[SEARCH]' // search (optional)
+    '<SEARCH>' // search (optional)
 );
 
 console.log(response);

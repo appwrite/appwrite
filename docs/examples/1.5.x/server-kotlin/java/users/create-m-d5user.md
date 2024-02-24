@@ -10,10 +10,10 @@ Client client = new Client()
 Users users = new Users(client);
 
 users.createMD5User(
-    "[USER_ID]", // userId
+    "<USER_ID>", // userId
     "email@example.com", // email
     "password", // password
-    "[NAME]", // name (optional)
+    "<NAME>", // name (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

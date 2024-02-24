@@ -8,8 +8,8 @@ Client client = Client()
 Functions functions = Functions(client);
 
 Future result = functions.deleteDeployment(
-  functionId: '[FUNCTION_ID]',
-  deploymentId: '[DEPLOYMENT_ID]',
+  functionId: '<FUNCTION_ID>',
+  deploymentId: '<DEPLOYMENT_ID>',
 );
 
 result.then((response) {

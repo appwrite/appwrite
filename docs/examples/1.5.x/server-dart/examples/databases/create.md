@@ -8,8 +8,8 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.create(
-  databaseId: '[DATABASE_ID]',
-  name: '[NAME]',
+  databaseId: '<DATABASE_ID>',
+  name: '<NAME>',
   enabled: false, // (optional)
 );
 

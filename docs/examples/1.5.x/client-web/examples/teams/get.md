@@ -7,7 +7,7 @@ const client = new Client()
 const teams = new Teams(client);
 
 const result = await teams.get(
-    '[TEAM_ID]' // teamId
+    '<TEAM_ID>' // teamId
 );
 
 console.log(response);

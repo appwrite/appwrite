@@ -8,15 +8,15 @@ const client = new Client()
 const users = new Users(client);
 
 const response = await users.createScryptUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
-    '[PASSWORD_SALT]', // passwordSalt
+    '<PASSWORD_SALT>', // passwordSalt
     null, // passwordCpu
     null, // passwordMemory
     null, // passwordParallel
     null, // passwordLength
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

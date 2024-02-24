@@ -1,7 +1,7 @@
 query {
     databasesGetCollection(
-        databaseId: "[DATABASE_ID]",
-        collectionId: "[COLLECTION_ID]"
+        databaseId: "<DATABASE_ID>",
+        collectionId: "<COLLECTION_ID>"
     ) {
         _id
         _createdAt

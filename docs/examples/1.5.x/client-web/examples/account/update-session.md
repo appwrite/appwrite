@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const result = await account.updateSession(
-    '[SESSION_ID]' // sessionId
+    '<SESSION_ID>' // sessionId
 );
 
 console.log(response);

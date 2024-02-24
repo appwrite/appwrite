@@ -7,7 +7,7 @@ const client = new Client()
 const account = new Account(client);
 
 const result = await account.deletePushTarget(
-    '[TARGET_ID]' // targetId
+    '<TARGET_ID>' // targetId
 );
 
 console.log(response);

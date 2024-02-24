@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateAuthSessionsLimit(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     1 // limit
 );
 

@@ -10,12 +10,12 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.update_email(
-    message_id: '[MESSAGE_ID]',
+    message_id: '<MESSAGE_ID>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional
-    subject: '[SUBJECT]', # optional
-    content: '[CONTENT]', # optional
+    subject: '<SUBJECT>', # optional
+    content: '<CONTENT>', # optional
     status: MessageStatus::DRAFT, # optional
     html: false, # optional
     cc: [], # optional

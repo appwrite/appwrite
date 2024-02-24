@@ -7,12 +7,12 @@ const client = new Client()
 const databases = new Databases(client);
 
 const result = await databases.updateEnumAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     [], // elements
     false, // required
-    '[DEFAULT]' // default
+    '<DEFAULT>' // default
 );
 
 console.log(response);

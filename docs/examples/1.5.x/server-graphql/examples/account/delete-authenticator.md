@@ -1,7 +1,7 @@
 mutation {
     accountDeleteAuthenticator(
         type: "totp",
-        otp: "[OTP]"
+        otp: "<OTP>"
     ) {
         _id
         _createdAt

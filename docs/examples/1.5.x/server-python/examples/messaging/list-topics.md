@@ -9,5 +9,5 @@ messaging = Messaging(client)
 
 result = messaging.list_topics(
     queries = [], # optional
-    search = '[SEARCH]' # optional
+    search = '<SEARCH>' # optional
 )

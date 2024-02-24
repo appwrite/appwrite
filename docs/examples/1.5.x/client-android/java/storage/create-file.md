@@ -10,8 +10,8 @@ Client client = new Client(context)
 Storage storage = new Storage(client);
 
 storage.createFile(
-    "[BUCKET_ID]", // bucketId 
-    "[FILE_ID]", // fileId 
+    "<BUCKET_ID>", // bucketId 
+    "<FILE_ID>", // fileId 
     InputFile.fromPath("file.png"), // file 
     listOf("read("any")"), // permissions (optional)
     new CoroutineCallback<>((result, error) -> {

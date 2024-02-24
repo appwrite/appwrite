@@ -7,7 +7,7 @@ let client = Client()
 let teams = Teams(client)
 
 let preferences = try await teams.updatePrefs(
-    teamId: "[TEAM_ID]",
+    teamId: "<TEAM_ID>",
     prefs: [:]
 )
 

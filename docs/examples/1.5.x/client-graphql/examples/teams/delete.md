@@ -1,6 +1,6 @@
 mutation {
     teamsDelete(
-        teamId: "[TEAM_ID]"
+        teamId: "<TEAM_ID>"
     ) {
         status
     }

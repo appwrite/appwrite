@@ -9,10 +9,10 @@ client = Client.new
 account = Account.new(client)
 
 response = account.create(
-    user_id: '[USER_ID]',
+    user_id: '<USER_ID>',
     email: 'email@example.com',
     password: '',
-    name: '[NAME]' # optional
+    name: '<NAME>' # optional
 )
 
 puts response.inspect

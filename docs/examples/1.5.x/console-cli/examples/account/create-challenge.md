@@ -1,2 +1,2 @@
 appwrite account createChallenge \
-        --provider totp
+        --factor totp

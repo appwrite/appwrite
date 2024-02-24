@@ -11,8 +11,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 databases.createIndex(
-    "[DATABASE_ID]", // databaseId
-    "[COLLECTION_ID]", // collectionId
+    "<DATABASE_ID>", // databaseId
+    "<COLLECTION_ID>", // collectionId
     "", // key
     IndexType.KEY, // type
     listOf(), // attributes

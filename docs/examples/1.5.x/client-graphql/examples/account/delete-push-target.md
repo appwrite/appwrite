@@ -1,6 +1,6 @@
 mutation {
     accountDeletePushTarget(
-        targetId: "[TARGET_ID]"
+        targetId: "<TARGET_ID>"
     ) {
         status
     }

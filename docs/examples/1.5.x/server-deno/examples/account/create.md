@@ -7,10 +7,10 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.create(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     '', // password
-    '[NAME]' // name (optional)
+    '<NAME>' // name (optional)
 );
 
 console.log(response);

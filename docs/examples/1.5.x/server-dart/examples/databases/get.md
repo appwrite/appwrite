@@ -8,7 +8,7 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.get(
-  databaseId: '[DATABASE_ID]',
+  databaseId: '<DATABASE_ID>',
 );
 
 result.then((response) {

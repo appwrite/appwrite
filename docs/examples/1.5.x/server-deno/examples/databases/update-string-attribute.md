@@ -8,11 +8,11 @@ const client = new Client()
 const databases = new Databases(client);
 
 const response = await databases.updateStringAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
-    '[DEFAULT]' // default
+    '<DEFAULT>' // default
 );
 
 console.log(response);

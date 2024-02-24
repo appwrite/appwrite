@@ -7,7 +7,7 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateAuthPasswordHistory(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     0 // limit
 );
 

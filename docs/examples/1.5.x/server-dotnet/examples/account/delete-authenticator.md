@@ -13,5 +13,5 @@ Account account = new Account(client);
 
 await account.DeleteAuthenticator(
     type: AuthenticatorType.Totp,
-    otp: "[OTP]"
+    otp: "<OTP>"
 );

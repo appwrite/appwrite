@@ -11,6 +11,6 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->listProviderLogs(
-    providerId: '[PROVIDER_ID]',
+    providerId: '<PROVIDER_ID>',
     queries: [] // optional
 );

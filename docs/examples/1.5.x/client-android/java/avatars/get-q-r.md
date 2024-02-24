@@ -9,7 +9,7 @@ Client client = new Client(context)
 Avatars avatars = new Avatars(client);
 
 avatars.getQR(
-    "[TEXT]", // text 
+    "<TEXT>", // text 
     1, // size (optional)
     0, // margin (optional)
     false, // download (optional)

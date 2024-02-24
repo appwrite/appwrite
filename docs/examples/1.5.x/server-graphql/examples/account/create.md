@@ -1,9 +1,9 @@
 mutation {
     accountCreate(
-        userId: "[USER_ID]",
+        userId: "<USER_ID>",
         email: "email@example.com",
         password: "",
-        name: "[NAME]"
+        name: "<NAME>"
     ) {
         _id
         _createdAt

@@ -1,9 +1,9 @@
 mutation {
     functionsCreateExecution(
-        functionId: "[FUNCTION_ID]",
-        body: "[BODY]",
+        functionId: "<FUNCTION_ID>",
+        body: "<BODY>",
         async: false,
-        path: "[PATH]",
+        path: "<PATH>",
         method: "GET",
         headers: "{}"
     ) {

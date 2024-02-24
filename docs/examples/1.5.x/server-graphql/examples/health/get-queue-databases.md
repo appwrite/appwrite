@@ -1,6 +1,6 @@
 query {
     healthGetQueueDatabases(
-        name: "[NAME]",
+        name: "<NAME>",
         threshold: 0
     ) {
         size

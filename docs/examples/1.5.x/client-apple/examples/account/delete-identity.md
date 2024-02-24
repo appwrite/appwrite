@@ -7,6 +7,6 @@ let client = Client()
 let account = Account(client)
 
 let result = try await account.deleteIdentity(
-    identityId: "[IDENTITY_ID]"
+    identityId: "<IDENTITY_ID>"
 )
 

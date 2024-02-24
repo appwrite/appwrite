@@ -8,12 +8,12 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 messaging = Messaging(client)
 
 result = messaging.create_sendgrid_provider(
-    provider_id = '[PROVIDER_ID]',
-    name = '[NAME]',
-    api_key = '[API_KEY]', # optional
-    from_name = '[FROM_NAME]', # optional
+    provider_id = '<PROVIDER_ID>',
+    name = '<NAME>',
+    api_key = '<API_KEY>', # optional
+    from_name = '<FROM_NAME>', # optional
     from_email = 'email@example.com', # optional
-    reply_to_name = '[REPLY_TO_NAME]', # optional
+    reply_to_name = '<REPLY_TO_NAME>', # optional
     reply_to_email = 'email@example.com', # optional
     enabled = False # optional
 )

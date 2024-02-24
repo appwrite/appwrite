@@ -8,8 +8,8 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.createTopic(
-    '[TOPIC_ID]', // topicId
-    '[NAME]', // name
+    '<TOPIC_ID>', // topicId
+    '<NAME>', // name
     ["any"] // subscribe (optional)
 );
 

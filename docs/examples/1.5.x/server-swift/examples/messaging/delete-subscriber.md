@@ -8,7 +8,7 @@ let client = Client()
 let messaging = Messaging(client)
 
 let result = try await messaging.deleteSubscriber(
-    topicId: "[TOPIC_ID]",
-    subscriberId: "[SUBSCRIBER_ID]"
+    topicId: "<TOPIC_ID>",
+    subscriberId: "<SUBSCRIBER_ID>"
 )
 

@@ -1,7 +1,7 @@
 query {
     functionsGetExecution(
-        functionId: "[FUNCTION_ID]",
-        executionId: "[EXECUTION_ID]"
+        functionId: "<FUNCTION_ID>",
+        executionId: "<EXECUTION_ID>"
     ) {
         _id
         _createdAt

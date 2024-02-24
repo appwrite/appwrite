@@ -8,7 +8,7 @@ let client = Client()
 let users = Users(client)
 
 let logList = try await users.listLogs(
-    userId: "[USER_ID]",
+    userId: "<USER_ID>",
     queries: [] // optional
 )
 

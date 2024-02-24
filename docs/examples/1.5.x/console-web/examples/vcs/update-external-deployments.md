@@ -7,9 +7,9 @@ const client = new Client()
 const vcs = new Vcs(client);
 
 const result = await vcs.updateExternalDeployments(
-    '[INSTALLATION_ID]', // installationId
-    '[REPOSITORY_ID]', // repositoryId
-    '[PROVIDER_PULL_REQUEST_ID]' // providerPullRequestId
+    '<INSTALLATION_ID>', // installationId
+    '<REPOSITORY_ID>', // repositoryId
+    '<PROVIDER_PULL_REQUEST_ID>' // providerPullRequestId
 );
 
 console.log(response);

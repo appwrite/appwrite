@@ -9,9 +9,9 @@ Client client = new Client(context)
 Functions functions = new Functions(client);
 
 functions.listExecutions(
-    "[FUNCTION_ID]", // functionId 
+    "<FUNCTION_ID>", // functionId 
     listOf(), // queries (optional)
-    "[SEARCH]", // search (optional)
+    "<SEARCH>", // search (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

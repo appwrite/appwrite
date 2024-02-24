@@ -11,5 +11,5 @@ val messaging = Messaging(client)
 
 val response = messaging.listProviders(
     queries = listOf(), // optional
-    search = "[SEARCH]" // optional
+    search = "<SEARCH>" // optional
 )

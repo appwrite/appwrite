@@ -11,7 +11,7 @@ $client = (new Client())
 $messaging = new Messaging($client);
 
 $result = $messaging->listSubscribers(
-    topicId: '[TOPIC_ID]',
+    topicId: '<TOPIC_ID>',
     queries: [], // optional
-    search: '[SEARCH]' // optional
+    search: '<SEARCH>' // optional
 );

@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.updateRelationshipAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     sdk.RelationMutate.Cascade // onDelete (optional)
 );

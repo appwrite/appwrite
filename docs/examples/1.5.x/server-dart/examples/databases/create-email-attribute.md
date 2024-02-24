@@ -8,8 +8,8 @@ Client client = Client()
 Databases databases = Databases(client);
 
 Future result = databases.createEmailAttribute(
-  databaseId: '[DATABASE_ID]',
-  collectionId: '[COLLECTION_ID]',
+  databaseId: '<DATABASE_ID>',
+  collectionId: '<COLLECTION_ID>',
   key: '',
   xrequired: false,
   xdefault: 'email@example.com', // (optional)

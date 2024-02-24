@@ -8,8 +8,8 @@ let client = Client()
 let functions = Functions(client)
 
 let result = try await functions.createBuild(
-    functionId: "[FUNCTION_ID]",
-    deploymentId: "[DEPLOYMENT_ID]",
-    buildId: "[BUILD_ID]"
+    functionId: "<FUNCTION_ID>",
+    deploymentId: "<DEPLOYMENT_ID>",
+    buildId: "<BUILD_ID>"
 )
 

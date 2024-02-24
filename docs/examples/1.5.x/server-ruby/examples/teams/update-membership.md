@@ -10,8 +10,8 @@ client = Client.new
 teams = Teams.new(client)
 
 response = teams.update_membership(
-    team_id: '[TEAM_ID]',
-    membership_id: '[MEMBERSHIP_ID]',
+    team_id: '<TEAM_ID>',
+    membership_id: '<MEMBERSHIP_ID>',
     roles: []
 )
 

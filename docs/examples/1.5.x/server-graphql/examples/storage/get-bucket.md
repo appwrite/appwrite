@@ -1,6 +1,6 @@
 query {
     storageGetBucket(
-        bucketId: "[BUCKET_ID]"
+        bucketId: "<BUCKET_ID>"
     ) {
         _id
         _createdAt

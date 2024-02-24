@@ -8,7 +8,7 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.update_recovery(
-    user_id = '[USER_ID]',
-    secret = '[SECRET]',
+    user_id = '<USER_ID>',
+    secret = '<SECRET>',
     password = ''
 )

@@ -11,6 +11,6 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->updateStatus(
-    userId: '[USER_ID]',
+    userId: '<USER_ID>',
     status: false
 );

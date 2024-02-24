@@ -11,12 +11,12 @@ Client client = new Client()
 Messaging messaging = new Messaging(client);
 
 Message result = await messaging.UpdateEmail(
-    messageId: "[MESSAGE_ID]",
+    messageId: "<MESSAGE_ID>",
     topics: new List<string>(), // optional
     users: new List<string>(), // optional
     targets: new List<string>(), // optional
-    subject: "[SUBJECT]", // optional
-    content: "[CONTENT]", // optional
+    subject: "<SUBJECT>", // optional
+    content: "<CONTENT>", // optional
     status: MessageStatus.Draft, // optional
     html: false, // optional
     cc: new List<string>(), // optional

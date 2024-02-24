@@ -11,5 +11,5 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 await storage.DeleteBucket(
-    bucketId: "[BUCKET_ID]"
+    bucketId: "<BUCKET_ID>"
 );

@@ -7,9 +7,9 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.createPushTarget(
-  targetId: '[TARGET_ID]',
-  identifier: '[IDENTIFIER]',
-  providerId: '[PROVIDER_ID]', // (optional)
+  targetId: '<TARGET_ID>',
+  identifier: '<IDENTIFIER>',
+  providerId: '<PROVIDER_ID>', // (optional)
 );
 
 result.then((response) {

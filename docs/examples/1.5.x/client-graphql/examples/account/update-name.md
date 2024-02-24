@@ -1,6 +1,6 @@
 mutation {
     accountUpdateName(
-        name: "[NAME]"
+        name: "<NAME>"
     ) {
         _id
         _createdAt

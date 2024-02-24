@@ -7,7 +7,7 @@ const client = new Client()
 const users = new Users(client);
 
 const result = await users.createSession(
-    '[USER_ID]' // userId
+    '<USER_ID>' // userId
 );
 
 console.log(response);

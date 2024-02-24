@@ -11,12 +11,12 @@ client = Client.new
 users = Users.new(client)
 
 response = users.create_target(
-    user_id: '[USER_ID]',
-    target_id: '[TARGET_ID]',
+    user_id: '<USER_ID>',
+    target_id: '<TARGET_ID>',
     provider_type: MessagingProviderType::EMAIL,
-    identifier: '[IDENTIFIER]',
-    provider_id: '[PROVIDER_ID]', # optional
-    name: '[NAME]' # optional
+    identifier: '<IDENTIFIER>',
+    provider_id: '<PROVIDER_ID>', # optional
+    name: '<NAME>' # optional
 )
 
 puts response.inspect

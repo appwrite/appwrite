@@ -11,7 +11,7 @@ functions = Functions.new(client)
 
 response = functions.list(
     queries: [], # optional
-    search: '[SEARCH]' # optional
+    search: '<SEARCH>' # optional
 )
 
 puts response.inspect

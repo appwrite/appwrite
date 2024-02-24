@@ -8,7 +8,7 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.listProviderLogs(
-  providerId: '[PROVIDER_ID]',
+  providerId: '<PROVIDER_ID>',
   queries: [], // (optional)
 );
 

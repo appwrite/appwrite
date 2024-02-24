@@ -8,7 +8,7 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.getSession(
-  sessionId: '[SESSION_ID]',
+  sessionId: '<SESSION_ID>',
 );
 
 result.then((response) {

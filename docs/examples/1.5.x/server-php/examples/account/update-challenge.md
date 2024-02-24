@@ -11,6 +11,6 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->updateChallenge(
-    challengeId: '[CHALLENGE_ID]',
-    otp: '[OTP]'
+    challengeId: '<CHALLENGE_ID>',
+    otp: '<OTP>'
 );

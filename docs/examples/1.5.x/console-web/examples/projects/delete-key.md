@@ -7,8 +7,8 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.deleteKey(
-    '[PROJECT_ID]', // projectId
-    '[KEY_ID]' // keyId
+    '<PROJECT_ID>', // projectId
+    '<KEY_ID>' // keyId
 );
 
 console.log(response);

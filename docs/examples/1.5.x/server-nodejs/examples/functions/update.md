@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.update(
-    '[FUNCTION_ID]', // functionId
-    '[NAME]', // name
+    '<FUNCTION_ID>', // functionId
+    '<NAME>', // name
     sdk..Node145, // runtime (optional)
     ["any"], // execute (optional)
     [], // events (optional)
@@ -17,11 +17,11 @@ const response = await functions.update(
     1, // timeout (optional)
     false, // enabled (optional)
     false, // logging (optional)
-    '[ENTRYPOINT]', // entrypoint (optional)
-    '[COMMANDS]', // commands (optional)
-    '[INSTALLATION_ID]', // installationId (optional)
-    '[PROVIDER_REPOSITORY_ID]', // providerRepositoryId (optional)
-    '[PROVIDER_BRANCH]', // providerBranch (optional)
+    '<ENTRYPOINT>', // entrypoint (optional)
+    '<COMMANDS>', // commands (optional)
+    '<INSTALLATION_ID>', // installationId (optional)
+    '<PROVIDER_REPOSITORY_ID>', // providerRepositoryId (optional)
+    '<PROVIDER_BRANCH>', // providerBranch (optional)
     false, // providerSilentMode (optional)
-    '[PROVIDER_ROOT_DIRECTORY]' // providerRootDirectory (optional)
+    '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
 );

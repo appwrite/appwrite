@@ -11,6 +11,6 @@ $client = (new Client())
 $users = new Users($client);
 
 $result = $users->getTarget(
-    userId: '[USER_ID]',
-    targetId: '[TARGET_ID]'
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>'
 );

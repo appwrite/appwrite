@@ -8,5 +8,5 @@ client.set_session('') # The user session to authenticate with
 account = Account(client)
 
 result = account.update_name(
-    name = '[NAME]'
+    name = '<NAME>'
 )

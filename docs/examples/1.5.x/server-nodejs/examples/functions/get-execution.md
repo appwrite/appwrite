@@ -8,6 +8,6 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.getExecution(
-    '[FUNCTION_ID]', // functionId
-    '[EXECUTION_ID]' // executionId
+    '<FUNCTION_ID>', // functionId
+    '<EXECUTION_ID>' // executionId
 );

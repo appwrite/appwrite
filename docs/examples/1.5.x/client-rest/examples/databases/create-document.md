@@ -7,7 +7,7 @@ X-Appwrite-Session:
 X-Appwrite-JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
 
 {
-  "documentId": "[DOCUMENT_ID]",
+  "documentId": "<DOCUMENT_ID>",
   "data": {},
   "permissions": ["read(\"any\")"]
 }

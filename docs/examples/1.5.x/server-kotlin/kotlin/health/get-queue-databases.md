@@ -10,6 +10,6 @@ val client = Client()
 val health = Health(client)
 
 val response = health.getQueueDatabases(
-    name = "[NAME]", // optional
+    name = "<NAME>", // optional
     threshold = 0 // optional
 )

@@ -7,7 +7,7 @@ let client = Client()
 let storage = Storage(client)
 
 let file = try await storage.getFile(
-    bucketId: "[BUCKET_ID]",
-    fileId: "[FILE_ID]"
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>"
 )
 

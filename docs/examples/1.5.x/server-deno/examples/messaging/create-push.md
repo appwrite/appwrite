@@ -8,20 +8,20 @@ const client = new Client()
 const messaging = new Messaging(client);
 
 const response = await messaging.createPush(
-    '[MESSAGE_ID]', // messageId
-    '[TITLE]', // title
-    '[BODY]', // body
+    '<MESSAGE_ID>', // messageId
+    '<TITLE>', // title
+    '<BODY>', // body
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
     {}, // data (optional)
-    '[ACTION]', // action (optional)
+    '<ACTION>', // action (optional)
     '[ID1:ID2]', // image (optional)
-    '[ICON]', // icon (optional)
-    '[SOUND]', // sound (optional)
-    '[COLOR]', // color (optional)
-    '[TAG]', // tag (optional)
-    '[BADGE]', // badge (optional)
+    '<ICON>', // icon (optional)
+    '<SOUND>', // sound (optional)
+    '<COLOR>', // color (optional)
+    '<TAG>', // tag (optional)
+    '<BADGE>', // badge (optional)
     MessageStatus.Draft, // status (optional)
     '' // scheduledAt (optional)
 );

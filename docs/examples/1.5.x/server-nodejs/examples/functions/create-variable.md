@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const functions = new sdk.Functions(client);
 
 const response = await functions.createVariable(
-    '[FUNCTION_ID]', // functionId
-    '[KEY]', // key
-    '[VALUE]' // value
+    '<FUNCTION_ID>', // functionId
+    '<KEY>', // key
+    '<VALUE>' // value
 );

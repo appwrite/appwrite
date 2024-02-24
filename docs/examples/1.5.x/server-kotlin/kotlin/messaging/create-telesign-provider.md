@@ -10,10 +10,10 @@ val client = Client()
 val messaging = Messaging(client)
 
 val response = messaging.createTelesignProvider(
-    providerId = "[PROVIDER_ID]",
-    name = "[NAME]",
+    providerId = "<PROVIDER_ID>",
+    name = "<NAME>",
     from = "+12065550100", // optional
-    customerId = "[CUSTOMER_ID]", // optional
-    apiKey = "[API_KEY]", // optional
+    customerId = "<CUSTOMER_ID>", // optional
+    apiKey = "<API_KEY>", // optional
     enabled = false // optional
 )

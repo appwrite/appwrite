@@ -1,2 +1,2 @@
 appwrite projects listPlatforms \
-        --projectId [PROJECT_ID]
+        --projectId <PROJECT_ID>

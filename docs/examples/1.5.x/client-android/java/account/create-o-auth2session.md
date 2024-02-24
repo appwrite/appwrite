@@ -13,7 +13,6 @@ account.createOAuth2Session(
     OAuthProvider.AMAZON, // provider 
     "https://example.com", // success (optional)
     "https://example.com", // failure (optional)
-    false, // token (optional)
     listOf(), // scopes (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

@@ -10,20 +10,20 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.create_push(
-    message_id: '[MESSAGE_ID]',
-    title: '[TITLE]',
-    body: '[BODY]',
+    message_id: '<MESSAGE_ID>',
+    title: '<TITLE>',
+    body: '<BODY>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional
     data: {}, # optional
-    action: '[ACTION]', # optional
+    action: '<ACTION>', # optional
     image: '[ID1:ID2]', # optional
-    icon: '[ICON]', # optional
-    sound: '[SOUND]', # optional
-    color: '[COLOR]', # optional
-    tag: '[TAG]', # optional
-    badge: '[BADGE]', # optional
+    icon: '<ICON>', # optional
+    sound: '<SOUND>', # optional
+    color: '<COLOR>', # optional
+    tag: '<TAG>', # optional
+    badge: '<BADGE>', # optional
     status: MessageStatus::DRAFT, # optional
     scheduled_at: '' # optional
 )

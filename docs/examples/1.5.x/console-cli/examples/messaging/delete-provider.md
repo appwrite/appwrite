@@ -1,2 +1,2 @@
 appwrite messaging deleteProvider \
-        --providerId [PROVIDER_ID]
+        --providerId <PROVIDER_ID>

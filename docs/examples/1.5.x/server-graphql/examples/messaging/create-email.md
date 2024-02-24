@@ -1,8 +1,8 @@
 mutation {
     messagingCreateEmail(
-        messageId: "[MESSAGE_ID]",
-        subject: "[SUBJECT]",
-        content: "[CONTENT]",
+        messageId: "<MESSAGE_ID>",
+        subject: "<SUBJECT>",
+        content: "<CONTENT>",
         topics: [],
         users: [],
         targets: [],

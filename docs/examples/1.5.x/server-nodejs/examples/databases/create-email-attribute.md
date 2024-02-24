@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.createEmailAttribute(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
     '', // key
     false, // required
     'email@example.com', // default (optional)

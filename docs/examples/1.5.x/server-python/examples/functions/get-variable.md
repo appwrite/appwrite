@@ -8,6 +8,6 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 functions = Functions(client)
 
 result = functions.get_variable(
-    function_id = '[FUNCTION_ID]',
-    variable_id = '[VARIABLE_ID]'
+    function_id = '<FUNCTION_ID>',
+    variable_id = '<VARIABLE_ID>'
 )

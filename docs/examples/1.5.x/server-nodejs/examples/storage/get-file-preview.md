@@ -8,8 +8,8 @@ const client = new sdk.Client()
 const storage = new sdk.Storage(client);
 
 const response = await storage.getFilePreview(
-    '[BUCKET_ID]', // bucketId
-    '[FILE_ID]', // fileId
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
     0, // width (optional)
     0, // height (optional)
     sdk.ImageGravity.Center, // gravity (optional)

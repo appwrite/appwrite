@@ -12,8 +12,8 @@ Client client = new Client()
 Storage storage = new Storage(client);
 
 Bucket result = await storage.CreateBucket(
-    bucketId: "[BUCKET_ID]",
-    name: "[NAME]",
+    bucketId: "<BUCKET_ID>",
+    name: "<NAME>",
     permissions: ["read("any")"], // optional
     fileSecurity: false, // optional
     enabled: false, // optional

@@ -1,10 +1,10 @@
 mutation {
     messagingCreateVonageProvider(
-        providerId: "[PROVIDER_ID]",
-        name: "[NAME]",
+        providerId: "<PROVIDER_ID>",
+        name: "<NAME>",
         from: "+12065550100",
-        apiKey: "[API_KEY]",
-        apiSecret: "[API_SECRET]",
+        apiKey: "<API_KEY>",
+        apiSecret: "<API_SECRET>",
         enabled: false
     ) {
         _id

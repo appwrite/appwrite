@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const teams = new sdk.Teams(client);
 
 const response = await teams.create(
-    '[TEAM_ID]', // teamId
-    '[NAME]', // name
+    '<TEAM_ID>', // teamId
+    '<NAME>', // name
     [] // roles (optional)
 );

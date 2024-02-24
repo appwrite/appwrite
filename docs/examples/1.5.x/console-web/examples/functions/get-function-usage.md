@@ -7,7 +7,7 @@ const client = new Client()
 const functions = new Functions(client);
 
 const result = await functions.getFunctionUsage(
-    '[FUNCTION_ID]', // functionId
+    '<FUNCTION_ID>', // functionId
     FunctionUsageRange.TwentyFourHours // range (optional)
 );
 

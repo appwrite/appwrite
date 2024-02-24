@@ -10,6 +10,6 @@ val client = Client()
 val users = Users(client)
 
 val response = users.updatePrefs(
-    userId = "[USER_ID]",
+    userId = "<USER_ID>",
     prefs = mapOf( "a" to "b" )
 )

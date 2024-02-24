@@ -1,6 +1,6 @@
 query {
     usersGet(
-        userId: "[USER_ID]"
+        userId: "<USER_ID>"
     ) {
         _id
         _createdAt

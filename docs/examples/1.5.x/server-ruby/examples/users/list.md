@@ -11,7 +11,7 @@ users = Users.new(client)
 
 response = users.list(
     queries: [], # optional
-    search: '[SEARCH]' # optional
+    search: '<SEARCH>' # optional
 )
 
 puts response.inspect

@@ -1,3 +1,3 @@
 appwrite messaging listSubscriberLogs \
-        --subscriberId [SUBSCRIBER_ID] \
+        --subscriberId <SUBSCRIBER_ID> \
 

@@ -10,7 +10,7 @@ client = Client.new
 messaging = Messaging.new(client)
 
 response = messaging.list_topic_logs(
-    topic_id: '[TOPIC_ID]',
+    topic_id: '<TOPIC_ID>',
     queries: [] # optional
 )
 

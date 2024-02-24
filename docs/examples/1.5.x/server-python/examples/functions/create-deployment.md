@@ -9,9 +9,9 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 functions = Functions(client)
 
 result = functions.create_deployment(
-    function_id = '[FUNCTION_ID]',
+    function_id = '<FUNCTION_ID>',
     code = InputFile.from_path('file.png'),
     activate = False,
-    entrypoint = '[ENTRYPOINT]', # optional
-    commands = '[COMMANDS]' # optional
+    entrypoint = '<ENTRYPOINT>', # optional
+    commands = '<COMMANDS>' # optional
 )

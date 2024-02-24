@@ -8,5 +8,5 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const response = await account.updateName(
-    '[NAME]' // name
+    '<NAME>' // name
 );

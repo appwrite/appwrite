@@ -8,8 +8,8 @@ Client client = Client()
 Account account = Account(client);
 
 Future result = account.updateVerification(
-  userId: '[USER_ID]',
-  secret: '[SECRET]',
+  userId: '<USER_ID>',
+  secret: '<SECRET>',
 );
 
 result.then((response) {

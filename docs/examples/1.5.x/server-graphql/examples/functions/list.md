@@ -1,7 +1,7 @@
 query {
     functionsList(
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         functions {

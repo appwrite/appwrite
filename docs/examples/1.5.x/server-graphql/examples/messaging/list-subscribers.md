@@ -1,8 +1,8 @@
 query {
     messagingListSubscribers(
-        topicId: "[TOPIC_ID]",
+        topicId: "<TOPIC_ID>",
         queries: [],
-        search: "[SEARCH]"
+        search: "<SEARCH>"
     ) {
         total
         subscribers {

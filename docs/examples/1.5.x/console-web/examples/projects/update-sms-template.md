@@ -7,10 +7,10 @@ const client = new Client()
 const projects = new Projects(client);
 
 const result = await projects.updateSmsTemplate(
-    '[PROJECT_ID]', // projectId
+    '<PROJECT_ID>', // projectId
     SmsTemplateType.Verification, // type
     SmsTemplateLocale.Af, // locale
-    '[MESSAGE]' // message
+    '<MESSAGE>' // message
 );
 
 console.log(response);

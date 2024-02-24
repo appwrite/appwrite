@@ -13,5 +13,5 @@ $account = new Account($client);
 
 $result = $account->deleteAuthenticator(
     type: AuthenticatorType::TOTP(),
-    otp: '[OTP]'
+    otp: '<OTP>'
 );

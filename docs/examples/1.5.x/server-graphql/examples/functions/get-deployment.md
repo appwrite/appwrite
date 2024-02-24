@@ -1,7 +1,7 @@
 query {
     functionsGetDeployment(
-        functionId: "[FUNCTION_ID]",
-        deploymentId: "[DEPLOYMENT_ID]"
+        functionId: "<FUNCTION_ID>",
+        deploymentId: "<DEPLOYMENT_ID>"
     ) {
         _id
         _createdAt

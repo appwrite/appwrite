@@ -8,7 +8,7 @@ const client = new sdk.Client()
 const databases = new sdk.Databases(client);
 
 const response = await databases.deleteDocument(
-    '[DATABASE_ID]', // databaseId
-    '[COLLECTION_ID]', // collectionId
-    '[DOCUMENT_ID]' // documentId
+    '<DATABASE_ID>', // databaseId
+    '<COLLECTION_ID>', // collectionId
+    '<DOCUMENT_ID>' // documentId
 );

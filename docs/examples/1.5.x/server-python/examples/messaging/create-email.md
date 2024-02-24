@@ -8,9 +8,9 @@ client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
 messaging = Messaging(client)
 
 result = messaging.create_email(
-    message_id = '[MESSAGE_ID]',
-    subject = '[SUBJECT]',
-    content = '[CONTENT]',
+    message_id = '<MESSAGE_ID>',
+    subject = '<SUBJECT>',
+    content = '<CONTENT>',
     topics = [], # optional
     users = [], # optional
     targets = [], # optional

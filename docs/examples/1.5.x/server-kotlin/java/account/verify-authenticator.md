@@ -12,7 +12,7 @@ Account account = new Account(client);
 
 account.verifyAuthenticator(
     AuthenticatorType.TOTP, // type
-    "[OTP]", // otp
+    "<OTP>", // otp
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

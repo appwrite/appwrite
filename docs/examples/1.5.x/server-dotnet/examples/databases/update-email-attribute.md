@@ -15,8 +15,8 @@ Client client = new Client()
 Databases databases = new Databases(client);
 
 AttributeEmail result = await databases.UpdateEmailAttribute(
-    databaseId: "[DATABASE_ID]",
-    collectionId: "[COLLECTION_ID]",
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
     key: "",
     required: false,
     default: "email@example.com"

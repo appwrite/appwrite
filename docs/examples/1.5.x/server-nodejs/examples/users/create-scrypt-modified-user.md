@@ -8,11 +8,11 @@ const client = new sdk.Client()
 const users = new sdk.Users(client);
 
 const response = await users.createScryptModifiedUser(
-    '[USER_ID]', // userId
+    '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password
-    '[PASSWORD_SALT]', // passwordSalt
-    '[PASSWORD_SALT_SEPARATOR]', // passwordSaltSeparator
-    '[PASSWORD_SIGNER_KEY]', // passwordSignerKey
-    '[NAME]' // name (optional)
+    '<PASSWORD_SALT>', // passwordSalt
+    '<PASSWORD_SALT_SEPARATOR>', // passwordSaltSeparator
+    '<PASSWORD_SIGNER_KEY>', // passwordSignerKey
+    '<NAME>' // name (optional)
 );

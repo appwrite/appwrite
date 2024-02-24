@@ -11,5 +11,5 @@ $client = (new Client())
 $functions = new Functions($client);
 
 $result = $functions->listVariables(
-    functionId: '[FUNCTION_ID]'
+    functionId: '<FUNCTION_ID>'
 );

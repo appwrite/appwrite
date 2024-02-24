@@ -10,9 +10,9 @@ Client client = new Client()
 Functions functions = new Functions(client);
 
 functions.createVariable(
-    "[FUNCTION_ID]", // functionId
-    "[KEY]", // key
-    "[VALUE]", // value
+    "<FUNCTION_ID>", // functionId
+    "<KEY>", // key
+    "<VALUE>", // value
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

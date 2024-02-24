@@ -8,12 +8,12 @@ Client client = Client()
 Messaging messaging = Messaging(client);
 
 Future result = messaging.updateEmail(
-  messageId: '[MESSAGE_ID]',
+  messageId: '<MESSAGE_ID>',
   topics: [], // (optional)
   users: [], // (optional)
   targets: [], // (optional)
-  subject: '[SUBJECT]', // (optional)
-  content: '[CONTENT]', // (optional)
+  subject: '<SUBJECT>', // (optional)
+  content: '<CONTENT>', // (optional)
   status:  MessageStatus.draft, // (optional)
   html: false, // (optional)
   cc: [], // (optional)
