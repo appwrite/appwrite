@@ -340,15 +340,15 @@ class Migrations extends Action
                 $migrationDocument->setAttribute('errors', $errorMessages);
             }
         } finally {
+            if ($tempAPIKey) {
+                $this->removeAPIKey($tempAPIKey);
+            }
             if ($migrationDocument) {
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 if ($migrationDocument->getAttribute('status', '') == 'failed') {
                     throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', []));
                 }
-            }
-            if ($tempAPIKey) {
-                $this->removeAPIKey($tempAPIKey);
             }
         }
     }
