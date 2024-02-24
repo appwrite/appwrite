@@ -379,6 +379,23 @@ class Mail extends Event
     }
 
     /**
+     * Reset
+     *
+     * @return self
+     */
+    public function reset(): self
+    {
+        $this->project = null;
+        $this->recipient = '';
+        $this->name = '';
+        $this->subject = '';
+        $this->body = '';
+        $this->variables = [];
+        $this->bodyTemplate = '';
+        $this->attachment = [];
+    }
+
+    /**
      * Executes the event and sends it to the mails worker.
      *
      * @return string|bool
