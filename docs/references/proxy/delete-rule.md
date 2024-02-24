@@ -1,1 +1,0 @@
-Delete a proxy rule by its unique ID.

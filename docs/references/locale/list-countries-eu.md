@@ -1,1 +1,0 @@
-List of all countries that are currently members of the EU. You can use the locale header to get the data in a supported language.

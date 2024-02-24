@@ -1,1 +1,0 @@
-Update currently logged in user account name.

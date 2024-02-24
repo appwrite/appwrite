@@ -1,1 +1,0 @@
-Get the preferences as a key-value object for the currently logged in user.

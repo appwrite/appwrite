@@ -1,1 +1,0 @@
-Get the collection activity logs list by its unique ID.

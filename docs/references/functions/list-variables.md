@@ -1,1 +1,0 @@
-Get a list of all variables of a specific function.

@@ -1,1 +1,0 @@
-Update the user email verification status by its unique ID.

@@ -1,1 +1,0 @@
-Create a boolean attribute.

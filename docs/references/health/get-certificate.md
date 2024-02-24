@@ -1,1 +1,0 @@
-Get the SSL certificate for a domain

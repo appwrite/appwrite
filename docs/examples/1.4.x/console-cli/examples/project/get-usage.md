@@ -1,2 +1,0 @@
-appwrite project getUsage \
-
