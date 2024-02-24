@@ -141,7 +141,7 @@ jobs:
         run: |
           docker load --input /tmp/${{ env.IMAGE }}.tar
           docker compose up -d
-          sleep 30
+          sleep 20
           docker compose ls
           docker compose ps
           docker compose logs openruntimes-proxy
