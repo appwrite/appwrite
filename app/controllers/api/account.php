@@ -558,7 +558,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
         if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+            $current = $user->find('current', true, 'sessions');
+
+            if ($current && $current->getAttribute('provider') !== Auth::SESSION_PROVIDER_ANONYMOUS) {
+                throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+            }
         }
 
         $protocol = $request->getProtocol();
