@@ -125,11 +125,7 @@ class Swagger2 extends Format
                 continue;
             }
 
-            $method = $route->getLabel('sdk.method', [\uniqid()]);
-            if (\is_array($method)) {
-                $method = $method[0];
-            }
-
+            $method = $route->getLabel('sdk.method', 'unknown');
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
@@ -171,6 +167,7 @@ class Swagger2 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
+                    'deprecated' => $route->getLabel('sdk.deprecated', false),
                     'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
