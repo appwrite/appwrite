@@ -150,10 +150,14 @@ class Swagger2 extends Format
             }
 
             if (empty($routeSecurity)) {
-                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                if (!$route->getLabel('sdk.hideServer', false)) {
+                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                }
+                if (!$route->getLabel('sdk.hideClient', false)) {
+                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
+                }
             }
-
+            
             $temp = [
                 'summary' => $route->getDesc(),
                 'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
