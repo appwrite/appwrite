@@ -118,12 +118,7 @@ class Swagger2 extends Format
             /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
-            $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
-
-            if ($hide) {
-                continue;
-            }
 
             $method = $route->getLabel('sdk.method', 'unknown');
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
@@ -150,12 +145,8 @@ class Swagger2 extends Format
             }
 
             if (empty($routeSecurity)) {
-                if (!$route->getLabel('sdk.hideServer', false)) {
-                    $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                }
-                if (!$route->getLabel('sdk.hideClient', false)) {
-                    $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                }
+                $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
             $temp = [

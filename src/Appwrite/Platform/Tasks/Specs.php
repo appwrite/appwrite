@@ -168,34 +168,35 @@ class Specs extends Action
 
             foreach ($appRoutes as $key => $method) {
                 foreach ($method as $route) {
+                    $hide = $route->getLabel('sdk.hide', false);
+                    if ($hide === true || (\is_array($hide) && \in_array($platform, $hide))) {
+                        continue;
+                    }
+
                     /** @var \Utopia\Route $route */
                     $routeSecurity = $route->getLabel('sdk.auth', []);
-                    $sdkPlaforms = [];
+                    $sdkPlatforms = [];
 
                     foreach ($routeSecurity as $value) {
                         switch ($value) {
                             case APP_AUTH_TYPE_SESSION:
-                                $sdkPlaforms[] = APP_PLATFORM_CLIENT;
+                                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                                 break;
                             case APP_AUTH_TYPE_KEY:
-                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_JWT:
-                                $sdkPlaforms[] = APP_PLATFORM_SERVER;
+                                $sdkPlatforms[] = APP_PLATFORM_SERVER;
                                 break;
                             case APP_AUTH_TYPE_ADMIN:
-                                $sdkPlaforms[] = APP_PLATFORM_CONSOLE;
+                                $sdkPlatforms[] = APP_PLATFORM_CONSOLE;
                                 break;
                         }
                     }
 
                     if (empty($routeSecurity)) {
-                        if (!$route->getLabel('sdk.hideServer', false)) {
-                            $sdkPlatforms[] = APP_PLATFORM_SERVER;
-                        }
-                        if (!$route->getLabel('sdk.hideClient', false)) {
-                            $sdkPlatforms[] = APP_PLATFORM_CLIENT;
-                        }
+                        $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                        $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                     }
 
                     if (!$route->getLabel('docs', true)) {
@@ -214,7 +215,7 @@ class Specs extends Action
                         continue;
                     }
 
-                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlaforms)) {
+                    if ($platform !== APP_PLATFORM_CONSOLE && !\in_array($platforms[$platform], $sdkPlatforms)) {
                         continue;
                     }
 
