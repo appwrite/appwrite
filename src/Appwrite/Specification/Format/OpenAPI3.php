@@ -123,7 +123,7 @@ class OpenAPI3 extends Format
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
 
-            $method = $route->getLabel('sdk.method', 'unknown');
+            $id = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
@@ -154,17 +154,17 @@ class OpenAPI3 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
+                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($id),
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $method,
+                    'method' => $route->getLabel('sdk.method', \uniqid()),
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
                     'deprecated' => $route->getLabel('sdk.deprecated', false),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
+                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
@@ -423,7 +423,7 @@ class OpenAPI3 extends Format
                         foreach ($this->enumBlacklist as $blacklist) {
                             if (
                                 $blacklist['namespace'] == $route->getLabel('sdk.namespace', '')
-                                && $blacklist['method'] == $method
+                                && $blacklist['method'] == $route->getLabel('sdk.method', '')
                                 && $blacklist['parameter'] == $name
                             ) {
                                 $allowed = false;
@@ -433,8 +433,8 @@ class OpenAPI3 extends Format
 
                         if ($allowed) {
                                 $node['schema']['enum'] = $validator->getList();
-                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
-                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
+                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';
