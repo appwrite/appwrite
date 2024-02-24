@@ -58,7 +58,7 @@
         "utopia-php/locale": "0.4.*",
         "utopia-php/logger": "0.3.*",
         "utopia-php/messaging": "0.10.*",
-        "utopia-php/migration": "0.3.*",
+        "utopia-php/migration": "dev-dev",
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.5.*",
         "utopia-php/pools": "0.4.*",
@@ -77,6 +77,12 @@
         "webonyx/graphql-php": "14.11.*",
         "league/csv": "9.14.*"
     },
+    "repositories": [
+      {
+        "type": "vcs",
+        "url": "https://github.com/utopia-php/migration"
+      }
+    ],
     "require-dev": {
         "ext-fileinfo": "*",
         "appwrite/sdk-generator": "0.36.*",

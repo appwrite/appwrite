@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "37887fb414be6480280484aa41c0df9d",
+    "content-hash": "9e0e07159d27e4b86511aaab851532de",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -65,16 +65,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "10.0.0",
+            "version": "10.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "461eedf4efd502dc905c3055f36f0e3583f67390"
+                "reference": "da579af70723cfc117b5af84375bdef117e27312"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/461eedf4efd502dc905c3055f36f0e3583f67390",
-                "reference": "461eedf4efd502dc905c3055f36f0e3583f67390",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/da579af70723cfc117b5af84375bdef117e27312",
+                "reference": "da579af70723cfc117b5af84375bdef117e27312",
                 "shasum": ""
             },
             "require": {
@@ -99,10 +99,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/10.0.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/10.1.0",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2023-09-07T23:28:31+00:00"
+            "time": "2023-11-20T09:56:12+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -1962,20 +1962,20 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "0.3.6",
+            "version": "dev-dev",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "f78273b38bade23db5866e5c7cb5f55427ba82af"
+                "reference": "0847fad35006c16f2aa572c4fa890cc8a0e7f8f2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/f78273b38bade23db5866e5c7cb5f55427ba82af",
-                "reference": "f78273b38bade23db5866e5c7cb5f55427ba82af",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0847fad35006c16f2aa572c4fa890cc8a0e7f8f2",
+                "reference": "0847fad35006c16f2aa572c4fa890cc8a0e7f8f2",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "10.0.*",
+                "appwrite/appwrite": "10.1.0",
                 "php": "8.*",
                 "utopia-php/cli": "0.*"
             },
@@ -1990,7 +1990,19 @@
                     "Utopia\\Migration\\": "src/Migration"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Utopia\\Tests\\": "tests/Migration"
+                }
+            },
+            "scripts": {
+                "lint": [
+                    "./vendor/bin/pint --test"
+                ],
+                "format": [
+                    "./vendor/bin/pint"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -2003,10 +2015,10 @@
                 "utopia"
             ],
             "support": {
-                "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/0.3.6"
+                "source": "https://github.com/utopia-php/migration/tree/dev",
+                "issues": "https://github.com/utopia-php/migration/issues"
             },
-            "time": "2023-11-02T15:13:03+00:00"
+            "time": "2024-02-23T12:02:32+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -3357,21 +3369,21 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.8.1",
+            "version": "1.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353"
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
-                "reference": "bc3dc91a5e9b14aa06d1d9e90647c5c5a2cc5353",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/153ae662783729388a584b4361f2545e4d841e3c",
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c",
                 "shasum": ""
             },
             "require": {
                 "doctrine/deprecations": "^1.0",
-                "php": "^7.4 || ^8.0",
+                "php": "^7.3 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0",
                 "phpstan/phpdoc-parser": "^1.13"
             },
@@ -3409,9 +3421,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.1"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.2"
             },
-            "time": "2024-01-18T19:15:27+00:00"
+            "time": "2024-02-23T11:10:43+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -5449,7 +5461,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
