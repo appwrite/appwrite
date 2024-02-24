@@ -393,6 +393,7 @@ class Mail extends Event
         $this->variables = [];
         $this->bodyTemplate = '';
         $this->attachment = [];
+        return $this;
     }
 
     /**
