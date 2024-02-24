@@ -192,7 +192,6 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -514,7 +513,7 @@ App::post('/v1/users/:userId/targets')
                     Permission::delete(Role::user($user->getId())),
                 ],
                 'providerId' => $providerId ?? null,
-                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getInternalId(),
@@ -806,6 +805,9 @@ App::get('/v1/users/:userId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -834,7 +836,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1660,7 +1662,7 @@ App::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -1729,7 +1731,7 @@ App::post('/v1/users/:userId/tokens')
     ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 

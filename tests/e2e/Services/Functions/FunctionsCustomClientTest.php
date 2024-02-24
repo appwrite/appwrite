@@ -135,7 +135,7 @@ class FunctionsCustomClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['body']['status']);
+        $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $function['body']['$id'] . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',
@@ -266,7 +266,7 @@ class FunctionsCustomClientTest extends Scope
             \sleep(1);
         }
 
-        $this->assertEquals('ready', $deployment['body']['status']);
+        $this->assertEquals('ready', $deployment['body']['status'], \json_encode($deployment['body']));
 
         $function = $this->client->call(Client::METHOD_PATCH, '/functions/' . $functionId . '/deployments/' . $deploymentId, [
             'content-type' => 'application/json',

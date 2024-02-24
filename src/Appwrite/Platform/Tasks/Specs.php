@@ -120,12 +120,6 @@ class Specs extends Action
                     'description' => 'The user session to authenticate with',
                     'in' => 'header',
                 ],
-                'ForwardedFor' => [
-                    'type' => 'apiKey',
-                    'name' => 'X-Forwarded-For',
-                    'description' => 'The IP address of the client that made the request',
-                    'in' => 'header',
-                ],
                 'ForwardedUserAgent' => [
                     'type' => 'apiKey',
                     'name' => 'X-Forwarded-User-Agent',

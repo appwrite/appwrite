@@ -111,8 +111,7 @@ class DatabasesConsoleClientTest extends Scope
 
         $collections = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections', array_merge([
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
+            'x-appwrite-project' => $this->getProject()['$id']
         ], $this->getHeaders()));
 
         $this->assertEquals(200, $collections['headers']['status-code']);

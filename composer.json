@@ -1,4 +1,5 @@
 {
+
     "name": "appwrite/server-ce",
     "description": "End to end backend server for frontend and mobile apps.",
     "type": "project",
@@ -61,7 +62,6 @@
         "utopia-php/orchestration": "0.9.*",
         "utopia-php/platform": "0.5.*",
         "utopia-php/pools": "0.4.*",
-        "utopia-php/preloader": "0.2.*",
         "utopia-php/queue": "0.7.*",
         "utopia-php/registry": "0.5.*",
         "utopia-php/storage": "0.18.*",

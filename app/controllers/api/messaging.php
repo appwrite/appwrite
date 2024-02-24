@@ -219,14 +219,14 @@ App::post('/v1/messaging/providers/smtp')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMTPProvider')
+    ->label('sdk.method', 'createSmtpProvider')
     ->label('sdk.description', '/docs/references/messaging/create-smtp-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.')
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
@@ -692,7 +692,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createFCMProvider')
+    ->label('sdk.method', 'createFcmProvider')
     ->label('sdk.description', '/docs/references/messaging/create-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -755,7 +755,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createAPNSProvider')
+    ->label('sdk.method', 'createApnsProvider')
     ->label('sdk.description', '/docs/references/messaging/create-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -766,11 +766,12 @@ App::post('/v1/messaging/providers/apns')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', false, new Boolean(), 'Use APNS sandbox environment.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, bool $sandbox, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -803,6 +804,10 @@ App::post('/v1/messaging/providers/apns')
             $enabled = false;
         }
 
+        $options = [
+            'sandbox' => $sandbox
+        ];
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
@@ -810,6 +815,7 @@ App::post('/v1/messaging/providers/apns')
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials,
+            'options' => $options
         ]);
 
         try {
@@ -884,7 +890,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listProviderLogs')
-    ->label('sdk.description', '/docs/references/messaging/providers/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-provider-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -1195,14 +1201,14 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSMTPProvider')
+    ->label('sdk.method', 'updateSmtpProvider')
     ->label('sdk.description', '/docs/references/messaging/update-smtp-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.', true)
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
     ->param('port', null, new Range(1, 65535), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
@@ -1727,7 +1733,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateFCMProvider')
+    ->label('sdk.method', 'updateFcmProvider')
     ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1796,7 +1802,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateAPNSProvider')
+    ->label('sdk.method', 'updateApnsProvider')
     ->label('sdk.description', '/docs/references/messaging/update-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1808,10 +1814,11 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', null, new Boolean(), 'Use APNS sandbox environment.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $sandbox, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1846,6 +1853,14 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        $options = $provider->getAttribute('options');
+
+        if (!\is_null($sandbox)) {
+            $options['sandbox'] = $sandbox;
+        }
+
+        $provider->setAttribute('options', $options);
 
         if (!\is_null($enabled)) {
             if ($enabled) {
@@ -1909,7 +1924,7 @@ App::delete('/v1/messaging/providers/:providerId')
     });
 
 App::post('/v1/messaging/topics')
-    ->desc('Create a topic.')
+    ->desc('Create a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.create')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -1952,7 +1967,7 @@ App::post('/v1/messaging/topics')
     });
 
 App::get('/v1/messaging/topics')
-    ->desc('List topics.')
+    ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2009,7 +2024,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTopicLogs')
-    ->label('sdk.description', '/docs/references/messaging/topics/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-topic-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -2092,7 +2107,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId')
-    ->desc('Get a topic.')
+    ->desc('Get a topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2119,7 +2134,7 @@ App::get('/v1/messaging/topics/:topicId')
     });
 
 App::patch('/v1/messaging/topics/:topicId')
-    ->desc('Update a topic.')
+    ->desc('Update a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -2133,19 +2148,24 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('name', null, new Text(128), 'Topic Name.', true)
+    ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, ?string $name, ?array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if (!empty($name)) {
+        if (!\is_null($name)) {
             $topic->setAttribute('name', $name);
+        }
+
+        if (!\is_null($subscribe)) {
+            $topic->setAttribute('subscribe', $subscribe);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
@@ -2158,7 +2178,7 @@ App::patch('/v1/messaging/topics/:topicId')
     });
 
 App::delete('/v1/messaging/topics/:topicId')
-    ->desc('Delete a topic.')
+    ->desc('Delete a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
     ->label('audits.resource', 'topic/{request.$topicId}')
@@ -2198,7 +2218,7 @@ App::delete('/v1/messaging/topics/:topicId')
     });
 
 App::post('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('Create a subscriber.')
+    ->desc('Create a subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
     ->label('audits.resource', 'subscriber/{response.$id}')
@@ -2294,7 +2314,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('List subscribers.')
+    ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2374,7 +2394,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listSubscriberLogs')
-    ->label('sdk.description', '/docs/references/messaging/subscribers/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-subscriber-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -2457,7 +2477,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Get a subscriber.')
+    ->desc('Get a subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2496,7 +2516,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Delete a subscriber.')
+    ->desc('Delete a subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
@@ -2555,7 +2575,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::post('/v1/messaging/messages/email')
-    ->desc('Create an email.')
+    ->desc('Create an email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2699,7 +2719,7 @@ App::post('/v1/messaging/messages/email')
     });
 
 App::post('/v1/messaging/messages/sms')
-    ->desc('Create an SMS.')
+    ->desc('Create an SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2707,7 +2727,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMS')
+    ->label('sdk.method', 'createSms')
     ->label('sdk.description', '/docs/references/messaging/create-sms.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2807,7 +2827,7 @@ App::post('/v1/messaging/messages/sms')
     });
 
 App::post('/v1/messaging/messages/push')
-    ->desc('Create a push notification.')
+    ->desc('Create a push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2816,7 +2836,7 @@ App::post('/v1/messaging/messages/push')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createPush')
-    ->label('sdk.description', '/docs/references/messaging/create-push-notification.md')
+    ->label('sdk.description', '/docs/references/messaging/create-push.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
@@ -3022,7 +3042,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listMessageLogs')
-    ->label('sdk.description', '/docs/references/messaging/messages/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-message-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -3194,7 +3214,7 @@ App::get('/v1/messaging/messages/:messageId')
     });
 
 App::patch('/v1/messaging/messages/email/:messageId')
-    ->desc('Update an email.')
+    ->desc('Update an email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3332,7 +3352,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     });
 
 App::patch('/v1/messaging/messages/sms/:messageId')
-    ->desc('Update an SMS.')
+    ->desc('Update an SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3340,7 +3360,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSMS')
+    ->label('sdk.method', 'updateSms')
     ->label('sdk.description', '/docs/references/messaging/update-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3450,7 +3470,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     });
 
 App::patch('/v1/messaging/messages/push/:messageId')
-    ->desc('Update a push notification.')
+    ->desc('Update a push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3459,7 +3479,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updatePush')
-    ->label('sdk.description', '/docs/references/messaging/update-push-notification.md')
+    ->label('sdk.description', '/docs/references/messaging/update-push.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)

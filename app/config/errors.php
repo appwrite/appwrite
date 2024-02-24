@@ -272,6 +272,11 @@ return [
         'description' => 'User phone is already verified',
         'code' => 409
     ],
+    Exception::USER_DELETION_PROHIBITED => [
+        'name' => Exception::USER_DELETION_PROHIBITED,
+        'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
+        'code' => 400
+    ],
     Exception::USER_TARGET_NOT_FOUND => [
         'name' => Exception::USER_TARGET_NOT_FOUND,
         'description' => 'The target could not be found.',
@@ -281,6 +286,11 @@ return [
         'name' => Exception::USER_TARGET_ALREADY_EXISTS,
         'description' => 'A target with the same ID already exists.',
         'code' => 409,
+    ],
+    Exception::USER_API_KEY_AND_SESSION_SET => [
+        'name' => Exception::USER_API_KEY_AND_SESSION_SET,
+        'description' => 'API key and session used in the same request. Use either `setSession` or `setKey`. Learn about which authentication method to use in the SSR docs: https://appwrite.io/docs/products/auth/server-side-rendering',
+        'code' => 403,
     ],
 
     /** Teams */

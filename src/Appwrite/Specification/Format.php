@@ -116,6 +116,7 @@ abstract class Format
             case 'account':
                 switch ($method) {
                     case 'createOAuth2Session':
+                    case 'createOAuth2Token':
                         switch ($param) {
                             case 'provider':
                                 return 'OAuthProvider';
@@ -208,10 +209,10 @@ abstract class Format
                                 return 'MessagingUsageRange';
                         }
                         break;
-                    case 'createSMS':
+                    case 'createSms':
                     case 'createPush':
                     case 'createEmail':
-                    case 'updateSMS':
+                    case 'updateSms':
                     case 'updatePush':
                     case 'updateEmail':
                         switch ($param) {
@@ -219,11 +220,11 @@ abstract class Format
                                 return 'MessageStatus';
                         }
                         break;
-                    case 'createSMTPProvider':
-                    case 'updateSMTPProvider':
+                    case 'createSmtpProvider':
+                    case 'updateSmtpProvider':
                         switch ($param) {
                             case 'encryption':
-                                return 'SMTPEncryption';
+                                return 'SmtpEncryption';
                         }
                         break;
                 }
@@ -255,9 +256,9 @@ abstract class Format
                     case 'deleteSmsTemplate':
                         switch ($param) {
                             case 'type':
-                                return 'SMSTemplateType';
+                                return 'SmsTemplateType';
                             case 'locale':
-                                return 'SMSTemplateLocale';
+                                return 'SmsTemplateLocale';
                         }
                         break;
                     case 'createPlatform':
@@ -288,7 +289,7 @@ abstract class Format
                     case 'updateServiceStatus':
                         switch ($param) {
                             case 'service':
-                                return 'APIService';
+                                return 'ApiService';
                         }
                         break;
                 }

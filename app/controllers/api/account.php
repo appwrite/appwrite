@@ -269,7 +269,7 @@ App::post('/v1/account/sessions/email')
                 'secret' => Auth::hash($secret), // One way hash encryption to protect DB leak
                 'userAgent' => $request->getUserAgent('UNKNOWN'),
                 'ip' => $request->getIP(),
-                'factors' => ['email'],
+                'factors' => ['password'],
                 'countryCode' => ($record) ? \strtolower($record['country']['iso_code']) : '--',
                 'expire' => DateTime::addSeconds(new \DateTime(), $duration)
             ],
@@ -345,14 +345,11 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
     ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
     ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
-    ->param('token', false, new Boolean(true), 'Include token credentials in the final redirect, useful for server-side integrations, or when cookies are not available.', true)
     ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
     ->inject('response')
     ->inject('project')
-    ->action(function (string $provider, string $success, string $failure, mixed $token, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
-        $token = in_array($token, ['true', true], true);
-
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
         $protocol = $request->getProtocol();
 
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
@@ -391,7 +388,77 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $oauth2 = new $className($appId, $appSecret, $callback, [
             'success' => $success,
             'failure' => $failure,
-            'token' => $token,
+            'token' => false,
+        ], $scopes);
+
+        $response
+            ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->addHeader('Pragma', 'no-cache')
+            ->redirect($oauth2->getLoginURL());
+    });
+
+App::get('/v1/account/tokens/oauth2/:provider')
+    ->desc('Create OAuth2 token')
+    ->groups(['api', 'account'])
+    ->label('error', __DIR__ . '/../../views/general/error.phtml')
+    ->label('scope', 'sessions.write')
+    ->label('sdk.auth', [])
+    ->label('sdk.hideServer', true)
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createOAuth2Token')
+    ->label('sdk.description', '/docs/references/account/create-token-oauth2.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_MOVED_PERMANENTLY)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_HTML)
+    ->label('sdk.methodType', 'webAuth')
+    ->label('abuse-limit', 50)
+    ->label('abuse-key', 'ip:{ip}')
+    ->param('provider', '', new WhiteList(\array_keys(Config::getParam('oAuthProviders')), true), 'OAuth2 Provider. Currently, supported providers are: ' . \implode(', ', \array_keys(\array_filter(Config::getParam('oAuthProviders'), fn($node) => (!$node['mock'])))) . '.')
+    ->param('success', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a successful login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('failure', '', fn($clients) => new Host($clients), 'URL to redirect back to your app after a failed login attempt.  Only URLs from hostnames in your project\'s platform list are allowed. This requirement helps to prevent an [open redirect](https://cheatsheetseries.owasp.org/cheatsheets/Unvalidated_Redirects_and_Forwards_Cheat_Sheet.html) attack against your project API.', true, ['clients'])
+    ->param('scopes', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'A list of custom OAuth2 scopes. Check each provider internal docs for a list of supported scopes. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' scopes are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('project')
+    ->action(function (string $provider, string $success, string $failure, array $scopes, Request $request, Response $response, Document $project) use ($oauthDefaultSuccess, $oauthDefaultFailure) {
+        $protocol = $request->getProtocol();
+
+        $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
+        $providerEnabled = $project->getAttribute('oAuthProviders', [])[$provider . 'Enabled'] ?? false;
+
+        if (!$providerEnabled) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please enable the provider from your ' . APP_NAME . ' console to continue.');
+        }
+
+        $appId = $project->getAttribute('oAuthProviders', [])[$provider . 'Appid'] ?? '';
+        $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
+
+        if (!empty($appSecret) && isset($appSecret['version'])) {
+            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
+        }
+
+        if (empty($appId) || empty($appSecret)) {
+            throw new Exception(Exception::PROJECT_PROVIDER_DISABLED, 'This provider is disabled. Please configure the provider app ID and app secret key from your ' . APP_NAME . ' console to continue.');
+        }
+
+        $className = 'Appwrite\\Auth\\OAuth2\\' . \ucfirst($provider);
+
+        if (!\class_exists($className)) {
+            throw new Exception(Exception::PROJECT_PROVIDER_UNSUPPORTED);
+        }
+
+        if (empty($success)) {
+            $success = $protocol . '://' . $request->getHostname() . $oauthDefaultSuccess;
+        }
+
+        if (empty($failure)) {
+            $failure = $protocol . '://' . $request->getHostname() . $oauthDefaultFailure;
+        }
+
+        $oauth2 = new $className($appId, $appSecret, $callback, [
+            'success' => $success,
+            'failure' => $failure,
+            'token' => true,
         ], $scopes);
 
         $response
@@ -904,7 +971,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
 App::get('/v1/account/identities')
     ->desc('List Identities')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listIdentities')
@@ -960,7 +1027,7 @@ App::get('/v1/account/identities')
 App::delete('/v1/account/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].identities.[identityId].delete')
     ->label('audits.event', 'identity.delete')
     ->label('audits.resource', 'identity/{request.$identityId}')
@@ -1198,15 +1265,16 @@ App::post('/v1/account/tokens/magic-url')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
-            'user' => '',
-            'team' => '',
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
+            'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'redirect' => $url,
-            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
-            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
-            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -1426,15 +1494,16 @@ App::post('/v1/account/tokens/email')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}} ,{{team}}, {{project}} and {{otp}} are required in the templates */
-            'user' => '',
-            'team' => '',
+            // {{user}}, {{project}} and {{otp}} are required in the templates
+            'user' => $user->getAttribute('name'),
             'project' => $project->getAttribute('name'),
             'otp' => $tokenSecret,
-            'agentDevice' => '<strong>' . ( $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN') . '</strong>',
-            'agentClient' => '<strong>' . ($agentClient['clientName'] ?? 'UNKNOWN') . '</strong>',
-            'agentOs' => '<strong>' . ($agentOs['osName'] ?? 'UNKNOWN') . '</strong>',
-            'phrase' => '<strong>' . (!empty($phrase) ? $phrase : '') . '</strong>'
+            'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+            'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+            'agentOs' => $agentOs['osName'] ?? 'UNKNOWN',
+            'phrase' => !empty($phrase) ? $phrase : '',
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -1949,7 +2018,7 @@ App::post('/v1/account/sessions/anonymous')
 App::post('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('auth.type', 'jwt')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
@@ -1996,7 +2065,7 @@ App::post('/v1/account/jwt')
 App::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'get')
@@ -2019,7 +2088,7 @@ App::get('/v1/account')
 App::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getPrefs')
@@ -2041,7 +2110,7 @@ App::get('/v1/account/prefs')
 App::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listSessions')
@@ -2076,7 +2145,7 @@ App::get('/v1/account/sessions')
 App::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listLogs')
@@ -2133,7 +2202,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2141,7 +2210,7 @@ App::get('/v1/account/logs')
 App::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'getSession')
@@ -2183,7 +2252,7 @@ App::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -2216,7 +2285,7 @@ App::patch('/v1/account/password')
     ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -2285,7 +2354,7 @@ App::patch('/v1/account/email')
     ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -2377,7 +2446,7 @@ App::patch('/v1/account/phone')
     ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -2458,7 +2527,7 @@ App::patch('/v1/account/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -2491,7 +2560,7 @@ App::patch('/v1/account/status')
     ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
@@ -2533,7 +2602,7 @@ App::patch('/v1/account/status')
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -2613,7 +2682,7 @@ App::delete('/v1/account/sessions/:sessionId')
 App::patch('/v1/account/sessions/:sessionId')
     ->desc('Update (or renew) a session')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
     ->label('audits.event', 'session.update')
     ->label('audits.resource', 'user/{response.userId}')
@@ -2689,7 +2758,7 @@ App::patch('/v1/account/sessions/:sessionId')
 App::delete('/v1/account/sessions')
     ->desc('Delete sessions')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
     ->label('audits.resource', 'user/{user.$id}')
@@ -2895,11 +2964,12 @@ App::post('/v1/account/recovery')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $profile->getAttribute('name'),
-            'team' => '',
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => ''
         ];
 
         $queueForMails
@@ -3016,7 +3086,7 @@ App::put('/v1/account/recovery')
 App::post('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].verification.[tokenId].create')
     ->label('audits.event', 'verification.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -3142,11 +3212,12 @@ App::post('/v1/account/verification')
 
         $emailVariables = [
             'direction' => $locale->getText('settings.direction'),
-            /* {{user}}, {{team}}, {{redirect}} and {{project}} are required in default and custom templates */
+            // {{user}}, {{redirect}} and {{project}} are required in default and custom templates
             'user' => $user->getAttribute('name'),
-            'team' => '',
             'redirect' => $url,
-            'project' => $projectName
+            'project' => $projectName,
+            // TODO: remove unnecessary team variable from this email
+            'team' => '',
         ];
 
         $queueForMails
@@ -3236,7 +3307,7 @@ App::put('/v1/account/verification')
 App::post('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('auth.type', 'phone')
     ->label('event', 'users.[userId].verification.[tokenId].create')
     ->label('audits.event', 'verification.create')
@@ -3407,7 +3478,7 @@ App::patch('/v1/account/mfa')
     ->desc('Update MFA')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -3440,7 +3511,7 @@ App::patch('/v1/account/mfa')
 App::get('/v1/account/mfa/factors')
     ->desc('List Factors')
     ->groups(['api', 'account', 'mfa'])
-    ->label('scope', 'accounts.read')
+    ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'listFactors')
@@ -3467,7 +3538,7 @@ App::post('/v1/account/mfa/:type')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -3526,7 +3597,7 @@ App::put('/v1/account/mfa/:type')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -3582,7 +3653,7 @@ App::delete('/v1/account/mfa/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete.mfa')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.update')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('audits.userId', '{response.$id}')
@@ -3631,14 +3702,14 @@ App::delete('/v1/account/mfa/:type')
 App::post('/v1/account/mfa/challenge')
     ->desc('Create 2FA Challenge')
     ->groups(['api', 'account', 'mfa'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].challenges.[challengeId].create')
     ->label('audits.event', 'challenge.create')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'create2FAChallenge')
+    ->label('sdk.method', 'createChallenge')
     ->label('sdk.description', '/docs/references/account/create-2fa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3649,11 +3720,13 @@ App::post('/v1/account/mfa/challenge')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
+    ->inject('locale')
+    ->inject('project')
+    ->inject('request')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('queueForMails')
-    ->inject('locale')
-    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails, Locale $locale) {
+    ->action(function (string $factor, Response $response, Database $dbForProject, Document $user, Locale $locale, Document $project, Request $request, Event $queueForEvents, Messaging $queueForMessaging, Mail $queueForMails) {
 
         $expire = DateTime::addSeconds(new \DateTime(), Auth::TOKEN_EXPIRATION_CONFIRM);
         $code = Auth::codeGenerator();
@@ -3685,6 +3758,22 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_PHONE_NOT_VERIFIED);
                 }
 
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/sms-base.tpl');
+
+                $customTemplate = $project->getAttribute('templates', [])['sms.mfaChallenge-' . $locale->default] ?? [];
+                if (!empty($customTemplate)) {
+                    $message = $customTemplate['message'] ?? $message;
+                }
+
+                $messageContent = Template::fromString($locale->getText("sms.verification.body"));
+                $messageContent
+                    ->setParam('{{project}}', $project->getAttribute('name'))
+                    ->setParam('{{secret}}', $code);
+                $messageContent = \strip_tags($messageContent->render());
+                $message = $message->setParam('{{token}}', $messageContent);
+
+                $message = $message->render();
+
                 $queueForMessaging
                     ->setType(MESSAGE_SEND_TYPE_INTERNAL)
                     ->setMessage(new Document([
@@ -3693,7 +3782,8 @@ App::post('/v1/account/mfa/challenge')
                             'content' => $code,
                         ],
                     ]))
-                    ->setRecipients([$user->getAttribute('phone')]);
+                    ->setRecipients([$user->getAttribute('phone')])
+                    ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
             case 'email':
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {
@@ -3706,9 +3796,85 @@ App::post('/v1/account/mfa/challenge')
                     throw new Exception(Exception::USER_EMAIL_NOT_VERIFIED);
                 }
 
+                $subject = $locale->getText("emails.mfaChallenge.subject");
+                $customTemplate = $project->getAttribute('templates', [])['email.mfaChallenge-' . $locale->default] ?? [];
+
+                $detector = new Detector($request->getUserAgent('UNKNOWN'));
+                $agentOs = $detector->getOS();
+                $agentClient = $detector->getClient();
+                $agentDevice = $detector->getDevice();
+
+                $message = Template::fromFile(__DIR__ . '/../../config/locale/templates/email-mfa-challenge.tpl');
+                $message
+                    ->setParam('{{hello}}', $locale->getText("emails.mfaChallenge.hello"))
+                    ->setParam('{{description}}', $locale->getText("emails.mfaChallenge.description"))
+                    ->setParam('{{clientInfo}}', $locale->getText("emails.mfaChallenge.clientInfo"))
+                    ->setParam('{{thanks}}', $locale->getText("emails.mfaChallenge.thanks"))
+                    ->setParam('{{signature}}', $locale->getText("emails.mfaChallenge.signature"));
+
+                $body = $message->render();
+
+                $smtp = $project->getAttribute('smtp', []);
+                $smtpEnabled = $smtp['enabled'] ?? false;
+
+                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $replyTo = "";
+
+                if ($smtpEnabled) {
+                    if (!empty($smtp['senderEmail'])) {
+                        $senderEmail = $smtp['senderEmail'];
+                    }
+                    if (!empty($smtp['senderName'])) {
+                        $senderName = $smtp['senderName'];
+                    }
+                    if (!empty($smtp['replyTo'])) {
+                        $replyTo = $smtp['replyTo'];
+                    }
+
+                    $queueForMails
+                        ->setSmtpHost($smtp['host'] ?? '')
+                        ->setSmtpPort($smtp['port'] ?? '')
+                        ->setSmtpUsername($smtp['username'] ?? '')
+                        ->setSmtpPassword($smtp['password'] ?? '')
+                        ->setSmtpSecure($smtp['secure'] ?? '');
+
+                    if (!empty($customTemplate)) {
+                        if (!empty($customTemplate['senderEmail'])) {
+                            $senderEmail = $customTemplate['senderEmail'];
+                        }
+                        if (!empty($customTemplate['senderName'])) {
+                            $senderName = $customTemplate['senderName'];
+                        }
+                        if (!empty($customTemplate['replyTo'])) {
+                            $replyTo = $customTemplate['replyTo'];
+                        }
+
+                        $body = $customTemplate['message'] ?? '';
+                        $subject = $customTemplate['subject'] ?? $subject;
+                    }
+
+                    $queueForMails
+                        ->setSmtpReplyTo($replyTo)
+                        ->setSmtpSenderEmail($senderEmail)
+                        ->setSmtpSenderName($senderName);
+                }
+
+                $emailVariables = [
+                    'direction' => $locale->getText('settings.direction'),
+                    // {{user}}, {{project}} and {{otp}} are required in the templates
+                    'user' => $user->getAttribute('name'),
+                    'project' => $project->getAttribute('name'),
+                    'otp' => $code,
+                    'agentDevice' => $agentDevice['deviceBrand'] ?? $agentDevice['deviceBrand'] ?? 'UNKNOWN',
+                    'agentClient' => $agentClient['clientName'] ?? 'UNKNOWN',
+                    'agentOs' => $agentOs['osName'] ?? 'UNKNOWN'
+                ];
+
                 $queueForMails
-                    ->setSubject("{$code} is your 6-digit code")
-                    ->setBody($code)
+                    ->setSubject($subject)
+                    ->setBody($body)
+                    ->setVariables($emailVariables)
                     ->setRecipient($user->getAttribute('email'))
                     ->trigger();
                 break;
@@ -3724,7 +3890,7 @@ App::post('/v1/account/mfa/challenge')
 App::put('/v1/account/mfa/challenge')
     ->desc('Create MFA Challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[tokenId].create')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
@@ -3790,7 +3956,7 @@ App::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete')
-    ->label('scope', 'accounts.write')
+    ->label('scope', 'account')
     ->label('audits.event', 'user.delete')
     ->label('audits.resource', 'user/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3800,13 +3966,25 @@ App::delete('/v1/account')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_NONE)
     ->inject('user')
+    ->inject('project')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('queueForDeletes')
-    ->action(function (Document $user, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
+    ->action(function (Document $user, Document $project, Response $response, Database $dbForProject, Event $queueForEvents, Delete $queueForDeletes) {
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if ($project->getId() === 'console') {
+            // get all memberships
+            $memberships = $user->getAttribute('memberships', []);
+            foreach ($memberships as $membership) {
+                // prevent deletion if at least one active membership
+                if ($membership->getAttribute('confirm', false)) {
+                    throw new Exception(Exception::USER_DELETION_PROHIBITED);
+                }
+            }
         }
 
         $dbForProject->deleteDocument('users', $user->getId());

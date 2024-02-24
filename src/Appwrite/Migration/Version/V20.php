@@ -30,16 +30,10 @@ class V20 extends Migration
         foreach (['subQueryIndexes', 'subQueryPlatforms', 'subQueryDomains', 'subQueryKeys', 'subQueryWebhooks', 'subQuerySessions', 'subQueryTokens', 'subQueryMemberships', 'subQueryVariables', 'subQueryChallenges', 'subQueryProjectVariables', 'subQueryTargets', 'subQueryTopicTargets'] as $name) {
             Database::addFilter(
                 $name,
-                fn() => null,
-                fn() => []
+                fn () => null,
+                fn () => []
             );
         }
-
-        $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
-        $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
-        $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
-        $this->migrateUsageMetrics('users.$all.count.total', 'users');
-        $this->migrateSessionsMetric();
 
         Console::log('Migrating Project: ' . $this->project->getAttribute('name') . ' (' . $this->project->getId() . ')');
         $this->projectDB->setNamespace("_{$this->project->getInternalId()}");
@@ -47,14 +41,23 @@ class V20 extends Migration
         Console::info('Migrating Collections');
         $this->migrateCollections();
 
-        Console::info('Migrating Functions');
-        $this->migrateFunctions();
+        // No need to migrate stats for console
+        if ($this->project->getInternalId() !== 'console') {
+            $this->migrateUsageMetrics('project.$all.network.requests', 'network.requests');
+            $this->migrateUsageMetrics('project.$all.network.outbound', 'network.outbound');
+            $this->migrateUsageMetrics('project.$all.network.inbound', 'network.inbound');
+            $this->migrateUsageMetrics('users.$all.count.total', 'users');
+            $this->migrateSessionsMetric();
 
-        Console::info('Migrating Databases');
-        $this->migrateDatabases();
+            Console::info('Migrating Functions');
+            $this->migrateFunctions();
 
-        Console::info('Migrating Buckets');
-        $this->migrateBuckets();
+            Console::info('Migrating Databases');
+            $this->migrateDatabases();
+
+            Console::info('Migrating Buckets');
+            $this->migrateBuckets();
+        }
 
         Console::info('Migrating Documents');
         $this->forEachDocument([$this, 'fixDocument']);
@@ -75,25 +78,27 @@ class V20 extends Migration
         };
 
         // Support database array type migration (user collections)
-        foreach (
-            $this->documentsIterator('attributes', [
-                Query::equal('array', [true]),
-            ]) as $attribute
-        ) {
-            $foundIndex = false;
+        if ($collectionType === 'projects') {
             foreach (
-                $this->documentsIterator('indexes', [
-                    Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
-                    Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
-                ]) as $index
+                $this->documentsIterator('attributes', [
+                Query::equal('array', [true]),
+                ]) as $attribute
             ) {
-                if (in_array($attribute['key'], $index['attributes'])) {
-                    $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
-                    $foundIndex = true;
+                $foundIndex = false;
+                foreach (
+                    $this->documentsIterator('indexes', [
+                        Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
+                        Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
+                    ]) as $index
+                ) {
+                    if (in_array($attribute['key'], $index['attributes'])) {
+                        $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
+                        $foundIndex = true;
+                    }
                 }
-            }
-            if ($foundIndex === true) {
-                $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
+                if ($foundIndex === true) {
+                    $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
+                }
             }
         }
 
@@ -323,7 +328,6 @@ class V20 extends Migration
      */
     protected function createInfMetric(string $metric, int $value): void
     {
-
         try {
             /**
              * Creating inf metric
@@ -351,7 +355,6 @@ class V20 extends Migration
      */
     protected function migrateUsageMetrics(string $from, string $to): void
     {
-
         /**
          * inf metric
          */
@@ -411,7 +414,6 @@ class V20 extends Migration
      */
     private function migrateFunctions(): void
     {
-
         $this->migrateUsageMetrics('deployment.$all.storage.size', 'deployments.storage');
         $this->migrateUsageMetrics('builds.$all.compute.total', 'builds');
         $this->migrateUsageMetrics('builds.$all.compute.time', 'builds.compute');
@@ -539,6 +541,14 @@ class V20 extends Migration
                 $duration = $this->project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
                 $expire = DateTime::addSeconds(new \DateTime(), $duration);
                 $document->setAttribute('expire', $expire);
+
+                $factors = match ($document->getAttribute('provider')) {
+                    Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
+                    Auth::SESSION_PROVIDER_PHONE => ['phone'],
+                    default => ['password'],
+                };
+
+                $document->setAttribute('factors', $factors);
                 break;
         }
         return $document;

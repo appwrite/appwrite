@@ -69,7 +69,8 @@ class Messaging extends Action
      * @param Message $message
      * @param Log $log
      * @param Database $dbForProject
-     * @param callable $getLocalCache
+     * @param Device $deviceForFiles
+     * @param Device $deviceForLocalFiles
      * @param Usage $queueForUsage
      * @return void
      * @throws \Exception
@@ -468,6 +469,7 @@ class Messaging extends Action
     private function getPushAdapter(Document $provider): ?PushAdapter
     {
         $credentials = $provider->getAttribute('credentials');
+        $options = $provider->getAttribute('options');
 
         return match ($provider->getAttribute('provider')) {
             'mock' => new Mock('username', 'password'),
@@ -476,6 +478,7 @@ class Messaging extends Action
                 $credentials['authKeyId'],
                 $credentials['teamId'],
                 $credentials['bundleId'],
+                $options['sandbox']
             ),
             'fcm' => new FCM(\json_encode($credentials['serviceAccountJSON'])),
             default => null

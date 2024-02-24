@@ -3,8 +3,9 @@
 namespace Appwrite\Platform\Workers;
 
 use Exception;
+use Appwrite\Event\UsageDump;
+use Utopia\App;
 use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Platform\Action;
@@ -12,14 +13,12 @@ use Utopia\Queue\Message;
 
 class Usage extends Action
 {
-    protected static array $stats = [];
-    protected array $periods = [
-        '1h' => 'Y-m-d H:00',
-        '1d' => 'Y-m-d 00:00',
-        'inf' => '0000-00-00 00:00'
-    ];
+    private array $stats = [];
+    private int $lastTriggeredTime = 0;
+    private int $keys = 0;
+    private const INFINITY_PERIOD = '_inf_';
+    private const KEYS_THRESHOLD = 10000;
 
-    protected const INFINITY_PERIOD = '_inf_';
     public static function getName(): string
     {
         return 'usage';
@@ -35,26 +34,31 @@ class Usage extends Action
         ->desc('Usage worker')
         ->inject('message')
         ->inject('getProjectDB')
-        ->callback(function (Message $message, callable $getProjectDB) {
-             $this->action($message, $getProjectDB);
+        ->inject('queueForUsageDump')
+        ->callback(function (Message $message, callable $getProjectDB, UsageDump $queueForUsageDump) {
+             $this->action($message, $getProjectDB, $queueForUsageDump);
         });
+
+        $this->lastTriggeredTime = time();
     }
 
     /**
      * @param Message $message
      * @param callable $getProjectDB
+     * @param UsageDump $queueForUsageDump
      * @return void
      * @throws \Utopia\Database\Exception
      * @throws Exception
      */
-    public function action(Message $message, callable $getProjectDB): void
+    public function action(Message $message, callable $getProjectDB, UsageDump $queueForUsageDump): void
     {
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
+        //Todo Figure out way to preserve keys when the container is being recreated @shimonewman
 
-        $payload = $message->getPayload() ?? [];
+        $aggregationInterval = (int) App::getEnv('_APP_USAGE_AGGREGATION_INTERVAL', '20');
         $project = new Document($payload['project'] ?? []);
         $projectId = $project->getInternalId();
         foreach ($payload['reduce'] ?? [] as $document) {
@@ -70,13 +74,31 @@ class Usage extends Action
             );
         }
 
-        self::$stats[$projectId]['project'] = $project;
+        $this->stats[$projectId]['project'] = $project;
         foreach ($payload['metrics'] ?? [] as $metric) {
-            if (!isset(self::$stats[$projectId]['keys'][$metric['key']])) {
-                self::$stats[$projectId]['keys'][$metric['key']] = $metric['value'];
+                 $this->keys++;
+            if (!isset($this->stats[$projectId]['keys'][$metric['key']])) {
+                $this->stats[$projectId]['keys'][$metric['key']] = $metric['value'];
                 continue;
             }
-            self::$stats[$projectId]['keys'][$metric['key']] += $metric['value'];
+
+            $this->stats[$projectId]['keys'][$metric['key']] += $metric['value'];
+        }
+
+        // If keys crossed threshold or X time passed since the last send and there are some keys in the array ($this->stats)
+        if (
+            $this->keys >= self::KEYS_THRESHOLD ||
+            (time() - $this->lastTriggeredTime > $aggregationInterval  && $this->keys > 0)
+        ) {
+            Console::warning('[' . DateTime::now() . '] Aggregated ' . $this->keys . ' keys');
+
+            $queueForUsageDump
+                ->setStats($this->stats)
+                ->trigger();
+
+            $this->stats = [];
+            $this->keys = 0;
+            $this->lastTriggeredTime = time();
         }
     }
 
@@ -91,7 +113,6 @@ class Usage extends Action
      */
     private function reduce(Document $project, Document $document, array &$metrics, callable $getProjectDB): void
     {
-
         $dbForProject = $getProjectDB($project);
 
         try {

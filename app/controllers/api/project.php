@@ -144,9 +144,30 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        // merge network inbound + outbound
+        $projectBandwidth = [];
+        foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_NETWORK_OUTBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+
+        $network = [];
+        foreach ($projectBandwidth as $date => $value) {
+            $network[] = [
+                'date' => $date,
+                'value' => $value
+            ];
+        }
+
         $response->dynamic(new Document([
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
-            'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
+            'network' => $network,
             'users' => ($usage[METRIC_USERS]),
             'executions' => ($usage[METRIC_EXECUTIONS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],

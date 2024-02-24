@@ -1,1 +1,1 @@
-List the targets associated with a message as set via the targets attribute.
+Get a list of the targets associated with a message.
