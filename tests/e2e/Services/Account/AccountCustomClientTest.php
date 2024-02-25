@@ -74,7 +74,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
-        // already logged in
+        /**
+         * Test for FAILURE
+         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -85,11 +87,8 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
-        /**
-         * Test for FAILURE
-         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -2247,7 +2246,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(10);
+        \sleep(15);
 
         $smsRequest = $this->getLastRequest();
 
