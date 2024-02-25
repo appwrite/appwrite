@@ -1616,6 +1616,54 @@ App::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relati
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
+        $database = Authorization::skip(fn() => $dbForProject->getDocument('databases', $databaseId));
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $collection = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);
+        $collection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId());
+
+        if ($collection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $relatedCollectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId);
+        $relatedCollection = $dbForProject->getCollection('database_' . $database->getInternalId() . '_collection_' . $relatedCollectionDocument->getInternalId());
+
+        if ($relatedCollection->isEmpty()) {
+            throw new Exception(Exception::COLLECTION_NOT_FOUND);
+        }
+
+        $attributes = $collection->getAttribute('attributes', []);
+        /** @var Document[] $attributes */
+        foreach ($attributes as $attribute) {
+            if ($attribute->getAttribute('type') !== Database::VAR_RELATIONSHIP) {
+                continue;
+            }
+
+            if (\strtolower($attribute->getId()) === \strtolower($key)) {
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS);
+            }
+
+            if (
+                \strtolower($attribute->getAttribute('options')['twoWayKey']) === \strtolower($twoWayKey) &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                // Console should provide a unique twoWayKey input!
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Attribute with the requested key already exists. Attribute keys must be unique, try again with a different key.');
+            }
+
+            if (
+                $type === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('options')['relationType'] === Database::RELATION_MANY_TO_MANY &&
+                $attribute->getAttribute('options')['relatedCollection'] === $relatedCollection->getId()
+            ) {
+                throw new Exception(Exception::ATTRIBUTE_ALREADY_EXISTS, 'Creating more than one "manyToMany" relationship on the same collection is currently not permitted.');
+            }
+        }
+
         $attribute = createAttribute(
             $databaseId,
             $collectionId,
