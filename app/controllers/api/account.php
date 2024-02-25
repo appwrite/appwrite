@@ -3918,11 +3918,11 @@ App::put('/v1/account/mfa/challenge')
         };
 
     if (!$success && $provider === 'totp') {
-        $backups = $user->getAttribute('mfaBackups', []);
+        $backups = $user->getAttribute('totpBackup', []);
         if (in_array($otp, $backups)) {
             $success = true;
             $backups = array_diff($backups, [$otp]);
-            $user->setAttribute('mfaBackups', $backups);
+            $user->setAttribute('totpBackup', $backups);
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
     }
