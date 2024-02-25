@@ -2251,8 +2251,11 @@ class AccountCustomClientTest extends Scope
 
         $smsRequest = $this->getLastRequest();
 
+        $message = $smsRequest['data']['message'];
+        $token = substr($message, 0, 6);
+
         return \array_merge($data, [
-            'token' => $smsRequest['data']['secret']
+            'token' => $token
         ]);
     }
 

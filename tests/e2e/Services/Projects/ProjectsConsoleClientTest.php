@@ -1731,19 +1731,15 @@ class ProjectsConsoleClientTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
 
-        $email = uniqid() . 'user@localhost.test';
-        $password = '';
-        $name = 'username';
-        $userId = ID::unique();
-        $response = $this->client->call(Client::METHOD_POST, '/account', array_merge([
-            'origin' => 'http://localhost',
+        $response = $this->client->call(Client::METHOD_POST, '/users', array_merge($this->getHeaders(), [
             'content-type' => 'application/json',
             'x-appwrite-project' => $id,
+            'x-appwrite-mode' => 'admin',
         ]), [
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
-            'userId' => $userId
+            // Empty password
+            'email' => uniqid() . 'user@localhost.test',
+            'name' => 'User',
+            'userId' => ID::unique(),
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
