@@ -1944,8 +1944,7 @@ class AccountCustomClientTest extends Scope
 
         $smsRequest = null;
         $this->assertEventually(function () use ($smsRequest) {
-            $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-            $smsRequest['data'] = json_decode($smsRequest['data'], true);
+            $smsRequest = $this->getLastRequest();
 
             $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
             $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
@@ -2250,8 +2249,7 @@ class AccountCustomClientTest extends Scope
 
         $smsRequest = null;
         $this->assertEventually(function () use ($smsRequest) {
-            $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
-            $smsRequest['data'] = json_decode($smsRequest['data'], true);
+            $smsRequest = $this->getLastRequest();
 
             $this->assertArrayHasKey('secret', $smsRequest['data']);
         }, 20000, 500);
