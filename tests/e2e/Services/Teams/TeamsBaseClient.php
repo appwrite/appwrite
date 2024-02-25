@@ -30,6 +30,7 @@ trait TeamsBaseClient
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsInt($response['body']['total']);
         $this->assertNotEmpty($response['body']['memberships'][0]['$id']);
+        $this->assertNotEmpty($response['body']['memberships'][0]['mfa']);
         $this->assertEquals($this->getUser()['name'], $response['body']['memberships'][0]['userName']);
         $this->assertEquals($this->getUser()['email'], $response['body']['memberships'][0]['userEmail']);
         $this->assertEquals($teamName, $response['body']['memberships'][0]['teamName']);
@@ -155,6 +156,7 @@ trait TeamsBaseClient
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']['$id']);
+        $this->assertNotEmpty($response['body']['mfa']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['userName']);
         $this->assertNotEmpty($response['body']['userEmail']);
