@@ -122,6 +122,10 @@ class Swagger2 extends Format
 
             $method = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
+            if ($desc == null){
+                echo $route->getLabel('sdk.description', '');
+                echo '';
+            }
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
             $routeSecurity = $route->getLabel('sdk.auth', []);
