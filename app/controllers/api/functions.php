@@ -116,6 +116,28 @@ $redeployVcs = function (Request $request, Document $function, Document $project
         'activate' => true,
     ]));
 
+    $buildId = ID::unique();
+    $build = $dbForProject->createDocument('builds', new Document([
+        '$id' => $buildId,
+        '$permissions' => [],
+        'startTime' => null,
+        'deploymentInternalId' => $deployment->getInternalId(),
+        'deploymentId' => $deployment->getId(),
+        'status' => 'waiting',
+        'path' => '',
+        'runtime' => $function->getAttribute('runtime'),
+        'source' => $deployment->getAttribute('path', ''),
+        'sourceType' => '',
+        'logs' => '',
+        'endTime' => null,
+        'duration' => 0,
+        'size' => 0
+    ]));
+
+    $deployment->setAttribute('buildId', $build->getId());
+    $deployment->setAttribute('buildInternalId', $build->getInternalId());
+    $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
     $queueForBuilds
         ->setType(BUILD_TYPE_DEPLOYMENT)
         ->setResource($function)
@@ -1188,7 +1210,6 @@ App::post('/v1/functions/:functionId/deployments')
             $build = $dbForProject->createDocument('builds', new Document([
                 '$id' => $buildId,
                 '$permissions' => [],
-                'creationTime' => DateTime::now(),
                 'startTime' => null,
                 'deploymentInternalId' => $deployment->getInternalId(),
                 'deploymentId' => $deployment->getId(),
@@ -1426,74 +1447,6 @@ App::delete('/v1/functions/:functionId/deployments/:deploymentId')
         $queueForDeletes
             ->setType(DELETE_TYPE_DOCUMENT)
             ->setDocument($deployment);
-
-        $response->noContent();
-    });
-
-App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
-    ->groups(['api', 'functions'])
-    ->desc('Create build')
-    ->label('scope', 'functions.write')
-    ->label('event', 'functions.[functionId].deployments.[deploymentId].update')
-    ->label('audits.event', 'deployment.update')
-    ->label('audits.resource', 'function/{request.functionId}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'functions')
-    ->label('sdk.method', 'createBuild')
-    ->label('sdk.description', '/docs/references/functions/create-build.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
-    ->label('sdk.response.model', Response::MODEL_NONE)
-    ->param('functionId', '', new UID(), 'Function ID.')
-    ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('queueForEvents')
-    ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
-
-        $function = $dbForProject->getDocument('functions', $functionId);
-
-        if ($function->isEmpty()) {
-            throw new Exception(Exception::FUNCTION_NOT_FOUND);
-        }
-
-        $deployment = $dbForProject->getDocument('deployments', $deploymentId);
-
-        if ($deployment->isEmpty()) {
-            throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
-        }
-
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
-
-        if ($build->isEmpty()) {
-            throw new Exception(Exception::BUILD_NOT_FOUND);
-        }
-
-        $deploymentId = ID::unique();
-
-        $deployment->removeAttribute('$internalId');
-        $deployment = $dbForProject->createDocument('deployments', $deployment->setAttributes([
-            '$id' => $deploymentId,
-            'buildId' => '',
-            'buildInternalId' => '',
-            'entrypoint' => $function->getAttribute('entrypoint'),
-            'commands' => $function->getAttribute('commands', ''),
-            'search' => implode(' ', [$deploymentId, $function->getAttribute('entrypoint')]),
-        ]));
-
-        $queueForBuilds
-            ->setType(BUILD_TYPE_DEPLOYMENT)
-            ->setResource($function)
-            ->setDeployment($deployment)
-            ->setProject($project)
-            ->trigger();
-
-        $queueForEvents
-            ->setParam('functionId', $function->getId())
-            ->setParam('deploymentId', $deployment->getId());
 
         $response->noContent();
     });

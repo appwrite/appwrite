@@ -2591,17 +2591,6 @@ $projectCollections = array_merge([
         'name' => 'Builds',
         'attributes' => [
             [
-                '$id' => ID::custom('creationTime'),
-                'type' => Database::VAR_DATETIME,
-                'format' => '',
-                'size' => 0,
-                'signed' => false,
-                'required' => false,
-                'default' => null,
-                'array' => false,
-                'filters' => ['datetime'],
-            ],
-            [
                 '$id' => ID::custom('startTime'),
                 'type' => Database::VAR_DATETIME,
                 'format' => '',

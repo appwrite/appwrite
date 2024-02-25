@@ -154,6 +154,7 @@ class Builds extends Action
 
         $build->setAttribute('status', 'processing');
         $build->setAttribute('startTime', $startTime);
+        $build->setAttribute('sourceType', strtolower($deviceFunctions->getType()));
         $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         $source = $deployment->getAttribute('path', '');
