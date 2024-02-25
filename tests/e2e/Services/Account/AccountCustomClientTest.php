@@ -291,7 +291,7 @@ class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['logs']);
         $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertEquals("session.create", $response['body']['logs'][2]['event']);
+        $this->assertEquals("user.create", $response['body']['logs'][2]['event']);
         $this->assertEquals(filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][2]['ip']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
@@ -312,10 +312,6 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
-
-        $this->assertEquals("user.create", $response['body']['logs'][3]['event']);
-        $this->assertEquals(filter_var($response['body']['logs'][3]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][3]['ip']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
@@ -368,7 +364,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(3, $responseOffset['body']['logs']);
+        $this->assertCount(2, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
@@ -2242,12 +2238,15 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(15);
+        \sleep(5);
 
         $smsRequest = $this->getLastRequest();
 
+        $message = $smsRequest['data']['message'];
+        $token = substr($message, 0, 6);
+
         return \array_merge($data, [
-            'token' => $smsRequest['data']['secret']
+            'token' => $token
         ]);
     }
 
