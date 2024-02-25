@@ -120,7 +120,7 @@ class Swagger2 extends Format
             $scope = $route->getLabel('scope', '');
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
-            $id = $route->getLabel('sdk.method', \uniqid());
+            $method = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
@@ -151,19 +151,19 @@ class Swagger2 extends Format
 
             $temp = [
                 'summary' => $route->getDesc(),
-                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($id),
+                'operationId' => $route->getLabel('sdk.namespace', 'default') . ucfirst($method),
                 'consumes' => [],
                 'produces' => [],
                 'tags' => [$route->getLabel('sdk.namespace', 'default')],
                 'description' => ($desc) ? \file_get_contents($desc) : '',
                 'responses' => [],
                 'x-appwrite' => [ // Appwrite related metadata
-                    'method' => $route->getLabel('sdk.method', \uniqid()),
+                    'method' => $method,
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
                     'deprecated' => $route->getLabel('sdk.deprecated', false),
-                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($id) . '.md',
+                    'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
                     'rate-time' => $route->getLabel('abuse-time', 3600),
