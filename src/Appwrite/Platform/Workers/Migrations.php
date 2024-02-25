@@ -347,7 +347,7 @@ class Migrations extends Action
                 $this->updateMigrationDocument($migrationDocument, $projectDocument);
 
                 if ($migrationDocument->getAttribute('status', '') == 'failed') {
-                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', []));
+                    throw new Exception(implode("\n", $migrationDocument->getAttribute('errors', [])));
                 }
             }
         }
