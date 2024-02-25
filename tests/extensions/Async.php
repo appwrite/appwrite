@@ -9,10 +9,6 @@ trait Async
 {
     public static function assertEventually(callable $probe, int $timeoutMilliseconds = 10000, int $waitMilliseconds = 500): void
     {
-        Assert::assertThat(
-            $probe,
-            new Eventually($timeoutMilliseconds, $waitMilliseconds)
-        );
+        Assert::assertThat($probe, new Eventually($timeoutMilliseconds, $waitMilliseconds));
     }
 }
-
