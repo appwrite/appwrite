@@ -1599,30 +1599,20 @@ App::delete('/v1/users/:userId/mfa/:type')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
-    ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $type, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $success = match ($type) {
-            'totp' => Challenge\TOTP::verify($user, $otp),
-            default => false
-        };
-
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
-
-    if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-    }
+        if (!$user->getAttribute('totp')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+        }
 
         $user
             ->setAttribute('totp', false)
