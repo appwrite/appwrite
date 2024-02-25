@@ -73,7 +73,7 @@ App::get('/v1/project/usage')
 
         Authorization::skip(function () use ($dbForProject, $firstDay, $lastDay, $period, $metrics, &$total, &$stats) {
             foreach ($metrics['total'] as $metric) {
-                $result = $dbForProject->findOne('stats_v2', [
+                $result = $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -81,7 +81,7 @@ App::get('/v1/project/usage')
             }
 
             foreach ($metrics['period'] as $metric) {
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::greaterThanEqual('time', $firstDay),
@@ -116,7 +116,7 @@ App::get('/v1/project/usage')
             $id = $function->getId();
             $name = $function->getAttribute('name');
             $metric = str_replace('{functionInternalId}', $function->getInternalId(), METRIC_FUNCTION_ID_EXECUTIONS);
-            $value = $dbForProject->findOne('stats_v2', [
+            $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
             ]);
@@ -132,7 +132,7 @@ App::get('/v1/project/usage')
             $id = $bucket->getId();
             $name = $bucket->getAttribute('name');
             $metric = str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE);
-            $value = $dbForProject->findOne('stats_v2', [
+            $value = $dbForProject->findOne('stats', [
                 Query::equal('metric', [$metric]),
                 Query::equal('period', ['inf'])
             ]);
@@ -144,9 +144,30 @@ App::get('/v1/project/usage')
             ];
         }, $dbForProject->find('buckets'));
 
+        // merge network inbound + outbound
+        $projectBandwidth = [];
+        foreach ($usage[METRIC_NETWORK_INBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+        foreach ($usage[METRIC_NETWORK_OUTBOUND] as $item) {
+            $projectBandwidth[$item['date']] ??= 0;
+            $projectBandwidth[$item['date']] += $item['value'];
+        }
+
+
+        $network = [];
+        foreach ($projectBandwidth as $date => $value) {
+            $network[] = [
+                'date' => $date,
+                'value' => $value
+            ];
+        }
+
         $response->dynamic(new Document([
             'requests' => ($usage[METRIC_NETWORK_REQUESTS]),
-            'network' => ($usage[METRIC_NETWORK_INBOUND] + $usage[METRIC_NETWORK_OUTBOUND]),
+            'network' => $network,
             'users' => ($usage[METRIC_USERS]),
             'executions' => ($usage[METRIC_EXECUTIONS]),
             'executionsTotal' => $total[METRIC_EXECUTIONS],

@@ -115,6 +115,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($email) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => 'email',
@@ -132,6 +137,11 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
         if ($phone) {
             try {
                 $target = $dbForProject->createDocument('targets', new Document([
+                    '$permissions' => [
+                        Permission::read(Role::user($user->getId())),
+                        Permission::update(Role::user($user->getId())),
+                        Permission::delete(Role::user($user->getId())),
+                    ],
                     'userId' => $user->getId(),
                     'userInternalId' => $user->getInternalId(),
                     'providerType' => 'sms',
@@ -182,7 +192,6 @@ App::post('/v1/users')
     ->inject('hooks')
     ->action(function (string $userId, ?string $email, ?string $phone, ?string $password, string $name, Response $response, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
         $user = createUser('plaintext', '{}', $userId, $email, $password, $phone, $name, $project, $dbForProject, $queueForEvents, $hooks);
-
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
             ->dynamic($user, Response::MODEL_USER);
@@ -498,8 +507,13 @@ App::post('/v1/users/:userId/targets')
         try {
             $target = $dbForProject->createDocument('targets', new Document([
                 '$id' => $targetId,
+                '$permissions' => [
+                    Permission::read(Role::user($user->getId())),
+                    Permission::update(Role::user($user->getId())),
+                    Permission::delete(Role::user($user->getId())),
+                ],
                 'providerId' => $providerId ?? null,
-                'providerInternalId' => $provider->getInternalId() ?? null,
+                'providerInternalId' => $provider->isEmpty() ? null : $provider->getInternalId(),
                 'providerType' =>  $providerType,
                 'userId' => $userId,
                 'userInternalId' => $user->getInternalId(),
@@ -791,6 +805,9 @@ App::get('/v1/users/:userId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
+                'userId' => ID::custom($log['data']['userId']),
+                'userEmail' => $log['data']['userEmail'] ?? null,
+                'userName' => $log['data']['userName'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -819,7 +836,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getId()),
+            'total' => $audit->countLogsByUser($user->getInternalId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -1227,6 +1244,11 @@ App::patch('/v1/users/:userId/email')
             } else {
                 if (\strlen($email) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
                         'userId' => $user->getId(),
                         'userInternalId' => $user->getInternalId(),
                         'providerType' => 'email',
@@ -1305,6 +1327,11 @@ App::patch('/v1/users/:userId/phone')
             } else {
                 if (\strlen($number) !== 0) {
                     $target = $dbForProject->createDocument('targets', new Document([
+                        '$permissions' => [
+                            Permission::read(Role::user($user->getId())),
+                            Permission::update(Role::user($user->getId())),
+                            Permission::delete(Role::user($user->getId())),
+                        ],
                         'userId' => $user->getId(),
                         'userInternalId' => $user->getInternalId(),
                         'providerType' => 'sms',
@@ -1523,18 +1550,18 @@ App::patch('/v1/users/:userId/mfa')
         $response->dynamic($user, Response::MODEL_USER);
     });
 
-App::get('/v1/users/:userId/providers')
-    ->desc('List Providers')
+App::get('/v1/users/:userId/mfa/factors')
+    ->desc('List Factors')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listProviders')
-    ->label('sdk.description', '/docs/references/users/list-providers.md')
+    ->label('sdk.method', 'listFactors')
+    ->label('sdk.description', '/docs/references/users/list-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_MFA_PROVIDERS)
+    ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
     ->param('userId', '', new UID(), 'User ID.')
     ->inject('response')
     ->inject('dbForProject')
@@ -1551,10 +1578,10 @@ App::get('/v1/users/:userId/providers')
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_PROVIDERS);
+        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
     });
 
-App::delete('/v1/users/:userId/mfa/:provider')
+App::delete('/v1/users/:userId/mfa/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -1571,20 +1598,20 @@ App::delete('/v1/users/:userId/mfa/:provider')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('provider', null, new WhiteList(['totp']), 'Provider.')
+    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $provider, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $success = match ($provider) {
+        $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
         };
@@ -1635,7 +1662,7 @@ App::post('/v1/users/:userId/sessions')
     ->inject('queueForEvents')
     ->action(function (string $userId, Request $request, Response $response, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -1704,7 +1731,7 @@ App::post('/v1/users/:userId/tokens')
     ->action(function (string $userId, int $length, int $expire, Request $request, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
-        if ($user === false || $user->isEmpty()) {
+        if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
@@ -1976,7 +2003,7 @@ App::get('/v1/users/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -1984,7 +2011,7 @@ App::get('/v1/users/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),

@@ -42,7 +42,6 @@ class Tasks extends Service
             ->addAction(Install::getName(), new Install())
             ->addAction(Maintenance::getName(), new Maintenance())
             ->addAction(Migrate::getName(), new Migrate())
-            ->addAction(Migrate::getName(), new Migrate())
             ->addAction(PatchRecreateRepositoriesDocuments::getName(), new PatchRecreateRepositoriesDocuments())
             ->addAction(QueueCount::getName(), new QueueCount())
             ->addAction(QueueRetry::getName(), new QueueRetry())

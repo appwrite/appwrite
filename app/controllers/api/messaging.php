@@ -10,6 +10,7 @@ use Appwrite\Messaging\Status as MessageStatus;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Permission;
 use Appwrite\Role;
+use Appwrite\Utopia\Database\Validator\CompoundUID;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Messages;
 use Appwrite\Utopia\Database\Validator\Queries\Providers;
@@ -27,10 +28,13 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
+use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
+use Utopia\Domains\Domain;
 use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
@@ -215,14 +219,14 @@ App::post('/v1/messaging/providers/smtp')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMTPProvider')
+    ->label('sdk.method', 'createSmtpProvider')
     ->label('sdk.description', '/docs/references/messaging/create-smtp-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new CustomId(), 'Provider ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Provider name.')
-    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.')
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.')
     ->param('port', 587, new Range(1, 65535), 'The default SMTP server port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
@@ -688,7 +692,7 @@ App::post('/v1/messaging/providers/fcm')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createFCMProvider')
+    ->label('sdk.method', 'createFcmProvider')
     ->label('sdk.description', '/docs/references/messaging/create-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -751,7 +755,7 @@ App::post('/v1/messaging/providers/apns')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createAPNSProvider')
+    ->label('sdk.method', 'createApnsProvider')
     ->label('sdk.description', '/docs/references/messaging/create-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -762,11 +766,12 @@ App::post('/v1/messaging/providers/apns')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', false, new Boolean(), 'Use APNS sandbox environment.', true)
     ->param('enabled', null, new Boolean(), 'Set as enabled.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, string $authKey, string $authKeyId, string $teamId, string $bundleId, bool $sandbox, ?bool $enabled, Event $queueForEvents, Database $dbForProject, Response $response) {
         $providerId = $providerId == 'unique()' ? ID::unique() : $providerId;
 
         $credentials = [];
@@ -799,6 +804,10 @@ App::post('/v1/messaging/providers/apns')
             $enabled = false;
         }
 
+        $options = [
+            'sandbox' => $sandbox
+        ];
+
         $provider = new Document([
             '$id' => $providerId,
             'name' => $name,
@@ -806,6 +815,7 @@ App::post('/v1/messaging/providers/apns')
             'type' => MESSAGE_TYPE_PUSH,
             'enabled' => $enabled,
             'credentials' => $credentials,
+            'options' => $options
         ]);
 
         try {
@@ -880,7 +890,7 @@ App::get('/v1/messaging/providers/:providerId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listProviderLogs')
-    ->label('sdk.description', '/docs/references/messaging/providers/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-provider-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -1191,14 +1201,14 @@ App::patch('/v1/messaging/providers/smtp/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSMTPProvider')
+    ->label('sdk.method', 'updateSmtpProvider')
     ->label('sdk.description', '/docs/references/messaging/update-smtp-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
     ->param('providerId', '', new UID(), 'Provider ID.')
     ->param('name', '', new Text(128), 'Provider name.', true)
-    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host by using this format: [hostname:port] (e.g. "smtp1.example.com:25;smtp2.example.com"). You can also specify encryption type, for example: (e.g. "tls://smtp1.example.com:587;ssl://smtp2.example.com:465"). Hosts will be tried in order.', true)
+    ->param('host', '', new Text(0), 'SMTP hosts. Either a single hostname or multiple semicolon-delimited hostnames. You can also specify a different port for each host such as `smtp1.example.com:25;smtp2.example.com`. You can also specify encryption type, for example: `tls://smtp1.example.com:587;ssl://smtp2.example.com:465"`. Hosts will be tried in order.', true)
     ->param('port', null, new Range(1, 65535), 'SMTP port.', true)
     ->param('username', '', new Text(0), 'Authentication username.', true)
     ->param('password', '', new Text(0), 'Authentication password.', true)
@@ -1723,7 +1733,7 @@ App::patch('/v1/messaging/providers/fcm/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateFCMProvider')
+    ->label('sdk.method', 'updateFcmProvider')
     ->label('sdk.description', '/docs/references/messaging/update-fcm-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1792,7 +1802,7 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->label('scope', 'providers.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateAPNSProvider')
+    ->label('sdk.method', 'updateApnsProvider')
     ->label('sdk.description', '/docs/references/messaging/update-apns-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -1804,10 +1814,11 @@ App::patch('/v1/messaging/providers/apns/:providerId')
     ->param('authKeyId', '', new Text(0), 'APNS authentication key ID.', true)
     ->param('teamId', '', new Text(0), 'APNS team ID.', true)
     ->param('bundleId', '', new Text(0), 'APNS bundle ID.', true)
+    ->param('sandbox', null, new Boolean(), 'Use APNS sandbox environment.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $providerId, string $name, ?bool $enabled, string $authKey, string $authKeyId, string $teamId, string $bundleId, ?bool $sandbox, Event $queueForEvents, Database $dbForProject, Response $response) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -1842,6 +1853,14 @@ App::patch('/v1/messaging/providers/apns/:providerId')
         }
 
         $provider->setAttribute('credentials', $credentials);
+
+        $options = $provider->getAttribute('options');
+
+        if (!\is_null($sandbox)) {
+            $options['sandbox'] = $sandbox;
+        }
+
+        $provider->setAttribute('options', $options);
 
         if (!\is_null($enabled)) {
             if ($enabled) {
@@ -1905,7 +1924,7 @@ App::delete('/v1/messaging/providers/:providerId')
     });
 
 App::post('/v1/messaging/topics')
-    ->desc('Create a topic.')
+    ->desc('Create a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.create')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -1920,15 +1939,17 @@ App::post('/v1/messaging/topics')
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new CustomId(), 'Topic ID. Choose a custom Topic ID or a new Topic ID.')
     ->param('name', '', new Text(128), 'Topic Name.')
+    ->param('subscribe', [Role::users()], new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, string $name, array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topicId = $topicId == 'unique()' ? ID::unique() : $topicId;
 
         $topic = new Document([
             '$id' => $topicId,
             'name' => $name,
+            'subscribe' => $subscribe,
         ]);
 
         try {
@@ -1946,7 +1967,7 @@ App::post('/v1/messaging/topics')
     });
 
 App::get('/v1/messaging/topics')
-    ->desc('List topics.')
+    ->desc('List topics')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2003,7 +2024,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listTopicLogs')
-    ->label('sdk.description', '/docs/references/messaging/topics/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-topic-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -2086,7 +2107,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId')
-    ->desc('Get a topic.')
+    ->desc('Get a topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2113,7 +2134,7 @@ App::get('/v1/messaging/topics/:topicId')
     });
 
 App::patch('/v1/messaging/topics/:topicId')
-    ->desc('Update a topic.')
+    ->desc('Update a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -2127,19 +2148,24 @@ App::patch('/v1/messaging/topics/:topicId')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_TOPIC)
     ->param('topicId', '', new UID(), 'Topic ID.')
-    ->param('name', '', new Text(128), 'Topic Name.', true)
+    ->param('name', null, new Text(128), 'Topic Name.', true)
+    ->param('subscribe', null, new Roles(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of role strings with subscribe permission. By default all users are granted with any subscribe permission. [learn more about roles](https://appwrite.io/docs/permissions#permission-roles). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' roles are allowed, each 64 characters long.', true)
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $name, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->action(function (string $topicId, ?string $name, ?array $subscribe, Event $queueForEvents, Database $dbForProject, Response $response) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        if (!empty($name)) {
+        if (!\is_null($name)) {
             $topic->setAttribute('name', $name);
+        }
+
+        if (!\is_null($subscribe)) {
+            $topic->setAttribute('subscribe', $subscribe);
         }
 
         $topic = $dbForProject->updateDocument('topics', $topicId, $topic);
@@ -2152,7 +2178,7 @@ App::patch('/v1/messaging/topics/:topicId')
     });
 
 App::delete('/v1/messaging/topics/:topicId')
-    ->desc('Delete a topic.')
+    ->desc('Delete a topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
     ->label('audits.resource', 'topic/{request.$topicId}')
@@ -2192,7 +2218,7 @@ App::delete('/v1/messaging/topics/:topicId')
     });
 
 App::post('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('Create a subscriber.')
+    ->desc('Create a subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
     ->label('audits.resource', 'subscriber/{response.$id}')
@@ -2220,6 +2246,12 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
+        $validator = new Authorization('subscribe');
+
+        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        }
+
         $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
@@ -2228,32 +2260,42 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
 
         $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
-        $userId = $user->getId();
-
         $subscriber = new Document([
             '$id' => $subscriberId,
             '$permissions' => [
-                Permission::read(Role::user($userId)),
-                Permission::delete(Role::user($userId)),
+                Permission::read(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
             ],
             'topicId' => $topicId,
             'topicInternalId' => $topic->getInternalId(),
             'targetId' => $targetId,
             'targetInternalId' => $target->getInternalId(),
-            'userId' => $userId,
+            'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
             'providerType' => $target->getAttribute('providerType'),
             'search' => implode(' ', [
                 $subscriberId,
                 $targetId,
-                $userId,
+                $user->getId(),
                 $target->getAttribute('providerType'),
             ]),
         ]);
 
         try {
             $subscriber = $dbForProject->createDocument('subscribers', $subscriber);
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+            $totalAttribute = match ($target->getAttribute('providerType')) {
+                MESSAGE_TYPE_EMAIL => 'emailTotal',
+                MESSAGE_TYPE_SMS => 'smsTotal',
+                MESSAGE_TYPE_PUSH => 'pushTotal',
+                default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+            };
+
+            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+                'topics',
+                $topicId,
+                $totalAttribute,
+            ));
         } catch (DuplicateException) {
             throw new Exception(Exception::SUBSCRIBER_ALREADY_EXISTS);
         }
@@ -2272,7 +2314,7 @@ App::post('/v1/messaging/topics/:topicId/subscribers')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('List subscribers.')
+    ->desc('List subscribers')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2304,7 +2346,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        \array_push($queries, Query::equal('topicInternalId', [$topic->getInternalId()]));
+        $queries[] = Query::equal('topicInternalId', [$topic->getInternalId()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -2352,7 +2394,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listSubscriberLogs')
-    ->label('sdk.description', '/docs/references/messaging/subscribers/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-subscriber-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -2435,7 +2477,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Get a subscriber.')
+    ->desc('Get a subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2474,7 +2516,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Delete a subscriber.')
+    ->desc('Delete a subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
@@ -2505,8 +2547,23 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
+        $target = $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId'));
+
         $dbForProject->deleteDocument('subscribers', $subscriberId);
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute('topics', $topicId, 'total', 1));
+
+        $totalAttribute = match ($target->getAttribute('providerType')) {
+            MESSAGE_TYPE_EMAIL => 'emailTotal',
+            MESSAGE_TYPE_SMS => 'smsTotal',
+            MESSAGE_TYPE_PUSH => 'pushTotal',
+            default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
+        };
+
+        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+            'topics',
+            $topicId,
+            $totalAttribute,
+            min: 0
+        ));
 
         $queueForEvents
             ->setParam('topicId', $topic->getId())
@@ -2518,7 +2575,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::post('/v1/messaging/messages/email')
-    ->desc('Create an email.')
+    ->desc('Create an email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2539,6 +2596,7 @@ App::post('/v1/messaging/messages/email')
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('cc', [], new ArrayList(new UID()), 'Array of target IDs to be added as CC.', true)
     ->param('bcc', [], new ArrayList(new UID()), 'Array of target IDs to be added as BCC.', true)
+    ->param('attachments', [], new ArrayList(new CompoundUID()), 'Array of compound bucket IDs to file IDs to be attached to the email.', true)
     ->param('status', MessageStatus::DRAFT, new WhiteList([MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]), 'Message Status. Value must be one of: ' . implode(', ', [MessageStatus::DRAFT, MessageStatus::SCHEDULED, MessageStatus::PROCESSING]) . '.', true)
     ->param('html', false, new Boolean(), 'Is content of type HTML', true)
     ->param('scheduledAt', null, new DatetimeValidator(requireDateInFuture: true), 'Scheduled delivery time for message in [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) format. DateTime value must be in future.', true)
@@ -2548,7 +2606,7 @@ App::post('/v1/messaging/messages/email')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $subject, string $content, array $topics, array $users, array $targets, array $cc, array $bcc, array $attachments, string $status, bool $html, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2581,6 +2639,29 @@ App::post('/v1/messaging/messages/email')
             }
         }
 
+        if (!empty($attachments)) {
+            foreach ($attachments as &$attachment) {
+                [$bucketId, $fileId] = CompoundUID::parse($attachment);
+
+                $bucket = $dbForProject->getDocument('buckets', $bucketId);
+
+                if ($bucket->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                }
+
+                $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+
+                if ($file->isEmpty()) {
+                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                }
+
+                $attachment = [
+                    'bucketId' => $bucketId,
+                    'fileId' => $fileId,
+                ];
+            }
+        }
+
         $message = $dbForProject->createDocument('messages', new Document([
             '$id' => $messageId,
             'providerType' => MESSAGE_TYPE_EMAIL,
@@ -2594,6 +2675,7 @@ App::post('/v1/messaging/messages/email')
                 'html' => $html,
                 'cc' => $cc,
                 'bcc' => $bcc,
+                'attachments' => $attachments,
             ],
             'status' => $status,
         ]));
@@ -2601,14 +2683,13 @@ App::post('/v1/messaging/messages/email')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2638,7 +2719,7 @@ App::post('/v1/messaging/messages/email')
     });
 
 App::post('/v1/messaging/messages/sms')
-    ->desc('Create an SMS.')
+    ->desc('Create an SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2646,7 +2727,7 @@ App::post('/v1/messaging/messages/sms')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'createSMS')
+    ->label('sdk.method', 'createSms')
     ->label('sdk.description', '/docs/references/messaging/create-sms.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -2710,14 +2791,13 @@ App::post('/v1/messaging/messages/sms')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2747,7 +2827,7 @@ App::post('/v1/messaging/messages/sms')
     });
 
 App::post('/v1/messaging/messages/push')
-    ->desc('Create a push notification.')
+    ->desc('Create a push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2756,7 +2836,7 @@ App::post('/v1/messaging/messages/push')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createPush')
-    ->label('sdk.description', '/docs/references/messaging/create-push-notification.md')
+    ->label('sdk.description', '/docs/references/messaging/create-push.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
@@ -2768,6 +2848,7 @@ App::post('/v1/messaging/messages/push')
     ->param('targets', [], new ArrayList(new UID()), 'List of Targets IDs.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', '', new Text(256), 'Action for push notification.', true)
+    ->param('image', '', new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage.', true)
     ->param('icon', '', new Text(256), 'Icon for push notification. Available only for Android and Web Platform.', true)
     ->param('sound', '', new Text(256), 'Sound for push notification. Available only for Android and IOS Platform.', true)
     ->param('color', '', new Text(256), 'Color for push notification. Available only for Android Platform.', true)
@@ -2781,7 +2862,7 @@ App::post('/v1/messaging/messages/push')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, string $title, string $body, array $topics, array $users, array $targets, ?array $data, string $action, string $image, string $icon, string $sound, string $color, string $tag, string $badge, string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $messageId = $messageId == 'unique()'
             ? ID::unique()
             : $messageId;
@@ -2812,9 +2893,41 @@ App::post('/v1/messaging/messages/push')
             }
         }
 
+        if (!empty($image)) {
+            [$bucketId, $fileId] = CompoundUID::parse($image);
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+            if ($bucket->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($file->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            }
+
+            $host = App::getEnv('_APP_DOMAIN', 'localhost');
+            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
+            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+        }
+
         $pushData = [];
 
-        $keys = ['title', 'body', 'data', 'action', 'icon', 'sound', 'color', 'tag', 'badge'];
+        $keys = ['title', 'body', 'data', 'action', 'image', 'icon', 'sound', 'color', 'tag', 'badge'];
 
         foreach ($keys as $key) {
             if (!empty($$key)) {
@@ -2836,14 +2949,13 @@ App::post('/v1/messaging/messages/push')
         switch ($status) {
             case MessageStatus::PROCESSING:
                 $queueForMessaging
-                    ->setMessageId($message->getId())
-                    ->trigger();
+                    ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                    ->setMessageId($message->getId());
                 break;
             case MessageStatus::SCHEDULED:
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -2930,7 +3042,7 @@ App::get('/v1/messaging/messages/:messageId/logs')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'listMessageLogs')
-    ->label('sdk.description', '/docs/references/messaging/messages/get-logs.md')
+    ->label('sdk.description', '/docs/references/messaging/list-message-logs.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_LOG_LIST)
@@ -3102,7 +3214,7 @@ App::get('/v1/messaging/messages/:messageId')
     });
 
 App::patch('/v1/messaging/messages/email/:messageId')
-    ->desc('Update an email.')
+    ->desc('Update an email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3197,7 +3309,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3229,8 +3340,8 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3241,7 +3352,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     });
 
 App::patch('/v1/messaging/messages/sms/:messageId')
-    ->desc('Update an SMS.')
+    ->desc('Update an SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3249,7 +3360,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     ->label('scope', 'messages.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
-    ->label('sdk.method', 'updateSMS')
+    ->label('sdk.method', 'updateSms')
     ->label('sdk.description', '/docs/references/messaging/update-email.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3316,7 +3427,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3348,8 +3458,8 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents
@@ -3360,7 +3470,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     });
 
 App::patch('/v1/messaging/messages/push/:messageId')
-    ->desc('Update a push notification.')
+    ->desc('Update a push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3369,7 +3479,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'updatePush')
-    ->label('sdk.description', '/docs/references/messaging/update-push-notification.md')
+    ->label('sdk.description', '/docs/references/messaging/update-push.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MESSAGE)
@@ -3381,6 +3491,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->param('body', null, new Text(64230), 'Body for push notification.', true)
     ->param('data', null, new JSON(), 'Additional Data for push notification.', true)
     ->param('action', null, new Text(256), 'Action for push notification.', true)
+    ->param('image', null, new CompoundUID(), 'Image for push notification. Must be a compound bucket ID to file ID of a jpeg, png, or bmp image in Appwrite Storage.', true)
     ->param('icon', null, new Text(256), 'Icon for push notification. Available only for Android and Web platforms.', true)
     ->param('sound', null, new Text(256), 'Sound for push notification. Available only for Android and iOS platforms.', true)
     ->param('color', null, new Text(256), 'Color for push notification. Available only for Android platforms.', true)
@@ -3394,7 +3505,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     ->inject('project')
     ->inject('queueForMessaging')
     ->inject('response')
-    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
+    ->action(function (string $messageId, ?array $topics, ?array $users, ?array $targets, ?string $title, ?string $body, ?array $data, ?string $action, ?string $image, ?string $icon, ?string $sound, ?string $color, ?string $tag, ?int $badge, ?string $status, ?string $scheduledAt, Event $queueForEvents, Database $dbForProject, Database $dbForConsole, Document $project, Messaging $queueForMessaging, Response $response) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3464,6 +3575,38 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $pushData['badge'] = $badge;
         }
 
+        if (!\is_null($image)) {
+            [$bucketId, $fileId] = CompoundUID::parse($image);
+
+            $bucket = $dbForProject->getDocument('buckets', $bucketId);
+            if ($bucket->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
+            if ($file->isEmpty()) {
+                throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+            }
+
+            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
+                throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
+            }
+
+            $host = App::getEnv('_APP_DOMAIN', 'localhost');
+            $domain = new Domain(\parse_url($host, PHP_URL_HOST));
+            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') === 'disabled' ? 'http' : 'https';
+
+            if (!$domain->isKnown()) {
+                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
+            }
+
+            $pushData['image'] = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+        }
+
         $message->setAttribute('data', $pushData);
 
         if (!\is_null($status)) {
@@ -3475,7 +3618,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 $schedule = $dbForConsole->createDocument('schedules', new Document([
                     'region' => App::getEnv('_APP_REGION', 'default'),
                     'resourceType' => 'message',
-                    'resourceCollection' => 'messages',
                     'resourceId' => $message->getId(),
                     'resourceInternalId' => $message->getInternalId(),
                     'resourceUpdatedAt' => DateTime::now(),
@@ -3507,8 +3649,8 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if ($status === MessageStatus::PROCESSING) {
             $queueForMessaging
-                ->setMessageId($message->getId())
-                ->trigger();
+                ->setType(MESSAGE_SEND_TYPE_EXTERNAL)
+                ->setMessageId($message->getId());
         }
 
         $queueForEvents

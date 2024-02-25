@@ -238,9 +238,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
                 ->setResource($function)
-                ->setDeployment($deployment)
-                ->setProject($project)
-                ->trigger();
+                ->setDeployment($deployment);
 
             //TODO: Add event?
         }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "55d2ed1081591f2b3b3af9999236b109",
+    "content-hash": "f19c09e7e233fe0f767bf5255fb46b86",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -162,6 +162,12 @@
                 "url": "https://github.com/appwrite/runtimes.git",
                 "reference": "214a37c2c66e0f2bc9c30fdfde66955d9fd084a1"
             },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/appwrite/runtimes/zipball/214a37c2c66e0f2bc9c30fdfde66955d9fd084a1",
+                "reference": "214a37c2c66e0f2bc9c30fdfde66955d9fd084a1",
+                "shasum": ""
+            },
             "require": {
                 "php": ">=8.0",
                 "utopia-php/system": "0.7.*"
@@ -176,6 +182,7 @@
                     "Appwrite\\Runtimes\\": "src/Runtimes"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "BSD-3-Clause"
             ],
@@ -195,6 +202,10 @@
                 "php",
                 "runtimes"
             ],
+            "support": {
+                "issues": "https://github.com/appwrite/runtimes/issues",
+                "source": "https://github.com/appwrite/runtimes/tree/0.13.2"
+            },
             "time": "2023-11-22T15:36:00+00:00"
         },
         {
@@ -874,16 +885,16 @@
         },
         {
             "name": "phpmailer/phpmailer",
-            "version": "v6.8.0",
+            "version": "v6.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPMailer/PHPMailer.git",
-                "reference": "df16b615e371d81fb79e506277faea67a1be18f1"
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/df16b615e371d81fb79e506277faea67a1be18f1",
-                "reference": "df16b615e371d81fb79e506277faea67a1be18f1",
+                "url": "https://api.github.com/repos/PHPMailer/PHPMailer/zipball/039de174cd9c17a8389754d3b877a2ed22743e18",
+                "reference": "039de174cd9c17a8389754d3b877a2ed22743e18",
                 "shasum": ""
             },
             "require": {
@@ -893,16 +904,17 @@
                 "php": ">=5.5.0"
             },
             "require-dev": {
-                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.2",
+                "dealerdirect/phpcodesniffer-composer-installer": "^1.0",
                 "doctrine/annotations": "^1.2.6 || ^1.13.3",
                 "php-parallel-lint/php-console-highlighter": "^1.0.0",
                 "php-parallel-lint/php-parallel-lint": "^1.3.2",
                 "phpcompatibility/php-compatibility": "^9.3.5",
                 "roave/security-advisories": "dev-latest",
-                "squizlabs/php_codesniffer": "^3.7.1",
+                "squizlabs/php_codesniffer": "^3.7.2",
                 "yoast/phpunit-polyfills": "^1.0.4"
             },
             "suggest": {
+                "decomplexity/SendOauth2": "Adapter for using XOAUTH2 authentication",
                 "ext-mbstring": "Needed to send email in multibyte encoding charset or decode encoded addresses",
                 "ext-openssl": "Needed for secure SMTP sending and DKIM signing",
                 "greew/oauth2-azure-provider": "Needed for Microsoft Azure XOAUTH2 authentication",
@@ -942,7 +954,7 @@
             "description": "PHPMailer is a full-featured email creation and transfer class for PHP",
             "support": {
                 "issues": "https://github.com/PHPMailer/PHPMailer/issues",
-                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.8.0"
+                "source": "https://github.com/PHPMailer/PHPMailer/tree/v6.9.1"
             },
             "funding": [
                 {
@@ -950,7 +962,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2023-03-06T14:43:22+00:00"
+            "time": "2023-11-25T22:23:28+00:00"
         },
         {
             "name": "spomky-labs/otphp",
@@ -1900,28 +1912,28 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.9.1",
+            "version": "0.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf"
+                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
-                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/71dce00ad43eb278a877cb2c329f7b8d677adfeb",
+                "reference": "71dce00ad43eb278a877cb2c329f7b8d677adfeb",
                 "shasum": ""
             },
             "require": {
                 "ext-curl": "*",
                 "ext-openssl": "*",
-                "php": ">=8.0.0"
+                "php": ">=8.0.0",
+                "phpmailer/phpmailer": "6.9.1"
             },
             "require-dev": {
-                "laravel/pint": "1.13.*",
-                "phpmailer/phpmailer": "6.8.*",
-                "phpstan/phpstan": "1.10.*",
-                "phpunit/phpunit": "9.6.10"
+                "laravel/pint": "1.13.11",
+                "phpstan/phpstan": "1.10.58",
+                "phpunit/phpunit": "10.5.10"
             },
             "type": "library",
             "autoload": {
@@ -1944,9 +1956,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.9.1"
+                "source": "https://github.com/utopia-php/messaging/tree/0.10.0"
             },
-            "time": "2024-02-15T03:44:44+00:00"
+            "time": "2024-02-20T07:30:15+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2205,59 +2217,6 @@
                 "source": "https://github.com/utopia-php/pools/tree/0.4.2"
             },
             "time": "2022-11-22T07:55:45+00:00"
-        },
-        {
-            "name": "utopia-php/preloader",
-            "version": "0.2.4",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/utopia-php/preloader.git",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/preloader/zipball/65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "reference": "65ef48392e72172f584b0baa2e224f9a1cebcce0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=7.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^9.3",
-                "vimeo/psalm": "4.0.1"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Utopia\\Preloader\\": "src/Preloader"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Eldad Fux",
-                    "email": "team@appwrite.io"
-                }
-            ],
-            "description": "Utopia Preloader library is simple and lite library for managing PHP preloading configuration",
-            "keywords": [
-                "framework",
-                "php",
-                "preload",
-                "preloader",
-                "preloading",
-                "upf",
-                "utopia"
-            ],
-            "support": {
-                "issues": "https://github.com/utopia-php/preloader/issues",
-                "source": "https://github.com/utopia-php/preloader/tree/0.2.4"
-            },
-            "time": "2020-10-24T07:04:59+00:00"
         },
         {
             "name": "utopia-php/queue",
@@ -3525,16 +3484,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.26.0",
+            "version": "1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "231e3186624c03d7e7c890ec662b81e6b0405227"
+                "reference": "bd84b629c8de41aa2ae82c067c955e06f1b00240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/231e3186624c03d7e7c890ec662b81e6b0405227",
-                "reference": "231e3186624c03d7e7c890ec662b81e6b0405227",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/bd84b629c8de41aa2ae82c067c955e06f1b00240",
+                "reference": "bd84b629c8de41aa2ae82c067c955e06f1b00240",
                 "shasum": ""
             },
             "require": {
@@ -3566,9 +3525,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.26.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.25.0"
             },
-            "time": "2024-02-23T16:05:55+00:00"
+            "time": "2024-01-04T17:06:16+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
