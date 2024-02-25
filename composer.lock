@@ -1540,16 +1540,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.48.2",
+            "version": "0.48.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4"
+                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
-                "reference": "0a231a2874fdbc0cf2ae2170b3f132fdee0ddfd4",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
+                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
                 "shasum": ""
             },
             "require": {
@@ -1557,7 +1557,7 @@
                 "ext-pdo": "*",
                 "php": ">=8.0",
                 "utopia-php/cache": "0.9.*",
-                "utopia-php/framework": "0.*.*",
+                "utopia-php/framework": "0.33.*",
                 "utopia-php/mongo": "0.3.*"
             },
             "require-dev": {
@@ -1590,9 +1590,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.48.2"
+                "source": "https://github.com/utopia-php/database/tree/0.48.4"
             },
-            "time": "2024-02-02T14:10:14+00:00"
+            "time": "2024-02-23T03:22:55+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -1900,16 +1900,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.9.0",
+            "version": "0.9.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "df54ba51570e886724590edeb03dbd455bb0464d"
+                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/df54ba51570e886724590edeb03dbd455bb0464d",
-                "reference": "df54ba51570e886724590edeb03dbd455bb0464d",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
+                "reference": "7beec07684e9e1dfcf4ab5b1ba731fa396dccbdf",
                 "shasum": ""
             },
             "require": {
@@ -1944,9 +1944,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.9.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.9.1"
             },
-            "time": "2024-01-31T11:51:27+00:00"
+            "time": "2024-02-15T03:44:44+00:00"
         },
         {
             "name": "utopia-php/migration",
@@ -2768,16 +2768,16 @@
     "packages-dev": [
         {
             "name": "appwrite/sdk-generator",
-            "version": "0.36.3",
+            "version": "0.36.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93"
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d308f7f492545da3e51ea5b91c0778392c40b93",
-                "reference": "8d308f7f492545da3e51ea5b91c0778392c40b93",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/8d932098009d62d37dda73cfe4ebc11f83e21405",
+                "reference": "8d932098009d62d37dda73cfe4ebc11f83e21405",
                 "shasum": ""
             },
             "require": {
@@ -2813,9 +2813,9 @@
             "description": "Appwrite PHP library for generating API SDKs for multiple programming languages and platforms",
             "support": {
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
-                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.3"
+                "source": "https://github.com/appwrite/sdk-generator/tree/0.36.4"
             },
-            "time": "2024-02-14T06:33:38+00:00"
+            "time": "2024-02-20T16:36:15+00:00"
         },
         {
             "name": "doctrine/deprecations",
@@ -3119,16 +3119,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.0.0",
+            "version": "v5.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "4a21235f7e56e713259a6f76bf4b5ea08502b9dc"
+                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/4a21235f7e56e713259a6f76bf4b5ea08502b9dc",
-                "reference": "4a21235f7e56e713259a6f76bf4b5ea08502b9dc",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/2218c2252c874a4624ab2f613d86ac32d227bc69",
+                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69",
                 "shasum": ""
             },
             "require": {
@@ -3171,9 +3171,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.0"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.1"
             },
-            "time": "2024-01-07T17:17:35+00:00"
+            "time": "2024-02-21T19:24:10+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -3398,21 +3398,21 @@
         },
         {
             "name": "phpdocumentor/type-resolver",
-            "version": "1.8.0",
+            "version": "1.8.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/TypeResolver.git",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc"
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/fad452781b3d774e3337b0c0b245dd8e5a4455fc",
-                "reference": "fad452781b3d774e3337b0c0b245dd8e5a4455fc",
+                "url": "https://api.github.com/repos/phpDocumentor/TypeResolver/zipball/153ae662783729388a584b4361f2545e4d841e3c",
+                "reference": "153ae662783729388a584b4361f2545e4d841e3c",
                 "shasum": ""
             },
             "require": {
                 "doctrine/deprecations": "^1.0",
-                "php": "^7.4 || ^8.0",
+                "php": "^7.3 || ^8.0",
                 "phpdocumentor/reflection-common": "^2.0",
                 "phpstan/phpdoc-parser": "^1.13"
             },
@@ -3450,9 +3450,9 @@
             "description": "A PSR-5 based resolver of Class names, Types and Structural Element Names",
             "support": {
                 "issues": "https://github.com/phpDocumentor/TypeResolver/issues",
-                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.0"
+                "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.8.2"
             },
-            "time": "2024-01-11T11:49:22+00:00"
+            "time": "2024-02-23T11:10:43+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -3525,16 +3525,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "1.25.0",
+            "version": "1.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "bd84b629c8de41aa2ae82c067c955e06f1b00240"
+                "reference": "231e3186624c03d7e7c890ec662b81e6b0405227"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/bd84b629c8de41aa2ae82c067c955e06f1b00240",
-                "reference": "bd84b629c8de41aa2ae82c067c955e06f1b00240",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/231e3186624c03d7e7c890ec662b81e6b0405227",
+                "reference": "231e3186624c03d7e7c890ec662b81e6b0405227",
                 "shasum": ""
             },
             "require": {
@@ -3566,9 +3566,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.25.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/1.26.0"
             },
-            "time": "2024-01-04T17:06:16+00:00"
+            "time": "2024-02-23T16:05:55+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -5008,16 +5008,16 @@
         },
         {
             "name": "squizlabs/php_codesniffer",
-            "version": "3.8.1",
+            "version": "3.9.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PHPCSStandards/PHP_CodeSniffer.git",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7"
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/14f5fff1e64118595db5408e946f3a22c75807f7",
-                "reference": "14f5fff1e64118595db5408e946f3a22c75807f7",
+                "url": "https://api.github.com/repos/PHPCSStandards/PHP_CodeSniffer/zipball/d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
+                "reference": "d63cee4890a8afaf86a22e51ad4d97c91dd4579b",
                 "shasum": ""
             },
             "require": {
@@ -5084,7 +5084,7 @@
                     "type": "open_collective"
                 }
             ],
-            "time": "2024-01-11T20:47:48+00:00"
+            "time": "2024-02-16T15:06:51+00:00"
         },
         {
             "name": "swoole/ide-helper",
