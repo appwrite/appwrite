@@ -1943,7 +1943,7 @@ class AccountCustomClientTest extends Scope
         $userId = $response['body']['userId'];
 
         $smsRequest = null;
-        $this->assertEventually(function () use ($smsRequest) {
+        $this->assertEventually(function () use (&$smsRequest) {
             $smsRequest = $this->getLastRequest();
 
             $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
@@ -2248,14 +2248,14 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $smsRequest = null;
-        $this->assertEventually(function () use ($smsRequest) {
+        $this->assertEventually(function () use (&$smsRequest) {
             $smsRequest = $this->getLastRequest();
 
-            $this->assertArrayHasKey('secret', $smsRequest['data']);
-        }, 20000, 500);
+            $this->assertArrayHasKey('message', $smsRequest['data']);
+        }, 100000, 500);
 
         return \array_merge($data, [
-            'token' => $smsRequest['data']['secret']
+            'token' => \substr($smsRequest['data']['message'], 0, 6),
         ]);
     }
 

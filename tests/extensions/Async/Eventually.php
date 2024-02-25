@@ -24,7 +24,7 @@ final class Eventually extends Constraint
         $start = microtime(true);
         $lastException = null;
 
-        while (microtime(true) - $start < $this->timeoutMs / 1000) {
+        do {
             try {
                 $probe();
                 return true;
@@ -33,7 +33,7 @@ final class Eventually extends Constraint
             }
 
             usleep($this->waitMs * 1000);
-        }
+        } while (microtime(true) - $start < $this->timeoutMs / 1000);
 
         if ($returnResult) {
             return false;
