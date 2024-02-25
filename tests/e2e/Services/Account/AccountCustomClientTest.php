@@ -1942,11 +1942,8 @@ class AccountCustomClientTest extends Scope
 
         $userId = $response['body']['userId'];
 
-        \sleep(7);
-
         $smsRequest = null;
-
-        $this->assertEventually(function () {
+        $this->assertEventually(function () use($smsRequest) {
             $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
             $smsRequest['data'] = json_decode($smsRequest['data'], true);
 
@@ -2252,8 +2249,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $smsRequest = null;
-
-        $this->assertEventually(function () {
+        $this->assertEventually(function () use($smsRequest) {
             $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
             $smsRequest['data'] = json_decode($smsRequest['data'], true);
 
