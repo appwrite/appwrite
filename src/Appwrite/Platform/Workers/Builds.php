@@ -147,31 +147,14 @@ class Builds extends Action
         $isNewBuild = empty($buildId);
         $deviceFunctions = $getFunctionsDevice($project->getId());
 
-        if ($isNewBuild) {
-            $buildId = ID::unique();
-            $build = $dbForProject->createDocument('builds', new Document([
-                '$id' => $buildId,
-                '$permissions' => [],
-                'startTime' => $startTime,
-                'deploymentInternalId' => $deployment->getInternalId(),
-                'deploymentId' => $deployment->getId(),
-                'status' => 'processing',
-                'path' => '',
-                'runtime' => $function->getAttribute('runtime'),
-                'source' => $deployment->getAttribute('path', ''),
-                'sourceType' => strtolower($deviceFunctions->getType()),
-                'logs' => '',
-                'endTime' => null,
-                'duration' => 0,
-                'size' => 0
-            ]));
-
-            $deployment->setAttribute('buildId', $build->getId());
-            $deployment->setAttribute('buildInternalId', $build->getInternalId());
-            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
-        } else {
-            $build = $dbForProject->getDocument('builds', $buildId);
+        $build = $dbForProject->getDocument('builds', $buildId);
+        if ($build->getAttribute('status') === 'cancelled') {
+            return;
         }
+
+        $build->setAttribute('status', 'processing');
+        $build->setAttribute('startTime', $startTime);
+        $build = $dbForProject->updateDocument('builds', $buildId, $build);
 
         $source = $deployment->getAttribute('path', '');
         $installationId = $deployment->getAttribute('installationId', '');

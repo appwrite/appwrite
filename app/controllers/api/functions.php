@@ -1184,6 +1184,29 @@ App::post('/v1/functions/:functionId/deployments')
                 $deployment = $dbForProject->updateDocument('deployments', $deploymentId, $deployment->setAttribute('size', $fileSize)->setAttribute('metadata', $metadata));
             }
 
+            $buildId = ID::unique();
+            $build = $dbForProject->createDocument('builds', new Document([
+                '$id' => $buildId,
+                '$permissions' => [],
+                'creationTime' => DateTime::now(),
+                'startTime' => null,
+                'deploymentInternalId' => $deployment->getInternalId(),
+                'deploymentId' => $deployment->getId(),
+                'status' => 'waiting',
+                'path' => '',
+                'runtime' => $function->getAttribute('runtime'),
+                'source' => $deployment->getAttribute('path', ''),
+                'sourceType' => strtolower($deviceFunctions->getType()),
+                'logs' => '',
+                'endTime' => null,
+                'duration' => 0,
+                'size' => 0
+            ]));
+
+            $deployment->setAttribute('buildId', $build->getId());
+            $deployment->setAttribute('buildInternalId', $build->getInternalId());
+            $deployment = $dbForProject->updateDocument('deployments', $deployment->getId(), $deployment);
+
             // Start the build
             $queueForBuilds
                 ->setType(BUILD_TYPE_DEPLOYMENT)
