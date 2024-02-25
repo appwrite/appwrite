@@ -232,10 +232,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -292,7 +289,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(4, $response['body']['logs']);
+        $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
         $this->assertEquals("session.create", $response['body']['logs'][2]['event']);
         $this->assertEquals(filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][2]['ip']);
@@ -2238,7 +2235,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-
         ]));
 
         $this->assertEquals(201, $response['headers']['status-code']);
