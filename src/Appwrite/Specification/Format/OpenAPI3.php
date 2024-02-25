@@ -423,7 +423,7 @@ class OpenAPI3 extends Format
                         foreach ($this->enumBlacklist as $blacklist) {
                             if (
                                 $blacklist['namespace'] == $route->getLabel('sdk.namespace', '')
-                                && $blacklist['method'] == $route->getLabel('sdk.method', '')
+                                && $blacklist['method'] == $method
                                 && $blacklist['parameter'] == $name
                             ) {
                                 $allowed = false;
@@ -433,8 +433,8 @@ class OpenAPI3 extends Format
 
                         if ($allowed) {
                                 $node['schema']['enum'] = $validator->getList();
-                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                                $node['schema']['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
+                                $node['schema']['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
                         }
                         if ($validator->getType() === 'integer') {
                             $node['format'] = 'int32';

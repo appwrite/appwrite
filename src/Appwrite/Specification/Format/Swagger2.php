@@ -422,7 +422,7 @@ class Swagger2 extends Format
                         //Iterate the blackList. If it matches with the current one, then it is blackListed
                         $allowed = true;
                         foreach ($this->enumBlacklist as $blacklist) {
-                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') && $blacklist['method'] == $route->getLabel('sdk.method', '') && $blacklist['parameter'] == $name) {
+                            if ($blacklist['namespace'] == $route->getLabel('sdk.namespace', '') && $blacklist['method'] == $method && $blacklist['parameter'] == $name) {
                                 $allowed = false;
                                 break;
                             }
@@ -430,8 +430,8 @@ class Swagger2 extends Format
 
                         if ($allowed) {
                             $node['enum'] = $validator->getList();
-                            $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
-                            $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $route->getLabel('sdk.method', ''), $name);
+                            $node['x-enum-name'] = $this->getEnumName($route->getLabel('sdk.namespace', ''), $method, $name);
+                            $node['x-enum-keys'] = $this->getEnumKeys($route->getLabel('sdk.namespace', ''), $method, $name);
                         }
 
                         if ($validator->getType() === 'integer') {
