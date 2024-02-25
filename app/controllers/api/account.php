@@ -557,14 +557,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
-        if (!$user->isEmpty()) {
-            $current = $user->find('current', true, 'sessions');
-
-            if ($current && $current->getAttribute('provider') !== Auth::SESSION_PROVIDER_ANONYMOUS) {
-                throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
-            }
-        }
-
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -686,6 +678,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
+
+            $sessionUpgrade = true;
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -715,7 +709,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             /**
-             * Is verified is not used yet, since we don't know after an accout is created anymore if it was verified or not.
+             * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
@@ -956,6 +950,20 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $response
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+        }
+
+        if (isset($sessionUpgrade) && $sessionUpgrade) {
+            foreach ($user->getAttribute('targets', []) as $target) {
+                if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
+                    continue;
+                }
+
+                $target
+                    ->setAttribute('sessionId', $session->getId())
+                    ->setAttrubte('sessionInternalId', $session->getInternalId());
+
+                $dbForProject->updateDocument('targets', $target->getId(), $target);
+            }
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
