@@ -420,17 +420,23 @@ App::get('/v1/functions/runtimes')
     ->label('sdk.response.model', Response::MODEL_RUNTIME_LIST)
     ->inject('response')
     ->action(function (Response $response) {
-
         $runtimes = Config::getParam('runtimes');
 
-        $runtimes = array_map(function ($key) use ($runtimes) {
+        $allowList = \array_filter(\explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES', '')));
+
+        $allowed = [];
+        foreach ($runtimes as $key => $runtime) {
+            if (!empty($allowList) && !\in_array($key, $allowList)) {
+                continue;
+            }
+
             $runtimes[$key]['$id'] = $key;
-            return $runtimes[$key];
-        }, array_keys($runtimes));
+            $allowed[] = $runtimes[$key];
+        }
 
         $response->dynamic(new Document([
-            'total' => count($runtimes),
-            'runtimes' => $runtimes
+            'total' => count($allowed),
+            'runtimes' => $allowed
         ]), Response::MODEL_RUNTIME_LIST);
     });
 
