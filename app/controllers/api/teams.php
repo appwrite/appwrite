@@ -756,8 +756,20 @@ App::get('/v1/teams/:teamId/memberships')
         $memberships = array_map(function ($membership) use ($dbForProject, $team) {
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
+            $mfa = $user->getAttribute('mfa', false);
+
+            if ($mfa) {
+                $totpEnabled = $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false);
+                $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
+                $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
+
+                if (!$totpEnabled && !$emailEnabled && !$phoneEnabled) {
+                    $mfa = false;
+                }
+            }
+
             $membership
-                ->setAttribute('mfa', $user->getAttribute('mfa'))
+                ->setAttribute('mfa', $mfa)
                 ->setAttribute('teamName', $team->getAttribute('name'))
                 ->setAttribute('userName', $user->getAttribute('name'))
                 ->setAttribute('userEmail', $user->getAttribute('email'))
