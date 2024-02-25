@@ -1953,7 +1953,7 @@ class AccountCustomClientTest extends Scope
             $this->assertEquals('POST', $smsRequest['method']);
             $this->assertEquals('+123456789', $smsRequest['data']['from']);
             $this->assertEquals('+123456789', $smsRequest['data']['to']);
-        }, 20000, 500);
+        }, 5000, 500);
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2252,7 +2252,7 @@ class AccountCustomClientTest extends Scope
             $smsRequest = $this->getLastRequest();
 
             $this->assertArrayHasKey('message', $smsRequest['data']);
-        }, 100000, 500);
+        }, 5000, 500);
 
         return \array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6),
