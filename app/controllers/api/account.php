@@ -330,7 +330,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'sessions.write')
     ->label('sdk.auth', [])
-    ->label('sdk.hideServer', true)
+    ->label('sdk.hide', [APP_PLATFORM_SERVER])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Session')
     ->label('sdk.description', '/docs/references/account/create-session-oauth2.md')
@@ -400,7 +400,6 @@ App::get('/v1/account/tokens/oauth2/:provider')
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
     ->label('scope', 'sessions.write')
     ->label('sdk.auth', [])
-    ->label('sdk.hideServer', true)
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createOAuth2Token')
     ->label('sdk.description', '/docs/references/account/create-token-oauth2.md')
@@ -1635,8 +1634,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 };
 
 App::put('/v1/account/sessions/magic-url')
-    ->alias('/v1/account/sessions/phone')
-    ->desc('Create session (deprecated)')
+    ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -1644,8 +1642,39 @@ App::put('/v1/account/sessions/magic-url')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
+    ->label('sdk.deprecated', true)
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', ['updateMagicURLSession', 'updatePhoneSession'])
+    ->label('sdk.method', 'updateMagicURLSession')
+    ->label('sdk.description', '/docs/references/account/create-session.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_SESSION)
+    ->label('abuse-limit', 10)
+    ->label('abuse-key', 'ip:{ip},userId:{param-userId}')
+    ->param('userId', '', new CustomId(), 'User ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('secret', '', new Text(256), 'Valid verification token.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('locale')
+    ->inject('geodb')
+    ->inject('queueForEvents')
+    ->action($createSession);
+
+App::put('/v1/account/sessions/phone')
+    ->desc('Update phone session')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
+    ->groups(['api', 'account'])
+    ->label('scope', 'sessions.write')
+    ->label('audits.event', 'session.create')
+    ->label('audits.resource', 'user/{response.userId}')
+    ->label('audits.userId', '{response.userId}')
+    ->label('sdk.auth', [])
+    ->label('sdk.deprecated', true)
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updatePhoneSession')
     ->label('sdk.description', '/docs/references/account/create-session.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -3918,11 +3947,11 @@ App::put('/v1/account/mfa/challenge')
         };
 
     if (!$success && $provider === 'totp') {
-        $backups = $user->getAttribute('mfaBackups', []);
+        $backups = $user->getAttribute('totpBackup', []);
         if (in_array($otp, $backups)) {
             $success = true;
             $backups = array_diff($backups, [$otp]);
-            $user->setAttribute('mfaBackups', $backups);
+            $user->setAttribute('totpBackup', $backups);
             $dbForProject->updateDocument('users', $user->getId(), $user);
         }
     }
