@@ -2,7 +2,7 @@
 
 namespace Tests\E2E\Services\Account;
 
-use Appwrite\Tests\Retry;
+use Appwrite\Tests\Async;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectCustom;
@@ -19,6 +19,7 @@ class AccountCustomClientTest extends Scope
     use AccountBase;
     use ProjectCustom;
     use SideClient;
+    use Async;
 
     /**
      * @depends testCreateAccount
@@ -1918,7 +1919,6 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($response['body']['users'][0]['email'], $email);
     }
 
-    #[Retry(count: 2)]
     public function testCreatePhone(): array
     {
         $number = '+123456789';
@@ -1944,15 +1944,20 @@ class AccountCustomClientTest extends Scope
 
         \sleep(7);
 
-        $smsRequest = $this->getLastRequest();
+        $smsRequest = null;
 
-        $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
-        $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
-        $this->assertEquals('username', $smsRequest['headers']['X-Username']);
-        $this->assertEquals('password', $smsRequest['headers']['X-Key']);
-        $this->assertEquals('POST', $smsRequest['method']);
-        $this->assertEquals('+123456789', $smsRequest['data']['from']);
-        $this->assertEquals($number, $smsRequest['data']['to']);
+        $this->assertEventually(function () {
+            $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+            $smsRequest['data'] = json_decode($smsRequest['data'], true);
+
+            $this->assertEquals('http://request-catcher:5000/mock-sms', $smsRequest['url']);
+            $this->assertEquals('Appwrite Mock Message Sender', $smsRequest['headers']['User-Agent']);
+            $this->assertEquals('username', $smsRequest['headers']['X-Username']);
+            $this->assertEquals('password', $smsRequest['headers']['X-Key']);
+            $this->assertEquals('POST', $smsRequest['method']);
+            $this->assertEquals('+123456789', $smsRequest['data']['from']);
+            $this->assertEquals('+123456789', $smsRequest['data']['to']);
+        }, 20000, 500);
 
         $data['token'] = $smsRequest['data']['message'];
         $data['id'] = $userId;
@@ -2226,7 +2231,6 @@ class AccountCustomClientTest extends Scope
     /**
      * @depends testUpdatePhone
      */
-    #[Retry(count: 3)]
     public function testPhoneVerification(array $data): array
     {
         $session = $data['session'] ?? '';
@@ -2247,9 +2251,14 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(10);
+        $smsRequest = null;
 
-        $smsRequest = $this->getLastRequest();
+        $this->assertEventually(function () {
+            $smsRequest = json_decode(file_get_contents('http://request-catcher:5000/__last_request__'), true);
+            $smsRequest['data'] = json_decode($smsRequest['data'], true);
+
+            $this->assertArrayHasKey('secret', $smsRequest['data']);
+        }, 20000, 500);
 
         return \array_merge($data, [
             'token' => $smsRequest['data']['secret']
