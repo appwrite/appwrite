@@ -71,7 +71,7 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             : ID::custom($userId);
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
+            $personalDataValidator = new PersonalData($userId, $email, $name, $phone, false, true);
             if (!$personalDataValidator->isValid($plaintextPassword)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
