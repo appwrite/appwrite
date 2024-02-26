@@ -71,7 +71,14 @@ function createUser(string $hash, mixed $hashOptions, string $userId, ?string $e
             : ID::custom($userId);
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
-            $personalDataValidator = new PersonalData($userId, $email, $name, $phone);
+            $personalDataValidator = new PersonalData(
+                $userId,
+                $email,
+                $name,
+                $phone,
+                strict: false,
+                allowEmpty: true
+            );
             if (!$personalDataValidator->isValid($plaintextPassword)) {
                 throw new Exception(Exception::USER_PASSWORD_PERSONAL_DATA);
             }
@@ -1968,7 +1975,7 @@ App::delete('/v1/users/identities/:identityId')
     });
 
 App::get('/v1/users/usage')
-    ->desc('Get usage stats for the users API')
+    ->desc('Get users usage stats')
     ->groups(['api', 'users'])
     ->label('scope', 'users.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

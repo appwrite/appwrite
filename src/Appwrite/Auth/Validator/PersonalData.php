@@ -12,9 +12,10 @@ class PersonalData extends Password
         protected ?string $email = null,
         protected ?string $name = null,
         protected ?string $phone = null,
-        protected bool $strict = false
+        protected bool $strict = false,
+        protected bool $allowEmpty = false,
     ) {
-        parent::__construct();
+        parent::__construct($allowEmpty);
     }
 
     /**
