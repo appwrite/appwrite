@@ -144,7 +144,6 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
-        $isNewBuild = empty($buildId);
         $deviceFunctions = $getFunctionsDevice($project->getId());
 
         $build = $dbForProject->getDocument('builds', $buildId);
@@ -152,6 +151,7 @@ class Builds extends Action
             return;
         }
 
+        $isNewBuild = empty($build->getAttribute('startTime'));
         $build->setAttribute('status', 'processing');
         $build->setAttribute('startTime', $startTime);
         $build->setAttribute('sourceType', strtolower($deviceFunctions->getType()));
