@@ -18,7 +18,7 @@ use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 App::get('/v1/project/usage')
-    ->desc('Get usage stats for a project')
+    ->desc('Get project usage stats')
     ->groups(['api', 'usage'])
     ->label('scope', 'projects.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
