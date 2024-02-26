@@ -3797,7 +3797,7 @@ App::get('/v1/databases/:databaseId/usage')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
-    ->desc('Get usage stats for a collection')
+    ->desc('Get usage stat')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
