@@ -2700,7 +2700,7 @@ App::delete('/v1/account/sessions/:sessionId')
     });
 
 App::patch('/v1/account/sessions/:sessionId')
-    ->desc('Update (or renew) a session')
+    ->desc('Update (or renew) session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].update')
@@ -4024,7 +4024,7 @@ App::delete('/v1/account')
     });
 
 App::post('/v1/account/targets/push')
-    ->desc('Create a push target')
+    ->desc('Create push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.create')
@@ -4097,7 +4097,7 @@ App::post('/v1/account/targets/push')
     });
 
 App::put('/v1/account/targets/:targetId/push')
-    ->desc('Update a push target')
+    ->desc('Update push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.update')
@@ -4152,7 +4152,7 @@ App::put('/v1/account/targets/:targetId/push')
     });
 
 App::delete('/v1/account/targets/:targetId/push')
-    ->desc('Delete a push target')
+    ->desc('Delete push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
     ->label('audits.event', 'target.delete')
