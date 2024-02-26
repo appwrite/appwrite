@@ -3090,6 +3090,33 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
+        $select = \array_reduce($queries, function ($result, $query) {
+            return $result || ($query->getMethod() === Query::TYPE_SELECT);
+        }, false);
+
+        // Check if the SELECT query includes $databaseId and $collectionId
+        $hasDatabaseId = false;
+        $hasCollectionId = false;
+        if ($select) {
+            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
+            }, false);
+            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
+            }, false);
+        }
+
+        if ($select) {
+            foreach ($documents as $document) {
+                if (!$hasDatabaseId) {
+                    $document->removeAttribute('$databaseId');
+                }
+                if (!$hasCollectionId) {
+                    $document->removeAttribute('$collectionId');
+                }
+            }
+        }
+
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,
@@ -3635,7 +3662,7 @@ App::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     });
 
 App::get('/v1/databases/usage')
-    ->desc('Get usage stats for the database')
+    ->desc('Get databases usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3713,7 +3740,7 @@ App::get('/v1/databases/usage')
     });
 
 App::get('/v1/databases/:databaseId/usage')
-    ->desc('Get usage stats for the database')
+    ->desc('Get database usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -3797,7 +3824,7 @@ App::get('/v1/databases/:databaseId/usage')
 
 App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->alias('/v1/database/:collectionId/usage', ['databaseId' => 'default'])
-    ->desc('Get usage stats for a collection')
+    ->desc('Get collection usage stats')
     ->groups(['api', 'database', 'usage'])
     ->label('scope', 'collections.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])

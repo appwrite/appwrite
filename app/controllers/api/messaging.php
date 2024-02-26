@@ -145,7 +145,7 @@ App::post('/v1/messaging/providers/sendgrid')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'messaging')
     ->label('sdk.method', 'createSendgridProvider')
-    ->label('sdk.description', '/docs/references/messaging/create-sengrid-provider.md')
+    ->label('sdk.description', '/docs/references/messaging/create-sendgrid-provider.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_PROVIDER)
@@ -1924,7 +1924,7 @@ App::delete('/v1/messaging/providers/:providerId')
     });
 
 App::post('/v1/messaging/topics')
-    ->desc('Create a topic')
+    ->desc('Create topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.create')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -2107,7 +2107,7 @@ App::get('/v1/messaging/topics/:topicId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId')
-    ->desc('Get a topic')
+    ->desc('Get topic')
     ->groups(['api', 'messaging'])
     ->label('scope', 'topics.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2134,7 +2134,7 @@ App::get('/v1/messaging/topics/:topicId')
     });
 
 App::patch('/v1/messaging/topics/:topicId')
-    ->desc('Update a topic')
+    ->desc('Update topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.update')
     ->label('audits.resource', 'topic/{response.$id}')
@@ -2178,7 +2178,7 @@ App::patch('/v1/messaging/topics/:topicId')
     });
 
 App::delete('/v1/messaging/topics/:topicId')
-    ->desc('Delete a topic')
+    ->desc('Delete topic')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'topic.delete')
     ->label('audits.resource', 'topic/{request.$topicId}')
@@ -2218,7 +2218,7 @@ App::delete('/v1/messaging/topics/:topicId')
     });
 
 App::post('/v1/messaging/topics/:topicId/subscribers')
-    ->desc('Create a subscriber')
+    ->desc('Create subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.create')
     ->label('audits.resource', 'subscriber/{response.$id}')
@@ -2477,7 +2477,7 @@ App::get('/v1/messaging/subscribers/:subscriberId/logs')
     });
 
 App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Get a subscriber')
+    ->desc('Get subscriber')
     ->groups(['api', 'messaging'])
     ->label('scope', 'subscribers.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -2516,7 +2516,7 @@ App::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
-    ->desc('Delete a subscriber')
+    ->desc('Delete subscriber')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'subscriber.delete')
     ->label('audits.resource', 'subscriber/{request.$subscriberId}')
@@ -2575,7 +2575,7 @@ App::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     });
 
 App::post('/v1/messaging/messages/email')
-    ->desc('Create an email')
+    ->desc('Create email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2719,7 +2719,7 @@ App::post('/v1/messaging/messages/email')
     });
 
 App::post('/v1/messaging/messages/sms')
-    ->desc('Create an SMS')
+    ->desc('Create SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -2827,7 +2827,7 @@ App::post('/v1/messaging/messages/sms')
     });
 
 App::post('/v1/messaging/messages/push')
-    ->desc('Create a push notification')
+    ->desc('Create push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.create')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3190,7 +3190,7 @@ App::get('/v1/messaging/messages/:messageId/targets')
     });
 
 App::get('/v1/messaging/messages/:messageId')
-    ->desc('Get a message')
+    ->desc('Get message')
     ->groups(['api', 'messaging'])
     ->label('scope', 'messages.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN, APP_AUTH_TYPE_KEY])
@@ -3214,7 +3214,7 @@ App::get('/v1/messaging/messages/:messageId')
     });
 
 App::patch('/v1/messaging/messages/email/:messageId')
-    ->desc('Update an email')
+    ->desc('Update email')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3377,7 +3377,7 @@ App::patch('/v1/messaging/messages/email/:messageId')
     });
 
 App::patch('/v1/messaging/messages/sms/:messageId')
-    ->desc('Update an SMS')
+    ->desc('Update SMS')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3520,7 +3520,7 @@ App::patch('/v1/messaging/messages/sms/:messageId')
     });
 
 App::patch('/v1/messaging/messages/push/:messageId')
-    ->desc('Update a push notification')
+    ->desc('Update push notification')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.update')
     ->label('audits.resource', 'message/{response.$id}')
@@ -3736,7 +3736,7 @@ App::patch('/v1/messaging/messages/push/:messageId')
     });
 
 App::delete('/v1/messaging/messages/:messageId')
-    ->desc('Delete a message')
+    ->desc('Delete message')
     ->groups(['api', 'messaging'])
     ->label('audits.event', 'message.delete')
     ->label('audits.resource', 'message/{request.route.messageId}')

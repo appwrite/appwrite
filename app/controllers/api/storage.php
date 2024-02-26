@@ -1514,7 +1514,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     });
 
 App::get('/v1/storage/usage')
-    ->desc('Get usage stats for storage')
+    ->desc('Get storage usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
@@ -1593,7 +1593,7 @@ App::get('/v1/storage/usage')
     });
 
 App::get('/v1/storage/:bucketId/usage')
-    ->desc('Get usage stats for storage bucket')
+    ->desc('Get bucket usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
