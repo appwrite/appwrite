@@ -2247,15 +2247,10 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
-        \sleep(10);
-
         $smsRequest = $this->getLastRequest();
 
-        $message = $smsRequest['data']['message'];
-        $token = substr($message, 0, 6);
-
         return \array_merge($data, [
-            'token' => $token
+            'token' => \substr($smsRequest['data']['message'], 0, 6)
         ]);
     }
 
