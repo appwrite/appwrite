@@ -3309,6 +3309,10 @@ App::patch('/v1/messaging/messages/email/:messageId')
             $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
+        }
+
         if (!\is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
@@ -3456,6 +3460,10 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
         }
 
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
+        }
+
         if (!\is_null($topics)) {
             $message->setAttribute('topics', $topics);
         }
@@ -3589,6 +3597,10 @@ App::patch('/v1/messaging/messages/push/:messageId')
             }
 
             $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+        }
+
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         if (!\is_null($topics)) {
