@@ -800,6 +800,7 @@ trait MessagingBase
             'messageId' => ID::unique(),
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -868,6 +869,7 @@ trait MessagingBase
             'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
