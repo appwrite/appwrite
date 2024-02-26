@@ -800,6 +800,7 @@ trait MessagingBase
             'messageId' => ID::unique(),
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -868,6 +869,7 @@ trait MessagingBase
             'targets' => [$targetId1, $targetId2],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
+            'draft' => true
         ]);
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -903,7 +905,6 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'status' => MessageStatus::SCHEDULED,
             'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
         ]);
 
@@ -920,23 +921,6 @@ trait MessagingBase
 
         $this->assertEquals(200, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::FAILED, $message['body']['status']);
-
-        /**
-         * Test for FAILURE
-         */
-        $message = $this->client->call(Client::METHOD_POST, '/messaging/messages/email', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'messageId' => ID::unique(),
-            'targets' => [$targetId],
-            'subject' => 'New blog post',
-            'content' => 'Check out the new blog post at http://localhost',
-            'status' => MessageStatus::SCHEDULED,
-        ]);
-
-        $this->assertEquals(400, $message['headers']['status-code']);
     }
 
     public function testScheduledToDraftMessage(): void
@@ -965,7 +949,6 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'status' => MessageStatus::SCHEDULED,
             'scheduledAt' => DateTime::addSeconds(new \DateTime(), 5),
         ]);
 
@@ -977,7 +960,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => MessageStatus::DRAFT,
+            'draft' => true,
         ]);
 
         $this->assertEquals(200, $message['headers']['status-code']);
@@ -1021,28 +1004,18 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'status' => MessageStatus::DRAFT,
+            'draft' => true,
         ]);
 
         $this->assertEquals(201, $message['headers']['status-code']);
         $this->assertEquals(MessageStatus::DRAFT, $message['body']['status']);
-
-        $response = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ], [
-            'status' => MessageStatus::SCHEDULED,
-        ]);
-
-        $this->assertEquals(400, $response['headers']['status-code']);
 
         $message = $this->client->call(Client::METHOD_PATCH, '/messaging/messages/email/' . $message['body']['$id'], [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => MessageStatus::SCHEDULED,
+            'draft' => false,
             'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
         ]);
 
@@ -1087,7 +1060,6 @@ trait MessagingBase
             'targets' => [$targetId],
             'subject' => 'New blog post',
             'content' => 'Check out the new blog post at http://localhost',
-            'status' => MessageStatus::SCHEDULED,
             'scheduledAt' => DateTime::addSeconds(new \DateTime(), 3),
         ]);
 
@@ -1257,7 +1229,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$email['body']['topics'][0]],
             'subject' => 'Khali beats Undertaker',
             'content' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -1270,7 +1242,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $email['headers']['status-code']);
@@ -1422,7 +1394,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$sms['body']['topics'][0]],
             'content' => 'Your OTP code is 123456',
         ]);
@@ -1434,7 +1406,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $sms['headers']['status-code']);
@@ -1583,7 +1555,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'draft',
+            'draft' => true,
             'topics' => [$push['body']['topics'][0]],
             'title' => 'Test-Notification',
             'body' => 'Test-Notification-Body',
@@ -1596,7 +1568,7 @@ trait MessagingBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
-            'status' => 'processing',
+            'draft' => false,
         ]);
 
         $this->assertEquals(200, $push['headers']['status-code']);
@@ -1640,7 +1612,6 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'messageId' => ID::unique(),
-            'status' => 'processing',
             'topics' => [$topic['$id']],
             'subject' => 'Test subject',
             'content' => 'Test content',
