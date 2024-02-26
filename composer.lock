@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ed4d8b871471fe6a259742c4abe88184",
+    "content-hash": "59dbd35558ca65064a13a846f7760312",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1552,16 +1552,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.48.4",
+            "version": "dev-duplicate_exceptions_info",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0"
+                "reference": "c257bc7b5ea72b3e0a48816acb475a6a3698852b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
-                "reference": "02f20bd901b8fab26d7dc2c58f7da1d6a08d21c0",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/c257bc7b5ea72b3e0a48816acb475a6a3698852b",
+                "reference": "c257bc7b5ea72b3e0a48816acb475a6a3698852b",
                 "shasum": ""
             },
             "require": {
@@ -1602,9 +1602,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.48.4"
+                "source": "https://github.com/utopia-php/database/tree/duplicate_exceptions_info"
             },
-            "time": "2024-02-23T03:22:55+00:00"
+            "time": "2024-02-26T11:50:21+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -5447,9 +5447,18 @@
             "time": "2023-10-10T11:58:32+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/database",
+            "version": "dev-duplicate_exceptions_info",
+            "alias": "0.48.4",
+            "alias_normalized": "0.48.4.0"
+        }
+    ],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "utopia-php/database": 20
+    },
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

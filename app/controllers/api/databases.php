@@ -3495,8 +3495,12 @@ App::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docum
             );
         } catch (AuthorizationException) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
-        } catch (DuplicateException) {
-            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS);
+        } catch (DuplicateException $exception) {
+            $message = 'Document with the requested ID already exists. ';
+            $message .= !is_null($exception->getCollectionId()) ? ' In Collection ' . $exception->getCollectionId() : '';
+            $message .= !is_null($exception->getDocumentId()) ? ' Id ' . $exception->getDocumentId() : '';
+            $message .= 'Try again with a different ID or use ID.unique() to generate a unique ID.';
+            throw new Exception(Exception::DOCUMENT_ALREADY_EXISTS, $message);
         } catch (StructureException $exception) {
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, $exception->getMessage());
         }

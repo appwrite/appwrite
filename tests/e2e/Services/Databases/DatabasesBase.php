@@ -3575,6 +3575,8 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(409, $duplicate['headers']['status-code']);
+        var_dump($duplicate);
+        $this->assertEquals('---', '___---');
 
         return $data;
     }
