@@ -118,18 +118,9 @@ class Swagger2 extends Format
             /** @var \Utopia\Route $route */
             $url = \str_replace('/v1', '', $route->getPath());
             $scope = $route->getLabel('scope', '');
-            $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
 
-            if ($hide) {
-                continue;
-            }
-
-            $method = $route->getLabel('sdk.method', [\uniqid()]);
-            if (\is_array($method)) {
-                $method = $method[0];
-            }
-
+            $method = $route->getLabel('sdk.method', \uniqid());
             $desc = (!empty($route->getLabel('sdk.description', ''))) ? \realpath(__DIR__ . '/../../../../' . $route->getLabel('sdk.description', '')) : null;
             $produces = $route->getLabel('sdk.response.type', null);
             $model = $route->getLabel('sdk.response.model', 'none');
@@ -154,8 +145,8 @@ class Swagger2 extends Format
             }
 
             if (empty($routeSecurity)) {
-                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
                 $sdkPlatforms[] = APP_PLATFORM_SERVER;
+                $sdkPlatforms[] = APP_PLATFORM_CLIENT;
             }
 
             $temp = [
@@ -171,6 +162,7 @@ class Swagger2 extends Format
                     'weight' => $route->getOrder(),
                     'cookies' => $route->getLabel('sdk.cookies', false),
                     'type' => $route->getLabel('sdk.methodType', ''),
+                    'deprecated' => $route->getLabel('sdk.deprecated', false),
                     'demo' => Template::fromCamelCaseToDash($route->getLabel('sdk.namespace', 'default')) . '/' . Template::fromCamelCaseToDash($method) . '.md',
                     'edit' => 'https://github.com/appwrite/appwrite/edit/master' . $route->getLabel('sdk.description', ''),
                     'rate-limit' => $route->getLabel('abuse-limit', 0),
