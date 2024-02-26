@@ -551,12 +551,11 @@ class V20 extends Migration
                 $document->setAttribute('expire', $expire);
 
                 $factors = match ($document->getAttribute('provider')) {
-                    Auth::SESSION_PROVIDER_MAGIC_URL,
-                    Auth::SESSION_PROVIDER_OAUTH2 => ['email'],
+                    Auth::SESSION_PROVIDER_EMAIL => ['password'],
                     Auth::SESSION_PROVIDER_PHONE => ['phone'],
                     Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
                     Auth::SESSION_PROVIDER_TOKEN => ['token'],
-                    default => ['password'],
+                    default => ['email'],
                 };
 
                 $document->setAttribute('factors', $factors);
