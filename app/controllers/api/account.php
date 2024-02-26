@@ -2994,7 +2994,7 @@ App::post('/v1/account/recovery')
 
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name'))
+            ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)
