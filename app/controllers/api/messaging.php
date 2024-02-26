@@ -3251,6 +3251,17 @@ App::patch('/v1/messaging/messages/email/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        if (
+            $status !== MessageStatus::DRAFT
+            && \count($topics ?? $message->getAttribute('topics', [])) === 0
+            && \count($users ?? $message->getAttribute('users', [])) === 0
+            && \count($targets ?? $message->getAttribute('targets', [])) === 0
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        $currentScheduledAt = $message->getAttribute('scheduledAt');
+
         switch ($message->getAttribute('status')) {
             case MessageStatus::PROCESSING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
@@ -3260,8 +3271,54 @@ App::patch('/v1/messaging/messages/email/:messageId')
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
-        if (!\is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
+        if (
+            $status === MessageStatus::SCHEDULED
+            && \is_null($scheduledAt)
+            && \is_null($currentScheduledAt)
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
+        }
+
+        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule' => $scheduledAt,
+                'active' => $status === MessageStatus::SCHEDULED,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+        }
+
+        if (!\is_null($currentScheduledAt)) {
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
+
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+            }
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('active', $scheduledStatus);
+
+            if (!\is_null($scheduledAt)) {
+                $schedule->setAttribute('schedule', $scheduledAt);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+        }
+
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         if (!\is_null($topics)) {
@@ -3302,38 +3359,6 @@ App::patch('/v1/messaging/messages/email/:messageId')
 
         if (!\is_null($status)) {
             $message->setAttribute('status', $status);
-        }
-
-        if (!\is_null($scheduledAt)) {
-            if (\is_null($message->getAttribute(('scheduleId')))) {
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'message',
-                    'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
-                    'active' => $status === MessageStatus::SCHEDULED,
-                ]));
-
-                $message->setAttribute('scheduleId', $schedule->getId());
-            } else {
-                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
-
-                if ($schedule->isEmpty()) {
-                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
-                }
-
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
-
-                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-            }
-
-            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
@@ -3385,6 +3410,17 @@ App::patch('/v1/messaging/messages/sms/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        if (
+            $status !== MessageStatus::DRAFT
+            && \count($topics ?? $message->getAttribute('topics', [])) === 0
+            && \count($users ?? $message->getAttribute('users', [])) === 0
+            && \count($targets ?? $message->getAttribute('targets', [])) === 0
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        $currentScheduledAt = $message->getAttribute('scheduledAt');
+
         switch ($message->getAttribute('status')) {
             case MessageStatus::PROCESSING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
@@ -3394,8 +3430,54 @@ App::patch('/v1/messaging/messages/sms/:messageId')
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
-        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
+        if (
+            $status === MessageStatus::SCHEDULED
+            && \is_null($scheduledAt)
+            && \is_null($currentScheduledAt)
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
+        }
+
+        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule' => $scheduledAt,
+                'active' => $status === MessageStatus::SCHEDULED,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+        }
+
+        if (!\is_null($currentScheduledAt)) {
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
+
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+            }
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('active', $scheduledStatus);
+
+            if (!\is_null($scheduledAt)) {
+                $schedule->setAttribute('schedule', $scheduledAt);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+        }
+
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         if (!\is_null($topics)) {
@@ -3420,38 +3502,6 @@ App::patch('/v1/messaging/messages/sms/:messageId')
 
         if (!\is_null($status)) {
             $message->setAttribute('status', $status);
-        }
-
-        if (!\is_null($scheduledAt)) {
-            if (\is_null($message->getAttribute(('scheduleId')))) {
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'message',
-                    'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
-                    'active' => $status === MessageStatus::SCHEDULED,
-                ]));
-
-                $message->setAttribute('scheduleId', $schedule->getId());
-            } else {
-                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
-
-                if ($schedule->isEmpty()) {
-                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
-                }
-
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
-
-                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-            }
-
-            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
@@ -3512,6 +3562,17 @@ App::patch('/v1/messaging/messages/push/:messageId')
             throw new Exception(Exception::MESSAGE_NOT_FOUND);
         }
 
+        if (
+            $status !== MessageStatus::DRAFT
+            && \count($topics ?? $message->getAttribute('topics', [])) === 0
+            && \count($users ?? $message->getAttribute('users', [])) === 0
+            && \count($targets ?? $message->getAttribute('targets', [])) === 0
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_TARGET);
+        }
+
+        $currentScheduledAt = $message->getAttribute('scheduledAt');
+
         switch ($message->getAttribute('status')) {
             case MessageStatus::PROCESSING:
                 throw new Exception(Exception::MESSAGE_ALREADY_PROCESSING);
@@ -3521,8 +3582,54 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::MESSAGE_ALREADY_FAILED);
         }
 
-        if (!is_null($message->getAttribute('scheduledAt')) && $message->getAttribute('scheduledAt') < new \DateTime()) {
+        if (
+            $status === MessageStatus::SCHEDULED
+            && \is_null($scheduledAt)
+            && \is_null($currentScheduledAt)
+        ) {
+            throw new Exception(Exception::MESSAGE_MISSING_SCHEDULE);
+        }
+
+        if (!\is_null($currentScheduledAt) && new \DateTime($currentScheduledAt) < new \DateTime()) {
             throw new Exception(Exception::MESSAGE_ALREADY_SCHEDULED);
+        }
+
+        if (\is_null($currentScheduledAt) && !\is_null($scheduledAt)) {
+            $schedule = $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'),
+                'resourceType' => 'message',
+                'resourceId' => $message->getId(),
+                'resourceInternalId' => $message->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule' => $scheduledAt,
+                'active' => $status === MessageStatus::SCHEDULED,
+            ]));
+
+            $message->setAttribute('scheduleId', $schedule->getId());
+        }
+
+        if (!\is_null($currentScheduledAt)) {
+            $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
+            $scheduledStatus = ($status ?? $message->getAttribute('status')) === MessageStatus::SCHEDULED;
+
+            if ($schedule->isEmpty()) {
+                throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+            }
+
+            $schedule
+                ->setAttribute('resourceUpdatedAt', DateTime::now())
+                ->setAttribute('active', $scheduledStatus);
+
+            if (!\is_null($scheduledAt)) {
+                $schedule->setAttribute('schedule', $scheduledAt);
+            }
+
+            $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
+        }
+
+        if (!\is_null($scheduledAt)) {
+            $message->setAttribute('scheduledAt', $scheduledAt);
         }
 
         if (!\is_null($topics)) {
@@ -3611,38 +3718,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
 
         if (!\is_null($status)) {
             $message->setAttribute('status', $status);
-        }
-
-        if (!\is_null($scheduledAt)) {
-            if (\is_null($message->getAttribute(('scheduleId')))) {
-                $schedule = $dbForConsole->createDocument('schedules', new Document([
-                    'region' => App::getEnv('_APP_REGION', 'default'),
-                    'resourceType' => 'message',
-                    'resourceId' => $message->getId(),
-                    'resourceInternalId' => $message->getInternalId(),
-                    'resourceUpdatedAt' => DateTime::now(),
-                    'projectId' => $project->getId(),
-                    'schedule'  => $scheduledAt,
-                    'active' => $status === MessageStatus::SCHEDULED,
-                ]));
-
-                $message->setAttribute('scheduleId', $schedule->getId());
-            } else {
-                $schedule = $dbForConsole->getDocument('schedules', $message->getAttribute('scheduleId'));
-
-                if ($schedule->isEmpty()) {
-                    throw new Exception(Exception::SCHEDULE_NOT_FOUND);
-                }
-
-                $schedule
-                    ->setAttribute('resourceUpdatedAt', DateTime::now())
-                    ->setAttribute('schedule', $scheduledAt)
-                    ->setAttribute('active', $status === MessageStatus::SCHEDULED);
-
-                $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule);
-            }
-
-            $message->setAttribute('scheduleId', $schedule->getId());
         }
 
         $message = $dbForProject->updateDocument('messages', $message->getId(), $message);
