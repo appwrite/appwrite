@@ -6,4 +6,4 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.createAnonymousSession();
+const result = await account.createAnonymousSession();

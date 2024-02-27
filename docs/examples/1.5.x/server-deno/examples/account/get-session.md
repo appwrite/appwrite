@@ -10,5 +10,3 @@ const account = new Account(client);
 const response = await account.getSession(
     '<SESSION_ID>' // sessionId
 );
-
-console.log(response);

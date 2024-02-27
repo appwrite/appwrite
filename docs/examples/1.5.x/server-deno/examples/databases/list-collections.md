@@ -12,5 +12,3 @@ const response = await databases.listCollections(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

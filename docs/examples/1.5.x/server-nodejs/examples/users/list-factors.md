@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.listFactors(
+const result = await users.listFactors(
     '<USER_ID>' // userId
 );

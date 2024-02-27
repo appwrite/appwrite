@@ -15,5 +15,3 @@ const response = await messaging.createMsg91Provider(
     '<AUTH_KEY>', // authKey (optional)
     false // enabled (optional)
 );
-
-console.log(response);

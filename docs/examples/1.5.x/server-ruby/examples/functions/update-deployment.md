@@ -9,9 +9,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.update_deployment(
+result = functions.update_deployment(
     function_id: '<FUNCTION_ID>',
     deployment_id: '<DEPLOYMENT_ID>'
 )
-
-puts response.inspect

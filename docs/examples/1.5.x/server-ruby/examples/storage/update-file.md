@@ -9,11 +9,9 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.update_file(
+result = storage.update_file(
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     name: '<NAME>', # optional
     permissions: ["read("any")"] # optional
 )
-
-puts response.inspect

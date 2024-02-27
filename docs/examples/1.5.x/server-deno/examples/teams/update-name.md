@@ -11,5 +11,3 @@ const response = await teams.updateName(
     '<TEAM_ID>', // teamId
     '<NAME>' // name
 );
-
-console.log(response);

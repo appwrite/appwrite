@@ -9,7 +9,7 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.create_membership(
+result = teams.create_membership(
     team_id: '<TEAM_ID>',
     roles: [],
     email: 'email@example.com', # optional
@@ -18,5 +18,3 @@ response = teams.create_membership(
     url: 'https://example.com', # optional
     name: '<NAME>' # optional
 )
-
-puts response.inspect

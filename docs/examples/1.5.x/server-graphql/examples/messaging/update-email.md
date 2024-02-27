@@ -6,7 +6,7 @@ mutation {
         targets: [],
         subject: "<SUBJECT>",
         content: "<CONTENT>",
-        status: "draft",
+        draft: false,
         html: false,
         cc: [],
         bcc: [],

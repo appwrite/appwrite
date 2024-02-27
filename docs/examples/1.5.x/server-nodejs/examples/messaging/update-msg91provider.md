@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateMsg91Provider(
+const result = await messaging.updateMsg91Provider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     false, // enabled (optional)

@@ -14,5 +14,3 @@ const response = await functions.createDeployment(
     '<ENTRYPOINT>', // entrypoint (optional)
     '<COMMANDS>' // commands (optional)
 );
-
-console.log(response);

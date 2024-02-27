@@ -10,7 +10,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_relationship_attribute(
+result = databases.create_relationship_attribute(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     related_collection_id: '<RELATED_COLLECTION_ID>',
@@ -20,5 +20,3 @@ response = databases.create_relationship_attribute(
     two_way_key: '', # optional
     on_delete: RelationMutate::CASCADE # optional
 )
-
-puts response.inspect

@@ -10,5 +10,3 @@ const account = new Account(client);
 const response = await account.addAuthenticator(
     AuthenticatorType.Totp // type
 );
-
-console.log(response);

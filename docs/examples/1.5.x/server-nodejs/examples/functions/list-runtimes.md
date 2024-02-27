@@ -7,4 +7,4 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.listRuntimes();
+const result = await functions.listRuntimes();

@@ -8,7 +8,7 @@ val client = Client(context)
 
 val teams = Teams(client)
 
-val response = teams.getMembership(
+val result = teams.getMembership(
     teamId = "<TEAM_ID>", 
     membershipId = "<MEMBERSHIP_ID>", 
 )

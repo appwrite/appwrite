@@ -14,5 +14,3 @@ const response = await databases.updateEmailAttribute(
     false, // required
     'email@example.com' // default
 );
-
-console.log(response);

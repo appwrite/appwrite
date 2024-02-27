@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateTelesignProvider(
+const result = await messaging.updateTelesignProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     false, // enabled (optional)

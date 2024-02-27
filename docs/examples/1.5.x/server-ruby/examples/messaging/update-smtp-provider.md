@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_smtp_provider(
+result = messaging.update_smtp_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>', # optional
     host: '<HOST>', # optional
@@ -25,5 +25,3 @@ response = messaging.update_smtp_provider(
     reply_to_email: '<REPLY_TO_EMAIL>', # optional
     enabled: false # optional
 )
-
-puts response.inspect

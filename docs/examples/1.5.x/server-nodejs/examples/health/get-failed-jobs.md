@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const health = new sdk.Health(client);
 
-const response = await health.getFailedJobs(
+const result = await health.getFailedJobs(
     sdk..V1Database, // name
     null // threshold (optional)
 );

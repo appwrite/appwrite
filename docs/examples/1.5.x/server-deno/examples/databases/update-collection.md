@@ -15,5 +15,3 @@ const response = await databases.updateCollection(
     false, // documentSecurity (optional)
     false // enabled (optional)
 );
-
-console.log(response);

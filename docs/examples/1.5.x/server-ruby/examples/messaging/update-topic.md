@@ -9,10 +9,8 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_topic(
+result = messaging.update_topic(
     topic_id: '<TOPIC_ID>',
     name: '<NAME>', # optional
     subscribe: ["any"] # optional
 )
-
-puts response.inspect

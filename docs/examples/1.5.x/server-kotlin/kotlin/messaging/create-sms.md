@@ -15,6 +15,6 @@ val response = messaging.createSms(
     topics = listOf(), // optional
     users = listOf(), // optional
     targets = listOf(), // optional
-    status = "draft", // optional
+    draft = false, // optional
     scheduledAt = "" // optional
 )

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.deleteAttribute(
+const result = await databases.deleteAttribute(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '' // key

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const response = await avatars.getInitials(
+const result = await avatars.getInitials(
     '<NAME>', // name (optional)
     0, // width (optional)
     0, // height (optional)

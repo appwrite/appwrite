@@ -9,8 +9,6 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.delete(
+result = functions.delete(
     function_id: '<FUNCTION_ID>'
 )
-
-puts response.inspect

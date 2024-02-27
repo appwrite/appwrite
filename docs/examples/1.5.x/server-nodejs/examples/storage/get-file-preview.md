@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.getFilePreview(
+const result = await storage.getFilePreview(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     0, // width (optional)

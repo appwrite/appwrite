@@ -19,5 +19,3 @@ const response = await messaging.updateMailgunProvider(
     '<REPLY_TO_NAME>', // replyToName (optional)
     '<REPLY_TO_EMAIL>' // replyToEmail (optional)
 );
-
-console.log(response);

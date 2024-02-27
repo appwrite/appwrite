@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.getSession(
+val result = account.getSession(
     sessionId = "<SESSION_ID>", 
 )

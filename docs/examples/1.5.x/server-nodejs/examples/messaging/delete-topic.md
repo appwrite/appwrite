@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.deleteTopic(
+const result = await messaging.deleteTopic(
     '<TOPIC_ID>' // topicId
 );

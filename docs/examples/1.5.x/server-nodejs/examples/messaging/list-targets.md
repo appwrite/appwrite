@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.listTargets(
+const result = await messaging.listTargets(
     '<MESSAGE_ID>', // messageId
     [] // queries (optional)
 );

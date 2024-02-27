@@ -10,7 +10,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.create(
+result = functions.create(
     function_id: '<FUNCTION_ID>',
     name: '<NAME>',
     runtime: ::NODE-14.5,
@@ -32,5 +32,3 @@ response = functions.create(
     template_root_directory: '<TEMPLATE_ROOT_DIRECTORY>', # optional
     template_branch: '<TEMPLATE_BRANCH>' # optional
 )
-
-puts response.inspect

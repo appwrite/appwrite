@@ -13,5 +13,3 @@ const response = await teams.updateMembershipStatus(
     '<USER_ID>', // userId
     '<SECRET>' // secret
 );
-
-console.log(response);

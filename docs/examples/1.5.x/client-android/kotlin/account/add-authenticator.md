@@ -9,6 +9,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.addAuthenticator(
+val result = account.addAuthenticator(
     type = AuthenticatorType.TOTP,
 )

@@ -13,5 +13,3 @@ const response = await functions.updateVariable(
     '<KEY>', // key
     '<VALUE>' // value (optional)
 );
-
-console.log(response);

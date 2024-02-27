@@ -22,5 +22,3 @@ const result = storage.getFilePreview(
     '', // background (optional)
     ImageFormat.Jpg // output (optional)
 );
-
-console.log(result);

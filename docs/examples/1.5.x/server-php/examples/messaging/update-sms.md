@@ -16,6 +16,6 @@ $result = $messaging->updateSms(
     users: [], // optional
     targets: [], // optional
     content: '<CONTENT>', // optional
-    status: MessageStatus::DRAFT(), // optional
+    draft: false, // optional
     scheduledAt: '' // optional
 );

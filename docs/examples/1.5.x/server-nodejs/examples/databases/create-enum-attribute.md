@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.createEnumAttribute(
+const result = await databases.createEnumAttribute(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '', // key

@@ -11,5 +11,3 @@ const response = await teams.getMembership(
     '<TEAM_ID>', // teamId
     '<MEMBERSHIP_ID>' // membershipId
 );
-
-console.log(response);

@@ -14,5 +14,3 @@ const response = await databases.createDocument(
     {}, // data
     ["read("any")"] // permissions (optional)
 );
-
-console.log(response);

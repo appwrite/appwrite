@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.createTarget(
+const result = await users.createTarget(
     '<USER_ID>', // userId
     '<TARGET_ID>', // targetId
     sdk.MessagingProviderType.Email, // providerType

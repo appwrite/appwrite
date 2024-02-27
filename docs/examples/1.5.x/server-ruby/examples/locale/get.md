@@ -9,6 +9,4 @@ client = Client.new
 
 locale = Locale.new(client)
 
-response = locale.get()
-
-puts response.inspect
+result = locale.get()

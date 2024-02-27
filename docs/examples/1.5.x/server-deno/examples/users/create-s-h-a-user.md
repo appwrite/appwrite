@@ -14,5 +14,3 @@ const response = await users.createSHAUser(
     PasswordHash.Sha1, // passwordVersion (optional)
     '<NAME>' // name (optional)
 );
-
-console.log(response);

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.deleteDeployment(
+const result = await functions.deleteDeployment(
     '<FUNCTION_ID>', // functionId
     '<DEPLOYMENT_ID>' // deploymentId
 );

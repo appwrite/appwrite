@@ -9,7 +9,7 @@ val client = Client(context)
 
 val storage = Storage(client)
 
-val response = storage.createFile(
+val result = storage.createFile(
     bucketId = "<BUCKET_ID>", 
     fileId = "<FILE_ID>", 
     file = InputFile.fromPath("file.png"), 

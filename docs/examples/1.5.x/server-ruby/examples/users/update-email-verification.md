@@ -9,9 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_email_verification(
+result = users.update_email_verification(
     user_id: '<USER_ID>',
     email_verification: false
 )
-
-puts response.inspect

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.createScryptUser(
+const result = await users.createScryptUser(
     '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password

@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.createVerification(
+val result = account.createVerification(
     url = "https://example.com", 
 )

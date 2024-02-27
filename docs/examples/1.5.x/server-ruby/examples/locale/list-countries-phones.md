@@ -9,6 +9,4 @@ client = Client.new
 
 locale = Locale.new(client)
 
-response = locale.list_countries_phones()
-
-puts response.inspect
+result = locale.list_countries_phones()

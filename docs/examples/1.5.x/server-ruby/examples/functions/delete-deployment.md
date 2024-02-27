@@ -9,9 +9,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.delete_deployment(
+result = functions.delete_deployment(
     function_id: '<FUNCTION_ID>',
     deployment_id: '<DEPLOYMENT_ID>'
 )
-
-puts response.inspect

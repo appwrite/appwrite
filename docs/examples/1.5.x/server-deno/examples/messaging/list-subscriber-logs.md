@@ -11,5 +11,3 @@ const response = await messaging.listSubscriberLogs(
     '<SUBSCRIBER_ID>', // subscriberId
     [] // queries (optional)
 );
-
-console.log(response);

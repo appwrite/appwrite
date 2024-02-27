@@ -14,5 +14,3 @@ const response = await databases.updateIpAttribute(
     false, // required
     '' // default
 );
-
-console.log(response);

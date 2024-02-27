@@ -11,5 +11,3 @@ const response = await health.getFailedJobs(
     .V1Database, // name
     null // threshold (optional)
 );
-
-console.log(response);

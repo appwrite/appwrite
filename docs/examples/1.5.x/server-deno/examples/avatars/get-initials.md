@@ -13,5 +13,3 @@ const result = avatars.getInitials(
     0, // height (optional)
     '' // background (optional)
 );
-
-console.log(result);

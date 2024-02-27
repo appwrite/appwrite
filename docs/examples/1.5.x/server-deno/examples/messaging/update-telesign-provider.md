@@ -15,5 +15,3 @@ const response = await messaging.updateTelesignProvider(
     '<API_KEY>', // apiKey (optional)
     '<FROM>' // from (optional)
 );
-
-console.log(response);

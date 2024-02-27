@@ -7,4 +7,4 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.updateStatus();
+const result = await account.updateStatus();

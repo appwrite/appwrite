@@ -13,5 +13,3 @@ const response = await users.createArgon2User(
     'password', // password
     '<NAME>' // name (optional)
 );
-
-console.log(response);

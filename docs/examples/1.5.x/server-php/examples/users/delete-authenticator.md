@@ -13,6 +13,5 @@ $users = new Users($client);
 
 $result = $users->deleteAuthenticator(
     userId: '<USER_ID>',
-    type: AuthenticatorType::TOTP(),
-    otp: '<OTP>'
+    type: AuthenticatorType::TOTP()
 );

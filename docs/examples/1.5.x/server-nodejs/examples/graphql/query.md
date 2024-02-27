@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const graphql = new sdk.Graphql(client);
 
-const response = await graphql.query(
+const result = await graphql.query(
     {} // query
 );

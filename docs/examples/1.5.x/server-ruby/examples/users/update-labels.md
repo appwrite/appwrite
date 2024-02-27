@@ -9,9 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_labels(
+result = users.update_labels(
     user_id: '<USER_ID>',
     labels: []
 )
-
-puts response.inspect

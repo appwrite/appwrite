@@ -9,12 +9,10 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.create_sha_user(
+result = users.create_sha_user(
     user_id: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
     password_version: PasswordHash::SHA1, # optional
     name: '<NAME>' # optional
 )
-
-puts response.inspect

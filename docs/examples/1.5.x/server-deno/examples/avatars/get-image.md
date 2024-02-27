@@ -12,5 +12,3 @@ const result = avatars.getImage(
     0, // width (optional)
     0 // height (optional)
 );
-
-console.log(result);

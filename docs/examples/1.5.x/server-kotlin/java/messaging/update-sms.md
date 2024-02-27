@@ -15,7 +15,7 @@ messaging.updateSms(
     listOf(), // users (optional)
     listOf(), // targets (optional)
     "<CONTENT>", // content (optional)
-    MessageStatus.DRAFT, // status (optional)
+    false, // draft (optional)
     "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

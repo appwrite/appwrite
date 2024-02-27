@@ -12,5 +12,3 @@ const response = await messaging.createSubscriber(
     '<SUBSCRIBER_ID>', // subscriberId
     '<TARGET_ID>' // targetId
 );
-
-console.log(response);

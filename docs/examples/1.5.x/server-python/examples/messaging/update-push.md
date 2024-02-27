@@ -22,6 +22,6 @@ result = messaging.update_push(
     color = '<COLOR>', # optional
     tag = '<TAG>', # optional
     badge = None, # optional
-    status = MessageStatus.DRAFT, # optional
+    draft = False, # optional
     scheduled_at = '' # optional
 )

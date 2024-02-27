@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_challenge(
+result = account.create_challenge(
     factor: AuthenticationFactor::TOTP
 )
-
-puts response.inspect

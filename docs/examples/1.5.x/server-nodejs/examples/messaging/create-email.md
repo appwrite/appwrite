@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.createEmail(
+const result = await messaging.createEmail(
     '<MESSAGE_ID>', // messageId
     '<SUBJECT>', // subject
     '<CONTENT>', // content
@@ -17,7 +17,7 @@ const response = await messaging.createEmail(
     [], // cc (optional)
     [], // bcc (optional)
     [], // attachments (optional)
-    sdk.MessageStatus.Draft, // status (optional)
+    false, // draft (optional)
     false, // html (optional)
     '' // scheduledAt (optional)
 );

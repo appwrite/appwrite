@@ -12,5 +12,3 @@ const response = await account.create(
     '', // password
     '<NAME>' // name (optional)
 );
-
-console.log(response);

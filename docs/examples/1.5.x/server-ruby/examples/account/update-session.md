@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_session(
+result = account.update_session(
     session_id: '<SESSION_ID>'
 )
-
-puts response.inspect

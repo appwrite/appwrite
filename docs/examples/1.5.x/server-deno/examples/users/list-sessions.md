@@ -10,5 +10,3 @@ const users = new Users(client);
 const response = await users.listSessions(
     '<USER_ID>' // userId
 );
-
-console.log(response);

@@ -9,8 +9,6 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_favicon(
+result = avatars.get_favicon(
     url: 'https://example.com'
 )
-
-puts response.inspect

@@ -12,5 +12,3 @@ const response = await messaging.createTopic(
     '<NAME>', // name
     ["any"] // subscribe (optional)
 );
-
-console.log(response);

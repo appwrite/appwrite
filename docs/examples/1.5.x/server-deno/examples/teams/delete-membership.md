@@ -11,5 +11,3 @@ const response = await teams.deleteMembership(
     '<TEAM_ID>', // teamId
     '<MEMBERSHIP_ID>' // membershipId
 );
-
-console.log(response);

@@ -10,5 +10,3 @@ const teams = new Teams(client);
 const response = await teams.get(
     '<TEAM_ID>' // teamId
 );
-
-console.log(response);

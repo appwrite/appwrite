@@ -8,7 +8,7 @@ val client = Client(context)
 
 val storage = Storage(client)
 
-val response = storage.updateFile(
+val result = storage.updateFile(
     bucketId = "<BUCKET_ID>", 
     fileId = "<FILE_ID>", 
     name = "<NAME>", // (optional)

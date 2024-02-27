@@ -10,5 +10,3 @@ const health = new Health(client);
 const response = await health.getQueueBuilds(
     null // threshold (optional)
 );
-
-console.log(response);

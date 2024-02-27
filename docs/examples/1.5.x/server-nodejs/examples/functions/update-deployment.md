@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.updateDeployment(
+const result = await functions.updateDeployment(
     '<FUNCTION_ID>', // functionId
     '<DEPLOYMENT_ID>' // deploymentId
 );

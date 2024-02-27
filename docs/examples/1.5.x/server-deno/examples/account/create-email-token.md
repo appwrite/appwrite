@@ -11,5 +11,3 @@ const response = await account.createEmailToken(
     'email@example.com', // email
     false // phrase (optional)
 );
-
-console.log(response);

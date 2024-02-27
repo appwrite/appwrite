@@ -10,5 +10,3 @@ const graphql = new Graphql(client);
 const response = await graphql.mutation(
     {} // query
 );
-
-console.log(response);

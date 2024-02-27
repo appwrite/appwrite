@@ -9,6 +9,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.list_factors()
-
-puts response.inspect
+result = account.list_factors()

@@ -22,7 +22,7 @@ let message = try await messaging.updatePush(
     color: "<COLOR>", // optional
     tag: "<TAG>", // optional
     badge: 0, // optional
-    status: .draft, // optional
+    draft: false, // optional
     scheduledAt: "" // optional
 )
 

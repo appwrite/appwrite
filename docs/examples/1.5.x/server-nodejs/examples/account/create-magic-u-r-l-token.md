@@ -6,7 +6,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.createMagicURLToken(
+const result = await account.createMagicURLToken(
     '<USER_ID>', // userId
     'email@example.com', // email
     'https://example.com', // url (optional)

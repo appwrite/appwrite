@@ -9,14 +9,12 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_sms(
+result = messaging.update_sms(
     message_id: '<MESSAGE_ID>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional
     content: '<CONTENT>', # optional
-    status: MessageStatus::DRAFT, # optional
+    draft: false, # optional
     scheduled_at: '' # optional
 )
-
-puts response.inspect

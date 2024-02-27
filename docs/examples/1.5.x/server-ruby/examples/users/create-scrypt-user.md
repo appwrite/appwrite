@@ -9,7 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.create_scrypt_user(
+result = users.create_scrypt_user(
     user_id: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
@@ -20,5 +20,3 @@ response = users.create_scrypt_user(
     password_length: null,
     name: '<NAME>' # optional
 )
-
-puts response.inspect

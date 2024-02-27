@@ -9,7 +9,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.verifyAuthenticator(
+val result = account.verifyAuthenticator(
     type = AuthenticatorType.TOTP,
     otp = "<OTP>", 
 )

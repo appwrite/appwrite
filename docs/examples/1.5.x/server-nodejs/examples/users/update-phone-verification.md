@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.updatePhoneVerification(
+const result = await users.updatePhoneVerification(
     '<USER_ID>', // userId
     false // phoneVerification
 );

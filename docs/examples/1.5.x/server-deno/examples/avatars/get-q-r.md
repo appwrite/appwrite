@@ -13,5 +13,3 @@ const result = avatars.getQR(
     0, // margin (optional)
     false // download (optional)
 );
-
-console.log(result);

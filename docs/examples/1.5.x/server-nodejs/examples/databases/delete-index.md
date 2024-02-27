@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.deleteIndex(
+const result = await databases.deleteIndex(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '' // key

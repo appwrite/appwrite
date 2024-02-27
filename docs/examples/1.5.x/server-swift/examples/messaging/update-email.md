@@ -14,7 +14,7 @@ let message = try await messaging.updateEmail(
     targets: [], // optional
     subject: "<SUBJECT>", // optional
     content: "<CONTENT>", // optional
-    status: .draft, // optional
+    draft: false, // optional
     html: false, // optional
     cc: [], // optional
     bcc: [], // optional

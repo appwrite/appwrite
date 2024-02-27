@@ -9,6 +9,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_phone_verification()
-
-puts response.inspect
+result = account.create_phone_verification()

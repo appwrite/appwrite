@@ -13,7 +13,6 @@ Users users = new Users(client);
 users.deleteAuthenticator(
     "<USER_ID>", // userId
     AuthenticatorType.TOTP, // type
-    "<OTP>", // otp
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {
             error.printStackTrace();

@@ -8,7 +8,7 @@ val client = Client(context)
 
 val teams = Teams(client)
 
-val response = teams.listMemberships(
+val result = teams.listMemberships(
     teamId = "<TEAM_ID>", 
     queries = listOf(), // (optional)
     search = "<SEARCH>", // (optional)

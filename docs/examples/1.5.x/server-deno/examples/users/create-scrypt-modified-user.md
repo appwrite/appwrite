@@ -16,5 +16,3 @@ const response = await users.createScryptModifiedUser(
     '<PASSWORD_SIGNER_KEY>', // passwordSignerKey
     '<NAME>' // name (optional)
 );
-
-console.log(response);

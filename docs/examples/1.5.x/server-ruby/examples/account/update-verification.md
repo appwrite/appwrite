@@ -9,9 +9,7 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_verification(
+result = account.update_verification(
     user_id: '<USER_ID>',
     secret: '<SECRET>'
 )
-
-puts response.inspect

@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.delete_identity(
+result = account.delete_identity(
     identity_id: '<IDENTITY_ID>'
 )
-
-puts response.inspect

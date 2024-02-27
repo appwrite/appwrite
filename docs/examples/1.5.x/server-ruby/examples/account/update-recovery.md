@@ -9,10 +9,8 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_recovery(
+result = account.update_recovery(
     user_id: '<USER_ID>',
     secret: '<SECRET>',
     password: ''
 )
-
-puts response.inspect

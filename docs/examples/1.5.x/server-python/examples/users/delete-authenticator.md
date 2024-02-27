@@ -10,6 +10,5 @@ users = Users(client)
 
 result = users.delete_authenticator(
     user_id = '<USER_ID>',
-    type = AuthenticatorType.TOTP,
-    otp = '<OTP>'
+    type = AuthenticatorType.TOTP
 )

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.updateBucket(
+const result = await storage.updateBucket(
     '<BUCKET_ID>', // bucketId
     '<NAME>', // name
     ["read("any")"], // permissions (optional)

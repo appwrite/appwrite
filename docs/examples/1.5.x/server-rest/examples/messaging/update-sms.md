@@ -10,6 +10,6 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "users": [],
   "targets": [],
   "content": "<CONTENT>",
-  "status": "draft",
+  "draft": false,
   "scheduledAt": 
 }

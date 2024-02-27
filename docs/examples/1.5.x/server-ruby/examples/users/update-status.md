@@ -9,9 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_status(
+result = users.update_status(
     user_id: '<USER_ID>',
     status: false
 )
-
-puts response.inspect

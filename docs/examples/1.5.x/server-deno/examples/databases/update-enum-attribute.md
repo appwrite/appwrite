@@ -15,5 +15,3 @@ const response = await databases.updateEnumAttribute(
     false, // required
     '<DEFAULT>' // default
 );
-
-console.log(response);

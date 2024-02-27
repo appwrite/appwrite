@@ -19,7 +19,7 @@ messaging.createEmail(
     listOf(), // cc (optional)
     listOf(), // bcc (optional)
     listOf(), // attachments (optional)
-    MessageStatus.DRAFT, // status (optional)
+    false, // draft (optional)
     false, // html (optional)
     "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {

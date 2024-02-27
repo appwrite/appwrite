@@ -24,6 +24,6 @@ val response = messaging.createPush(
     color = "<COLOR>", // optional
     tag = "<TAG>", // optional
     badge = "<BADGE>", // optional
-    status = "draft", // optional
+    draft = false, // optional
     scheduledAt = "" // optional
 )

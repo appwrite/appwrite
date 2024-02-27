@@ -8,7 +8,7 @@ val client = Client(context)
 
 val messaging = Messaging(client)
 
-val response = messaging.deleteSubscriber(
+val result = messaging.deleteSubscriber(
     topicId = "<TOPIC_ID>", 
     subscriberId = "<SUBSCRIBER_ID>", 
 )

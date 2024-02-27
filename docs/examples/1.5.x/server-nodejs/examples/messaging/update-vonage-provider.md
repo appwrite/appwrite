@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateVonageProvider(
+const result = await messaging.updateVonageProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     false, // enabled (optional)

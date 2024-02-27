@@ -13,5 +13,3 @@ const response = await messaging.updateFcmProvider(
     false, // enabled (optional)
     {} // serviceAccountJSON (optional)
 );
-
-console.log(response);

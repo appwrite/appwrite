@@ -11,5 +11,3 @@ const result = storage.getFileView(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>' // fileId
 );
-
-console.log(result);

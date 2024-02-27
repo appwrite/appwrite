@@ -8,7 +8,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.createFile(
+const result = await storage.createFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     InputFile.fromPath('/path/to/file.png', 'file.png'), // file

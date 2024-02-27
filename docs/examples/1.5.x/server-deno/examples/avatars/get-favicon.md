@@ -10,5 +10,3 @@ const avatars = new Avatars(client);
 const result = avatars.getFavicon(
     'https://example.com' // url
 );
-
-console.log(result);

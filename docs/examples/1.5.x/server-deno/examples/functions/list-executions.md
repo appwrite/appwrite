@@ -12,5 +12,3 @@ const response = await functions.listExecutions(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

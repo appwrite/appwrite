@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.getTarget(
+const result = await users.getTarget(
     '<USER_ID>', // userId
     '<TARGET_ID>' // targetId
 );

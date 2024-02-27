@@ -8,7 +8,7 @@ val client = Client(context)
 
 val avatars = Avatars(client)
 
-val result =avatars.getImage(
+val result = avatars.getImage(
     url = "https://example.com", 
     width = 0, // (optional)
     height = 0, // (optional)

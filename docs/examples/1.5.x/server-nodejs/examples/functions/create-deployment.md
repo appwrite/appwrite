@@ -8,7 +8,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.createDeployment(
+const result = await functions.createDeployment(
     '<FUNCTION_ID>', // functionId
     InputFile.fromPath('/path/to/file.png', 'file.png'), // code
     false, // activate

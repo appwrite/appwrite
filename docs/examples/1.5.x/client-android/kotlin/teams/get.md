@@ -8,6 +8,6 @@ val client = Client(context)
 
 val teams = Teams(client)
 
-val response = teams.get(
+val result = teams.get(
     teamId = "<TEAM_ID>", 
 )

@@ -9,9 +9,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.list(
+result = functions.list(
     queries: [], # optional
     search: '<SEARCH>' # optional
 )
-
-puts response.inspect

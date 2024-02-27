@@ -1,7 +1,6 @@
 using Appwrite;
-using Appwrite.Services;
 using Appwrite.Models;
-using Appwrite.Enums;
+using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -17,7 +16,7 @@ Message result = await messaging.UpdateEmail(
     targets: new List<string>(), // optional
     subject: "<SUBJECT>", // optional
     content: "<CONTENT>", // optional
-    status: MessageStatus.Draft, // optional
+    draft: false, // optional
     html: false, // optional
     cc: new List<string>(), // optional
     bcc: new List<string>(), // optional

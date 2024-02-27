@@ -8,7 +8,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updateEmail(
+val result = account.updateEmail(
     email = "email@example.com", 
     password = "password", 
 )

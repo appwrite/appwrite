@@ -11,5 +11,3 @@ const response = await users.listLogs(
     '<USER_ID>', // userId
     [] // queries (optional)
 );
-
-console.log(response);

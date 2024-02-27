@@ -11,5 +11,3 @@ const response = await messaging.listTopicLogs(
     '<TOPIC_ID>', // topicId
     [] // queries (optional)
 );
-
-console.log(response);

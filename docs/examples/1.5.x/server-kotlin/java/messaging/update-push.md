@@ -24,7 +24,7 @@ messaging.updatePush(
     "<COLOR>", // color (optional)
     "<TAG>", // tag (optional)
     0, // badge (optional)
-    MessageStatus.DRAFT, // status (optional)
+    false, // draft (optional)
     "", // scheduledAt (optional)
     new CoroutineCallback<>((result, error) -> {
         if (error != null) {

@@ -11,5 +11,3 @@ const response = await users.updateStatus(
     '<USER_ID>', // userId
     false // status
 );
-
-console.log(response);

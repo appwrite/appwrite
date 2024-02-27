@@ -9,7 +9,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_float_attribute(
+result = databases.create_float_attribute(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     key: '',
@@ -19,5 +19,3 @@ response = databases.create_float_attribute(
     default: null, # optional
     array: false # optional
 )
-
-puts response.inspect

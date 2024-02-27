@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.createMailgunProvider(
+const result = await messaging.createMailgunProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name
     '<API_KEY>', // apiKey (optional)

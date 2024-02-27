@@ -7,8 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.deleteAuthenticator(
+const result = await users.deleteAuthenticator(
     '<USER_ID>', // userId
-    sdk.AuthenticatorType.Totp, // type
-    '<OTP>' // otp
+    sdk.AuthenticatorType.Totp // type
 );

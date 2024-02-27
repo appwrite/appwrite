@@ -9,8 +9,6 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.create_session(
+result = users.create_session(
     user_id: '<USER_ID>'
 )
-
-puts response.inspect

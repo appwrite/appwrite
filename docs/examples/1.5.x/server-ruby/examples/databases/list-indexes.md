@@ -9,10 +9,8 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.list_indexes(
+result = databases.list_indexes(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     queries: [] # optional
 )
-
-puts response.inspect

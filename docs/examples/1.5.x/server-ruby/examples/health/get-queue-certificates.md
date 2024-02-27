@@ -9,8 +9,6 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_queue_certificates(
+result = health.get_queue_certificates(
     threshold: null # optional
 )
-
-puts response.inspect

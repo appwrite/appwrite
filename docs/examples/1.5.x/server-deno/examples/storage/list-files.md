@@ -12,5 +12,3 @@ const response = await storage.listFiles(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

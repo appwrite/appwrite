@@ -10,8 +10,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.add_authenticator(
+result = account.add_authenticator(
     type: AuthenticatorType::TOTP
 )
-
-puts response.inspect

@@ -15,5 +15,3 @@ const response = await messaging.updateTwilioProvider(
     '<AUTH_TOKEN>', // authToken (optional)
     '<FROM>' // from (optional)
 );
-
-console.log(response);

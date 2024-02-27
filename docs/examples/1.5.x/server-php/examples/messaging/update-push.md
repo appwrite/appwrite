@@ -25,6 +25,6 @@ $result = $messaging->updatePush(
     color: '<COLOR>', // optional
     tag: '<TAG>', // optional
     badge: null, // optional
-    status: MessageStatus::DRAFT(), // optional
+    draft: false, // optional
     scheduledAt: '' // optional
 );

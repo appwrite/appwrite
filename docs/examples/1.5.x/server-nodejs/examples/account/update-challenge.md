@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.updateChallenge(
+const result = await account.updateChallenge(
     '<CHALLENGE_ID>', // challengeId
     '<OTP>' // otp
 );

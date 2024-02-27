@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.delete(
+const result = await databases.delete(
     '<DATABASE_ID>' // databaseId
 );

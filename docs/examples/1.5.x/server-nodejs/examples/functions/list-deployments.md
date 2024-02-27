@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.listDeployments(
+const result = await functions.listDeployments(
     '<FUNCTION_ID>', // functionId
     [], // queries (optional)
     '<SEARCH>' // search (optional)

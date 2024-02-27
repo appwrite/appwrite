@@ -9,6 +9,4 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.list_runtimes()
-
-puts response.inspect
+result = functions.list_runtimes()

@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.listLogs(
+val result = account.listLogs(
     queries = listOf(), // (optional)
 )

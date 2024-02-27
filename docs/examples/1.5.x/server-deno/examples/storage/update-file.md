@@ -13,5 +13,3 @@ const response = await storage.updateFile(
     '<NAME>', // name (optional)
     ["read("any")"] // permissions (optional)
 );
-
-console.log(response);

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.deleteFile(
+const result = await storage.deleteFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>' // fileId
 );

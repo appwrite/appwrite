@@ -15,5 +15,3 @@ const response = await databases.createBooleanAttribute(
     false, // default (optional)
     false // array (optional)
 );
-
-console.log(response);

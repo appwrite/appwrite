@@ -16,7 +16,7 @@ messaging.updateEmail(
     listOf(), // targets (optional)
     "<SUBJECT>", // subject (optional)
     "<CONTENT>", // content (optional)
-    MessageStatus.DRAFT, // status (optional)
+    false, // draft (optional)
     false, // html (optional)
     listOf(), // cc (optional)
     listOf(), // bcc (optional)

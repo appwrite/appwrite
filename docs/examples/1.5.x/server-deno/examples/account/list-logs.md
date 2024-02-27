@@ -10,5 +10,3 @@ const account = new Account(client);
 const response = await account.listLogs(
     [] // queries (optional)
 );
-
-console.log(response);

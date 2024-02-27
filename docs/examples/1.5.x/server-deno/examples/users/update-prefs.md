@@ -11,5 +11,3 @@ const response = await users.updatePrefs(
     '<USER_ID>', // userId
     {} // prefs
 );
-
-console.log(response);

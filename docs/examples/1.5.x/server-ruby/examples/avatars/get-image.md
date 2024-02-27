@@ -9,10 +9,8 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_image(
+result = avatars.get_image(
     url: 'https://example.com',
     width: 0, # optional
     height: 0 # optional
 )
-
-puts response.inspect

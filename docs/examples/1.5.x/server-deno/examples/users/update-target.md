@@ -14,5 +14,3 @@ const response = await users.updateTarget(
     '<PROVIDER_ID>', // providerId (optional)
     '<NAME>' // name (optional)
 );
-
-console.log(response);

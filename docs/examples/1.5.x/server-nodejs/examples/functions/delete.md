@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.delete(
+const result = await functions.delete(
     '<FUNCTION_ID>' // functionId
 );

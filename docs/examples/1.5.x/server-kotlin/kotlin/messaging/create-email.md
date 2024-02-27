@@ -19,7 +19,7 @@ val response = messaging.createEmail(
     cc = listOf(), // optional
     bcc = listOf(), // optional
     attachments = listOf(), // optional
-    status = "draft", // optional
+    draft = false, // optional
     html = false, // optional
     scheduledAt = "" // optional
 )

@@ -8,7 +8,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.createSession(
+val result = account.createSession(
     userId = "<USER_ID>", 
     secret = "<SECRET>", 
 )

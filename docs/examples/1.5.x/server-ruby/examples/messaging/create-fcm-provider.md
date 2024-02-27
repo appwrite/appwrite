@@ -9,11 +9,9 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_fcm_provider(
+result = messaging.create_fcm_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>',
     service_account_json: {}, # optional
     enabled: false # optional
 )
-
-puts response.inspect

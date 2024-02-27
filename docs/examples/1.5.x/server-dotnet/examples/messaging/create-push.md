@@ -1,9 +1,6 @@
 using Appwrite;
-using Appwrite.Services;
 using Appwrite.Models;
-using Appwrite.Enums;
-using Appwrite.Enums;
-using Appwrite.Enums;
+using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -27,6 +24,6 @@ Message result = await messaging.CreatePush(
     color: "<COLOR>", // optional
     tag: "<TAG>", // optional
     badge: "<BADGE>", // optional
-    status: MessageStatus.Draft, // optional
+    draft: false, // optional
     scheduledAt: "" // optional
 );

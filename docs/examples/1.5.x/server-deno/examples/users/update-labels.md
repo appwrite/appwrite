@@ -11,5 +11,3 @@ const response = await users.updateLabels(
     '<USER_ID>', // userId
     [] // labels
 );
-
-console.log(response);

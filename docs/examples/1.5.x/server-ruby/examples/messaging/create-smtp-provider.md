@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_smtp_provider(
+result = messaging.create_smtp_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>',
     host: '<HOST>',
@@ -25,5 +25,3 @@ response = messaging.create_smtp_provider(
     reply_to_email: 'email@example.com', # optional
     enabled: false # optional
 )
-
-puts response.inspect

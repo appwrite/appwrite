@@ -9,8 +9,6 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.get(
+result = users.get(
     user_id: '<USER_ID>'
 )
-
-puts response.inspect

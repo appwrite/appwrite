@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateSmtpProvider(
+const result = await messaging.updateSmtpProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     '<HOST>', // host (optional)

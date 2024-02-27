@@ -8,7 +8,7 @@ val client = Client(context)
 
 val teams = Teams(client)
 
-val response = teams.updateName(
+val result = teams.updateName(
     teamId = "<TEAM_ID>", 
     name = "<NAME>", 
 )

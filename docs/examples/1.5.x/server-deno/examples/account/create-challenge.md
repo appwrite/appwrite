@@ -9,5 +9,3 @@ const account = new Account(client);
 const response = await account.createChallenge(
     AuthenticationFactor.Totp // factor
 );
-
-console.log(response);

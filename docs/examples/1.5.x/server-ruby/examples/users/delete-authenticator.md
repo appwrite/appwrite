@@ -10,10 +10,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.delete_authenticator(
+result = users.delete_authenticator(
     user_id: '<USER_ID>',
-    type: AuthenticatorType::TOTP,
-    otp: '<OTP>'
+    type: AuthenticatorType::TOTP
 )
-
-puts response.inspect

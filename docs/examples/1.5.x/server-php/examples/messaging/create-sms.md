@@ -16,6 +16,6 @@ $result = $messaging->createSms(
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
-    status: MessageStatus::DRAFT(), // optional
+    draft: false, // optional
     scheduledAt: '' // optional
 );

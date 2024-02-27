@@ -23,5 +23,3 @@ const response = await messaging.updateSmtpProvider(
     '<REPLY_TO_EMAIL>', // replyToEmail (optional)
     false // enabled (optional)
 );
-
-console.log(response);

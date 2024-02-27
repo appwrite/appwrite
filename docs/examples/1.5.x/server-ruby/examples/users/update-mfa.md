@@ -9,9 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_mfa(
+result = users.update_mfa(
     user_id: '<USER_ID>',
     mfa: false
 )
-
-puts response.inspect

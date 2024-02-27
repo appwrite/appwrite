@@ -12,5 +12,3 @@ const response = await databases.listAttributes(
     '<COLLECTION_ID>', // collectionId
     [] // queries (optional)
 );
-
-console.log(response);

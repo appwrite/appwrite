@@ -10,11 +10,9 @@ client = Client.new
 
 avatars = Avatars.new(client)
 
-response = avatars.get_credit_card(
+result = avatars.get_credit_card(
     code: CreditCard::AMERICAN_EXPRESS,
     width: 0, # optional
     height: 0, # optional
     quality: 0 # optional
 )
-
-puts response.inspect

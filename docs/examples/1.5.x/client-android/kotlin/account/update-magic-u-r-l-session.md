@@ -8,7 +8,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updateMagicURLSession(
+val result = account.updateMagicURLSession(
     userId = "<USER_ID>", 
     secret = "<SECRET>", 
 )

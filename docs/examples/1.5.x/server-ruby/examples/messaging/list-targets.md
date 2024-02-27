@@ -9,9 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.list_targets(
+result = messaging.list_targets(
     message_id: '<MESSAGE_ID>',
     queries: [] # optional
 )
-
-puts response.inspect

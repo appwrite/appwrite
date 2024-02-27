@@ -9,12 +9,10 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.update_target(
+result = users.update_target(
     user_id: '<USER_ID>',
     target_id: '<TARGET_ID>',
     identifier: '<IDENTIFIER>', # optional
     provider_id: '<PROVIDER_ID>', # optional
     name: '<NAME>' # optional
 )
-
-puts response.inspect

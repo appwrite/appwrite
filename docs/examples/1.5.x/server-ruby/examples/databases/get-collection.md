@@ -9,9 +9,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.get_collection(
+result = databases.get_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>'
 )
-
-puts response.inspect

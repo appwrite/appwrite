@@ -15,5 +15,3 @@ const response = await functions.createExecution(
     ExecutionMethod.GET, // method (optional)
     {} // headers (optional)
 );
-
-console.log(response);

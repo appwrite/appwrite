@@ -17,5 +17,3 @@ const response = await databases.createFloatAttribute(
     null, // default (optional)
     false // array (optional)
 );
-
-console.log(response);

@@ -15,5 +15,3 @@ const response = await databases.createIpAttribute(
     '', // default (optional)
     false // array (optional)
 );
-
-console.log(response);

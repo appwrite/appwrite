@@ -19,5 +19,3 @@ const response = await messaging.createMailgunProvider(
     'email@example.com', // replyToEmail (optional)
     false // enabled (optional)
 );
-
-console.log(response);

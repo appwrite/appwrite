@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.createRelationshipAttribute(
+const result = await databases.createRelationshipAttribute(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '<RELATED_COLLECTION_ID>', // relatedCollectionId

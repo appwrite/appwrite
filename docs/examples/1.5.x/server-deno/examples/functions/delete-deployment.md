@@ -11,5 +11,3 @@ const response = await functions.deleteDeployment(
     '<FUNCTION_ID>', // functionId
     '<DEPLOYMENT_ID>' // deploymentId
 );
-
-console.log(response);

@@ -11,5 +11,3 @@ const result = functions.downloadDeployment(
     '<FUNCTION_ID>', // functionId
     '<DEPLOYMENT_ID>' // deploymentId
 );
-
-console.log(result);

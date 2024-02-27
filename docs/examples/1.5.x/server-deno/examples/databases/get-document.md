@@ -13,5 +13,3 @@ const response = await databases.getDocument(
     '<DOCUMENT_ID>', // documentId
     [] // queries (optional)
 );
-
-console.log(response);

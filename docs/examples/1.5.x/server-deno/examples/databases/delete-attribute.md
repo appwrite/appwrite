@@ -12,5 +12,3 @@ const response = await databases.deleteAttribute(
     '<COLLECTION_ID>', // collectionId
     '' // key
 );
-
-console.log(response);

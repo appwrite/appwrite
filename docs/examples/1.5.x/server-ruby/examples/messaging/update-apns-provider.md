@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_apns_provider(
+result = messaging.update_apns_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>', # optional
     enabled: false, # optional
@@ -19,5 +19,3 @@ response = messaging.update_apns_provider(
     bundle_id: '<BUNDLE_ID>', # optional
     sandbox: false # optional
 )
-
-puts response.inspect

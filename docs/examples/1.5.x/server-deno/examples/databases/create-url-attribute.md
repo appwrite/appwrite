@@ -15,5 +15,3 @@ const response = await databases.createUrlAttribute(
     'https://example.com', // default (optional)
     false // array (optional)
 );
-
-console.log(response);

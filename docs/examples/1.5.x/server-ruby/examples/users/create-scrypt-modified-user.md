@@ -9,7 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.create_scrypt_modified_user(
+result = users.create_scrypt_modified_user(
     user_id: '<USER_ID>',
     email: 'email@example.com',
     password: 'password',
@@ -18,5 +18,3 @@ response = users.create_scrypt_modified_user(
     password_signer_key: '<PASSWORD_SIGNER_KEY>',
     name: '<NAME>' # optional
 )
-
-puts response.inspect

@@ -12,5 +12,3 @@ const response = await functions.createBuild(
     '<DEPLOYMENT_ID>', // deploymentId
     '<BUILD_ID>' // buildId
 );
-
-console.log(response);

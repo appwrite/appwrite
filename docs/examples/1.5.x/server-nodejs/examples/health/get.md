@@ -7,4 +7,4 @@ const client = new sdk.Client()
 
 const health = new sdk.Health(client);
 
-const response = await health.get();
+const result = await health.get();

@@ -8,7 +8,7 @@ val client = Client(context)
 
 val databases = Databases(client)
 
-val response = databases.createDocument(
+val result = databases.createDocument(
     databaseId = "<DATABASE_ID>", 
     collectionId = "<COLLECTION_ID>", 
     documentId = "<DOCUMENT_ID>", 

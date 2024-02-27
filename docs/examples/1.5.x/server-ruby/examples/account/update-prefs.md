@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_prefs(
+result = account.update_prefs(
     prefs: {}
 )
-
-puts response.inspect

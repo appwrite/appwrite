@@ -11,5 +11,3 @@ const response = await messaging.listProviderLogs(
     '<PROVIDER_ID>', // providerId
     [] // queries (optional)
 );
-
-console.log(response);

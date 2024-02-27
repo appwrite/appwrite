@@ -9,14 +9,12 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_sms(
+result = messaging.create_sms(
     message_id: '<MESSAGE_ID>',
     content: '<CONTENT>',
     topics: [], # optional
     users: [], # optional
     targets: [], # optional
-    status: MessageStatus::DRAFT, # optional
+    draft: false, # optional
     scheduled_at: '' # optional
 )
-
-puts response.inspect

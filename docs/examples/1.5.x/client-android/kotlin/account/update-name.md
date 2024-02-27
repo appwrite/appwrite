@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updateName(
+val result = account.updateName(
     name = "<NAME>", 
 )

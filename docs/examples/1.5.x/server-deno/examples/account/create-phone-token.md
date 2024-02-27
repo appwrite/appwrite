@@ -10,5 +10,3 @@ const response = await account.createPhoneToken(
     '<USER_ID>', // userId
     '+12065550100' // phone
 );
-
-console.log(response);

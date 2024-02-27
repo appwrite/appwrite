@@ -9,7 +9,7 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.get_file_preview(
+result = storage.get_file_preview(
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>',
     width: 0, # optional
@@ -24,5 +24,3 @@ response = storage.get_file_preview(
     background: '', # optional
     output: ImageFormat::JPG # optional
 )
-
-puts response.inspect

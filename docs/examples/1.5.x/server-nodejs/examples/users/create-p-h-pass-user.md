@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.createPHPassUser(
+const result = await users.createPHPassUser(
     '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password

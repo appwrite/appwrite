@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.deleteIdentity(
+val result = account.deleteIdentity(
     identityId = "<IDENTITY_ID>", 
 )

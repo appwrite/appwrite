@@ -10,5 +10,3 @@ const health = new Health(client);
 const response = await health.getCertificate(
     '' // domain (optional)
 );
-
-console.log(response);

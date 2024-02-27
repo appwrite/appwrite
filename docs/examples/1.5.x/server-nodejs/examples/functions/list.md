@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.list(
+const result = await functions.list(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );

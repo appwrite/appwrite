@@ -9,12 +9,10 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.update_email_attribute(
+result = databases.update_email_attribute(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     key: '',
     required: false,
     default: 'email@example.com'
 )
-
-puts response.inspect

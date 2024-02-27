@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.createMsg91Provider(
+const result = await messaging.createMsg91Provider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name
     '+12065550100', // from (optional)

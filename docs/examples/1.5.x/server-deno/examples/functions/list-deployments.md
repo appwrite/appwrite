@@ -12,5 +12,3 @@ const response = await functions.listDeployments(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

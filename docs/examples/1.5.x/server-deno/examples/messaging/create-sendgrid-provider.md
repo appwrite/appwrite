@@ -17,5 +17,3 @@ const response = await messaging.createSendgridProvider(
     'email@example.com', // replyToEmail (optional)
     false // enabled (optional)
 );
-
-console.log(response);

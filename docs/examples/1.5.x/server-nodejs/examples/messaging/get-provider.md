@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.getProvider(
+const result = await messaging.getProvider(
     '<PROVIDER_ID>' // providerId
 );

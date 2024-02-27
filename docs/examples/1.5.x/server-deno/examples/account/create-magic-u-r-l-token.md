@@ -12,5 +12,3 @@ const response = await account.createMagicURLToken(
     'https://example.com', // url (optional)
     false // phrase (optional)
 );
-
-console.log(response);

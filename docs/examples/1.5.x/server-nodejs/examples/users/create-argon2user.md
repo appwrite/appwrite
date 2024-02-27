@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.createArgon2User(
+const result = await users.createArgon2User(
     '<USER_ID>', // userId
     'email@example.com', // email
     'password', // password

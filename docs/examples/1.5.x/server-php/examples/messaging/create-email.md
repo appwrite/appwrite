@@ -20,7 +20,7 @@ $result = $messaging->createEmail(
     cc: [], // optional
     bcc: [], // optional
     attachments: [], // optional
-    status: MessageStatus::DRAFT(), // optional
+    draft: false, // optional
     html: false, // optional
     scheduledAt: '' // optional
 );

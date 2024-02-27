@@ -14,7 +14,7 @@ mutation {
         color: "<COLOR>",
         tag: "<TAG>",
         badge: 0,
-        status: "draft",
+        draft: false,
         scheduledAt: ""
     ) {
         _id

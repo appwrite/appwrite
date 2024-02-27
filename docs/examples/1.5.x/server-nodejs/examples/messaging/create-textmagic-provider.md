@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.createTextmagicProvider(
+const result = await messaging.createTextmagicProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name
     '+12065550100', // from (optional)

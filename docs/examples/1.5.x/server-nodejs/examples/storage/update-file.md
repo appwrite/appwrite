@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.updateFile(
+const result = await storage.updateFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>', // fileId
     '<NAME>', // name (optional)

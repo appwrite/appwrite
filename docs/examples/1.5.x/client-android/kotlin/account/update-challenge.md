@@ -8,7 +8,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updateChallenge(
+val result = account.updateChallenge(
     challengeId = "<CHALLENGE_ID>", 
     otp = "<OTP>", 
 )

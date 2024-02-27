@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.listVariables(
+const result = await functions.listVariables(
     '<FUNCTION_ID>' // functionId
 );

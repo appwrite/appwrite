@@ -11,5 +11,3 @@ const response = await account.updateEmail(
     'email@example.com', // email
     'password' // password
 );
-
-console.log(response);

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.createExecution(
+const result = await functions.createExecution(
     '<FUNCTION_ID>', // functionId
     '<BODY>', // body (optional)
     false, // async (optional)

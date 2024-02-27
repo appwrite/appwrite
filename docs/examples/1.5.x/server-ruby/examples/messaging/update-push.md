@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_push(
+result = messaging.update_push(
     message_id: '<MESSAGE_ID>',
     topics: [], # optional
     users: [], # optional
@@ -24,8 +24,6 @@ response = messaging.update_push(
     color: '<COLOR>', # optional
     tag: '<TAG>', # optional
     badge: null, # optional
-    status: MessageStatus::DRAFT, # optional
+    draft: false, # optional
     scheduled_at: '' # optional
 )
-
-puts response.inspect

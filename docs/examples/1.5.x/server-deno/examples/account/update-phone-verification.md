@@ -11,5 +11,3 @@ const response = await account.updatePhoneVerification(
     '<USER_ID>', // userId
     '<SECRET>' // secret
 );
-
-console.log(response);

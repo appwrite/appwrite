@@ -13,5 +13,3 @@ const response = await storage.createFile(
     InputFile.fromPath('/path/to/file.png', 'file.png'), // file
     ["read("any")"] // permissions (optional)
 );
-
-console.log(response);

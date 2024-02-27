@@ -9,10 +9,8 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.list_collections(
+result = databases.list_collections(
     database_id: '<DATABASE_ID>',
     queries: [], # optional
     search: '<SEARCH>' # optional
 )
-
-puts response.inspect

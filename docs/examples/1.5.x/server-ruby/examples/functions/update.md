@@ -9,7 +9,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.update(
+result = functions.update(
     function_id: '<FUNCTION_ID>',
     name: '<NAME>',
     runtime: ::NODE-14.5, # optional
@@ -27,5 +27,3 @@ response = functions.update(
     provider_silent_mode: false, # optional
     provider_root_directory: '<PROVIDER_ROOT_DIRECTORY>' # optional
 )
-
-puts response.inspect

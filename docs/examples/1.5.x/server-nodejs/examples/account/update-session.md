@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.updateSession(
+const result = await account.updateSession(
     '<SESSION_ID>' // sessionId
 );

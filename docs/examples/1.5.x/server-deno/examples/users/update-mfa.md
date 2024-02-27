@@ -11,5 +11,3 @@ const response = await users.updateMfa(
     '<USER_ID>', // userId
     false // mfa
 );
-
-console.log(response);

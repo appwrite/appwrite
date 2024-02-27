@@ -9,10 +9,8 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.create(
+result = teams.create(
     team_id: '<TEAM_ID>',
     name: '<NAME>',
     roles: [] # optional
 )
-
-puts response.inspect

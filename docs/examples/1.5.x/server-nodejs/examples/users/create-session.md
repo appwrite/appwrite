@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.createSession(
+const result = await users.createSession(
     '<USER_ID>' // userId
 );

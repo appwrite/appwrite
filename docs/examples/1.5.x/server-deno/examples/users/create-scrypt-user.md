@@ -18,5 +18,3 @@ const response = await users.createScryptUser(
     null, // passwordLength
     '<NAME>' // name (optional)
 );
-
-console.log(response);

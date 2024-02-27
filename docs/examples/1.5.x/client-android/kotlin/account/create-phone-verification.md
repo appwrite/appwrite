@@ -8,4 +8,4 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.createPhoneVerification()
+val result = account.createPhoneVerification()

@@ -9,6 +9,4 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_time()
-
-puts response.inspect
+result = health.get_time()

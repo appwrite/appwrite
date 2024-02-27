@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.createVerification(
+const result = await account.createVerification(
     'https://example.com' // url
 );

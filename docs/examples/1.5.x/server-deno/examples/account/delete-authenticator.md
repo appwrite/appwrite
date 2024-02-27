@@ -11,5 +11,3 @@ const response = await account.deleteAuthenticator(
     AuthenticatorType.Totp, // type
     '<OTP>' // otp
 );
-
-console.log(response);

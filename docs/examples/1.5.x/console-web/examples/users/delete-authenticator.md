@@ -8,8 +8,7 @@ const users = new Users(client);
 
 const result = await users.deleteAuthenticator(
     '<USER_ID>', // userId
-    AuthenticatorType.Totp, // type
-    '<OTP>' // otp
+    AuthenticatorType.Totp // type
 );
 
 console.log(response);

@@ -9,7 +9,7 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.create_bucket(
+result = storage.create_bucket(
     bucket_id: '<BUCKET_ID>',
     name: '<NAME>',
     permissions: ["read("any")"], # optional
@@ -21,5 +21,3 @@ response = storage.create_bucket(
     encryption: false, # optional
     antivirus: false # optional
 )
-
-puts response.inspect

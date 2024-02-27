@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const response = await teams.delete(
+const result = await teams.delete(
     '<TEAM_ID>' // teamId
 );

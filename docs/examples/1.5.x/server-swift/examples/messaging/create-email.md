@@ -17,7 +17,7 @@ let message = try await messaging.createEmail(
     cc: [], // optional
     bcc: [], // optional
     attachments: [], // optional
-    status: .draft, // optional
+    draft: false, // optional
     html: false, // optional
     scheduledAt: "" // optional
 )

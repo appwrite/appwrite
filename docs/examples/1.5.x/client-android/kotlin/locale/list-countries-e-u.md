@@ -8,4 +8,4 @@ val client = Client(context)
 
 val locale = Locale(client)
 
-val response = locale.listCountriesEU()
+val result = locale.listCountriesEU()

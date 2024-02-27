@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.getSubscriber(
+const result = await messaging.getSubscriber(
     '<TOPIC_ID>', // topicId
     '<SUBSCRIBER_ID>' // subscriberId
 );

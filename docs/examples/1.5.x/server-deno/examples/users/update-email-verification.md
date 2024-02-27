@@ -11,5 +11,3 @@ const response = await users.updateEmailVerification(
     '<USER_ID>', // userId
     false // emailVerification
 );
-
-console.log(response);

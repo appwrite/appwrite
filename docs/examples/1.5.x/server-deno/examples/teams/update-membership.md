@@ -12,5 +12,3 @@ const response = await teams.updateMembership(
     '<MEMBERSHIP_ID>', // membershipId
     [] // roles
 );
-
-console.log(response);

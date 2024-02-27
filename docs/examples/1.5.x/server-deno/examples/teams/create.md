@@ -12,5 +12,3 @@ const response = await teams.create(
     '<NAME>', // name
     [] // roles (optional)
 );
-
-console.log(response);

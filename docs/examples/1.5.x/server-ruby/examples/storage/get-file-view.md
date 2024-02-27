@@ -9,9 +9,7 @@ client = Client.new
 
 storage = Storage.new(client)
 
-response = storage.get_file_view(
+result = storage.get_file_view(
     bucket_id: '<BUCKET_ID>',
     file_id: '<FILE_ID>'
 )
-
-puts response.inspect

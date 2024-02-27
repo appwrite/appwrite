@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.updatePhone(
+const result = await account.updatePhone(
     '+12065550100', // phone
     'password' // password
 );

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.getFile(
+const result = await storage.getFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>' // fileId
 );

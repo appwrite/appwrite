@@ -12,5 +12,3 @@ const response = await messaging.updateTopic(
     '<NAME>', // name (optional)
     ["any"] // subscribe (optional)
 );
-
-console.log(response);

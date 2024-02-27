@@ -15,5 +15,3 @@ const response = await messaging.createVonageProvider(
     '<API_SECRET>', // apiSecret (optional)
     false // enabled (optional)
 );
-
-console.log(response);

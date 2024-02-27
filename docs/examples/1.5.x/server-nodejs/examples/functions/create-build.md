@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.createBuild(
+const result = await functions.createBuild(
     '<FUNCTION_ID>', // functionId
     '<DEPLOYMENT_ID>', // deploymentId
     '<BUILD_ID>' // buildId

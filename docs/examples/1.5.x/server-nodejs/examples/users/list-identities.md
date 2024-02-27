@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.listIdentities(
+const result = await users.listIdentities(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );

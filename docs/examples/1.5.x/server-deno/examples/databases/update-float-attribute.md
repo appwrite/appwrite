@@ -16,5 +16,3 @@ const response = await databases.updateFloatAttribute(
     null, // max
     null // default
 );
-
-console.log(response);

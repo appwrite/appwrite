@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.verifyAuthenticator(
+const result = await account.verifyAuthenticator(
     sdk.AuthenticatorType.Totp, // type
     '<OTP>' // otp
 );

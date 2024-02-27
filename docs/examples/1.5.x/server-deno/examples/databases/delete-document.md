@@ -12,5 +12,3 @@ const response = await databases.deleteDocument(
     '<COLLECTION_ID>', // collectionId
     '<DOCUMENT_ID>' // documentId
 );
-
-console.log(response);

@@ -12,5 +12,3 @@ const response = await databases.update(
     '<NAME>', // name
     false // enabled (optional)
 );
-
-console.log(response);

@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.delete_session(
+result = account.delete_session(
     session_id: '<SESSION_ID>'
 )
-
-puts response.inspect

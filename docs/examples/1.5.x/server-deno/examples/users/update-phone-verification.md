@@ -11,5 +11,3 @@ const response = await users.updatePhoneVerification(
     '<USER_ID>', // userId
     false // phoneVerification
 );
-
-console.log(response);

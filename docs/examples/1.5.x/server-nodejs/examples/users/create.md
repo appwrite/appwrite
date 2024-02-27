@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.create(
+const result = await users.create(
     '<USER_ID>', // userId
     'email@example.com', // email (optional)
     '+12065550100', // phone (optional)

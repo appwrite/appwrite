@@ -11,5 +11,3 @@ const response = await storage.deleteFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>' // fileId
 );
-
-console.log(response);

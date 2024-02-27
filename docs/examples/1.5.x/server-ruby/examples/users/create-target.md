@@ -10,7 +10,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.create_target(
+result = users.create_target(
     user_id: '<USER_ID>',
     target_id: '<TARGET_ID>',
     provider_type: MessagingProviderType::EMAIL,
@@ -18,5 +18,3 @@ response = users.create_target(
     provider_id: '<PROVIDER_ID>', # optional
     name: '<NAME>' # optional
 )
-
-puts response.inspect

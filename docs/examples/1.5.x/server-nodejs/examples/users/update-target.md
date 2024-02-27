@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.updateTarget(
+const result = await users.updateTarget(
     '<USER_ID>', // userId
     '<TARGET_ID>', // targetId
     '<IDENTIFIER>', // identifier (optional)

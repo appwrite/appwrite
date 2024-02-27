@@ -9,7 +9,7 @@ mutation {
         cc: [],
         bcc: [],
         attachments: [],
-        status: "draft",
+        draft: false,
         html: false,
         scheduledAt: ""
     ) {

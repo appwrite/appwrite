@@ -9,8 +9,6 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.list_factors(
+result = users.list_factors(
     user_id: '<USER_ID>'
 )
-
-puts response.inspect

@@ -11,5 +11,3 @@ const response = await account.createRecovery(
     'email@example.com', // email
     'https://example.com' // url
 );
-
-console.log(response);

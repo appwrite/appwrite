@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.updateLabels(
+const result = await users.updateLabels(
     '<USER_ID>', // userId
     [] // labels
 );

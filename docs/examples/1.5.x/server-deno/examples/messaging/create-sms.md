@@ -1,4 +1,4 @@
-import { Client, Messaging, MessageStatus } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Messaging } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -13,8 +13,6 @@ const response = await messaging.createSms(
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
-    MessageStatus.Draft, // status (optional)
+    false, // draft (optional)
     '' // scheduledAt (optional)
 );
-
-console.log(response);

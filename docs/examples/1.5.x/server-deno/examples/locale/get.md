@@ -8,5 +8,3 @@ const client = new Client()
 const locale = new Locale(client);
 
 const response = await locale.get();
-
-console.log(response);

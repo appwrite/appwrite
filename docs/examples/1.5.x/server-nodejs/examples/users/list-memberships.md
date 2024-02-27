@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.listMemberships(
+const result = await users.listMemberships(
     '<USER_ID>' // userId
 );

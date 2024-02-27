@@ -25,6 +25,6 @@ $result = $messaging->createPush(
     color: '<COLOR>', // optional
     tag: '<TAG>', // optional
     badge: '<BADGE>', // optional
-    status: MessageStatus::DRAFT(), // optional
+    draft: false, // optional
     scheduledAt: '' // optional
 );

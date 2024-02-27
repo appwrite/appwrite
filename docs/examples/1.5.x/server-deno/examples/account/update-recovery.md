@@ -12,5 +12,3 @@ const response = await account.updateRecovery(
     '<SECRET>', // secret
     '' // password
 );
-
-console.log(response);

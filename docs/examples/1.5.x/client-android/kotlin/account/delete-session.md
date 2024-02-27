@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.deleteSession(
+val result = account.deleteSession(
     sessionId = "<SESSION_ID>", 
 )

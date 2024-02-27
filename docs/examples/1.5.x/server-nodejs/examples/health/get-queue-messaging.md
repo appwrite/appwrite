@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const health = new sdk.Health(client);
 
-const response = await health.getQueueMessaging(
+const result = await health.getQueueMessaging(
     null // threshold (optional)
 );

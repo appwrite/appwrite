@@ -12,4 +12,3 @@ account.createOAuth2Token(
     'https://example.com', // failure (optional)
     [] // scopes (optional)
 );
-

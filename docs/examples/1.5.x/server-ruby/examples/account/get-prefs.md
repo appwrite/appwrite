@@ -9,6 +9,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.get_prefs()
-
-puts response.inspect
+result = account.get_prefs()

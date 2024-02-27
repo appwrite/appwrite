@@ -9,9 +9,7 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_password(
+result = account.update_password(
     password: '',
     old_password: 'password' # optional
 )
-
-puts response.inspect

@@ -9,7 +9,7 @@ client = Client.new
 
 functions = Functions.new(client)
 
-response = functions.create_execution(
+result = functions.create_execution(
     function_id: '<FUNCTION_ID>',
     body: '<BODY>', # optional
     async: false, # optional
@@ -17,5 +17,3 @@ response = functions.create_execution(
     method: ExecutionMethod::GET, # optional
     headers: {} # optional
 )
-
-puts response.inspect

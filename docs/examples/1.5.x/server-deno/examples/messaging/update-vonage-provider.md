@@ -15,5 +15,3 @@ const response = await messaging.updateVonageProvider(
     '<API_SECRET>', // apiSecret (optional)
     '<FROM>' // from (optional)
 );
-
-console.log(response);

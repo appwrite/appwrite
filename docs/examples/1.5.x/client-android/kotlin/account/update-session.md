@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updateSession(
+val result = account.updateSession(
     sessionId = "<SESSION_ID>", 
 )

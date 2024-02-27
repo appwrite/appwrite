@@ -13,6 +13,6 @@ result = messaging.update_sms(
     users = [], # optional
     targets = [], # optional
     content = '<CONTENT>', # optional
-    status = MessageStatus.DRAFT, # optional
+    draft = False, # optional
     scheduled_at = '' # optional
 )

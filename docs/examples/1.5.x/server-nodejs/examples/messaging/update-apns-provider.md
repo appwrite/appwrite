@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateApnsProvider(
+const result = await messaging.updateApnsProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     false, // enabled (optional)

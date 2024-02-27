@@ -8,7 +8,7 @@ val client = Client(context)
 
 val functions = Functions(client)
 
-val response = functions.createExecution(
+val result = functions.createExecution(
     functionId = "<FUNCTION_ID>", 
     body = "<BODY>", // (optional)
     async = false, // (optional)

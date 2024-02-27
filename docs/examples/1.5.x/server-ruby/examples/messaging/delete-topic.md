@@ -9,8 +9,6 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.delete_topic(
+result = messaging.delete_topic(
     topic_id: '<TOPIC_ID>'
 )
-
-puts response.inspect

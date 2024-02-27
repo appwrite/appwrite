@@ -9,8 +9,6 @@ client = Client.new
 
 teams = Teams.new(client)
 
-response = teams.get_prefs(
+result = teams.get_prefs(
     team_id: '<TEAM_ID>'
 )
-
-puts response.inspect

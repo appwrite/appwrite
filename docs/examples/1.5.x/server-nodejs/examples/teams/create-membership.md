@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const response = await teams.createMembership(
+const result = await teams.createMembership(
     '<TEAM_ID>', // teamId
     [], // roles
     'email@example.com', // email (optional)

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateTopic(
+const result = await messaging.updateTopic(
     '<TOPIC_ID>', // topicId
     '<NAME>', // name (optional)
     ["any"] // subscribe (optional)

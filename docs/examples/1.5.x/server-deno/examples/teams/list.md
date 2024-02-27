@@ -11,5 +11,3 @@ const response = await teams.list(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

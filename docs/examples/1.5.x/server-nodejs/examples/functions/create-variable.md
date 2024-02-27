@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.createVariable(
+const result = await functions.createVariable(
     '<FUNCTION_ID>', // functionId
     '<KEY>', // key
     '<VALUE>' // value

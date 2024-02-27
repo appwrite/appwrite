@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updatePush(
+const result = await messaging.updatePush(
     '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
@@ -22,6 +22,6 @@ const response = await messaging.updatePush(
     '<COLOR>', // color (optional)
     '<TAG>', // tag (optional)
     null, // badge (optional)
-    sdk.MessageStatus.Draft, // status (optional)
+    false, // draft (optional)
     '' // scheduledAt (optional)
 );

@@ -9,11 +9,9 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.get_document(
+result = databases.get_document(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     document_id: '<DOCUMENT_ID>',
     queries: [] # optional
 )
-
-puts response.inspect

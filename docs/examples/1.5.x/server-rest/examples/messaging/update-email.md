@@ -11,7 +11,7 @@ X-Appwrite-Key: 919c2d18fb5d4...a2ae413da83346ad2
   "targets": [],
   "subject": "<SUBJECT>",
   "content": "<CONTENT>",
-  "status": "draft",
+  "draft": false,
   "html": false,
   "cc": [],
   "bcc": [],

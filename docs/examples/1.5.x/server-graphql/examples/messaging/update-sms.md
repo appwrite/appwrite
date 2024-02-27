@@ -5,7 +5,7 @@ mutation {
         users: [],
         targets: [],
         content: "<CONTENT>",
-        status: "draft",
+        draft: false,
         scheduledAt: ""
     ) {
         _id

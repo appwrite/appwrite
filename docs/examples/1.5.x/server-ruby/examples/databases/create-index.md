@@ -10,7 +10,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_index(
+result = databases.create_index(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     key: '',
@@ -18,5 +18,3 @@ response = databases.create_index(
     attributes: [],
     orders: [] # optional
 )
-
-puts response.inspect

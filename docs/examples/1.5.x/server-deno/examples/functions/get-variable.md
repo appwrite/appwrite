@@ -11,5 +11,3 @@ const response = await functions.getVariable(
     '<FUNCTION_ID>', // functionId
     '<VARIABLE_ID>' // variableId
 );
-
-console.log(response);

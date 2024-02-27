@@ -7,14 +7,14 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateEmail(
+const result = await messaging.updateEmail(
     '<MESSAGE_ID>', // messageId
     [], // topics (optional)
     [], // users (optional)
     [], // targets (optional)
     '<SUBJECT>', // subject (optional)
     '<CONTENT>', // content (optional)
-    sdk.MessageStatus.Draft, // status (optional)
+    false, // draft (optional)
     false, // html (optional)
     [], // cc (optional)
     [], // bcc (optional)

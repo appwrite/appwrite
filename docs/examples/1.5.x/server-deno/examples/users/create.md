@@ -14,5 +14,3 @@ const response = await users.create(
     '', // password (optional)
     '<NAME>' // name (optional)
 );
-
-console.log(response);

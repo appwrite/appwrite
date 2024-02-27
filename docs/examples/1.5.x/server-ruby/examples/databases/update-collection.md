@@ -9,7 +9,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.update_collection(
+result = databases.update_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     name: '<NAME>',
@@ -17,5 +17,3 @@ response = databases.update_collection(
     document_security: false, # optional
     enabled: false # optional
 )
-
-puts response.inspect

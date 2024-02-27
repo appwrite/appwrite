@@ -11,5 +11,3 @@ const response = await users.updatePassword(
     '<USER_ID>', // userId
     '' // password
 );
-
-console.log(response);

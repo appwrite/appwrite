@@ -10,5 +10,3 @@ const response = await account.createSession(
     '<USER_ID>', // userId
     '<SECRET>' // secret
 );
-
-console.log(response);

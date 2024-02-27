@@ -8,6 +8,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_anonymous_session()
-
-puts response.inspect
+result = account.create_anonymous_session()

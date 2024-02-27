@@ -8,7 +8,7 @@ val client = Client(context)
 
 val teams = Teams(client)
 
-val response = teams.createMembership(
+val result = teams.createMembership(
     teamId = "<TEAM_ID>", 
     roles = listOf(), 
     email = "email@example.com", // (optional)

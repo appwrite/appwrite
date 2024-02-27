@@ -10,5 +10,3 @@ const response = await account.createEmailPasswordSession(
     'email@example.com', // email
     'password' // password
 );
-
-console.log(response);

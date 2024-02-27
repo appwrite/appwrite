@@ -9,6 +9,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.createChallenge(
+val result = account.createChallenge(
     factor = AuthenticationFactor.TOTP,
 )

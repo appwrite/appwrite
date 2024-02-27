@@ -9,8 +9,6 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.list_memberships(
+result = users.list_memberships(
     user_id: '<USER_ID>'
 )
-
-puts response.inspect

@@ -8,7 +8,7 @@ val client = Client(context)
 
 val avatars = Avatars(client)
 
-val result =avatars.getQR(
+val result = avatars.getQR(
     text = "<TEXT>", 
     size = 1, // (optional)
     margin = 0, // (optional)

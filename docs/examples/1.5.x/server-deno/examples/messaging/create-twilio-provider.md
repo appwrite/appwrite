@@ -15,5 +15,3 @@ const response = await messaging.createTwilioProvider(
     '<AUTH_TOKEN>', // authToken (optional)
     false // enabled (optional)
 );
-
-console.log(response);

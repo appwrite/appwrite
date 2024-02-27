@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const account = new sdk.Account(client);
 
-const response = await account.addAuthenticator(
+const result = await account.addAuthenticator(
     sdk.AuthenticatorType.Totp // type
 );

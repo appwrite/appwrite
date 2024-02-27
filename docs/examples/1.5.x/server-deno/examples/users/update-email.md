@@ -11,5 +11,3 @@ const response = await users.updateEmail(
     '<USER_ID>', // userId
     'email@example.com' // email
 );
-
-console.log(response);

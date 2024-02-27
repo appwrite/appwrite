@@ -13,7 +13,7 @@ let message = try await messaging.updateSms(
     users: [], // optional
     targets: [], // optional
     content: "<CONTENT>", // optional
-    status: .draft, // optional
+    draft: false, // optional
     scheduledAt: "" // optional
 )
 

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.updatePassword(
+const result = await users.updatePassword(
     '<USER_ID>', // userId
     '' // password
 );

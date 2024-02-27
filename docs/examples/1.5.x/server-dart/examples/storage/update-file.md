@@ -1,21 +1,15 @@
 import 'package:dart_appwrite/dart_appwrite.dart';
 
 Client client = Client()
-  .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
-  .setProject('5df5acd0d48c2') // Your project ID
-  .setSession(''); // The user session to authenticate with
+    .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('5df5acd0d48c2') // Your project ID
+    .setSession(''); // The user session to authenticate with
 
 Storage storage = Storage(client);
 
-Future result = storage.updateFile(
-  bucketId: '<BUCKET_ID>',
-  fileId: '<FILE_ID>',
-  name: '<NAME>', // (optional)
-  permissions: ["read("any")"], // (optional)
+File result = await storage.updateFile(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    name: '<NAME>', // (optional)
+    permissions: ["read("any")"], // (optional)
 );
-
-result.then((response) {
-  print(response);
-}).catchError((error) {
-  print(error.response);
-});

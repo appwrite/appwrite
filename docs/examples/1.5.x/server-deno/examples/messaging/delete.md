@@ -10,5 +10,3 @@ const messaging = new Messaging(client);
 const response = await messaging.delete(
     '<MESSAGE_ID>' // messageId
 );
-
-console.log(response);

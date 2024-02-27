@@ -9,9 +9,7 @@ client = Client.new
 
 users = Users.new(client)
 
-response = users.list_targets(
+result = users.list_targets(
     user_id: '<USER_ID>',
     queries: [] # optional
 )
-
-puts response.inspect

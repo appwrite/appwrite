@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.updateTextmagicProvider(
+const result = await messaging.updateTextmagicProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name (optional)
     false, // enabled (optional)

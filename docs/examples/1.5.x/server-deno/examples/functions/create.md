@@ -29,5 +29,3 @@ const response = await functions.create(
     '<TEMPLATE_ROOT_DIRECTORY>', // templateRootDirectory (optional)
     '<TEMPLATE_BRANCH>' // templateBranch (optional)
 );
-
-console.log(response);

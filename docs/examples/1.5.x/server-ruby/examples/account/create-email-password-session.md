@@ -8,9 +8,7 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_email_password_session(
+result = account.create_email_password_session(
     email: 'email@example.com',
     password: 'password'
 )
-
-puts response.inspect

@@ -11,5 +11,3 @@ const response = await account.updateVerification(
     '<USER_ID>', // userId
     '<SECRET>' // secret
 );
-
-console.log(response);

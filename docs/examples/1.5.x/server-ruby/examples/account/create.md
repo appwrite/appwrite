@@ -8,11 +8,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create(
+result = account.create(
     user_id: '<USER_ID>',
     email: 'email@example.com',
     password: '',
     name: '<NAME>' # optional
 )
-
-puts response.inspect

@@ -11,5 +11,3 @@ const response = await users.updateName(
     '<USER_ID>', // userId
     '<NAME>' // name
 );
-
-console.log(response);

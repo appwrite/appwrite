@@ -11,5 +11,3 @@ const response = await account.updateChallenge(
     '<CHALLENGE_ID>', // challengeId
     '<OTP>' // otp
 );
-
-console.log(response);

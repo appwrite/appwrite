@@ -12,5 +12,3 @@ const response = await messaging.listSubscribers(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

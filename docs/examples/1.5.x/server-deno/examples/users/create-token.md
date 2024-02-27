@@ -12,5 +12,3 @@ const response = await users.createToken(
     4, // length (optional)
     60 // expire (optional)
 );
-
-console.log(response);

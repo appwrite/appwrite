@@ -11,5 +11,3 @@ const response = await account.updatePhone(
     '+12065550100', // phone
     'password' // password
 );
-
-console.log(response);

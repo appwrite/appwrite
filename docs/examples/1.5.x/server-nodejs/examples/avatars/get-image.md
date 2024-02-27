@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const avatars = new sdk.Avatars(client);
 
-const response = await avatars.getImage(
+const result = await avatars.getImage(
     'https://example.com', // url
     0, // width (optional)
     0 // height (optional)

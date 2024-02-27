@@ -10,5 +10,3 @@ const functions = new Functions(client);
 const response = await functions.listVariables(
     '<FUNCTION_ID>' // functionId
 );
-
-console.log(response);

@@ -1,9 +1,7 @@
 using Appwrite;
-using Appwrite.Services;
+using Appwrite.Enums;
 using Appwrite.Models;
-using Appwrite.Enums;
-using Appwrite.Enums;
-using Appwrite.Enums;
+using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -14,6 +12,5 @@ Users users = new Users(client);
 
 await users.DeleteAuthenticator(
     userId: "<USER_ID>",
-    type: AuthenticatorType.Totp,
-    otp: "<OTP>"
+    type: AuthenticatorType.Totp
 );

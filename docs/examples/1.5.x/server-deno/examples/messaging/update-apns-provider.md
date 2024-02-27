@@ -17,5 +17,3 @@ const response = await messaging.updateApnsProvider(
     '<BUNDLE_ID>', // bundleId (optional)
     false // sandbox (optional)
 );
-
-console.log(response);

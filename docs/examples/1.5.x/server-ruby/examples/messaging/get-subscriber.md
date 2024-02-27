@@ -9,9 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.get_subscriber(
+result = messaging.get_subscriber(
     topic_id: '<TOPIC_ID>',
     subscriber_id: '<SUBSCRIBER_ID>'
 )
-
-puts response.inspect

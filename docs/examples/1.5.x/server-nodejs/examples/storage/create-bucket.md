@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const storage = new sdk.Storage(client);
 
-const response = await storage.createBucket(
+const result = await storage.createBucket(
     '<BUCKET_ID>', // bucketId
     '<NAME>', // name
     ["read("any")"], // permissions (optional)

@@ -7,4 +7,4 @@ const client = new sdk.Client()
 
 const locale = new sdk.Locale(client);
 
-const response = await locale.listCountriesPhones();
+const result = await locale.listCountriesPhones();

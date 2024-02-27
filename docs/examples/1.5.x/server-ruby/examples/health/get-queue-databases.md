@@ -9,9 +9,7 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_queue_databases(
+result = health.get_queue_databases(
     name: '<NAME>', # optional
     threshold: null # optional
 )
-
-puts response.inspect

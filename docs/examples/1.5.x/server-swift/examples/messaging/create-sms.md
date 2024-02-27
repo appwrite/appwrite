@@ -13,7 +13,7 @@ let message = try await messaging.createSms(
     topics: [], // optional
     users: [], // optional
     targets: [], // optional
-    status: .draft, // optional
+    draft: false, // optional
     scheduledAt: "" // optional
 )
 

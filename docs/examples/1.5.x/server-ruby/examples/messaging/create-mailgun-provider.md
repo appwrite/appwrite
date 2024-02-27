@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_mailgun_provider(
+result = messaging.create_mailgun_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>',
     api_key: '<API_KEY>', # optional
@@ -21,5 +21,3 @@ response = messaging.create_mailgun_provider(
     reply_to_email: 'email@example.com', # optional
     enabled: false # optional
 )
-
-puts response.inspect

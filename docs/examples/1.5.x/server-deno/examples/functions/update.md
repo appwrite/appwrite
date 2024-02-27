@@ -25,5 +25,3 @@ const response = await functions.update(
     false, // providerSilentMode (optional)
     '<PROVIDER_ROOT_DIRECTORY>' // providerRootDirectory (optional)
 );
-
-console.log(response);

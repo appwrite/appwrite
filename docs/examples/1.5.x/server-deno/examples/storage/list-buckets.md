@@ -11,5 +11,3 @@ const response = await storage.listBuckets(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

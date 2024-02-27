@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.deleteProvider(
+const result = await messaging.deleteProvider(
     '<PROVIDER_ID>' // providerId
 );

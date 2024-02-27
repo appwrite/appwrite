@@ -9,9 +9,7 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_recovery(
+result = account.create_recovery(
     email: 'email@example.com',
     url: 'https://example.com'
 )
-
-puts response.inspect

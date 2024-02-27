@@ -8,6 +8,6 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.deletePushTarget(
+val result = account.deletePushTarget(
     targetId = "<TARGET_ID>", 
 )

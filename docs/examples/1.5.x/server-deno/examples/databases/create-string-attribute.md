@@ -17,5 +17,3 @@ const response = await databases.createStringAttribute(
     false, // array (optional)
     false // encrypt (optional)
 );
-
-console.log(response);

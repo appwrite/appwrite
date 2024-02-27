@@ -8,6 +8,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_jwt()
-
-puts response.inspect
+result = account.create_jwt()

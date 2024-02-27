@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.updateCollection(
+const result = await databases.updateCollection(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     '<NAME>', // name

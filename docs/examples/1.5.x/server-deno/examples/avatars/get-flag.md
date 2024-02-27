@@ -13,5 +13,3 @@ const result = avatars.getFlag(
     0, // height (optional)
     0 // quality (optional)
 );
-
-console.log(result);

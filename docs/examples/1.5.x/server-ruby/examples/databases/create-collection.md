@@ -9,7 +9,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.create_collection(
+result = databases.create_collection(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     name: '<NAME>',
@@ -17,5 +17,3 @@ response = databases.create_collection(
     document_security: false, # optional
     enabled: false # optional
 )
-
-puts response.inspect

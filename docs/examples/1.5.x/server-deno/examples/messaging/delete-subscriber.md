@@ -11,5 +11,3 @@ const response = await messaging.deleteSubscriber(
     '<TOPIC_ID>', // topicId
     '<SUBSCRIBER_ID>' // subscriberId
 );
-
-console.log(response);

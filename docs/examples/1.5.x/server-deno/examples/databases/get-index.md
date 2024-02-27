@@ -12,5 +12,3 @@ const response = await databases.getIndex(
     '<COLLECTION_ID>', // collectionId
     '' // key
 );
-
-console.log(response);

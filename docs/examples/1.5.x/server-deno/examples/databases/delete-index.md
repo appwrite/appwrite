@@ -12,5 +12,3 @@ const response = await databases.deleteIndex(
     '<COLLECTION_ID>', // collectionId
     '' // key
 );
-
-console.log(response);

@@ -10,7 +10,6 @@ let users = Users(client)
 
 let user = try await users.deleteAuthenticator(
     userId: "<USER_ID>",
-    type: .totp,
-    otp: "<OTP>"
+    type: .totp
 )
 

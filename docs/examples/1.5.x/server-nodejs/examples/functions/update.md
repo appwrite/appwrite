@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const functions = new sdk.Functions(client);
 
-const response = await functions.update(
+const result = await functions.update(
     '<FUNCTION_ID>', // functionId
     '<NAME>', // name
     sdk..Node145, // runtime (optional)

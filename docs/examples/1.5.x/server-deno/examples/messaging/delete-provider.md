@@ -10,5 +10,3 @@ const messaging = new Messaging(client);
 const response = await messaging.deleteProvider(
     '<PROVIDER_ID>' // providerId
 );
-
-console.log(response);

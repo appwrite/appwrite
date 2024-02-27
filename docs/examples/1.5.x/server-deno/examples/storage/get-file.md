@@ -11,5 +11,3 @@ const response = await storage.getFile(
     '<BUCKET_ID>', // bucketId
     '<FILE_ID>' // fileId
 );
-
-console.log(response);

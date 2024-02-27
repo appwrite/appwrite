@@ -12,5 +12,3 @@ const response = await functions.createVariable(
     '<KEY>', // key
     '<VALUE>' // value
 );
-
-console.log(response);

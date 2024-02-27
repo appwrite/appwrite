@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.listIndexes(
+const result = await databases.listIndexes(
     '<DATABASE_ID>', // databaseId
     '<COLLECTION_ID>', // collectionId
     [] // queries (optional)

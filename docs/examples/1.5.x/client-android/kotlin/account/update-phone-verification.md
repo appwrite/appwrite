@@ -8,7 +8,7 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.updatePhoneVerification(
+val result = account.updatePhoneVerification(
     userId = "<USER_ID>", 
     secret = "<SECRET>", 
 )

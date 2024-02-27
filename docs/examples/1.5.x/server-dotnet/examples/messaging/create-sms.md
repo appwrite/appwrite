@@ -1,8 +1,6 @@
 using Appwrite;
-using Appwrite.Services;
 using Appwrite.Models;
-using Appwrite.Enums;
-using Appwrite.Enums;
+using Appwrite.Services;
 
 Client client = new Client()
     .SetEndPoint("https://cloud.appwrite.io/v1") // Your API Endpoint
@@ -17,6 +15,6 @@ Message result = await messaging.CreateSms(
     topics: new List<string>(), // optional
     users: new List<string>(), // optional
     targets: new List<string>(), // optional
-    status: MessageStatus.Draft, // optional
+    draft: false, // optional
     scheduledAt: "" // optional
 );

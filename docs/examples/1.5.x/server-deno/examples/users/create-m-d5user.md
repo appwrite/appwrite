@@ -13,5 +13,3 @@ const response = await users.createMD5User(
     'password', // password
     '<NAME>' // name (optional)
 );
-
-console.log(response);

@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.update(
+const result = await databases.update(
     '<DATABASE_ID>', // databaseId
     '<NAME>', // name
     false // enabled (optional)

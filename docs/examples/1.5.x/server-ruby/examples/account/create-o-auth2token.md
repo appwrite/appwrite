@@ -9,11 +9,9 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_o_auth2_token(
+result = account.create_o_auth2_token(
     provider: OAuthProvider::AMAZON,
     success: 'https://example.com', # optional
     failure: 'https://example.com', # optional
     scopes: [] # optional
 )
-
-puts response.inspect

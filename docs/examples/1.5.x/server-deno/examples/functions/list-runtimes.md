@@ -8,5 +8,3 @@ const client = new Client()
 const functions = new Functions(client);
 
 const response = await functions.listRuntimes();
-
-console.log(response);

@@ -15,5 +15,3 @@ const response = await messaging.createTextmagicProvider(
     '<API_KEY>', // apiKey (optional)
     false // enabled (optional)
 );
-
-console.log(response);

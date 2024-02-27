@@ -8,9 +8,7 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.create_session(
+result = account.create_session(
     user_id: '<USER_ID>',
     secret: '<SECRET>'
 )
-
-puts response.inspect

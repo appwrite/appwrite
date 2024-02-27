@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const users = new sdk.Users(client);
 
-const response = await users.listTargets(
+const result = await users.listTargets(
     '<USER_ID>', // userId
     [] // queries (optional)
 );

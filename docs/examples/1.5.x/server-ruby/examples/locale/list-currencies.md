@@ -9,6 +9,4 @@ client = Client.new
 
 locale = Locale.new(client)
 
-response = locale.list_currencies()
-
-puts response.inspect
+result = locale.list_currencies()

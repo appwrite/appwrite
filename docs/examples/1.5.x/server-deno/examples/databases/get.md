@@ -10,5 +10,3 @@ const databases = new Databases(client);
 const response = await databases.get(
     '<DATABASE_ID>' // databaseId
 );
-
-console.log(response);

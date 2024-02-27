@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const teams = new sdk.Teams(client);
 
-const response = await teams.getMembership(
+const result = await teams.getMembership(
     '<TEAM_ID>', // teamId
     '<MEMBERSHIP_ID>' // membershipId
 );

@@ -9,6 +9,4 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_status()
-
-puts response.inspect
+result = account.update_status()

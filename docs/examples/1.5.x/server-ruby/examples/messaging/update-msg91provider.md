@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.update_msg91_provider(
+result = messaging.update_msg91_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>', # optional
     enabled: false, # optional
@@ -17,5 +17,3 @@ response = messaging.update_msg91_provider(
     auth_key: '<AUTH_KEY>', # optional
     from: '<FROM>' # optional
 )
-
-puts response.inspect

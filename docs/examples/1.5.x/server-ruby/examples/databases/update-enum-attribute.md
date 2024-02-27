@@ -9,7 +9,7 @@ client = Client.new
 
 databases = Databases.new(client)
 
-response = databases.update_enum_attribute(
+result = databases.update_enum_attribute(
     database_id: '<DATABASE_ID>',
     collection_id: '<COLLECTION_ID>',
     key: '',
@@ -17,5 +17,3 @@ response = databases.update_enum_attribute(
     required: false,
     default: '<DEFAULT>'
 )
-
-puts response.inspect

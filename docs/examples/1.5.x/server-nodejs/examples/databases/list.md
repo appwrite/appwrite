@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const databases = new sdk.Databases(client);
 
-const response = await databases.list(
+const result = await databases.list(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );

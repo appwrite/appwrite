@@ -19,5 +19,3 @@ const response = await storage.updateBucket(
     false, // encryption (optional)
     false // antivirus (optional)
 );
-
-console.log(response);

@@ -1,4 +1,4 @@
-import { Client, Messaging, MessageStatus } from "@appwrite.io/console";
+import { Client, Messaging } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -16,7 +16,7 @@ const result = await messaging.createEmail(
     [], // cc (optional)
     [], // bcc (optional)
     [], // attachments (optional)
-    MessageStatus.Draft, // status (optional)
+    false, // draft (optional)
     false, // html (optional)
     '' // scheduledAt (optional)
 );

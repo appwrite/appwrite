@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.createApnsProvider(
+const result = await messaging.createApnsProvider(
     '<PROVIDER_ID>', // providerId
     '<NAME>', // name
     '<AUTH_KEY>', // authKey (optional)

@@ -23,5 +23,3 @@ const response = await messaging.createSmtpProvider(
     'email@example.com', // replyToEmail (optional)
     false // enabled (optional)
 );
-
-console.log(response);

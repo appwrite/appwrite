@@ -15,5 +15,3 @@ const response = await databases.createEmailAttribute(
     'email@example.com', // default (optional)
     false // array (optional)
 );
-
-console.log(response);

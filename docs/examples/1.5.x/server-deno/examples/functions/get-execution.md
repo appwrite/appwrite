@@ -11,5 +11,3 @@ const response = await functions.getExecution(
     '<FUNCTION_ID>', // functionId
     '<EXECUTION_ID>' // executionId
 );
-
-console.log(response);

@@ -16,5 +16,3 @@ const response = await databases.createEnumAttribute(
     '<DEFAULT>', // default (optional)
     false // array (optional)
 );
-
-console.log(response);

@@ -11,5 +11,3 @@ const response = await teams.updatePrefs(
     '<TEAM_ID>', // teamId
     {} // prefs
 );
-
-console.log(response);

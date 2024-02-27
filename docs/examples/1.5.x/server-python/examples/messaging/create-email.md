@@ -17,7 +17,7 @@ result = messaging.create_email(
     cc = [], # optional
     bcc = [], # optional
     attachments = [], # optional
-    status = MessageStatus.DRAFT, # optional
+    draft = False, # optional
     html = False, # optional
     scheduled_at = '' # optional
 )

@@ -10,9 +10,7 @@ client = Client.new
 
 health = Health.new(client)
 
-response = health.get_failed_jobs(
+result = health.get_failed_jobs(
     name: ::V1-DATABASE,
     threshold: null # optional
 )
-
-puts response.inspect

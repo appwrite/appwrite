@@ -7,6 +7,6 @@ const client = new sdk.Client()
 
 const graphql = new sdk.Graphql(client);
 
-const response = await graphql.mutation(
+const result = await graphql.mutation(
     {} // query
 );

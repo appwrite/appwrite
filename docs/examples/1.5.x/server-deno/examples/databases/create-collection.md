@@ -15,5 +15,3 @@ const response = await databases.createCollection(
     false, // documentSecurity (optional)
     false // enabled (optional)
 );
-
-console.log(response);

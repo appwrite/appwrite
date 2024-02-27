@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.list_logs(
+result = account.list_logs(
     queries: [] # optional
 )
-
-puts response.inspect

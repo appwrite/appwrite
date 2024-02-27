@@ -9,7 +9,7 @@ client = Client.new
 
 messaging = Messaging.new(client)
 
-response = messaging.create_apns_provider(
+result = messaging.create_apns_provider(
     provider_id: '<PROVIDER_ID>',
     name: '<NAME>',
     auth_key: '<AUTH_KEY>', # optional
@@ -19,5 +19,3 @@ response = messaging.create_apns_provider(
     sandbox: false, # optional
     enabled: false # optional
 )
-
-puts response.inspect

@@ -9,8 +9,6 @@ client = Client.new
 
 account = Account.new(client)
 
-response = account.update_name(
+result = account.update_name(
     name: '<NAME>'
 )
-
-puts response.inspect

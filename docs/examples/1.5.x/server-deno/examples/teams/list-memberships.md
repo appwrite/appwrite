@@ -12,5 +12,3 @@ const response = await teams.listMemberships(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );
-
-console.log(response);

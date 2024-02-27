@@ -15,6 +15,6 @@ val response = messaging.updateSms(
     users = listOf(), // optional
     targets = listOf(), // optional
     content = "<CONTENT>", // optional
-    status = "draft", // optional
+    draft = false, // optional
     scheduledAt = "" // optional
 )

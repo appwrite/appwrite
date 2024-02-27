@@ -13,6 +13,6 @@ result = messaging.create_sms(
     topics = [], # optional
     users = [], # optional
     targets = [], # optional
-    status = MessageStatus.DRAFT, # optional
+    draft = False, # optional
     scheduled_at = '' # optional
 )

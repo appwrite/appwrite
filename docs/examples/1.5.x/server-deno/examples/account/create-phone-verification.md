@@ -8,5 +8,3 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.createPhoneVerification();
-
-console.log(response);

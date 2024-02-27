@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.listSubscriberLogs(
+const result = await messaging.listSubscriberLogs(
     '<SUBSCRIBER_ID>', // subscriberId
     [] // queries (optional)
 );

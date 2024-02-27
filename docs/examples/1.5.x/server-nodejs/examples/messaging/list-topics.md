@@ -7,7 +7,7 @@ const client = new sdk.Client()
 
 const messaging = new sdk.Messaging(client);
 
-const response = await messaging.listTopics(
+const result = await messaging.listTopics(
     [], // queries (optional)
     '<SEARCH>' // search (optional)
 );

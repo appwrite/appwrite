@@ -8,4 +8,4 @@ val client = Client(context)
 
 val account = Account(client)
 
-val response = account.createJWT()
+val result = account.createJWT()

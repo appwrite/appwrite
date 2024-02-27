@@ -10,5 +10,3 @@ const storage = new Storage(client);
 const response = await storage.deleteBucket(
     '<BUCKET_ID>' // bucketId
 );
-
-console.log(response);

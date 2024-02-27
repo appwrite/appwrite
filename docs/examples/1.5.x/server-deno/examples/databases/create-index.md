@@ -15,5 +15,3 @@ const response = await databases.createIndex(
     [], // attributes
     [] // orders (optional)
 );
-
-console.log(response);
