@@ -254,8 +254,7 @@ App::get('/v1/avatars/image')
     ->desc('Get image from URL')
     ->groups(['api', 'avatars'])
     ->label('scope', 'avatars.read')
-    ->label('cache', true)
-    ->label('cache.resource', 'avatar/image')
+
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'avatars')
     ->label('sdk.method', 'getImage')
@@ -268,7 +267,6 @@ App::get('/v1/avatars/image')
     ->param('height', 400, new Range(0, 2000), 'Resize preview image height, Pass an integer between 0 to 2000. Defaults to 400.', true)
     ->inject('response')
     ->action(function (string $url, int $width, int $height, Response $response) {
-
         $quality = 80;
         $output = 'png';
         $type = 'png';
@@ -279,7 +277,7 @@ App::get('/v1/avatars/image')
 
         $domain = new Domain(\parse_url($url, PHP_URL_HOST));
 
-        if (!$domain->isKnown()) {
+        if (!$domain->isKnown() || !$domain->isExternal()) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
@@ -335,7 +333,7 @@ App::get('/v1/avatars/favicon')
 
         $domain = new Domain(\parse_url($url, PHP_URL_HOST));
 
-        if (!$domain->isKnown()) {
+        if (!$domain->isKnown() || !$domain->isExternal()) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
@@ -414,7 +412,7 @@ App::get('/v1/avatars/favicon')
 
         $domain = new Domain(\parse_url($outputHref, PHP_URL_HOST));
 
-        if (!$domain->isKnown()) {
+        if (!$domain->isKnown() || !$domain->isExternal()) {
             throw new Exception(Exception::AVATAR_REMOTE_URL_FAILED);
         }
 
