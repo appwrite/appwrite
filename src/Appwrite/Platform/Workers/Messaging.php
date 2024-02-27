@@ -86,7 +86,7 @@ class Messaging extends Action
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            throw new Exception('Missing payload');
+            throw new \Exception('Missing payload');
         }
 
         $type = $payload['type'] ?? '';
@@ -105,7 +105,7 @@ class Messaging extends Action
                 $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
                 break;
             default:
-                throw new Exception('Unknown message type: ' . $type);
+                throw new \Exception('Unknown message type: ' . $type);
         }
     }
 
@@ -226,19 +226,19 @@ class Messaging extends Action
                     $provider = $dbForProject->getDocument('providers', $providerId);
 
                     if ($provider->isEmpty() || !$provider->getAttribute('enabled')) {
-                        $provider = $fallback;
+                        $provider = $default;
                     } else {
                         $providers[$providerId] = $provider;
                     }
                 }
 
-                $identifiers = $identifiers[$providerId];
+                $identifiersForProvider = $identifiers[$providerId];
 
                 $adapter = match ($provider->getAttribute('type')) {
                     MESSAGE_TYPE_SMS => $this->getSmsAdapter($provider),
                     MESSAGE_TYPE_PUSH => $this->getPushAdapter($provider),
                     MESSAGE_TYPE_EMAIL => $this->getEmailAdapter($provider),
-                    default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
+                    default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
                 $batches = \array_chunk(
@@ -257,7 +257,7 @@ class Messaging extends Action
                             MESSAGE_TYPE_SMS => $this->buildSmsMessage($messageData, $provider),
                             MESSAGE_TYPE_PUSH => $this->buildPushMessage($messageData),
                             MESSAGE_TYPE_EMAIL => $this->buildEmailMessage($dbForProject, $messageData, $provider, $deviceForFiles, $deviceForLocalFiles),
-                            default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
+                            default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                         };
 
                         try {
@@ -344,12 +344,12 @@ class Messaging extends Action
 
                 $bucket = $dbForProject->getDocument('buckets', $bucketId);
                 if ($bucket->isEmpty()) {
-                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
                 $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                 if ($file->isEmpty()) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                    throw new \Exception('Storage file with the requested ID could not be found');
                 }
 
                 $path = $file->getAttribute('path', '');
@@ -368,7 +368,7 @@ class Messaging extends Action
         }
 
         if ($project->isEmpty()) {
-            throw new Exception('Project not set in payload');
+            throw new \Exception('Project not set in payload');
         }
 
         Console::log('Project: ' . $project->getId());
@@ -556,19 +556,19 @@ class Messaging extends Action
 
                 $bucket = $dbForProject->getDocument('buckets', $bucketId);
                 if ($bucket->isEmpty()) {
-                    throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
+                    throw new \Exception('Storage bucket with the requested ID could not be found');
                 }
 
                 $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
                 if ($file->isEmpty()) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
+                    throw new \Exception('Storage file with the requested ID could not be found');
                 }
 
                 $mimes = Config::getParam('storage-mimes');
                 $path = $file->getAttribute('path', '');
 
                 if (!$deviceForFiles->exists($path)) {
-                    throw new Exception(Exception::STORAGE_FILE_NOT_FOUND, 'File not found in ' . $path);
+                    throw new \Exception('File not found in ' . $path);
                 }
 
                 $contentType = 'text/plain';
