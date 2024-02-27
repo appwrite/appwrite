@@ -1,0 +1,1 @@
+Get a user's push notification target by ID.

@@ -1,0 +1,1 @@
+List attributes in the collection.
