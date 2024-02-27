@@ -218,8 +218,8 @@ class Messaging extends Action
         /**
          * @var array<array> $results
          */
-        $results = batch(\array_map(function ($providerId) use ($identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
-            return function () use ($providerId, $identifiers, $providers, $fallback, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+        $results = batch(\array_map(function ($providerId) use ($identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+            return function () use ($providerId, $identifiers, &$providers, $default, $message, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                 if (\array_key_exists($providerId, $providers)) {
                     $provider = $providers[$providerId];
                 } else {
@@ -241,12 +241,13 @@ class Messaging extends Action
                     default => throw new Exception(Exception::PROVIDER_INCORRECT_TYPE)
                 };
 
-                $maxBatchSize = $adapter->getMaxMessagesPerRequest();
-                $batches = \array_chunk($identifiers, $maxBatchSize);
-                $batchIndex = 0;
+                $batches = \array_chunk(
+                    \array_keys($identifiersForProvider),
+                    $adapter->getMaxMessagesPerRequest()
+                );
 
-                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
-                    return function () use ($batch, $message, $provider, $adapter, &$batchIndex, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                return batch(\array_map(function ($batch) use ($message, $provider, $adapter, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
+                    return function () use ($batch, $message, $provider, $adapter, $dbForProject, $deviceForFiles, $deviceForLocalFiles) {
                         $deliveredTotal = 0;
                         $deliveryErrors = [];
                         $messageData = clone $message;
@@ -283,10 +284,8 @@ class Messaging extends Action
                                 }
                             }
                         } catch (\Throwable $e) {
-                            $deliveryErrors[] = 'Failed sending to targets ' . $batchIndex + 1 . ' of ' . \count($batch) . ' with error: ' . $e->getMessage();
+                            $deliveryErrors[] = 'Failed sending to targets with error: ' . $e->getMessage();
                         } finally {
-                            $batchIndex++;
-
                             return [
                                 'deliveredTotal' => $deliveredTotal,
                                 'deliveryErrors' => $deliveryErrors,
@@ -297,7 +296,7 @@ class Messaging extends Action
             };
         }, \array_keys($identifiers)));
 
-        $results = array_merge(...$results);
+        $results = \array_merge(...$results);
 
         $deliveredTotal = 0;
         $deliveryErrors = [];
@@ -330,7 +329,7 @@ class Messaging extends Action
 
         $dbForProject->updateDocument('messages', $message->getId(), $message);
 
-        // Delete any attachments that were downloaded to the local cache
+        // Delete any attachments that were downloaded to local storage
         if ($provider->getAttribute('type') === MESSAGE_TYPE_EMAIL) {
             if ($deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 return;
@@ -427,12 +426,13 @@ class Messaging extends Action
 
         $adapter = $this->getSmsAdapter($provider);
 
-        $maxBatchSize = $adapter->getMaxMessagesPerRequest();
-        $batches = \array_chunk($recipients, $maxBatchSize);
-        $batchIndex = 0;
+        $batches = \array_chunk(
+            $recipients,
+            $adapter->getMaxMessagesPerRequest()
+        );
 
-        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $batchIndex, $project, $queueForUsage) {
-            return function () use ($batch, $message, $provider, $adapter, $batchIndex, $project, $queueForUsage) {
+        batch(\array_map(function ($batch) use ($message, $provider, $adapter, $project, $queueForUsage) {
+            return function () use ($batch, $message, $provider, $adapter, $project, $queueForUsage) {
                 $message->setAttribute('to', $batch);
 
                 $data = $this->buildSmsMessage($message, $provider);
@@ -445,7 +445,7 @@ class Messaging extends Action
                         ->addMetric(METRIC_MESSAGES, 1)
                         ->trigger();
                 } catch (\Throwable $e) {
-                    throw new Exception('Failed sending to targets ' . $batchIndex + 1 . '-' . \count($batch) . ' with error: ' . $e->getMessage(), 500);
+                    throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
                 }
             };
         }, $batches));
