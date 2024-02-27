@@ -118,11 +118,12 @@ class Messaging extends Action
         $topicIds = $message->getAttribute('topics', []);
         $targetIds = $message->getAttribute('targets', []);
         $userIds = $message->getAttribute('users', []);
+        $providerType = $message->getAttribute('providerType');
 
         /**
-         * @var array<Document> $recipients
+         * @var array<Document> $allTargets
          */
-        $recipients = [];
+        $allTargets = [];
 
         if (\count($topicIds) > 0) {
             $topics = $dbForProject->find('topics', [
@@ -130,9 +131,11 @@ class Messaging extends Action
                 Query::limit(\count($topicIds)),
             ]);
             foreach ($topics as $topic) {
-                $targets = \array_filter($topic->getAttribute('targets'), fn(Document $target) =>
-                    $target->getAttribute('providerType') === $message->getAttribute('providerType'));
-                $recipients = \array_merge($recipients, $targets);
+                $targets = \array_filter($topic->getAttribute('targets'), function (Document $target) use ($providerType) {
+                    return $target->getAttribute('providerType') === $providerType;
+                });
+
+                \array_push($allTargets, ...$targets);
             }
         }
 
@@ -142,9 +145,11 @@ class Messaging extends Action
                 Query::limit(\count($userIds)),
             ]);
             foreach ($users as $user) {
-                $targets = \array_filter($user->getAttribute('targets'), fn(Document $target) =>
-                    $target->getAttribute('providerType') === $message->getAttribute('providerType'));
-                $recipients = \array_merge($recipients, $targets);
+                $targets = \array_filter($user->getAttribute('targets'), function (Document $target) use ($providerType) {
+                    return $target->getAttribute('providerType') === $providerType;
+                });
+
+                \array_push($allTargets, ...$targets);
             }
         }
 
