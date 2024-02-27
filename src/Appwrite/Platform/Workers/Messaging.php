@@ -189,7 +189,7 @@ class Messaging extends Action
         }
 
         /**
-         * @var array<string, array<string>> $identifiers
+         * @var array<string, array<string, null>> $identifiers
          */
         $identifiers = [];
 
@@ -211,7 +211,8 @@ class Messaging extends Action
                 if (!\array_key_exists($providerId, $identifiers)) {
                     $identifiers[$providerId] = [];
                 }
-                $identifiers[$providerId][] = $recipient->getAttribute('identifier');
+                // Use null as value to avoid duplicate keys
+                $identifiers[$providerId][$target->getAttribute('identifier')] = null;
             }
         }
 
