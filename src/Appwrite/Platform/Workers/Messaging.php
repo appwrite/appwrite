@@ -156,14 +156,14 @@ class Messaging extends Action
         if (\count($targetIds) > 0) {
             $targets = $dbForProject->find('targets', [
                 Query::equal('$id', $targetIds),
+                Query::equal('providerType', [$providerType]),
                 Query::limit(\count($targetIds)),
             ]);
-            $targets = \array_filter($targets, fn(Document $target) =>
-                $target->getAttribute('providerType') === $message->getAttribute('providerType'));
-            $recipients = \array_merge($recipients, $targets);
+
+            \array_push($allTargets, ...$targets);
         }
 
-        if (empty($recipients)) {
+        if (empty($allTargets)) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
                 'deliveryErrors' => ['No valid recipients found.']
