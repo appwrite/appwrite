@@ -228,10 +228,6 @@ App::post('/v1/account/sessions/email')
     ->inject('queueForEvents')
     ->inject('hooks')
     ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
-        if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
-        }
-
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -1545,10 +1541,6 @@ App::post('/v1/account/tokens/email')
     });
 
 $createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
-    if (!$user->isEmpty()) {
-        throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
-    }
-
     $roles = Authorization::getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -1658,7 +1650,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 App::put('/v1/account/sessions/magic-url')
     ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1688,7 +1680,7 @@ App::put('/v1/account/sessions/magic-url')
 App::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1718,7 +1710,7 @@ App::put('/v1/account/sessions/phone')
 App::post('/v1/account/sessions/token')
     ->desc('Create session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1941,10 +1933,6 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
-        if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
-        }
-
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
