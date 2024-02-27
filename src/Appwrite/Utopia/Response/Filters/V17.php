@@ -22,6 +22,15 @@ class V17 extends Filter
             case Response::MODEL_TOKEN:
                 $parsedResponse = $this->parseToken($parsedResponse);
                 break;
+            case Response::MODEL_MEMBERSHIP:
+                $parsedResponse = $this->parseMembership($parsedResponse);
+                break;
+            case Response::MODEL_SESSION:
+                $parsedResponse = $this->parseSession($parsedResponse);
+                break;
+            case Response::MODEL_WEBHOOK:
+                $parsedResponse = $this->parseWebhook($parsedResponse);
+                break;
         }
 
         return $parsedResponse;
@@ -30,6 +39,8 @@ class V17 extends Filter
     protected function parseUser(array $content)
     {
         unset($content['targets']);
+        unset($content['mfa']);
+        unset($content['totp']);
         return $content;
     }
 
@@ -43,6 +54,27 @@ class V17 extends Filter
     protected function parseToken(array $content)
     {
         unset($content['phrase']);
+        return $content;
+    }
+
+    protected function parseMembership(array $content)
+    {
+        unset($content['mfa']);
+        return $content;
+    }
+
+    protected function parseSession(array $content)
+    {
+        unset($content['factors']);
+        unset($content['secret']);
+        return $content;
+    }
+
+    protected function parseWebhook(array $content)
+    {
+        unset($content['enabled']);
+        unset($content['logs']);
+        unset($content['attempts']);
         return $content;
     }
 }
