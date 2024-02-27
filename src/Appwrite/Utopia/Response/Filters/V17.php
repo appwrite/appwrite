@@ -31,7 +31,6 @@ class V17 extends Filter
             case Response::MODEL_WEBHOOK:
                 $parsedResponse = $this->parseWebhook($parsedResponse);
                 break;
-
         }
 
         return $parsedResponse;
