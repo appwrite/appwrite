@@ -173,18 +173,18 @@ class Messaging extends Action
             return;
         }
 
-        $fallback = $dbForProject->findOne('providers', [
+        $default = $dbForProject->findOne('providers', [
             Query::equal('enabled', [true]),
-            Query::equal('type', [$recipients[0]->getAttribute('providerType')]),
+            Query::equal('type', [$providerType]),
         ]);
 
-        if ($fallback === false || $fallback->isEmpty()) {
+        if ($default === false || $default->isEmpty()) {
             $dbForProject->updateDocument('messages', $message->getId(), $message->setAttributes([
                 'status' => MessageStatus::FAILED,
-                'deliveryErrors' => ['No fallback provider found.']
+                'deliveryErrors' => ['No enabled provider found.']
             ]));
 
-            Console::warning('No fallback provider found.');
+            Console::warning('No enabled provider found.');
             return;
         }
 
@@ -194,22 +194,17 @@ class Messaging extends Action
         $identifiers = [];
 
         /**
-         * @var Document[] $providers
+         * @var array<Document> $providers
          */
         $providers = [
-            $fallback->getId() => $fallback
+            $default->getId() => $default
         ];
 
-        foreach ($recipients as $recipient) {
-            $providerId = $recipient->getAttribute('providerId');
+        foreach ($allTargets as $target) {
+            $providerId = $target->getAttribute('providerId');
 
-            if (
-                !$providerId
-                && $fallback instanceof Document
-                && !$fallback->isEmpty()
-                && $fallback->getAttribute('enabled')
-            ) {
-                $providerId = $fallback->getId();
+            if (!$providerId) {
+                $providerId = $default->getId();
             }
 
             if ($providerId) {
