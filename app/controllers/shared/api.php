@@ -461,6 +461,20 @@ App::init()
         }
     });
 
+App::init()
+    ->groups(['session'])
+    ->inject('user')
+    ->inject('request')
+    ->action(function (Document $user, Request $request) {
+        if (\str_contains($request->getURI(), 'oauth2')) {
+            return;
+        }
+
+        if (!$user->isEmpty()) {
+            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS);
+        }
+    });
+
 /**
  * Limit user session
  *
@@ -497,6 +511,7 @@ App::shutdown()
             $session = array_shift($sessions);
             $dbForProject->deleteDocument('sessions', $session->getId());
         }
+
         $dbForProject->purgeCachedDocument('users', $userId);
     });
 

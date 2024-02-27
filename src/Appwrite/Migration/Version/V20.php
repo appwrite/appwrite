@@ -252,6 +252,14 @@ class V20 extends Migration
                         Console::warning("'totpBackup' from {$id}: {$th->getMessage()}");
                     }
 
+                     // Create challenges attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'challenges');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'challenges' from {$id}: {$th->getMessage()}");
+                    }
+
                     break;
                 case 'projects':
                     // Rename providers authProviders to oAuthProviders
@@ -543,9 +551,11 @@ class V20 extends Migration
                 $document->setAttribute('expire', $expire);
 
                 $factors = match ($document->getAttribute('provider')) {
-                    Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
+                    Auth::SESSION_PROVIDER_EMAIL => ['password'],
                     Auth::SESSION_PROVIDER_PHONE => ['phone'],
-                    default => ['password'],
+                    Auth::SESSION_PROVIDER_ANONYMOUS => ['anonymous'],
+                    Auth::SESSION_PROVIDER_TOKEN => ['token'],
+                    default => ['email'],
                 };
 
                 $document->setAttribute('factors', $factors);

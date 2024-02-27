@@ -74,7 +74,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
-        // already logged in
+        /**
+         * Test for FAILURE
+         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -85,11 +87,8 @@ class AccountCustomClientTest extends Scope
             'password' => $password,
         ]);
 
-        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals(401, $response['headers']['status-code']);
 
-        /**
-         * Test for FAILURE
-         */
         $response = $this->client->call(Client::METHOD_POST, '/account/sessions/email', array_merge([
             'origin' => 'http://localhost',
             'content-type' => 'application/json',
@@ -233,10 +232,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertIsArray($response['body']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertCount(2, $response['body']);
-        $this->assertEquals(3, $response['body']['total']);
+        $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
@@ -293,9 +289,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertIsArray($response['body']['logs']);
         $this->assertNotEmpty($response['body']['logs']);
-        $this->assertCount(4, $response['body']['logs']);
+        $this->assertCount(3, $response['body']['logs']);
         $this->assertIsNumeric($response['body']['total']);
-        $this->assertEquals("session.create", $response['body']['logs'][2]['event']);
+        $this->assertEquals("user.create", $response['body']['logs'][2]['event']);
         $this->assertEquals(filter_var($response['body']['logs'][2]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][2]['ip']);
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
@@ -316,10 +312,6 @@ class AccountCustomClientTest extends Scope
 
         $this->assertEquals('--', $response['body']['logs'][1]['countryCode']);
         $this->assertEquals('Unknown', $response['body']['logs'][1]['countryName']);
-
-        $this->assertEquals("user.create", $response['body']['logs'][3]['event']);
-        $this->assertEquals(filter_var($response['body']['logs'][3]['ip'], FILTER_VALIDATE_IP), $response['body']['logs'][3]['ip']);
-        $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['logs'][2]['time']));
 
         $this->assertEquals('Windows', $response['body']['logs'][2]['osName']);
         $this->assertEquals('WIN', $response['body']['logs'][2]['osCode']);
@@ -372,7 +364,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals($responseOffset['headers']['status-code'], 200);
         $this->assertIsArray($responseOffset['body']['logs']);
         $this->assertNotEmpty($responseOffset['body']['logs']);
-        $this->assertCount(3, $responseOffset['body']['logs']);
+        $this->assertCount(2, $responseOffset['body']['logs']);
         $this->assertIsNumeric($responseOffset['body']['total']);
 
         $this->assertEquals($response['body']['logs'][1], $responseOffset['body']['logs'][0]);
@@ -2239,7 +2231,6 @@ class AccountCustomClientTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'cookie' => 'a_session_' . $this->getProject()['$id'] . '=' . $session,
-
         ]));
 
         $this->assertEquals(201, $response['headers']['status-code']);
@@ -2248,6 +2239,9 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(true, (new DatetimeValidator())->isValid($response['body']['expire']));
 
         $smsRequest = $this->getLastRequest();
+
+        $message = $smsRequest['data']['message'];
+        $token = substr($message, 0, 6);
 
         return \array_merge($data, [
             'token' => \substr($smsRequest['data']['message'], 0, 6)
