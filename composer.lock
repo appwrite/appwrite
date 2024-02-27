@@ -2731,12 +2731,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-generator.git",
-                "reference": "b9610102dd6da8ee5cb8815884100e0b68003065"
+                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/b9610102dd6da8ee5cb8815884100e0b68003065",
-                "reference": "b9610102dd6da8ee5cb8815884100e0b68003065",
+                "url": "https://api.github.com/repos/appwrite/sdk-generator/zipball/38dce714421fe616e29ddf65dc5e60d16fa8e158",
+                "reference": "38dce714421fe616e29ddf65dc5e60d16fa8e158",
                 "shasum": ""
             },
             "require": {
@@ -2774,7 +2774,7 @@
                 "issues": "https://github.com/appwrite/sdk-generator/issues",
                 "source": "https://github.com/appwrite/sdk-generator/tree/0.37.0-rc.6"
             },
-            "time": "2024-02-27T05:11:32+00:00"
+            "time": "2024-02-27T07:49:06+00:00"
         },
         {
             "name": "doctrine/deprecations",
