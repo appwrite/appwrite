@@ -57,7 +57,7 @@ class QueueRetry extends Action
 
         $limit = (int)$limit;
         $queueClient = new Client($name, $queue);
-        var_dump($limit);
+
         if ($queueClient->countFailedJobs() === 0) {
             Console::error('No failed jobs found.');
             return;
