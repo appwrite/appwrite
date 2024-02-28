@@ -37,7 +37,7 @@ class QueueRetry extends Action
                 Event::MIGRATIONS_QUEUE_NAME,
                 Event::HAMSTER_CLASS_NAME
             ]), 'Queue name')
-            ->param('limit', null, new Wildcard(), 'jobs limit', true)
+            ->param('limit', 0, new Wildcard(), 'jobs limit', true)
             ->inject('queue')
             ->callback(fn ($name, $limit, $queue) => $this->action($name, $limit, $queue));
     }
@@ -50,18 +50,14 @@ class QueueRetry extends Action
     public function action(string $name, mixed $limit, Connection $queue): void
     {
 
-        if (!\is_numeric($limit) && $limit !== null) {
-            Console::error('$limit parameter should be an integer');
-            return;
-        }
-
         if (!$name) {
             Console::error('Missing required parameter $name');
             return;
         }
 
+        $limit = (int)$limit;
         $queueClient = new Client($name, $queue);
-
+        var_dump($limit);
         if ($queueClient->countFailedJobs() === 0) {
             Console::error('No failed jobs found.');
             return;
