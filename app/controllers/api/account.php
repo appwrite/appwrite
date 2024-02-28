@@ -1791,7 +1791,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2526,7 +2526,7 @@ App::post('/v1/account/recovery')
 
         $queueForMails
             ->setRecipient($profile->getAttribute('email', ''))
-            ->setName($profile->getAttribute('name'))
+            ->setName($profile->getAttribute('name', ''))
             ->setBody($body)
             ->setVariables($emailVariables)
             ->setSubject($subject)

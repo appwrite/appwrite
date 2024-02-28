@@ -2997,6 +2997,33 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/documents')
             $processDocument($collection, $document);
         }
 
+        $select = \array_reduce($queries, function ($result, $query) {
+            return $result || ($query->getMethod() === Query::TYPE_SELECT);
+        }, false);
+
+        // Check if the SELECT query includes $databaseId and $collectionId
+        $hasDatabaseId = false;
+        $hasCollectionId = false;
+        if ($select) {
+            $hasDatabaseId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$databaseId', $query->getValues()));
+            }, false);
+            $hasCollectionId = \array_reduce($queries, function ($result, $query) {
+                return $result || ($query->getMethod() === Query::TYPE_SELECT && \in_array('$collectionId', $query->getValues()));
+            }, false);
+        }
+
+        if ($select) {
+            foreach ($documents as $document) {
+                if (!$hasDatabaseId) {
+                    $document->removeAttribute('$databaseId');
+                }
+                if (!$hasCollectionId) {
+                    $document->removeAttribute('$collectionId');
+                }
+            }
+        }
+
         $response->dynamic(new Document([
             'total' => $total,
             'documents' => $documents,

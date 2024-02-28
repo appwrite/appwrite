@@ -297,7 +297,7 @@ class Swagger2 extends Format
                 switch ((!empty($validator)) ? \get_class($validator) : '') {
                     case 'Utopia\Validator\Text':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
                     case 'Utopia\Validator\Boolean':
                         $node['type'] = $validator->getType();
@@ -308,11 +308,11 @@ class Swagger2 extends Format
                             $node['x-upload-id'] = true;
                         }
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
                     case 'Utopia\Database\Validator\UID':
                         $node['type'] = $validator->getType();
-                        $node['x-example'] = '<' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . '>';
+                        $node['x-example'] = '[' . \strtoupper(Template::fromCamelCaseToSnake($node['name'])) . ']';
                         break;
                     case 'Utopia\Database\Validator\DatetimeValidator':
                         $node['type'] = $validator->getType();
