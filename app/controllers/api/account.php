@@ -228,7 +228,6 @@ App::post('/v1/account/sessions/email')
     ->inject('queueForEvents')
     ->inject('hooks')
     ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
-
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -553,7 +552,6 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
-
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -675,6 +673,8 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             if (!empty($userWithMatchingEmail)) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
+
+            $sessionUpgrade = true;
         }
 
         $sessions = $user->getAttribute('sessions', []);
@@ -704,7 +704,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             }
 
             /**
-             * Is verified is not used yet, since we don't know after an accout is created anymore if it was verified or not.
+             * Is verified is not used yet, since we don't know after an account is created anymore if it was verified or not.
              */
             $isVerified = $oauth2->isEmailVerified($accessToken);
 
@@ -945,6 +945,20 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
             $response
                 ->addCookie(Auth::$cookieName . '_legacy', Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, null)
                 ->addCookie(Auth::$cookieName, Auth::encodeSession($user->getId(), $secret), (new \DateTime($expire))->getTimestamp(), '/', Config::getParam('cookieDomain'), ('https' == $protocol), true, Config::getParam('cookieSamesite'));
+        }
+
+        if (isset($sessionUpgrade) && $sessionUpgrade) {
+            foreach ($user->getAttribute('targets', []) as $target) {
+                if ($target->getAttribute('providerType') !== MESSAGE_TYPE_PUSH) {
+                    continue;
+                }
+
+                $target
+                    ->setAttribute('sessionId', $session->getId())
+                    ->setAttrubte('sessionInternalId', $session->getInternalId());
+
+                $dbForProject->updateDocument('targets', $target->getId(), $target);
+            }
         }
 
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -1636,7 +1650,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
 App::put('/v1/account/sessions/magic-url')
     ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1666,7 +1680,7 @@ App::put('/v1/account/sessions/magic-url')
 App::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1696,7 +1710,7 @@ App::put('/v1/account/sessions/phone')
 App::post('/v1/account/sessions/token')
     ->desc('Create session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'session'])
     ->label('scope', 'sessions.write')
     ->label('audits.event', 'session.create')
     ->label('audits.resource', 'user/{response.userId}')
@@ -1919,7 +1933,6 @@ App::post('/v1/account/sessions/anonymous')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
-
         $protocol = $request->getProtocol();
         $roles = Authorization::getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -1927,10 +1940,6 @@ App::post('/v1/account/sessions/anonymous')
 
         if ('console' === $project->getId()) {
             throw new Exception(Exception::USER_ANONYMOUS_CONSOLE_PROHIBITED, 'Failed to create anonymous user');
-        }
-
-        if (!$user->isEmpty()) {
-            throw new Exception(Exception::USER_SESSION_ALREADY_EXISTS, 'Cannot create an anonymous user when logged in');
         }
 
         $limit = $project->getAttribute('auths', [])['limit'] ?? 0;
