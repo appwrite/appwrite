@@ -69,7 +69,7 @@ class Comment
             foreach ($project['functions'] as $functionId => $function) {
                 if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
                     $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
-                } else if ($function['status'] === 'ready') {
+                } elseif ($function['status'] === 'ready') {
                     $text .= "**Your function has been successfully deployed.**\n\n";
                 } else {
                     $text .= "**Your function deployment has failed. Please check the logs for more details and retry.**\n\n";
