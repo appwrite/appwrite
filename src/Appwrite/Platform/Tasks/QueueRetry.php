@@ -9,6 +9,7 @@ use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
 use Utopia\Validator\Integer;
 use Utopia\Validator\WhiteList;
+use Utopia\Validator\Wildcard;
 
 class QueueRetry extends Action
 {
@@ -36,18 +37,24 @@ class QueueRetry extends Action
                 Event::MIGRATIONS_QUEUE_NAME,
                 Event::HAMSTER_CLASS_NAME
             ]), 'Queue name')
-            ->param('limit', 0, new Integer(true), 'jobs limit', true)
+            ->param('limit', null, new Wildcard(), 'jobs limit', true)
             ->inject('queue')
             ->callback(fn ($name, $limit, $queue) => $this->action($name, $limit, $queue));
     }
 
     /**
      * @param string $name The name of the queue to retry jobs from
-     * @param int $limit
+     * @param  mixed $limit
      * @param Connection $queue
      */
-    public function action(string $name, int $limit, Connection $queue): void
+    public function action(string $name, mixed $limit, Connection $queue): void
     {
+
+        if (!\is_numeric($limit) && $limit !== null) {
+            Console::error('$limit parameter should be an integer');
+            return;
+        }
+
         if (!$name) {
             Console::error('Missing required parameter $name');
             return;
