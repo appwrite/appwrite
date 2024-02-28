@@ -65,18 +65,23 @@ class Comment
             ];
         }
 
-        //TODO: Update link to documentation
-        $text .= "**Your function has been automatically deployed.** Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n";
-
         foreach ($projects as $projectId => $project) {
-            $text .= "**{$project['name']}** `{$projectId}`\n\n";
-            $text .= "| Function | ID | Status | Action |\n";
-            $text .= "| :- | :-  | :-  | :- |\n";
-
-            $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
-            $hostname = App::getEnv('_APP_DOMAIN');
-
             foreach ($project['functions'] as $functionId => $function) {
+                if ($function['status'] === 'waiting' || $function['status'] === 'processing' || $function['status'] === 'building') {
+                    $text .= "**Your function deployment is in progress. Please check back in a few minutes for the updated status.**\n\n";
+                } else if ($function['status'] === 'ready') {
+                    $text .= "**Your function has been successfully deployed.**\n\n";
+                } else {
+                    $text .= "**Your function deployment has failed. Please check the logs for more details and retry.**\n\n";
+                }
+
+                $text .= "Project name: **{$project['name']}** \nProject ID: `{$projectId}`\n\n";
+                $text .= "| Function | ID | Status | Action |\n";
+                $text .= "| :- | :-  | :-  | :- |\n";
+
+                $protocol = App::getEnv('_APP_OPTIONS_FORCE_HTTPS') == 'disabled' ? 'http' : 'https';
+                $hostname = App::getEnv('_APP_DOMAIN');
+
                 $generateImage = function (string $status) use ($protocol, $hostname) {
                     $extention = $status === 'building' ? 'gif' : 'png';
                     $imagesUrl = $protocol . '://' . $hostname . '/images/vcs/';
@@ -104,6 +109,7 @@ class Comment
 
             $text .= "\n\n";
         }
+        $text .= "Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n"; //TODO: Update link to documentation
         //TODO: Update did you know section
         $tip = $this->tips[array_rand($this->tips)];
         $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";
