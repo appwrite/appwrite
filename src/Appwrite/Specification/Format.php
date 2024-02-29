@@ -126,17 +126,14 @@ abstract class Format
                     case 'verifyAuthenticator':
                     case 'deleteAuthenticator':
                         switch ($param) {
-                            case 'factor':
-                                return 'AuthenticatorFactor';
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'type':
+                                return 'AuthenticatorType';
                         }
                         break;
                     case 'createChallenge':
-                    case 'verifyChallenge':
                         switch ($param) {
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'factor':
+                                return 'AuthenticationFactor';
                         }
                         break;
                 }
@@ -323,10 +320,8 @@ abstract class Format
                         break;
                     case 'deleteAuthenticator':
                         switch ($param) {
-                            case 'factor':
-                                return 'AuthenticatorFactor';
-                            case 'provider':
-                                return 'AuthenticatorProvider';
+                            case 'type':
+                                return 'AuthenticatorType';
                         }
                         break;
                     case 'createTarget':

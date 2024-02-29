@@ -934,12 +934,12 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 ->setPayload($response->output($session, Response::MODEL_SESSION))
             ;
 
-            // TODO: Remove this deprecated, undocumented workaround
+            // TODO: Remove this deprecated workaround - support only token
             if ($state['success']['path'] == $oauthDefaultSuccess) {
                 $query['project'] = $project->getId();
                 $query['domain'] = Config::getParam('cookieDomain');
                 $query['key'] = Auth::$cookieName;
-                $query['secret'] = $secret;
+                $query['secret'] = Auth::encodeSession($user->getId(), $secret);
             }
 
             $response
@@ -3761,7 +3761,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createChallenge')
-    ->label('sdk.description', '/docs/references/account/create-2fa-challenge.md')
+    ->label('sdk.description', '/docs/references/account/create-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
