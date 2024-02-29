@@ -2945,11 +2945,11 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_requestPath'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['requestPath'],
-                'lengths' => [Database::LENGTH_KEY],
+                'lengths' => [2048],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
-                '$id' => ID::custom('_key_deploymentId'),
+                '$id' => ID::custom('_key_deployment'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['deploymentId'],
                 'lengths' => [Database::LENGTH_KEY],
