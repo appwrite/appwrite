@@ -15,8 +15,8 @@ class Phone extends Challenge
     public static function challenge(Document $challenge, Document $user, string $otp): bool
     {
         if (
-            $challenge->isSet('provider') &&
-            $challenge->getAttribute('provider') === 'phone'
+            $challenge->isSet('type') &&
+            $challenge->getAttribute('type') === 'phone'
         ) {
             return self::verify($challenge, $otp);
         }

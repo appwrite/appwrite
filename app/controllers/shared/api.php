@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Provider\TOTP;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
@@ -280,9 +281,9 @@ App::init()
 
         if ($mode !== APP_MODE_ADMIN) {
             $mfaEnabled = $user->getAttribute('mfa', false);
-            $hasVerifiedAuthenticator = $user->getAttribute('totpVerification', false);
             $hasVerifiedEmail = $user->getAttribute('emailVerification', false);
             $hasVerifiedPhone = $user->getAttribute('phoneVerification', false);
+            $hasVerifiedAuthenticator = TOTP::getAuthenticatorFromUser($user)?->getAttribute('verified') ?? false;
             $hasMoreFactors = $hasVerifiedEmail || $hasVerifiedPhone || $hasVerifiedAuthenticator;
             $minimumFactors = ($mfaEnabled && $hasMoreFactors) ? 2 : 1;
 

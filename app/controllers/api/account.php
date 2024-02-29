@@ -151,11 +151,11 @@ App::post('/v1/account')
                 'reset' => false,
                 'name' => $name,
                 'mfa' => false,
-                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
@@ -766,11 +766,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'reset' => false,
                         'name' => $name,
                         'mfa' => false,
-                        'totp' => false,
                         'prefs' => new \stdClass(),
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
+                        'authenticators' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
@@ -1152,11 +1152,11 @@ App::post('/v1/account/tokens/magic-url')
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'mfa' => false,
-                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
             ]);
@@ -1971,11 +1971,11 @@ App::post('/v1/account/sessions/anonymous')
             'reset' => false,
             'name' => null,
             'mfa' => false,
-            'totp' => false,
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
+            'authenticators' => null,
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
@@ -2630,7 +2630,7 @@ App::patch('/v1/account/status')
 
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
@@ -3554,13 +3554,15 @@ App::get('/v1/account/mfa/factors')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
-        $providers = new Document([
-            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
+        $totp = TOTP::getAuthenticatorFromUser($user);
+
+        $factors = new Document([
+            'totp' => $totp !== null && $totp->getAttribute('verified', false),
             'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
+        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
 App::post('/v1/account/mfa/:type')
@@ -3599,23 +3601,37 @@ App::post('/v1/account/mfa/:type')
 
         $backups = Provider::generateBackupCodes();
 
-    if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists on this account.');
+        $authenticator = TOTP::getAuthenticatorFromUser($user);
+
+    if ($authenticator && $authenticator->getAttribute('verified')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
     }
 
-        $user
-            ->setAttribute('totp', true)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpBackup', $backups)
-            ->setAttribute('totpSecret', $otp->getSecret());
+        $authenticator = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'type' => 'totp',
+            'verified' => false,
+            'data' => [
+                'secret' => $otp->getSecret(),
+                'backups' => $backups
+            ],
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]
+        ]);
 
-        $model = new Document();
-        $model
-            ->setAttribute('backups', $backups)
-            ->setAttribute('secret', $otp->getSecret())
-            ->setAttribute('uri', $otp->getProvisioningUri());
+        $model = new Document([
+            'backups' => $backups,
+            'secret' => $otp->getSecret(),
+            'uri' => $otp->getProvisioningUri()
+        ]);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $authenticator = $dbForProject->createDocument('authenticators', $authenticator);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3641,32 +3657,39 @@ App::put('/v1/account/mfa/:type')
     ->label('sdk.offline.key', 'current')
     ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
-    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+
+        $authenticator = match ($type) {
+            'totp' => TOTP::getAuthenticatorFromUser($user),
+            default => null
+        };
+
+    if ($authenticator === null) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found on this account.');
+    }
+
+    if ($authenticator->getAttribute('verified')) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
+    }
 
         $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
-            default => false
+            default => throw new Exception(Exception::USER_INVALID_TOKEN)
         };
 
     if (!$success) {
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
 
-    if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator needs to be added first.');
-    } elseif ($user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
-    }
+        $authenticator->setAttribute('verified', true);
 
-        $user->setAttribute('totpVerification', true);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
@@ -3702,6 +3725,15 @@ App::delete('/v1/account/mfa/:type')
     ->inject('queueForEvents')
     ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
+        $authenticator = match ($type) {
+            'totp' => TOTP::getAuthenticatorFromUser($user),
+            default => null
+        };
+
+    if (!$authenticator) {
+        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found.');
+    }
+
         $success = match ($type) {
             'totp' => Challenge\TOTP::verify($user, $otp),
             default => false
@@ -3711,17 +3743,8 @@ App::delete('/v1/account/mfa/:type')
         throw new Exception(Exception::USER_INVALID_TOKEN);
     }
 
-    if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-    }
-
-        $user
-            ->setAttribute('totp', false)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpSecret', null)
-            ->setAttribute('totpBackup', null);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3762,7 +3785,7 @@ App::post('/v1/account/mfa/challenge')
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'provider' => $factor,
+            'type' => $factor,
             'token' => Auth::tokenGenerator(),
             'code' => $code,
             'expire' => $expire,
@@ -3942,26 +3965,29 @@ App::put('/v1/account/mfa/challenge')
     ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
+        var_dump($challenge);
 
         if ($challenge->isEmpty()) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $provider = $challenge->getAttribute('provider');
-        $success = match ($provider) {
+        $type = $challenge->getAttribute('type');
+
+        $success = match ($type) {
             'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
             'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
             'email' => Challenge\Email::challenge($challenge, $user, $otp),
             default => false
         };
 
-    if (!$success && $provider === 'totp') {
-        $backups = $user->getAttribute('totpBackup', []);
-        if (in_array($otp, $backups)) {
+    if (!$success && $type === 'totp') {
+        $authenticator = TOTP::getAuthenticatorFromUser($user);
+        $data = $authenticator->getAttribute('data', []);
+        if (in_array($otp, $data['backups'])) {
             $success = true;
-            $backups = array_diff($backups, [$otp]);
-            $user->setAttribute('totpBackup', $backups);
-            $dbForProject->updateDocument('users', $user->getId(), $user);
+            $backups = array_diff($data['backups'], [$otp]);
+            $authenticator->setAttribute('totpBackup', $backups);
+            $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
         }
     }
 
@@ -3976,10 +4002,9 @@ App::put('/v1/account/mfa/challenge')
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
+        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
 
-        $queueForEvents
-            ->setParam('userId', $user->getId());
+        $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });

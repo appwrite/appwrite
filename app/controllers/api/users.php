@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\MFA\Challenge;
+use Appwrite\Auth\MFA\Provider\TOTP;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -1579,13 +1579,15 @@ App::get('/v1/users/:userId/mfa/factors')
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        $providers = new Document([
-            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
+        $totp = TOTP::getAuthenticatorFromUser($user);
+
+        $factors = new Document([
+            'totp' => $totp !== null && $totp->getAttribute('verified', false),
             'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
             'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
+        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
 App::delete('/v1/users/:userId/mfa/:type')
@@ -1606,28 +1608,24 @@ App::delete('/v1/users/:userId/mfa/:type')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
     ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
-    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
         }
 
-        if (!$user->getAttribute('totp')) {
+        $authenticator = TOTP::getAuthenticatorFromUser($user);
+
+        if ($authenticator === null) {
             throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
         }
 
-        $user
-            ->setAttribute('totp', false)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpSecret', null)
-            ->setAttribute('totpBackup', null);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
