@@ -2945,7 +2945,7 @@ $projectCollections = array_merge([
                 '$id' => ID::custom('_key_requestPath'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['requestPath'],
-                'lengths' => [],
+                'lengths' => [Database::LENGTH_KEY],
                 'orders' => [Database::ORDER_ASC],
             ],
             [
