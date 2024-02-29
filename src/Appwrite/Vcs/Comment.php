@@ -109,10 +109,11 @@ class Comment
 
             $text .= "\n\n";
         }
-        $text .= "Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n"; //TODO: Update link to documentation
+        $functionUrl = $protocol . '://' . $hostname . '/console/project-' . $projectId . '/functions/function-' . $functionId;
+        $text .= "> Only deployments on the production branch are activated automatically. If you'd like to activate this deployment, navigate to [your deployments]($functionUrl). Learn more about Appwrite [Function Deployments](https://appwrite.io/docs/functions).\n\n"; //TODO: Update link to documentation
         //TODO: Update did you know section
         $tip = $this->tips[array_rand($this->tips)];
-        $text .= "> **💡 Did you know?** \n " . $tip . "\n\n";
+        $text .= "**💡 Did you know?** \n " . $tip . "\n\n";
 
         return $text;
     }
