@@ -3603,8 +3603,11 @@ App::post('/v1/account/mfa/:type')
 
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
-    if ($authenticator && $authenticator->getAttribute('verified')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
+    if ($authenticator) {
+        if ($authenticator->getAttribute('verified')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
+        }
+        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
     }
 
         $authenticator = new Document([
@@ -3677,14 +3680,10 @@ App::put('/v1/account/mfa/:type')
         throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
     }
 
-        $success = match ($type) {
-            'totp' => Challenge\TOTP::verify($user, $otp),
-            default => throw new Exception(Exception::USER_INVALID_TOKEN)
-        };
-
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+    match ($type) {
+        'totp' => Challenge\TOTP::verify($user, $otp),
+        default => throw new Exception(Exception::USER_INVALID_TOKEN)
+    };
 
         $authenticator->setAttribute('verified', true);
 
@@ -3988,6 +3987,7 @@ App::put('/v1/account/mfa/challenge')
             $backups = array_diff($data['backups'], [$otp]);
             $authenticator->setAttribute('totpBackup', $backups);
             $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+            $dbForProject->purgeCachedDocument('users', $user->getId());
         }
     }
 
