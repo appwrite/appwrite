@@ -3985,7 +3985,7 @@ App::put('/v1/account/mfa/challenge')
         if (in_array($otp, $data['backups'])) {
             $success = true;
             $backups = array_diff($data['backups'], [$otp]);
-            $authenticator->setAttribute('totpBackup', $backups);
+            $authenticator->setAttribute('data', array_merge($data, ['backups' => $backups]));
             $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
             $dbForProject->purgeCachedDocument('users', $user->getId());
         }
