@@ -3,8 +3,8 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Challenge;
-use Appwrite\Auth\MFA\Provider;
-use Appwrite\Auth\MFA\Provider\TOTP;
+use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
@@ -3557,9 +3557,9 @@ App::get('/v1/account/mfa/factors')
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $factors = new Document([
-            'totp' => $totp !== null && $totp->getAttribute('verified', false),
-            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
+            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -3582,7 +3582,7 @@ App::post('/v1/account/mfa/:type')
     ->label('sdk.response.model', Response::MODEL_MFA_TYPE)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
@@ -3592,7 +3592,7 @@ App::post('/v1/account/mfa/:type')
     ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $otp = match ($type) {
-            'totp' => new TOTP(),
+            Type::TOTP => new TOTP(),
             default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown type.')
         };
 
@@ -3614,7 +3614,7 @@ App::post('/v1/account/mfa/:type')
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => 'totp',
+            'type' => Provider::TYPE_TOTP,
             'verified' => false,
             'data' => [
                 'secret' => $otp->getSecret(),
@@ -3658,7 +3658,7 @@ App::put('/v1/account/mfa/:type')
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
     ->inject('response')
     ->inject('user')
@@ -3668,7 +3668,7 @@ App::put('/v1/account/mfa/:type')
     ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = match ($type) {
-            'totp' => TOTP::getAuthenticatorFromUser($user),
+            Type::TOTP => TOTP::getAuthenticatorFromUser($user),
             default => null
         };
 
@@ -3681,7 +3681,7 @@ App::put('/v1/account/mfa/:type')
     }
 
     match ($type) {
-        'totp' => Challenge\TOTP::verify($user, $otp),
+        Type::TOTP => Challenge\TOTP::verify($user, $otp),
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     };
 
@@ -3715,17 +3715,16 @@ App::delete('/v1/account/mfa/:type')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
-    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $authenticator = match ($type) {
-            'totp' => TOTP::getAuthenticatorFromUser($user),
+            Type::TOTP => TOTP::getAuthenticatorFromUser($user),
             default => null
         };
 
@@ -3734,7 +3733,7 @@ App::delete('/v1/account/mfa/:type')
     }
 
         $success = match ($type) {
-            'totp' => Challenge\TOTP::verify($user, $otp),
+            Type::TOTP => Challenge\TOTP::verify($user, $otp),
             default => false
         };
 
@@ -3767,7 +3766,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('factor', '', new WhiteList(['totp', 'phone', 'email']), 'Factor used for verification.')
+    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP]), 'Factor used for verification.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -3798,7 +3797,7 @@ App::post('/v1/account/mfa/challenge')
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
         switch ($factor) {
-            case 'phone':
+            case Type::PHONE:
                 if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
@@ -3836,7 +3835,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setRecipients([$user->getAttribute('phone')])
                     ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
-            case 'email':
+            case Type::EMAIL:
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
@@ -3964,7 +3963,6 @@ App::put('/v1/account/mfa/challenge')
     ->action(function (string $challengeId, string $otp, Document $project, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $challenge = $dbForProject->getDocument('challenges', $challengeId);
-        var_dump($challenge);
 
         if ($challenge->isEmpty()) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
@@ -3973,13 +3971,13 @@ App::put('/v1/account/mfa/challenge')
         $type = $challenge->getAttribute('type');
 
         $success = match ($type) {
-            'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
-            'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
-            'email' => Challenge\Email::challenge($challenge, $user, $otp),
+            Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
+            Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
+            Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             default => false
         };
 
-    if (!$success && $type === 'totp') {
+    if (!$success && $type === Type::TOTP) {
         $authenticator = TOTP::getAuthenticatorFromUser($user);
         $data = $authenticator->getAttribute('data', []);
         if (in_array($otp, $data['backups'])) {

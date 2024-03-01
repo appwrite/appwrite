@@ -3,7 +3,7 @@
 namespace Appwrite\Auth\MFA\Challenge;
 
 use Appwrite\Auth\MFA\Challenge;
-use Appwrite\Auth\MFA\Provider;
+use Appwrite\Auth\MFA\Type;
 use OTPHP\TOTP as TOTPLibrary;
 use Utopia\Database\Document;
 
@@ -11,7 +11,7 @@ class TOTP extends Challenge
 {
     public static function verify(Document $user, string $otp): bool
     {
-        $authenticator = Provider\TOTP::getAuthenticatorFromUser($user);
+        $authenticator = Type\TOTP::getAuthenticatorFromUser($user);
         $data = $authenticator->getAttribute('data');
         $instance = TOTPLibrary::create($data['secret']);
 
@@ -22,7 +22,7 @@ class TOTP extends Challenge
     {
         if (
             $challenge->isSet('type') &&
-            $challenge->getAttribute('type') === 'totp'
+            $challenge->getAttribute('type') === Type::TOTP
         ) {
             return self::verify($user, $otp);
         }

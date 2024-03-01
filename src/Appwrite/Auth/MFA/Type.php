@@ -5,9 +5,13 @@ namespace Appwrite\Auth\MFA;
 use Appwrite\Auth\Auth;
 use OTPHP\OTP;
 
-abstract class Provider
+abstract class Type
 {
     protected OTP $instance;
+
+    public const TOTP = 'totp';
+    public const EMAIL = 'email';
+    public const PHONE = 'phone';
 
     public function setLabel(string $label): self
     {

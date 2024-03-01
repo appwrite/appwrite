@@ -1,7 +1,8 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\MFA\Provider\TOTP;
+use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
@@ -1582,9 +1583,9 @@ App::get('/v1/users/:userId/mfa/factors')
         $totp = TOTP::getAuthenticatorFromUser($user);
 
         $factors = new Document([
-            'totp' => $totp !== null && $totp->getAttribute('verified', false),
-            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
+            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
@@ -1607,7 +1608,7 @@ App::delete('/v1/users/:userId/mfa/:type')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->param('userId', '', new UID(), 'User ID.')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')

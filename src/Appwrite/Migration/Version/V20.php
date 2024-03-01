@@ -220,44 +220,20 @@ class V20 extends Migration
                         Console::warning("'mfa' from {$id}: {$th->getMessage()}");
                     }
 
-                    // Create totp attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'totp');
-                        $this->projectDB->purgeCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'totp' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // Create totpVerification attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpVerification');
-                        $this->projectDB->purgeCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'totpVerification' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // Create totpSecret attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpSecret');
-                        $this->projectDB->purgeCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'totpSecret' from {$id}: {$th->getMessage()}");
-                    }
-
-                    // Create totpBackup attribute
-                    try {
-                        $this->createAttributeFromCollection($this->projectDB, $id, 'totpBackup');
-                        $this->projectDB->purgeCachedCollection($id);
-                    } catch (Throwable $th) {
-                        Console::warning("'totpBackup' from {$id}: {$th->getMessage()}");
-                    }
-
-                     // Create challenges attribute
+                    // Create challenges attribute
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'challenges');
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("'challenges' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create authenticators attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'authenticators');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'authenticators' from {$id}: {$th->getMessage()}");
                     }
 
                     break;
