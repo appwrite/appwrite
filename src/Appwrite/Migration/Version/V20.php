@@ -134,6 +134,7 @@ class V20 extends Migration
                     $this->createCollection('subscribers');
                     $this->createCollection('targets');
                     $this->createCollection('challenges');
+                    $this->createCollection('authenticators');
 
                     break;
                 case 'cache':
