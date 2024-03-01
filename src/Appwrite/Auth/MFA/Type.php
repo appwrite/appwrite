@@ -12,6 +12,7 @@ abstract class Type
     public const TOTP = 'totp';
     public const EMAIL = 'email';
     public const PHONE = 'phone';
+    public const RECOVERY_CODE = 'recoveryCode';
 
     public function setLabel(string $label): self
     {
@@ -47,12 +48,12 @@ abstract class Type
         return $this->instance->getProvisioningUri();
     }
 
-    public static function generateBackupCodes(int $length = 6, int $total = 6): array
+    public static function generateBackupCodes(int $length = 10, int $total = 6): array
     {
         $backups = [];
 
         for ($i = 0; $i < $total; $i++) {
-            $backups[] = Auth::codeGenerator($length);
+            $backups[] = Auth::tokenGenerator($length);
         }
 
         return $backups;

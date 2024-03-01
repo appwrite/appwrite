@@ -3543,8 +3543,8 @@ App::get('/v1/account/mfa/factors')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'listFactors')
-    ->label('sdk.description', '/docs/references/account/list-factors.md')
+    ->label('sdk.method', 'listMfaFactors')
+    ->label('sdk.description', '/docs/references/account/list-mfa-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
@@ -3565,7 +3565,7 @@ App::get('/v1/account/mfa/factors')
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::post('/v1/account/mfa/:type')
+App::post('/v1/account/mfa/authenticators/:type')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3575,8 +3575,8 @@ App::post('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'addAuthenticator')
-    ->label('sdk.description', '/docs/references/account/add-authenticator.md')
+    ->label('sdk.method', 'createMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/create-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_TYPE)
@@ -3599,8 +3599,6 @@ App::post('/v1/account/mfa/:type')
         $otp->setLabel($user->getAttribute('email'));
         $otp->setIssuer($project->getAttribute('name'));
 
-        $backups = Type::generateBackupCodes();
-
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
         if ($authenticator) {
@@ -3618,7 +3616,6 @@ App::post('/v1/account/mfa/:type')
             'verified' => false,
             'data' => [
                 'secret' => $otp->getSecret(),
-                'backups' => $backups
             ],
             '$permissions' => [
                 Permission::read(Role::user($user->getId())),
@@ -3628,7 +3625,6 @@ App::post('/v1/account/mfa/:type')
         ]);
 
         $model = new Document([
-            'backups' => $backups,
             'secret' => $otp->getSecret(),
             'uri' => $otp->getProvisioningUri()
         ]);
@@ -3641,7 +3637,7 @@ App::post('/v1/account/mfa/:type')
         $response->dynamic($model, Response::MODEL_MFA_TYPE);
     });
 
-App::put('/v1/account/mfa/:type')
+App::put('/v1/account/mfa/authenticators/:type')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3651,8 +3647,8 @@ App::put('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'verifyAuthenticator')
-    ->label('sdk.description', '/docs/references/account/verify-authenticator.md')
+    ->label('sdk.method', 'updateMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/update-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
@@ -3704,7 +3700,50 @@ App::put('/v1/account/mfa/:type')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account/mfa/:type')
+App::post('/v1/account/mfa/recovery-codes')
+    ->desc('Create MFA Recovery Codes')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/create-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('response')
+    ->inject('user')
+    ->inject('project')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (!empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::delete('/v1/account/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -3714,8 +3753,8 @@ App::delete('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteAuthenticator')
-    ->label('sdk.description', '/docs/references/account/delete-mfa.md')
+    ->label('sdk.method', 'deleteMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
@@ -3736,8 +3775,22 @@ App::delete('/v1/account/mfa/:type')
             throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found.');
         }
 
+        $recoveryCodeVerify = function (Document $user, string $otp) use ($dbForProject) {
+            $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+            if (in_array($otp, $mfaRecoveryCodes)) {
+                $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                $dbForProject->updateDocument('users', $user->getId(), $user);
+
+                return true;
+            }
+
+            return false;
+        };
+
         $success = (match ($type) {
             Type::TOTP => Challenge\TOTP::verify($user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeVerify($user, $otp),
             default => false
         });
 
@@ -3763,14 +3816,14 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createChallenge')
-    ->label('sdk.description', '/docs/references/account/create-challenge.md')
+    ->label('sdk.method', 'createMfaChallenge')
+    ->label('sdk.description', '/docs/references/account/create-mfa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`.')
+    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -3951,8 +4004,8 @@ App::put('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateChallenge')
-    ->label('sdk.description', '/docs/references/account/update-challenge.md')
+    ->label('sdk.method', 'updateMfaChallenge')
+    ->label('sdk.description', '/docs/references/account/update-mfa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
@@ -3974,24 +4027,33 @@ App::put('/v1/account/mfa/challenge')
 
         $type = $challenge->getAttribute('type');
 
+        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
+            if (
+                $challenge->isSet('type') &&
+                $challenge->getAttribute('type') === Type::RECOVERY_CODE
+            ) {
+                $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+                if (in_array($otp, $mfaRecoveryCodes)) {
+                    $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                    $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
+        };
+
         $success = (match ($type) {
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
             default => false
         });
-
-        if (!$success && $type === Type::TOTP) {
-            $authenticator = TOTP::getAuthenticatorFromUser($user);
-            $data = $authenticator?->getAttribute('data', []);
-            if (in_array($otp, $data['backups'] ?? [])) {
-                $success = true;
-                $backups = array_diff($data['backups'], [$otp]);
-                $authenticator->setAttribute('data', array_merge($data, ['backups' => $backups]));
-                $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
-                $dbForProject->purgeCachedDocument('users', $user->getId());
-            }
-        }
 
         if (!$success) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
