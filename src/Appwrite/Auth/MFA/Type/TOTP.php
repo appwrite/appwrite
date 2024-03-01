@@ -15,7 +15,7 @@ class TOTP extends Type
 
     public static function getAuthenticatorFromUser(Document $user): ?Document
     {
-        foreach ($user->getAttribute('authenticators') as $authenticator) {
+        foreach ($user->getAttribute('authenticators', []) as $authenticator) {
             /** @var Document $authenticator */
             if ($authenticator->getAttribute('type') === Type::TOTP) {
                 return $authenticator;

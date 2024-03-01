@@ -16,7 +16,7 @@ class Phone extends Challenge
     {
         if (
             $challenge->isSet('type') &&
-            $challenge->getAttribute('type') === 'phone'
+            $challenge->getAttribute('type') === Type::PHONE
         ) {
             return self::verify($challenge, $otp);
         }

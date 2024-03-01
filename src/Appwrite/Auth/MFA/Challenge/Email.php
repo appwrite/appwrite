@@ -16,7 +16,7 @@ class Email extends Challenge
     {
         if (
             $challenge->isSet('type') &&
-            $challenge->getAttribute('type') === 'email'
+            $challenge->getAttribute('type') === Type::EMAIL
         ) {
             return self::verify($challenge, $otp);
         }

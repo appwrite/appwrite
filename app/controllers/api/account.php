@@ -3582,7 +3582,7 @@ App::post('/v1/account/mfa/:type')
     ->label('sdk.response.model', Response::MODEL_MFA_TYPE)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . TYPE::TOTP . '`')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
@@ -3599,7 +3599,7 @@ App::post('/v1/account/mfa/:type')
         $otp->setLabel($user->getAttribute('email'));
         $otp->setIssuer($project->getAttribute('name'));
 
-        $backups = Provider::generateBackupCodes();
+        $backups = Type::generateBackupCodes();
 
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
@@ -3614,7 +3614,7 @@ App::post('/v1/account/mfa/:type')
             '$id' => ID::unique(),
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'type' => Provider::TYPE_TOTP,
+            'type' => Type::TOTP,
             'verified' => false,
             'data' => [
                 'secret' => $otp->getSecret(),
@@ -3766,7 +3766,7 @@ App::post('/v1/account/mfa/challenge')
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP]), 'Factor used for verification.')
+    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP]), 'Factor used for verification. Must be one of following: `' . TYPE::EMAIL . '`, `' . TYPE::PHONE . '`, `' . TYPE::TOTP . '`.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -3970,17 +3970,17 @@ App::put('/v1/account/mfa/challenge')
 
         $type = $challenge->getAttribute('type');
 
-        $success = match ($type) {
+        $success = (match ($type) {
             Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
             Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
             Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
             default => false
-        };
+        });
 
     if (!$success && $type === Type::TOTP) {
         $authenticator = TOTP::getAuthenticatorFromUser($user);
-        $data = $authenticator->getAttribute('data', []);
-        if (in_array($otp, $data['backups'])) {
+        $data = $authenticator?->getAttribute('data', []);
+        if (in_array($otp, $data['backups'] ?? [])) {
             $success = true;
             $backups = array_diff($data['backups'], [$otp]);
             $authenticator->setAttribute('data', array_merge($data, ['backups' => $backups]));
