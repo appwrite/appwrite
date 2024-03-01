@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6d1a2fabffa05c7d7a2094b04dc9e8b9",
+    "content-hash": "f7a4173bb5adeea3518f949fa883a282",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -156,11 +156,11 @@
         },
         {
             "name": "appwrite/php-runtimes",
-            "version": "0.13.2",
+            "version": "0.13.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/runtimes.git",
-                "reference": "214a37c2c66e0f2bc9c30fdfde66955d9fd084a1"
+                "reference": "5d93fc578a9a543bcdc9b2c0562d80a51d56c73d"
             },
             "require": {
                 "php": ">=8.0",
@@ -195,7 +195,7 @@
                 "php",
                 "runtimes"
             ],
-            "time": "2023-11-22T15:36:00+00:00"
+            "time": "2024-03-01T14:47:47+00:00"
         },
         {
             "name": "chillerlan/php-qrcode",
@@ -1547,16 +1547,16 @@
         },
         {
             "name": "utopia-php/messaging",
-            "version": "0.2.0",
+            "version": "0.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/messaging.git",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43"
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/2d0f474a106bb1da285f85e105c29b46085d3a43",
-                "reference": "2d0f474a106bb1da285f85e105c29b46085d3a43",
+                "url": "https://api.github.com/repos/utopia-php/messaging/zipball/d488223876f88f97bb76fd6681fed0df80558f62",
+                "reference": "d488223876f88f97bb76fd6681fed0df80558f62",
                 "shasum": ""
             },
             "require": {
@@ -1589,9 +1589,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/messaging/issues",
-                "source": "https://github.com/utopia-php/messaging/tree/0.2.0"
+                "source": "https://github.com/utopia-php/messaging/tree/0.3.0"
             },
-            "time": "2023-09-14T20:48:42+00:00"
+            "time": "2023-11-14T21:02:37+00:00"
         },
         {
             "name": "utopia-php/migration",

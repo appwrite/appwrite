@@ -68,13 +68,18 @@ class Deletes extends Action
         $datetime = $payload['datetime'] ?? null;
         $hourlyUsageRetentionDatetime = $payload['hourlyUsageRetentionDatetime'] ?? null;
         $resource = $payload['resource'] ?? null;
-        $resourceType = $payload['resourceType'] ?? null;
         $document = new Document($payload['document'] ?? []);
         $project  = new Document($payload['project'] ?? []);
 
         switch (strval($type)) {
             case DELETE_TYPE_DOCUMENT:
                 switch ($document->getCollection()) {
+                    case DELETE_TYPE_DATABASES:
+                        $this->deleteDatabase($getProjectDB, $document, $project);
+                        break;
+                    case DELETE_TYPE_COLLECTIONS:
+                        $this->deleteCollection($getProjectDB, $document, $project);
+                        break;
                     case DELETE_TYPE_PROJECTS:
                         $this->deleteProject($dbForConsole, $getProjectDB, $getFilesDevice, $getFunctionsDevice, $getBuildsDevice, $getCacheDevice, $document);
                         break;
@@ -103,6 +108,10 @@ class Deletes extends Action
                         $this->deleteRule($dbForConsole, $document);
                         break;
                     default:
+                        if (\str_starts_with($document->getCollection(), 'database_')) {
+                            $this->deleteCollection($getProjectDB, $document, $project);
+                            break;
+                        }
                         Console::error('No lazy delete operation available for document of type: ' . $document->getCollection());
                         break;
                 }
@@ -136,7 +145,7 @@ class Deletes extends Action
                 $this->deleteUsageStats($project, $getProjectDB, $hourlyUsageRetentionDatetime);
                 break;
             case DELETE_TYPE_CACHE_BY_RESOURCE:
-                $this->deleteCacheByResource($project, $getProjectDB, $resource, $resourceType);
+                $this->deleteCacheByResource($project, $getProjectDB, $resource);
                 break;
             case DELETE_TYPE_CACHE_BY_TIMESTAMP:
                 $this->deleteCacheByDate($project, $getProjectDB, $datetime);
@@ -194,37 +203,32 @@ class Deletes extends Action
      * @param string $resource
      * @return void
      * @throws Authorization
-     * @param string|null $resourceType
-     * @throws Exception
      */
-    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource, string $resourceType = null): void
+    private function deleteCacheByResource(Document $project, callable $getProjectDB, string $resource): void
     {
         $projectId = $project->getId();
         $dbForProject = $getProjectDB($project);
+        $document = $dbForProject->findOne('cache', [Query::equal('resource', [$resource])]);
 
-        $cache = new Cache(
-            new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
-        );
+        if ($document) {
+            $cache = new Cache(
+                new Filesystem(APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId)
+            );
 
-        $query[] = Query::equal('resource', [$resource]);
-        if (!empty($resourceType)) {
-            $query[] = Query::equal('resourceType', [$resourceType]);
-        }
+            $this->deleteById(
+                $document,
+                $dbForProject,
+                function ($document) use ($cache, $projectId) {
+                    $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
 
-        $this->deleteByGroup(
-            'cache',
-            $query,
-            $dbForProject,
-            function (Document $document) use ($cache, $projectId) {
-                $path = APP_STORAGE_CACHE . DIRECTORY_SEPARATOR . 'app-' . $projectId . DIRECTORY_SEPARATOR . $document->getId();
-
-                if ($cache->purge($document->getId())) {
-                    Console::success('Deleting cache file: ' . $path);
-                } else {
-                    Console::error('Failed to delete cache file: ' . $path);
+                    if ($cache->purge($document->getId())) {
+                        Console::success('Deleting cache file: ' . $path);
+                    } else {
+                        Console::error('Failed to delete cache file: ' . $path);
+                    }
                 }
-            }
-        );
+            );
+        }
     }
 
     /**
@@ -265,6 +269,72 @@ class Deletes extends Action
     }
 
     /**
+     * @param callable $getProjectDB
+     * @param Document $document
+     * @param Document $project
+     * @return void
+     * @throws Exception
+     */
+    private function deleteDatabase(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $databaseId = $document->getId();
+        $dbForProject = $getProjectDB($project);
+
+        $this->deleteByGroup('database_' . $document->getInternalId(), [], $dbForProject, function ($document) use ($getProjectDB, $project) {
+            $this->deleteCollection($getProjectDB, $document, $project);
+        });
+
+        $dbForProject->deleteCollection('database_' . $document->getInternalId());
+        $this->deleteAuditLogsByResource($getProjectDB, 'database/' . $databaseId, $project);
+    }
+
+    /**
+     * @param callable $getProjectDB
+     * @param Document $document teams document
+     * @param Document $project
+     * @return void
+     * @throws Exception
+     */
+    private function deleteCollection(callable $getProjectDB, Document $document, Document $project): void
+    {
+        $collectionId = $document->getId();
+        $collectionInternalId = $document->getInternalId();
+        $databaseId = $document->getAttribute('databaseId');
+        $databaseInternalId = $document->getAttribute('databaseInternalId');
+
+        $dbForProject = $getProjectDB($project);
+
+        $relationships = \array_filter(
+            $document->getAttribute('attributes'),
+            fn ($attribute) => $attribute['type'] === Database::VAR_RELATIONSHIP
+        );
+
+        foreach ($relationships as $relationship) {
+            if (!$relationship['twoWay']) {
+                continue;
+            }
+            $relatedCollection = $dbForProject->getDocument('database_' . $databaseInternalId, $relationship['relatedCollection']);
+            $dbForProject->deleteDocument('attributes', $databaseInternalId . '_' . $relatedCollection->getInternalId() . '_' . $relationship['twoWayKey']);
+            $dbForProject->deleteCachedDocument('database_' . $databaseInternalId, $relatedCollection->getId());
+            $dbForProject->deleteCachedCollection('database_' . $databaseInternalId . '_collection_' . $relatedCollection->getInternalId());
+        }
+
+        $dbForProject->deleteCollection('database_' . $databaseInternalId . '_collection_' . $document->getInternalId());
+
+        $this->deleteByGroup('attributes', [
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
+        ], $dbForProject);
+
+        $this->deleteByGroup('indexes', [
+            Query::equal('databaseInternalId', [$databaseInternalId]),
+            Query::equal('collectionInternalId', [$collectionInternalId])
+        ], $dbForProject);
+
+        $this->deleteAuditLogsByResource($getProjectDB, 'database/' . $databaseId . '/collection/' . $collectionId, $project);
+    }
+
+    /**
      * @param Database $dbForConsole
      * @param callable $getProjectDB
      * @param string $hourlyUsageRetentionDatetime
@@ -275,7 +345,7 @@ class Deletes extends Action
     {
         $dbForProject = $getProjectDB($project);
         // Delete Usage stats
-        $this->deleteByGroup('stats', [
+        $this->deleteByGroup('stats_v2', [
             Query::lessThan('time', $hourlyUsageRetentionDatetime),
             Query::equal('period', ['1h']),
         ], $dbForProject);
