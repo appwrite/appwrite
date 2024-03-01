@@ -103,6 +103,11 @@ return [
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
     ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
+    ],
 
     /** User Errors */
     Exception::USER_COUNT_EXCEEDED => [
