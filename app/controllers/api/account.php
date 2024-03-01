@@ -1565,14 +1565,14 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
-    $factor = match ($verifiedToken->getAttribute('type')) {
+    $factor = (match ($verifiedToken->getAttribute('type')) {
         Auth::TOKEN_TYPE_MAGIC_URL,
         Auth::TOKEN_TYPE_OAUTH2,
         Auth::TOKEN_TYPE_EMAIL => 'email',
         Auth::TOKEN_TYPE_PHONE => 'phone',
         Auth::TOKEN_TYPE_GENERIC => 'token',
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
-    };
+    });
 
     $session = new Document(array_merge(
         [
@@ -3591,10 +3591,10 @@ App::post('/v1/account/mfa/:type')
     ->inject('queueForEvents')
     ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $otp = match ($type) {
+        $otp = (match ($type) {
             Type::TOTP => new TOTP(),
             default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown type.')
-        };
+        });
 
         $otp->setLabel($user->getAttribute('email'));
         $otp->setIssuer($project->getAttribute('name'));
@@ -3603,12 +3603,12 @@ App::post('/v1/account/mfa/:type')
 
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
-    if ($authenticator) {
-        if ($authenticator->getAttribute('verified')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
+        if ($authenticator) {
+            if ($authenticator->getAttribute('verified')) {
+                throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
+            }
+            $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         }
-        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
-    }
 
         $authenticator = new Document([
             '$id' => ID::unique(),
@@ -3667,23 +3667,27 @@ App::put('/v1/account/mfa/:type')
     ->inject('queueForEvents')
     ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
-        $authenticator = match ($type) {
+        $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
             default => null
-        };
+        });
 
-    if ($authenticator === null) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found on this account.');
-    }
+        if ($authenticator === null) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found on this account.');
+        }
 
-    if ($authenticator->getAttribute('verified')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
-    }
+        if ($authenticator->getAttribute('verified')) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
+        }
 
-    match ($type) {
-        Type::TOTP => Challenge\TOTP::verify($user, $otp),
-        default => throw new Exception(Exception::USER_INVALID_TOKEN)
-    };
+        $success = (match ($type) {
+            Type::TOTP => Challenge\TOTP::verify($user, $otp),
+            default => false
+        });
+
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $authenticator->setAttribute('verified', true);
 
@@ -3723,23 +3727,23 @@ App::delete('/v1/account/mfa/:type')
     ->inject('queueForEvents')
     ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $authenticator = match ($type) {
+        $authenticator = (match ($type) {
             Type::TOTP => TOTP::getAuthenticatorFromUser($user),
             default => null
-        };
+        });
 
-    if (!$authenticator) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found.');
-    }
+        if (!$authenticator) {
+            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found.');
+        }
 
-        $success = match ($type) {
+        $success = (match ($type) {
             Type::TOTP => Challenge\TOTP::verify($user, $otp),
             default => false
-        };
+        });
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -3941,7 +3945,7 @@ App::put('/v1/account/mfa/challenge')
     ->desc('Create MFA Challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
-    ->label('event', 'users.[userId].sessions.[tokenId].create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
@@ -3977,21 +3981,21 @@ App::put('/v1/account/mfa/challenge')
             default => false
         });
 
-    if (!$success && $type === Type::TOTP) {
-        $authenticator = TOTP::getAuthenticatorFromUser($user);
-        $data = $authenticator?->getAttribute('data', []);
-        if (in_array($otp, $data['backups'] ?? [])) {
-            $success = true;
-            $backups = array_diff($data['backups'], [$otp]);
-            $authenticator->setAttribute('data', array_merge($data, ['backups' => $backups]));
-            $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
-            $dbForProject->purgeCachedDocument('users', $user->getId());
+        if (!$success && $type === Type::TOTP) {
+            $authenticator = TOTP::getAuthenticatorFromUser($user);
+            $data = $authenticator?->getAttribute('data', []);
+            if (in_array($otp, $data['backups'] ?? [])) {
+                $success = true;
+                $backups = array_diff($data['backups'], [$otp]);
+                $authenticator->setAttribute('data', array_merge($data, ['backups' => $backups]));
+                $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+                $dbForProject->purgeCachedDocument('users', $user->getId());
+            }
         }
-    }
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -4002,7 +4006,9 @@ App::put('/v1/account/mfa/challenge')
 
         $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
 
-        $queueForEvents->setParam('userId', $user->getId());
+        $queueForEvents
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });
