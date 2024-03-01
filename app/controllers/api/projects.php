@@ -1466,7 +1466,7 @@ App::patch('/v1/projects/:projectId/smtp')
     ->param('port', 587, new Integer(), 'SMTP server port', true)
     ->param('username', '', new Text(0, 0), 'SMTP server username', true)
     ->param('password', '', new Text(0, 0), 'SMTP server password', true)
-    ->param('secure', '', new WhiteList(['tls'], true), 'Does SMTP server use secure connection', true)
+    ->param('secure', '', new WhiteList(['tls', 'ssl'], true), 'Does SMTP server use secure connection', true)
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $projectId, bool $enabled, string $senderName, string $senderEmail, string $replyTo, string $host, int $port, string $username, string $password, string $secure, Response $response, Database $dbForConsole) {
