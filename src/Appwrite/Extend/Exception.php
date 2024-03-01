@@ -55,6 +55,7 @@ class Exception extends \Exception
     public const GENERAL_CODES_DISABLED            = 'general_codes_disabled';
     public const GENERAL_USAGE_DISABLED            = 'general_usage_disabled';
     public const GENERAL_NOT_IMPLEMENTED           = 'general_not_implemented';
+    public const GENERAL_BAD_REQUEST               = 'general_bad_request';
 
     /** Users */
     public const USER_COUNT_EXCEEDED               = 'user_count_exceeded';
