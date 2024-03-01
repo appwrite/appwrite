@@ -1622,7 +1622,7 @@ App::delete('/v1/users/:userId/mfa/authenticators/:type')
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
         if ($authenticator === null) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());

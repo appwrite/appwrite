@@ -3593,7 +3593,7 @@ App::post('/v1/account/mfa/authenticators/:type')
 
         $otp = (match ($type) {
             Type::TOTP => new TOTP(),
-            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown type.')
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unknown type.') // Ideally never happens if param validator stays always in sync
         });
 
         $otp->setLabel($user->getAttribute('email'));
@@ -3603,7 +3603,7 @@ App::post('/v1/account/mfa/authenticators/:type')
 
         if ($authenticator) {
             if ($authenticator->getAttribute('verified')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.');
+                throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.'); // TODO: Type this exception
             }
             $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         }
@@ -3669,11 +3669,11 @@ App::put('/v1/account/mfa/authenticators/:type')
         });
 
         if ($authenticator === null) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found on this account.');
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
         if ($authenticator->getAttribute('verified')) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
+            throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
         }
 
         $success = (match ($type) {
@@ -3772,27 +3772,24 @@ App::delete('/v1/account/mfa/authenticators/:type')
         });
 
         if (!$authenticator) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator not found.');
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
-        $recoveryCodeVerify = function (Document $user, string $otp) use ($dbForProject) {
+        $success = (match ($type) {
+            Type::TOTP => Challenge\TOTP::verify($user, $otp),
+            default => false
+        });
+
+        if (!$success) {
             $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
             if (in_array($otp, $mfaRecoveryCodes)) {
                 $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
                 $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
                 $dbForProject->updateDocument('users', $user->getId(), $user);
 
-                return true;
+                $success = true;
             }
-
-            return false;
-        };
-
-        $success = (match ($type) {
-            Type::TOTP => Challenge\TOTP::verify($user, $otp),
-            Type::RECOVERY_CODE => $recoveryCodeVerify($user, $otp),
-            default => false
-        });
+        }
 
         if (!$success) {
             throw new Exception(Exception::USER_INVALID_TOKEN);
