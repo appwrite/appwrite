@@ -598,7 +598,7 @@ $commonCollections = [
         ],
         'indexes' => [
             [
-                '$id' => ID::custom('_key_user'),
+                '$id' => ID::custom('_key_userInternalId'),
                 'type' => Database::INDEX_KEY,
                 'attributes' => ['userInternalId'],
                 'lengths' => [Database::LENGTH_KEY],
