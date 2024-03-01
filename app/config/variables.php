@@ -408,7 +408,7 @@ return [
             ],
             [
                 'name' => '_APP_SMTP_SECURE',
-                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' if running on a secure connection.',
+                'description' => 'SMTP secure connection protocol. Empty by default, change to \'tls\' or \'ssl\' if running on a secure connection.',
                 'introduction' => '',
                 'default' => '',
                 'required' => false,
