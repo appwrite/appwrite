@@ -1,7 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Auth\MFA\Provider\TOTP;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Database as EventDatabase;
