@@ -3603,7 +3603,7 @@ App::post('/v1/account/mfa/authenticators/:type')
 
         if ($authenticator) {
             if ($authenticator->getAttribute('verified')) {
-                throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already exists on this account.'); // TODO: Type this exception
+                throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
             }
             $dbForProject->deleteDocument('authenticators', $authenticator->getId());
         }
