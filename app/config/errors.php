@@ -232,6 +232,21 @@ return [
         'description' => 'A user with the same phone number already exists in the current project.',
         'code' => 409,
     ],
+    Exception::USER_RECOVERY_CODES_ALREADY_EXISTS => [
+        'name' => Exception::USER_RECOVERY_CODES_ALREADY_EXISTS,
+        'description' => 'The current user already generated recovery codes and they can only be read once for security reasons.',
+        'code' => 409,
+    ],
+    Exception::USER_AUTHENTICATOR_NOT_FOUND => [
+        'name' => Exception::USER_AUTHENTICATOR_NOT_FOUND,
+        'description' => 'Authenticator could not be found on the current user.',
+        'code' => 404,
+    ],
+    Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED => [
+        'name' => Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED,
+        'description' => 'This authenticator is already verified on the current user.',
+        'code' => 409,
+    ],
     Exception::USER_PHONE_NOT_FOUND => [
         'name' => Exception::USER_PHONE_NOT_FOUND,
         'description' => 'The current user does not have a phone number associated with their account.',

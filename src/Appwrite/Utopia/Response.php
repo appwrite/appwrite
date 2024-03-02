@@ -82,6 +82,7 @@ use Appwrite\Utopia\Response\Model\MetricBreakdown;
 use Appwrite\Utopia\Response\Model\Provider;
 use Appwrite\Utopia\Response\Model\Message;
 use Appwrite\Utopia\Response\Model\MFAFactors;
+use Appwrite\Utopia\Response\Model\MFARecoveryCodes;
 use Appwrite\Utopia\Response\Model\MFAType;
 use Appwrite\Utopia\Response\Model\Subscriber;
 use Appwrite\Utopia\Response\Model\Topic;
@@ -174,6 +175,7 @@ class Response extends SwooleResponse
     public const MODEL_MFA_FACTORS = 'mfaFactors';
     public const MODEL_MFA_OTP = 'mfaTotp';
     public const MODEL_MFA_CHALLENGE = 'mfaChallenge';
+    public const MODEL_MFA_RECOVERY_CODES = 'mfaRecoveryCodes';
 
     // Users password algos
     public const MODEL_ALGO_MD5 = 'algoMd5';
@@ -443,6 +445,7 @@ class Response extends SwooleResponse
             ->setModel(new TemplateEmail())
             ->setModel(new ConsoleVariables())
             ->setModel(new MFAChallenge())
+            ->setModel(new MFARecoveryCodes())
             ->setModel(new MFAType())
             ->setModel(new MFAFactors())
             ->setModel(new Provider())

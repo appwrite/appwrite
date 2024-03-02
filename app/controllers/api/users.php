@@ -1565,8 +1565,8 @@ App::get('/v1/users/:userId/mfa/factors')
     ->label('usage.metric', 'users.{scope}.requests.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'listFactors')
-    ->label('sdk.description', '/docs/references/users/list-factors.md')
+    ->label('sdk.method', 'listMfaFactors')
+    ->label('sdk.description', '/docs/references/users/list-mfa-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
@@ -1591,7 +1591,7 @@ App::get('/v1/users/:userId/mfa/factors')
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::delete('/v1/users/:userId/mfa/:type')
+App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -1602,8 +1602,8 @@ App::delete('/v1/users/:userId/mfa/:type')
     ->label('usage.metric', 'users.{scope}.requests.update')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'users')
-    ->label('sdk.method', 'deleteAuthenticator')
-    ->label('sdk.description', '/docs/references/users/delete-mfa.md')
+    ->label('sdk.method', 'deleteMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/users/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
@@ -1622,7 +1622,7 @@ App::delete('/v1/users/:userId/mfa/:type')
         $authenticator = TOTP::getAuthenticatorFromUser($user);
 
         if ($authenticator === null) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
         }
 
         $dbForProject->deleteDocument('authenticators', $authenticator->getId());

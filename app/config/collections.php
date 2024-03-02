@@ -279,6 +279,17 @@ $commonCollections = [
                 'filters' => [],
             ],
             [
+                '$id' => ID::custom('mfaRecoveryCodes'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 256,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => true,
+                'filters' => [],
+            ],
+            [
                 '$id' => ID::custom('authenticators'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
@@ -365,7 +376,7 @@ $commonCollections = [
                 'default' => null,
                 'array' => false,
                 'filters' => ['datetime'],
-            ]
+            ],
         ],
         'indexes' => [
             [
