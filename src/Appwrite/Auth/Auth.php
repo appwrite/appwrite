@@ -87,6 +87,11 @@ class Auth
     public const TOKEN_LENGTH_SESSION = 256;
 
     /**
+     * MFA
+     */
+    public const MFA_RECENT_DURATION = 600; // 5 minutes
+
+    /**
      * @var string
      */
     public static $cookieName = 'a_session';

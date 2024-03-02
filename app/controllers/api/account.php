@@ -3714,15 +3714,14 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('sdk.description', '/docs/references/account/create-mfa-recovery-codes.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->inject('response')
     ->inject('user')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
 
@@ -3735,6 +3734,102 @@ App::post('/v1/account/mfa/recovery-codes')
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::put('/v1/account/mfa/recovery-codes')
+    ->desc('Regenerate MFA Recovery Codes')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/update-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('session')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->inject('user')
+    ->inject('queueForEvents')
+    ->action(function (Document $session, Database $dbForProject, Response $response, Document $user, Event $queueForEvents) {
+
+        $isSessionSafe = false;
+
+        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
+        if (!empty($lastUpdate)) {
+            $now = DateTime::now();
+            $maxAllowedDate = DateTime::addSeconds($lastUpdate, Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+
+            $isSessionSafe = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        }
+
+        if (!$isSessionSafe) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+        'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::get('/v1/account/mfa/recovery-codes')
+    ->desc('Get MFA Recovery Codes')
+    ->groups(['api', 'account'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/get-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('session')
+    ->inject('response')
+    ->inject('user')
+    ->action(function (Document $session, Response $response, Document $user) {
+
+        $isSessionSafe = false;
+
+        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
+        if (!empty($lastUpdate)) {
+            $now = DateTime::now();
+            $maxAllowedDate = DateTime::addSeconds($lastUpdate, Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+
+            $isSessionSafe = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        }
+
+        if (!$isSessionSafe) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
 
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
@@ -4063,7 +4158,11 @@ App::put('/v1/account/mfa/challenge')
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
+        $session = $session
+            ->setAttribute('factors', $type, Document::SET_TYPE_APPEND)
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
 
         $queueForEvents
                     ->setParam('userId', $user->getId())

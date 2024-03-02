@@ -242,6 +242,11 @@ return [
         'description' => 'Authenticator could not be found on the current user.',
         'code' => 404,
     ],
+    Exception::USER_RECOVERY_CODES_NOT_FOUND => [
+        'name' => Exception::USER_RECOVERY_CODES_NOT_FOUND,
+        'description' => 'Recovery codes could not be found on the current user.',
+        'code' => 404,
+    ],
     Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED => [
         'name' => Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED,
         'description' => 'This authenticator is already verified on the current user.',
@@ -260,6 +265,11 @@ return [
     Exception::USER_MORE_FACTORS_REQUIRED => [
         'name' => Exception::USER_MORE_FACTORS_REQUIRED,
         'description' => 'More factors are required to complete the sign in process.',
+        'code' => 401,
+    ],
+    Exception::USER_CHALLENGE_REQUIRED => [
+        'name' => Exception::USER_CHALLENGE_REQUIRED,
+        'description' => 'A recently succeessful challenge is required to complete this action. A challenge is considered recent for 5 minutes.',
         'code' => 401,
     ],
     Exception::USER_OAUTH2_BAD_REQUEST => [
