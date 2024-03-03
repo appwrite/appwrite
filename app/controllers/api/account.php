@@ -3712,7 +3712,7 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createMfaRecoveryCodes')
     ->label('sdk.description', '/docs/references/account/create-mfa-recovery-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
     ->label('sdk.offline.model', '/account')
@@ -3764,6 +3764,11 @@ App::put('/v1/account/mfa/recovery-codes')
     ->inject('user')
     ->inject('queueForEvents')
     ->action(function (Database $dbForProject, Response $response, Document $user, Event $queueForEvents) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
 
         $mfaRecoveryCodes = Type::generateBackupCodes();
         $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);

@@ -1591,6 +1591,132 @@ App::get('/v1/users/:userId/mfa/factors')
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
+App::get('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Get MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('scope', 'users.read')
+    ->label('usage.metric', 'users.{scope}.requests.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'getMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/get-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $userId, Response $response, Database $dbForProject) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::post('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Create MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].create.mfa.recovery-codes')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'createMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/create-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (!empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::put('/v1/users/:userId/mfa/recovery-codes')
+    ->desc('Regenerate MFA Recovery Codes')
+    ->groups(['api', 'users'])
+    ->label('event', 'users.[userId].update.mfa.recovery-codes')
+    ->label('scope', 'users.write')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('usage.metric', 'users.{scope}.requests.update')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'users')
+    ->label('sdk.method', 'updateMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/users/update-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->param('userId', '', new UID(), 'User ID.')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
+        $user = $dbForProject->getDocument('users', $userId);
+
+        if ($user->isEmpty()) {
+            throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+        'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
 App::delete('/v1/users/:userId/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'users'])
