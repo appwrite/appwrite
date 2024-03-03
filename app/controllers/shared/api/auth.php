@@ -7,6 +7,26 @@ use Appwrite\Extend\Exception;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use MaxMind\Db\Reader;
+use Utopia\Database\DateTime;
+
+App::init()
+    ->groups(['mfaProtected'])
+    ->inject('session')
+    ->action(function (Document $session) {
+        $isSessionSafe = false;
+
+        $lastUpdate = $session->getAttribute('mfaUpdatedAt');
+        if (!empty($lastUpdate)) {
+            $now = DateTime::now();
+            $maxAllowedDate = DateTime::addSeconds($lastUpdate, Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
+
+            $isSessionSafe = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+        }
+
+        if (!$isSessionSafe) {
+            throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
+        }
+    });
 
 App::init()
     ->groups(['auth'])
