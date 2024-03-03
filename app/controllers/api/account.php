@@ -3742,7 +3742,7 @@ App::post('/v1/account/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::put('/v1/account/mfa/recovery-codes')
+App::patch('/v1/account/mfa/recovery-codes')
     ->desc('Regenerate MFA Recovery Codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].update.mfa')

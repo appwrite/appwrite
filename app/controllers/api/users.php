@@ -1626,7 +1626,7 @@ App::get('/v1/users/:userId/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::post('/v1/users/:userId/mfa/recovery-codes')
+App::patch('/v1/users/:userId/mfa/recovery-codes')
     ->desc('Create MFA Recovery Codes')
     ->groups(['api', 'users'])
     ->label('event', 'users.[userId].create.mfa.recovery-codes')
@@ -1646,7 +1646,7 @@ App::post('/v1/users/:userId/mfa/recovery-codes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
@@ -1692,7 +1692,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $type, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $userId, Response $response, Database $dbForProject, Event $queueForEvents) {
         $user = $dbForProject->getDocument('users', $userId);
 
         if ($user->isEmpty()) {
