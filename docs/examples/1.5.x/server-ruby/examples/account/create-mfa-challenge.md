@@ -10,5 +10,5 @@ client = Client.new
 account = Account.new(client)
 
 result = account.create_mfa_challenge(
-    factor: ::EMAIL
+    factor: AuthenticationFactor::EMAIL
 )

@@ -1,4 +1,4 @@
-import { Client, Account,  } from "https://deno.land/x/appwrite/mod.ts";
+import { Client, Account, AuthenticatorType } from "https://deno.land/x/appwrite/mod.ts";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,6 +8,6 @@ const client = new Client()
 const account = new Account(client);
 
 const response = await account.updateMfaAuthenticator(
-    .Totp, // type
+    AuthenticatorType.Totp, // type
     '<OTP>' // otp
 );

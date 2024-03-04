@@ -7,6 +7,6 @@ Client client = Client()
 Account account = Account(client);
 
 await account.deleteMfaAuthenticator(
-    type: .totp,
+    type: AuthenticatorType.totp,
     otp: '<OTP>',
 );

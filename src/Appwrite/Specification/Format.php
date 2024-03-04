@@ -122,15 +122,15 @@ abstract class Format
                                 return 'OAuthProvider';
                         }
                         break;
-                    case 'addAuthenticator':
-                    case 'verifyAuthenticator':
-                    case 'deleteAuthenticator':
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
                         switch ($param) {
                             case 'type':
                                 return 'AuthenticatorType';
                         }
                         break;
-                    case 'createChallenge':
+                    case 'createMfaChallenge':
                         switch ($param) {
                             case 'factor':
                                 return 'AuthenticationFactor';
@@ -318,7 +318,9 @@ abstract class Format
                                 return 'UserUsageRange';
                         }
                         break;
-                    case 'deleteAuthenticator':
+                    case 'createMfaAuthenticator':
+                    case 'updateMfaAuthenticator':
+                    case 'deleteMfaAuthenticator':
                         switch ($param) {
                             case 'type':
                                 return 'AuthenticatorType';

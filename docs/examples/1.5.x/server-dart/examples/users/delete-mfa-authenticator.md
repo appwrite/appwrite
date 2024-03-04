@@ -9,5 +9,5 @@ Users users = Users(client);
 
 await users.deleteMfaAuthenticator(
     userId: '<USER_ID>',
-    type: .totp,
+    type: AuthenticatorType.totp,
 );

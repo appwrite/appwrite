@@ -7,5 +7,5 @@ const client = new sdk.Client()
 const account = new sdk.Account(client);
 
 const result = await account.createMfaChallenge(
-    sdk..Email // factor
+    sdk.AuthenticationFactor.Email // factor
 );
