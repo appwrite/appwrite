@@ -40,7 +40,6 @@ class V17 extends Filter
     {
         unset($content['targets']);
         unset($content['mfa']);
-        unset($content['totp']);
         return $content;
     }
 

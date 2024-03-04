@@ -29,5 +29,6 @@ query {
         current
         factors
         secret
+        mfaUpdatedAt
     }
 }

@@ -74,7 +74,6 @@ class V17Test extends TestCase
                 [
                     'targets' => 'test',
                     'mfa' => 'test',
-                    'totp' => 'test',
                 ],
                 [
                 ],

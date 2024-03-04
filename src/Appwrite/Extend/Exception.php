@@ -89,6 +89,11 @@ class Exception extends \Exception
     public const USER_MISSING_ID                   = 'user_missing_id';
     public const USER_MORE_FACTORS_REQUIRED        = 'user_more_factors_required';
     public const USER_INVALID_CHALLENGE            = 'user_invalid_challenge';
+    public const USER_AUTHENTICATOR_NOT_FOUND      = 'user_authenticator_not_found';
+    public const USER_AUTHENTICATOR_ALREADY_VERIFIED = 'user_authenticator_already_verified';
+    public const USER_RECOVERY_CODES_ALREADY_EXISTS = 'user_recovery_codes_already_exists';
+    public const USER_RECOVERY_CODES_NOT_FOUND     = 'user_recovery_codes_not_found';
+    public const USER_CHALLENGE_REQUIRED           = 'user_challenge_required';
     public const USER_OAUTH2_BAD_REQUEST           = 'user_oauth2_bad_request';
     public const USER_OAUTH2_UNAUTHORIZED          = 'user_oauth2_unauthorized';
     public const USER_OAUTH2_PROVIDER_ERROR        = 'user_oauth2_provider_error';

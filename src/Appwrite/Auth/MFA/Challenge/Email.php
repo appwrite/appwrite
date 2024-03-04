@@ -15,8 +15,8 @@ class Email extends Challenge
     public static function challenge(Document $challenge, Document $user, string $otp): bool
     {
         if (
-            $challenge->isSet('provider') &&
-            $challenge->getAttribute('provider') === 'email'
+            $challenge->isSet('type') &&
+            $challenge->getAttribute('type') === Type::EMAIL
         ) {
             return self::verify($challenge, $otp);
         }

@@ -1,1 +1,0 @@
-Complete the MFA challenge by providing the one-time password.

@@ -234,6 +234,7 @@ class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals(2, $response['body']['total']);
         $this->assertEquals($sessionId, $response['body']['sessions'][0]['$id']);
+        $this->assertEmpty($response['body']['sessions'][0]['secret']);
 
         $this->assertEquals('Windows', $response['body']['sessions'][0]['osName']);
         $this->assertEquals('WIN', $response['body']['sessions'][0]['osCode']);
@@ -1770,6 +1771,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals('123456', $response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertGreaterThan(DateTime::addSeconds(new \DateTime(), 14400 - 5), $response['body']['providerAccessTokenExpiry']); // 5 seconds allowed networking delay
@@ -1805,6 +1807,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals($response['body']['provider'], 'anonymous');
 
         $sessionID = $response['body']['$id'];
@@ -1817,6 +1820,7 @@ class AccountCustomClientTest extends Scope
         ]));
 
         $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEmpty($response['body']['secret']);
         $this->assertEquals($response['body']['provider'], 'anonymous');
 
         $response = $this->client->call(Client::METHOD_GET, '/account/sessions/97823askjdkasd80921371980', array_merge([
