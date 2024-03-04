@@ -3368,6 +3368,17 @@ $consoleCollections = array_merge([
                 'filters' => ['json'],
             ],
             [
+                '$id' => ID::custom('apis'),
+                'type' => Database::VAR_STRING,
+                'format' => '',
+                'size' => 16384,
+                'signed' => true,
+                'required' => false,
+                'default' => [],
+                'array' => false,
+                'filters' => ['json'],
+            ],
+            [
                 '$id' => ID::custom('smtp'),
                 'type' => Database::VAR_STRING,
                 'format' => '',
