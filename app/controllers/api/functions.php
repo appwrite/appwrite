@@ -1540,7 +1540,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
 
     App::patch('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->groups(['api', 'functions'])
-    ->desc('Update build status to cancelled')
+    ->desc('Update build status')
     ->label('scope', 'functions.write')
     ->label('audits.event', 'deployment.update')
     ->label('audits.resource', 'function/{request.functionId}')
@@ -1552,12 +1552,11 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
     ->label('sdk.response.model', Response::MODEL_BUILD)
     ->param('functionId', '', new UID(), 'Function ID.')
     ->param('deploymentId', '', new UID(), 'Deployment ID.')
-    ->param('buildId', '', new UID(), 'Build unique ID.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('queueForEvents')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents) {
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Document $project, Event $queueForEvents) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -1570,7 +1569,7 @@ App::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId')
             throw new Exception(Exception::DEPLOYMENT_NOT_FOUND);
         }
 
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $buildId));
+        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
 
         if ($build->isEmpty()) {
             throw new Exception(Exception::BUILD_NOT_FOUND);

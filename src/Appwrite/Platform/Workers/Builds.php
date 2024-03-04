@@ -9,6 +9,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
 use Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Swoole\Coroutine as Co;
 use Executor\Executor;
 use Utopia\App;
@@ -144,6 +145,10 @@ class Builds extends Action
         $startTime = DateTime::now();
         $durationStart = \microtime(true);
         $buildId = $deployment->getAttribute('buildId', '');
+        if ($buildId->isEmpty()) {
+            throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
+        }
+
         $deviceFunctions = $getFunctionsDevice($project->getId());
 
         $build = $dbForProject->getDocument('builds', $buildId);
@@ -494,6 +499,11 @@ class Builds extends Action
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
             Authorization::skip(fn() => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
+            $build = $dbForProject->getDocument('builds', $buildId);
+            if ($build->getAttribute('status') === 'cancelled') {
+                return;
+            }
+
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
             $build->setAttribute('endTime', $endTime);
