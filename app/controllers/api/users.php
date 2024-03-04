@@ -1711,7 +1711,7 @@ App::put('/v1/users/:userId/mfa/recovery-codes')
         $queueForEvents->setParam('userId', $user->getId());
 
         $document = new Document([
-        'recoveryCodes' => $mfaRecoveryCodes
+            'recoveryCodes' => $mfaRecoveryCodes
         ]);
 
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);

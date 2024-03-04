@@ -13,17 +13,17 @@ App::init()
     ->groups(['mfaProtected'])
     ->inject('session')
     ->action(function (Document $session) {
-        $isSessionSafe = false;
+        $isSessionFresh = false;
 
         $lastUpdate = $session->getAttribute('mfaUpdatedAt');
         if (!empty($lastUpdate)) {
             $now = DateTime::now();
             $maxAllowedDate = DateTime::addSeconds($lastUpdate, Auth::MFA_RECENT_DURATION); // Maximum date until session is considered safe before asking for another challenge
 
-            $isSessionSafe = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
+            $isSessionFresh = DateTime::formatTz($maxAllowedDate) >= DateTime::formatTz($now);
         }
 
-        if (!$isSessionSafe) {
+        if (!$isSessionFresh) {
             throw new Exception(Exception::USER_CHALLENGE_REQUIRED);
         }
     });

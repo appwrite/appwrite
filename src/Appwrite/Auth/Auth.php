@@ -89,7 +89,7 @@ class Auth
     /**
      * MFA
      */
-    public const MFA_RECENT_DURATION = 600; // 5 minutes
+    public const MFA_RECENT_DURATION = 1800; // 30 mins
 
     /**
      * @var string
