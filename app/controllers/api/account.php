@@ -116,7 +116,7 @@ App::post('/v1/account')
             Query::equal('providerEmail', [$email]),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         if ($project->getAttribute('auths', [])['personalDataCheck'] ?? false) {
@@ -743,7 +743,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                     Query::equal('providerEmail', [$email]),
                 ]);
                 if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                    throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
                 }
 
                 try {
@@ -814,7 +814,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                 Query::notEqual('userId', $user->getId()),
             ]);
             if (!empty($identitiesWithMatchingEmail)) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $dbForProject->createDocument('identities', new Document([
@@ -1371,7 +1371,7 @@ App::post('/v1/account/tokens/email')
                 Query::equal('providerEmail', [$email]),
             ]);
             if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-                throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+                throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
             }
 
             $userId = $userId === 'unique()' ? ID::unique() : $userId;
@@ -2438,7 +2438,7 @@ App::patch('/v1/account/email')
             Query::notEqual('userId', $user->getId()),
         ]);
         if ($identityWithMatchingEmail !== false && !$identityWithMatchingEmail->isEmpty()) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $user
@@ -2474,7 +2474,7 @@ App::patch('/v1/account/email')
             }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate) {
-            throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
+            throw new Exception(Exception::GENERAL_BAD_REQUEST); /** Return a generic bad request to prevent exposing existing accounts */
         }
 
         $queueForEvents->setParam('userId', $user->getId());
