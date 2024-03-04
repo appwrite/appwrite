@@ -173,6 +173,12 @@ class Session extends Model
                 'default' => '',
                 'example' => '5e5bb8c16897e',
             ])
+            ->addRule('mfaUpdatedAt', [
+                'type' => self::TYPE_DATETIME,
+                'description' => 'Most recent date in ISO 8601 format when the session successfully passed MFA challenge.',
+                'default' => '',
+                'example' => self::TYPE_DATETIME_EXAMPLE,
+            ])
         ;
     }
 

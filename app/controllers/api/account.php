@@ -2154,6 +2154,10 @@ App::get('/v1/account/sessions')
     ->inject('project')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
@@ -2162,6 +2166,8 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '');
+
             $sessions[$key] = $session;
         }
 
@@ -2256,6 +2262,10 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project) {
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -2268,6 +2278,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
+                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -3712,17 +3723,16 @@ App::post('/v1/account/mfa/recovery-codes')
     ->label('sdk.namespace', 'account')
     ->label('sdk.method', 'createMfaRecoveryCodes')
     ->label('sdk.description', '/docs/references/account/create-mfa-recovery-codes.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_USER)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
     ->inject('response')
     ->inject('user')
-    ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
         $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
 
@@ -3735,6 +3745,77 @@ App::post('/v1/account/mfa/recovery-codes')
         $dbForProject->updateDocument('users', $user->getId(), $user);
 
         $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::patch('/v1/account/mfa/recovery-codes')
+    ->desc('Regenerate MFA Recovery Codes')
+    ->groups(['api', 'account', 'mfaProtected'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/update-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->inject('user')
+    ->inject('queueForEvents')
+    ->action(function (Database $dbForProject, Response $response, Document $user, Event $queueForEvents) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::get('/v1/account/mfa/recovery-codes')
+    ->desc('Get MFA Recovery Codes')
+    ->groups(['api', 'account', 'mfaProtected'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/get-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('response')
+    ->inject('user')
+    ->action(function (Response $response, Document $user) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
 
         $document = new Document([
             'recoveryCodes' => $mfaRecoveryCodes
@@ -4063,7 +4144,11 @@ App::put('/v1/account/mfa/challenge')
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $type, Document::SET_TYPE_APPEND));
+        $session = $session
+            ->setAttribute('factors', $type, Document::SET_TYPE_APPEND)
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
 
         $queueForEvents
                     ->setParam('userId', $user->getId())
