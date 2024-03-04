@@ -3,8 +3,8 @@
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Challenge;
-use Appwrite\Auth\MFA\Provider;
-use Appwrite\Auth\MFA\Provider\TOTP;
+use Appwrite\Auth\MFA\Type;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\OAuth2\Exception as OAuth2Exception;
 use Appwrite\Auth\Validator\Password;
 use Appwrite\Auth\Validator\Phone;
@@ -151,11 +151,11 @@ App::post('/v1/account')
                 'reset' => false,
                 'name' => $name,
                 'mfa' => false,
-                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
                 'search' => implode(' ', [$userId, $email, $name]),
                 'accessedAt' => DateTime::now(),
             ]);
@@ -766,11 +766,11 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'reset' => false,
                         'name' => $name,
                         'mfa' => false,
-                        'totp' => false,
                         'prefs' => new \stdClass(),
                         'sessions' => null,
                         'tokens' => null,
                         'memberships' => null,
+                        'authenticators' => null,
                         'search' => implode(' ', [$userId, $email, $name]),
                         'accessedAt' => DateTime::now(),
                     ]);
@@ -1152,11 +1152,11 @@ App::post('/v1/account/tokens/magic-url')
                 'registration' => DateTime::now(),
                 'reset' => false,
                 'mfa' => false,
-                'totp' => false,
                 'prefs' => new \stdClass(),
                 'sessions' => null,
                 'tokens' => null,
                 'memberships' => null,
+                'authenticators' => null,
                 'search' => implode(' ', [$userId, $email]),
                 'accessedAt' => DateTime::now(),
             ]);
@@ -1565,14 +1565,14 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $record = $geodb->get($request->getIP());
     $sessionSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_SESSION);
 
-    $factor = match ($verifiedToken->getAttribute('type')) {
+    $factor = (match ($verifiedToken->getAttribute('type')) {
         Auth::TOKEN_TYPE_MAGIC_URL,
         Auth::TOKEN_TYPE_OAUTH2,
         Auth::TOKEN_TYPE_EMAIL => 'email',
         Auth::TOKEN_TYPE_PHONE => 'phone',
         Auth::TOKEN_TYPE_GENERIC => 'token',
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
-    };
+    });
 
     $session = new Document(array_merge(
         [
@@ -1971,11 +1971,11 @@ App::post('/v1/account/sessions/anonymous')
             'reset' => false,
             'name' => null,
             'mfa' => false,
-            'totp' => false,
             'prefs' => new \stdClass(),
             'sessions' => null,
             'tokens' => null,
             'memberships' => null,
+            'authenticators' => null,
             'search' => $userId,
             'accessedAt' => DateTime::now(),
         ]);
@@ -2154,6 +2154,10 @@ App::get('/v1/account/sessions')
     ->inject('project')
     ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $sessions = $user->getAttribute('sessions', []);
         $current = Auth::sessionVerify($sessions, Auth::$secret);
 
@@ -2162,6 +2166,8 @@ App::get('/v1/account/sessions')
 
             $session->setAttribute('countryName', $countryName);
             $session->setAttribute('current', ($current == $session->getId()) ? true : false);
+            $session->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '');
+
             $sessions[$key] = $session;
         }
 
@@ -2256,6 +2262,10 @@ App::get('/v1/account/sessions/:sessionId')
     ->inject('project')
     ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project) {
 
+        $roles = Authorization::getRoles();
+        $isPrivilegedUser = Auth::isPrivilegedUser($roles);
+        $isAppUser = Auth::isAppUser($roles);
+
         $sessions = $user->getAttribute('sessions', []);
         $sessionId = ($sessionId === 'current')
             ? Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret)
@@ -2268,6 +2278,7 @@ App::get('/v1/account/sessions/:sessionId')
                 $session
                     ->setAttribute('current', ($session->getAttribute('secret') == Auth::hash(Auth::$secret)))
                     ->setAttribute('countryName', $countryName)
+                    ->setAttribute('secret', ($isPrivilegedUser || $isAppUser) ? $session->getAttribute('secret', '') : '')
                 ;
 
                 return $response->dynamic($session, Response::MODEL_SESSION);
@@ -2630,7 +2641,7 @@ App::patch('/v1/account/status')
 
 App::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
-    ->groups(['api', 'account'])
+    ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
     ->label('event', 'users.[userId].sessions.[sessionId].delete')
     ->label('audits.event', 'session.delete')
@@ -3543,8 +3554,8 @@ App::get('/v1/account/mfa/factors')
     ->label('scope', 'account')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'listFactors')
-    ->label('sdk.description', '/docs/references/account/list-factors.md')
+    ->label('sdk.method', 'listMfaFactors')
+    ->label('sdk.description', '/docs/references/account/list-mfa-factors.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_FACTORS)
@@ -3554,16 +3565,18 @@ App::get('/v1/account/mfa/factors')
     ->inject('user')
     ->action(function (Response $response, Document $user) {
 
-        $providers = new Document([
-            'totp' => $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false),
-            'email' => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
-            'phone' => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
+        $totp = TOTP::getAuthenticatorFromUser($user);
+
+        $factors = new Document([
+            Type::TOTP => $totp !== null && $totp->getAttribute('verified', false),
+            Type::EMAIL => $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false),
+            Type::PHONE => $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false)
         ]);
 
-        $response->dynamic($providers, Response::MODEL_MFA_FACTORS);
+        $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::post('/v1/account/mfa/:type')
+App::post('/v1/account/mfa/authenticators/:type')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3573,14 +3586,14 @@ App::post('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'addAuthenticator')
-    ->label('sdk.description', '/docs/references/account/add-authenticator.md')
+    ->label('sdk.method', 'createMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/create-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_TYPE)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator. Must be `' . Type::TOTP . '`')
     ->inject('requestTimestamp')
     ->inject('response')
     ->inject('project')
@@ -3589,40 +3602,53 @@ App::post('/v1/account/mfa/:type')
     ->inject('queueForEvents')
     ->action(function (string $type, ?\DateTime $requestTimestamp, Response $response, Document $project, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $otp = match ($type) {
-            'totp' => new TOTP(),
-            default => throw new Exception(Exception::GENERAL_UNKNOWN, 'Unknown type.')
-        };
+        $otp = (match ($type) {
+            Type::TOTP => new TOTP(),
+            default => throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Unknown type.') // Ideally never happens if param validator stays always in sync
+        });
 
         $otp->setLabel($user->getAttribute('email'));
         $otp->setIssuer($project->getAttribute('name'));
 
-        $backups = Provider::generateBackupCodes();
+        $authenticator = TOTP::getAuthenticatorFromUser($user);
 
-    if ($user->getAttribute('totp') && $user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP already exists on this account.');
-    }
+        if ($authenticator) {
+            if ($authenticator->getAttribute('verified')) {
+                throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
+            }
+            $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+        }
 
-        $user
-            ->setAttribute('totp', true)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpBackup', $backups)
-            ->setAttribute('totpSecret', $otp->getSecret());
+        $authenticator = new Document([
+            '$id' => ID::unique(),
+            'userId' => $user->getId(),
+            'userInternalId' => $user->getInternalId(),
+            'type' => Type::TOTP,
+            'verified' => false,
+            'data' => [
+                'secret' => $otp->getSecret(),
+            ],
+            '$permissions' => [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]
+        ]);
 
-        $model = new Document();
-        $model
-            ->setAttribute('backups', $backups)
-            ->setAttribute('secret', $otp->getSecret())
-            ->setAttribute('uri', $otp->getProvisioningUri());
+        $model = new Document([
+            'secret' => $otp->getSecret(),
+            'uri' => $otp->getProvisioningUri()
+        ]);
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $authenticator = $dbForProject->createDocument('authenticators', $authenticator);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
         $response->dynamic($model, Response::MODEL_MFA_TYPE);
     });
 
-App::put('/v1/account/mfa/:type')
+App::put('/v1/account/mfa/authenticators/:type')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3632,41 +3658,48 @@ App::put('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'verifyAuthenticator')
-    ->label('sdk.description', '/docs/references/account/verify-authenticator.md')
+    ->label('sdk.method', 'updateMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/update-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
     ->label('sdk.offline.model', '/account')
     ->label('sdk.offline.key', 'current')
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
-    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('project')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents) {
 
-        $success = match ($type) {
-            'totp' => Challenge\TOTP::verify($user, $otp),
+        $authenticator = (match ($type) {
+            Type::TOTP => TOTP::getAuthenticatorFromUser($user),
+            default => null
+        });
+
+        if ($authenticator === null) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
+        }
+
+        if ($authenticator->getAttribute('verified')) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_ALREADY_VERIFIED);
+        }
+
+        $success = (match ($type) {
+            Type::TOTP => Challenge\TOTP::verify($user, $otp),
             default => false
-        };
+        });
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator needs to be added first.');
-    } elseif ($user->getAttribute('totpVerification')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'Authenticator already verified on this account.');
-    }
+        $authenticator->setAttribute('verified', true);
 
-        $user->setAttribute('totpVerification', true);
-
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->updateDocument('authenticators', $authenticator->getId(), $authenticator);
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
@@ -3678,7 +3711,120 @@ App::put('/v1/account/mfa/:type')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account/mfa/:type')
+App::post('/v1/account/mfa/recovery-codes')
+    ->desc('Create MFA Recovery Codes')
+    ->groups(['api', 'account'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'createMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/create-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('response')
+    ->inject('user')
+    ->inject('dbForProject')
+    ->inject('queueForEvents')
+    ->action(function (Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (!empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_ALREADY_EXISTS);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::patch('/v1/account/mfa/recovery-codes')
+    ->desc('Regenerate MFA Recovery Codes')
+    ->groups(['api', 'account', 'mfaProtected'])
+    ->label('event', 'users.[userId].update.mfa')
+    ->label('scope', 'account')
+    ->label('audits.event', 'user.update')
+    ->label('audits.resource', 'user/{response.$id}')
+    ->label('audits.userId', '{response.$id}')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'updateMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/update-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('dbForProject')
+    ->inject('response')
+    ->inject('user')
+    ->inject('queueForEvents')
+    ->action(function (Database $dbForProject, Response $response, Document $user, Event $queueForEvents) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $mfaRecoveryCodes = Type::generateBackupCodes();
+        $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+        $dbForProject->updateDocument('users', $user->getId(), $user);
+
+        $queueForEvents->setParam('userId', $user->getId());
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::get('/v1/account/mfa/recovery-codes')
+    ->desc('Get MFA Recovery Codes')
+    ->groups(['api', 'account', 'mfaProtected'])
+    ->label('scope', 'account')
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'account')
+    ->label('sdk.method', 'getMfaRecoveryCodes')
+    ->label('sdk.description', '/docs/references/account/get-mfa-recovery-codes.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_MFA_RECOVERY_CODES)
+    ->label('sdk.offline.model', '/account')
+    ->label('sdk.offline.key', 'current')
+    ->inject('response')
+    ->inject('user')
+    ->action(function (Response $response, Document $user) {
+
+        $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+
+        if (empty($mfaRecoveryCodes)) {
+            throw new Exception(Exception::USER_RECOVERY_CODES_NOT_FOUND);
+        }
+
+        $document = new Document([
+            'recoveryCodes' => $mfaRecoveryCodes
+        ]);
+
+        $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
+    });
+
+App::delete('/v1/account/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -3688,40 +3834,50 @@ App::delete('/v1/account/mfa/:type')
     ->label('audits.userId', '{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'deleteAuthenticator')
-    ->label('sdk.description', '/docs/references/account/delete-mfa.md')
+    ->label('sdk.method', 'deleteMfaAuthenticator')
+    ->label('sdk.description', '/docs/references/account/delete-mfa-authenticator.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_USER)
-    ->param('type', null, new WhiteList(['totp']), 'Type of authenticator.')
+    ->param('type', null, new WhiteList([Type::TOTP]), 'Type of authenticator.')
     ->param('otp', '', new Text(256), 'Valid verification token.')
-    ->inject('requestTimestamp')
     ->inject('response')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $type, string $otp, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->action(function (string $type, string $otp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
 
-        $success = match ($type) {
-            'totp' => Challenge\TOTP::verify($user, $otp),
+        $authenticator = (match ($type) {
+            Type::TOTP => TOTP::getAuthenticatorFromUser($user),
+            default => null
+        });
+
+        if (!$authenticator) {
+            throw new Exception(Exception::USER_AUTHENTICATOR_NOT_FOUND);
+        }
+
+        $success = (match ($type) {
+            Type::TOTP => Challenge\TOTP::verify($user, $otp),
             default => false
-        };
+        });
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+            if (in_array($otp, $mfaRecoveryCodes)) {
+                $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                $dbForProject->updateDocument('users', $user->getId(), $user);
 
-    if (!$user->getAttribute('totp')) {
-        throw new Exception(Exception::GENERAL_UNKNOWN, 'TOTP not added.');
-    }
+                $success = true;
+            }
+        }
 
-        $user
-            ->setAttribute('totp', false)
-            ->setAttribute('totpVerification', false)
-            ->setAttribute('totpSecret', null)
-            ->setAttribute('totpBackup', null);
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-        $user = $dbForProject->withRequestTimestamp($requestTimestamp, fn () => $dbForProject->updateDocument('users', $user->getId(), $user));
+        $dbForProject->deleteDocument('authenticators', $authenticator->getId());
+        $dbForProject->purgeCachedDocument('users', $user->getId());
 
         $queueForEvents->setParam('userId', $user->getId());
 
@@ -3738,14 +3894,14 @@ App::post('/v1/account/mfa/challenge')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'createChallenge')
-    ->label('sdk.description', '/docs/references/account/create-challenge.md')
+    ->label('sdk.method', 'createMfaChallenge')
+    ->label('sdk.description', '/docs/references/account/create-mfa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_MFA_CHALLENGE)
     ->label('abuse-limit', 10)
     ->label('abuse-key', 'url:{url},token:{param-token}')
-    ->param('factor', '', new WhiteList(['totp', 'phone', 'email']), 'Factor used for verification.')
+    ->param('factor', '', new WhiteList([Type::EMAIL, Type::PHONE, Type::TOTP, Type::RECOVERY_CODE]), 'Factor used for verification. Must be one of following: `' . Type::EMAIL . '`, `' . Type::PHONE . '`, `' . Type::TOTP . '`, `' . Type::RECOVERY_CODE . '`.')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('user')
@@ -3762,7 +3918,7 @@ App::post('/v1/account/mfa/challenge')
         $challenge = new Document([
             'userId' => $user->getId(),
             'userInternalId' => $user->getInternalId(),
-            'provider' => $factor,
+            'type' => $factor,
             'token' => Auth::tokenGenerator(),
             'code' => $code,
             'expire' => $expire,
@@ -3776,7 +3932,7 @@ App::post('/v1/account/mfa/challenge')
         $challenge = $dbForProject->createDocument('challenges', $challenge);
 
         switch ($factor) {
-            case 'phone':
+            case Type::PHONE:
                 if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
@@ -3814,7 +3970,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setRecipients([$user->getAttribute('phone')])
                     ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
-            case 'email':
+            case Type::EMAIL:
                 if (empty(App::getEnv('_APP_SMTP_HOST'))) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
@@ -3920,14 +4076,14 @@ App::put('/v1/account/mfa/challenge')
     ->desc('Create MFA Challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
-    ->label('event', 'users.[userId].sessions.[tokenId].create')
+    ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->label('audits.event', 'challenges.update')
     ->label('audits.resource', 'user/{response.userId}')
     ->label('audits.userId', '{response.userId}')
     ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_JWT])
     ->label('sdk.namespace', 'account')
-    ->label('sdk.method', 'updateChallenge')
-    ->label('sdk.description', '/docs/references/account/update-challenge.md')
+    ->label('sdk.method', 'updateMfaChallenge')
+    ->label('sdk.description', '/docs/references/account/update-mfa-challenge.md')
     ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
     ->label('sdk.response.model', Response::MODEL_SESSION)
     ->label('abuse-limit', 10)
@@ -3947,27 +4103,39 @@ App::put('/v1/account/mfa/challenge')
             throw new Exception(Exception::USER_INVALID_TOKEN);
         }
 
-        $provider = $challenge->getAttribute('provider');
-        $success = match ($provider) {
-            'totp' => Challenge\TOTP::challenge($challenge, $user, $otp),
-            'phone' => Challenge\Phone::challenge($challenge, $user, $otp),
-            'email' => Challenge\Email::challenge($challenge, $user, $otp),
-            default => false
+        $type = $challenge->getAttribute('type');
+
+        $recoveryCodeChallenge = function (Document $challenge, Document $user, string $otp) use ($dbForProject) {
+            if (
+                $challenge->isSet('type') &&
+                $challenge->getAttribute('type') === Type::RECOVERY_CODE
+            ) {
+                $mfaRecoveryCodes = $user->getAttribute('mfaRecoveryCodes', []);
+                if (in_array($otp, $mfaRecoveryCodes)) {
+                    $mfaRecoveryCodes = array_diff($mfaRecoveryCodes, [$otp]);
+                    $user->setAttribute('mfaRecoveryCodes', $mfaRecoveryCodes);
+                    $dbForProject->updateDocument('users', $user->getId(), $user);
+
+                    return true;
+                }
+
+                return false;
+            }
+
+            return false;
         };
 
-    if (!$success && $provider === 'totp') {
-        $backups = $user->getAttribute('totpBackup', []);
-        if (in_array($otp, $backups)) {
-            $success = true;
-            $backups = array_diff($backups, [$otp]);
-            $user->setAttribute('totpBackup', $backups);
-            $dbForProject->updateDocument('users', $user->getId(), $user);
-        }
-    }
+        $success = (match ($type) {
+            Type::TOTP => Challenge\TOTP::challenge($challenge, $user, $otp),
+            Type::PHONE => Challenge\Phone::challenge($challenge, $user, $otp),
+            Type::EMAIL => Challenge\Email::challenge($challenge, $user, $otp),
+            Type::RECOVERY_CODE => $recoveryCodeChallenge($challenge, $user, $otp),
+            default => false
+        });
 
-    if (!$success) {
-        throw new Exception(Exception::USER_INVALID_TOKEN);
-    }
+        if (!$success) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
         $dbForProject->deleteDocument('challenges', $challengeId);
         $dbForProject->purgeCachedDocument('users', $user->getId());
@@ -3976,10 +4144,15 @@ App::put('/v1/account/mfa/challenge')
         $sessionId = Auth::sessionVerify($user->getAttribute('sessions', []), Auth::$secret, $authDuration);
         $session = $dbForProject->getDocument('sessions', $sessionId);
 
-        $dbForProject->updateDocument('sessions', $sessionId, $session->setAttribute('factors', $provider, Document::SET_TYPE_APPEND));
+        $session = $session
+            ->setAttribute('factors', $type, Document::SET_TYPE_APPEND)
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+
+        $dbForProject->updateDocument('sessions', $sessionId, $session);
 
         $queueForEvents
-            ->setParam('userId', $user->getId());
+                    ->setParam('userId', $user->getId())
+                    ->setParam('sessionId', $session->getId());
 
         $response->dynamic($session, Response::MODEL_SESSION);
     });

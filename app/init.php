@@ -472,6 +472,20 @@ Database::addFilter(
 );
 
 Database::addFilter(
+    'subQueryAuthenticators',
+    function (mixed $value) {
+        return null;
+    },
+    function (mixed $value, Document $document, Database $database) {
+        return Authorization::skip(fn() => $database
+            ->find('authenticators', [
+                Query::equal('userInternalId', [$document->getInternalId()]),
+                Query::limit(APP_LIMIT_SUBQUERY),
+            ]));
+    }
+);
+
+Database::addFilter(
     'subQueryMemberships',
     function (mixed $value) {
         return null;

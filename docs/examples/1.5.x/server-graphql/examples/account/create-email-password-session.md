@@ -30,5 +30,6 @@ mutation {
         current
         factors
         secret
+        mfaUpdatedAt
     }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Auth\Auth;
+use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
@@ -757,9 +758,9 @@ App::get('/v1/teams/:teamId/memberships')
             $user = $dbForProject->getDocument('users', $membership->getAttribute('userId'));
 
             $mfa = $user->getAttribute('mfa', false);
-
             if ($mfa) {
-                $totpEnabled = $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false);
+                $totp = TOTP::getAuthenticatorFromUser($user);
+                $totpEnabled = $totp && $totp->getAttribute('verified', false);
                 $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
                 $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
 
@@ -820,7 +821,8 @@ App::get('/v1/teams/:teamId/memberships/:membershipId')
         $mfa = $user->getAttribute('mfa', false);
 
         if ($mfa) {
-            $totpEnabled = $user->getAttribute('totp', false) && $user->getAttribute('totpVerification', false);
+            $totp = TOTP::getAuthenticatorFromUser($user);
+            $totpEnabled = $totp && $totp->getAttribute('verified', false);
             $emailEnabled = $user->getAttribute('email', false) && $user->getAttribute('emailVerification', false);
             $phoneEnabled = $user->getAttribute('phone', false) && $user->getAttribute('phoneVerification', false);
 
