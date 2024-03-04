@@ -5,8 +5,9 @@ namespace Appwrite\Platform\Workers;
 use Exception;
 use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Database\Document;
 use Utopia\DSN\DSN;
-use Utopia\Messaging\Messages\Sms;
+use Utopia\Messaging\Messages\SMS;
 use Utopia\Messaging\Adapters\SMS\Mock;
 use Utopia\Messaging\Adapters\SMS\Msg91;
 use Utopia\Messaging\Adapters\SMS\Telesign;
@@ -15,6 +16,7 @@ use Utopia\Messaging\Adapters\SMS\Twilio;
 use Utopia\Messaging\Adapters\SMS\Vonage;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
+use Appwrite\Event\Usage;
 
 class Messaging extends Action
 {
@@ -43,20 +45,36 @@ class Messaging extends Action
         $this
             ->desc('Messaging worker')
             ->inject('message')
-            ->callback(fn($message) => $this->action($message));
+            ->inject('queueForUsage')
+            ->callback(fn(Message $message, Usage $queueForUsage) => $this->action($message, $queueForUsage));
     }
 
     /**
      * @param Message $message
+     * @param Usage $queueForUsage
      * @return void
      * @throws Exception
      */
-    public function action(Message $message): void
+    public function action(Message $message, Usage $queueForUsage): void
     {
         $payload = $message->getPayload() ?? [];
 
         if (empty($payload)) {
-            Console::error('Payload arg not found');
+            throw new Exception('Missing payload');
+        }
+
+        if (empty($payload['project'])) {
+            throw new Exception('Project not set in payload');
+        }
+
+        $project = new Document($payload['project'] ?? []);
+
+        Console::log('Project: ' . $project->getId());
+
+        $denyList = App::getEnv('_APP_SMS_PROJECTS_DENY_LIST', '');
+        $denyList = explode(',', $denyList);
+        if (in_array($project->getId(), $denyList)) {
+            Console::error("Project is in the deny list. Skipping ...");
             return;
         }
 
@@ -70,14 +88,29 @@ class Messaging extends Action
             return;
         }
 
-        $sms =  match ($this->dsn->getHost()) {
-            'mock' => new Mock($this->user, $this->secret), // used for tests
-            'twilio' => new Twilio($this->user, $this->secret),
-            'text-magic' => new TextMagic($this->user, $this->secret),
-            'telesign' => new Telesign($this->user, $this->secret),
-            'msg91' => new Msg91($this->user, $this->secret),
-            'vonage' => new Vonage($this->user, $this->secret),
-            default => null
+
+        switch ($this->dsn->getHost()) {
+            case 'mock':
+                 $sms = new Mock($this->user, $this->secret); // used for tests
+                break;
+            case 'twilio':
+                 $sms = new Twilio($this->user, $this->secret);
+                break;
+            case 'text-magic':
+                $sms = new TextMagic($this->user, $this->secret);
+                break;
+            case 'telesign':
+                $sms = new Telesign($this->user, $this->secret);
+                break;
+            case 'msg91':
+                $sms = new Msg91($this->user, $this->secret);
+                $sms->setTemplate($this->dsn->getParam('template'));
+                break;
+            case 'vonage':
+                $sms = new Vonage($this->user, $this->secret);
+                break;
+            default:
+                $sms = null;
         };
 
         if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
@@ -100,6 +133,11 @@ class Messaging extends Action
 
         try {
             $sms->send($message);
+
+            $queueForUsage
+                ->setProject($project)
+                ->addMetric(METRIC_MESSAGES, 1)
+                ->trigger();
         } catch (\Exception $error) {
             throw new Exception('Error sending message: ' . $error->getMessage(), 500);
         }

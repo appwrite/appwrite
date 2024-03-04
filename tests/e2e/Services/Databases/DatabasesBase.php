@@ -978,7 +978,7 @@ trait DatabasesBase
         ]);
 
         $this->assertEquals(400, $badEnum['headers']['status-code']);
-        $this->assertEquals('Invalid `elements` param: Value must a valid array and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
+        $this->assertEquals('Invalid `elements` param: Value must a valid array no longer than 100 items and Value must be a valid string and at least 1 chars and no longer than 255 chars', $badEnum['body']['message']);
 
         return $data;
     }
@@ -2791,7 +2791,7 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
         $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
             'origin' => 'http://localhost',
@@ -2979,7 +2979,7 @@ trait DatabasesBase
             'email' => $email,
             'password' => $password,
         ]);
-        $session2 = $this->client->parseCookie((string)$session2['headers']['set-cookie'])['a_session_' . $this->getProject()['$id']];
+        $session2 = $session2['cookies']['a_session_' . $this->getProject()['$id']];
 
         $document3GetWithDocumentRead = $this->client->call(Client::METHOD_GET, '/databases/' . $databaseId . '/collections/' . $collectionId . '/documents/' . $document3['body']['$id'], [
             'origin' => 'http://localhost',
@@ -4068,6 +4068,8 @@ trait DatabasesBase
         $this->assertEquals(2, count($response['body']['documents']));
         $this->assertEquals(null, $response['body']['documents'][0]['fullName']);
         $this->assertArrayNotHasKey("libraries", $response['body']['documents'][0]);
+        $this->assertArrayNotHasKey('$databaseId', $response['body']['documents'][0]);
+        $this->assertArrayNotHasKey('$collectionId', $response['body']['documents'][0]);
     }
 
     /**
@@ -4087,6 +4089,8 @@ trait DatabasesBase
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayNotHasKey('libraries', $response['body']['documents'][0]);
+        $this->assertArrayNotHasKey('$databaseId', $response['body']['documents'][0]);
+        $this->assertArrayNotHasKey('$collectionId', $response['body']['documents'][0]);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents', array_merge([
             'content-type' => 'application/json',
@@ -4099,6 +4103,8 @@ trait DatabasesBase
         $document = $response['body']['documents'][0];
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertArrayHasKey('libraries', $document);
+        $this->assertArrayNotHasKey('$databaseId', $document);
+        $this->assertArrayNotHasKey('$collectionId', $document);
 
         $response = $this->client->call(Client::METHOD_GET, '/databases/' . $data['databaseId'] . '/collections/' . $data['personCollection'] . '/documents/' . $document['$id'], array_merge([
             'content-type' => 'application/json',

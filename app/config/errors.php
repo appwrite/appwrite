@@ -31,7 +31,7 @@ return [
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,
@@ -102,6 +102,11 @@ return [
         'name' => Exception::GENERAL_NOT_IMPLEMENTED,
         'description' => 'This method was not fully implemented yet. If you believe this is a mistake, please upgrade your Appwrite server version.',
         'code' => 405,
+    ],
+    Exception::GENERAL_BAD_REQUEST => [
+        'name' => Exception::GENERAL_BAD_REQUEST,
+        'description' => 'There was an error processing your request. Please check the inputs and try again.',
+        'code' => 400,
     ],
 
     /** User Errors */
@@ -250,6 +255,11 @@ return [
         'name' => Exception::USER_PHONE_ALREADY_VERIFIED,
         'description' => 'User phone is already verified',
         'code' => 409
+    ],
+    Exception::USER_DELETION_PROHIBITED => [
+        'name' => Exception::USER_DELETION_PROHIBITED,
+        'description' => 'User deletion is not allowed for users with active memberships. Please delete all confirmed memberships before deleting the account.',
+        'code' => 400
     ],
 
     /** Teams */
@@ -680,6 +690,7 @@ return [
         'name' => Exception::RULE_VERIFICATION_FAILED,
         'description' => 'Domain verification failed. Please check if your DNS records are correct and try again.',
         'code' => 401,
+        'publish' => true
     ],
     Exception::PROJECT_SMTP_CONFIG_INVALID => [
         'name' => Exception::PROJECT_SMTP_CONFIG_INVALID,
@@ -767,10 +778,22 @@ return [
     ],
 
     /** Health */
-    Exception::QUEUE_SIZE_EXCEEDED => [
-        'name' => Exception::QUEUE_SIZE_EXCEEDED,
+    Exception::HEALTH_QUEUE_SIZE_EXCEEDED => [
+        'name' => Exception::HEALTH_QUEUE_SIZE_EXCEEDED,
         'description' => 'Queue size threshold hit.',
         'code' => 503,
         'publish' => false
+    ],
+
+    Exception::HEALTH_CERTIFICATE_EXPIRED => [
+        'name' => Exception::HEALTH_CERTIFICATE_EXPIRED,
+        'description' => 'The SSL certificate for the specified domain has expired and is no longer valid.',
+        'code' => 404,
+    ],
+
+    Exception::HEALTH_INVALID_HOST => [
+        'name' => Exception::HEALTH_INVALID_HOST,
+        'description' => 'Failed to establish a connection to the specified domain. Please verify the domain name and ensure that the server is running and accessible.',
+        'code' => 404,
     ],
 ];
