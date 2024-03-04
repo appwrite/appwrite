@@ -11,6 +11,6 @@ client = Client.new
 account = Account.new(client)
 
 result = account.delete_mfa_authenticator(
-    type: ::TOTP,
+    type: AuthenticatorType::TOTP,
     otp: '<OTP>'
 )

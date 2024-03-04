@@ -12,5 +12,5 @@ users = Users.new(client)
 
 result = users.delete_mfa_authenticator(
     user_id: '<USER_ID>',
-    type: ::TOTP
+    type: AuthenticatorType::TOTP
 )

@@ -2,7 +2,7 @@
 
 use Appwrite\Client;
 use Appwrite\Services\Account;
-use Appwrite\Enums\;
+use Appwrite\Enums\AuthenticationFactor;
 
 $client = (new Client())
     ->setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -11,5 +11,5 @@ $client = (new Client())
 $account = new Account($client);
 
 $result = $account->createMfaChallenge(
-    factor: ::EMAIL()
+    factor: AuthenticationFactor::EMAIL()
 );

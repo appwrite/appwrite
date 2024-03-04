@@ -1,4 +1,4 @@
-import { Client, Users,  } from "@appwrite.io/console";
+import { Client, Users, AuthenticatorType } from "@appwrite.io/console";
 
 const client = new Client()
     .setEndpoint('https://cloud.appwrite.io/v1') // Your API Endpoint
@@ -8,7 +8,7 @@ const users = new Users(client);
 
 const result = await users.deleteMfaAuthenticator(
     '<USER_ID>', // userId
-    .Totp // type
+    AuthenticatorType.Totp // type
 );
 
 console.log(response);

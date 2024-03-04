@@ -10,5 +10,5 @@ Client client = new Client()
 Account account = new Account(client);
 
 MfaChallenge result = await account.CreateMfaChallenge(
-    factor: .Email
+    factor: AuthenticationFactor.Email
 );

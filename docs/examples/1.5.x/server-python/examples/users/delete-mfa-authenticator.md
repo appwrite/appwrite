@@ -1,5 +1,5 @@
 from appwrite.client import Client
-from appwrite.enums import 
+from appwrite.enums import AuthenticatorType
 
 client = Client()
 client.set_endpoint('https://cloud.appwrite.io/v1') # Your API Endpoint
@@ -10,5 +10,5 @@ users = Users(client)
 
 result = users.delete_mfa_authenticator(
     user_id = '<USER_ID>',
-    type = .TOTP
+    type = AuthenticatorType.TOTP
 )
