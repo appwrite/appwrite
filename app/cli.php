@@ -103,7 +103,19 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
-            $database->setNamespace('_' . $project->getInternalId());
+
+            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+                $database
+                    ->setShareTables(true)
+                    ->setTenant($project->getInternalId())
+                    ->setNamespace('');
+            } else {
+                $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
+
             return $database;
         }
 
@@ -115,6 +127,18 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $database = new Database($dbAdapter, $cache);
 
         $databases[$databaseName] = $database;
+
+        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            $database
+                ->setShareTables(true)
+                ->setTenant($project->getInternalId())
+                ->setNamespace('');
+        } else {
+            $database
+                ->setShareTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
             ->setNamespace('_' . $project->getInternalId())
