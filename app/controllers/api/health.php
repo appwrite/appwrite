@@ -702,6 +702,47 @@ App::get('/v1/health/storage/local')
         $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
     });
 
+App::get('/v1/health/storage')
+    ->desc('Get storage')
+    ->groups(['api', 'health'])
+    ->label('scope', 'health.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
+    ->label('sdk.namespace', 'health')
+    ->label('sdk.method', 'getStorage')
+    ->label('sdk.description', '/docs/references/health/get-storage.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
+    ->inject('response')
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
+        $checkStart = \microtime(true);
+
+        foreach ($devices as $device) {
+            if (!$device->write($device->getPath('health.txt'), 'test', 'text/plain')) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed writing test file to ' . $device->getRoot());
+            }
+
+            if ($device->read($device->getPath('health.txt')) !== 'test') {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed reading test file from ' . $device->getRoot());
+            }
+
+            if (!$device->delete($device->getPath('health.txt'))) {
+                throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Failed deleting test file from ' . $device->getRoot());
+            }
+        }
+
+        $output = [
+            'status' => 'pass',
+            'ping' => \round((\microtime(true) - $checkStart) / 1000)
+        ];
+
+        $response->dynamic(new Document($output), Response::MODEL_HEALTH_STATUS);
+    });
+
 App::get('/v1/health/anti-virus')
     ->desc('Get antivirus')
     ->groups(['api', 'health'])

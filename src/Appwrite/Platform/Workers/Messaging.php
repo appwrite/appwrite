@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -442,8 +440,8 @@ class Messaging extends Action
                     $adapter->send($data);
 
                     $queueForUsage
-                        ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
+                        ->setProject($project)
                         ->trigger();
                 } catch (\Throwable $e) {
                     throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());

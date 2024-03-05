@@ -2237,7 +2237,7 @@ App::get('/v1/account/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
