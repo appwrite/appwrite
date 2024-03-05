@@ -374,11 +374,15 @@ App::init()
     ->inject('console')
     ->inject('project')
     ->inject('dbForConsole')
+    ->inject('getProjectDB')
     ->inject('locale')
     ->inject('localeCodes')
     ->inject('clients')
+    ->inject('geodb')
+    ->inject('queueForUsage')
+    ->inject('queueForEvents')
     ->inject('queueForCertificates')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, Locale $locale, array $localeCodes, array $clients, Certificate $queueForCertificates) {
+    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage,Event $queueForEvents,Certificate $queueForCertificates) {
         /*
         * Appwrite Router
         */
