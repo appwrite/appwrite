@@ -85,19 +85,25 @@ class V20 extends Migration
                 ]) as $attribute
             ) {
                 $foundIndex = false;
+                $collectionId = "database_{$attribute['databaseInternalId']}_collection_{$attribute['collectionInternalId']}";
                 foreach (
                     $this->documentsIterator('indexes', [
                         Query::equal('databaseInternalId', [$attribute['databaseInternalId']]),
                         Query::equal('collectionInternalId', [$attribute['collectionInternalId']]),
                     ]) as $index
                 ) {
-                    if (in_array($attribute['key'], $index['attributes'])) {
-                        $this->projectDB->deleteIndex($index['collectionId'], $index['$id']);
+                    if (in_array($attribute->getAttribute('key'), $index->getAttribute('attributes'))) {
+                    try {
+                        $this->projectDB->deleteIndex($collectionId, $index->getId());
+                    } catch (Throwable $th) {
+                        Console::warning("Failed to delete index: {$th->getMessage()}");
+                    } finally {
                         $foundIndex = true;
+                    }
                     }
                 }
                 if ($foundIndex === true) {
-                    $this->projectDB->updateAttribute($attribute['collectionInternalId'], $attribute['key'], $attribute['type']);
+                    $this->projectDB->updateAttribute($collectionId, $attribute['key'], $attribute['type']);
                 }
             }
         }
@@ -221,6 +227,22 @@ class V20 extends Migration
                         Console::warning("'mfa' from {$id}: {$th->getMessage()}");
                     }
 
+                    // Create mfaRecoveryCodes attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfaRecoveryCodes');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'mfa' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create mfaRecoveryCodes attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mfaUpdatedAt');
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("'mfa' from {$id}: {$th->getMessage()}");
+                    }
+
                     // Create challenges attribute
                     try {
                         $this->createAttributeFromCollection($this->projectDB, $id, 'challenges');
@@ -257,8 +279,6 @@ class V20 extends Migration
                         Console::warning("'webhooks' from {$id}: {$th->getMessage()}");
                     }
                     break;
-                default:
-                    break;
             }
 
             usleep(50000);
@@ -278,7 +298,6 @@ class V20 extends Migration
         /**
          * Creating inf metric
          */
-
         Console::info('Migrating Sessions metric');
 
         $sessionsCreated = $this->projectDB->sum('stats', 'value', [
@@ -508,7 +527,11 @@ class V20 extends Migration
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $document->getAttribute('email'),
                     ]);
-                    $this->projectDB->createDocument('targets', $target);
+                    try {
+                        $this->projectDB->createDocument('targets', $target);
+                    } catch (Duplicate $th) {
+                        Console::warning("Email target for user {$document->getId()} already exists.");
+                    }
                 }
 
                 if ($document->getAttribute('phone', '') !== '') {
@@ -519,7 +542,11 @@ class V20 extends Migration
                         'providerType' => MESSAGE_TYPE_SMS,
                         'identifier' => $document->getAttribute('phone'),
                     ]);
-                    $this->projectDB->createDocument('targets', $target);
+                    try {
+                        $this->projectDB->createDocument('targets', $target);
+                    } catch (Duplicate $th) {
+                        Console::warning("Email target for user {$document->getId()} already exists.");
+                    }
                 }
                 break;
             case 'sessions':
