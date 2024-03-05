@@ -3,6 +3,7 @@
 namespace Appwrite\Auth\MFA\Challenge;
 
 use Appwrite\Auth\MFA\Challenge;
+use Appwrite\Auth\MFA\Type;
 use Utopia\Database\Document;
 
 class Email extends Challenge
