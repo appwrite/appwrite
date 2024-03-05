@@ -83,6 +83,7 @@ use Utopia\Validator\IP;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
 use Utopia\CLI\Console;
+use Utopia\Database\Adapter\MariaDBProxy;
 use Utopia\Domains\Validator\PublicDomain;
 
 const APP_NAME = 'Appwrite';
@@ -759,13 +760,13 @@ $register->set('pools', function () {
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_CONSOLE', $fallbackForDB),
             'multiple' => false,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql', 'mariadb-proxy'],
         ],
         'database' => [
             'type' => 'database',
             'dsns' => App::getEnv('_APP_CONNECTIONS_DB_PROJECT', $fallbackForDB),
             'multiple' => true,
-            'schemes' => ['mariadb', 'mysql'],
+            'schemes' => ['mariadb', 'mysql', 'mariadb-proxy'],
         ],
         'queue' => [
             'type' => 'queue',
@@ -841,6 +842,14 @@ $register->set('pools', function () {
              * Resource assignment to an adapter will happen below.
              */
             switch ($dsnScheme) {
+                case 'mariadb-proxy':
+                    // Ignore port and password (user = password)
+                    $resource = [
+                        'endpoint' => 'http://' . $dsnHost . '/v1',
+                        'secret' => $dsnUser,
+                        'database' => $dsnDatabase
+                    ];
+                    break;
                 case 'mysql':
                 case 'mariadb':
                     $resource = function () use ($dsnHost, $dsnPort, $dsnUser, $dsnPass, $dsnDatabase) {
@@ -880,6 +889,7 @@ $register->set('pools', function () {
                         $adapter = match ($dsn->getScheme()) {
                             'mariadb' => new MariaDB($resource()),
                             'mysql' => new MySQL($resource()),
+                            'mariadb-proxy' => new MariaDBProxy($resource['endpoint'], $resource['secret'], $resource['database']),
                             default => null
                         };
 
