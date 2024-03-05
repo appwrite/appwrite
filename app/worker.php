@@ -267,7 +267,6 @@ try {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
-
 $worker = $platform->getWorker();
 
 $worker
@@ -283,9 +282,9 @@ $worker
     ->inject('logger')
     ->inject('log')
     ->inject('pools')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools) use ($queueName) {
+    ->inject('project')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
-
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -301,6 +300,7 @@ $worker
             $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId() ?? 'n/a');
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());

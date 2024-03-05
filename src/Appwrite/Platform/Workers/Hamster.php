@@ -286,7 +286,7 @@ class Hamster extends Action
                         $limit = $periodValue['limit'];
                         $period = $periodValue['period'];
 
-                        $requestDocs = $dbForProject->find('stats', [
+                        $requestDocs = $dbForProject->find('stats_v2', [
                             Query::equal('period', [$period]),
                             Query::equal('metric', [$metric]),
                             Query::limit($limit),
