@@ -714,11 +714,11 @@ App::get('/v1/health/storage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->inject('deviceFiles')
-    ->inject('deviceFunctions')
-    ->inject('deviceBuilds')
-    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) {
-        $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {

@@ -2,14 +2,12 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
 use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -389,41 +387,6 @@ class Messaging extends Action
 
         $log->addTag('type', $host);
 
-        if (empty($payload['message'])) {
-            Console::error('Message arg not found');
-            return;
-        }
-
-
-        switch ($this->dsn->getHost()) {
-            case 'mock':
-                 $sms = new Mock($this->user, $this->secret); // used for tests
-                break;
-            case 'twilio':
-                 $sms = new Twilio($this->user, $this->secret);
-                break;
-            case 'text-magic':
-                $sms = new TextMagic($this->user, $this->secret);
-                break;
-            case 'telesign':
-                $sms = new Telesign($this->user, $this->secret);
-                break;
-            case 'msg91':
-                $sms = new Msg91($this->user, $this->secret);
-                $sms->setTemplate($this->dsn->getParam('template'));
-                break;
-            case 'vonage':
-                $sms = new Vonage($this->user, $this->secret);
-                break;
-            default:
-                $sms = null;
-        };
-
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
-            Console::error('Skipped sms processing. No Phone provider has been set.');
-            return;
-        }
-
         $from = App::getEnv('_APP_SMS_FROM');
 
         $provider = new Document([
@@ -477,8 +440,8 @@ class Messaging extends Action
                     $adapter->send($data);
 
                     $queueForUsage
-                        ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
+                        ->setProject($project)
                         ->trigger();
                 } catch (\Throwable $e) {
                     throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());
