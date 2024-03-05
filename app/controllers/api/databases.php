@@ -3687,7 +3687,7 @@ App::get('/v1/databases/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3695,7 +3695,7 @@ App::get('/v1/databases/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -3771,7 +3771,7 @@ App::get('/v1/databases/:databaseId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3779,7 +3779,7 @@ App::get('/v1/databases/:databaseId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
@@ -3857,7 +3857,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
 
         Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
-                $result =  $dbForProject->findOne('stats_v2', [
+                $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', ['inf'])
                 ]);
@@ -3865,7 +3865,7 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
                 $stats[$metric]['total'] = $result['value'] ?? 0;
                 $limit = $days['limit'];
                 $period = $days['period'];
-                $results = $dbForProject->find('stats_v2', [
+                $results = $dbForProject->find('stats', [
                     Query::equal('metric', [$metric]),
                     Query::equal('period', [$period]),
                     Query::limit($limit),
