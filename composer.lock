@@ -1552,16 +1552,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "0.49.0",
+            "version": "0.49.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "02000f01e9329b92251825fdccde023feb88a915"
+                "reference": "4199fe8f00f4e181c7782c4a6862845d591c1f03"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/02000f01e9329b92251825fdccde023feb88a915",
-                "reference": "02000f01e9329b92251825fdccde023feb88a915",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/4199fe8f00f4e181c7782c4a6862845d591c1f03",
+                "reference": "4199fe8f00f4e181c7782c4a6862845d591c1f03",
                 "shasum": ""
             },
             "require": {
@@ -1603,9 +1603,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/0.49.0"
+                "source": "https://github.com/utopia-php/database/tree/0.49.1"
             },
-            "time": "2024-03-01T10:44:41+00:00"
+            "time": "2024-03-06T11:35:53+00:00"
         },
         {
             "name": "utopia-php/domains",
@@ -3118,16 +3118,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.0.1",
+            "version": "v5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69"
+                "reference": "139676794dc1e9231bf7bcd123cfc0c99182cb13"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/2218c2252c874a4624ab2f613d86ac32d227bc69",
-                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/139676794dc1e9231bf7bcd123cfc0c99182cb13",
+                "reference": "139676794dc1e9231bf7bcd123cfc0c99182cb13",
                 "shasum": ""
             },
             "require": {
@@ -3170,9 +3170,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.1"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.2"
             },
-            "time": "2024-02-21T19:24:10+00:00"
+            "time": "2024-03-05T20:51:40+00:00"
         },
         {
             "name": "phar-io/manifest",

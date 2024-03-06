@@ -775,15 +775,15 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
                         'accessedAt' => DateTime::now(),
                     ]);
                     $user->removeAttribute('$internalId');
-                    $userDoc = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+                    $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
                     $dbForProject->createDocument('targets', new Document([
                         '$permissions' => [
                             Permission::read(Role::user($user->getId())),
                             Permission::update(Role::user($user->getId())),
                             Permission::delete(Role::user($user->getId())),
                         ],
-                        'userId' => $userDoc->getId(),
-                        'userInternalId' => $userDoc->getInternalId(),
+                        'userId' => $user->getId(),
+                        'userInternalId' => $user->getInternalId(),
                         'providerType' => MESSAGE_TYPE_EMAIL,
                         'identifier' => $email,
                     ]));
@@ -1162,7 +1162,7 @@ App::post('/v1/account/tokens/magic-url')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::tokenGenerator(Auth::TOKEN_LENGTH_MAGIC_URL);
@@ -1401,7 +1401,7 @@ App::post('/v1/account/tokens/email')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
         }
 
         $tokenSecret = Auth::codeGenerator(6);
@@ -1813,7 +1813,7 @@ App::post('/v1/account/tokens/phone')
             ]);
 
             $user->removeAttribute('$internalId');
-            Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
+            $user = Authorization::skip(fn () => $dbForProject->createDocument('users', $user));
             try {
                 $target = Authorization::skip(fn() => $dbForProject->createDocument('targets', new Document([
                     '$permissions' => [
@@ -1980,7 +1980,7 @@ App::post('/v1/account/sessions/anonymous')
             'accessedAt' => DateTime::now(),
         ]);
         $user->removeAttribute('$internalId');
-        Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
+        $user = Authorization::skip(fn() => $dbForProject->createDocument('users', $user));
 
         // Create session token
         $duration = $project->getAttribute('auths', [])['duration'] ?? Auth::TOKEN_EXPIRATION_LOGIN_LONG;

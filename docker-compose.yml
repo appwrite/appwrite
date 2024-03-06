@@ -956,9 +956,7 @@ services:
 
   database-proxy:
     container_name: database-proxy
-    image: appwrite/database-proxy:0.1.3
-    build:
-      context: .
+    image: appwrite/database-proxy:0.1.5
     networks:
       - appwrite
       - database-proxy
