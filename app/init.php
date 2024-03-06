@@ -1183,17 +1183,17 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+//            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
-            } else {
-                $database
-                    ->setShareTables(false)
-                    ->setTenant(null)
-                    ->setNamespace('_' . $project->getInternalId());
-            }
+//            } else {
+//                $database
+//                    ->setShareTables(false)
+//                    ->setTenant(null)
+//                    ->setNamespace('_' . $project->getInternalId());
+//            }
         });
 
         if (isset($databases[$databaseName])) {
