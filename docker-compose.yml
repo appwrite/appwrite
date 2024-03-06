@@ -116,6 +116,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -231,6 +232,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -263,6 +265,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -292,6 +295,7 @@ services:
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -333,6 +337,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -387,6 +392,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -424,6 +430,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -493,6 +500,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -525,6 +533,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -599,6 +608,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -637,6 +647,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -672,6 +683,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -705,6 +717,7 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -738,6 +751,7 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -775,6 +789,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -804,6 +819,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -837,6 +853,7 @@ services:
       - _APP_ENV
       - _APP_WORKER_PER_CORE
       - _APP_OPENSSL_KEY_V1
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT
@@ -871,6 +888,7 @@ services:
       - _APP_REDIS_PORT
       - _APP_REDIS_USER
       - _APP_REDIS_PASS
+      - _APP_DB_ADAPTER
       - _APP_DB_HOST
       - _APP_CONNECTIONS_DB_CONSOLE
       - _APP_CONNECTIONS_DB_PROJECT

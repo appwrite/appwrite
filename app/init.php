@@ -740,7 +740,7 @@ $register->set('pools', function () {
     $group = new Group();
 
     $fallbackForDB = 'db_main=' . AppwriteURL::unparse([
-        'scheme' => 'mariadb',
+        'scheme' => App::getEnv('_APP_DB_ADAPTER', 'mariadb'),
         'host' => App::getEnv('_APP_DB_HOST', 'mariadb'),
         'port' => App::getEnv('_APP_DB_PORT', '3306'),
         'user' => App::getEnv('_APP_DB_USER', ''),
@@ -843,10 +843,15 @@ $register->set('pools', function () {
              */
             switch ($dsnScheme) {
                 case 'mariadb-proxy':
+                    $host = $dsnHost;
+                    if($dsnPort) {
+                        $host .= ':' . $dsnPort;
+                    }
+
                     // Ignore port and password (user = password)
                     $resource = [
-                        'endpoint' => 'http://' . $dsnHost . '/v1',
-                        'secret' => $dsnUser,
+                        'endpoint' => 'http://' . $host . '/v1',
+                        'secret' => $dsnPass,
                         'database' => $dsnDatabase
                     ];
                     break;
