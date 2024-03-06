@@ -535,8 +535,8 @@ App::shutdown()
     ->inject('mode')
     ->inject('dbForConsole')
     ->action(function (App $utopia, Request $request, Response $response, Document $project, Document $user, Event $queueForEvents, Audit $queueForAudits, Usage $queueForUsage, Delete $queueForDeletes, EventDatabase $queueForDatabase, Build $queueForBuilds, Messaging $queueForMessaging, Database $dbForProject, Func $queueForFunctions, string $mode, Database $dbForConsole) use ($parseLabel) {
-        if (empty($user) || $user->isEmpty() || empty($user->getInternalId())) {
-            $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $queueForEvents->getParam('userId')));
+        if (!empty($user) && !$user->isEmpty() && empty($user->getInternalId())) {
+            $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $user->getId()));
         }
 
         $responsePayload = $response->getPayload();
