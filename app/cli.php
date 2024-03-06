@@ -105,7 +105,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             $database = $databases[$databaseName];
 
             if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
-                \var_dump('Using shared tables');
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
@@ -130,7 +129,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $databases[$databaseName] = $database;
 
         if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
-            \var_dump('Using shared tables');
             $database
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())

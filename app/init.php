@@ -1135,18 +1135,17 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
-        \var_dump('Using shared tables');
+    //if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
             ->setShareTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace('');
-    } else {
-        $database
-            ->setShareTables(false)
-            ->setTenant(null)
-            ->setNamespace('_' . $project->getInternalId());
-    }
+//    } else {
+//        $database
+//            ->setShareTables(false)
+//            ->setTenant(null)
+//            ->setNamespace('_' . $project->getInternalId());
+//    }
 
     return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
@@ -1185,7 +1184,6 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
             if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
-                \var_dump('Using shared tables');
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
