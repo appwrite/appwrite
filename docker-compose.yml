@@ -118,8 +118,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -234,8 +232,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -267,8 +263,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -297,8 +291,6 @@ services:
       - _APP_SYSTEM_SECURITY_EMAIL_ADDRESS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -339,8 +331,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -394,8 +384,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -432,8 +420,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -502,8 +488,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -535,8 +519,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -610,8 +592,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -649,8 +629,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -685,8 +663,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -719,8 +695,6 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -753,8 +727,6 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -791,8 +763,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -821,8 +791,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -855,8 +823,6 @@ services:
       - _APP_OPENSSL_KEY_V1
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
@@ -890,8 +856,6 @@ services:
       - _APP_REDIS_PASS
       - _APP_DB_ADAPTER
       - _APP_DB_HOST
-      - _APP_CONNECTIONS_DB_CONSOLE
-      - _APP_CONNECTIONS_DB_PROJECT
       - _APP_DB_PORT
       - _APP_DB_SCHEMA
       - _APP_DB_USER
