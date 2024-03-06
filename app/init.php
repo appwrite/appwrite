@@ -844,7 +844,7 @@ $register->set('pools', function () {
             switch ($dsnScheme) {
                 case 'mariadb-proxy':
                     $host = $dsnHost;
-                    if($dsnPort) {
+                    if ($dsnPort) {
                         $host .= ':' . $dsnPort;
                     }
 
