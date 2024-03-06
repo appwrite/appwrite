@@ -2,9 +2,8 @@
 
 namespace Tests\Unit\Utopia\Response\Filters;
 
-use Appwrite\Utopia\Response\Filters\V16;
-use Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Filters\V16;
 use Cron\CronExpression;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\DateTime;

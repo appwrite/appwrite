@@ -8,8 +8,8 @@ use Appwrite\Event\Usage;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Deployment;
 use Appwrite\Vcs\Comment;
-use Swoole\Coroutine as Co;
 use Executor\Executor;
+use Swoole\Coroutine as Co;
 use Utopia\App;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -19,9 +19,9 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Exception\Structure;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
@@ -52,7 +52,7 @@ class Builds extends Action
             ->inject('dbForProject')
             ->inject('deviceForFunctions')
             ->inject('log')
-            ->callback(fn($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
+            ->callback(fn ($message, Database $dbForConsole, Event $queueForEvents, Func $queueForFunctions, Usage $usage, Cache $cache, Database $dbForProject, Device $deviceForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForEvents, $queueForFunctions, $usage, $cache, $dbForProject, $deviceForFunctions, $log));
     }
 
     /**
@@ -281,7 +281,7 @@ class Builds extends Action
                      * Send realtime Event
                      */
                     $target = Realtime::fromPayload(
-                    // Pass first, most verbose event pattern
+                        // Pass first, most verbose event pattern
                         event: $allEvents[0],
                         payload: $build,
                         project: $project
@@ -357,7 +357,7 @@ class Builds extends Action
 
             /** Trigger Realtime */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project
@@ -421,48 +421,48 @@ class Builds extends Action
                         $err = $error;
                     }
                 }),
-                    Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
-                        try {
-                            $executor->getLogs(
-                                deploymentId: $deployment->getId(),
-                                projectId: $project->getId(),
-                                callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
-                                    if ($response === null) {
-                                        $build = $dbForProject->getDocument('builds', $build->getId());
+                Co\go(function () use ($executor, $project, $deployment, &$response, &$build, $dbForProject, $allEvents, &$err) {
+                    try {
+                        $executor->getLogs(
+                            deploymentId: $deployment->getId(),
+                            projectId: $project->getId(),
+                            callback: function ($logs) use (&$response, &$build, $dbForProject, $allEvents, $project) {
+                                if ($response === null) {
+                                    $build = $dbForProject->getDocument('builds', $build->getId());
 
-                                        if ($build->isEmpty()) {
-                                            throw new Exception('Build not found', 404);
-                                        }
+                                    if ($build->isEmpty()) {
+                                        throw new Exception('Build not found', 404);
+                                    }
 
-                                        $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
-                                        $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
+                                    $build = $build->setAttribute('logs', $build->getAttribute('logs', '') . $logs);
+                                    $build = $dbForProject->updateDocument('builds', $build->getId(), $build);
 
-                                        /**
+                                    /**
                                          * Send realtime Event
                                          */
-                                        $target = Realtime::fromPayload(
+                                    $target = Realtime::fromPayload(
                                         // Pass first, most verbose event pattern
-                                            event: $allEvents[0],
-                                            payload: $build,
-                                            project: $project
-                                        );
-                                        Realtime::send(
-                                            projectId: 'console',
-                                            payload: $build->getArrayCopy(),
-                                            events: $allEvents,
-                                            channels: $target['channels'],
-                                            roles: $target['roles']
-                                        );
-                                    }
+                                        event: $allEvents[0],
+                                        payload: $build,
+                                        project: $project
+                                    );
+                                    Realtime::send(
+                                        projectId: 'console',
+                                        payload: $build->getArrayCopy(),
+                                        events: $allEvents,
+                                        channels: $target['channels'],
+                                        roles: $target['roles']
+                                    );
                                 }
-                            );
-                        } catch (\Throwable $error) {
-                            if (empty($err)) {
-                                $err = $error;
                             }
+                        );
+                    } catch (\Throwable $error) {
+                        if (empty($err)) {
+                            $err = $error;
                         }
-                    }),
-                ]);
+                    }
+                }),
+            ]);
 
             if ($err) {
                 throw $err;
@@ -502,7 +502,7 @@ class Builds extends Action
                 ->setAttribute('resourceUpdatedAt', DateTime::now())
                 ->setAttribute('schedule', $function->getAttribute('schedule'))
                 ->setAttribute('active', !empty($function->getAttribute('schedule')) && !empty($function->getAttribute('deployment')));
-            Authorization::skip(fn() => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+            Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
         } catch (\Throwable $th) {
             $endTime = DateTime::now();
             $durationEnd = \microtime(true);
@@ -521,7 +521,7 @@ class Builds extends Action
              * Send realtime Event
              */
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $build,
                 project: $project

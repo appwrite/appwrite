@@ -77,17 +77,17 @@ class BatchTest extends Scope
                 'name' => 'Tester 1',
             ],
         ],
-        [
-            'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
+            [
+                'query' => 'mutation CreateTeam($teamId: String! $name: String!) {
                 teamsCreate(teamId: $teamId, name: $name) {
                     name
                 }
             }',
-            'variables' => [
-                'teamId' => ID::unique(),
-                'name' => 'Team 1',
-            ],
-        ]];
+                'variables' => [
+                    'teamId' => ID::unique(),
+                    'name' => 'Team 1',
+                ],
+            ]];
 
         $response = $this->client->call(Client::METHOD_POST, '/graphql', \array_merge([
             'content-type' => 'application/json',

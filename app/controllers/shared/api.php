@@ -9,22 +9,22 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
-use Appwrite\Extend\Exception;
 use Appwrite\Event\Usage;
+use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Adapter\Realtime;
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
-use Utopia\App;
+use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
+use Utopia\App;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Authorization;
-use Utopia\Config\Config;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
@@ -677,10 +677,10 @@ App::shutdown()
                 $now = DateTime::now();
                 if ($cacheLog->isEmpty()) {
                     Authorization::skip(fn () => $dbForProject->createDocument('cache', new Document([
-                    '$id' => $key,
-                    'resource' => $resource,
-                    'accessedAt' => $now,
-                    'signature' => $signature,
+                        '$id' => $key,
+                        'resource' => $resource,
+                        'accessedAt' => $now,
+                        'signature' => $signature,
                     ])));
                 } elseif (DateTime::formatTz(DateTime::addSeconds(new \DateTime(), -APP_CACHE_UPDATE)) > $accessedAt) {
                     $cacheLog->setAttribute('accessedAt', $now);

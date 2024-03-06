@@ -1,23 +1,20 @@
 <?php
 
 use Appwrite\Auth\OAuth2\Github as OAuth2Github;
-use Utopia\App;
 use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Validator\Host;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Response;
-use Utopia\Validator\Text;
-use Utopia\VCS\Adapter\Git\GitHub;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\Queries\Installations;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
+use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -36,6 +33,9 @@ use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Host;
+use Utopia\Validator\Text;
+use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
 use function Swoole\Coroutine\batch;

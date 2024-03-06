@@ -1,13 +1,13 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Utopia\Request;
-use Utopia\App;
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Request;
+use MaxMind\Db\Reader;
+use Utopia\App;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
-use MaxMind\Db\Reader;
-use Utopia\Database\DateTime;
 
 App::init()
     ->groups(['mfaProtected'])

@@ -2,18 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Appwrite\Event\Delete;
-use Swoole\Timer;
-use Utopia\Database\Document;
-use Utopia\Platform\Action;
-use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
+use Appwrite\Event\Messaging;
 use Utopia\Database\Database;
 use Utopia\Pools\Group;
-use Appwrite\Event\Messaging;
-
-use function Swoole\Coroutine\run;
 
 class ScheduleMessages extends ScheduleBase
 {

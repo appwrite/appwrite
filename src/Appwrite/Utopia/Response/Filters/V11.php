@@ -42,7 +42,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseFunctionsList($content);
                 break;
 
-            // Convert status from boolean to int
+                // Convert status from boolean to int
             case Response::MODEL_USER:
                 $parsedResponse = $this->parseStatus($content);
                 break;
@@ -50,7 +50,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseUserList($content);
                 break;
 
-            // Convert all Health responses back to original
+                // Convert all Health responses back to original
             case Response::MODEL_HEALTH_STATUS:
                 $parsedResponse = $this->parseHealthStatus($content);
                 break;
@@ -67,7 +67,7 @@ class V11 extends Filter
                 $parsedResponse = $this->parseHealthAntivirus($content);
                 break;
 
-            // Complex filters
+                // Complex filters
             case Response::MODEL_COLLECTION:
                 $parsedResponse = $this->parseCollection($content);
                 break;
