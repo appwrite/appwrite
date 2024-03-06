@@ -84,7 +84,7 @@ class Execution extends Model
                 'description' => 'HTTP response body. This will return empty unless execution is created as synchronous.',
                 'default' => '',
                 'example' => 'Developers are awesome.',
-                ])
+            ])
             ->addRule('responseHeaders', [
                 'type' => Response::MODEL_HEADERS,
                 'description' => 'HTTP response headers as a key-value object. This will return only whitelisted headers. All headers are returned if execution is created as synchronous.',

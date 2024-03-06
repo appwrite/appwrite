@@ -7,8 +7,8 @@ use Appwrite\Event\Delete;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
 use Utopia\Database\DateTime;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
 

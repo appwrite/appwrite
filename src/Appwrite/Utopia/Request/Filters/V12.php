@@ -23,17 +23,17 @@ class V12 extends Filter
                 $content = $this->addId($content, 'teamId');
                 break;
 
-            // Status integer -> boolean
+                // Status integer -> boolean
             case "users.updateStatus":
                 $content = $this->convertStatus($content);
                 break;
 
-            // Deprecating order type
+                // Deprecating order type
             case "functions.listExecutions":
                 $content = $this->removeOrderType($content);
                 break;
 
-            // The rest (more complex) formats
+                // The rest (more complex) formats
             case "database.createDocument":
                 $content = $this->addId($content, 'documentId');
                 $content = $this->removeParentProperties($content);

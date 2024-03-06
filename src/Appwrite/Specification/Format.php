@@ -2,10 +2,10 @@
 
 namespace Appwrite\Specification;
 
+use Appwrite\Utopia\Response\Model;
 use Utopia\App;
 use Utopia\Config\Config;
 use Utopia\Route;
-use Appwrite\Utopia\Response\Model;
 
 abstract class Format
 {

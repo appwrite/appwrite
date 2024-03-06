@@ -4,11 +4,11 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
 use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
-use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Queue\Message;
 
 class UsageDump extends Action

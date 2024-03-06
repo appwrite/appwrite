@@ -4,11 +4,11 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Hamster as EventHamster;
 use Utopia\App;
-use Utopia\Platform\Action;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Query;
 use Utopia\Database\Document;
+use Utopia\Database\Query;
+use Utopia\Platform\Action;
 
 class Hamster extends Action
 {

@@ -46,7 +46,7 @@ class Functions extends Action
             ->inject('queueForEvents')
             ->inject('queueForUsage')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
+            ->callback(fn (Message $message, Database $dbForProject, Func $queueForFunctions, Event $queueForEvents, Usage $queueForUsage, Log $log) => $this->action($message, $dbForProject, $queueForFunctions, $queueForEvents, $queueForUsage, $log));
     }
 
     /**
@@ -467,7 +467,7 @@ class Functions extends Action
             'executionId' => $execution->getId()
         ]);
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $allEvents[0],
             payload: $execution
         );

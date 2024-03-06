@@ -8,44 +8,44 @@ use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Usage;
 use Appwrite\Event\Validator\FunctionEvent;
-use Appwrite\Utopia\Response\Model\Rule;
 use Appwrite\Extend\Exception;
-use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Messaging\Adapter\Realtime;
+use Appwrite\Task\Validator\Cron;
+use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Database\Validator\Queries\Deployments;
+use Appwrite\Utopia\Database\Validator\Queries\Executions;
+use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Response;
+use Appwrite\Utopia\Response\Model\Rule;
+use Executor\Executor;
+use MaxMind\Db\Reader;
+use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Validator\Assoc;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Storage\Device;
 use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Appwrite\Utopia\Response;
 use Utopia\Swoole\Request;
-use Appwrite\Task\Validator\Cron;
-use Appwrite\Utopia\Database\Validator\Queries\Deployments;
-use Appwrite\Utopia\Database\Validator\Queries\Executions;
-use Appwrite\Utopia\Database\Validator\Queries\Functions;
-use Utopia\App;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\ArrayList;
-use Utopia\Validator\Text;
-use Utopia\Validator\Range;
-use Utopia\Validator\WhiteList;
-use Utopia\Config\Config;
-use Executor\Executor;
-use Utopia\CLI\Console;
-use Utopia\Database\Validator\Roles;
+use Utopia\Validator\Assoc;
 use Utopia\Validator\Boolean;
-use Utopia\Database\Exception\Duplicate as DuplicateException;
-use MaxMind\Db\Reader;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -529,19 +529,19 @@ App::get('/v1/functions/:functionId/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,
@@ -621,19 +621,19 @@ App::get('/v1/functions/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
         $response->dynamic(new Document([
             'range' => $range,
             'functionsTotal' => $usage[$metrics[0]]['total'],

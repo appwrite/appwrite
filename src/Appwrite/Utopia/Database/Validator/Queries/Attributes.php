@@ -2,8 +2,6 @@
 
 namespace Appwrite\Utopia\Database\Validator\Queries;
 
-use Utopia\Database\Validator\Query\Select;
-
 class Attributes extends Base
 {
     public const ALLOWED_ATTRIBUTES = [

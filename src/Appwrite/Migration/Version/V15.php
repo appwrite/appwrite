@@ -4,8 +4,6 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Exception;
-use PDO;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -1236,7 +1234,7 @@ class V15 extends Migration
                  * skipping migration for 'cache' and 'variables'.
                  * 'users' already migrated.
                  */
-                return null;
+                return;
 
             case '_metadata':
                 /**

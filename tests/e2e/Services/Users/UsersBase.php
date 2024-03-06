@@ -957,22 +957,22 @@ trait UsersBase
         /**
          * Test for SUCCESS
          */
-         $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
+        $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-         ], [
+        ], [
             'email' => 'users.service@updated.com',
             'password' => 'password'
-         ]);
+        ]);
 
         $this->assertEquals($session['headers']['status-code'], 201);
 
-         $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
+        $user = $this->client->call(Client::METHOD_PATCH, '/users/' . $data['userId'] . '/password', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
-         ], $this->getHeaders()), [
+        ], $this->getHeaders()), [
             'password' => '',
-         ]);
+        ]);
 
         $this->assertEquals($user['headers']['status-code'], 200);
         $this->assertNotEmpty($user['body']['$id']);
