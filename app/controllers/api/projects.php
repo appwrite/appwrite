@@ -158,6 +158,8 @@ App::post('/v1/projects')
             $database = DATABASE_SHARED_TABLES;
         }
 
+        \var_dump('DATABASE: ' . $database);
+
         try {
             $project = $dbForConsole->createDocument('projects', new Document([
                 '$id' => $projectId,
@@ -198,6 +200,7 @@ App::post('/v1/projects')
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
 
         if ($database === DATABASE_SHARED_TABLES) {
+            \var_dump('Using shared tables');
             $dbForProject
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())

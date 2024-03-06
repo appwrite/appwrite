@@ -76,6 +76,7 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         ->setMetadata('project', $project->getId());
 
     if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        \var_dump('Using shared tables');
         $database
             ->setShareTables(true)
             ->setTenant($project->getInternalId())
@@ -115,6 +116,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             $database = $databases[$databaseName];
 
             if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+                \var_dump('Using shared tables');
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
@@ -139,6 +141,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         $databases[$databaseName] = $database;
 
         if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            \var_dump('Using shared tables');
             $database
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
