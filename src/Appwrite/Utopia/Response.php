@@ -248,6 +248,11 @@ class Response extends SwooleResponse
     public const MODEL_FUNC_PERMISSIONS = 'funcPermissions';
     public const MODEL_HEADERS = 'headers';
 
+    // Backups
+    public const MODEL_BACKUP_POLICY = 'backupPolicy';
+    public const MODEL_BACKUP_POLICY_LIST = 'backupPolicyList';
+    public const MODEL_BACKUP = 'backup';
+
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
     public const MODEL_PROXY_RULE_LIST = 'proxyRuleList';

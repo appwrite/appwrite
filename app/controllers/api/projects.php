@@ -1882,17 +1882,17 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
 App::post('/v1/backups-policy')
     ->groups(['api', 'projects'])
     ->desc('Create backup policy')
-    ->label('scope', 'backup.write')
-    ->label('event', 'backup.[functionId].create')
-    ->label('audits.event', 'backups.create')
-    ->label('audits.resource', 'backup/{response.$id}')
+    ->label('scope', 'backupPolicy.write')
+    ->label('event', 'backupPolicy.[functionId].create')
+    ->label('audits.event', 'backupPolicy.create')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'backups')
+    ->label('sdk.namespace', 'backupPolicy')
     ->label('sdk.method', 'create')
     ->label('sdk.description', '/docs/references/backups-policy/create-function.md')
     ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_FUNCTION)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
     ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
     ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
@@ -1938,7 +1938,7 @@ App::post('/v1/backups-policy')
         $policy->setAttribute('scheduleId', $schedule->getId());
         $policy->setAttribute('scheduleInternalId', $schedule->getInternalId());
 
-        $policy = $dbForProject->updateDocument('functions', $policy->getId(), $policy);
+        $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), $policy);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
