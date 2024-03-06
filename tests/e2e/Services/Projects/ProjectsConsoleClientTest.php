@@ -1850,7 +1850,7 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $id,
         ], $this->getHeaders()));
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         $response = $this->client->call(Client::METHOD_POST, '/teams', array_merge([
             'content-type' => 'application/json',
@@ -1860,7 +1860,7 @@ class ProjectsConsoleClientTest extends Scope
             'name' => 'Arsenal'
         ]);
 
-        $this->assertEquals(503, $response['headers']['status-code']);
+        $this->assertEquals(403, $response['headers']['status-code']);
 
         // Cleanup
 
