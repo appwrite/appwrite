@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "733cdc4128cc298318cf487442d3efed",
+    "content-hash": "a0c585fabc25c78458734e1fbf9d30c8",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -2892,6 +2892,72 @@
                 }
             ],
             "time": "2022-12-30T00:15:36+00:00"
+        },
+        {
+            "name": "laravel/pint",
+            "version": "v1.14.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/laravel/pint.git",
+                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
+                "reference": "6b127276e3f263f7bb17d5077e9e0269e61b2a0e",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "ext-tokenizer": "*",
+                "ext-xml": "*",
+                "php": "^8.1.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.49.0",
+                "illuminate/view": "^10.43.0",
+                "larastan/larastan": "^2.8.1",
+                "laravel-zero/framework": "^10.3.0",
+                "mockery/mockery": "^1.6.7",
+                "nunomaduro/termwind": "^1.15.1",
+                "pestphp/pest": "^2.33.6"
+            },
+            "bin": [
+                "builds/pint"
+            ],
+            "type": "project",
+            "autoload": {
+                "psr-4": {
+                    "App\\": "app/",
+                    "Database\\Seeders\\": "database/seeders/",
+                    "Database\\Factories\\": "database/factories/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Nuno Maduro",
+                    "email": "enunomaduro@gmail.com"
+                }
+            ],
+            "description": "An opinionated code formatter for PHP.",
+            "homepage": "https://laravel.com",
+            "keywords": [
+                "format",
+                "formatter",
+                "lint",
+                "linter",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/laravel/pint/issues",
+                "source": "https://github.com/laravel/pint"
+            },
+            "time": "2024-02-20T17:38:05+00:00"
         },
         {
             "name": "matthiasmullie/minify",

@@ -1,0 +1,8 @@
+{
+    "preset": "psr12",
+    "exclude": [
+        "./app/sdks",
+        "./tests/resources/functions",
+        "./app/console"
+    ]
+}
