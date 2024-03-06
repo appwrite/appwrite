@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "76e3175bdffb16335168d35fc5322e8f",
+    "content-hash": "e23977abd3961338f79e291bdf8124e1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -1260,16 +1260,16 @@
         },
         {
             "name": "utopia-php/abuse",
-            "version": "dev-feat-database-proxy",
+            "version": "0.37.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/abuse.git",
-                "reference": "5032d5220af527853e2d549e62be3f4ee2932db9"
+                "reference": "2de5c12886cbd516e511e559afdd9e615d871062"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/5032d5220af527853e2d549e62be3f4ee2932db9",
-                "reference": "5032d5220af527853e2d549e62be3f4ee2932db9",
+                "url": "https://api.github.com/repos/utopia-php/abuse/zipball/2de5c12886cbd516e511e559afdd9e615d871062",
+                "reference": "2de5c12886cbd516e511e559afdd9e615d871062",
                 "shasum": ""
             },
             "require": {
@@ -1303,9 +1303,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/abuse/issues",
-                "source": "https://github.com/utopia-php/abuse/tree/feat-database-proxy"
+                "source": "https://github.com/utopia-php/abuse/tree/0.37.0"
             },
-            "time": "2024-03-05T09:31:14+00:00"
+            "time": "2024-03-06T21:20:27+00:00"
         },
         {
             "name": "utopia-php/analytics",
@@ -1355,16 +1355,16 @@
         },
         {
             "name": "utopia-php/audit",
-            "version": "dev-feat-database-proxy",
+            "version": "0.39.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/audit.git",
-                "reference": "973865837fd502f98e5762241ea0c0ebecf776f2"
+                "reference": "f0bc15012e05cc0b9dde012ab27d25f193768a2c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/audit/zipball/973865837fd502f98e5762241ea0c0ebecf776f2",
-                "reference": "973865837fd502f98e5762241ea0c0ebecf776f2",
+                "url": "https://api.github.com/repos/utopia-php/audit/zipball/f0bc15012e05cc0b9dde012ab27d25f193768a2c",
+                "reference": "f0bc15012e05cc0b9dde012ab27d25f193768a2c",
                 "shasum": ""
             },
             "require": {
@@ -1396,9 +1396,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/audit/issues",
-                "source": "https://github.com/utopia-php/audit/tree/feat-database-proxy"
+                "source": "https://github.com/utopia-php/audit/tree/0.39.0"
             },
-            "time": "2024-03-05T09:31:19+00:00"
+            "time": "2024-03-06T21:20:37+00:00"
         },
         {
             "name": "utopia-php/cache",
@@ -5455,24 +5455,9 @@
             "time": "2023-11-21T18:54:41+00:00"
         }
     ],
-    "aliases": [
-        {
-            "package": "utopia-php/abuse",
-            "version": "dev-feat-database-proxy",
-            "alias": "0.36.99",
-            "alias_normalized": "0.36.99.0"
-        },
-        {
-            "package": "utopia-php/audit",
-            "version": "dev-feat-database-proxy",
-            "alias": "0.38.99",
-            "alias_normalized": "0.38.99.0"
-        }
-    ],
+    "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
-        "utopia-php/abuse": 20,
-        "utopia-php/audit": 20,
         "appwrite/sdk-generator": 5
     },
     "prefer-stable": false,
