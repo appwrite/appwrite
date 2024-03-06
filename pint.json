@@ -4,5 +4,14 @@
         "./app/sdks",
         "./tests/resources/functions",
         "./app/console"
-    ]
+    ],
+    "rules": {
+        "array_indentation": true,
+        "single_import_per_statement": true,
+        "use_arrow_functions": true,
+        "simplified_null_return": true,
+        "ordered_imports": {
+            "sort_algorithm": "alpha"
+        }
+    }
 }
