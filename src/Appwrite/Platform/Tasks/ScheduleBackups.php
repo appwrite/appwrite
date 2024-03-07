@@ -8,8 +8,11 @@ use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Migration\Resource;
+use Utopia\Migration\Sources\Appwrite;
 use Utopia\Pools\Group;
 
 class ScheduleBackups extends ScheduleBase
@@ -24,16 +27,15 @@ class ScheduleBackups extends ScheduleBase
         return 'schedule-backups';
     }
 
-    public static function getSupportedResource(): string
+    public static function getSupportedResource(): array
     {
-        return 'backup';
+        return ['backup-project', 'backup-database'];
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();
-
         $enqueueDiff = $this->lastEnqueueUpdate === null ? 0 : $timerStart - $this->lastEnqueueUpdate;
         $timeFrame = DateTime::addSeconds(new \DateTime(), static::ENQUEUE_TIMER - $enqueueDiff);
 
@@ -68,7 +70,9 @@ class ScheduleBackups extends ScheduleBase
         }
 
         foreach ($delayedExecutions as $delay => $scheduleKeys) {
-            \go(function () use ($delay, $scheduleKeys, $pools, $dbForConsole) {
+            \go(/**
+             * @throws \Utopia\Database\Exception
+             */ function () use ($getProjectDB, $delay, $scheduleKeys, $pools) {
                 \sleep($delay); // in seconds
 
                 $queue = $pools->get('queue')->pop();
@@ -82,24 +86,54 @@ class ScheduleBackups extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-//                    $backups = $dbForConsole->createDocument('backups', new Document([
-//                        'policyId' => $schedule['project'],
-//                        'policyInternalId' => $function->getInternalId(),
-//
-//                    ]));
+                    $resources = Appwrite::getSupportedResources();
 
+                    if($schedule === 'backup-database') {
+                        $resources = [
+                            Resource::TYPE_DATABASE,
+                            Resource::TYPE_COLLECTION,
+                            Resource::TYPE_ATTRIBUTE,
+                            Resource::TYPE_INDEX,
+                            Resource::TYPE_DOCUMENT,
+                        ];
+                    }
+
+                    $project = $schedule['project'];
+                    $apiKey = $project['keys'][0]['secret'] ?? null;
+
+                    if(empty($apiKey)){
+                        Console::error('No api key was found for proget: ' . $project->getId());
+                        continue;
+                    }
+
+                    $policy = $schedule['resource'];
+                    $dbForProject = $getProjectDB($project);
+
+                    $migration = $dbForProject->createDocument('migrations', new Document([
+                        '$id' => ID::unique(),
+                        'status' => 'pending',
+                        'stage' => 'init',
+                        'source' => Appwrite::getName(),
+                        'credentials' => [
+                            'endpoint' => '127.0.0.1/v1',
+                            'projectId' => $project->getId(),
+                            'apiKey' => $project['secret'],
+                        ],
+                        'resources' => $resources,
+                        'statusCounters' => '{}',
+                        'resourceData' => '{}',
+                        'errors' => [],
+                    ]));
 
                     $queueForMigrations = new Migration($connection);
-
-
-
-//                    $queueForMigrations
-//                        ->setType('schedule')
-//                        ->setFunction($schedule['resource'])
-//                        ->setMethod('POST')
-//                        ->setPath('/')
-//                        ->setProject($schedule['project'])
-//                        ->trigger();
+                    $queueForMigrations
+                        ->setMigration($migration)
+                        ->setProject($project)
+                        ->setParams([
+                             'policyId' => $policy->getId(),
+                             'policyInternalId' => $policy->getInternalId(),
+                        ])
+                        ->trigger();
                 }
 
                 $queue->reclaim();
@@ -107,9 +141,6 @@ class ScheduleBackups extends ScheduleBase
         }
 
         $timerEnd = \microtime(true);
-
-        // TODO: This was a bug before because it wasn't passed by reference, enabling it breaks scheduling
-        //$this->lastEnqueueUpdate = $timerStart;
 
         Console::log("Enqueue tick: {$total} executions were enqueued in " . ($timerEnd - $timerStart) . " seconds");
     }

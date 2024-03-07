@@ -23,19 +23,20 @@ abstract class ScheduleBase extends Action
     protected array $schedules = [];
 
     abstract public static function getName(): string;
-    abstract public static function getSupportedResource(): string;
+    abstract public static function getSupportedResource(): array;
 
     abstract protected function enqueueResources(
         Group $pools,
-        Database $dbForConsole
+        Database $dbForConsole,
+        callable $getProjectDB,
     );
 
     public function __construct()
     {
-        $type = static::getSupportedResource();
+        $types = implode(',', static::getSupportedResource());
 
         $this
-            ->desc("Execute {$type}s scheduled in Appwrite")
+            ->desc("Execute {$types}s scheduled in Appwrite")
             ->inject('pools')
             ->inject('dbForConsole')
             ->inject('getProjectDB')
@@ -49,8 +50,9 @@ abstract class ScheduleBase extends Action
      */
     public function action(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
-        Console::title(\ucfirst(static::getSupportedResource()) . ' scheduler V1');
-        Console::success(APP_NAME . ' ' . \ucfirst(static::getSupportedResource()) . ' scheduler v1 has started');
+        $types = implode(',', static::getSupportedResource());
+        Console::title(\ucfirst($types) . ' scheduler V1');
+        Console::success(APP_NAME . ' ' . \ucfirst($types) . ' scheduler v1 has started');
 
         /**
          * Extract only necessary attributes to lower memory used.
@@ -65,7 +67,7 @@ abstract class ScheduleBase extends Action
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
                 'message' => 'messages',
-                'backupPolicies' => 'backupPolicies'
+                'backup-project', 'backup-database' => 'backupsPolicy',
             };
 
             $resource = $getProjectDB($project)->getDocument(
@@ -101,7 +103,7 @@ abstract class ScheduleBase extends Action
 
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                 Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                Query::equal('resourceType', [static::getSupportedResource()]),
+                Query::equal('resourceType', static::getSupportedResource()),
                 Query::equal('active', [true]),
             ]));
 
@@ -114,8 +116,8 @@ abstract class ScheduleBase extends Action
                 } catch (\Throwable $th) {
                     $collectionId = match ($document->getAttribute('resourceType')) {
                         'function' => 'functions',
-                        'message' => 'messages',
-                        'backupsPolicy' => 'backupsPolicy'
+                        'message'  => 'messages',
+                        'backup-project', 'backup-database' => 'backupsPolicy',
                     };
 
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
@@ -132,7 +134,7 @@ abstract class ScheduleBase extends Action
 
         Console::success("Starting timers at " . DateTime::now());
 
-        run(function () use ($dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
+        run(function () use ($getProjectDB, $dbForConsole, &$lastSyncUpdate, $getSchedule, $pools) {
             /**
              * The timer synchronize $schedules copy with database collection.
              */
@@ -156,7 +158,7 @@ abstract class ScheduleBase extends Action
 
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
                         Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
-                        Query::equal('resourceType', [static::getSupportedResource()]),
+                        Query::equal('resourceType', static::getSupportedResource()),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));
 
@@ -192,10 +194,10 @@ abstract class ScheduleBase extends Action
 
             Timer::tick(
                 static::ENQUEUE_TIMER * 1000,
-                fn () => $this->enqueueResources($pools, $dbForConsole)
+                fn () => $this->enqueueResources($pools, $dbForConsole, $getProjectDB)
             );
 
-            $this->enqueueResources($pools, $dbForConsole);
+            $this->enqueueResources($pools, $dbForConsole, $getProjectDB);
         });
     }
 }
