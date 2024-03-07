@@ -391,20 +391,18 @@ App::init()
         */
         $route = $utopia->getRoute();
         Request::setRoute($route);
-        Request::resetFilters();
 
         if ($route === null) {
             return $response->setStatusCode(404)->send('Not Found');
         }
 
         $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
-
         if ($requestFormat) {
             if (version_compare($requestFormat, '1.4.0', '<')) {
-                Request::addFilter(new RequestV16());
+                $request->addFilter(new RequestV16());
             }
             if (version_compare($requestFormat, '1.5.0', '<')) {
-                Request::addFilter(new RequestV17());
+                $request->addFilter(new RequestV17());
             }
         }
 
@@ -514,15 +512,13 @@ App::init()
         /*
         * Response format
         */
-        Response::resetFilters();
-
         $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
         if ($responseFormat) {
             if (version_compare($responseFormat, '1.4.0', '<')) {
-                Response::addFilter(new ResponseV16());
+                $response->addFilter(new ResponseV16());
             }
             if (version_compare($responseFormat, '1.5.0', '<')) {
-                Response::addFilter(new ResponseV17());
+                $response->addFilter(new ResponseV17());
             }
         }
 

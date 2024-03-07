@@ -301,7 +301,7 @@ class Response extends SwooleResponse
     /**
      * @var array<Filter>
      */
-    private static $filters = [];
+    protected array $filters = [];
 
     /**
      * @var array
@@ -526,7 +526,7 @@ class Response extends SwooleResponse
         $output = $this->output(clone $document, $model);
 
         // If filter is set, parse the output
-        foreach (self::$filters as $filter) {
+        foreach ($this->filters as $filter) {
             $output = $filter->parse($output, $model);
         }
 
@@ -688,9 +688,9 @@ class Response extends SwooleResponse
      *
      * @return void
      */
-    public static function addFilter(Filter $filter): void
+    public function addFilter(Filter $filter): void
     {
-        self::$filters[] = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
@@ -698,9 +698,9 @@ class Response extends SwooleResponse
      *
      * @return Filter
      */
-    public static function getFilters(): array
+    public function getFilters(): array
     {
-        return self::$filters;
+        return $this->filters;
     }
 
     /**
@@ -708,9 +708,9 @@ class Response extends SwooleResponse
      *
      * @return void
      */
-    public static function resetFilters(): void
+    public function resetFilters(): void
     {
-        self::$filters = [];
+        $this->filters = [];
     }
 
     /**
@@ -718,9 +718,9 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function hasFilters(): bool
+    public function hasFilters(): bool
     {
-        return !empty(self::$filters);
+        return !empty($this->filters);
     }
 
     /**

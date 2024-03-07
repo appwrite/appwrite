@@ -12,8 +12,7 @@ class Request extends UtopiaRequest
     /**
      * @var array<Filter>
      */
-    private static array $filters = [];
-
+    private array $filters = [];
     private static ?Route $route = null;
 
     public function __construct(SwooleRequest $request)
@@ -28,15 +27,13 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if (self::hasFilters() && self::hasRoute()) {
+        if ($this->hasFilters() && self::hasRoute()) {
             $method = self::getRoute()->getLabel('sdk.method', 'unknown');
             $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
 
-            $parameters = array_reduce(
-                self::getFilters(),
-                fn (array $carry, Filter $filter) => $filter->parse($carry, $endpointIdentifier),
-                $parameters
-            );
+            foreach ($this->getFilters() as $filter) {
+                $parameters = $filter->parse($parameters, $endpointIdentifier);
+            }
         }
 
         return $parameters;
@@ -49,9 +46,9 @@ class Request extends UtopiaRequest
      *
      * @return void
      */
-    public static function addFilter(Filter $filter): void
+    public function addFilter(Filter $filter): void
     {
-        self::$filters[] = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
@@ -59,9 +56,9 @@ class Request extends UtopiaRequest
      *
      * @return array<Filter>
      */
-    public static function getFilters(): array
+    public function getFilters(): array
     {
-        return self::$filters;
+        return $this->filters;
     }
 
     /**
@@ -69,9 +66,9 @@ class Request extends UtopiaRequest
      *
      * @return void
      */
-    public static function resetFilters(): void
+    public function resetFilters(): void
     {
-        self::$filters = [];
+        $this->filters = [];
     }
 
     /**
@@ -79,9 +76,9 @@ class Request extends UtopiaRequest
      *
      * @return bool
      */
-    public static function hasFilters(): bool
+    public function hasFilters(): bool
     {
-        return !empty(self::$filters);
+        return !empty($this->filters);
     }
 
     /**
