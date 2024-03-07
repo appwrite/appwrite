@@ -130,7 +130,7 @@ App::post('/v1/projects')
         }
 
         $databaseOverride = App::getEnv('_APP_DATABASE_OVERRIDE');
-        $index = array_search($databaseOverride, $databases);
+        $index = \array_search($databaseOverride, $databases);
         if ($index !== false) {
             $database = $databases[$index];
         } else {
@@ -199,17 +199,17 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
 
-//        if ($database === DATABASE_SHARED_TABLES) {
+        if ($database === DATABASE_SHARED_TABLES) {
             $dbForProject
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace('');
-//        } else {
-//            $dbForProject
-//                ->setShareTables(false)
-//                ->setTenant(null)
-//                ->setNamespace('_' . $project->getInternalId());
-//        }
+        } else {
+            $dbForProject
+                ->setShareTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $dbForProject->create();
 

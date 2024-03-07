@@ -1135,19 +1135,19 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
         ->setMetadata('project', $project->getId())
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-    //if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
             ->setShareTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace('');
-//    } else {
-//        $database
-//            ->setShareTables(false)
-//            ->setTenant(null)
-//            ->setNamespace('_' . $project->getInternalId());
-//    }
-        return null;
-//    return $database;
+    } else {
+        $database
+            ->setShareTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getInternalId());
+    }
+
+    return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
@@ -1183,17 +1183,17 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
                 ->setMetadata('project', $project->getId())
                 ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
-//            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
-//            } else {
-//                $database
-//                    ->setShareTables(false)
-//                    ->setTenant(null)
-//                    ->setNamespace('_' . $project->getInternalId());
-//            }
+            } else {
+                $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
         });
 
         if (isset($databases[$databaseName])) {
@@ -1210,8 +1210,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $database = new Database($dbAdapter, $cache);
         $databases[$databaseName] = $database;
         $configure($database);
-        return null;
-//        return $database;
+
+        return $database;
     };
 }, ['pools', 'dbForConsole', 'cache']);
 

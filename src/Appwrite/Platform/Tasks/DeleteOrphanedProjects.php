@@ -83,15 +83,26 @@ class DeleteOrphanedProjects extends Action
                 }
 
                 try {
-                    $db = $project->getAttribute('database');
+                    $database = $project->getAttribute('database');
                     $adapter = $pools
-                        ->get($db)
+                        ->get($database)
                         ->pop()
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
                     $dbForProject->setDatabase('appwrite');
-                    $dbForProject->setNamespace('_' . $project->getInternalId());
+
+                    if ($database === DATABASE_SHARED_TABLES) {
+                        $dbForProject
+                            ->setShareTables(true)
+                            ->setTenant($project->getInternalId())
+                            ->setNamespace('');
+                    } else {
+                        $dbForProject
+                            ->setShareTables(false)
+                            ->setTenant(null)
+                            ->setNamespace('_' . $project->getInternalId());
+                    }
 
                     $collectionsCreated = 0;
                     $cnt++;

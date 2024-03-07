@@ -75,17 +75,17 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         ->setMetadata('host', \gethostname())
         ->setMetadata('project', $project->getId());
 
-//    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
             ->setShareTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace('');
-//    } else {
-//        $database
-//            ->setShareTables(false)
-//            ->setTenant(null)
-//            ->setNamespace('_' . $project->getInternalId());
-//    }
+    } else {
+        $database
+            ->setShareTables(false)
+            ->setTenant(null)
+            ->setNamespace('_' . $project->getInternalId());
+    }
 
     return $database;
 }, ['cache', 'register', 'message', 'dbForConsole']);
@@ -114,17 +114,17 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
 
-//            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
-//            } else {
-//                $database
-//                    ->setShareTables(false)
-//                    ->setTenant(null)
-//                    ->setNamespace('_' . $project->getInternalId());
-//            }
+            } else {
+                $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
 
             return $database;
         }
@@ -138,17 +138,17 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         $databases[$databaseName] = $database;
 
-//        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
             $database
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace('');
-//        } else {
-//            $database
-//                ->setShareTables(false)
-//                ->setTenant(null)
-//                ->setNamespace('_' . $project->getInternalId());
-//        }
+        } else {
+            $database
+                ->setShareTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         return $database;
     };

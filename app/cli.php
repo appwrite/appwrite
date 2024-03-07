@@ -104,17 +104,17 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         if (isset($databases[$databaseName])) {
             $database = $databases[$databaseName];
 
-//            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+            if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
                     ->setShareTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
-//            } else {
-//                $database
-//                    ->setShareTables(false)
-//                    ->setTenant(null)
-//                    ->setNamespace('_' . $project->getInternalId());
-//            }
+            } else {
+                $database
+                    ->setShareTables(false)
+                    ->setTenant(null)
+                    ->setNamespace('_' . $project->getInternalId());
+            }
 
             return $database;
         }
@@ -128,17 +128,17 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         $databases[$databaseName] = $database;
 
-//        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
             $database
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace('');
-//        } else {
-//            $database
-//                ->setShareTables(false)
-//                ->setTenant(null)
-//                ->setNamespace('_' . $project->getInternalId());
-//        }
+        } else {
+            $database
+                ->setShareTables(false)
+                ->setTenant(null)
+                ->setNamespace('_' . $project->getInternalId());
+        }
 
         $database
             ->setMetadata('host', \gethostname())
