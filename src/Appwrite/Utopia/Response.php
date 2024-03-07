@@ -299,9 +299,9 @@ class Response extends SwooleResponse
     public const MODEL_MOCK = 'mock';
 
     /**
-     * @var Filter
+     * @var array<Filter>
      */
-    private static $filter = null;
+    protected array $filters = [];
 
     /**
      * @var array
@@ -511,6 +511,15 @@ class Response extends SwooleResponse
         return $this->models;
     }
 
+    public function applyFilters(array $data, string $model): array
+    {
+        foreach ($this->filters as $filter) {
+            $data = $filter->parse($data, $model);
+        }
+
+        return $data;
+    }
+
     /**
      * Validate response objects and outputs
      *  the response according to given format type
@@ -524,11 +533,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-
-        // If filter is set, parse the output
-        if (self::hasFilter()) {
-            $output = self::getFilter()->parse($output, $model);
-        }
+        $output = $this->applyFilters($output, $model);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
@@ -682,15 +687,15 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
      * @param $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter)
+    public function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        $this->filters[] = $filter;
     }
 
     /**
@@ -698,9 +703,19 @@ class Response extends SwooleResponse
      *
      * @return Filter
      */
-    public static function getFilter(): ?Filter
+    public function getFilters(): array
     {
-        return self::$filter;
+        return $this->filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public function resetFilters(): void
+    {
+        $this->filters = [];
     }
 
     /**
@@ -708,9 +723,9 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty($this->filters);
     }
 
     /**
