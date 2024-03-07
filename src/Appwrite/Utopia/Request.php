@@ -9,7 +9,11 @@ use Utopia\Swoole\Request as UtopiaRequest;
 
 class Request extends UtopiaRequest
 {
-    private static ?Filter $filter = null;
+    /**
+     * @var array<Filter>
+     */
+    private static array $filters = [];
+
     private static ?Route $route = null;
 
     public function __construct(SwooleRequest $request)
@@ -24,35 +28,50 @@ class Request extends UtopiaRequest
     {
         $parameters = parent::getParams();
 
-        if (self::hasFilter() && self::hasRoute()) {
+        if (self::hasFilters() && self::hasRoute()) {
             $method = self::getRoute()->getLabel('sdk.method', 'unknown');
             $endpointIdentifier = self::getRoute()->getLabel('sdk.namespace', 'unknown') . '.' . $method;
-            $parameters = self::getFilter()->parse($parameters, $endpointIdentifier);
+
+            $parameters = array_reduce(
+                self::getFilters(),
+                fn (array $carry, Filter $filter) => $filter->parse($carry, $endpointIdentifier),
+                $parameters
+            );
         }
 
         return $parameters;
     }
 
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
-     * @param Filter|null $filter Filter the response filter to set
+     * @param Filter $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter): void
+    public static function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        self::$filters[] = $filter;
     }
 
     /**
      * Return the currently set filter
      *
-     * @return Filter|null
+     * @return array<Filter>
      */
-    public static function getFilter(): ?Filter
+    public static function getFilters(): array
     {
-        return self::$filter;
+        return self::$filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public static function resetFilters(): void
+    {
+        self::$filters = [];
     }
 
     /**
@@ -60,9 +79,9 @@ class Request extends UtopiaRequest
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public static function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty(self::$filters);
     }
 
     /**
@@ -94,7 +113,7 @@ class Request extends UtopiaRequest
      */
     public static function hasRoute(): bool
     {
-        return self::$route != null;
+        return self::$route !== null;
     }
 
     /**

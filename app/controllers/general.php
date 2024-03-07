@@ -8,18 +8,9 @@ use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
-use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
-use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
-use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
-use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
 use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
 use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
-use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
-use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
-use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
-use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
 use Appwrite\Utopia\View;
@@ -400,37 +391,21 @@ App::init()
         */
         $route = $utopia->getRoute();
         Request::setRoute($route);
+        Request::resetFilters();
 
         if ($route === null) {
             return $response->setStatusCode(404)->send('Not Found');
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
+
         if ($requestFormat) {
-            switch ($requestFormat) {
-                case version_compare($requestFormat, '0.12.0', '<'):
-                    Request::setFilter(new RequestV12());
-                    break;
-                case version_compare($requestFormat, '0.13.0', '<'):
-                    Request::setFilter(new RequestV13());
-                    break;
-                case version_compare($requestFormat, '0.14.0', '<'):
-                    Request::setFilter(new RequestV14());
-                    break;
-                case version_compare($requestFormat, '0.15.3', '<'):
-                    Request::setFilter(new RequestV15());
-                    break;
-                case version_compare($requestFormat, '1.4.0', '<'):
-                    Request::setFilter(new RequestV16());
-                    break;
-                case version_compare($requestFormat, '1.5.0', '<'):
-                    Request::setFilter(new RequestV17());
-                    break;
-                default:
-                    Request::setFilter(null);
+            if (version_compare($requestFormat, '1.4.0', '<')) {
+                Request::addFilter(new RequestV16());
             }
-        } else {
-            Request::setFilter(null);
+            if (version_compare($requestFormat, '1.5.0', '<')) {
+                Request::addFilter(new RequestV17());
+            }
         }
 
         $domain = $request->getHostname();
@@ -539,35 +514,16 @@ App::init()
         /*
         * Response format
         */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        Response::resetFilters();
+
+        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', null));
         if ($responseFormat) {
-            switch ($responseFormat) {
-                case version_compare($responseFormat, '0.11.2', '<='):
-                    Response::setFilter(new ResponseV11());
-                    break;
-                case version_compare($responseFormat, '0.12.4', '<='):
-                    Response::setFilter(new ResponseV12());
-                    break;
-                case version_compare($responseFormat, '0.13.4', '<='):
-                    Response::setFilter(new ResponseV13());
-                    break;
-                case version_compare($responseFormat, '0.14.0', '<='):
-                    Response::setFilter(new ResponseV14());
-                    break;
-                case version_compare($responseFormat, '0.15.3', '<='):
-                    Response::setFilter(new ResponseV15());
-                    break;
-                case version_compare($responseFormat, '1.4.0', '<'):
-                    Response::setFilter(new ResponseV16());
-                    break;
-                case version_compare($responseFormat, '1.5.0', '<'):
-                    Response::setFilter(new ResponseV17());
-                    break;
-                default:
-                    Response::setFilter(null);
+            if (version_compare($responseFormat, '1.4.0', '<')) {
+                Response::addFilter(new ResponseV16());
             }
-        } else {
-            Response::setFilter(null);
+            if (version_compare($responseFormat, '1.5.0', '<')) {
+                Response::addFilter(new ResponseV17());
+            }
         }
 
         /*

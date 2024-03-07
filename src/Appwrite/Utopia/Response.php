@@ -299,9 +299,9 @@ class Response extends SwooleResponse
     public const MODEL_MOCK = 'mock';
 
     /**
-     * @var Filter
+     * @var array<Filter>
      */
-    private static $filter = null;
+    private static $filters = [];
 
     /**
      * @var array
@@ -526,8 +526,8 @@ class Response extends SwooleResponse
         $output = $this->output(clone $document, $model);
 
         // If filter is set, parse the output
-        if (self::hasFilter()) {
-            $output = self::getFilter()->parse($output, $model);
+        foreach (self::$filters as $filter) {
+            $output = $filter->parse($output, $model);
         }
 
         switch ($this->getContentType()) {
@@ -682,15 +682,15 @@ class Response extends SwooleResponse
     }
 
     /**
-     * Function to set a response filter
+     * Function to add a response filter, the order of filters are first in - first out.
      *
      * @param $filter the response filter to set
      *
      * @return void
      */
-    public static function setFilter(?Filter $filter)
+    public static function addFilter(Filter $filter): void
     {
-        self::$filter = $filter;
+        self::$filters[] = $filter;
     }
 
     /**
@@ -698,9 +698,19 @@ class Response extends SwooleResponse
      *
      * @return Filter
      */
-    public static function getFilter(): ?Filter
+    public static function getFilters(): array
     {
-        return self::$filter;
+        return self::$filters;
+    }
+
+    /**
+     * Reset filters
+     *
+     * @return void
+     */
+    public static function resetFilters(): void
+    {
+        self::$filters = [];
     }
 
     /**
@@ -708,9 +718,9 @@ class Response extends SwooleResponse
      *
      * @return bool
      */
-    public static function hasFilter(): bool
+    public static function hasFilters(): bool
     {
-        return self::$filter != null;
+        return !empty(self::$filters);
     }
 
     /**
