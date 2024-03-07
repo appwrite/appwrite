@@ -419,7 +419,7 @@ class ProjectsConsoleClientTest extends Scope
     /**
      * @depends testCreateProject
      */
-    public function testBackupPolicy($data): array
+    public function testBackupPolicy($data): void
     {
         $id = $data['projectId'] ?? '';
 
@@ -428,7 +428,6 @@ class ProjectsConsoleClientTest extends Scope
             'x-appwrite-project' => $this->getProject()['$id'],
         ], $this->getHeaders()), [
             'policyId' => 'policy1',
-            'projectId' => $id,
             'name' => 'Hourly Backups',
             'schedule' => '*/15 * * * *',
             'enabled' => true,
@@ -442,7 +441,6 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertNotEmpty($response['body']);
         $this->assertEquals($id, $response['body']['$id']);
         $this->assertEquals('Project Test', $response['body']['name']);
-
     }
 
         /**

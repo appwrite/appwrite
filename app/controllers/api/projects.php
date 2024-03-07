@@ -1912,7 +1912,7 @@ App::post('/v1/backups-policy')
         $resourceType = 'backupProject';
 
         $policy = $dbForProject->createDocument('backupsPolicy', new Document([
-            '$id' => 'daily',
+            '$id' => $policyId,
             'name' => $name,
             'resourceType' => $resourceType,
             'resourceId' => $project->getId(),
