@@ -1,7 +1,6 @@
 <?php
 
 use Appwrite\Auth\OAuth2\Firebase as OAuth2Firebase;
-use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Event\Migration;
 use Appwrite\Extend\Exception;

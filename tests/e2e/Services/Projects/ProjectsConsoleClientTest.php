@@ -4,13 +4,11 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
-use Appwrite\Task\Validator\Cron;
-use Appwrite\Utopia\Database\Validator\CustomId;
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\ProjectConsole;
-use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
+use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -1530,9 +1528,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
 
-         /**
-         * Reset
-         */
+        /**
+        * Reset
+        */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
@@ -1647,9 +1645,9 @@ class ProjectsConsoleClientTest extends Scope
         $this->assertEquals(400, $response['headers']['status-code']);
 
 
-         /**
-         * Reset
-         */
+        /**
+        * Reset
+        */
         $response = $this->client->call(Client::METHOD_PATCH, '/projects/' . $id . '/auth/password-history', array_merge([
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],

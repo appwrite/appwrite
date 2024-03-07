@@ -2,23 +2,19 @@
 
 require_once __DIR__ . '/../init.php';
 
-use Utopia\App;
-use Utopia\Locale\Locale;
-use Utopia\Logger\Logger;
-use Utopia\Logger\Log;
-use Utopia\Logger\Log\User;
-use Swoole\Http\Request as SwooleRequest;
-use Appwrite\Utopia\Request;
-use MaxMind\Db\Reader;
-use Appwrite\Utopia\Response;
-use Appwrite\Utopia\View;
-use Appwrite\Extend\Exception as AppwriteException;
-use Utopia\Config\Config;
-use Utopia\Domains\Domain;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Event;
 use Appwrite\Event\Usage;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Network\Validator\Origin;
+use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
+use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
+use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
+use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
+use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
+use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
+use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V11 as ResponseV11;
 use Appwrite\Utopia\Response\Filters\V12 as ResponseV12;
 use Appwrite\Utopia\Response\Filters\V13 as ResponseV13;
@@ -26,20 +22,24 @@ use Appwrite\Utopia\Response\Filters\V14 as ResponseV14;
 use Appwrite\Utopia\Response\Filters\V15 as ResponseV15;
 use Appwrite\Utopia\Response\Filters\V16 as ResponseV16;
 use Appwrite\Utopia\Response\Filters\V17 as ResponseV17;
+use Appwrite\Utopia\View;
+use Executor\Executor;
+use MaxMind\Db\Reader;
+use Swoole\Http\Request as SwooleRequest;
+use Utopia\App;
 use Utopia\CLI\Console;
+use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Query;
 use Utopia\Database\Helpers\ID;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Domains\Domain;
+use Utopia\Locale\Locale;
+use Utopia\Logger\Log;
+use Utopia\Logger\Log\User;
+use Utopia\Logger\Logger;
 use Utopia\Validator\Hostname;
-use Appwrite\Utopia\Request\Filters\V12 as RequestV12;
-use Appwrite\Utopia\Request\Filters\V13 as RequestV13;
-use Appwrite\Utopia\Request\Filters\V14 as RequestV14;
-use Appwrite\Utopia\Request\Filters\V15 as RequestV15;
-use Appwrite\Utopia\Request\Filters\V16 as RequestV16;
-use Appwrite\Utopia\Request\Filters\V17 as RequestV17;
-use Executor\Executor;
 use Utopia\Validator\Text;
 
 Config::setParam('domainVerification', false);
@@ -529,7 +529,8 @@ App::init()
             'cookieDomain',
             $isLocalHost || $isIpAddress
                 ? null
-                : ($isConsoleProject && $isConsoleRootSession
+                : (
+                    $isConsoleProject && $isConsoleRootSession
                     ? '.' . $selfDomain->getRegisterable()
                     : '.' . $request->getHostname()
                 )

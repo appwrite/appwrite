@@ -132,8 +132,8 @@ trait DatabasesBase
             Client::METHOD_GET,
             '/databases/' . $databaseId . '/collections/' . $presidents['body']['$id'] . '/documents',
             array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()),
             [
                 'queries' => [

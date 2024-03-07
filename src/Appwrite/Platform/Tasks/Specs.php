@@ -2,8 +2,6 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
-use Utopia\Validator\Text;
 use Appwrite\Specification\Format\OpenAPI3;
 use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
@@ -17,8 +15,10 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Specs extends Action

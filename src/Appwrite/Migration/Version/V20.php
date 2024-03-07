@@ -81,7 +81,7 @@ class V20 extends Migration
         if ($collectionType === 'projects') {
             foreach (
                 $this->documentsIterator('attributes', [
-                Query::equal('array', [true]),
+                    Query::equal('array', [true]),
                 ]) as $attribute
             ) {
                 $foundIndex = false;

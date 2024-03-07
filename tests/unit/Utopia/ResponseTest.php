@@ -2,9 +2,9 @@
 
 namespace Tests\Unit\Utopia;
 
-use Exception;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V11;
+use Exception;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Database\Document;
