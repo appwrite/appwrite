@@ -3934,13 +3934,17 @@ App::post('/v1/databases/:databaseId/backups-policy')
     ->inject('project')
     ->inject('dbForConsole')
     ->action(function (string $policyId, string $name, bool $enabled, int $retention, int $hours, string $databaseId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+
+        if($hours < 1){
+            throw new Exception(Exception::GENERAL_ARGUMENT_INVALID, 'Hours must be greater than 1');
+        }
+
         $database = $dbForProject->getDocument('databases', $databaseId);
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        var_dump($project);
         $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
 
         $resourceType = 'backup-database';
@@ -3948,7 +3952,6 @@ App::post('/v1/databases/:databaseId/backups-policy')
         $policy = $dbForProject->createDocument('backupsPolicy', new Document([
             '$id' => $policyId,
             'name' => $name,
-            'status' => 'status',
             'resourceType' => $resourceType,
             'resourceId' => $database->getId(),
             'resourceInternalId' => $database->getInternalId(),
@@ -3961,11 +3964,11 @@ App::post('/v1/databases/:databaseId/backups-policy')
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
                 'resourceType' => $resourceType,
-                'resourceId' => $project->getId(),
-                'resourceInternalId' => $project->getInternalId(),
+                'resourceId' => $database->getId(),
+                'resourceInternalId' => $database->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
-                'schedule'  => $policy->getAttribute('schedule'),
+                'schedule'  => "0 */{$hours} * * *",
                 'active' => false,
             ]))
         );
@@ -3977,5 +3980,5 @@ App::post('/v1/databases/:databaseId/backups-policy')
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($policy, Response::MODEL_FUNCTION);
+            ->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });

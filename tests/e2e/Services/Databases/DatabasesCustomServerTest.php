@@ -274,9 +274,11 @@ class DatabasesCustomServerTest extends Scope
 
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertNotEmpty($response['body']);
-       // $this->assertEquals($id, $response['body']['$id']);
-        $this->assertEquals('Project Test', $response['body']['name']);
-
+        $this->assertEquals('Hourly Backups', $response['body']['name']);
+        $this->assertEquals(4, $response['body']['hours']);
+        $this->assertEquals(6, $response['body']['retention']);
+        $this->assertEquals($databaseId, $response['body']['resourceId']);
+        $this->assertEquals('backup-database', $response['body']['resourceType']);
         $this->assertEquals('----', '------');
     }
 
