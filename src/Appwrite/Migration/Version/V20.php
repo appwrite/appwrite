@@ -143,6 +143,29 @@ class V20 extends Migration
                     $this->createCollection('authenticators');
 
                     break;
+
+                case 'cache':
+
+                    // Create resourceType attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'resourceType');
+                    } catch (Throwable $th) {
+                        Console::warning("'resourceType' from {$id}: {$th->getMessage()}");
+                    }
+
+                    // Create mimeType attribute
+                    try {
+                        $this->createAttributeFromCollection($this->projectDB, $id, 'mimeType');
+                    } catch (Throwable $th) {
+                        Console::warning("'mimeType' from {$id}: {$th->getMessage()}");
+                    }
+                    try {
+                        $this->projectDB->purgeCachedCollection($id);
+                    } catch (Throwable $th) {
+                        Console::warning("Purge cache from {$id}: {$th->getMessage()}");
+                    }
+
+                    break;
                 case 'stats':
                     try {
                         /**
