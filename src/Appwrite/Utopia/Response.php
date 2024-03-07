@@ -102,6 +102,7 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Appwrite\Utopia\Response\Model\BackupPolicy;
+use Appwrite\Utopia\Response\Model\Backup;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
@@ -253,6 +254,7 @@ class Response extends SwooleResponse
     public const MODEL_BACKUP_POLICY = 'backupPolicy';
     public const MODEL_BACKUP_POLICY_LIST = 'backupPolicyList';
     public const MODEL_BACKUP = 'backup';
+    public const MODEL_BACKUP_LIST = 'backupList';
 
     // Proxy
     public const MODEL_PROXY_RULE = 'proxyRule';
@@ -370,6 +372,7 @@ class Response extends SwooleResponse
             ->setModel(new BaseList('Target list', self::MODEL_TARGET_LIST, 'targets', self::MODEL_TARGET))
             ->setModel(new BaseList('Migrations List', self::MODEL_MIGRATION_LIST, 'migrations', self::MODEL_MIGRATION))
             ->setModel(new BaseList('Migrations Firebase Projects List', self::MODEL_MIGRATION_FIREBASE_PROJECT_LIST, 'projects', self::MODEL_MIGRATION_FIREBASE_PROJECT))
+            ->setModel(new BaseList('Backup List', self::MODEL_BACKUP_LIST, 'backupList', self::MODEL_BACKUP))
             // Entities
             ->setModel(new Database())
             ->setModel(new Collection())
@@ -463,6 +466,7 @@ class Response extends SwooleResponse
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
             ->setModel(new BackupPolicy())
+            ->setModel(new Backup())
             // Tests (keep last)
             ->setModel(new Mock());
 
