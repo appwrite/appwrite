@@ -4,6 +4,7 @@ namespace Tests\Unit\Utopia;
 
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filters\V11;
+use Appwrite\Utopia\Response\Filters\V16;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
@@ -21,16 +22,16 @@ class ResponseTest extends TestCase
         $this->response->setModel(new Nested());
     }
 
-    public function testSetFilter(): void
+    public function testSetFilters(): void
     {
-        $this->assertEquals($this->response->hasFilter(), false);
-        $this->assertEquals($this->response->getFilter(), null);
+        $this->assertEquals($this->response->hasFilters(), false);
+        $this->assertEquals($this->response->getFilters(), []);
 
-        $filter = new V11();
-        $this->response->setFilter($filter);
+        $filter = new V16();
+        $this->response->addFilter($filter);
 
-        $this->assertEquals($this->response->hasFilter(), true);
-        $this->assertEquals($this->response->getFilter(), $filter);
+        $this->assertEquals($this->response->hasFilters(), true);
+        $this->assertEquals($this->response->getFilters(), [$filter]);
     }
 
     public function testResponseModel(): void
