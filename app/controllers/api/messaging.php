@@ -2930,10 +2930,6 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
             }
 
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
-            }
-
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
                 throw new Exception(Exception::STORAGE_FILE_TYPE_UNSUPPORTED);
             }
@@ -3774,10 +3770,6 @@ App::patch('/v1/messaging/messages/push/:messageId')
             $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
             if ($file->isEmpty()) {
                 throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
-            }
-
-            if (!\in_array(Permission::read(Role::any()), \array_merge($file->getRead(), $bucket->getRead()))) {
-                throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
             if (!\in_array($file->getAttribute('mimeType'), ['image/png', 'image/jpeg'])) {
