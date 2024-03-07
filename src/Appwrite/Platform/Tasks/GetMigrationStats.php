@@ -10,6 +10,7 @@ use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Query;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -63,7 +64,7 @@ class GetMigrationStats extends Action
         Console::success(APP_NAME . ' Migration stats calculation has started');
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http(new Server(), 'UTC');
         $console = $app->getResource('console');
 
         /** CSV stuff */
@@ -101,7 +102,7 @@ class GetMigrationStats extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     /** Get Project ID */

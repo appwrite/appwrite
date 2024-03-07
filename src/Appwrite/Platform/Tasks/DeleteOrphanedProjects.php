@@ -9,6 +9,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
@@ -58,7 +59,7 @@ class DeleteOrphanedProjects extends Action
         ], $collectionsConfig);
 
         /* Initialise new Utopia app */
-        $app = new App('UTC');
+        $app = new Http(new Server(), 'UTC');
         $console = $app->getResource('console');
         $projects = [$console];
 
@@ -123,7 +124,7 @@ class DeleteOrphanedProjects extends Action
                         $dbForConsole->deleteDocument('projects', $project->getId());
                         $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
-                        if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                        if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                             try {
                                 $dbForProject->deleteCollection(Database::METADATA);
                                 $dbForProject->purgeCachedCollection(Database::METADATA);

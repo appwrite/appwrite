@@ -38,7 +38,7 @@ use Utopia\Storage\Device\Local;
 
 global $register;
 
-Authorization::disable();
+$auth->disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Server::setResource('register', fn () => $register);
@@ -228,6 +228,8 @@ Server::setResource('deviceForLocalFiles', function (Document $project) {
     return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
+Server::setResource('authorization', fn () => new Authorization());
+
 $pools = $register->get('pools');
 $platform = new Appwrite();
 $args = $_SERVER['argv'];
@@ -284,7 +286,8 @@ $worker
     ->inject('log')
     ->inject('pools')
     ->inject('project')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
+    ->inject('auth')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project, Authorization $auth) use ($queueName) {
         $pools->reclaim();
         $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
@@ -306,7 +309,7 @@ $worker
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $auth->getRoles());
 
             $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);

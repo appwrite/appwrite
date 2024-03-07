@@ -52,7 +52,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
     $host = $request->getHostname() ?? '';
 
-    $route = Authorization::skip(
+    $route = $auth->skip(
         fn () => $dbForConsole->find('rules', [
             Query::equal('domain', [$host]),
             Query::limit(1)
@@ -80,7 +80,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     }
 
     $projectId = $route->getAttribute('projectId');
-    $project = Authorization::skip(
+    $project = $auth->skip(
         fn () => $dbForConsole->getDocument('projects', $projectId)
     );
     if (array_key_exists('proxy', $project->getAttribute('services', []))) {
@@ -124,11 +124,11 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         $requestHeaders = $request->getHeaders();
 
-        $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+        $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
         $dbForProject = $getProjectDB($project);
 
-        $function = Authorization::skip(fn () => $dbForProject->getDocument('functions', $functionId));
+        $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         if ($function->isEmpty() || !$function->getAttribute('enabled')) {
             throw new AppwriteException(AppwriteException::FUNCTION_NOT_FOUND);
@@ -143,7 +143,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
             throw new AppwriteException(AppwriteException::FUNCTION_RUNTIME_UNSUPPORTED, 'Runtime "' . $function->getAttribute('runtime', '') . '" is not supported');
         }
 
-        $deployment = Authorization::skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
+        $deployment = $auth->skip(fn () => $dbForProject->getDocument('deployments', $function->getAttribute('deployment', '')));
 
         if ($deployment->getAttribute('resourceId') !== $function->getId()) {
             throw new AppwriteException(AppwriteException::DEPLOYMENT_NOT_FOUND, 'Deployment not found. Create a deployment before trying to execute a function');
@@ -154,7 +154,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         }
 
         /** Check if build has completed */
-        $build = Authorization::skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
+        $build = $auth->skip(fn () => $dbForProject->getDocument('builds', $deployment->getAttribute('buildId', '')));
         if ($build->isEmpty()) {
             throw new AppwriteException(AppwriteException::BUILD_NOT_FOUND);
         }
@@ -316,7 +316,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
 
         if ($function->getAttribute('logging')) {
             /** @var Document $execution */
-            $execution = Authorization::skip(fn () => $dbForProject->createDocument('executions', $execution));
+            $execution = $auth->skip(fn () => $dbForProject->createDocument('executions', $execution));
         }
 
         $execution->setAttribute('logs', '');
@@ -444,7 +444,7 @@ Http::init()
             } elseif (str_starts_with($request->getURI(), '/.well-known/acme-challenge')) {
                 Console::warning('Skipping SSL certificates generation on ACME challenge.');
             } else {
-                Authorization::disable();
+                $auth->disable();
 
                 $envDomain = Http::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
@@ -483,7 +483,7 @@ Http::init()
                 }
                 $domains[$domain->get()] = true;
 
-                Authorization::reset(); // ensure authorization is re-enabled
+                $auth->reset(); // ensure authorization is re-enabled
             }
             Config::setParam('domains', $domains);
         }
@@ -701,7 +701,7 @@ Http::error()
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());
             $log->addExtra('detailedTrace', $error->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $auth->getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);

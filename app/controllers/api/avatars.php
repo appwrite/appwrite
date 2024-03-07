@@ -63,7 +63,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
 
 $getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger) {
     try {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         $sessions = $user->getAttribute('sessions', []);
 
@@ -114,7 +114,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                     ->setAttribute('providerRefreshToken', $refreshToken)
                     ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int)$oauth2->getAccessTokenExpiry('')));
 
-                Authorization::skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
+                $auth->skip(fn () => $dbForProject->updateDocument('sessions', $gitHubSession->getId(), $gitHubSession));
 
                 $dbForProject->purgeCachedDocument('users', $user->getId());
             } catch (Throwable $err) {
@@ -122,7 +122,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
                 do {
                     $previousAccessToken = $gitHubSession->getAttribute('providerAccessToken');
 
-                    $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+                    $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
                     $sessions = $user->getAttribute('sessions', []);
 
                     $gitHubSession = new Document();
@@ -594,7 +594,7 @@ Http::get('/v1/cards/cloud')
     ->inject('employees')
     ->inject('logger')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -801,7 +801,7 @@ Http::get('/v1/cards/cloud-back')
     ->inject('employees')
     ->inject('logger')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);
@@ -879,7 +879,7 @@ Http::get('/v1/cards/cloud-og')
     ->inject('employees')
     ->inject('logger')
     ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
-        $user = Authorization::skip(fn () => $dbForConsole->getDocument('users', $userId));
+        $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
             throw new Exception(Exception::USER_NOT_FOUND);

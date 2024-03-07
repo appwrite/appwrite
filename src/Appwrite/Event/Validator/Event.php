@@ -3,7 +3,7 @@
 namespace Appwrite\Event\Validator;
 
 use Utopia\Config\Config;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 
 class Event extends Validator
 {

@@ -7,6 +7,7 @@ use Appwrite\Specification\Format\Swagger2;
 use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Exception;
+use Swoole\Http\Request;
 use Swoole\Http\Response as HttpResponse;
 use Utopia\Http\Http;
 use Utopia\Cache\Adapter\None;
@@ -15,9 +16,9 @@ use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Request;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 
@@ -248,7 +249,7 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [new Http(new Server(), 'UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),

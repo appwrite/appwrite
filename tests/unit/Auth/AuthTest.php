@@ -13,13 +13,20 @@ use Utopia\Database\Validator\Roles;
 
 class AuthTest extends TestCase
 {
+    protected Authorization $auth;
+
+    public function setUp(): void
+    {
+        $this->auth = new Authorization();
+    }
+
     /**
      * Reset Roles
      */
     public function tearDown(): void
     {
-        Authorization::cleanRoles();
-        Authorization::setRole(Role::any()->toString());
+        $this->auth->cleanRoles();
+        $this->auth->addRole(Role::any()->toString());
     }
 
     public function testCookieName(): void
@@ -347,7 +354,7 @@ class AuthTest extends TestCase
             '$id' => ''
         ]);
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
         $this->assertCount(1, $roles);
         $this->assertContains(Role::guests()->toString(), $roles);
     }
@@ -383,7 +390,7 @@ class AuthTest extends TestCase
             ]
         ]);
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
 
         $this->assertCount(13, $roles);
         $this->assertContains(Role::users()->toString(), $roles);
@@ -404,21 +411,21 @@ class AuthTest extends TestCase
         $user['emailVerification'] = false;
         $user['phoneVerification'] = false;
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
         $this->assertContains(Role::users(Roles::DIMENSION_UNVERIFIED)->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_UNVERIFIED)->toString(), $roles);
 
         // Enable single verification type
         $user['emailVerification'] = true;
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
         $this->assertContains(Role::users(Roles::DIMENSION_VERIFIED)->toString(), $roles);
         $this->assertContains(Role::user(ID::custom('123'), Roles::DIMENSION_VERIFIED)->toString(), $roles);
     }
 
     public function testPrivilegedUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_OWNER);
+        $this->auth->addRole(Auth::USER_ROLE_OWNER);
         $user  = new Document([
             '$id' => ID::custom('123'),
             'emailVerification' => true,
@@ -444,7 +451,7 @@ class AuthTest extends TestCase
             ]
         ]);
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
 
         $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);
@@ -462,7 +469,7 @@ class AuthTest extends TestCase
 
     public function testAppUserRoles(): void
     {
-        Authorization::setRole(Auth::USER_ROLE_APPS);
+        $this->auth->addRole(Auth::USER_ROLE_APPS);
         $user  = new Document([
             '$id' => ID::custom('123'),
             'memberships' => [
@@ -486,7 +493,7 @@ class AuthTest extends TestCase
             ]
         ]);
 
-        $roles = Auth::getRoles($user);
+        $roles = Auth::getRoles($user, $this->auth);
 
         $this->assertCount(7, $roles);
         $this->assertNotContains(Role::users()->toString(), $roles);

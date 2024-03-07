@@ -7,7 +7,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Nullable;
 use Utopia\Http\Validator\Range;
@@ -273,7 +273,7 @@ class OpenAPI3 extends Format
 
             foreach ($route->getParams() as $name => $param) { // Set params
                 /**
-                 * @var \Utopia\Validator $validator
+                 * @var \Utopia\Http\Validator $validator
                  */
                 $validator = (\is_callable($param['validator'])) ? call_user_func_array($param['validator'], $this->app->getResources($param['injections'])) : $param['validator'];
 

@@ -26,7 +26,7 @@ class Schema
      * @throws Exception
      */
     public static function build(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,
@@ -85,7 +85,7 @@ class Schema
      * @return array
      * @throws Exception
      */
-    protected static function api(App $utopia, callable $complexity): array
+    protected static function api(Http $utopia, callable $complexity): array
     {
         Mapper::init($utopia
             ->getResource('response')
@@ -143,7 +143,7 @@ class Schema
      * @throws \Exception
      */
     protected static function collections(
-        App $utopia,
+        Http $utopia,
         callable $complexity,
         callable $attributes,
         array $urls,

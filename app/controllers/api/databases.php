@@ -88,7 +88,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
     $default = $attribute->getAttribute('default');
     $options = $attribute->getAttribute('options', []);
 
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -237,7 +237,7 @@ function updateAttribute(
     array $elements = null,
     array $options = []
 ): Document {
-    $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+    $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
     if ($db->isEmpty()) {
         throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -752,7 +752,7 @@ Http::post('/v1/databases/:databaseId/collections')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -813,7 +813,7 @@ Http::get('/v1/databases/:databaseId/collections')
     ->inject('mode')
     ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -875,7 +875,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -911,7 +911,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1017,7 +1017,7 @@ Http::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1081,7 +1081,7 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1616,7 +1616,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relat
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1719,7 +1719,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
         /** @var Document $database */
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -1753,7 +1753,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
 
         if ($cursor) {
             $attributeId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('attributes', [
+            $cursorDocument = $auth->skip(fn () => $dbForProject->find('attributes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
                 Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$attributeId]),
@@ -1807,7 +1807,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2300,7 +2300,7 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:ke
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2413,7 +2413,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2575,7 +2575,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
         /** @var Document $database */
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2605,7 +2605,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
 
         if ($cursor) {
             $indexId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->find('indexes', [
+            $cursorDocument = $auth->skip(fn () => $dbForProject->find('indexes', [
                 Query::equal('collectionInternalId', [$collection->getInternalId()]),
                 Query::equal('databaseInternalId', [$database->getInternalId()]),
                 Query::equal('key', [$indexId]),
@@ -2645,7 +2645,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2688,7 +2688,7 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('queueForEvents')
     ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
 
-        $db = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($db->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -2771,16 +2771,16 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
             throw new Exception(Exception::DOCUMENT_INVALID_STRUCTURE, '$id is not allowed for creating new documents, try update instead');
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($auth->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -2818,8 +2818,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
-                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', Authorization::getRoles()) . ')');
+                    if (!$auth->isRole($role)) {
+                        throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $auth->getRoles()) . ')');
                     }
                 }
             }
@@ -2867,7 +2867,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -2881,7 +2881,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $current = Authorization::skip(
+                        $current = $auth->skip(
                             fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(), $relation->getId())
                         );
 
@@ -2941,7 +2941,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -2988,15 +2988,15 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $isAPIKey = Auth::isAppUser($auth->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3020,7 +3020,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         if ($cursor) {
             $documentId = $cursor->getValue();
 
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Document '{$documentId}' for the 'cursor' value not found.");
@@ -3066,7 +3066,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
+                $relatedCollection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId));
 
                 foreach ($relations as $index => $doc) {
                     if ($doc instanceof Document) {
@@ -3145,16 +3145,16 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
     ->inject('dbForProject')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($auth->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3198,7 +3198,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -3237,7 +3237,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
     ->inject('geodb')
     ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -3357,16 +3357,16 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
             throw new Exception(Exception::DOCUMENT_MISSING_PAYLOAD);
         }
 
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($auth->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
@@ -3374,7 +3374,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
 
         // Read permission should not be required for update
         /** @var Document $document */
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3388,7 +3388,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         ]);
 
         // Users can only manage their own roles, API keys and Admin users can manage any
-        $roles = Authorization::getRoles();
+        $roles = $auth->getRoles();
         if (!$isAPIKey && !$isPrivilegedUser && !\is_null($permissions)) {
             foreach (Database::PERMISSIONS as $type) {
                 foreach ($permissions as $permission) {
@@ -3401,7 +3401,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                         $permission->getIdentifier(),
                         $permission->getDimension()
                     ))->toString();
-                    if (!Authorization::isRole($role)) {
+                    if (!$auth->isRole($role)) {
                         throw new Exception(Exception::USER_UNAUTHORIZED, 'Permissions must be one of: (' . \implode(', ', $roles) . ')');
                     }
                 }
@@ -3438,7 +3438,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -3453,7 +3453,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                         $relation = new Document($relation);
                     }
                     if ($relation instanceof Document) {
-                        $oldDocument = Authorization::skip(fn () => $dbForProject->getDocument(
+                        $oldDocument = $auth->skip(fn () => $dbForProject->getDocument(
                             'database_' . $database->getInternalId() . '_collection_' . $relatedCollection->getInternalId(),
                             $relation->getId()
                         ));
@@ -3522,7 +3522,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -3576,23 +3576,23 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:doc
     ->inject('queueForEvents')
     ->inject('mode')
     ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, string $mode) {
-        $database = Authorization::skip(fn () => $dbForProject->getDocument('databases', $databaseId));
+        $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
-        $isAPIKey = Auth::isAppUser(Authorization::getRoles());
-        $isPrivilegedUser = Auth::isPrivilegedUser(Authorization::getRoles());
+        $isAPIKey = Auth::isAppUser($auth->getRoles());
+        $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
         if ($database->isEmpty() || (!$database->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
         }
 
-        $collection = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
+        $collection = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId));
 
         if ($collection->isEmpty() || (!$collection->getAttribute('enabled', false) && !$isAPIKey && !$isPrivilegedUser)) {
             throw new Exception(Exception::COLLECTION_NOT_FOUND);
         }
 
         // Read permission should not be required for delete
-        $document = Authorization::skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
+        $document = $auth->skip(fn () => $dbForProject->getDocument('database_' . $database->getInternalId() . '_collection_' . $collection->getInternalId(), $documentId));
 
         if ($document->isEmpty()) {
             throw new Exception(Exception::DOCUMENT_NOT_FOUND);
@@ -3632,7 +3632,7 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:doc
                 }
 
                 $relatedCollectionId = $relationship->getAttribute('relatedCollection');
-                $relatedCollection = Authorization::skip(
+                $relatedCollection = $auth->skip(
                     fn () => $dbForProject->getDocument('database_' . $database->getInternalId(), $relatedCollectionId)
                 );
 
@@ -3685,7 +3685,7 @@ Http::get('/v1/databases/usage')
             METRIC_DOCUMENTS,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -3769,7 +3769,7 @@ Http::get('/v1/databases/:databaseId/usage')
             str_replace('{databaseInternalId}', $database->getInternalId(), METRIC_DATABASE_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),
@@ -3855,7 +3855,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             str_replace(['{databaseInternalId}', '{collectionInternalId}'], [$database->getInternalId(), $collectionDocument->getInternalId()], METRIC_DATABASE_ID_COLLECTION_ID_DOCUMENTS),
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

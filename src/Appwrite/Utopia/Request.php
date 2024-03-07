@@ -4,18 +4,12 @@ namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
 use Utopia\Http\Adapter\Swoole\Request as SwooleRequest;
-use Utopia\Http\Request as HttpRequest;
 use Utopia\Http\Route;
 
-class Request extends HttpRequest
+class Request extends SwooleRequest
 {
     private static ?Filter $filter = null;
     private static ?Route $route = null;
-
-    public function __construct(SwooleRequest $request)
-    {
-        parent::__construct($request);
-    }
 
     /**
      * @inheritdoc

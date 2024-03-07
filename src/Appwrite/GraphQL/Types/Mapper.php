@@ -10,7 +10,7 @@ use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Definition\UnionType;
 use Utopia\Http\Http;
 use Utopia\Http\Route;
-use Utopia\Validator;
+use Utopia\Http\Validator;
 use Utopia\Http\Validator\Nullable;
 
 class Mapper
@@ -75,7 +75,7 @@ class Mapper
     }
 
     public static function route(
-        App $utopia,
+        Http $utopia,
         Route $route,
         callable $complexity
     ): iterable {
@@ -213,7 +213,7 @@ class Mapper
      * @throws Exception
      */
     public static function param(
-        App $utopia,
+        Http $utopia,
         Validator|callable $validator,
         bool $required,
         array $injections

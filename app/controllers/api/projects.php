@@ -30,15 +30,15 @@ use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Multiple;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Multiple;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 
 Http::init()
     ->groups(['projects'])

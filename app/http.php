@@ -251,8 +251,8 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     Http::setResource('pools', fn () => $pools);
 
     try {
-        Authorization::cleanRoles();
-        Authorization::setRole(Role::any()->toString());
+        $auth->cleanRoles();
+        $auth->addRole(Role::any()->toString());
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
@@ -293,7 +293,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $log->addExtra('line', $th->getLine());
             $log->addExtra('trace', $th->getTraceAsString());
             $log->addExtra('detailedTrace', $th->getTrace());
-            $log->addExtra('roles', Authorization::getRoles());
+            $log->addExtra('roles', $auth->getRoles());
 
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);

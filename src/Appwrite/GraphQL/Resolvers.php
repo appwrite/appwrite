@@ -20,7 +20,7 @@ class Resolvers
      * @return callable
      */
     public static function api(
-        App $utopia,
+        Http $utopia,
         ?Route $route,
     ): callable {
         return static fn ($type, $args, $context, $info) => new Swoole(
@@ -67,7 +67,7 @@ class Resolvers
      * @return callable
      */
     public static function document(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         string $methodType,
@@ -89,7 +89,7 @@ class Resolvers
      * @return callable
      */
     public static function documentGet(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -119,7 +119,7 @@ class Resolvers
      * @return callable
      */
     public static function documentList(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -155,7 +155,7 @@ class Resolvers
      * @return callable
      */
     public static function documentCreate(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -187,7 +187,7 @@ class Resolvers
      * @return callable
      */
     public static function documentUpdate(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -218,7 +218,7 @@ class Resolvers
      * @return callable
      */
     public static function documentDelete(
-        App $utopia,
+        Http $utopia,
         string $databaseId,
         string $collectionId,
         callable $url,
@@ -249,7 +249,7 @@ class Resolvers
      * @throws Exception
      */
     private static function resolve(
-        App $utopia,
+        Http $utopia,
         Request $request,
         Response $response,
         callable $resolve,

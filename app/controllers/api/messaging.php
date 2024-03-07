@@ -867,7 +867,7 @@ Http::get('/v1/messaging/providers')
 
         if ($cursor) {
             $providerId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('providers', $providerId));
+            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('providers', $providerId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Provider '{$providerId}' for the 'cursor' value not found.");
@@ -2001,7 +2001,7 @@ Http::get('/v1/messaging/topics')
 
         if ($cursor) {
             $topicId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Topic '{$topicId}' for the 'cursor' value not found.");
@@ -2239,7 +2239,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
     ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2251,13 +2251,13 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $targetId));
+        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {
             throw new Exception(Exception::USER_TARGET_NOT_FOUND);
         }
 
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber = new Document([
             '$id' => $subscriberId,
@@ -2290,7 +2290,7 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
                 default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
             };
 
-            Authorization::skip(fn () => $dbForProject->increaseDocumentAttribute(
+            $auth->skip(fn () => $dbForProject->increaseDocumentAttribute(
                 'topics',
                 $topicId,
                 $totalAttribute,
@@ -2339,7 +2339,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
             $queries[] = Query::search('search', $search);
         }
 
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2357,7 +2357,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
 
         if ($cursor) {
             $subscriberId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
+            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('subscribers', $subscriberId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Subscriber '{$subscriberId}' for the 'cursor' value not found.");
@@ -2370,8 +2370,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
             return function () use ($subscriber, $dbForProject) {
-                $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-                $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+                $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+                $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
                 return $subscriber
                     ->setAttribute('target', $target)
@@ -2491,7 +2491,7 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2503,8 +2503,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             throw new Exception(Exception::SUBSCRIBER_NOT_FOUND);
         }
 
-        $target = Authorization::skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
-        $user = Authorization::skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
+        $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
+        $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
         $subscriber
             ->setAttribute('target', $target)
@@ -2534,7 +2534,7 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('dbForProject')
     ->inject('response')
     ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
-        $topic = Authorization::skip(fn () => $dbForProject->getDocument('topics', $topicId));
+        $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
             throw new Exception(Exception::TOPIC_NOT_FOUND);
@@ -2557,7 +2557,7 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
             default => throw new Exception(Exception::TARGET_PROVIDER_INVALID_TYPE),
         };
 
-        Authorization::skip(fn () => $dbForProject->decreaseDocumentAttribute(
+        $auth->skip(fn () => $dbForProject->decreaseDocumentAttribute(
             'topics',
             $topicId,
             $totalAttribute,
@@ -3043,7 +3043,7 @@ Http::get('/v1/messaging/messages')
 
         if ($cursor) {
             $messageId = $cursor->getValue();
-            $cursorDocument = Authorization::skip(fn () => $dbForProject->getDocument('messages', $messageId));
+            $cursorDocument = $auth->skip(fn () => $dbForProject->getDocument('messages', $messageId));
 
             if ($cursorDocument->isEmpty()) {
                 throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Message '{$messageId}' for the 'cursor' value not found.");

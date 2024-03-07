@@ -10,6 +10,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\FPM\Server;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Http\Validator\Text;
@@ -31,7 +32,8 @@ class Migrate extends Action
             ->inject('dbForConsole')
             ->inject('getProjectDB')
             ->inject('register')
-            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register));
+            ->inject('auth')
+            ->callback(fn ($version, $cache, $dbForConsole, $getProjectDB, Registry $register, Authorization $auth) => $this->action($version, $cache, $dbForConsole, $getProjectDB, $register, $auth));
     }
 
     private function clearProjectsCache(Cache $cache, Document $project)
@@ -43,16 +45,16 @@ class Migrate extends Action
         }
     }
 
-    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register)
+    public function action(string $version, Cache $cache, Database $dbForConsole, callable $getProjectDB, Registry $register, Authorization $auth)
     {
-        Authorization::disable();
+        $auth->disable();
         if (!array_key_exists($version, Migration::$versions)) {
             Console::error("Version {$version} not found.");
             Console::exit(1);
             return;
         }
 
-        $app = new App('UTC');
+        $app = new Http(new Server(), 'UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 

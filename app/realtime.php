@@ -25,6 +25,7 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Adapter\FPM\Server as FPMServer;
 use Utopia\Logger\Log;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
@@ -191,7 +192,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                     'value' => '{}'
                 ]);
 
-                $statsDocument = Authorization::skip(fn () => $database->createDocument('realtime', $document));
+                $auth = new Authorization();
+                $statsDocument = $auth->skip(fn () => $database->createDocument('realtime', $document));
                 break;
             } catch (Throwable) {
                 Console::warning("Collection not ready. Retrying connection ({$attempts})...");
@@ -220,7 +222,8 @@ $server->onStart(function () use ($stats, $register, $containerId, &$statsDocume
                 ->setAttribute('timestamp', DateTime::now())
                 ->setAttribute('value', json_encode($payload));
 
-            Authorization::skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
+            $auth = new Authorization();
+            $auth->skip(fn () => $database->updateDocument('realtime', $statsDocument->getId(), $statsDocument));
         } catch (Throwable $th) {
             call_user_func($logError, $th, "updateWorkerDocument");
         } finally {
@@ -244,7 +247,8 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 
             $payload = [];
 
-            $list = Authorization::skip(fn () => $database->find('realtime', [
+            $auth = new Authorization();
+            $list = $auth->skip(fn () => $database->find('realtime', [
                 Query::greaterThan('timestamp', DateTime::addSeconds(new \DateTime(), -15)),
             ]));
 
@@ -340,12 +344,13 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
                     if ($realtime->hasSubscriber($projectId, 'user:' . $userId)) {
                         $connection = array_key_first(reset($realtime->subscriptions[$projectId]['user:' . $userId]));
                         $consoleDatabase = getConsoleDB();
-                        $project = Authorization::skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
+                        $auth = new Authorization();
+                        $project = $auth->skip(fn () => $consoleDatabase->getDocument('projects', $projectId));
                         $database = getProjectDB($project);
 
                         $user = $database->getDocument('users', $userId);
 
-                        $roles = Auth::getRoles($user);
+                        $roles = Auth::getRoles($user, $auth);
 
                         $realtime->subscribe($projectId, $connection, $roles, $realtime->connections[$connection]['channels']);
 
@@ -389,7 +394,7 @@ $server->onWorkerStart(function (int $workerId) use ($server, $register, $stats,
 });
 
 $server->onOpen(function (int $connection, SwooleRequest $request) use ($server, $register, $stats, &$realtime, $logError) {
-    $app = new App('UTC');
+    $app = new Http(new FPMServer(), 'UTC');
     $request = new Request($request);
     $response = new Response(new SwooleResponse());
 
@@ -442,7 +447,8 @@ $server->onOpen(function (int $connection, SwooleRequest $request) use ($server,
             throw new Exception(Exception::REALTIME_POLICY_VIOLATION, $originValidator->getDescription());
         }
 
-        $roles = Auth::getRoles($user);
+        $auth = new Authorization();
+        $roles = Auth::getRoles($user, $auth);
 
         $channels = Realtime::convertChannels($request->getQuery('channels', []), $user->getId());
 
@@ -502,7 +508,8 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
         $database = getConsoleDB();
 
         if ($projectId !== 'console') {
-            $project = Authorization::skip(fn () => $database->getDocument('projects', $projectId));
+            $auth = new Authorization();
+            $project = $auth->skip(fn () => $database->getDocument('projects', $projectId));
             $database = getProjectDB($project);
         } else {
             $project = null;
@@ -554,7 +561,7 @@ $server->onMessage(function (int $connection, string $message) use ($server, $re
                     throw new Exception(Exception::REALTIME_MESSAGE_FORMAT_INVALID, 'Session is not valid.');
                 }
 
-                $roles = Auth::getRoles($user);
+                $roles = Auth::getRoles($user, $auth);
                 $channels = Realtime::convertChannels(array_flip($realtime->connections[$connection]['channels']), $user->getId());
                 $realtime->subscribe($realtime->connections[$connection]['projectId'], $connection, $roles, $channels);
 

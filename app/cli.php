@@ -25,7 +25,7 @@ use Utopia\Registry\Registry;
 
 global $register;
 
-Authorization::disable();
+$auth->disable();
 
 CLI::setResource('register', fn () => $register);
 

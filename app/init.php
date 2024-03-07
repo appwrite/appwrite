@@ -62,6 +62,8 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Request;
+use Utopia\Http\Response;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -436,7 +438,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database->find('sessions', [
+        return $database->getAuthorization()->skip(fn () => $database->find('sessions', [
             Query::equal('userInternalId', [$document->getInternalId()]),
             Query::limit(APP_LIMIT_SUBQUERY),
         ]));
@@ -449,7 +451,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -463,7 +465,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('challenges', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -477,7 +479,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -491,7 +493,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -583,7 +585,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn () => $database
+        return $database->getAuthorization()->skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY)
@@ -597,7 +599,7 @@ Database::addFilter(
         return;
     },
     function (mixed $value, Document $document, Database $database) {
-        $targetIds = Authorization::skip(fn () => \array_map(
+        $targetIds = $database->getAuthorization()->skip(fn () => \array_map(
             fn ($document) => $document->getAttribute('targetInternalId'),
             $database->find('subscribers', [
                 Query::equal('topicInternalId', [$document->getInternalId()]),
@@ -1129,15 +1131,9 @@ Http::setResource('clients', function ($request, $console, $project) {
     return $clients;
 }, ['request', 'console', 'project']);
 
-Http::setResource('user', function ($mode, $project, $console, $request, $response, $dbForProject, $dbForConsole) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Appwrite\Utopia\Response $response */
-    /** @var Utopia\Database\Document $project */
-    /** @var Utopia\Database\Database $dbForProject */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var string $mode */
+Http::setResource('user', function (string $mode, Document $project, Document $console, Request $request, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
 
-    Authorization::setDefaultStatus(true);
+    $auth->setDefaultStatus(true);
 
     Auth::setCookieName('a_session_' . $project->getId());
 
@@ -1201,7 +1197,7 @@ Http::setResource('user', function ($mode, $project, $console, $request, $respon
 
     if (APP_MODE_ADMIN === $mode) {
         if ($user->find('teamId', $project->getAttribute('teamId'), 'memberships')) {
-            Authorization::setDefaultStatus(false);  // Cancel security segmentation for admin users.
+            $auth->setDefaultStatus(false);  // Cancel security segmentation for admin users.
         } else {
             $user = new Document([]);
         }
@@ -1234,12 +1230,9 @@ Http::setResource('user', function ($mode, $project, $console, $request, $respon
     $dbForConsole->setMetadata('user', $user->getId());
 
     return $user;
-}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole']);
+}, ['mode', 'project', 'console', 'request', 'response', 'dbForProject', 'dbForConsole', 'auth']);
 
-Http::setResource('project', function ($dbForConsole, $request, $console) {
-    /** @var Appwrite\Utopia\Request $request */
-    /** @var Utopia\Database\Database $dbForConsole */
-    /** @var Utopia\Database\Document $console */
+Http::setResource('project', function (Database $dbForConsole, Request $request, Document $console, Authorization $auth) {
 
     $projectId = $request->getParam('project', $request->getHeader('x-appwrite-project', ''));
 
@@ -1247,10 +1240,10 @@ Http::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
+    $project = $auth->skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
-}, ['dbForConsole', 'request', 'console']);
+}, ['dbForConsole', 'request', 'console', 'auth']);
 
 Http::setResource('session', function (Document $user, Document $project) {
     if ($user->isEmpty()) {
@@ -1546,7 +1539,7 @@ Http::setResource('promiseAdapter', function ($register) {
     return $register->get('promiseAdapter');
 }, ['register']);
 
-Http::setResource('schema', function ($utopia, $dbForProject) {
+Http::setResource('schema', function (Http $utopia, Database $dbForProject, Authorization $auth) {
 
     $complexity = function (int $complexity, array $args) {
         $queries = Query::parseQueries($args['queries'] ?? []);
@@ -1556,8 +1549,8 @@ Http::setResource('schema', function ($utopia, $dbForProject) {
         return $complexity * $limit;
     };
 
-    $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
+    $attributes = function (int $limit, int $offset) use ($dbForProject, $auth) {
+        $attrs = $auth->skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));
@@ -1630,7 +1623,7 @@ Http::setResource('schema', function ($utopia, $dbForProject) {
         $urls,
         $params,
     );
-}, ['utopia', 'dbForProject']);
+}, ['utopia', 'dbForProject', 'auth']);
 
 Http::setResource('contributors', function () {
     $path = 'app/config/contributors.json';

@@ -2120,7 +2120,7 @@ Http::get('/v1/users/usage')
             METRIC_SESSIONS,
         ];
 
-        Authorization::skip(function () use ($dbForProject, $days, $metrics, &$stats) {
+        $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats) {
             foreach ($metrics as $count => $metric) {
                 $result =  $dbForProject->findOne('stats', [
                     Query::equal('metric', [$metric]),

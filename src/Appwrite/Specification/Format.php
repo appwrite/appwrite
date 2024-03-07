@@ -9,7 +9,7 @@ use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected App $app;
+    protected Http $app;
 
     /**
      * @var Route[]
@@ -50,7 +50,7 @@ abstract class Format
         ]
     ];
 
-    public function __construct(App $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount)
     {
         $this->app = $app;
         $this->services = $services;

@@ -4,6 +4,7 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
+use PharIo\Manifest\Author;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event as AnalyticsEvent;
 use Utopia\Http\Http;
@@ -53,7 +54,8 @@ class Hamster extends Action
             ->inject('pools')
             ->inject('cache')
             ->inject('dbForConsole')
-            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole) => $this->action($message, $pools, $cache, $dbForConsole));
+            ->inject('auth')
+            ->callback(fn (Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth) => $this->action($message, $pools, $cache, $dbForConsole, $auth));
     }
 
     /**
@@ -65,7 +67,7 @@ class Hamster extends Action
      * @return void
      * @throws \Utopia\Database\Exception
      */
-    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole): void
+    public function action(Message $message, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth): void
     {
         $token = Http::getEnv('_APP_MIXPANEL_TOKEN', '');
         if (empty($token)) {
@@ -83,7 +85,7 @@ class Hamster extends Action
 
         switch ($type) {
             case EventHamster::TYPE_PROJECT:
-                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole);
+                $this->getStatsForProject(new Document($payload['project']), $pools, $cache, $dbForConsole, $auth);
                 break;
             case EventHamster::TYPE_ORGANISATION:
                 $this->getStatsForOrganization(new Document($payload['organization']), $dbForConsole);
@@ -101,7 +103,7 @@ class Hamster extends Action
      * @param Database $dbForConsole
      * @throws \Utopia\Database\Exception
      */
-    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole): void
+    private function getStatsForProject(Document $project, Group $pools, Cache $cache, Database $dbForConsole, Authorization $auth): void
     {
         /**
          * Skip user projects with id 'console'
@@ -121,7 +123,7 @@ class Hamster extends Action
                 ->getResource();
 
             $dbForProject = new Database($adapter, $cache);
-            $dbForProject->setDefaultDatabase('appwrite');
+            $dbForProject->setDatabase('appwrite');
             $dbForProject->setNamespace('_' . $project->getInternalId());
 
             $statsPerProject = [];
@@ -279,7 +281,7 @@ class Hamster extends Action
                 ],
             ];
 
-            Authorization::skip(function () use ($dbForProject, $periods, &$statsPerProject) {
+            $auth->skip(function () use ($dbForProject, $periods, &$statsPerProject) {
                 foreach ($this->metrics as $key => $metric) {
                     foreach ($periods as $periodKey => $periodValue) {
                         $limit = $periodValue['limit'];
