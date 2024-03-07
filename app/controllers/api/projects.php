@@ -199,18 +199,17 @@ App::post('/v1/projects')
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
 
-        if ($database === DATABASE_SHARED_TABLES) {
-            \var_dump('Using shared tables');
+//        if ($database === DATABASE_SHARED_TABLES) {
             $dbForProject
                 ->setShareTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace('');
-        } else {
-            $dbForProject
-                ->setShareTables(false)
-                ->setTenant(null)
-                ->setNamespace('_' . $project->getInternalId());
-        }
+//        } else {
+//            $dbForProject
+//                ->setShareTables(false)
+//                ->setTenant(null)
+//                ->setNamespace('_' . $project->getInternalId());
+//        }
 
         $dbForProject->create();
 

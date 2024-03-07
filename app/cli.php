@@ -141,7 +141,6 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 //        }
 
         $database
-            ->setNamespace('_' . $project->getInternalId())
             ->setMetadata('host', \gethostname())
             ->setMetadata('project', $project->getId());
 

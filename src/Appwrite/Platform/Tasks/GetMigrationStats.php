@@ -102,7 +102,7 @@ class GetMigrationStats extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     /** Get Project ID */
