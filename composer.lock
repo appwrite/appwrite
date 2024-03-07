@@ -771,50 +771,11 @@
             "version": "0.6.3",
             "source": {
                 "type": "git",
-                "url": "git@github.com:mustangostang/spyc.git",
+                "url": "https://github.com/mustangostang/spyc",
                 "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0"
             },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/mustangostang/spyc/zipball/4627c838b16550b666d15aeae1e5289dd5b77da0",
-                "reference": "4627c838b16550b666d15aeae1e5289dd5b77da0",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "4.3.*@dev"
-            },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "0.5.x-dev"
-                }
-            },
-            "autoload": {
-                "files": [
-                    "Spyc.php"
-                ]
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "mustangostang",
-                    "email": "vlad.andersen@gmail.com"
-                }
-            ],
-            "description": "A simple YAML loader/dumper class for PHP",
-            "homepage": "https://github.com/mustangostang/spyc/",
-            "keywords": [
-                "spyc",
-                "yaml",
-                "yml"
-            ],
-            "time": "2019-09-10T13:16:29+00:00"
+            "notification-url": "https://packagist.org/downloads/"
         },
         {
             "name": "paragonie/constant_time_encoding",
@@ -3078,16 +3039,16 @@
         },
         {
             "name": "nikic/php-parser",
-            "version": "v5.0.1",
+            "version": "v5.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69"
+                "reference": "139676794dc1e9231bf7bcd123cfc0c99182cb13"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/2218c2252c874a4624ab2f613d86ac32d227bc69",
-                "reference": "2218c2252c874a4624ab2f613d86ac32d227bc69",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/139676794dc1e9231bf7bcd123cfc0c99182cb13",
+                "reference": "139676794dc1e9231bf7bcd123cfc0c99182cb13",
                 "shasum": ""
             },
             "require": {
@@ -3130,9 +3091,9 @@
             ],
             "support": {
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.1"
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.0.2"
             },
-            "time": "2024-02-21T19:24:10+00:00"
+            "time": "2024-03-05T20:51:40+00:00"
         },
         {
             "name": "phar-io/manifest",
