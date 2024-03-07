@@ -3,6 +3,8 @@
 use Appwrite\Extend\Exception;
 use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -21,8 +23,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -76,7 +76,7 @@ $getUserGitHub = function (string $userId, Document $project, Database $dbForPro
         }
 
         if (empty($gitHubSession)) {
-            throw new Exception(Exception::GENERAL_UNKNOWN, 'GitHub session not found.');
+            throw new Exception(Exception::USER_SESSION_NOT_FOUND, 'GitHub session not found.');
         }
 
         $provider = $gitHubSession->getAttribute('provider', '');

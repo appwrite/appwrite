@@ -1,7 +1,7 @@
 <?php
 
-use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Request;
+use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Config\Config;

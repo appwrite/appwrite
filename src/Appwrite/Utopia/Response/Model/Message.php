@@ -5,7 +5,6 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 use Utopia\Database\DateTime;
-use Utopia\Database\Document as DatabaseDocument;
 
 class Message extends Model
 {

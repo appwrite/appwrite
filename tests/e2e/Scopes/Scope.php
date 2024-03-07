@@ -3,8 +3,8 @@
 namespace Tests\E2E\Scopes;
 
 use Appwrite\Tests\Retryable;
-use Tests\E2E\Client;
 use PHPUnit\Framework\TestCase;
+use Tests\E2E\Client;
 use Utopia\Database\Helpers\ID;
 
 abstract class Scope extends TestCase

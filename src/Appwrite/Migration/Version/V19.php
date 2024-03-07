@@ -650,8 +650,8 @@ class V19 extends Migration
     {
         foreach (
             $this->documentsIterator('attributes', [
-            Query::equal('format', ['enum']),
-            Query::lessThan('size', Database::LENGTH_KEY)
+                Query::equal('format', ['enum']),
+                Query::lessThan('size', Database::LENGTH_KEY)
             ]) as $attribute
         ) {
             $attribute->setAttribute('size', Database::LENGTH_KEY);

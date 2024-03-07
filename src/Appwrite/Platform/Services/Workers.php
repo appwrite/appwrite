@@ -2,20 +2,20 @@
 
 namespace Appwrite\Platform\Services;
 
-use Utopia\Platform\Service;
 use Appwrite\Platform\Workers\Audits;
-use Appwrite\Platform\Workers\Webhooks;
-use Appwrite\Platform\Workers\Mails;
-use Appwrite\Platform\Workers\Messaging;
+use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Certificates;
 use Appwrite\Platform\Workers\Databases;
-use Appwrite\Platform\Workers\Functions;
-use Appwrite\Platform\Workers\Builds;
 use Appwrite\Platform\Workers\Deletes;
+use Appwrite\Platform\Workers\Functions;
 use Appwrite\Platform\Workers\Hamster;
+use Appwrite\Platform\Workers\Mails;
+use Appwrite\Platform\Workers\Messaging;
+use Appwrite\Platform\Workers\Migrations;
 use Appwrite\Platform\Workers\Usage;
 use Appwrite\Platform\Workers\UsageDump;
-use Appwrite\Platform\Workers\Migrations;
+use Appwrite\Platform\Workers\Webhooks;
+use Utopia\Platform\Service;
 
 class Workers extends Service
 {

@@ -9,11 +9,11 @@ use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Exception\Conflict;
 use Utopia\Database\Exception\Restricted;
 use Utopia\Database\Exception\Structure;
-use Utopia\Database\Exception as DatabaseException;
 use Utopia\Database\Query;
 use Utopia\Logger\Log;
 use Utopia\Platform\Action;
@@ -37,7 +37,7 @@ class Databases extends Action
             ->inject('dbForConsole')
             ->inject('dbForProject')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Database $dbForProject, Log $log) => $this->action($message, $dbForConsole, $dbForProject, $log));
     }
 
     /**
@@ -613,7 +613,7 @@ class Databases extends Action
         array $events
     ): void {
         $target = Realtime::fromPayload(
-        // Pass first, most verbose event pattern
+            // Pass first, most verbose event pattern
             event: $events[0],
             payload: $attribute,
             project: $project,

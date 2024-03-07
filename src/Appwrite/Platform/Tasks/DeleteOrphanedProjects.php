@@ -3,13 +3,13 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Boolean;

@@ -18,38 +18,56 @@ ini_set('display_startup_errors', 1);
 ini_set('default_socket_timeout', -1);
 error_reporting(E_ALL);
 
+use Ahc\Jwt\JWT;
+use Ahc\Jwt\JWTException;
+use Appwrite\Auth\Auth;
+use Appwrite\Event\Audit;
+use Appwrite\Event\Build;
+use Appwrite\Event\Certificate;
+use Appwrite\Event\Database as EventDatabase;
+use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
+use Appwrite\Event\Func;
+use Appwrite\Event\Mail;
+use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
-use Appwrite\Auth\Auth;
-use Appwrite\Event\Audit;
-use Appwrite\Event\Database as EventDatabase;
-use Appwrite\Event\Event;
-use Appwrite\Event\Mail;
-use Appwrite\Event\Messaging;
-use Appwrite\Event\Delete;
+use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\GraphQL\Schema;
+use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\URL\URL as AppwriteURL;
+use MaxMind\Db\Reader;
+use PHPMailer\PHPMailer\PHPMailer;
+use Swoole\Database\PDOProxy;
 use Utopia\App;
-use Utopia\Database\Adapter\SQL;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Logger\Logger;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Helpers\ID;
+use Utopia\Database\Adapter\MariaDB;
+use Utopia\Database\Adapter\MySQL;
+use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
-use Utopia\Locale\Locale;
+use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
-use Appwrite\GraphQL\Promises\Adapter\Swoole;
+use Utopia\Locale\Locale;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
+use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
+use Utopia\Queue;
+use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Backblaze;
@@ -58,32 +76,13 @@ use Utopia\Storage\Device\Linode;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Database\Adapter\MariaDB;
-use Utopia\Database\Adapter\MySQL;
-use Utopia\Pools\Group;
-use Utopia\Pools\Pool;
-use Ahc\Jwt\JWT;
-use Ahc\Jwt\JWTException;
-use Appwrite\Event\Build;
-use Appwrite\Event\Certificate;
-use Appwrite\Event\Func;
-use Appwrite\Hooks\Hooks;
-use MaxMind\Db\Reader;
-use PHPMailer\PHPMailer\PHPMailer;
-use Swoole\Database\PDOProxy;
-use Utopia\Logger\Log;
-use Utopia\Queue;
-use Utopia\Queue\Connection;
 use Utopia\Storage\Storage;
-use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
-use Utopia\Validator\Range;
 use Utopia\Validator\Hostname;
 use Utopia\Validator\IP;
+use Utopia\Validator\Range;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\CLI\Console;
-use Utopia\Domains\Validator\PublicDomain;
+use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 const APP_NAME = 'Appwrite';
 const APP_DOMAIN = 'appwrite.io';
@@ -296,7 +295,7 @@ Database::addFilter(
     },
     function (mixed $value) {
         if (is_null($value)) {
-            return null;
+            return;
         }
 
         return json_decode($value, true)['value'];
@@ -350,7 +349,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryAttributes',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         $attributes = $database->find('attributes', [
@@ -376,7 +375,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryIndexes',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -391,7 +390,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryPlatforms',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -405,7 +404,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryKeys',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -419,7 +418,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryWebhooks',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -433,7 +432,7 @@ Database::addFilter(
 Database::addFilter(
     'subQuerySessions',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return Authorization::skip(fn () => $database->find('sessions', [
@@ -446,10 +445,10 @@ Database::addFilter(
 Database::addFilter(
     'subQueryTokens',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('tokens', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -460,10 +459,10 @@ Database::addFilter(
 Database::addFilter(
     'subQueryChallenges',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('challenges', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -474,10 +473,10 @@ Database::addFilter(
 Database::addFilter(
     'subQueryAuthenticators',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('authenticators', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -488,10 +487,10 @@ Database::addFilter(
 Database::addFilter(
     'subQueryMemberships',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('memberships', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY),
@@ -502,7 +501,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryVariables',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -531,7 +530,7 @@ Database::addFilter(
     },
     function (mixed $value) {
         if (is_null($value)) {
-            return null;
+            return;
         }
         $value = json_decode($value, true);
         $key = App::getEnv('_APP_OPENSSL_KEY_V' . $value['version']);
@@ -543,7 +542,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryProjectVariables',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         return $database
@@ -580,10 +579,10 @@ Database::addFilter(
 Database::addFilter(
     'subQueryTargets',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
-        return Authorization::skip(fn() => $database
+        return Authorization::skip(fn () => $database
             ->find('targets', [
                 Query::equal('userInternalId', [$document->getInternalId()]),
                 Query::limit(APP_LIMIT_SUBQUERY)
@@ -594,7 +593,7 @@ Database::addFilter(
 Database::addFilter(
     'subQueryTopicTargets',
     function (mixed $value) {
-        return null;
+        return;
     },
     function (mixed $value, Document $document, Database $database) {
         $targetIds = Authorization::skip(fn () => \array_map(
@@ -724,7 +723,7 @@ $register->set('logger', function () {
     $providerConfig = App::getEnv('_APP_LOGGING_CONFIG', '');
 
     if (empty($providerName) || empty($providerConfig)) {
-        return null;
+        return;
     }
 
     if (!Logger::hasProvider($providerName)) {
@@ -1011,7 +1010,7 @@ foreach ($locales as $locale) {
 ]);
 
 // Runtime Execution
-App::setResource('log', fn() => new Log());
+App::setResource('log', fn () => new Log());
 App::setResource('logger', function ($register) {
     return $register->get('logger');
 }, ['register']);
@@ -1020,11 +1019,11 @@ App::setResource('hooks', function ($register) {
     return $register->get('hooks');
 }, ['register']);
 
-App::setResource('register', fn() => $register);
-App::setResource('locale', fn() => new Locale(App::getEnv('_APP_LOCALE', 'en')));
+App::setResource('register', fn () => $register);
+App::setResource('locale', fn () => new Locale(App::getEnv('_APP_LOCALE', 'en')));
 
 App::setResource('localeCodes', function () {
-    return array_map(fn($locale) => $locale['code'], Config::getParam('locale-codes', []));
+    return array_map(fn ($locale) => $locale['code'], Config::getParam('locale-codes', []));
 });
 
 // Queues
@@ -1233,14 +1232,14 @@ App::setResource('project', function ($dbForConsole, $request, $console) {
         return $console;
     }
 
-    $project = Authorization::skip(fn() => $dbForConsole->getDocument('projects', $projectId));
+    $project = Authorization::skip(fn () => $dbForConsole->getDocument('projects', $projectId));
 
     return $project;
 }, ['dbForConsole', 'request', 'console']);
 
 App::setResource('session', function (Document $user, Document $project) {
     if ($user->isEmpty()) {
-        return null;
+        return;
     }
 
     $sessions = $user->getAttribute('sessions', []);
@@ -1248,7 +1247,7 @@ App::setResource('session', function (Document $user, Document $project) {
     $sessionId = Auth::sessionVerify($user->getAttribute('sessions'), Auth::$secret, $authDuration);
 
     if (!$sessionId) {
-        return null;
+        return;
     }
 
     foreach ($sessions as $session) {/** @var Document $session */
@@ -1257,7 +1256,7 @@ App::setResource('session', function (Document $user, Document $project) {
         }
     }
 
-    return null;
+    return;
 }, ['user', 'project']);
 
 App::setResource('console', function () {
@@ -1543,7 +1542,7 @@ App::setResource('schema', function ($utopia, $dbForProject) {
     };
 
     $attributes = function (int $limit, int $offset) use ($dbForProject) {
-        $attrs = Authorization::skip(fn() => $dbForProject->find('attributes', [
+        $attrs = Authorization::skip(fn () => $dbForProject->find('attributes', [
             Query::limit($limit),
             Query::offset($offset),
         ]));

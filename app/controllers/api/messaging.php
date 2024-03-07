@@ -18,9 +18,11 @@ use Appwrite\Utopia\Database\Validator\Queries\Subscribers;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Exception\Query as QueryException;
@@ -28,7 +30,6 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Key;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
@@ -42,8 +43,6 @@ use Utopia\Validator\Integer;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
-use MaxMind\Db\Reader;
-use Utopia\Database\DateTime;
 use Utopia\Validator\WhiteList;
 
 use function Swoole\Coroutine\batch;
@@ -2946,7 +2945,11 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            $image = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $image = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}",
+            ];
         }
 
         $pushData = [];
@@ -3771,7 +3774,11 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
-            $pushData['image'] = "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}";
+            $pushData['image'] = [
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}"
+            ];
         }
 
         $message->setAttribute('data', $pushData);

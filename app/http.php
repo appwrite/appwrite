@@ -2,28 +2,28 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Swoole\Constant;
-use Swoole\Process;
-use Swoole\Http\Server;
 use Swoole\Http\Request as SwooleRequest;
 use Swoole\Http\Response as SwooleResponse;
+use Swoole\Http\Server;
+use Swoole\Process;
+use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
+use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Audit\Audit;
-use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Swoole\Files;
-use Appwrite\Utopia\Request;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Pools\Group;
+use Utopia\Swoole\Files;
 
 $http = new Server(
     host: "0.0.0.0",
