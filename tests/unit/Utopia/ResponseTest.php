@@ -3,7 +3,6 @@
 namespace Tests\Unit\Utopia;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Filters\V11;
 use Appwrite\Utopia\Response\Filters\V16;
 use Exception;
 use PHPUnit\Framework\TestCase;
