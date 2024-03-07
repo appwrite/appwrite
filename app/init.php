@@ -1137,12 +1137,12 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 
     if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
-            ->setShareTables(true)
+            ->setSharedTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace('');
     } else {
         $database
-            ->setShareTables(false)
+            ->setSharedTables(false)
             ->setTenant(null)
             ->setNamespace('_' . $project->getInternalId());
     }
@@ -1185,12 +1185,12 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
             if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
-                    ->setShareTables(true)
+                    ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
             } else {
                 $database
-                    ->setShareTables(false)
+                    ->setSharedTables(false)
                     ->setTenant(null)
                     ->setNamespace('_' . $project->getInternalId());
             }

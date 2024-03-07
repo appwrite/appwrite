@@ -106,12 +106,12 @@ class GetMigrationStats extends Action
 
                     if ($database === DATABASE_SHARED_TABLES) {
                         $dbForProject
-                            ->setShareTables(true)
+                            ->setSharedTables(true)
                             ->setTenant($project->getInternalId())
                             ->setNamespace('');
                     } else {
                         $dbForProject
-                            ->setShareTables(false)
+                            ->setSharedTables(false)
                             ->setTenant(null)
                             ->setNamespace('_' . $project->getInternalId());
                     }

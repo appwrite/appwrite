@@ -77,12 +77,12 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
 
     if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
         $database
-            ->setShareTables(true)
+            ->setSharedTables(true)
             ->setTenant($project->getInternalId())
             ->setNamespace('');
     } else {
         $database
-            ->setShareTables(false)
+            ->setSharedTables(false)
             ->setTenant(null)
             ->setNamespace('_' . $project->getInternalId());
     }
@@ -116,12 +116,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
             if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
                 $database
-                    ->setShareTables(true)
+                    ->setSharedTables(true)
                     ->setTenant($project->getInternalId())
                     ->setNamespace('');
             } else {
                 $database
-                    ->setShareTables(false)
+                    ->setSharedTables(false)
                     ->setTenant(null)
                     ->setNamespace('_' . $project->getInternalId());
             }
@@ -140,12 +140,12 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
             $database
-                ->setShareTables(true)
+                ->setSharedTables(true)
                 ->setTenant($project->getInternalId())
                 ->setNamespace('');
         } else {
             $database
-                ->setShareTables(false)
+                ->setSharedTables(false)
                 ->setTenant(null)
                 ->setNamespace('_' . $project->getInternalId());
         }
