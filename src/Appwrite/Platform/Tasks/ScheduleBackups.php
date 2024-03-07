@@ -82,11 +82,11 @@ class ScheduleBackups extends ScheduleBase
 
                     $schedule = $this->schedules[$scheduleKey];
 
-                    $backups = $dbForConsole->createDocument('backups', new Document([
-                        'policyId' => $schedule['project'],
-                        'policyInternalId' => $function->getInternalId(),
-
-                    ]));
+//                    $backups = $dbForConsole->createDocument('backups', new Document([
+//                        'policyId' => $schedule['project'],
+//                        'policyInternalId' => $function->getInternalId(),
+//
+//                    ]));
 
 
                     $queueForMigrations = new Migration($connection);
