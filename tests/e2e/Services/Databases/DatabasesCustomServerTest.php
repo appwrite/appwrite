@@ -322,10 +322,27 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals('Hourly Backups', $policy['body']['name']);
         $this->assertEquals(true, $policy['body']['enabled']);
 
+        /**
+         * Test for update Policy
+         */
+        $policy = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/backups-policy/policy1', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]), [
+            'name' => 'Daily backups',
+            'enabled' => false,
+            'retention' => 10,
+            'hours' => 3,
+        ]);
+
+        $this->assertEquals(200, $policy['headers']['status-code']);
+        $this->assertEquals('policy1', $policy['body']['$id']);
+        $this->assertEquals('Daily backups', $policy['body']['name']);
+        $this->assertEquals(false, $policy['body']['enabled']);
+
         $this->assertEquals('---', '-------');
-
     }
-
 
     /**
      * @depends testListDatabases

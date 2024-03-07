@@ -3926,7 +3926,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
     ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
     ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', false)
-    ->param('retention', true, new Integer(), 'Days to keep backups before deletion', false)
+    ->param('retention', true, new Range(1, 30), 'Days to keep backups before deletion', false)
     ->param('hours', true, new Range(1, 168), 'Backup hours rotation', false)
     ->inject('request')
     ->inject('response')
@@ -4011,6 +4011,70 @@ App::get('/v1/databases/:databaseId/backups-policy/:policyId')
         if ($policy->isEmpty()) {
             throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
         }
+
+        $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
+    });
+
+App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
+    ->groups(['api', 'database'])
+    ->desc('Update backup policy')
+    ->label('scope', 'databases.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].create')
+    ->label('audits.event', 'backupPolicy.update')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/backups-policy/update-backup-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', false)
+    ->param('retention', true, new Range(1, 30), 'Days to keep backups before deletion', false)
+    ->param('hours', true, new Range(1, 168), 'Backup hours rotation', false)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $databaseId, string $policyId, string $name, bool $enabled, int $retention, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        try {
+            $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), new Document([
+                '$id' => $policy->getId(),
+                'name' => $name,
+                'enabled' => $enabled,
+                'retention' => $retention,
+                'hours' => $hours,
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::BACKUP_POLICY_ALREADY_EXISTS);
+        }
+
+        $schedule = $dbForConsole->getDocument('schedules', $policy->getAttribute('scheduleId'));
+        if ($schedule->isEmpty()) {
+            throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+        }
+
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', "0 */{$hours} * * *");
+            //->setAttribute('active', ?); todo: ?
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
