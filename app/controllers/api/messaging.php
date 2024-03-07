@@ -1,5 +1,6 @@
 <?php
 
+use Ahc\Jwt\JWT;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
@@ -2945,10 +2946,27 @@ App::post('/v1/messaging/messages/push')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
+            }
+
+            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
             $image = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}",
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}",
             ];
         }
 
@@ -3774,10 +3792,27 @@ App::patch('/v1/messaging/messages/push/:messageId')
                 throw new Exception(Exception::STORAGE_FILE_NOT_PUBLIC);
             }
 
+            $scheduleTime = $currentScheduledAt ?? $scheduledAt;
+            if (!\is_null($scheduleTime)) {
+                $expiry = (new \DateTime($scheduleTime))->add(new \DateInterval('P15D'))->format('U');
+            } else {
+                $expiry = (new \DateTime())->add(new \DateInterval('P15D'))->format('U');
+            }
+
+            $encoder = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'));
+
+            $jwt = $encoder->encode([
+                'iat' => \time(),
+                'exp' => $expiry,
+                'bucketId' => $bucket->getId(),
+                'fileId' => $file->getId(),
+                'projectId' => $project->getId(),
+            ]);
+
             $pushData['image'] = [
                 'bucketId' => $bucket->getId(),
                 'fileId' => $file->getId(),
-                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/view?project={$project->getId()}"
+                'url' => "{$protocol}://{$host}/v1/storage/buckets/{$bucket->getId()}/files/{$file->getId()}/push?project={$project->getId()}&jwt={$jwt}"
             ];
         }
 
