@@ -3,8 +3,8 @@
 namespace Tests\E2E\Services\Teams;
 
 use Tests\E2E\Client;
-use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\Helpers\ID;
 
@@ -79,10 +79,10 @@ class TeamsConsoleClientTest extends Scope
         $user = $this->client->call(Client::METHOD_POST, '/account', [
             'content-type' => 'application/json',
             'x-appwrite-project' => 'console'], [
-            'userId' => 'unique()',
-            'email' => $email,
-            'password' => $password,
-            'name' => $name,
+                'userId' => 'unique()',
+                'email' => $email,
+                'password' => $password,
+                'name' => $name,
             ], false);
 
         $this->assertEquals(201, $user['headers']['status-code']);

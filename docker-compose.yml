@@ -868,7 +868,7 @@ services:
     hostname: appwrite-executor
     <<: *x-logging
     stop_signal: SIGINT
-    image: openruntimes/executor:0.4.5
+    image: openruntimes/executor:0.4.9
     restart: unless-stopped
     networks:
       - appwrite
@@ -1004,7 +1004,6 @@ services:
   #     - appwrite
   #   volumes:
   #     - appwrite-uploads:/storage/uploads
-
   # Dev Tools Start ------------------------------------------------------------------------------------------
   #
   # The Appwrite Team uses the following tools to help debug, monitor and diagnose the Appwrite stack

@@ -4,48 +4,48 @@ use Appwrite\Auth\Auth;
 use Appwrite\Auth\MFA\Type;
 use Appwrite\Auth\MFA\Type\TOTP;
 use Appwrite\Auth\Validator\Password;
+use Appwrite\Auth\Validator\PasswordDictionary;
+use Appwrite\Auth\Validator\PasswordHistory;
+use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
+use Appwrite\Extend\Exception;
+use Appwrite\Hooks\Hooks;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Database\Validator\Queries\Targets;
-use Utopia\Database\Exception\Query as QueryException;
-use Utopia\Database\Validator\Queries;
 use Appwrite\Utopia\Database\Validator\Queries\Users;
-use Utopia\Database\Validator\Query\Limit;
-use Utopia\Database\Validator\Query\Offset;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
+use MaxMind\Db\Reader;
 use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
+use Utopia\Database\DateTime;
+use Utopia\Database\Document;
+use Utopia\Database\Exception\Duplicate;
+use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
-use Utopia\Locale\Locale;
-use Appwrite\Extend\Exception;
-use Utopia\Database\Document;
-use Utopia\Database\DateTime;
-use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Validator\UID;
-use Utopia\Database\Database;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Queries;
+use Utopia\Database\Validator\Query\Limit;
+use Utopia\Database\Validator\Query\Offset;
+use Utopia\Database\Validator\UID;
+use Utopia\Locale\Locale;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Text;
 use Utopia\Validator\Boolean;
-use Utopia\Validator\Range;
-use MaxMind\Db\Reader;
 use Utopia\Validator\Integer;
-use Appwrite\Auth\Validator\PasswordHistory;
-use Appwrite\Auth\Validator\PasswordDictionary;
-use Appwrite\Auth\Validator\PersonalData;
-use Appwrite\Hooks\Hooks;
+use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\WhiteList;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
@@ -813,9 +813,6 @@ App::get('/v1/users/:userId/logs')
 
             $output[$i] = new Document([
                 'event' => $log['event'],
-                'userId' => ID::custom($log['data']['userId']),
-                'userEmail' => $log['data']['userEmail'] ?? null,
-                'userName' => $log['data']['userName'] ?? null,
                 'ip' => $log['ip'],
                 'time' => $log['time'],
                 'osCode' => $os['osCode'],
@@ -844,7 +841,7 @@ App::get('/v1/users/:userId/logs')
         }
 
         $response->dynamic(new Document([
-            'total' => $audit->countLogsByUser($user->getInternalId()),
+            'total' => $audit->countLogsByUser($user->getId()),
             'logs' => $output,
         ]), Response::MODEL_LOG_LIST);
     });
@@ -2153,19 +2150,19 @@ App::get('/v1/users/usage')
             '1d' => 'Y-m-d\T00:00:00.000P',
         };
 
-    foreach ($metrics as $metric) {
-        $usage[$metric]['total'] =  $stats[$metric]['total'];
-        $usage[$metric]['data'] = [];
-        $leap = time() - ($days['limit'] * $days['factor']);
-        while ($leap < time()) {
-            $leap += $days['factor'];
-            $formatDate = date($format, $leap);
-            $usage[$metric]['data'][] = [
-                'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
-                'date' => $formatDate,
-            ];
+        foreach ($metrics as $metric) {
+            $usage[$metric]['total'] =  $stats[$metric]['total'];
+            $usage[$metric]['data'] = [];
+            $leap = time() - ($days['limit'] * $days['factor']);
+            while ($leap < time()) {
+                $leap += $days['factor'];
+                $formatDate = date($format, $leap);
+                $usage[$metric]['data'][] = [
+                    'value' => $stats[$metric]['data'][$formatDate]['value'] ?? 0,
+                    'date' => $formatDate,
+                ];
+            }
         }
-    }
 
         $response->dynamic(new Document([
             'range' => $range,

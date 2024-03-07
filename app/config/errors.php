@@ -32,7 +32,7 @@ return [
     Exception::GENERAL_SERVICE_DISABLED => [
         'name' => Exception::GENERAL_SERVICE_DISABLED,
         'description' => 'The requested service is disabled. You can enable the service from the Appwrite console.',
-        'code' => 503,
+        'code' => 403,
     ],
     Exception::GENERAL_UNAUTHORIZED_SCOPE => [
         'name' => Exception::GENERAL_UNAUTHORIZED_SCOPE,

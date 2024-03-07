@@ -2,18 +2,17 @@
 
 require_once __DIR__ . '/init.php';
 
-use Appwrite\Event\Event;
 use Appwrite\Event\Audit;
 use Appwrite\Event\Build;
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Database as EventDatabase;
 use Appwrite\Event\Delete;
+use Appwrite\Event\Event;
 use Appwrite\Event\Func;
 use Appwrite\Event\Hamster;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Migration;
-use Appwrite\Event\Phone;
 use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
@@ -27,14 +26,14 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
+use Utopia\Pools\Group;
+use Utopia\Queue\Connection;
 use Utopia\Queue\Message;
 use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
-use Utopia\Pools\Group;
-use Utopia\Queue\Connection;
 use Utopia\Storage\Device\Local;
 
 Authorization::disable();
@@ -141,7 +140,7 @@ Server::setResource('cache', function (Registry $register) {
     return new Cache(new Sharding($adapters));
 }, ['register']);
 
-Server::setResource('log', fn() => new Log());
+Server::setResource('log', fn () => new Log());
 
 Server::setResource('queueForUsage', function (Connection $queue) {
     return new Usage($queue);
@@ -267,7 +266,6 @@ try {
     Console::error($e->getMessage() . ', File: ' . $e->getFile() .  ', Line: ' . $e->getLine());
 }
 
-
 $worker = $platform->getWorker();
 
 $worker
@@ -283,9 +281,9 @@ $worker
     ->inject('logger')
     ->inject('log')
     ->inject('pools')
-    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools) use ($queueName) {
+    ->inject('project')
+    ->action(function (Throwable $error, ?Logger $logger, Log $log, Group $pools, Document $project) use ($queueName) {
         $pools->reclaim();
-
         $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
 
         if ($error instanceof PDOException) {
@@ -301,6 +299,7 @@ $worker
             $log->setAction('appwrite-queue-' . $queueName);
             $log->addTag('verboseType', get_class($error));
             $log->addTag('code', $error->getCode());
+            $log->addTag('projectId', $project->getId() ?? 'n/a');
             $log->addExtra('file', $error->getFile());
             $log->addExtra('line', $error->getLine());
             $log->addExtra('trace', $error->getTraceAsString());

@@ -2,27 +2,24 @@
 
 namespace Appwrite\Platform\Workers;
 
-use Appwrite\Auth\Auth;
 use Appwrite\Event\Usage;
-use Appwrite\Extend\Exception;
 use Appwrite\Messaging\Status as MessageStatus;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
-use Utopia\Database\Validator\Authorization;
-use Utopia\DSN\DSN;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\DSN\DSN;
 use Utopia\Logger\Log;
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
 use Utopia\Messaging\Adapter\Email\Mailgun;
-use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Email\Sendgrid;
-use Utopia\Messaging\Adapter\Push as PushAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP;
 use Utopia\Messaging\Adapter\Push\APNS;
+use Utopia\Messaging\Adapter\Push as PushAdapter;
 use Utopia\Messaging\Adapter\Push\FCM;
 use Utopia\Messaging\Adapter\SMS as SMSAdapter;
 use Utopia\Messaging\Adapter\SMS\Mock;
@@ -62,7 +59,7 @@ class Messaging extends Action
             ->inject('deviceForFiles')
             ->inject('deviceForLocalFiles')
             ->inject('queueForUsage')
-            ->callback(fn(Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
+            ->callback(fn (Message $message, Log $log, Database $dbForProject, Device $deviceForFiles, Device $deviceForLocalFiles, Usage $queueForUsage) => $this->action($message, $log, $dbForProject, $deviceForFiles, $deviceForLocalFiles, $queueForUsage));
     }
 
     /**
@@ -102,7 +99,7 @@ class Messaging extends Action
             case MESSAGE_SEND_TYPE_EXTERNAL:
                 $message = $dbForProject->getDocument('messages', $payload['messageId']);
 
-                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles,);
+                $this->sendExternalMessage($dbForProject, $message, $deviceForFiles, $deviceForLocalFiles, );
                 break;
             default:
                 throw new \Exception('Unknown message type: ' . $type);
@@ -442,8 +439,8 @@ class Messaging extends Action
                     $adapter->send($data);
 
                     $queueForUsage
-                        ->setProject($project)
                         ->addMetric(METRIC_MESSAGES, 1)
+                        ->setProject($project)
                         ->trigger();
                 } catch (\Throwable $e) {
                     throw new \Exception('Failed sending to targets with error: ' . $e->getMessage());

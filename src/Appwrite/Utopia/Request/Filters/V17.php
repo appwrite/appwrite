@@ -24,7 +24,7 @@ class V17 extends Filter
             case 'account.updateRecovery':
                 unset($content['passwordAgain']);
                 break;
-            // Queries
+                // Queries
             case 'account.listIdentities':
             case 'account.listLogs':
             case 'databases.list':

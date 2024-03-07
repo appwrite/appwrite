@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
 use Appwrite\SDK\Language\Android;
+use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\CLI;
 use Appwrite\SDK\Language\Dart;
 use Appwrite\SDK\Language\Deno;
@@ -18,12 +18,12 @@ use Appwrite\SDK\Language\Python;
 use Appwrite\SDK\Language\REST;
 use Appwrite\SDK\Language\Ruby;
 use Appwrite\SDK\Language\Swift;
-use Appwrite\SDK\Language\Apple;
 use Appwrite\SDK\Language\Web;
 use Appwrite\SDK\SDK;
 use Appwrite\Spec\Swagger2;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Platform\Action;
 
 class SDKs extends Action
 {
@@ -72,7 +72,7 @@ class SDKs extends Action
 
                 $spec = file_get_contents(__DIR__ . '/../../../../app/config/specs/swagger2-' . $version . '-' . $language['family'] . '.json');
 
-                $cover = 'https://appwrite.io/images/github.png';
+                $cover = 'https://github.com/appwrite/appwrite/raw/main/public/images/github.png';
                 $result = \realpath(__DIR__ . '/../../../../app') . '/sdks/' . $key . '-' . $language['key'];
                 $resultExamples = \realpath(__DIR__ . '/../../../..') . '/docs/examples/' . $version . '/' . $key . '-' . $language['key'];
                 $target = \realpath(__DIR__ . '/../../../../app') . '/sdks/git/' . $language['key'] . '/';

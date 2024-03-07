@@ -2,11 +2,11 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Platform\Action;
 use Appwrite\Event\Certificate;
 use Utopia\App;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
+use Utopia\Platform\Action;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
 

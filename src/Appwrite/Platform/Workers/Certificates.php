@@ -47,7 +47,7 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -534,7 +534,7 @@ class Certificates extends Action
                 'ruleId' => $rule->getId(),
             ]);
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $rule,
                 project: $project

@@ -3,16 +3,15 @@
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
 use Utopia\App;
-use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
-use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
@@ -39,21 +38,21 @@ App::get('/v1/project/usage')
         $lastDay = (new DateTime($endDate))->format($format);
 
         $metrics = [
-           'total' => [
+            'total' => [
                 METRIC_EXECUTIONS,
                 METRIC_DOCUMENTS,
                 METRIC_DATABASES,
                 METRIC_USERS,
                 METRIC_BUCKETS,
                 METRIC_FILES_STORAGE
-           ],
-           'period' => [
+            ],
+            'period' => [
                 METRIC_NETWORK_REQUESTS,
                 METRIC_NETWORK_INBOUND,
                 METRIC_NETWORK_OUTBOUND,
                 METRIC_USERS,
                 METRIC_EXECUTIONS
-             ]
+            ]
         ];
 
         $factor = match ($period) {

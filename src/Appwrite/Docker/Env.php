@@ -2,8 +2,6 @@
 
 namespace Appwrite\Docker;
 
-use Exception;
-
 class Env
 {
     /**
