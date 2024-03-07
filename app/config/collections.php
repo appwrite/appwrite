@@ -2941,10 +2941,10 @@ $projectCollections = array_merge([
         ],
         'indexes' => [],
     ],
-    'backupRestore' => [
+    'backupRestores' => [
         '$collection' => ID::custom(Database::METADATA),
-        '$id' => ID::custom('backupRestore'),
-        'name' => 'backupRestore',
+        '$id' => ID::custom('backupRestores'),
+        'name' => 'backupRestores',
         'attributes' => [
             [
                 '$id' => ID::custom('backupInternalId'),
