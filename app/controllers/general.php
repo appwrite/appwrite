@@ -26,7 +26,7 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -39,8 +39,8 @@ use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
-use Utopia\Validator\Hostname;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Text;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
@@ -60,15 +60,15 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     )[0] ?? null;
 
     if ($route === null) {
-        if ($host === App::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
+        if ($host === Http::getEnv('_APP_DOMAIN_FUNCTIONS', '')) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain cannot be used for security reasons. Please use any subdomain instead.');
         }
 
-        if (\str_ends_with($host, App::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
+        if (\str_ends_with($host, Http::getEnv('_APP_DOMAIN_FUNCTIONS', ''))) {
             throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'This domain is not connected to any Appwrite resource yet. Please configure custom domain or function domain to allow this request.');
         }
 
-        if (App::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
+        if (Http::getEnv('_APP_OPTIONS_ROUTER_PROTECTION', 'disabled') === 'enabled') {
             if ($host !== 'localhost' && $host !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 throw new AppwriteException(AppwriteException::GENERAL_ACCESS_FORBIDDEN, 'Router protection does not allow accessing Appwrite over this domain. Please add it as custom domain to your project or disable _APP_OPTIONS_ROUTER_PROTECTION environment variable.');
             }
@@ -99,7 +99,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     $type = $route->getAttribute('resourceType');
 
     if ($type === 'function') {
-        if (App::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (Http::getEnv('_APP_OPTIONS_FUNCTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https') {
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -259,7 +259,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         ]);
 
         /** Execute function */
-        $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+        $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
@@ -365,7 +365,7 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
     return false;
 }
 
-App::init()
+Http::init()
     ->groups(['api', 'web'])
     ->inject('utopia')
     ->inject('swooleRequest')
@@ -387,7 +387,7 @@ App::init()
         * Appwrite Router
         */
         $host = $request->getHostname() ?? '';
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = Http::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
@@ -405,7 +405,7 @@ App::init()
             return $response->setStatusCode(404)->send('Not Found');
         }
 
-        $requestFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $requestFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($requestFormat) {
             switch ($requestFormat) {
                 case version_compare($requestFormat, '0.12.0', '<'):
@@ -446,7 +446,7 @@ App::init()
             } else {
                 Authorization::disable();
 
-                $envDomain = App::getEnv('_APP_DOMAIN', '');
+                $envDomain = Http::getEnv('_APP_DOMAIN', '');
                 $mainDomain = null;
                 if (!empty($envDomain) && $envDomain !== 'localhost') {
                     $mainDomain = $envDomain;
@@ -523,7 +523,7 @@ App::init()
         $isIpAddress = filter_var($request->getHostname(), FILTER_VALIDATE_IP) !== false;
 
         $isConsoleProject = $project->getAttribute('$id', '') === 'console';
-        $isConsoleRootSession = App::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
+        $isConsoleRootSession = Http::getEnv('_APP_CONSOLE_ROOT_SESSION', 'disabled') === 'enabled';
 
         Config::setParam(
             'cookieDomain',
@@ -539,7 +539,7 @@ App::init()
         /*
         * Response format
         */
-        $responseFormat = $request->getHeader('x-appwrite-response-format', App::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
+        $responseFormat = $request->getHeader('x-appwrite-response-format', Http::getEnv('_APP_SYSTEM_RESPONSE_FORMAT', ''));
         if ($responseFormat) {
             switch ($responseFormat) {
                 case version_compare($responseFormat, '0.11.2', '<='):
@@ -576,7 +576,7 @@ App::init()
         * As recommended at:
         * @see https://www.owasp.org/index.php/List_of_useful_HTTP_headers
         */
-        if (App::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
+        if (Http::getEnv('_APP_OPTIONS_FORCE_HTTPS', 'disabled') === 'enabled') { // Force HTTPS
             if ($request->getProtocol() !== 'https' && ($swooleRequest->header['host'] ?? '') !== 'localhost' && ($swooleRequest->header['host'] ?? '') !== APP_HOSTNAME_INTERNAL) { // localhost allowed for proxy, APP_HOSTNAME_INTERNAL allowed for migrations
                 if ($request->getMethod() !== Request::METHOD_GET) {
                     throw new AppwriteException(AppwriteException::GENERAL_PROTOCOL_UNSUPPORTED, 'Method unsupported over HTTP. Please use HTTPS instead.');
@@ -617,7 +617,7 @@ App::init()
         }
     });
 
-App::options()
+Http::options()
     ->inject('utopia')
     ->inject('swooleRequest')
     ->inject('request')
@@ -632,7 +632,7 @@ App::options()
         * Appwrite Router
         */
         $host = $request->getHostname() ?? '';
-        $mainDomain = App::getEnv('_APP_DOMAIN', '');
+        $mainDomain = Http::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
             if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
@@ -652,7 +652,7 @@ App::options()
             ->noContent();
     });
 
-App::error()
+Http::error()
     ->inject('error')
     ->inject('utopia')
     ->inject('request')
@@ -661,7 +661,7 @@ App::error()
     ->inject('logger')
     ->inject('log')
     ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
 
         if ($error instanceof AppwriteException) {
@@ -706,7 +706,7 @@ App::error()
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
@@ -783,7 +783,7 @@ App::error()
 
         $type = $error->getType();
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => $message,
             'code' => $code,
             'file' => $file,
@@ -811,7 +811,7 @@ App::error()
 
             $layout
                 ->setParam('title', $project->getAttribute('name') . ' - Error')
-                ->setParam('development', App::isDevelopment())
+                ->setParam('development', Http::isDevelopment())
                 ->setParam('projectName', $project->getAttribute('name'))
                 ->setParam('projectURL', $project->getAttribute('url'))
                 ->setParam('message', $output['message'] ?? '')
@@ -828,7 +828,7 @@ App::error()
         );
     });
 
-App::get('/robots.txt')
+Http::get('/robots.txt')
     ->desc('Robots.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -838,7 +838,7 @@ App::get('/robots.txt')
         $response->text($template->render(false));
     });
 
-App::get('/humans.txt')
+Http::get('/humans.txt')
     ->desc('Humans.txt File')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -848,7 +848,7 @@ App::get('/humans.txt')
         $response->text($template->render(false));
     });
 
-App::get('/.well-known/acme-challenge/*')
+Http::get('/.well-known/acme-challenge/*')
     ->desc('SSL Verification')
     ->label('scope', 'public')
     ->label('docs', false)
@@ -901,7 +901,7 @@ App::get('/.well-known/acme-challenge/*')
 include_once __DIR__ . '/shared/api.php';
 include_once __DIR__ . '/shared/api/auth.php';
 
-App::wildcard()
+Http::wildcard()
     ->groups(['api'])
     ->label('scope', 'global')
     ->action(function () {

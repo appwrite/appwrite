@@ -11,7 +11,7 @@ use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model\Rule;
 use Exception;
 use Throwable;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -134,7 +134,7 @@ class Certificates extends Action
 
         try {
             // Email for alerts is required by LetsEncrypt
-            $email = App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
+            $email = Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS');
             if (empty($email)) {
                 throw new Exception('You must set a valid security email address (_APP_SYSTEM_SECURITY_EMAIL_ADDRESS) to issue an SSL certificate.');
             }
@@ -235,7 +235,7 @@ class Certificates extends Action
      */
     private function getMainDomain(): ?string
     {
-        $envDomain = App::getEnv('_APP_DOMAIN', '');
+        $envDomain = Http::getEnv('_APP_DOMAIN', '');
         if (!empty($envDomain) && $envDomain !== 'localhost') {
             return $envDomain;
         }
@@ -267,7 +267,7 @@ class Certificates extends Action
         if (!$isMainDomain) {
             // TODO: Would be awesome to also support A/AAAA records here. Maybe dry run?
             // Validate if domain target is properly configured
-            $target = new Domain(App::getEnv('_APP_DOMAIN_TARGET', ''));
+            $target = new Domain(Http::getEnv('_APP_DOMAIN_TARGET', ''));
 
             if (!$target->isKnown() || $target->isTest()) {
                 throw new Exception('Unreachable CNAME target (' . $target->get() . '), please use a domain with a public suffix.');
@@ -337,7 +337,7 @@ class Certificates extends Action
         $stdout = '';
         $stderr = '';
 
-        $staging = (App::isProduction()) ? '' : ' --dry-run';
+        $staging = (Http::isProduction()) ? '' : ' --dry-run';
         $exit = Console::execute("certbot certonly -v --webroot --noninteractive --agree-tos{$staging}"
             . " --email " . $email
             . " --cert-name " . $folder
@@ -436,7 +436,7 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
-        $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
+        $locale = new Locale(Http::getEnv('_APP_LOCALE', 'en'));
 
         // Send mail to administratore mail
         $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
@@ -473,7 +473,7 @@ class Certificates extends Action
             ->setBody($body)
             ->setName('Appwrite Administrator')
             ->setVariables($emailVariables)
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
+            ->setRecipient(Http::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->trigger();
     }
 

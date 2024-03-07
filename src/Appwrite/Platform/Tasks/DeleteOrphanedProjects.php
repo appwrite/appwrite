@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -12,7 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Boolean;
+use Utopia\Http\Validator\Boolean;
 
 class DeleteOrphanedProjects extends Action
 {

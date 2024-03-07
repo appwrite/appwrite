@@ -9,7 +9,7 @@ use Utopia\Database\Exception;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 class CreateInfMetric extends Action
 {

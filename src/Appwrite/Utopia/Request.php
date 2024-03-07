@@ -3,11 +3,11 @@
 namespace Appwrite\Utopia;
 
 use Appwrite\Utopia\Request\Filter;
-use Swoole\Http\Request as SwooleRequest;
-use Utopia\Route;
-use Utopia\Swoole\Request as UtopiaRequest;
+use Utopia\Http\Adapter\Swoole\Request as SwooleRequest;
+use Utopia\Http\Request as HttpRequest;
+use Utopia\Http\Route;
 
-class Request extends UtopiaRequest
+class Request extends HttpRequest
 {
     private static ?Filter $filter = null;
     private static ?Route $route = null;

@@ -5,19 +5,19 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
-use Utopia\Validator\Host;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
+use Utopia\Http\Validator\Host;
+use Utopia\Http\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 
-App::get('/v1/mock/tests/general/oauth2')
+Http::get('/v1/mock/tests/general/oauth2')
     ->desc('OAuth Login')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -33,7 +33,7 @@ App::get('/v1/mock/tests/general/oauth2')
         $response->redirect($redirectURI . '?' . \http_build_query(['code' => 'abcdef', 'state' => $state]));
     });
 
-App::get('/v1/mock/tests/general/oauth2/token')
+Http::get('/v1/mock/tests/general/oauth2/token')
     ->desc('OAuth2 Token')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -79,7 +79,7 @@ App::get('/v1/mock/tests/general/oauth2/token')
         }
     });
 
-App::get('/v1/mock/tests/general/oauth2/user')
+Http::get('/v1/mock/tests/general/oauth2/user')
     ->desc('OAuth2 User')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -99,7 +99,7 @@ App::get('/v1/mock/tests/general/oauth2/user')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/success')
+Http::get('/v1/mock/tests/general/oauth2/success')
     ->desc('OAuth2 Success')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -112,7 +112,7 @@ App::get('/v1/mock/tests/general/oauth2/success')
         ]);
     });
 
-App::get('/v1/mock/tests/general/oauth2/failure')
+Http::get('/v1/mock/tests/general/oauth2/failure')
     ->desc('OAuth2 Failure')
     ->groups(['mock'])
     ->label('scope', 'public')
@@ -127,7 +127,7 @@ App::get('/v1/mock/tests/general/oauth2/failure')
             ]);
     });
 
-App::patch('/v1/mock/functions-v2')
+Http::patch('/v1/mock/functions-v2')
     ->desc('Update Function Version to V2 (outdated code syntax)')
     ->groups(['mock', 'api', 'functions'])
     ->label('scope', 'functions.write')
@@ -136,7 +136,7 @@ App::patch('/v1/mock/functions-v2')
     ->inject('response')
     ->inject('dbForProject')
     ->action(function (string $functionId, Response $response, Database $dbForProject) {
-        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = Http::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -153,7 +153,7 @@ App::patch('/v1/mock/functions-v2')
         $response->noContent();
     });
 
-App::get('/v1/mock/github/callback')
+Http::get('/v1/mock/github/callback')
     ->desc('Create installation document using GitHub installation id')
     ->groups(['mock', 'api', 'vcs'])
     ->label('scope', 'public')
@@ -165,7 +165,7 @@ App::get('/v1/mock/github/callback')
     ->inject('response')
     ->inject('dbForConsole')
     ->action(function (string $providerInstallationId, string $projectId, GitHub $github, Document $project, Response $response, Database $dbForConsole) {
-        $isDevelopment = App::getEnv('_APP_ENV', 'development') === 'development';
+        $isDevelopment = Http::getEnv('_APP_ENV', 'development') === 'development';
 
         if (!$isDevelopment) {
             throw new Exception(Exception::GENERAL_NOT_IMPLEMENTED);
@@ -179,8 +179,8 @@ App::get('/v1/mock/github/callback')
         }
 
         if (!empty($providerInstallationId)) {
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
@@ -213,7 +213,7 @@ App::get('/v1/mock/github/callback')
         ]);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['mock'])
     ->inject('utopia')
     ->inject('response')

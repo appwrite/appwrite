@@ -3,9 +3,9 @@
 namespace Appwrite\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
-use Utopia\Route;
+use Utopia\Http\Route;
 
 abstract class Format
 {

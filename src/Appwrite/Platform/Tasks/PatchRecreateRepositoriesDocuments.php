@@ -10,7 +10,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 class PatchRecreateRepositoriesDocuments extends Action
 {

@@ -4,12 +4,12 @@ use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 
-App::init()
+Http::init()
     ->groups(['mfaProtected'])
     ->inject('session')
     ->action(function (Document $session) {
@@ -28,14 +28,14 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['auth'])
     ->inject('utopia')
     ->inject('request')
     ->inject('project')
     ->inject('geodb')
     ->action(function (App $utopia, Request $request, Document $project, Reader $geodb) {
-        $denylist = App::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
+        $denylist = Http::getEnv('_APP_CONSOLE_COUNTRIES_DENYLIST', '');
         if (!empty($denylist && $project->getId() === 'console')) {
             $countries = explode(',', $denylist);
             $record = $geodb->get($request->getIP()) ?? [];

@@ -8,7 +8,7 @@ use Appwrite\Specification\Specification;
 use Appwrite\Utopia\Response;
 use Exception;
 use Swoole\Http\Response as HttpResponse;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -18,8 +18,8 @@ use Utopia\Database\Database;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
 use Utopia\Request;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
 class Specs extends Action
 {
@@ -40,15 +40,15 @@ class Specs extends Action
 
     public function action(string $version, string $mode, Registry $register): void
     {
-        $appRoutes = App::getRoutes();
+        $appRoutes = Http::getRoutes();
         $response = new Response(new HttpResponse());
         $mocks = ($mode === 'mocks');
 
         // Mock dependencies
-        App::setResource('request', fn () => new Request());
-        App::setResource('response', fn () => $response);
-        App::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
-        App::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('request', fn () => new Request());
+        Http::setResource('response', fn () => $response);
+        Http::setResource('dbForConsole', fn () => new Database(new MySQL(''), new Cache(new None())));
+        Http::setResource('dbForProject', fn () => new Database(new MySQL(''), new Cache(new None())));
 
         $platforms = [
             'client' => APP_PLATFORM_CLIENT,
@@ -257,8 +257,8 @@ class Specs extends Action
                 };
 
                 $specs = new Specification($formatInstance);
-                $endpoint = App::getEnv('_APP_HOME', '[HOSTNAME]');
-                $email = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $endpoint = Http::getEnv('_APP_HOME', '[HOSTNAME]');
+                $email = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
 
                 $formatInstance
                     ->setParam('name', APP_NAME)

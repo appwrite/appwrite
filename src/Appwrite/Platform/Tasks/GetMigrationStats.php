@@ -5,7 +5,7 @@ namespace Appwrite\Platform\Tasks;
 use League\Csv\CannotInsertRecord;
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -164,8 +164,8 @@ class GetMigrationStats extends Action
 
         try {
             /** Addresses */
-            $mail->setFrom(App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
-            $recipients = explode(',', App::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
+            $mail->setFrom(Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM), 'Appwrite Cloud Hamster');
+            $recipients = explode(',', Http::getEnv('_APP_USERS_STATS_RECIPIENTS', ''));
 
             foreach ($recipients as $recipient) {
                 $mail->addAddress($recipient);

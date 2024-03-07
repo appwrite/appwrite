@@ -10,7 +10,7 @@ use Swoole\Http\Response as SwooleResponse;
 use Swoole\Http\Server;
 use Swoole\Process;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -27,12 +27,12 @@ use Utopia\Swoole\Files;
 
 $http = new Server(
     host: "0.0.0.0",
-    port: App::getEnv('PORT', 80),
+    port: Http::getEnv('PORT', 80),
     mode: SWOOLE_PROCESS,
 );
 
 $payloadSize = 6 * (1024 * 1024); // 6MB
-$workerNumber = swoole_cpu_num() * intval(App::getEnv('_APP_WORKER_PER_CORE', 6));
+$workerNumber = swoole_cpu_num() * intval(Http::getEnv('_APP_WORKER_PER_CORE', 6));
 
 $http
     ->set([
@@ -66,7 +66,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
     go(function () use ($register, $app) {
         $pools = $register->get('pools');
         /** @var Group $pools */
-        App::setResource('pools', fn () => $pools);
+        Http::setResource('pools', fn () => $pools);
 
         // wait for database to be ready
         $attempts = 0;
@@ -157,7 +157,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
                 '$id' => ID::custom('default'),
                 '$collection' => ID::custom('buckets'),
                 'name' => 'Default',
-                'maximumFileSize' => (int) App::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
+                'maximumFileSize' => (int) Http::getEnv('_APP_STORAGE_LIMIT', 0), // 10MB
                 'allowedFileExtensions' => [],
                 'enabled' => true,
                 'compression' => 'gzip',
@@ -227,8 +227,8 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
 });
 
 $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swooleResponse) use ($register) {
-    App::setResource('swooleRequest', fn () => $swooleRequest);
-    App::setResource('swooleResponse', fn () => $swooleResponse);
+    Http::setResource('swooleRequest', fn () => $swooleRequest);
+    Http::setResource('swooleResponse', fn () => $swooleResponse);
 
     $request = new Request($swooleRequest);
     $response = new Response($swooleResponse);
@@ -248,7 +248,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
     $app = new App('UTC');
 
     $pools = $register->get('pools');
-    App::setResource('pools', fn () => $pools);
+    Http::setResource('pools', fn () => $pools);
 
     try {
         Authorization::cleanRoles();
@@ -256,7 +256,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $app->run($request, $response);
     } catch (\Throwable $th) {
-        $version = App::getEnv('_APP_VERSION', 'UNKNOWN');
+        $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
 
         $logger = $app->getResource("logger");
         if ($logger) {
@@ -298,7 +298,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
             $action = $route->getLabel("sdk.namespace", "UNKNOWN_NAMESPACE") . '.' . $route->getLabel("sdk.method", "UNKNOWN_METHOD");
             $log->setAction($action);
 
-            $isProduction = App::getEnv('_APP_ENV', 'development') === 'production';
+            $isProduction = Http::getEnv('_APP_ENV', 'development') === 'production';
             $log->setEnvironment($isProduction ? Log::ENVIRONMENT_PRODUCTION : Log::ENVIRONMENT_STAGING);
 
             $responseCode = $logger->addLog($log);
@@ -312,7 +312,7 @@ $http->on('request', function (SwooleRequest $swooleRequest, SwooleResponse $swo
 
         $swooleResponse->setStatusCode(500);
 
-        $output = ((App::isDevelopment())) ? [
+        $output = ((Http::isDevelopment())) ? [
             'message' => 'Error: ' . $th->getMessage(),
             'code' => 500,
             'file' => $th->getFile(),

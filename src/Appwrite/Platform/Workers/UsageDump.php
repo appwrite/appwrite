@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -81,7 +81,7 @@ class UsageDump extends Action
                                 'time' => $time,
                                 'metric' => $key,
                                 'value' => $value,
-                                'region' => App::getEnv('_APP_REGION', 'default'),
+                                'region' => Http::getEnv('_APP_REGION', 'default'),
                             ]));
                         } catch (Duplicate $th) {
                             if ($value < 0) {

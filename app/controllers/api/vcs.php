@@ -8,7 +8,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Installations;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Vcs\Comment;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -32,9 +32,9 @@ use Utopia\Detector\Adapter\Python;
 use Utopia\Detector\Adapter\Ruby;
 use Utopia\Detector\Adapter\Swift;
 use Utopia\Detector\Detector;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Host;
+use Utopia\Http\Validator\Text;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -245,7 +245,7 @@ $createGitDeployments = function (GitHub $github, string $providerInstallationId
     }
 };
 
-App::get('/v1/vcs/github/authorize')
+Http::get('/v1/vcs/github/authorize')
     ->desc('Install GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -270,7 +270,7 @@ App::get('/v1/vcs/github/authorize')
             'failure' => $failure,
         ]);
 
-        $appName = App::getEnv('_APP_VCS_GITHUB_APP_NAME');
+        $appName = Http::getEnv('_APP_VCS_GITHUB_APP_NAME');
 
         if (empty($appName)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'GitHub App name is not configured. Please configure VCS (Version Control System) variables in .env file.');
@@ -287,7 +287,7 @@ App::get('/v1/vcs/github/authorize')
             ->redirect($url);
     });
 
-App::get('/v1/vcs/github/callback')
+Http::get('/v1/vcs/github/callback')
     ->desc('Capture installation and authorization from GitHub App')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -341,7 +341,7 @@ App::get('/v1/vcs/github/callback')
 
         // OAuth Authroization
         if (!empty($code)) {
-            $oauth2 = new OAuth2Github(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+            $oauth2 = new OAuth2Github(Http::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), Http::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
             $accessToken = $oauth2->getAccessToken($code) ?? '';
             $refreshToken = $oauth2->getRefreshToken($code) ?? '';
             $accessTokenExpiry = $oauth2->getAccessTokenExpiry($code) ?? '';
@@ -388,8 +388,8 @@ App::get('/v1/vcs/github/callback')
 
         // Create / Update installation
         if (!empty($providerInstallationId)) {
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId) ?? '';
 
@@ -447,7 +447,7 @@ App::get('/v1/vcs/github/callback')
             ->redirect($redirectSuccess);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
+Http::post('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/detection')
     ->desc('Detect runtime settings from source code')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -473,8 +473,8 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId);
@@ -518,7 +518,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories/:pr
         $response->dynamic(new Document($detection), Response::MODEL_DETECTION);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('List Repositories')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -547,8 +547,8 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $page = 1;
@@ -612,7 +612,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories')
         ]), Response::MODEL_PROVIDER_REPOSITORY_LIST);
     });
 
-App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
+Http::post('/v1/vcs/github/installations/:installationId/providerRepositories')
     ->desc('Create repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -639,7 +639,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         }
 
         if ($installation->getAttribute('personal', false) === true) {
-            $oauth2 = new OAuth2Github(App::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), App::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
+            $oauth2 = new OAuth2Github(Http::getEnv('_APP_VCS_GITHUB_CLIENT_ID', ''), Http::getEnv('_APP_VCS_GITHUB_CLIENT_SECRET', ''), "");
 
             $identity = $dbForConsole->findOne('identities', [
                 Query::equal('provider', ['github']),
@@ -681,8 +681,8 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
             }
         } else {
             $providerInstallationId = $installation->getAttribute('providerInstallationId');
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
             $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
             $owner = $github->getOwnerName($providerInstallationId);
 
@@ -713,7 +713,7 @@ App::post('/v1/vcs/github/installations/:installationId/providerRepositories')
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId')
     ->desc('Get repository')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -738,8 +738,8 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
@@ -762,7 +762,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         $response->dynamic(new Document($repository), Response::MODEL_PROVIDER_REPOSITORY);
     });
 
-App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
+Http::get('/v1/vcs/github/installations/:installationId/providerRepositories/:providerRepositoryId/branches')
     ->desc('List Repository Branches')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -787,8 +787,8 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         }
 
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 
         $owner = $github->getOwnerName($providerInstallationId) ?? '';
@@ -811,7 +811,7 @@ App::get('/v1/vcs/github/installations/:installationId/providerRepositories/:pro
         ]), Response::MODEL_BRANCH_LIST);
     });
 
-App::post('/v1/vcs/github/events')
+Http::post('/v1/vcs/github/events')
     ->desc('Create Event')
     ->groups(['api', 'vcs'])
     ->label('scope', 'public')
@@ -825,7 +825,7 @@ App::post('/v1/vcs/github/events')
         function (GitHub $github, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Build $queueForBuilds) use ($createGitDeployments) {
             $payload = $request->getRawPayload();
             $signatureRemote = $request->getHeader('x-hub-signature-256', '');
-            $signatureLocal = App::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
+            $signatureLocal = Http::getEnv('_APP_VCS_GITHUB_WEBHOOK_SECRET', '');
 
             $valid = empty($signatureRemote) ? true : $github->validateWebhookEvent($payload, $signatureRemote, $signatureLocal);
 
@@ -834,8 +834,8 @@ App::post('/v1/vcs/github/events')
             }
 
             $event = $request->getHeader('x-github-event', '');
-            $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-            $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+            $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+            $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
             $parsedPayload = $github->getEvent($event, $payload);
 
             if ($event == $github::EVENT_PUSH) {
@@ -950,7 +950,7 @@ App::post('/v1/vcs/github/events')
         }
     );
 
-App::get('/v1/vcs/installations')
+Http::get('/v1/vcs/installations')
     ->desc('List installations')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1010,7 +1010,7 @@ App::get('/v1/vcs/installations')
         ]), Response::MODEL_INSTALLATION_LIST);
     });
 
-App::get('/v1/vcs/installations/:installationId')
+Http::get('/v1/vcs/installations/:installationId')
     ->desc('Get installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.read')
@@ -1039,7 +1039,7 @@ App::get('/v1/vcs/installations/:installationId')
         $response->dynamic($installation, Response::MODEL_INSTALLATION);
     });
 
-App::delete('/v1/vcs/installations/:installationId')
+Http::delete('/v1/vcs/installations/:installationId')
     ->desc('Delete Installation')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -1072,7 +1072,7 @@ App::delete('/v1/vcs/installations/:installationId')
         $response->noContent();
     });
 
-App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
+Http::patch('/v1/vcs/github/installations/:installationId/repositories/:repositoryId')
     ->desc('Authorize external deployment')
     ->groups(['api', 'vcs'])
     ->label('scope', 'vcs.write')
@@ -1118,8 +1118,8 @@ App::patch('/v1/vcs/github/installations/:installationId/repositories/:repositor
 
         $repository = Authorization::skip(fn () => $dbForConsole->updateDocument('repositories', $repository->getId(), $repository));
 
-        $privateKey = App::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
-        $githubAppId = App::getEnv('_APP_VCS_GITHUB_APP_ID');
+        $privateKey = Http::getEnv('_APP_VCS_GITHUB_PRIVATE_KEY');
+        $githubAppId = Http::getEnv('_APP_VCS_GITHUB_APP_ID');
         $providerInstallationId = $installation->getAttribute('providerInstallationId');
         $github->initializeVariables($providerInstallationId, $privateKey, $githubAppId);
 

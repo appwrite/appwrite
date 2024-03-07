@@ -28,7 +28,7 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -46,18 +46,18 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
 use Utopia\Locale\Locale;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Assoc;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Host;
-use Utopia\Validator\Text;
-use Utopia\Validator\URL;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Assoc;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\Host;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
 
-App::post('/v1/account')
+Http::post('/v1/account')
     ->desc('Create account')
     ->groups(['api', 'account', 'auth'])
     ->label('event', 'users.[userId].create')
@@ -197,7 +197,7 @@ App::post('/v1/account')
             ->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::post('/v1/account/sessions/email')
+Http::post('/v1/account/sessions/email')
     ->alias('/v1/account/sessions')
     ->desc('Create email password session')
     ->groups(['api', 'account', 'auth', 'session'])
@@ -323,7 +323,7 @@ App::post('/v1/account/sessions/email')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::get('/v1/account/sessions/oauth2/:provider')
+Http::get('/v1/account/sessions/oauth2/:provider')
     ->desc('Create OAuth2 session')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -359,7 +359,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = Http::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -393,7 +393,7 @@ App::get('/v1/account/sessions/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::get('/v1/account/tokens/oauth2/:provider')
+Http::get('/v1/account/tokens/oauth2/:provider')
     ->desc('Create OAuth2 token')
     ->groups(['api', 'account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -428,7 +428,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
         $appSecret = $project->getAttribute('oAuthProviders', [])[$provider . 'Secret'] ?? '{}';
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = Http::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -462,7 +462,7 @@ App::get('/v1/account/tokens/oauth2/:provider')
             ->redirect($oauth2->getLoginURL());
     });
 
-App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -494,7 +494,7 @@ App::get('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 ]));
     });
 
-App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
+Http::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
     ->desc('OAuth2 callback')
     ->groups(['account'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -527,7 +527,7 @@ App::post('/v1/account/sessions/oauth2/callback/:provider/:projectId')
                 ]));
     });
 
-App::get('/v1/account/sessions/oauth2/:provider/redirect')
+Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->desc('OAuth2 redirect')
     ->groups(['api', 'account', 'session'])
     ->label('error', __DIR__ . '/../../views/general/error.phtml')
@@ -626,7 +626,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         }
 
         if (!empty($appSecret) && isset($appSecret['version'])) {
-            $key = App::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
+            $key = Http::getEnv('_APP_OPENSSL_KEY_V' . $appSecret['version']);
             $appSecret = OpenSSL::decrypt($appSecret['data'], $appSecret['method'], $key, 0, \hex2bin($appSecret['iv']), \hex2bin($appSecret['tag']));
         }
 
@@ -976,7 +976,7 @@ App::get('/v1/account/sessions/oauth2/:provider/redirect')
         ;
     });
 
-App::get('/v1/account/identities')
+Http::get('/v1/account/identities')
     ->desc('List Identities')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1032,7 +1032,7 @@ App::get('/v1/account/identities')
         ]), Response::MODEL_IDENTITY_LIST);
     });
 
-App::delete('/v1/account/identities/:identityId')
+Http::delete('/v1/account/identities/:identityId')
     ->desc('Delete identity')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -1068,7 +1068,7 @@ App::delete('/v1/account/identities/:identityId')
         return $response->noContent();
     });
 
-App::post('/v1/account/tokens/magic-url')
+Http::post('/v1/account/tokens/magic-url')
     ->alias('/v1/account/sessions/magic-url')
     ->desc('Create magic URL token')
     ->groups(['api', 'account', 'auth'])
@@ -1100,7 +1100,7 @@ App::post('/v1/account/tokens/magic-url')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -1228,8 +1228,8 @@ App::post('/v1/account/tokens/magic-url')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -1312,7 +1312,7 @@ App::post('/v1/account/tokens/magic-url')
         ;
     });
 
-App::post('/v1/account/tokens/email')
+Http::post('/v1/account/tokens/email')
     ->desc('Create email token (OTP)')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'sessions.write')
@@ -1341,7 +1341,7 @@ App::post('/v1/account/tokens/email')
     ->inject('queueForEvents')
     ->inject('queueForMails')
     ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
 
@@ -1457,8 +1457,8 @@ App::post('/v1/account/tokens/email')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -1648,7 +1648,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
     $response->dynamic($session, Response::MODEL_SESSION);
 };
 
-App::put('/v1/account/sessions/magic-url')
+Http::put('/v1/account/sessions/magic-url')
     ->desc('Update magic URL session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -1678,7 +1678,7 @@ App::put('/v1/account/sessions/magic-url')
     ->inject('queueForEvents')
     ->action($createSession);
 
-App::put('/v1/account/sessions/phone')
+Http::put('/v1/account/sessions/phone')
     ->desc('Update phone session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -1708,7 +1708,7 @@ App::put('/v1/account/sessions/phone')
     ->inject('queueForEvents')
     ->action($createSession);
 
-App::post('/v1/account/sessions/token')
+Http::post('/v1/account/sessions/token')
     ->desc('Create session')
     ->label('event', 'users.[userId].sessions.[sessionId].create')
     ->groups(['api', 'account', 'session'])
@@ -1737,7 +1737,7 @@ App::post('/v1/account/sessions/token')
     ->inject('queueForEvents')
     ->action($createSession);
 
-App::post('/v1/account/tokens/phone')
+Http::post('/v1/account/tokens/phone')
     ->alias('/v1/account/sessions/phone')
     ->desc('Create phone token')
     ->groups(['api', 'account'])
@@ -1766,7 +1766,7 @@ App::post('/v1/account/tokens/phone')
     ->inject('queueForMessaging')
     ->inject('locale')
     ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -1907,7 +1907,7 @@ App::post('/v1/account/tokens/phone')
         ;
     });
 
-App::post('/v1/account/sessions/anonymous')
+Http::post('/v1/account/sessions/anonymous')
     ->desc('Create anonymous session')
     ->groups(['api', 'account', 'auth', 'session'])
     ->label('event', 'users.[userId].sessions.[sessionId].create')
@@ -2045,7 +2045,7 @@ App::post('/v1/account/sessions/anonymous')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::post('/v1/account/jwt')
+Http::post('/v1/account/jwt')
     ->desc('Create JWT')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -2078,7 +2078,7 @@ App::post('/v1/account/jwt')
             throw new Exception(Exception::USER_SESSION_NOT_FOUND);
         }
 
-        $jwt = new JWT(App::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
+        $jwt = new JWT(Http::getEnv('_APP_OPENSSL_KEY_V1'), 'HS256', 900, 10); // Instantiate with key, algo, maxAge and leeway.
 
         $response
             ->setStatusCode(Response::STATUS_CODE_CREATED)
@@ -2092,7 +2092,7 @@ App::post('/v1/account/jwt')
             ])]), Response::MODEL_JWT);
     });
 
-App::get('/v1/account')
+Http::get('/v1/account')
     ->desc('Get account')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2115,7 +2115,7 @@ App::get('/v1/account')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account/prefs')
+Http::get('/v1/account/prefs')
     ->desc('Get account preferences')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2137,7 +2137,7 @@ App::get('/v1/account/prefs')
         $response->dynamic(new Document($prefs), Response::MODEL_PREFERENCES);
     });
 
-App::get('/v1/account/sessions')
+Http::get('/v1/account/sessions')
     ->desc('List sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2178,7 +2178,7 @@ App::get('/v1/account/sessions')
         ]), Response::MODEL_SESSION_LIST);
     });
 
-App::get('/v1/account/logs')
+Http::get('/v1/account/logs')
     ->desc('List logs')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2243,7 +2243,7 @@ App::get('/v1/account/logs')
         ]), Response::MODEL_LOG_LIST);
     });
 
-App::get('/v1/account/sessions/:sessionId')
+Http::get('/v1/account/sessions/:sessionId')
     ->desc('Get session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2289,7 +2289,7 @@ App::get('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/name')
+Http::patch('/v1/account/name')
     ->desc('Update name')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.name')
@@ -2322,7 +2322,7 @@ App::patch('/v1/account/name')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/password')
+Http::patch('/v1/account/password')
     ->desc('Update password')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.password')
@@ -2391,7 +2391,7 @@ App::patch('/v1/account/password')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/email')
+Http::patch('/v1/account/email')
     ->desc('Update email')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.email')
@@ -2483,7 +2483,7 @@ App::patch('/v1/account/email')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/phone')
+Http::patch('/v1/account/phone')
     ->desc('Update phone')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.phone')
@@ -2564,7 +2564,7 @@ App::patch('/v1/account/phone')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/prefs')
+Http::patch('/v1/account/prefs')
     ->desc('Update preferences')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.prefs')
@@ -2597,7 +2597,7 @@ App::patch('/v1/account/prefs')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::patch('/v1/account/status')
+Http::patch('/v1/account/status')
     ->desc('Update status')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.status')
@@ -2640,7 +2640,7 @@ App::patch('/v1/account/status')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::delete('/v1/account/sessions/:sessionId')
+Http::delete('/v1/account/sessions/:sessionId')
     ->desc('Delete session')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -2720,7 +2720,7 @@ App::delete('/v1/account/sessions/:sessionId')
         throw new Exception(Exception::USER_SESSION_NOT_FOUND);
     });
 
-App::patch('/v1/account/sessions/:sessionId')
+Http::patch('/v1/account/sessions/:sessionId')
     ->desc('Update session')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2796,7 +2796,7 @@ App::patch('/v1/account/sessions/:sessionId')
         return $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::delete('/v1/account/sessions')
+Http::delete('/v1/account/sessions')
     ->desc('Delete sessions')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -2861,7 +2861,7 @@ App::delete('/v1/account/sessions')
         $response->noContent();
     });
 
-App::post('/v1/account/recovery')
+Http::post('/v1/account/recovery')
     ->desc('Create password recovery')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -2890,7 +2890,7 @@ App::post('/v1/account/recovery')
     ->inject('queueForEvents')
     ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -2960,8 +2960,8 @@ App::post('/v1/account/recovery')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -3039,7 +3039,7 @@ App::post('/v1/account/recovery')
             ->dynamic($recovery, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/recovery')
+Http::put('/v1/account/recovery')
     ->desc('Create password recovery (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'sessions.write')
@@ -3124,7 +3124,7 @@ App::put('/v1/account/recovery')
         $response->dynamic($recoveryDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification')
+Http::post('/v1/account/verification')
     ->desc('Create email verification')
     ->groups(['api', 'account'])
     ->label('scope', 'account')
@@ -3151,7 +3151,7 @@ App::post('/v1/account/verification')
     ->inject('queueForMails')
     ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
 
-        if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+        if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
         }
 
@@ -3208,8 +3208,8 @@ App::post('/v1/account/verification')
         $smtp = $project->getAttribute('smtp', []);
         $smtpEnabled = $smtp['enabled'] ?? false;
 
-        $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-        $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+        $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+        $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
         $replyTo = "";
 
         if ($smtpEnabled) {
@@ -3285,7 +3285,7 @@ App::post('/v1/account/verification')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification')
+Http::put('/v1/account/verification')
     ->desc('Create email verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -3345,7 +3345,7 @@ App::put('/v1/account/verification')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::post('/v1/account/verification/phone')
+Http::post('/v1/account/verification/phone')
     ->desc('Create phone verification')
     ->groups(['api', 'account', 'auth'])
     ->label('scope', 'account')
@@ -3371,7 +3371,7 @@ App::post('/v1/account/verification/phone')
     ->inject('project')
     ->inject('locale')
     ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
-        if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+        if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
 
@@ -3457,7 +3457,7 @@ App::post('/v1/account/verification/phone')
             ->dynamic($verification, Response::MODEL_TOKEN);
     });
 
-App::put('/v1/account/verification/phone')
+Http::put('/v1/account/verification/phone')
     ->desc('Create phone verification (confirmation)')
     ->groups(['api', 'account'])
     ->label('scope', 'public')
@@ -3515,7 +3515,7 @@ App::put('/v1/account/verification/phone')
         $response->dynamic($verificationDocument, Response::MODEL_TOKEN);
     });
 
-App::patch('/v1/account/mfa')
+Http::patch('/v1/account/mfa')
     ->desc('Update MFA')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3549,7 +3549,7 @@ App::patch('/v1/account/mfa')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::get('/v1/account/mfa/factors')
+Http::get('/v1/account/mfa/factors')
     ->desc('List Factors')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -3577,7 +3577,7 @@ App::get('/v1/account/mfa/factors')
         $response->dynamic($factors, Response::MODEL_MFA_FACTORS);
     });
 
-App::post('/v1/account/mfa/authenticators/:type')
+Http::post('/v1/account/mfa/authenticators/:type')
     ->desc('Add Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3649,7 +3649,7 @@ App::post('/v1/account/mfa/authenticators/:type')
         $response->dynamic($model, Response::MODEL_MFA_TYPE);
     });
 
-App::put('/v1/account/mfa/authenticators/:type')
+Http::put('/v1/account/mfa/authenticators/:type')
     ->desc('Verify Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3712,7 +3712,7 @@ App::put('/v1/account/mfa/authenticators/:type')
         $response->dynamic($user, Response::MODEL_ACCOUNT);
     });
 
-App::post('/v1/account/mfa/recovery-codes')
+Http::post('/v1/account/mfa/recovery-codes')
     ->desc('Create MFA Recovery Codes')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3754,7 +3754,7 @@ App::post('/v1/account/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::patch('/v1/account/mfa/recovery-codes')
+Http::patch('/v1/account/mfa/recovery-codes')
     ->desc('Regenerate MFA Recovery Codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('event', 'users.[userId].update.mfa')
@@ -3795,7 +3795,7 @@ App::patch('/v1/account/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::get('/v1/account/mfa/recovery-codes')
+Http::get('/v1/account/mfa/recovery-codes')
     ->desc('Get MFA Recovery Codes')
     ->groups(['api', 'account', 'mfaProtected'])
     ->label('scope', 'account')
@@ -3825,7 +3825,7 @@ App::get('/v1/account/mfa/recovery-codes')
         $response->dynamic($document, Response::MODEL_MFA_RECOVERY_CODES);
     });
 
-App::delete('/v1/account/mfa/authenticators/:type')
+Http::delete('/v1/account/mfa/authenticators/:type')
     ->desc('Delete Authenticator')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete.mfa')
@@ -3885,7 +3885,7 @@ App::delete('/v1/account/mfa/authenticators/:type')
         $response->noContent();
     });
 
-App::post('/v1/account/mfa/challenge')
+Http::post('/v1/account/mfa/challenge')
     ->desc('Create 2FA Challenge')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -3934,7 +3934,7 @@ App::post('/v1/account/mfa/challenge')
 
         switch ($factor) {
             case Type::PHONE:
-                if (empty(App::getEnv('_APP_SMS_PROVIDER'))) {
+                if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
                     throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
                 }
                 if (empty($user->getAttribute('phone'))) {
@@ -3972,7 +3972,7 @@ App::post('/v1/account/mfa/challenge')
                     ->setProviderType(MESSAGE_TYPE_SMS);
                 break;
             case Type::EMAIL:
-                if (empty(App::getEnv('_APP_SMTP_HOST'))) {
+                if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
                     throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
                 }
                 if (empty($user->getAttribute('email'))) {
@@ -4003,8 +4003,8 @@ App::post('/v1/account/mfa/challenge')
                 $smtp = $project->getAttribute('smtp', []);
                 $smtpEnabled = $smtp['enabled'] ?? false;
 
-                $senderEmail = App::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
-                $senderName = App::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
+                $senderEmail = Http::getEnv('_APP_SYSTEM_EMAIL_ADDRESS', APP_EMAIL_TEAM);
+                $senderName = Http::getEnv('_APP_SYSTEM_EMAIL_NAME', APP_NAME . ' Server');
                 $replyTo = "";
 
                 if ($smtpEnabled) {
@@ -4073,7 +4073,7 @@ App::post('/v1/account/mfa/challenge')
         $response->dynamic($challenge, Response::MODEL_MFA_CHALLENGE);
     });
 
-App::put('/v1/account/mfa/challenge')
+Http::put('/v1/account/mfa/challenge')
     ->desc('Create MFA Challenge (confirmation)')
     ->groups(['api', 'account', 'mfa'])
     ->label('scope', 'account')
@@ -4158,7 +4158,7 @@ App::put('/v1/account/mfa/challenge')
         $response->dynamic($session, Response::MODEL_SESSION);
     });
 
-App::delete('/v1/account')
+Http::delete('/v1/account')
     ->desc('Delete account')
     ->groups(['api', 'account'])
     ->label('event', 'users.[userId].delete')
@@ -4206,7 +4206,7 @@ App::delete('/v1/account')
         $response->noContent();
     });
 
-App::post('/v1/account/targets/push')
+Http::post('/v1/account/targets/push')
     ->desc('Create push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4279,7 +4279,7 @@ App::post('/v1/account/targets/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::put('/v1/account/targets/:targetId/push')
+Http::put('/v1/account/targets/:targetId/push')
     ->desc('Update push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')
@@ -4334,7 +4334,7 @@ App::put('/v1/account/targets/:targetId/push')
             ->dynamic($target, Response::MODEL_TARGET);
     });
 
-App::delete('/v1/account/targets/:targetId/push')
+Http::delete('/v1/account/targets/:targetId/push')
     ->desc('Delete push target')
     ->groups(['api', 'account'])
     ->label('scope', 'targets.write')

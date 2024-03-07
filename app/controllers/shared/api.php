@@ -16,7 +16,7 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -25,7 +25,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\WhiteList;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -146,7 +146,7 @@ $databaseListener = function (string $event, Document $document, Document $proje
     }
 };
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -295,7 +295,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -365,7 +365,7 @@ App::init()
                 ;
             }
 
-            $enabled = App::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
+            $enabled = Http::getEnv('_APP_OPTIONS_ABUSE', 'enabled') !== 'disabled';
 
             if (
                 $enabled                // Abuse is enabled
@@ -463,7 +463,7 @@ App::init()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['session'])
     ->inject('user')
     ->inject('request')
@@ -483,7 +483,7 @@ App::init()
  * Delete older sessions if the number of sessions have crossed
  * the session limit set for the project
  */
-App::shutdown()
+Http::shutdown()
     ->groups(['session'])
     ->inject('utopia')
     ->inject('request')
@@ -517,7 +517,7 @@ App::shutdown()
         $dbForProject->purgeCachedDocument('users', $userId);
     });
 
-App::shutdown()
+Http::shutdown()
     ->groups(['api'])
     ->inject('utopia')
     ->inject('request')
@@ -737,10 +737,10 @@ App::shutdown()
         }
     });
 
-App::init()
+Http::init()
     ->groups(['usage'])
     ->action(function () {
-        if (App::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
+        if (Http::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
     });

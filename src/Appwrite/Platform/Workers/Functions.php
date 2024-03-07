@@ -9,7 +9,7 @@ use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Response\Model\Execution;
 use Exception;
 use Executor\Executor;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -383,7 +383,7 @@ class Functions extends Action
         try {
             $version = $function->getAttribute('version', 'v2');
             $command = $runtime['startCommand'];
-            $executor = new Executor(App::getEnv('_APP_EXECUTOR_HOST'));
+            $executor = new Executor(Http::getEnv('_APP_EXECUTOR_HOST'));
             $command = $version === 'v2' ? '' : 'cp /tmp/code.tar.gz /mnt/code/code.tar.gz && nohup helpers/start.sh "' . $command . '"';
             $executionResponse = $executor->createExecution(
                 projectId: $project->getId(),

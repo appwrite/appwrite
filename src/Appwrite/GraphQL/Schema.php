@@ -6,9 +6,9 @@ use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Exception;
-use Utopia\Route;
+use Utopia\Http\Route;
 
 class Schema
 {
@@ -32,7 +32,7 @@ class Schema
         array $urls,
         array $params,
     ): GQLSchema {
-        App::setResource('utopia:graphql', static function () use ($utopia) {
+        Http::setResource('utopia:graphql', static function () use ($utopia) {
             return $utopia;
         });
 

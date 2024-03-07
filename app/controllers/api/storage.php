@@ -10,7 +10,7 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
 use Appwrite\Utopia\Response;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -37,14 +37,14 @@ use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
 use Utopia\Swoole\Request;
-use Utopia\Validator\ArrayList;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\HexColor;
-use Utopia\Validator\Range;
-use Utopia\Validator\Text;
-use Utopia\Validator\WhiteList;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\HexColor;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 
-App::post('/v1/storage/buckets')
+Http::post('/v1/storage/buckets')
     ->desc('Create bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
@@ -63,7 +63,7 @@ App::post('/v1/storage/buckets')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, no user is granted with any permissions. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
-    ->param('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
+    ->param('maximumFileSize', (int) Http::getEnv('_APP_STORAGE_LIMIT', 0), new Range(1, (int) Http::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human(Http::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ',  [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -142,7 +142,7 @@ App::post('/v1/storage/buckets')
             ->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
-App::get('/v1/storage/buckets')
+Http::get('/v1/storage/buckets')
     ->desc('List buckets')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
@@ -196,7 +196,7 @@ App::get('/v1/storage/buckets')
         ]), Response::MODEL_BUCKET_LIST);
     });
 
-App::get('/v1/storage/buckets/:bucketId')
+Http::get('/v1/storage/buckets/:bucketId')
     ->desc('Get bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.read')
@@ -221,7 +221,7 @@ App::get('/v1/storage/buckets/:bucketId')
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
-App::put('/v1/storage/buckets/:bucketId')
+Http::put('/v1/storage/buckets/:bucketId')
     ->desc('Update bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
@@ -240,7 +240,7 @@ App::put('/v1/storage/buckets/:bucketId')
     ->param('permissions', null, new Permissions(APP_LIMIT_ARRAY_PARAMS_SIZE), 'An array of permission strings. By default, the current permissions are inherited. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('fileSecurity', false, new Boolean(true), 'Enables configuring permissions for individual file. A user needs one of file or bucket level permissions to access a file. [Learn more about permissions](https://appwrite.io/docs/permissions).', true)
     ->param('enabled', true, new Boolean(true), 'Is bucket enabled? When set to \'disabled\', users cannot access the files in this bucket but Server SDKs with and API key can still access the bucket. No files are lost when this is toggled.', true)
-    ->param('maximumFileSize', null, new Range(1, (int) App::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)App::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
+    ->param('maximumFileSize', null, new Range(1, (int) Http::getEnv('_APP_STORAGE_LIMIT', 0)), 'Maximum file size allowed in bytes. Maximum allowed value is ' . Storage::human((int)Http::getEnv('_APP_STORAGE_LIMIT', 0), 0) . '.', true)
     ->param('allowedFileExtensions', [], new ArrayList(new Text(64), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Allowed file extensions. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' extensions are allowed, each 64 characters long.', true)
     ->param('compression', Compression::NONE, new WhiteList([Compression::NONE, Compression::GZIP, Compression::ZSTD]), 'Compression algorithm choosen for compression. Can be one of ' . Compression::NONE . ', [' . Compression::GZIP . '](https://en.wikipedia.org/wiki/Gzip), or [' . Compression::ZSTD . '](https://en.wikipedia.org/wiki/Zstd), For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' compression is skipped even if it\'s enabled', true)
     ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Storage::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
@@ -256,7 +256,7 @@ App::put('/v1/storage/buckets/:bucketId')
         }
 
         $permissions ??= $bucket->getPermissions();
-        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) App::getEnv('_APP_STORAGE_LIMIT', 0));
+        $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) Http::getEnv('_APP_STORAGE_LIMIT', 0));
         $allowedFileExtensions ??= $bucket->getAttribute('allowedFileExtensions', []);
         $enabled ??= $bucket->getAttribute('enabled', true);
         $encryption ??= $bucket->getAttribute('encryption', true);
@@ -288,7 +288,7 @@ App::put('/v1/storage/buckets/:bucketId')
         $response->dynamic($bucket, Response::MODEL_BUCKET);
     });
 
-App::delete('/v1/storage/buckets/:bucketId')
+Http::delete('/v1/storage/buckets/:bucketId')
     ->desc('Delete bucket')
     ->groups(['api', 'storage'])
     ->label('scope', 'buckets.write')
@@ -329,7 +329,7 @@ App::delete('/v1/storage/buckets/:bucketId')
         $response->noContent();
     });
 
-App::post('/v1/storage/buckets/:bucketId/files')
+Http::post('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
     ->desc('Create file')
     ->groups(['api', 'storage'])
@@ -418,7 +418,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         $maximumFileSize = $bucket->getAttribute('maximumFileSize', 0);
-        if ($maximumFileSize > (int) App::getEnv('_APP_STORAGE_LIMIT', 0)) {
+        if ($maximumFileSize > (int) Http::getEnv('_APP_STORAGE_LIMIT', 0)) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Maximum bucket file size is larger than _APP_STORAGE_LIMIT');
         }
 
@@ -520,10 +520,10 @@ App::post('/v1/storage/buckets/:bucketId/files')
         }
 
         if ($chunksUploaded === $chunks) {
-            if (App::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
+            if (Http::getEnv('_APP_STORAGE_ANTIVIRUS') === 'enabled' && $bucket->getAttribute('antivirus', true) && $fileSize <= APP_LIMIT_ANTIVIRUS && $deviceForFiles->getType() === Storage::DEVICE_LOCAL) {
                 $antivirus = new Network(
-                    App::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
-                    (int) App::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
+                    Http::getEnv('_APP_STORAGE_ANTIVIRUS_HOST', 'clamav'),
+                    (int) Http::getEnv('_APP_STORAGE_ANTIVIRUS_PORT', 3310)
                 );
 
                 if (!$antivirus->fileScan($path)) {
@@ -560,7 +560,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
                 if (empty($data)) {
                     $data = $deviceForFiles->read($path);
                 }
-                $key = App::getEnv('_APP_OPENSSL_KEY_V1');
+                $key = Http::getEnv('_APP_OPENSSL_KEY_V1');
                 $iv = OpenSSL::randomPseudoBytes(OpenSSL::cipherIVLength(OpenSSL::CIPHER_AES_128_GCM));
                 $data = OpenSSL::encrypt($data, OpenSSL::CIPHER_AES_128_GCM, $key, 0, $iv, $tag);
             }
@@ -706,7 +706,7 @@ App::post('/v1/storage/buckets/:bucketId/files')
             ->dynamic($file, Response::MODEL_FILE);
     });
 
-App::get('/v1/storage/buckets/:bucketId/files')
+Http::get('/v1/storage/buckets/:bucketId/files')
     ->alias('/v1/storage/files', ['bucketId' => 'default'])
     ->desc('List files')
     ->groups(['api', 'storage'])
@@ -791,7 +791,7 @@ App::get('/v1/storage/buckets/:bucketId/files')
         ]), Response::MODEL_FILE_LIST);
     });
 
-App::get('/v1/storage/buckets/:bucketId/files/:fileId')
+Http::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
     ->desc('Get file')
     ->groups(['api', 'storage'])
@@ -838,7 +838,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
-App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
+Http::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->alias('/v1/storage/files/:fileId/preview', ['bucketId' => 'default'])
     ->desc('Get file preview')
     ->groups(['api', 'storage'])
@@ -918,7 +918,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         $algorithm = $file->getAttribute('algorithm', Compression::NONE);
         $cipher = $file->getAttribute('openSSLCipher');
         $mime = $file->getAttribute('mimeType');
-        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) App::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
+        if (!\in_array($mime, $inputs) || $file->getAttribute('sizeActual') > (int) Http::getEnv('_APP_STORAGE_PREVIEW_LIMIT', 20000000)) {
             if (!\in_array($mime, $inputs)) {
                 $path = (\array_key_exists($mime, $fileLogos)) ? $fileLogos[$mime] : $fileLogos['default'];
             } else {
@@ -955,7 +955,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                Http::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -1014,7 +1014,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         unset($image);
     });
 
-App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
+Http::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->alias('/v1/storage/files/:fileId/download', ['bucketId' => 'default'])
     ->desc('Get file for download')
     ->groups(['api', 'storage'])
@@ -1103,7 +1103,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                Http::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -1154,7 +1154,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
     });
 
-App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
+Http::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->alias('/v1/storage/files/:fileId/view', ['bucketId' => 'default'])
     ->desc('Get file for view')
     ->groups(['api', 'storage'])
@@ -1252,7 +1252,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
             $source = OpenSSL::decrypt(
                 $source,
                 $file->getAttribute('openSSLCipher'),
-                App::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
+                Http::getEnv('_APP_OPENSSL_KEY_V' . $file->getAttribute('openSSLVersion')),
                 0,
                 \hex2bin($file->getAttribute('openSSLIV')),
                 \hex2bin($file->getAttribute('openSSLTag'))
@@ -1306,7 +1306,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
     });
 
-App::put('/v1/storage/buckets/:bucketId/files/:fileId')
+Http::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->alias('/v1/storage/files/:fileId', ['bucketId' => 'default'])
     ->desc('Update file')
     ->groups(['api', 'storage'])
@@ -1415,7 +1415,7 @@ App::put('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->dynamic($file, Response::MODEL_FILE);
     });
 
-App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
+Http::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->desc('Delete File')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.write')
@@ -1511,7 +1511,7 @@ App::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         $response->noContent();
     });
 
-App::get('/v1/storage/usage')
+Http::get('/v1/storage/usage')
     ->desc('Get storage usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')
@@ -1590,7 +1590,7 @@ App::get('/v1/storage/usage')
         ]), Response::MODEL_USAGE_STORAGE);
     });
 
-App::get('/v1/storage/:bucketId/usage')
+Http::get('/v1/storage/:bucketId/usage')
     ->desc('Get bucket usage stats')
     ->groups(['api', 'storage'])
     ->label('scope', 'files.read')

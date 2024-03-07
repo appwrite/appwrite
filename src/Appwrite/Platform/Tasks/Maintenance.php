@@ -4,7 +4,7 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -35,11 +35,11 @@ class Maintenance extends Action
         Console::success(APP_NAME . ' maintenance process v1 has started');
 
         // # of days in seconds (1 day = 86400s)
-        $interval = (int) App::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
-        $delay = (int) App::getEnv('_APP_MAINTENANCE_DELAY', '0');
-        $usageStatsRetentionHourly = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
-        $cacheRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
-        $schedulesDeletionRetention = (int) App::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
+        $interval = (int) Http::getEnv('_APP_MAINTENANCE_INTERVAL', '86400');
+        $delay = (int) Http::getEnv('_APP_MAINTENANCE_DELAY', '0');
+        $usageStatsRetentionHourly = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_USAGE_HOURLY', '8640000'); //100 days
+        $cacheRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_CACHE', '2592000'); // 30 days
+        $schedulesDeletionRetention = (int) Http::getEnv('_APP_MAINTENANCE_RETENTION_SCHEDULES', '86400'); // 1 Day
 
         Console::loop(function () use ($interval, $cacheRetention, $schedulesDeletionRetention, $usageStatsRetentionHourly, $dbForConsole, $queueForDeletes, $queueForCertificates) {
             $time = DateTime::now();

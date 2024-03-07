@@ -105,7 +105,7 @@ use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
-use Utopia\Swoole\Response as SwooleResponse;
+use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 
 /**
  * @method int getStatusCode()

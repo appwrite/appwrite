@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Swoole\Timer;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -99,7 +99,7 @@ abstract class ScheduleBase extends Action
             }
 
             $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                Query::equal('region', [Http::getEnv('_APP_REGION', 'default')]),
                 Query::equal('resourceType', [static::getSupportedResource()]),
                 Query::equal('active', [true]),
             ]));
@@ -153,7 +153,7 @@ abstract class ScheduleBase extends Action
                     }
 
                     $results = $dbForConsole->find('schedules', \array_merge($paginationQueries, [
-                        Query::equal('region', [App::getEnv('_APP_REGION', 'default')]),
+                        Query::equal('region', [Http::getEnv('_APP_REGION', 'default')]),
                         Query::equal('resourceType', [static::getSupportedResource()]),
                         Query::greaterThanEqual('resourceUpdatedAt', $lastSyncUpdate),
                     ]));

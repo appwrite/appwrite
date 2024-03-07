@@ -3,7 +3,7 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
-use Utopia\App;
+use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -12,7 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Validator\Text;
+use Utopia\Http\Validator\Text;
 
 class Migrate extends Action
 {

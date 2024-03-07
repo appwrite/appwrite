@@ -5,11 +5,11 @@
  */
 
 use Appwrite\Runtimes\Runtimes;
-use Utopia\App;
+use Utopia\Http\Http;
 
 $runtimes = new Runtimes('v2');
 
-$allowList = empty(App::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', App::getEnv('_APP_FUNCTIONS_RUNTIMES'));
+$allowList = empty(Http::getEnv('_APP_FUNCTIONS_RUNTIMES')) ? [] : \explode(',', Http::getEnv('_APP_FUNCTIONS_RUNTIMES'));
 
 $runtimes = $runtimes->getAll(true, $allowList);
 

@@ -7,8 +7,8 @@ use Utopia\CLI\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
-use Utopia\Validator\WhiteList;
-use Utopia\Validator\Wildcard;
+use Utopia\Http\Validator\WhiteList;
+use Utopia\Http\Validator\Wildcard;
 
 class QueueRetry extends Action
 {
