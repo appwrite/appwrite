@@ -92,13 +92,6 @@ function router(App $utopia, Database $dbForConsole, callable $getProjectDB, Swo
         }
     }
 
-    if (array_key_exists('proxy', $project->getAttribute('apis', []))) {
-        $status = $project->getAttribute('apis', [])['proxy'];
-        if (!$status) {
-            throw new AppwriteException(AppwriteException::GENERAL_API_DISABLED);
-        }
-    }
-
     // Skip Appwrite Router for ACME challenge. Nessessary for certificate generation
     $path = ($swooleRequest->server['request_uri'] ?? '/');
     if (\str_starts_with($path, '/.well-known/acme-challenge')) {
