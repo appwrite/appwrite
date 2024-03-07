@@ -2,6 +2,7 @@
 
 namespace Appwrite\Specification\Format;
 
+use Utopia\Config\Config;
 use Appwrite\Specification\Format;
 use Appwrite\Template\Template;
 use Appwrite\Utopia\Response\Model;
@@ -90,6 +91,7 @@ class OpenAPI3 extends Format
                 'description' => $this->getParam('docs.description'),
                 'url' => $this->getParam('docs.url'),
             ],
+            'x-appwrite-events' => $this->events,
         ];
 
         if (isset($output['components']['securitySchemes']['Project'])) {
@@ -119,6 +121,7 @@ class OpenAPI3 extends Format
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
+            $event = $route->getLabel('event', '');
 
             if ($hide) {
                 continue;
@@ -174,6 +177,7 @@ class OpenAPI3 extends Format
                     'offline-model' => $route->getLabel('sdk.offline.model', ''),
                     'offline-key' => $route->getLabel('sdk.offline.key', ''),
                     'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
+                    'event' => $event,
                 ],
             ];
 

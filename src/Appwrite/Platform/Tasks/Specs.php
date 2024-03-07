@@ -217,6 +217,7 @@ class Specs extends Action
             }
 
             $models = $response->getModels();
+            $events = $this->generateEvents(Config::getParam('events', []));
 
             foreach ($models as $key => $value) {
                 if ($platform !== APP_PLATFORM_CONSOLE && !$value->isPublic()) {
@@ -224,7 +225,15 @@ class Specs extends Action
                 }
             }
 
-            $arguments = [new App('UTC'), $services, $routes, $models, $keys[$platform], $authCounts[$platform] ?? 0];
+            $arguments = [
+                    new App('UTC'),
+                    $services,
+                    $routes,
+                    $models,
+                    $keys[$platform],
+                    $authCounts[$platform] ?? 0,
+                    $events,
+                ];
             foreach (['swagger2', 'open-api3'] as $format) {
                 $formatInstance = match ($format) {
                     'swagger2' => new Swagger2(...$arguments),
@@ -273,5 +282,54 @@ class Specs extends Action
                 Console::success('Saved spec file: ' . realpath($path));
             }
         }
+    }
+
+    private function generateEvents(array $events, $parentModel = null)
+    {
+        $nodeEvents = [];
+        // go through each subNode's to find resources
+        foreach ($events as $key => $subNode) {
+            $pattern = "";
+            // if it's not an array of nodes, but something description or model, skip
+            if (!is_array($subNode)) {
+                continue;
+            }
+
+            // add wild card if applicable
+            if ($subNode['$resource'] ?? false) {
+                $pattern = "{$key}.*";
+            } else {
+                $pattern = "{$key}";
+            }
+
+            $model = isset($subNode['$model']) ? $subNode['$model'] : $parentModel;
+
+            // add events for the current node.
+            $nodeEvents[] = [
+                'pattern' => $pattern,
+                '$model' => $model,
+                '$description' => $subNode['$description'],
+            ];
+
+            // recursively get events from child nodes
+            $subEvents = $this::generateEvents($subNode, $model);
+
+            // update child nodes bu appending the root node's event pattern
+            // for example, joining databases.* with the child event collections.*
+            foreach ($subEvents as $key => $subEvent) {
+                $nodeEvents[] = [
+                    "pattern" => $pattern . "." . $subEvent["pattern"],
+                    '$model' =>
+                        $subEvent['$model'] === null
+                            ? $subNode['$model']
+                            : $subEvent['$model'],
+                    '$description' =>
+                        $subEvent['$description'] === ""
+                            ? $subNode['$description']
+                            : $subEvent['$description'],
+                ];
+            }
+        }
+        return $nodeEvents;
     }
 }

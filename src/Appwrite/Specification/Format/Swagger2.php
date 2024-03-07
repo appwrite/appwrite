@@ -88,6 +88,7 @@ class Swagger2 extends Format
                 'description' => $this->getParam('docs.description'),
                 'url' => $this->getParam('docs.url'),
             ],
+            'x-appwrite-events' => $this->events,
         ];
 
         if (isset($output['securityDefinitions']['Project'])) {
@@ -118,6 +119,7 @@ class Swagger2 extends Format
             $scope = $route->getLabel('scope', '');
             $hide = $route->getLabel('sdk.hide', false);
             $consumes = [$route->getLabel('sdk.request.type', 'application/json')];
+            $event = $route->getLabel('event', '');
 
             if ($hide) {
                 continue;
@@ -175,6 +177,7 @@ class Swagger2 extends Format
                     'offline-model' => $route->getLabel('sdk.offline.model', ''),
                     'offline-key' => $route->getLabel('sdk.offline.key', ''),
                     'offline-response-key' => $route->getLabel('sdk.offline.response.key', '$id'),
+                    'event' => $event,
                 ],
             ];
 
