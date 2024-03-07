@@ -17,6 +17,7 @@ use Appwrite\Platform\Tasks\QueueCount;
 use Appwrite\Platform\Tasks\QueueRetry;
 use Appwrite\Platform\Tasks\ScheduleFunctions;
 use Appwrite\Platform\Tasks\ScheduleMessages;
+use Appwrite\Platform\Tasks\ScheduleBackups;
 use Appwrite\Platform\Tasks\SDKs;
 use Appwrite\Platform\Tasks\Specs;
 use Appwrite\Platform\Tasks\SSL;
@@ -49,6 +50,7 @@ class Tasks extends Service
             ->addAction(SSL::getName(), new SSL())
             ->addAction(ScheduleFunctions::getName(), new ScheduleFunctions())
             ->addAction(ScheduleMessages::getName(), new ScheduleMessages())
+            ->addAction(ScheduleBackups::getName(), new ScheduleBackups())
             ->addAction(Specs::getName(), new Specs())
             ->addAction(Upgrade::getName(), new Upgrade())
             ->addAction(Vars::getName(), new Vars())

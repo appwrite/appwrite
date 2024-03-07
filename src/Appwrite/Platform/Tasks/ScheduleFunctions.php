@@ -21,12 +21,12 @@ class ScheduleFunctions extends ScheduleBase
         return 'schedule-functions';
     }
 
-    public static function getSupportedResource(): string
+    public static function getSupportedResource(): array
     {
-        return 'function';
+        return ['function'];
     }
 
-    protected function enqueueResources(Group $pools, Database $dbForConsole): void
+    protected function enqueueResources(Group $pools, Database $dbForConsole, callable $getProjectDB): void
     {
         $timerStart = \microtime(true);
         $time = DateTime::now();

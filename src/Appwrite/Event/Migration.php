@@ -33,6 +33,20 @@ class Migration extends Event
         return $this;
     }
 
+
+    /**
+     * Sets migration params.
+     *
+     * @param array $params
+     * @return self
+     */
+    public function setParams(array $params): self
+    {
+        $this->params = $params;
+
+        return $this;
+    }
+
     /**
      * Returns set migration document for the function event.
      *
@@ -81,6 +95,7 @@ class Migration extends Event
         return $client->enqueue([
             'project' => $this->project,
             'user' => $this->user,
+            'params' => $this->params,
             'migration' => $this->migration
         ]);
     }
