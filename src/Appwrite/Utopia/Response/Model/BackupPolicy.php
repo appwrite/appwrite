@@ -21,6 +21,7 @@ class BackupPolicy extends Model
                 'description' => 'The name of the policy',
                 'default' => '',
                 'example' => 'Hourly backups',
+                'required' => true,
             ])
             ->addRule('$createdAt', [
                 'type' => self::TYPE_DATETIME,
@@ -39,26 +40,36 @@ class BackupPolicy extends Model
                 'description' => 'Resource Type ( backup-database, backup-project ) ',
                 'default' => '',
                 'example' => 'backup-database',
+                'required' => true,
             ])
             ->addRule('resourceId', [
                 'type' => self::TYPE_STRING,
                 'description' => 'Resource Id od the resource ',
                 'default' => '',
                 'example' => 'backup-database',
+                'required' => true,
             ])
             ->addRule('retention', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'Days to save resource before delete',
                 'default' => [],
                 'example' => '',
+                'required' => true,
             ])
             ->addRule('hours', [
                 'type' => self::TYPE_INTEGER,
                 'description' => 'How often in hours to backup the resource',
                 'default' => [],
                 'example' => '',
+                'required' => true,
             ])
-
+            ->addRule('enabled', [
+                'type' => self::TYPE_BOOLEAN,
+                'description' => 'Is policy enabled',
+                'default' => false,
+                'example' => true,
+                'required' => true,
+            ])
         ;
     }
 
