@@ -66,7 +66,8 @@ abstract class ScheduleBase extends Action
 
             $collectionId = match ($schedule->getAttribute('resourceType')) {
                 'function' => 'functions',
-                'message' => 'messages'
+                'message' => 'messages',
+                'backupPolicies' => 'backupPolicies'
             };
 
             $resource = $getProjectDB($project)->getDocument(
@@ -115,7 +116,8 @@ abstract class ScheduleBase extends Action
                 } catch (\Throwable $th) {
                     $collectionId = match ($document->getAttribute('resourceType')) {
                         'function' => 'functions',
-                        'message' => 'messages'
+                        'message' => 'messages',
+                        'backupsPolicy' => 'backupsPolicy'
                     };
 
                     Console::error("Failed to load schedule for project {$document['projectId']} {$collectionId} {$document['resourceId']}");
