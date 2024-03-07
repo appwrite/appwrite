@@ -1146,8 +1146,8 @@ App::setResource('dbForProject', function (Group $pools, Database $dbForConsole,
 //            ->setTenant(null)
 //            ->setNamespace('_' . $project->getInternalId());
 //    }
-
-    return $database;
+        return null;
+//    return $database;
 }, ['pools', 'dbForConsole', 'cache', 'project']);
 
 App::setResource('dbForConsole', function (Group $pools, Cache $cache) {
