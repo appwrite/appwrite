@@ -19,31 +19,6 @@ class DatabasesCustomServerTest extends Scope
     use ProjectCustom;
     use SideServer;
 
-    public function testBackupPolicy(): void
-    {
-        $response = $this->client->call(Client::METHOD_POST, '/backups-policy', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ], $this->getHeaders()), [
-            'policyId' => 'policy1',
-            'name' => 'Hourly Backups',
-            'enabled' => true,
-            'days' => 6,
-            'hours' => 4
-        ]);
-
-        var_dump($response);
-
-        $this->assertEquals('----', '------');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals($id, $response['body']['$id']);
-        $this->assertEquals('Project Test', $response['body']['name']);
-    }
-
-
     public function testListDatabases()
     {
         $test1 = $this->client->call(Client::METHOD_POST, '/databases', array_merge([
@@ -275,6 +250,36 @@ class DatabasesCustomServerTest extends Scope
         $this->assertEquals(409, $response['headers']['status-code']);
         return ['databaseId' => $test1['body']['$id']];
     }
+
+    /**
+     * @depends testListDatabases
+     */
+    public function testBackupPolicy(array $data): void
+    {
+        $databaseId = $data['databaseId'];
+
+        $response = $this->client->call(Client::METHOD_POST, '/databases/' . $databaseId . '/backups-policy', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], $this->getHeaders()), [
+            'policyId' => 'policy1',
+            'name' => 'Hourly Backups',
+            'enabled' => true,
+            'retention' => 6,
+            'hours' => 4,
+        ]);
+
+        var_dump($response);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+       // $this->assertEquals($id, $response['body']['$id']);
+        $this->assertEquals('Project Test', $response['body']['name']);
+
+        $this->assertEquals('----', '------');
+    }
+
 
     /**
      * @depends testListDatabases

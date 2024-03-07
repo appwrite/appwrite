@@ -3908,13 +3908,12 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
         ]), Response::MODEL_USAGE_COLLECTION);
     });
 
-App::post('/v1/backups-policy')
-    ->groups(['api', 'projects'])
+App::post('/v1/databases/:databaseId/backups-policy')
+    ->groups(['api', 'database'])
     ->desc('Create backup policy')
-    ->groups(['api', 'projects'])
-    ->label('scope', 'projects.write')
+    ->label('scope', 'databases.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
-    ->label('event', 'backupPolicy.[functionId].create')
+    //->label('event', 'backupPolicy.[functionId].create')
     ->label('audits.event', 'backupPolicy.create')
     ->label('audits.resource', 'backupPolicy/{response.$id}')
     ->label('sdk.namespace', 'backupPolicy')
@@ -3925,31 +3924,36 @@ App::post('/v1/backups-policy')
     ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
     ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
     ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
-    ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', true)
-    ->param('retention', true, new Integer(), 'Days to keep backups before deletion', true)
-    ->param('days', true, new Integer(), 'Backups days', true)
-    ->param('hours', true, new Integer(), 'Backup hours', true)
+    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', false)
+    ->param('retention', true, new Integer(), 'Days to keep backups before deletion', false)
+    ->param('hours', true, new Integer(), 'Backup hours', false)
+    ->param('databaseId', '', new UID(), 'Database ID.')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $policyId, string $name, string $schedule, bool $enabled, int $retention, int $days, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+    ->action(function (string $policyId, string $name, bool $enabled, int $retention, int $hours, string $databaseId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
         var_dump($project);
         $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
 
-        $resourceType = 'backup-project';
+        $resourceType = 'backup-database';
 
         $policy = $dbForProject->createDocument('backupsPolicy', new Document([
             '$id' => $policyId,
             'name' => $name,
             'status' => 'status',
             'resourceType' => $resourceType,
-            'resourceId' => $project->getId(),
-            'resourceInternalId' => $project->getInternalId(),
+            'resourceId' => $database->getId(),
+            'resourceInternalId' => $database->getInternalId(),
             'enabled' => $enabled,
-            'days' => $days,
+            'retention' => $retention,
             'hours' => $hours,
         ]));
 
