@@ -236,6 +236,7 @@ App::setMode(App::getEnv('_APP_ENV', App::MODE_TYPE_PRODUCTION));
  */
 Config::load('events', __DIR__ . '/config/events.php');
 Config::load('auth', __DIR__ . '/config/auth.php');
+Config::load('apis', __DIR__ . '/config/apis.php');  // List of APIs
 Config::load('errors', __DIR__ . '/config/errors.php');
 Config::load('providers', __DIR__ . '/config/providers.php');
 Config::load('platforms', __DIR__ . '/config/platforms.php');
