@@ -4013,7 +4013,6 @@ App::get('/v1/databases/:databaseId/backups-policy/:policyId')
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
 
-
 App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
     ->desc('Update backup policy')

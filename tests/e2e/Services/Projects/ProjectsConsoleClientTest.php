@@ -4,18 +4,15 @@ namespace Tests\E2E\Services\Projects;
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Tests\E2E\Scopes\Scope;
+use Tests\E2E\Scopes\ProjectConsole;
+use Tests\E2E\Scopes\SideClient;
 use Tests\E2E\Client;
 use Tests\E2E\General\UsageTest;
-use Tests\E2E\Scopes\ProjectConsole;
-use Tests\E2E\Scopes\Scope;
-use Tests\E2E\Scopes\SideClient;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
-use Utopia\Validator\Boolean;
-use Utopia\Validator\Integer;
-use Utopia\Validator\Text;
 
 class ProjectsConsoleClientTest extends Scope
 {
@@ -417,33 +414,6 @@ class ProjectsConsoleClientTest extends Scope
     }
 
     /**
-     * @depends testCreateProject
-     */
-    public function testBackupPolicy($data): void
-    {
-        $id = $data['projectId'] ?? '';
-
-        $response = $this->client->call(Client::METHOD_POST, '/backups-policy', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'policyId' => 'policy1',
-            'name' => 'Hourly Backups',
-            'schedule' => '*/15 * * * *',
-            'enabled' => true,
-            'retention' => 8
-        ]);
-
-        var_dump($response);
-        $this->assertEquals('----', '------');
-
-        $this->assertEquals(200, $response['headers']['status-code']);
-        $this->assertNotEmpty($response['body']);
-        $this->assertEquals($id, $response['body']['$id']);
-        $this->assertEquals('Project Test', $response['body']['name']);
-    }
-
-        /**
      * @depends testCreateProject
      */
     public function testGetProject($data): array

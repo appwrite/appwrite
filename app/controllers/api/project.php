@@ -1,6 +1,7 @@
 <?php
 
 use Appwrite\Extend\Exception;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
@@ -12,7 +13,10 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
+use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
+use Utopia\Validator\Boolean;
+use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -34,8 +38,8 @@ App::get('/v1/project/usage')
     ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
-        $firstDay = (new DateTime($startDate))->format($format);
-        $lastDay = (new DateTime($endDate))->format($format);
+        $firstDay = (new \DateTime($startDate))->format($format);
+        $lastDay = (new \DateTime($endDate))->format($format);
 
         $metrics = [
             'total' => [
@@ -61,8 +65,8 @@ App::get('/v1/project/usage')
         };
 
         $limit = match ($period) {
-            '1h' => (new DateTime($startDate))->diff(new DateTime($endDate))->days * 24,
-            '1d' => (new DateTime($startDate))->diff(new DateTime($endDate))->days
+            '1h' => (new \DateTime($startDate))->diff(new \DateTime($endDate))->days * 24,
+            '1d' => (new \DateTime($startDate))->diff(new \DateTime($endDate))->days
         };
 
         $format = match ($period) {
@@ -363,4 +367,94 @@ App::delete('/v1/project/variables/:variableId')
         }
 
         $response->noContent();
+    });
+
+App::post('/v1/project/backups-policy')
+    ->desc('Create backup policy')
+    ->groups(['api'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].create')
+    ->label('audits.event', 'backupPolicy.create')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/backups-policy/create-backup-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', false)
+    ->param('retention', true, new Range(1, 30), 'Days to keep backups before deletion', false)
+    ->param('hours', true, new Range(1, 168), 'Backup hours rotation', false)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $policyId, string $name, bool $enabled, int $retention, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+        $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
+
+        try {
+            $policy = $dbForProject->createDocument('backupsPolicy', new Document([
+                '$id' => $policyId,
+                'name' => $name,
+                'resourceType' => BACKUP_RESOURCE_PROJECT,
+                'resourceId' => $project->getId(),
+                'resourceInternalId' => $project->getInternalId(),
+                'enabled' => $enabled,
+                'retention' => $retention,
+                'hours' => $hours,
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::BACKUP_POLICY_ALREADY_EXISTS);
+        }
+
+        $schedule = Authorization::skip(
+            fn () => $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'resourceType' => BACKUP_RESOURCE_DATABASE,
+                'resourceId' => $project->getId(),
+                'resourceInternalId' => $project->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => "0 */{$hours} * * *",
+                'active' => false,
+            ]))
+        );
+
+        $policy->setAttribute('scheduleId', $schedule->getId());
+        $policy->setAttribute('scheduleInternalId', $schedule->getInternalId());
+
+        $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), $policy);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($policy, Response::MODEL_BACKUP_POLICY);
+    });
+
+App::get('/v1/project/backups-policy/:policyId')
+    ->groups(['api'])
+    ->label('scope', 'projects.read')
+    ->desc('Get backup policy')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'getBackupsPolicy')
+    ->label('sdk.description', '/docs/references/databases/get-backups-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (string $policyId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
