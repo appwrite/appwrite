@@ -3,10 +3,11 @@
 namespace Tests\Unit\Utopia;
 
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Filters\V16;
 use Exception;
 use PHPUnit\Framework\TestCase;
 use Swoole\Http\Response as SwooleResponse;
+use Tests\Unit\Utopia\Response\Filters\First;
+use Tests\Unit\Utopia\Response\Filters\Second;
 use Utopia\Database\Document;
 
 class ResponseTest extends TestCase
@@ -21,16 +22,30 @@ class ResponseTest extends TestCase
         $this->response->setModel(new Nested());
     }
 
-    public function testSetFilters(): void
+    public function testFilters(): void
     {
-        $this->assertEquals($this->response->hasFilters(), false);
-        $this->assertEquals($this->response->getFilters(), []);
+        $this->assertFalse($this->response->hasFilters());
+        $this->assertIsArray($this->response->getFilters());
+        $this->assertEmpty($this->response->getFilters());
 
-        $filter = new V16();
-        $this->response->addFilter($filter);
+        $this->response->addFilter(new First());
+        $this->response->addFilter(new Second());
 
-        $this->assertEquals($this->response->hasFilters(), true);
-        $this->assertEquals($this->response->getFilters(), [$filter]);
+        $this->assertTrue($this->response->hasFilters());
+        $this->assertCount(2, $this->response->getFilters());
+
+        $output = $this->response->applyFilters([
+            'initial' => true,
+            'first' => false
+        ], 'test');
+
+        $this->assertArrayHasKey('initial', $output);
+        $this->assertTrue($output['initial']);
+        $this->assertArrayHasKey('first', $output);
+        $this->assertTrue($output['first']);
+        $this->assertArrayHasKey('second', $output);
+        $this->assertTrue($output['second']);
+        $this->assertArrayNotHasKey('deleted', $output);
     }
 
     public function testResponseModel(): void

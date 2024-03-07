@@ -511,6 +511,15 @@ class Response extends SwooleResponse
         return $this->models;
     }
 
+    public function applyFilters(array $data, string $model): array
+    {
+        foreach ($this->filters as $filter) {
+            $data = $filter->parse($data, $model);
+        }
+
+        return $data;
+    }
+
     /**
      * Validate response objects and outputs
      *  the response according to given format type
@@ -524,11 +533,7 @@ class Response extends SwooleResponse
     public function dynamic(Document $document, string $model): void
     {
         $output = $this->output(clone $document, $model);
-
-        // If filter is set, parse the output
-        foreach ($this->filters as $filter) {
-            $output = $filter->parse($output, $model);
-        }
+        $output = $this->applyFilters($output, $model);
 
         switch ($this->getContentType()) {
             case self::CONTENT_TYPE_JSON:
