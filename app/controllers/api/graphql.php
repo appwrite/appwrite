@@ -1,6 +1,8 @@
 <?php
 
+use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\GraphQL\Promises\Adapter;
 use Appwrite\GraphQL\Schema;
 use Appwrite\Utopia\Request;
@@ -14,11 +16,9 @@ use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
 use Utopia\App;
 use Utopia\Database\Document;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\JSON;
 use Utopia\Validator\Text;
-use Appwrite\Auth\Auth;
-use Utopia\Database\Validator\Authorization;
-use Appwrite\Extend\Exception as AppwriteException;
 
 App::init()
     ->groups(['graphql'])

@@ -2,6 +2,7 @@
 
 use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Origin;
 use Appwrite\Utopia\Request;
@@ -28,7 +29,6 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Logger\Log;
 use Utopia\WebSocket\Adapter;
 use Utopia\WebSocket\Server;
-use Appwrite\Extend\Exception as AppwriteException;
 
 /**
  * @var \Utopia\Registry\Registry $register

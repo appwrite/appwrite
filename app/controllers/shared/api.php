@@ -11,6 +11,7 @@ use Appwrite\Event\Func;
 use Appwrite\Event\Messaging;
 use Appwrite\Event\Usage;
 use Appwrite\Extend\Exception;
+use Appwrite\Extend\Exception as AppwriteException;
 use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
@@ -26,7 +27,6 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Validator\WhiteList;
-use Appwrite\Extend\Exception as AppwriteException;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
