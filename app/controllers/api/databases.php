@@ -7,6 +7,7 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\Email;
+use Appwrite\Task\Validator\Cron;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Attributes;
 use Appwrite\Utopia\Database\Validator\Queries\Collections;
@@ -19,6 +20,7 @@ use Utopia\App;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Conflict as ConflictException;
@@ -3904,4 +3906,72 @@ App::get('/v1/databases/:databaseId/collections/:collectionId/usage')
             'documentsTotal'   => $usage[$metrics[0]]['total'],
             'documents'   =>  $usage[$metrics[0]]['data'],
         ]), Response::MODEL_USAGE_COLLECTION);
+    });
+
+App::post('/v1/backups-policy')
+    ->groups(['api', 'projects'])
+    ->desc('Create backup policy')
+    ->groups(['api', 'projects'])
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('event', 'backupPolicy.[functionId].create')
+    ->label('audits.event', 'backupPolicy.create')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'create')
+    ->label('sdk.description', '/docs/references/backups-policy/create-function.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
+    ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
+    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', true)
+    ->param('retention', true, new Integer(), 'Days to keep backups before deletion', true)
+    ->param('days', true, new Integer(), 'Backups days', true)
+    ->param('hours', true, new Integer(), 'Backup hours', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $policyId, string $name, string $schedule, bool $enabled, int $retention, int $days, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+        var_dump($project);
+        $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
+
+        $resourceType = 'backup-project';
+
+        $policy = $dbForProject->createDocument('backupsPolicy', new Document([
+            '$id' => $policyId,
+            'name' => $name,
+            'status' => 'status',
+            'resourceType' => $resourceType,
+            'resourceId' => $project->getId(),
+            'resourceInternalId' => $project->getInternalId(),
+            'enabled' => $enabled,
+            'days' => $days,
+            'hours' => $hours,
+        ]));
+
+        $schedule = Authorization::skip(
+            fn () => $dbForConsole->createDocument('schedules', new Document([
+                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
+                'resourceType' => $resourceType,
+                'resourceId' => $project->getId(),
+                'resourceInternalId' => $project->getInternalId(),
+                'resourceUpdatedAt' => DateTime::now(),
+                'projectId' => $project->getId(),
+                'schedule'  => $policy->getAttribute('schedule'),
+                'active' => false,
+            ]))
+        );
+
+        $policy->setAttribute('scheduleId', $schedule->getId());
+        $policy->setAttribute('scheduleInternalId', $schedule->getInternalId());
+
+        $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), $policy);
+
+        $response
+            ->setStatusCode(Response::STATUS_CODE_CREATED)
+            ->dynamic($policy, Response::MODEL_FUNCTION);
     });

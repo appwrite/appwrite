@@ -1,22 +1,16 @@
 <?php
 
 use Appwrite\Auth\Auth;
-use Appwrite\Event\Build;
 use Appwrite\Event\Delete;
 use Appwrite\Event\Mail;
 use Appwrite\Event\Validator\Event;
-use Appwrite\Event\Validator\FunctionEvent;
 use Appwrite\Extend\Exception;
-use Appwrite\Messaging\Adapter\Realtime;
 use Appwrite\Network\Validator\Email;
 use Appwrite\Network\Validator\Origin;
-use Appwrite\Task\Validator\Cron;
 use Appwrite\Template\Template;
-use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
-use Appwrite\Utopia\Response\Model\Rule;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
 use Utopia\App;
@@ -24,7 +18,6 @@ use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
-use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Exception\Query as QueryException;
@@ -32,14 +25,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
-use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\Locale\Locale;
 use Utopia\Pools\Group;
-use Utopia\Swoole\Request;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Hostname;
@@ -49,7 +39,6 @@ use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
 use Utopia\Validator\WhiteList;
-use Utopia\VCS\Adapter\Git\GitHub;
 
 App::init()
     ->groups(['projects'])
@@ -1876,71 +1865,4 @@ App::delete('/v1/projects/:projectId/templates/email/:type/:locale')
             'replyTo' => $template['replyTo'],
             'message' => $template['message']
         ]), Response::MODEL_EMAIL_TEMPLATE);
-    });
-
-
-App::post('/v1/backups-policy')
-    ->groups(['api', 'projects'])
-    ->desc('Create backup policy')
-    ->label('scope', 'backupPolicy.write')
-    ->label('event', 'backupPolicy.[functionId].create')
-    ->label('audits.event', 'backupPolicy.create')
-    ->label('audits.resource', 'backupPolicy/{response.$id}')
-    ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
-    ->label('sdk.namespace', 'backupPolicy')
-    ->label('sdk.method', 'create')
-    ->label('sdk.description', '/docs/references/backups-policy/create-function.md')
-    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
-    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
-    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
-    ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
-    ->param('schedule', '', new Cron(), 'Schedule CRON syntax.', true)
-    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', true)
-    ->param('retention', true, new Integer(), 'Days to keep backups before deletion', true)
-    ->inject('request')
-    ->inject('response')
-    ->inject('dbForProject')
-    ->inject('project')
-    ->inject('user')
-    ->inject('queueForEvents')
-    ->inject('queueForBuilds')
-    ->inject('dbForConsole')
-    ->action(function (string $policyId, string $name, string $schedule, array $enabled, array $retention, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, \Appwrite\Event\Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole) {
-        $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
-
-        $resourceType = 'backupProject';
-
-        $policy = $dbForProject->createDocument('backupsPolicy', new Document([
-            '$id' => $policyId,
-            'name' => $name,
-            'resourceType' => $resourceType,
-            'resourceId' => $project->getId(),
-            'resourceInternalId' => $project->getInternalId(),
-            'enabled' => $enabled,
-            'schedule' => $schedule,
-            'retention' => $retention,
-        ]));
-
-        $schedule = Authorization::skip(
-            fn () => $dbForConsole->createDocument('schedules', new Document([
-                'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                'resourceType' => $resourceType,
-                'resourceId' => $project->getId(),
-                'resourceInternalId' => $project->getInternalId(),
-                'resourceUpdatedAt' => DateTime::now(),
-                'projectId' => $project->getId(),
-                'schedule'  => $policy->getAttribute('schedule'),
-                'active' => false,
-            ]))
-        );
-
-        $policy->setAttribute('scheduleId', $schedule->getId());
-        $policy->setAttribute('scheduleInternalId', $schedule->getInternalId());
-
-        $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), $policy);
-
-        $response
-            ->setStatusCode(Response::STATUS_CODE_CREATED)
-            ->dynamic($policy, Response::MODEL_FUNCTION);
     });
