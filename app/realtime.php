@@ -78,10 +78,17 @@ function getProjectDB(Document $project): Database
 
     $database = new Database($dbAdapter, getCache());
 
-    $database
-        ->setNamespace('_' . $project->getInternalId())
-        ->setMetadata('host', \gethostname())
-        ->setMetadata('project', $project->getId());
+//    if ($project->getAttribute('database') === DATABASE_SHARED_TABLES) {
+        $database
+            ->setShareTables(true)
+            ->setTenant($project->getInternalId())
+            ->setNamespace('');
+//    } else {
+//        $database
+//            ->setShareTables(false)
+//            ->setTenant(null)
+//            ->setNamespace('_' . $project->getInternalId());
+//    }
 
     return $database;
 }
