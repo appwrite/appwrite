@@ -109,7 +109,6 @@ class ScheduleBackups extends ScheduleBase
 
                     $policy = $schedule['resource'];
                     $dbForProject = $getProjectDB($project);
-
                     $migration = $dbForProject->createDocument('migrations', new Document([
                         '$id' => ID::unique(),
                         'status' => 'pending',
