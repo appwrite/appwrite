@@ -209,8 +209,6 @@ class V12 extends Filter
         unset($content['bucketsRead']);
         unset($content['bucketsUpdate']);
         unset($content['bucketsDelete']);
-        unset($content['filesCount']);
-        unset($content['bucketsDelete']);
         unset($content['filesCreate']);
         unset($content['filesRead']);
         unset($content['filesUpdate']);

@@ -24,11 +24,14 @@ class V14 extends Filter
 
     private function convertEvents($content)
     {
+        // TODO: If nessessary, implement V13 and use following code:
+        /*
         $migration = new MigrationV13();
 
         $events = $content['events'] ?? [];
         $content['events']  = $migration->migrateEvents($events);
 
         return $content;
+        */
     }
 }

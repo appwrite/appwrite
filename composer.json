@@ -13,7 +13,8 @@
     "scripts": {
         "test": "vendor/bin/phpunit",
         "lint": "vendor/bin/pint --test",
-        "format": "vendor/bin/pint"
+        "format": "vendor/bin/pint",
+        "check": "./vendor/bin/phpstan analyse -c phpstan.neon --memory-limit 1G app src tests"
     },
     "autoload": {
         "psr-4": {
@@ -84,7 +85,8 @@
         "swoole/ide-helper": "5.0.2",
         "textalk/websocket": "1.5.7",
         "utopia-php/fetch": "0.1.*",
-        "laravel/pint": "^1.14"
+        "laravel/pint": "^1.14",
+        "phpstan/phpstan": "1.8.*"
     },
     "provide": {
         "ext-phpiredis": "*"
