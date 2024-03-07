@@ -36,6 +36,8 @@ use Utopia\Queue\Server;
 use Utopia\Registry\Registry;
 use Utopia\Storage\Device\Local;
 
+global $register;
+
 Authorization::disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 

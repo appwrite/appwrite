@@ -23,6 +23,8 @@ use Utopia\Pools\Group;
 use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
+global $register;
+
 Authorization::disable();
 
 CLI::setResource('register', fn () => $register);

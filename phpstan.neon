@@ -1,0 +1,11 @@
+parameters:
+  level: 0
+  scanDirectories:
+    - vendor/swoole/ide-helper
+  excludePaths:
+    - tests/resources
+  ignoreErrors:
+    - '#Parameter \$geodb of anonymous function has invalid type MaxMind\\Db\\Reader\.#'
+    - '#Parameter \$geodb of function router\(\) has invalid type MaxMind\\Db\\Reader\.#'
+    - '#Instantiated class MaxMind\\Db\\Reader not found.#'
+    - '#Function scrypt not found\.#'

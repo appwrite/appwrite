@@ -2,6 +2,7 @@
 
 namespace Appwrite\Utopia\Response\Filters;
 
+use Appwrite\ID;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Filter;
 

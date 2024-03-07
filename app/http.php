@@ -77,6 +77,7 @@ $http->on(Constant::EVENT_START, function (Server $http) use ($payloadSize, $reg
             try {
                 $attempts++;
                 $dbForConsole = $app->getResource('dbForConsole');
+                $dbForConsole->ping();
                 /** @var Utopia\Database\Database $dbForConsole */
                 break; // leave the do-while if successful
             } catch (\Throwable $e) {

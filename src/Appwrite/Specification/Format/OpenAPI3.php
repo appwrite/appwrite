@@ -238,8 +238,11 @@ class OpenAPI3 extends Format
             }
 
             if ($route->getLabel('sdk.response.code', 500) === 204) {
-                $temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['description'] = 'No content';
-                unset($temp['responses'][(string)$route->getLabel('sdk.response.code', '500')]['schema']);
+                $labelCode = (string)$route->getLabel('sdk.response.code', '500');
+                $temp['responses'][$labelCode]['description'] = 'No content';
+                if(isset($temp['responses'][$labelCode]['schema'])) {
+                    unset($temp['responses'][$labelCode]['schema']);
+                }
             }
 
             if ((!empty($scope))) { //  && 'public' != $scope
