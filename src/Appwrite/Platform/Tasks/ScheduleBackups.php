@@ -19,8 +19,6 @@ class ScheduleBackups extends ScheduleBase
 {
     public const UPDATE_TIMER = 10; // seconds
     public const ENQUEUE_TIMER = 60; // seconds
-    private const RESOURCE_PROJECT = 'backup-project';
-    private const RESOURCE_DATABASE = 'backup-database';
     private ?float $lastEnqueueUpdate = null;
 
     public static function getName(): string
@@ -89,7 +87,7 @@ class ScheduleBackups extends ScheduleBase
 
                     $resources = Appwrite::getSupportedResources();
 
-                    if($schedule === self::RESOURCE_DATABASE) {
+                    if($schedule === BACKUP_RESOURCE_DATABASE) {
                         $resources = [
                             Resource::TYPE_DATABASE,
                             Resource::TYPE_COLLECTION,

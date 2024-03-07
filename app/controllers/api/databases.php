@@ -3942,13 +3942,12 @@ App::post('/v1/databases/:databaseId/backups-policy')
 
         $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
 
-        $resourceType = 'backup-database';
 
         try {
             $policy = $dbForProject->createDocument('backupsPolicy', new Document([
                 '$id' => $policyId,
                 'name' => $name,
-                'resourceType' => $resourceType,
+                'resourceType' => BACKUP_RESOURCE_DATABASE,
                 'resourceId' => $database->getId(),
                 'resourceInternalId' => $database->getInternalId(),
                 'enabled' => $enabled,
@@ -3962,7 +3961,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                'resourceType' => $resourceType,
+                'resourceType' => BACKUP_RESOURCE_DATABASE,
                 'resourceId' => $database->getId(),
                 'resourceInternalId' => $database->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
@@ -3982,6 +3981,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
             ->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
 
+
 App::get('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
     ->desc('Get backup policy')
@@ -3999,9 +3999,8 @@ App::get('/v1/databases/:databaseId/backups-policy/:policyId')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->inject('project')
     ->inject('dbForConsole')
-    ->action(function (string $databaseId, string $policyId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+    ->action(function (string $databaseId, string $policyId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
         $database = $dbForProject->getDocument('databases', $databaseId);
         if ($database->isEmpty()) {
             throw new Exception(Exception::DATABASE_NOT_FOUND);
@@ -4014,6 +4013,61 @@ App::get('/v1/databases/:databaseId/backups-policy/:policyId')
 
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
+
+App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
+    ->groups(['api', 'database'])
+    ->desc('delete backup policy')
+    ->label('scope', 'databases.delete')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].delete')
+    ->label('audits.event', 'backupPolicy.delete')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'deletePolicy')
+    ->label('sdk.description', '/docs/references/databases/delete-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->inject('queueForDeletes')
+    ->action(function (string $databaseId, string $policyId, string $name, bool $enabled, int $retention, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
+        $database = $dbForProject->getDocument('databases', $databaseId);
+
+        if ($database->isEmpty()) {
+            throw new Exception(Exception::DATABASE_NOT_FOUND);
+        }
+
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        try {
+            $dbForProject->deleteDocument('backupsPolicy', $policyId);
+            $dbForConsole->deleteDocument('schedules', $policy->getAttribute('scheduleId'));
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (RestrictedException) {
+            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        }
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_BACKUPS)
+            ->setDocument($policy);
+
+        $response->noContent();
+    });
+
 
 App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
@@ -4072,7 +4126,7 @@ App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
             ->setAttribute('schedule', "0 */{$hours} * * *");
-            //->setAttribute('active', ?); todo: ?
+        //->setAttribute('active', ?); todo: ?
 
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 

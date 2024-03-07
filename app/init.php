@@ -183,6 +183,7 @@ const DELETE_TYPE_TOPIC = 'topic';
 const DELETE_TYPE_TARGET = 'target';
 const DELETE_TYPE_EXPIRED_TARGETS = 'invalid_targets';
 const DELETE_TYPE_SESSION_TARGETS = 'session_targets';
+const DELETE_TYPE_BACKUPS = 'backups';
 
 // Message types
 const MESSAGE_SEND_TYPE_INTERNAL = 'internal';
@@ -243,6 +244,11 @@ const METRIC_FUNCTION_ID_EXECUTIONS_COMPUTE  = '{functionInternalId}.executions.
 const METRIC_NETWORK_REQUESTS  = 'network.requests';
 const METRIC_NETWORK_INBOUND  = 'network.inbound';
 const METRIC_NETWORK_OUTBOUND  = 'network.outbound';
+
+// Backups
+const BACKUP_RESOURCE_PROJECT = 'backup-project';
+const BACKUP_RESOURCE_DATABASE = 'backup-database';
+
 
 $register = new Registry();
 
