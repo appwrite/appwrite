@@ -1210,7 +1210,8 @@ App::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
         $database = new Database($dbAdapter, $cache);
         $databases[$databaseName] = $database;
         $configure($database);
-        return $database;
+        return null;
+//        return $database;
     };
 }, ['pools', 'dbForConsole', 'cache']);
 
