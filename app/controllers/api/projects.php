@@ -1906,13 +1906,13 @@ App::post('/v1/backups-policy')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
-    ->action(function (string $policyId, string $name, string $schedule, array $enabled, array $retention, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, \Appwrite\Event\Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) {
+    ->action(function (string $policyId, string $name, string $schedule, array $enabled, array $retention, Request $request, Response $response, Database $dbForProject, Document $project, Document $user, \Appwrite\Event\Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole) {
         $policyId = ($policyId == 'unique()') ? ID::unique() : $policyId;
 
         $resourceType = 'backupProject';
 
         $policy = $dbForProject->createDocument('backupsPolicy', new Document([
-            '$id' => $policyId,
+            '$id' => 'daily',
             'name' => $name,
             'resourceType' => $resourceType,
             'resourceId' => $project->getId(),
