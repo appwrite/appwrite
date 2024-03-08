@@ -4079,7 +4079,7 @@ App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
 
 App::get('/v1/databases/:databaseId/backups-policy')
     ->groups(['api', 'database'])
-    ->desc('Get database backups policies')
+    ->desc('Get database backups policy list')
     ->label('scope', 'databases.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     ->label('sdk.namespace', 'databases')
@@ -4087,7 +4087,7 @@ App::get('/v1/databases/:databaseId/backups-policy')
     ->label('sdk.description', '/docs/references/databases/get-backups-policies.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
-    ->label('sdk.response.model', Response::MODEL_BACKUP_LIST)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY_LIST)
     ->param('databaseId', '', new UID(), 'Database ID.')
     ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
     ->inject('request')
@@ -4126,11 +4126,11 @@ App::get('/v1/databases/:databaseId/backups-policy')
             $cursor->setValue($cursorDocument);
         }
 
-        $filterQueries = Query::groupByType($queries)['filters'];
+
 
         $response->dynamic(new Document([
             'backupPolicies' => $dbForProject->find('backupsPolicy', $queries),
-            'total' => $dbForProject->count('backupsPolicy', $filterQueries, APP_LIMIT_COUNT),
+            'total' => $dbForProject->count('backupsPolicy', $queries, APP_LIMIT_COUNT),
         ]), Response::MODEL_BACKUP_POLICY_LIST);
     });
 
