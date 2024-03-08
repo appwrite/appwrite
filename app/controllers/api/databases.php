@@ -3967,7 +3967,7 @@ App::post('/v1/databases/:databaseId/backups-policy')
                 'resourceUpdatedAt' => DateTime::now(),
                 'projectId' => $project->getId(),
                 'schedule'  => "0 */{$hours} * * *",
-                'active' => false,
+                'active' => $enabled,
             ]))
         );
 
@@ -4069,8 +4069,8 @@ App::patch('/v1/databases/:databaseId/backups-policy/:policyId')
 
         $schedule
             ->setAttribute('resourceUpdatedAt', DateTime::now())
-            ->setAttribute('schedule', "0 */{$hours} * * *");
-        //->setAttribute('active', ?); todo: ?
+            ->setAttribute('schedule', "0 */{$hours} * * *")
+            ->setAttribute('active', $enabled);
 
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
