@@ -1,4 +1,4 @@
-GET /v1/health/queue/usage HTTP/1.1
+GET /v1/health/queue/usage-dump HTTP/1.1
 Host: cloud.appwrite.io
 Content-Type: application/json
 X-Appwrite-Response-Format: 1.5.0

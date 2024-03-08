@@ -1,3 +1,11 @@
+## 12.0.0
+
+* Added enum support
+* Added SSR support
+* Added messaging service support
+* Added contains query support
+* Added or query support
+
 ## 11.0.1
 
 * Fix between queries
