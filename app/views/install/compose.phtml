@@ -600,7 +600,7 @@ services:
 
   appwrite-worker-usage:
     image: <?php echo $organization; ?>/<?php echo $image; ?>:<?php echo $version."\n"; ?>
-    entrypoint: entrypoint: worker-usage
+    entrypoint: worker-usage
     container_name: appwrite-worker-usage
     <<: *x-logging
     restart: unless-stopped
