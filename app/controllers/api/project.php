@@ -458,3 +458,61 @@ App::get('/v1/project/backups-policy/:policyId')
 
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
+
+
+App::patch('/v1/project/backups-policy/:policyId')
+    ->groups(['api'])
+    ->desc('Update backup policy')
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].create')
+    ->label('audits.event', 'databases.updateBackupsPolicy')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('sdk.namespace', 'backupPolicy')
+    ->label('sdk.method', 'updateBackupsPolicy')
+    ->label('sdk.description', '/docs/references/databases/update-backups-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_CREATED)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('name', '', new Text(128), 'Backup name. Max length: 128 chars.')
+    ->param('enabled', true, new Boolean(), 'Is policy enabled? When set to \'disabled\', No backup will be taken', false)
+    ->param('retention', true, new Range(1, 30), 'Days to keep backups before deletion', false)
+    ->param('hours', true, new Range(1, 168), 'Backup hours rotation', false)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->action(function (string $policyId, string $name, bool $enabled, int $retention, int $hours, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole) {
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        try {
+            $policy = $dbForProject->updateDocument('backupsPolicy', $policy->getId(), new Document([
+                '$id' => $policy->getId(),
+                'name' => $name,
+                'enabled' => $enabled,
+                'retention' => $retention,
+                'hours' => $hours,
+            ]));
+        } catch (DuplicateException) {
+            throw new Exception(Exception::BACKUP_POLICY_ALREADY_EXISTS);
+        }
+
+        $schedule = $dbForConsole->getDocument('schedules', $policy->getAttribute('scheduleId'));
+        if ($schedule->isEmpty()) {
+            throw new Exception(Exception::SCHEDULE_NOT_FOUND);
+        }
+
+        $schedule
+            ->setAttribute('resourceUpdatedAt', DateTime::now())
+            ->setAttribute('schedule', "0 */{$hours} * * *");
+        //->setAttribute('active', ?); todo: ?
+
+        Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
+
+        $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
+    });

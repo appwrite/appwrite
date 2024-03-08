@@ -36,17 +36,16 @@ class BackupTest extends Scope
             'x-appwrite-mode' => 'admin'
         ];
     }
-//
-//    protected function getConsoleHeadersGet(): array
-//    {
-//        return [
-//            //'content-type' => 'application/json',
-//            'origin' => 'http://localhost',
-//            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
-//            'x-appwrite-project' => $this->getProject()['$id'],
-//            'x-appwrite-mode' => 'admin'
-//        ];
-//    }
+
+    protected function getConsoleHeadersGet(): array
+    {
+        return [
+            'origin' => 'http://localhost',
+            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-mode' => 'admin'
+        ];
+    }
 
     public function testBackupPolicy(): void
     {
@@ -97,20 +96,19 @@ class BackupTest extends Scope
         /**
          * Test for Policy not found
          */
-        $database = $this->client->call(Client::METHOD_GET,
+        $database = $this->client->call(
+            Client::METHOD_GET,
             '/project/backups-policy/notfound',
             $this->getConsoleHeaders()
         );
 
         $this->assertEquals(404, $database['headers']['status-code']);
 
-        $this->assertEquals('---', '-------');
-
-        $policy = $this->client->call(Client::METHOD_GET, '/project/backups-policy/policy1', [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
+        $policy = $this->client->call(
+            Client::METHOD_GET,
+            '/project/backups-policy/policy1',
+            $this->getConsoleHeadersGet()
+        );
 
         $this->assertEquals(200, $policy['headers']['status-code']);
         $this->assertEquals('policy1', $policy['body']['$id']);
@@ -120,23 +118,22 @@ class BackupTest extends Scope
         /**
          * Test for update Policy
          */
-        $policy = $this->client->call(Client::METHOD_PATCH, '/databases/' . $databaseId . '/backups-policy/policy1', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'name' => 'Daily backups',
-            'enabled' => false,
-            'retention' => 10,
-            'hours' => 3,
-        ]);
+        $policy = $this->client->call(
+            Client::METHOD_PATCH,
+            '/project/backups-policy/policy1',
+            $this->getConsoleHeaders(),
+            [
+                'name' => 'Daily backups',
+                'enabled' => false,
+                'retention' => 10,
+                'hours' => 3
+            ]
+        );
 
         $this->assertEquals(200, $policy['headers']['status-code']);
         $this->assertEquals('policy1', $policy['body']['$id']);
         $this->assertEquals('Daily backups', $policy['body']['name']);
         $this->assertEquals(false, $policy['body']['enabled']);
-
-        $this->assertEquals('---', '-------');
     }
 
     public function tearDown(): void
