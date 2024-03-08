@@ -1,0 +1,1 @@
+Delete database backups policy list.
