@@ -7,6 +7,7 @@ use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
 use Tests\E2E\Services\Functions\FunctionsBase;
+use Utopia\Database\Query;
 
 class BackupTest extends Scope
 {
@@ -130,10 +131,83 @@ class BackupTest extends Scope
             ]
         );
 
+        $policyId = $policy['body']['$id'];
+
         $this->assertEquals(200, $policy['headers']['status-code']);
         $this->assertEquals('policy1', $policy['body']['$id']);
         $this->assertEquals('Daily backups', $policy['body']['name']);
         $this->assertEquals(false, $policy['body']['enabled']);
+
+        /**
+         * Test create Second policy
+         */
+        $response = $this->client->call(
+            Client::METHOD_POST,
+            '/project/backups-policy',
+            $this->getConsoleHeaders(),
+            [
+                'policyId' => 'my-policy',
+                'name' => 'New Hourly Backups',
+                'enabled' => true,
+                'retention' => 1,
+                'hours' => 1,
+            ]
+        );
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertNotEmpty($response['body']);
+        $this->assertEquals('New Hourly Backups', $response['body']['name']);
+        $this->assertEquals('my-policy', $response['body']['$id']);
+        $this->assertEquals(1, $response['body']['hours']);
+        $this->assertEquals(1, $response['body']['retention']);
+        $this->assertEquals($this->getProject()['$id'], $response['body']['resourceId']);
+        $this->assertEquals(true, $response['body']['enabled']);
+        $this->assertEquals('backup-project', $response['body']['resourceType']);
+
+        /**
+         * Test get backup policies list
+         */
+        $policies = $this->client->call(
+            Client::METHOD_GET,
+            '/project/backups-policy',
+            $this->getConsoleHeadersGet(),
+            [
+                'queries' => [
+                    Query::orderDesc()->toString()
+                ]
+            ]
+        );
+        $this->assertEquals(200, $policies['headers']['status-code']);
+        $this->assertEquals(2, count($policies['body']['backupPolicies']));
+
+        /**
+         * Test Delete policy
+         */
+        $response = $this->client->call(
+            Client::METHOD_DELETE,
+            "/project/backups-policy/{$policyId}",
+            $this->getConsoleHeaders(),
+            $this->getHeaders()
+        );
+
+        $this->assertEquals(204, $response['headers']['status-code']);
+        $this->assertEquals('', $response['body']);
+
+        /**
+         * Test get backup policies list after delete
+         */
+        $policies = $this->client->call(
+            Client::METHOD_GET,
+            '/project/backups-policy',
+            $this->getConsoleHeadersGet(),
+            [
+                'queries' => [
+                    Query::orderDesc()->toString()
+                ]
+            ]
+        );
+        $this->assertEquals(200, $policies['headers']['status-code']);
+        $this->assertEquals(1, count($policies['body']['backupPolicies']));
     }
 
     public function tearDown(): void

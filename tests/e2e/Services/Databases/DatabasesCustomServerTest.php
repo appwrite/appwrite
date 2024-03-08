@@ -375,12 +375,17 @@ class DatabasesCustomServerTest extends Scope
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
+        ],
+            [
+                'queries' => [
+                    Query::orderDesc()->toString()
+                ]
+            ]);
         $this->assertEquals(200, $policies['headers']['status-code']);
         $this->assertEquals(2, count($policies['body']['backupPolicies']));
 
         /**
-         * Test Create a new policy
+         * Test Delete policy
          */
         $response = $this->client->call(Client::METHOD_DELETE, '/databases/' . $databaseId. '/backups-policy/' . $policyId, array_merge([
             'content-type' => 'application/json',

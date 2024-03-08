@@ -4132,11 +4132,10 @@ App::get('/v1/databases/:databaseId/backups-policy')
         ]), Response::MODEL_BACKUP_POLICY_LIST);
     });
 
-
 App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
     ->groups(['api', 'database'])
     ->desc('delete backups policy')
-    ->label('scope', 'documents.write')
+    ->label('scope', 'databases.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].delete')
     ->label('audits.event', 'backups.deletePolicy')
@@ -4255,7 +4254,7 @@ App::get('/v1/databases/:databaseId/backups/:policyId')
 App::delete('/v1/databases/:databaseId/backups/:backupId')
     ->groups(['api', 'database'])
     ->desc('delete database backup')
-    ->label('scope', 'documents.write')
+    ->label('scope', 'databases.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].delete')
     ->label('audits.event', 'backup.delete')

@@ -1,12 +1,16 @@
 <?php
 
+use Appwrite\Event\Delete;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\App;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
+use Utopia\Database\Exception\Query as QueryException;
+use Utopia\Database\Exception\Restricted as RestrictedException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
@@ -15,6 +19,7 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\DateTime;
 use Utopia\Database\Validator\UID;
+use Utopia\Validator\ArrayList;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
@@ -459,14 +464,13 @@ App::get('/v1/project/backups-policy/:policyId')
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
     });
 
-
 App::patch('/v1/project/backups-policy/:policyId')
     ->groups(['api'])
     ->desc('Update backup policy')
-    ->label('scope', 'projects.read')
+    ->label('scope', 'projects.write')
     ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
     //->label('event', 'backupPolicy.[functionId].create')
-    ->label('audits.event', 'databases.updateBackupsPolicy')
+    ->label('audits.event', 'projects.updateBackupsPolicy')
     ->label('audits.resource', 'backupPolicy/{response.$id}')
     ->label('sdk.namespace', 'backupPolicy')
     ->label('sdk.method', 'updateBackupsPolicy')
@@ -515,4 +519,102 @@ App::patch('/v1/project/backups-policy/:policyId')
         Authorization::skip(fn () => $dbForConsole->updateDocument('schedules', $schedule->getId(), $schedule));
 
         $response->dynamic($policy, Response::MODEL_BACKUP_POLICY);
+    });
+
+App::get('/v1/project/backups-policy')
+    ->groups(['api', 'database'])
+    ->desc('Get project backups policy list')
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getBackupsPolicies')
+    ->label('sdk.description', '/docs/references/databases/get-backups-policies.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_POLICY_LIST)
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (array $queries, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
+
+        $cursor = reset($cursor);
+
+        if ($cursor) {
+            /** @var Query $cursor */
+            $policyId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('backupsPolicy', $policyId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$policyId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $response->dynamic(new Document([
+            'backupPolicies' => $dbForProject->find('backupsPolicy', $queries),
+            'total' => $dbForProject->count('backupsPolicy', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_BACKUP_POLICY_LIST);
+    });
+
+App::delete('/v1/project/backups-policy/:policyId')
+    ->groups(['api', 'database'])
+    ->desc('delete backups policy')
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].delete')
+    ->label('audits.event', 'backups.deletePolicy')
+    ->label('audits.resource', 'backupPolicy/{response.$id}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'deleteBackupsPolicy')
+    ->label('sdk.description', '/docs/references/databases/delete-backups-policy.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('project')
+    ->inject('dbForConsole')
+    ->inject('queueForDeletes')
+    ->action(function (string $policyId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject, Document $project, Database $dbForConsole, Delete $queueForDeletes) {
+        //Todo what you do we do with backups when a db is deleted?
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        try {
+            Authorization::skip(fn () =>  $dbForProject->deleteDocument('backupsPolicy', $policyId));
+            Authorization::skip(fn () => $dbForConsole->deleteDocument('schedules', $policy->getAttribute('scheduleId')));
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (RestrictedException) {
+            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        }
+
+        $queueForDeletes
+            ->setType(DELETE_TYPE_BACKUPS)
+            ->setDocument($policy);
+
+        $response->noContent();
     });
