@@ -5,7 +5,7 @@ namespace Appwrite\Utopia\Response\Model;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model;
 
-class BackupPolicy extends Model
+class BackupsPolicy extends Model
 {
     public function __construct()
     {

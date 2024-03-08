@@ -101,7 +101,7 @@ use Appwrite\Utopia\Response\Model\UsageUsers;
 use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
-use Appwrite\Utopia\Response\Model\BackupPolicy;
+use Appwrite\Utopia\Response\Model\BackupsPolicy;
 use Appwrite\Utopia\Response\Model\Backup;
 use Exception;
 use Swoole\Http\Response as SwooleHTTPResponse;
@@ -465,7 +465,7 @@ class Response extends SwooleResponse
             ->setModel(new Migration())
             ->setModel(new MigrationReport())
             ->setModel(new MigrationFirebaseProject())
-            ->setModel(new BackupPolicy())
+            ->setModel(new BackupsPolicy())
             ->setModel(new Backup())
             // Tests (keep last)
             ->setModel(new Mock());

@@ -36,6 +36,17 @@ class BackupTest extends Scope
             'x-appwrite-mode' => 'admin'
         ];
     }
+//
+//    protected function getConsoleHeadersGet(): array
+//    {
+//        return [
+//            //'content-type' => 'application/json',
+//            'origin' => 'http://localhost',
+//            'cookie' => 'a_session_console=' . $this->getRoot()['session'],
+//            'x-appwrite-project' => $this->getProject()['$id'],
+//            'x-appwrite-mode' => 'admin'
+//        ];
+//    }
 
     public function testBackupPolicy(): void
     {
@@ -88,17 +99,14 @@ class BackupTest extends Scope
          */
         $database = $this->client->call(Client::METHOD_GET,
             '/project/backups-policy/notfound',
-            [
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]);
+            $this->getConsoleHeaders()
+        );
 
         $this->assertEquals(404, $database['headers']['status-code']);
 
         $this->assertEquals('---', '-------');
 
-        $policy = $this->client->call(Client::METHOD_GET, '/databases/'. $databaseId .'/backups-policy/policy1', [
+        $policy = $this->client->call(Client::METHOD_GET, '/project/backups-policy/policy1', [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
