@@ -1321,8 +1321,8 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
     ->inject('response')
     ->inject('request')
     ->inject('dbForProject')
-    ->inject('mode')
     ->inject('project')
+    ->inject('mode')
     ->inject('deviceForFiles')
     ->action(function (string $bucketId, string $fileId, string $jwt, Response $response, Request $request, Database $dbForProject, Document $project, string $mode, Device $deviceForFiles) {
         $bucket = Authorization::skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
