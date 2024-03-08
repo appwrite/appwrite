@@ -181,6 +181,15 @@ class V20 extends Migration
                     }
 
                     try {
+                        /**
+                         * Ensure 'time' attribute is not required
+                         */
+                        $this->projectDB->updateAttribute($id, 'time', required: false);
+                    } catch (Throwable $th) {
+                        Console::warning("'time' from {$id}: {$th->getMessage()}");
+                    }
+
+                    try {
                         $this->projectDB->purgeCachedCollection($id);
                     } catch (Throwable $th) {
                         Console::warning("Purge cache from {$id}: {$th->getMessage()}");
