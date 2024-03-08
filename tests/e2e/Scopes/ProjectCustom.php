@@ -113,7 +113,11 @@ trait ProjectCustom
                 // 'functions.*', TODO @christyjacob4 : enable test once we allow functions.* events
                 'buckets.*',
                 'teams.*',
-                'users.*'
+                'users.*',
+                'providers.*',
+                'messages.*',
+                'topics.*',
+                //'subscribers.*' // limit length error
             ],
             'url' => 'http://request-catcher:5000/webhook',
             'security' => false,

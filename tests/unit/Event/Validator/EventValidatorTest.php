@@ -55,6 +55,15 @@ class EventValidatorTest extends TestCase
         $this->assertTrue($this->object->isValid('teams.*'));
         $this->assertTrue($this->object->isValid('users.*'));
         $this->assertTrue($this->object->isValid('teams.*.memberships.*.update.status'));
+        $this->assertTrue($this->object->isValid('providers.*'));
+        $this->assertTrue($this->object->isValid('providers.*.create'));
+        $this->assertTrue($this->object->isValid('providers.1.create'));
+        $this->assertTrue($this->object->isValid('messages.*'));
+        $this->assertTrue($this->object->isValid('messages.9.update'));
+        $this->assertTrue($this->object->isValid('messages.*.update'));
+        $this->assertTrue($this->object->isValid('topics.*'));
+        $this->assertTrue($this->object->isValid('topics.1.subscribers.1.delete'));
+        $this->assertTrue($this->object->isValid('topics.*.subscribers.1.delete'));
 
         /**
          * Test for FAILURE
@@ -69,5 +78,6 @@ class EventValidatorTest extends TestCase
         $this->assertFalse($this->object->isValid('users.torsten.unknown'));
         $this->assertFalse($this->object->isValid('users.torsten.delete.email'));
         $this->assertFalse($this->object->isValid('teams.*.memberships.*.update.unknown'));
+        $this->assertFalse($this->object->isValid('topics.*.subscribers.1.unknown'));
     }
 }

@@ -255,11 +255,19 @@ class Realtime extends Adapter
         $parts = explode('.', $event);
 
         switch ($parts[0]) {
+            case 'topics':
+                if ($parts[2] === 'subscribers') {
+                    $channels[] = 'subscribers';
+                    $channels[] = 'subscribers.' . $parts[3];
+                    $roles = [Role::user(ID::custom($payload->getAttribute('userId')))->toString()];
+                }
+                break;
             case 'users':
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
                 break;
+            case 'migrations':
             case 'rules':
                 $channels[] = 'console';
                 $projectId = 'console';
@@ -330,11 +338,6 @@ class Realtime extends Adapter
                     $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 }
 
-                break;
-            case 'migrations':
-                $channels[] = 'console';
-                $projectId = 'console';
-                $roles = [Role::team($project->getAttribute('teamId'))->toString()];
                 break;
         }
 
