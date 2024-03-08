@@ -349,41 +349,46 @@ class V20 extends Migration
             Query::equal('period', ['1d']),
         ]);
 
-        $query = $this->projectDB->findOne('stats', [
+        $stat = $this->projectDB->findOne('stats', [
             Query::equal('metric', ['sessions.$all.requests.delete']),
             Query::equal('period', ['1d']),
         ]);
 
-        $sessionsDeleted = $query['value'] ?? 0;
+        $sessionsDeleted = $stat->getAttribute('value', 0);
         $value = $sessionsCreated - $sessionsDeleted;
-        $this->createInfMetric('sessions', $value);
+        $time = $stat->getAttribute('time', DateTime::now());
+
+        $this->createInfMetric('sessions', $value, $time);
     }
 
     /**
      * @param string $metric
      * @param int $value
+     * @param string $time
      * @return void
-     * @throws Exception
      * @throws Authorization
      * @throws Structure
+     * @throws \Utopia\Database\Exception
      */
-    protected function createInfMetric(string $metric, int $value): void
+    protected function createInfMetric(string $metric, int $value, string $time): void
     {
         try {
             /**
              * Creating inf metric
              */
             Console::log("Creating inf metric to {$metric}");
+
             $id = \md5("_inf_{$metric}");
+
             $this->projectDB->createDocument('stats', new Document([
                 '$id' => $id,
                 'metric' => $metric,
                 'period' => 'inf',
                 'value' => $value,
-                'time' => null,
+                'time' => $time,
                 'region' => 'default',
             ]));
-        } catch (Duplicate $th) {
+        } catch (Duplicate) {
             Console::warning("Error while creating inf metric: duplicate id {$metric} {$id}");
         }
     }
@@ -400,16 +405,22 @@ class V20 extends Migration
          * inf metric
          */
         if (
-            str_contains($from, '$all') ||
-            str_contains($from, '.total')
+            \str_contains($from, '$all') ||
+            \str_contains($from, '.total')
         ) {
-            $query = $this->projectDB->sum('stats', 'value', [
+            $sum = $this->projectDB->sum('stats', 'value', [
                 Query::equal('metric', [$from]),
                 Query::equal('period', ['1d']),
             ]);
 
-            $value = $query ?? 0;
-            $this->createInfMetric($to, $value);
+            $stat = $this->projectDB->findOne('stats', [
+                Query::equal('metric', [$from]),
+                Query::equal('period', ['1d']),
+            ]);
+
+            $time = $stat->getAttribute('time', DateTime::now());
+
+            $this->createInfMetric($to, $sum, $time);
         }
 
         try {
