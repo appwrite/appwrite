@@ -4,12 +4,12 @@ namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
 use Appwrite\Event\Delete;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 class Maintenance extends Action

@@ -4,8 +4,8 @@ namespace Tests\Unit\Usage;
 
 use Appwrite\URL\URL as AppwriteURL;
 use PHPUnit\Framework\TestCase;
-use Utopia\Http\Http;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Queue;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;

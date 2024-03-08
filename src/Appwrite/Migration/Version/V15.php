@@ -4,7 +4,6 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Appwrite\OpenSSL\OpenSSL;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -12,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
+use Utopia\Http\Http;
 
 class V15 extends Migration
 {

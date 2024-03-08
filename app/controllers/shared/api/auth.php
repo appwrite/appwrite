@@ -4,10 +4,10 @@ use Appwrite\Auth\Auth;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 
 Http::init()
     ->groups(['mfaProtected'])

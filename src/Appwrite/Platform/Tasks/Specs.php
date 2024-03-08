@@ -9,7 +9,6 @@ use Appwrite\Utopia\Response;
 use Exception;
 use Swoole\Http\Request;
 use Swoole\Http\Response as HttpResponse;
-use Utopia\Http\Http;
 use Utopia\Cache\Adapter\None;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -17,10 +16,11 @@ use Utopia\Config\Config;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Database;
 use Utopia\Http\Adapter\FPM\Server;
-use Utopia\Platform\Action;
-use Utopia\Registry\Registry;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Platform\Action;
+use Utopia\Registry\Registry;
 
 class Specs extends Action
 {

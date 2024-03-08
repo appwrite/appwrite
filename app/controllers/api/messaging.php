@@ -19,7 +19,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Targets;
 use Appwrite\Utopia\Database\Validator\Queries\Topics;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -29,6 +28,7 @@ use Utopia\Database\Exception\Query as QueryException;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
@@ -36,7 +36,7 @@ use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Locale\Locale;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Integer;
@@ -44,6 +44,7 @@ use Utopia\Http\Validator\JSON;
 use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Locale\Locale;
 
 use function Swoole\Coroutine\batch;
 
@@ -846,7 +847,8 @@ Http::get('/v1/messaging/providers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -899,7 +901,8 @@ Http::get('/v1/messaging/providers/:providerId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $providerId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
         $provider = $dbForProject->getDocument('providers', $providerId);
 
         if ($provider->isEmpty()) {
@@ -916,7 +919,7 @@ Http::get('/v1/messaging/providers/:providerId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'provider/' . $providerId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
         $output = [];
@@ -1980,7 +1983,8 @@ Http::get('/v1/messaging/topics')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2033,7 +2037,8 @@ Http::get('/v1/messaging/topics/:topicId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $topicId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
         $topic = $dbForProject->getDocument('topics', $topicId);
 
         if ($topic->isEmpty()) {
@@ -2050,7 +2055,7 @@ Http::get('/v1/messaging/topics/:topicId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'topic/' . $topicId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2236,7 +2241,8 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (string $subscriberId, string $topicId, string $targetId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $auth) {
         $subscriberId = $subscriberId == 'unique()' ? ID::unique() : $subscriberId;
 
         $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
@@ -2245,9 +2251,9 @@ Http::post('/v1/messaging/topics/:topicId/subscribers')
             throw new Exception(Exception::TOPIC_NOT_FOUND);
         }
 
-        $validator = new Authorization('subscribe');
+        $validator = new Authorization();
 
-        if (!$validator->isValid($topic->getAttribute('subscribe'))) {
+        if (!$validator->isValid(new Input('subscribe', $topic->getAttribute('subscribe')))) {
             throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
         }
 
@@ -2328,7 +2334,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (string $topicId, array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -2368,8 +2375,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers')
 
         $subscribers = $dbForProject->find('subscribers', $queries);
 
-        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject) {
-            return function () use ($subscriber, $dbForProject) {
+        $subscribers = batch(\array_map(function (Document $subscriber) use ($dbForProject, $auth) {
+            return function () use ($subscriber, $dbForProject, $auth) {
                 $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $subscriber->getAttribute('targetId')));
                 $user = $auth->skip(fn () => $dbForProject->getDocument('users', $target->getAttribute('userId')));
 
@@ -2403,7 +2410,8 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $subscriberId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
         $subscriber = $dbForProject->getDocument('subscribers', $subscriberId);
 
         if ($subscriber->isEmpty()) {
@@ -2420,7 +2428,7 @@ Http::get('/v1/messaging/subscribers/:subscriberId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'subscriber/' . $subscriberId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -2490,7 +2498,8 @@ Http::get('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->param('subscriberId', '', new UID(), 'Subscriber ID.')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (string $topicId, string $subscriberId, Database $dbForProject, Response $response, Authorization $auth) {
         $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
@@ -2533,7 +2542,8 @@ Http::delete('/v1/messaging/topics/:topicId/subscribers/:subscriberId')
     ->inject('queueForEvents')
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (string $topicId, string $subscriberId, Event $queueForEvents, Database $dbForProject, Response $response, Authorization $auth) {
         $topic = $auth->skip(fn () => $dbForProject->getDocument('topics', $topicId));
 
         if ($topic->isEmpty()) {
@@ -3022,7 +3032,8 @@ Http::get('/v1/messaging/messages')
     ->param('search', '', new Text(256), 'Search term to filter your list results. Max length: 256 chars.', true)
     ->inject('dbForProject')
     ->inject('response')
-    ->action(function (array $queries, string $search, Database $dbForProject, Response $response) {
+    ->inject('auth')
+    ->action(function (array $queries, string $search, Database $dbForProject, Response $response, Authorization $auth) {
         try {
             $queries = Query::parseQueries($queries);
         } catch (QueryException $e) {
@@ -3075,7 +3086,8 @@ Http::get('/v1/messaging/messages/:messageId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $messageId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
         $message = $dbForProject->getDocument('messages', $messageId);
 
         if ($message->isEmpty()) {
@@ -3092,7 +3104,7 @@ Http::get('/v1/messaging/messages/:messageId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'message/' . $messageId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 

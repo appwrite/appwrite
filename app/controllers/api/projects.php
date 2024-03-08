@@ -13,7 +13,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Projects;
 use Appwrite\Utopia\Response;
 use PHPMailer\PHPMailer\PHPMailer;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -25,11 +24,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Validator\PublicDomain;
-use Utopia\Locale\Locale;
-use Utopia\Pools\Group;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Hostname;
@@ -39,6 +38,8 @@ use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\URL;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Locale\Locale;
+use Utopia\Pools\Group;
 
 Http::init()
     ->groups(['projects'])
@@ -76,7 +77,8 @@ Http::post('/v1/projects')
     ->inject('dbForConsole')
     ->inject('cache')
     ->inject('pools')
-    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools) {
+    ->inject('auth')
+    ->action(function (string $projectId, string $name, string $teamId, string $region, string $description, string $logo, string $url, string $legalName, string $legalCountry, string $legalState, string $legalCity, string $legalAddress, string $legalTaxId, Response $response, Database $dbForConsole, Cache $cache, Group $pools, Authorization $auth) {
 
         $team = $dbForConsole->getDocument('teams', $teamId);
 
@@ -177,13 +179,14 @@ Http::post('/v1/projects')
         }
 
         $dbForProject = new Database($pools->get($database)->pop()->getResource(), $cache);
+        $dbForProject->setAuthorization($auth);
         $dbForProject->setNamespace("_{$project->getInternalId()}");
         $dbForProject->create();
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $audit->setup();
 
-        $adapter = new TimeLimit('', 0, 1, $dbForProject);
+        $adapter = new TimeLimit('', 0, 1, $dbForProject, $auth);
         $adapter->setup();
 
         /** @var array $collections */

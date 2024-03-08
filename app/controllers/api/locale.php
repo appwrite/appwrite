@@ -3,9 +3,9 @@
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
 use Utopia\Locale\Locale;
 
 Http::get('/v1/locale')

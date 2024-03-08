@@ -3,10 +3,10 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\ClamAV\Network;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;

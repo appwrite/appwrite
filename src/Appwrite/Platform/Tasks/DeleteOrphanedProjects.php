@@ -2,18 +2,19 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Boolean;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\Http\Validator\Boolean;
 
 class DeleteOrphanedProjects extends Action
 {
@@ -32,13 +33,14 @@ class DeleteOrphanedProjects extends Action
             ->inject('cache')
             ->inject('dbForConsole')
             ->inject('register')
-            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register) {
-                $this->action($commit, $pools, $cache, $dbForConsole, $register);
+            ->inject('auth')
+            ->callback(function (bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth) {
+                $this->action($commit, $pools, $cache, $dbForConsole, $register, $auth);
             });
     }
 
 
-    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register): void
+    public function action(bool $commit, Group $pools, Cache $cache, Database $dbForConsole, Registry $register, Authorization $auth): void
     {
 
         Console::title('Delete orphaned projects V1');
@@ -59,8 +61,8 @@ class DeleteOrphanedProjects extends Action
         ], $collectionsConfig);
 
         /* Initialise new Utopia app */
-        $app = new Http(new Server(), 'UTC');
-        $console = $app->getResource('console');
+        $http = new Http(new Server(), 'UTC');
+        $console = $http->getResource('console');
         $projects = [$console];
 
         /** Database connections */
@@ -91,6 +93,7 @@ class DeleteOrphanedProjects extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
+                    $dbForProject->setAuthorization($auth);
                     $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 

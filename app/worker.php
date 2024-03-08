@@ -17,7 +17,6 @@ use Appwrite\Event\Usage;
 use Appwrite\Event\UsageDump;
 use Appwrite\Platform\Appwrite;
 use Swoole\Runtime;
-use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
@@ -26,6 +25,7 @@ use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
 use Utopia\Platform\Service;
@@ -38,12 +38,11 @@ use Utopia\Storage\Device\Local;
 
 global $register;
 
-$auth->disable();
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 
 Server::setResource('register', fn () => $register);
 
-Server::setResource('dbForConsole', function (Cache $cache, Registry $register) {
+Server::setResource('dbForConsole', function (Cache $cache, Registry $register, Authorization $auth) {
     $pools = $register->get('pools');
     $database = $pools
         ->get('console')
@@ -51,10 +50,11 @@ Server::setResource('dbForConsole', function (Cache $cache, Registry $register) 
         ->getResource();
 
     $adapter = new Database($database, $cache);
+    $adapter->setAuthorization($auth);
     $adapter->setNamespace('_console');
 
     return $adapter;
-}, ['cache', 'register']);
+}, ['cache', 'register', 'auth']);
 
 Server::setResource('project', function (Message $message, Database $dbForConsole) {
     $payload = $message->getPayload() ?? [];
@@ -67,7 +67,7 @@ Server::setResource('project', function (Message $message, Database $dbForConsol
     return $dbForConsole->getDocument('projects', $project->getId());
 }, ['message', 'dbForConsole']);
 
-Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole) {
+Server::setResource('dbForProject', function (Cache $cache, Registry $register, Message $message, Document $project, Database $dbForConsole, Authorization $auth) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
@@ -79,14 +79,15 @@ Server::setResource('dbForProject', function (Cache $cache, Registry $register, 
         ->getResource();
 
     $adapter = new Database($database, $cache);
+    $adapter->setAuthorization($auth);
     $adapter->setNamespace('_' . $project->getInternalId());
     return $adapter;
-}, ['cache', 'register', 'message', 'project', 'dbForConsole']);
+}, ['cache', 'register', 'message', 'project', 'dbForConsole', 'auth']);
 
-Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+Server::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases): Database {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth): Database {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -105,6 +106,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
+        $database->setAuthorization($auth);
 
         $databases[$databaseName] = $database;
 
@@ -112,7 +114,7 @@ Server::setResource('getProjectDB', function (Group $pools, Database $dbForConso
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'auth']);
 
 Server::setResource('abuseRetention', function () {
     return DateTime::addSeconds(new \DateTime(), -1 * Http::getEnv('_APP_MAINTENANCE_RETENTION_ABUSE', 86400));
@@ -228,7 +230,7 @@ Server::setResource('deviceForLocalFiles', function (Document $project) {
     return new Local(APP_STORAGE_UPLOADS . '/app-' . $project->getId());
 }, ['project']);
 
-Server::setResource('authorization', fn () => new Authorization());
+Server::setResource('auth', fn () => new Authorization());
 
 $pools = $register->get('pools');
 $platform = new Appwrite();
@@ -271,6 +273,13 @@ try {
 }
 
 $worker = $platform->getWorker();
+
+$worker
+    ->init()
+    ->inject('auth')
+    ->action(function (Authorization $auth) {
+        $auth->disable();
+    });
 
 $worker
     ->shutdown()

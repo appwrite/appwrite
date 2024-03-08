@@ -7,7 +7,6 @@ use Appwrite\Extend\Exception;
 use Appwrite\Network\Validator\CNAME;
 use Appwrite\Utopia\Database\Validator\Queries\Rules;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Query as QueryException;
@@ -15,10 +14,11 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Logger\Log;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Domain as ValidatorDomain;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Logger\Log;
 
 Http::post('/v1/proxy/rules')
     ->groups(['api', 'proxy'])

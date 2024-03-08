@@ -12,6 +12,14 @@ class Request extends SwooleRequest
     private static ?Route $route = null;
 
     /**
+     * Request constructor.
+     */
+    public function __construct(SwooleRequest $request)
+    {
+        parent::__construct($request->getSwooleRequest());
+    }
+
+    /**
      * @inheritdoc
      */
     public function getParams(): array

@@ -6,9 +6,9 @@ use Exception;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Fetch\Client;
-use Utopia\Platform\Action;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Text;
+use Utopia\Platform\Action;
 
 class DevGenerateTranslations extends Action
 {

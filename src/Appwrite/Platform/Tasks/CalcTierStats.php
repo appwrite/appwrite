@@ -4,17 +4,17 @@ namespace Appwrite\Platform\Tasks;
 
 use League\Csv\Writer;
 use PHPMailer\PHPMailer\PHPMailer;
-use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
-use Utopia\Http\Validator\Text;
 
 class CalcTierStats extends Action
 {

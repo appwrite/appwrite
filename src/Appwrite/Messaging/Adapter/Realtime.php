@@ -3,11 +3,11 @@
 namespace Appwrite\Messaging\Adapter;
 
 use Appwrite\Messaging\Adapter;
-use Utopia\Http\Http;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
+use Utopia\Http\Http;
 
 class Realtime extends Adapter
 {

@@ -21,7 +21,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Users;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -38,7 +37,7 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Boolean;
@@ -46,6 +45,7 @@ use Utopia\Http\Validator\Integer;
 use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Locale\Locale;
 
 /** TODO: Remove function when we move to using utopia/platform */
 function createUser(string $hash, mixed $hashOptions, string $userId, ?string $email, ?string $password, ?string $phone, string $name, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks): Document
@@ -777,7 +777,8 @@ Http::get('/v1/users/:userId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $userId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
 
         $user = $dbForProject->getDocument('users', $userId);
 
@@ -795,7 +796,7 @@ Http::get('/v1/users/:userId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
 
         $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
@@ -2110,7 +2111,8 @@ Http::get('/v1/users/usage')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('register')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];

@@ -205,7 +205,7 @@ class Mapper
     /**
      * Map a {@see Route} parameter to a GraphQL Type
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param Validator|callable $validator
      * @param bool $required
      * @param array $injections

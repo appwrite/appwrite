@@ -3,11 +3,11 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Hamster as EventHamster;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 class Hamster extends Action

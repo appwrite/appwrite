@@ -17,7 +17,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Teams;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -36,11 +35,12 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
+use Utopia\Locale\Locale;
 
 Http::post('/v1/teams')
     ->desc('Create team')
@@ -63,7 +63,8 @@ Http::post('/v1/teams')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $teamId, string $name, array $roles, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
         $isAppUser = Auth::isAppUser($auth->getRoles());
@@ -396,7 +397,8 @@ Http::post('/v1/teams/:teamId/memberships')
     ->inject('queueForMails')
     ->inject('queueForMessaging')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $teamId, string $email, string $userId, string $phone, array $roles, string $url, string $name, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Mail $queueForMails, Messaging $queueForMessaging, Event $queueForEvents, Authorization $auth) {
         $isAPIKey = Auth::isAppUser($auth->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
 
@@ -863,7 +865,8 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $teamId, string $membershipId, array $roles, Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
         if ($team->isEmpty()) {
@@ -938,7 +941,8 @@ Http::patch('/v1/teams/:teamId/memberships/:membershipId/status')
     ->inject('project')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $teamId, string $membershipId, string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Reader $geodb, Event $queueForEvents, Authorization $auth) {
         $protocol = $request->getProtocol();
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
@@ -1067,7 +1071,8 @@ Http::delete('/v1/teams/:teamId/memberships/:membershipId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $teamId, string $membershipId, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $membership = $dbForProject->getDocument('memberships', $membershipId);
 
@@ -1131,7 +1136,8 @@ Http::get('/v1/teams/:teamId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $teamId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
 
         $team = $dbForProject->getDocument('teams', $teamId);
 
@@ -1149,7 +1155,7 @@ Http::get('/v1/teams/:teamId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'team/' . $team->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 

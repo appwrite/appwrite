@@ -2,8 +2,8 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 
 Http::init()

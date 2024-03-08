@@ -16,7 +16,6 @@ use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Abuse\Abuse;
 use Utopia\Abuse\Adapters\TimeLimit;
-use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Filesystem;
 use Utopia\Cache\Cache;
 use Utopia\Config\Config;
@@ -25,7 +24,11 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Pools\Group;
+use Utopia\Pools\Pool;
 
 $parseLabel = function (string $label, array $responsePayload, array $requestParams, Document $user) {
     preg_match_all('/{(.*?)}/', $label, $matches);
@@ -328,7 +331,7 @@ Http::init()
         foreach ($abuseKeyLabel as $abuseKey) {
             $start = $request->getContentRangeStart();
             $end = $request->getContentRangeEnd();
-            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject);
+            $timeLimit = new TimeLimit($abuseKey, $route->getLabel('abuse-limit', 0), $route->getLabel('abuse-time', 3600), $dbForProject, $auth);
             $timeLimit
                 ->setParam('{projectId}', $project->getId())
                 ->setParam('{userId}', $user->getId())
@@ -433,8 +436,7 @@ Http::init()
                     }
 
                     $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-                    $validator = new Authorization(Database::PERMISSION_READ);
-                    $valid = $validator->isValid($bucket->getRead());
+                    $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
                     if (!$fileSecurity && !$valid) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
@@ -702,8 +704,6 @@ Http::shutdown()
             }
         }
 
-
-
         if ($project->getId() !== 'console') {
             if ($mode !== APP_MODE_ADMIN) {
                 $fileSize = 0;
@@ -746,4 +746,17 @@ Http::init()
         if (Http::getEnv('_APP_USAGE_STATS', 'enabled') !== 'enabled') {
             throw new Exception(Exception::GENERAL_USAGE_DISABLED);
         }
+    });
+
+Http::shutdown()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->reclaim();
+    });
+
+
+Http::error()
+    ->inject('pools')
+    ->action(function (Group $pools) {
+        $pools->reclaim();
     });

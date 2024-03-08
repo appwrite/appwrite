@@ -9,8 +9,8 @@ use Appwrite\OpenSSL\OpenSSL;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Buckets;
 use Appwrite\Utopia\Database\Validator\Queries\Files;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -24,8 +24,16 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Permissions;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\ArrayList;
+use Utopia\Http\Validator\Boolean;
+use Utopia\Http\Validator\HexColor;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Image\Image;
 use Utopia\Storage\Compression\Algorithms\GZIP;
 use Utopia\Storage\Compression\Algorithms\Zstd;
@@ -36,13 +44,6 @@ use Utopia\Storage\Validator\File;
 use Utopia\Storage\Validator\FileExt;
 use Utopia\Storage\Validator\FileSize;
 use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
-use Utopia\Http\Validator\ArrayList;
-use Utopia\Http\Validator\Boolean;
-use Utopia\Http\Validator\HexColor;
-use Utopia\Http\Validator\Range;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 
 Http::post('/v1/storage/buckets')
     ->desc('Create bucket')
@@ -361,7 +362,8 @@ Http::post('/v1/storage/buckets/:bucketId/files')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, mixed $file, ?array $permissions, Request $request, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Device $deviceForFiles, Device $deviceForLocal, Authorization $auth) {
 
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -372,8 +374,7 @@ Http::post('/v1/storage/buckets/:bucketId/files')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $validator = new Authorization(Database::PERMISSION_CREATE);
-        if (!$validator->isValid($bucket->getCreate())) {
+        if (!$auth->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -631,8 +632,7 @@ Http::post('/v1/storage/buckets/:bucketId/files')
                      * However as with chunk upload even if we are updating, we are essentially creating a file
                      * adding it's new chunk so we validate create permission instead of update
                      */
-                    $validator = new Authorization(Database::PERMISSION_CREATE);
-                    if (!$validator->isValid($bucket->getCreate())) {
+                    if (!$auth->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
                     $file = $auth->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
@@ -678,8 +678,7 @@ Http::post('/v1/storage/buckets/:bucketId/files')
                      * However as with chunk upload even if we are updating, we are essentially creating a file
                      * adding it's new chunk so we validate create permission instead of update
                      */
-                    $validator = new Authorization(Database::PERMISSION_CREATE);
-                    if (!$validator->isValid($bucket->getCreate())) {
+                    if (!$auth->isValid(new Input(Database::PERMISSION_CREATE, $bucket->getCreate()))) {
                         throw new Exception(Exception::USER_UNAUTHORIZED);
                     }
                     $file = $auth->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getInternalId(), $fileId, $file));
@@ -724,7 +723,8 @@ Http::get('/v1/storage/buckets/:bucketId/files')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $bucketId, array $queries, string $search, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -735,8 +735,7 @@ Http::get('/v1/storage/buckets/:bucketId/files')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -808,7 +807,8 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -819,8 +819,7 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -873,7 +872,8 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('deviceForLocal')
-    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, int $width, int $height, string $gravity, int $quality, int $borderWidth, string $borderColor, int $borderRadius, float $opacity, int $rotation, string $background, string $output, Request $request, Response $response, Document $project, Database $dbForProject, string $mode, Device $deviceForFiles, Device $deviceForLocal, Authorization $auth) {
 
         if (!\extension_loaded('imagick')) {
             throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Imagick extension is missing');
@@ -889,8 +889,7 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/preview')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1033,7 +1032,8 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Device $deviceForFiles) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, Request $request, Response $response, Database $dbForProject, string $mode, Device $deviceForFiles, Authorization $auth) {
 
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1045,8 +1045,7 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/download')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1173,7 +1172,8 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('deviceForFiles')
-    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceForFiles) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, Response $response, Request $request, Database $dbForProject, string $mode, Device $deviceForFiles, Authorization $auth) {
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -1184,8 +1184,7 @@ Http::get('/v1/storage/buckets/:bucketId/files/:fileId/view')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_READ, $bucket->getRead()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1333,7 +1332,8 @@ Http::put('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('user')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, ?string $name, ?array $permissions, Response $response, Database $dbForProject, Document $user, string $mode, Event $queueForEvents, Authorization $auth) {
 
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -1345,8 +1345,7 @@ Http::put('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_UPDATE);
-        $valid = $validator->isValid($bucket->getUpdate());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_UPDATE, $bucket->getUpdate()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1439,7 +1438,8 @@ Http::delete('/v1/storage/buckets/:bucketId/files/:fileId')
     ->inject('mode')
     ->inject('deviceForFiles')
     ->inject('queueForDeletes')
-    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceForFiles, Delete $queueForDeletes) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $fileId, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Device $deviceForFiles, Delete $queueForDeletes, Authorization $auth) {
         $bucket = $auth->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -1450,8 +1450,7 @@ Http::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_DELETE);
-        $valid = $validator->isValid($bucket->getDelete());
+        $valid = $auth->isValid(new Input(Database::PERMISSION_DELETE, $bucket->getDelete()));
         if (!$fileSecurity && !$valid) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
@@ -1464,7 +1463,7 @@ Http::delete('/v1/storage/buckets/:bucketId/files/:fileId')
         }
 
         // Make sure we don't delete the file before the document permission check occurs
-        if ($fileSecurity && !$valid && !$validator->isValid($file->getDelete())) {
+        if ($fileSecurity && !$valid && !$auth->isValid($file->getDelete())) {
             throw new Exception(Exception::USER_UNAUTHORIZED);
         }
 
@@ -1524,7 +1523,8 @@ Http::get('/v1/storage/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -1604,7 +1604,8 @@ Http::get('/v1/storage/:bucketId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $bucketId, string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $bucket = $dbForProject->getDocument('buckets', $bucketId);
 
@@ -1619,7 +1620,6 @@ Http::get('/v1/storage/:bucketId/usage')
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES),
             str_replace('{bucketInternalId}', $bucket->getInternalId(), METRIC_BUCKET_ID_FILES_STORAGE),
         ];
-
 
         $auth->skip(function () use ($dbForProject, $days, $metrics, &$stats, &$total) {
             foreach ($metrics as $metric) {

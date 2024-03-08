@@ -26,7 +26,6 @@ use Appwrite\Utopia\View;
 use Executor\Executor;
 use MaxMind\Db\Reader;
 use Swoole\Http\Request as SwooleRequest;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -35,18 +34,19 @@ use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Domain;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\Text;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Log\User;
 use Utopia\Logger\Logger;
-use Utopia\Http\Validator\Hostname;
-use Utopia\Http\Validator\Text;
 
 Config::setParam('domainVerification', false);
 Config::setParam('cookieDomain', 'localhost');
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 
-function router(App $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb)
+function router(Http $utopia, Database $dbForConsole, callable $getProjectDB, SwooleRequest $swooleRequest, Request $request, Response $response, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth)
 {
     $utopia->getRoute()?->label('error', __DIR__ . '/../views/general/error.phtml');
 
@@ -382,7 +382,8 @@ Http::init()
     ->inject('queueForUsage')
     ->inject('queueForEvents')
     ->inject('queueForCertificates')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates) {
+    ->inject('auth')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Document $console, Document $project, Database $dbForConsole, callable $getProjectDB, Locale $locale, array $localeCodes, array $clients, Reader $geodb, Usage $queueForUsage, Event $queueForEvents, Certificate $queueForCertificates, Authorization $auth) {
         /*
         * Appwrite Router
         */
@@ -390,7 +391,7 @@ Http::init()
         $mainDomain = Http::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb, $auth)) {
                 return;
             }
         }
@@ -627,7 +628,8 @@ Http::options()
     ->inject('queueForEvents')
     ->inject('queueForUsage')
     ->inject('geodb')
-    ->action(function (App $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (Http $utopia, SwooleRequest $swooleRequest, Request $request, Response $response, Database $dbForConsole, callable $getProjectDB, Event $queueForEvents, Usage $queueForUsage, Reader $geodb, Authorization $auth) {
         /*
         * Appwrite Router
         */
@@ -635,7 +637,7 @@ Http::options()
         $mainDomain = Http::getEnv('_APP_DOMAIN', '');
         // Only run Router when external domain
         if ($host !== $mainDomain) {
-            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb)) {
+            if (router($utopia, $dbForConsole, $getProjectDB, $swooleRequest, $request, $response, $queueForEvents, $queueForUsage, $geodb, $auth)) {
                 return;
             }
         }
@@ -660,7 +662,8 @@ Http::error()
     ->inject('project')
     ->inject('logger')
     ->inject('log')
-    ->action(function (Throwable $error, App $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log) {
+    ->inject('auth')
+    ->action(function (Throwable $error, Http $utopia, Request $request, Response $response, Document $project, ?Logger $logger, Log $log, Authorization $auth) {
         $version = Http::getEnv('_APP_VERSION', 'UNKNOWN');
         $route = $utopia->getRoute();
 
@@ -734,7 +737,7 @@ Http::error()
         }
 
         /** Handle Utopia Errors */
-        if ($error instanceof Utopia\Exception) {
+        if ($error instanceof Utopia\Http\Exception) {
             $error = new AppwriteException(AppwriteException::GENERAL_UNKNOWN, $message, $code, $error);
             switch ($code) {
                 case 400:

@@ -2,8 +2,8 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 class Version extends Action

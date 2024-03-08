@@ -12,8 +12,8 @@ use GraphQL\Validator\Rules\DisableIntrospection;
 use GraphQL\Validator\Rules\QueryComplexity;
 use GraphQL\Validator\Rules\QueryDepth;
 use Swoole\Coroutine\WaitGroup;
-use Utopia\Http\Http;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\JSON;
 use Utopia\Http\Validator\Text;
 

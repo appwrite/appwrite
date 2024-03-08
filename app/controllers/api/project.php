@@ -2,7 +2,6 @@
 
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -13,6 +12,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Datetime as DateTimeValidator;
 use Utopia\Database\Validator\UID;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
 
@@ -31,7 +31,8 @@ Http::get('/v1/project/usage')
     ->param('period', '1d', new WhiteList(['1h', '1d']), 'Period used', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $startDate, string $endDate, string $period, Response $response, Database $dbForProject, Authorization $auth) {
         $stats = $total = $usage = [];
         $format = 'Y-m-d 00:00:00';
         $firstDay = (new DateTime($startDate))->format($format);

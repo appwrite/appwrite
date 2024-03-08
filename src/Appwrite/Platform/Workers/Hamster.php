@@ -4,10 +4,8 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\Hamster as EventHamster;
 use Appwrite\Network\Validator\Origin;
-use PharIo\Manifest\Author;
 use Utopia\Analytics\Adapter\Mixpanel;
 use Utopia\Analytics\Event as AnalyticsEvent;
-use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
@@ -15,6 +13,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Pools\Group;
 use Utopia\Queue\Message;
@@ -123,6 +122,7 @@ class Hamster extends Action
                 ->getResource();
 
             $dbForProject = new Database($adapter, $cache);
+            $dbForProject->setAuthorization($auth);
             $dbForProject->setDatabase('appwrite');
             $dbForProject->setNamespace('_' . $project->getInternalId());
 

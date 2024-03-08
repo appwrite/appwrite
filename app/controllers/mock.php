@@ -5,16 +5,16 @@ global $utopia, $request, $response;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\UID;
-use Utopia\Http\Validator\WhiteList;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub;
 
 Http::get('/v1/mock/tests/general/oauth2')
@@ -218,7 +218,7 @@ Http::shutdown()
     ->inject('utopia')
     ->inject('response')
     ->inject('request')
-    ->action(function (App $utopia, Response $response, Request $request) {
+    ->action(function (Http $utopia, Response $response, Request $request) {
 
         $result = [];
         $route  = $utopia->getRoute();

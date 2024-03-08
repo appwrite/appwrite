@@ -4,10 +4,15 @@ use Appwrite\ClamAV\Network;
 use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
 use Utopia\Domains\Validator\PublicDomain;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Domain;
+use Utopia\Http\Validator\Integer;
+use Utopia\Http\Validator\Multiple;
+use Utopia\Http\Validator\Text;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Pools\Group;
 use Utopia\Queue\Client;
 use Utopia\Queue\Connection;
@@ -15,11 +20,6 @@ use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\Storage\Storage;
-use Utopia\Http\Validator\Domain;
-use Utopia\Http\Validator\Integer;
-use Utopia\Http\Validator\Multiple;
-use Utopia\Http\Validator\Text;
-use Utopia\Http\Validator\WhiteList;
 
 Http::get('/v1/health')
     ->desc('Get HTTP')

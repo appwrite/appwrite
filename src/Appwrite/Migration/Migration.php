@@ -4,7 +4,6 @@ namespace Appwrite\Migration;
 
 use Exception;
 use Swoole\Runtime;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -12,6 +11,7 @@ use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 
 Runtime::enableCoroutine(SWOOLE_HOOK_ALL);
 

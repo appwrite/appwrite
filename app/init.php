@@ -43,7 +43,6 @@ use Appwrite\URL\URL as AppwriteURL;
 use MaxMind\Db\Reader;
 use PHPMailer\PHPMailer\PHPMailer;
 use Swoole\Database\PDOProxy;
-use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
@@ -62,8 +61,14 @@ use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Structure;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Http\Request;
 use Utopia\Http\Response;
+use Utopia\Http\Validator\Hostname;
+use Utopia\Http\Validator\IP;
+use Utopia\Http\Validator\Range;
+use Utopia\Http\Validator\URL;
+use Utopia\Http\Validator\WhiteList;
 use Utopia\Locale\Locale;
 use Utopia\Logger\Log;
 use Utopia\Logger\Logger;
@@ -80,11 +85,6 @@ use Utopia\Storage\Device\Local;
 use Utopia\Storage\Device\S3;
 use Utopia\Storage\Device\Wasabi;
 use Utopia\Storage\Storage;
-use Utopia\Http\Validator\Hostname;
-use Utopia\Http\Validator\IP;
-use Utopia\Http\Validator\Range;
-use Utopia\Http\Validator\URL;
-use Utopia\Http\Validator\WhiteList;
 use Utopia\VCS\Adapter\Git\GitHub as VcsGitHub;
 
 const APP_NAME = 'Appwrite';
@@ -1307,7 +1307,7 @@ Http::setResource('console', function () {
     ]);
 }, []);
 
-Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project) {
+Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole, Cache $cache, Document $project, Authorization $auth) {
     if ($project->isEmpty() || $project->getId() === 'console') {
         return $dbForConsole;
     }
@@ -1318,6 +1318,7 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole
         ->getResource();
 
     $database = new Database($dbAdapter, $cache);
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_' . $project->getInternalId())
@@ -1326,9 +1327,9 @@ Http::setResource('dbForProject', function (Group $pools, Database $dbForConsole
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'dbForConsole', 'cache', 'project']);
+}, ['pools', 'dbForConsole', 'cache', 'project', 'auth']);
 
-Http::setResource('dbForConsole', function (Group $pools, Cache $cache) {
+Http::setResource('dbForConsole', function (Group $pools, Cache $cache, Authorization $auth) {
     $dbAdapter = $pools
         ->get('console')
         ->pop()
@@ -1336,6 +1337,7 @@ Http::setResource('dbForConsole', function (Group $pools, Cache $cache) {
     ;
 
     $database = new Database($dbAdapter, $cache);
+    $database->setAuthorization($auth);
 
     $database
         ->setNamespace('_console')
@@ -1344,12 +1346,12 @@ Http::setResource('dbForConsole', function (Group $pools, Cache $cache) {
         ->setTimeout(APP_DATABASE_TIMEOUT_MILLISECONDS);
 
     return $database;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'auth']);
 
-Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, Authorization $auth) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    $getProjectDB = function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -1374,6 +1376,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
+        $database->setAuthorization($auth);
 
         $databases[$databaseName] = $database;
 
@@ -1387,7 +1390,7 @@ Http::setResource('getProjectDB', function (Group $pools, Database $dbForConsole
     };
 
     return $getProjectDB;
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'auth']);
 
 Http::setResource('cache', function (Group $pools) {
     $list = Config::getParam('pools-cache', []);
@@ -1662,3 +1665,7 @@ Http::setResource('requestTimestamp', function ($request) {
 }, ['request']);
 
 Http::setResource('auth', fn () => new Authorization());
+
+Http::setResource('pools', function ($register) {
+    return $register->get('pools');
+}, ['pools']);

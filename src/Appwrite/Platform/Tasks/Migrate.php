@@ -3,7 +3,6 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Migration\Migration;
-use Utopia\Http\Http;
 use Utopia\Cache\Cache;
 use Utopia\CLI\Console;
 use Utopia\Database\Database;
@@ -11,9 +10,10 @@ use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Http\Adapter\FPM\Server;
+use Utopia\Http\Http;
+use Utopia\Http\Validator\Text;
 use Utopia\Platform\Action;
 use Utopia\Registry\Registry;
-use Utopia\Http\Validator\Text;
 
 class Migrate extends Action
 {
@@ -54,11 +54,11 @@ class Migrate extends Action
             return;
         }
 
-        $app = new Http(new Server(), 'UTC');
+        $http = new Http(new Server(), 'UTC');
 
         Console::success('Starting Data Migration to version ' . $version);
 
-        $console = $app->getResource('console');
+        $console = $http->getResource('console');
 
         $limit = 30;
         $sum = 30;

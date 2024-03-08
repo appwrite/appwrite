@@ -15,7 +15,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Indexes;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -32,6 +31,7 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
 use Utopia\Database\Validator\Index as IndexValidator;
 use Utopia\Database\Validator\Key;
@@ -41,7 +41,7 @@ use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\Structure;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\FloatValidator;
@@ -53,6 +53,7 @@ use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\URL;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Locale\Locale;
 
 /**
  * * Create attribute of varying type
@@ -74,7 +75,7 @@ use Utopia\Http\Validator\WhiteList;
  * @throws ConflictException
  * @throws Exception
  */
-function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents): Document
+function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth): Document
 {
     $key = $attribute->getAttribute('key');
     $type = $attribute->getAttribute('type', '');
@@ -223,6 +224,7 @@ function createAttribute(string $databaseId, string $collectionId, Document $att
 }
 
 function updateAttribute(
+    Authorization $auth,
     string $databaseId,
     string $collectionId,
     string $key,
@@ -235,7 +237,7 @@ function updateAttribute(
     int|float $min = null,
     int|float $max = null,
     array $elements = null,
-    array $options = []
+    array $options = [],
 ): Document {
     $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -564,7 +566,8 @@ Http::get('/v1/databases/:databaseId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $databaseId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
 
@@ -582,7 +585,7 @@ Http::get('/v1/databases/:databaseId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'database/' . $databaseId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -750,7 +753,8 @@ Http::post('/v1/databases/:databaseId/collections')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -811,7 +815,8 @@ Http::get('/v1/databases/:databaseId/collections')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, array $queries, string $search, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -873,7 +878,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -909,7 +915,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/logs')
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -934,7 +941,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId;
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -1015,7 +1022,8 @@ Http::put('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('dbForProject')
     ->inject('mode')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $name, ?array $permissions, bool $documentSecurity, bool $enabled, Response $response, Database $dbForProject, string $mode, Event $queueForEvents, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1079,7 +1087,8 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, string $mode, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1140,7 +1149,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?int $size, ?bool $required, ?string $default, bool $array, bool $encrypt, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         // Ensure attribute default is within required size
         $validator = new Text($size, 0);
@@ -1162,7 +1172,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/strin
             'default' => $default,
             'array' => $array,
             'filters' => $filters,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1194,7 +1204,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1204,7 +1215,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/email
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_EMAIL,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1237,7 +1248,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum'
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, array $elements, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
         if (!is_null($default) && !in_array($default, $elements)) {
             throw new Exception(Exception::ATTRIBUTE_VALUE_INVALID, 'Default value not found in elements');
         }
@@ -1251,7 +1263,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/enum'
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_ENUM,
             'formatOptions' => ['elements' => $elements],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1283,7 +1295,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1293,7 +1306,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/ip')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_IP,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1325,7 +1338,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1335,7 +1349,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/url')
             'default' => $default,
             'array' => $array,
             'format' => APP_DATABASE_ATTRIBUTE_URL,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1369,7 +1383,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? PHP_INT_MIN : \intval($min);
@@ -1399,7 +1414,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/integ
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1440,7 +1455,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         // Ensure attribute default is within range
         $min = (is_null($min)) ? -PHP_FLOAT_MAX : \floatval($min);
@@ -1473,7 +1489,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/float
                 'min' => $min,
                 'max' => $max,
             ],
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $formatOptions = $attribute->getAttribute('formatOptions', []);
 
@@ -1512,7 +1528,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $attribute = createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
@@ -1521,7 +1538,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/boole
             'required' => $required,
             'default' => $default,
             'array' => $array,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1553,7 +1570,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, bool $array, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $filters[] = 'datetime';
 
@@ -1565,7 +1583,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/datet
             'default' => $default,
             'array' => $array,
             'filters' => $filters,
-        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents);
+        ]), $response, $dbForProject, $queueForDatabase, $queueForEvents, $auth);
 
         $response
             ->setStatusCode(Response::STATUS_CODE_ACCEPTED)
@@ -1599,6 +1617,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relat
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
+    ->inject('auth')
     ->action(function (
         string $databaseId,
         string $collectionId,
@@ -1611,7 +1630,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relat
         Response $response,
         Database $dbForProject,
         EventDatabase $queueForDatabase,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $auth
     ) {
         $key ??= $relatedCollectionId;
         $twoWayKey ??= $collectionId;
@@ -1686,7 +1706,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/attributes/relat
             $response,
             $dbForProject,
             $queueForDatabase,
-            $queueForEvents
+            $queueForEvents,
+            $auth
         );
 
         $options = $attribute->getAttribute('options', []);
@@ -1717,7 +1738,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes')
     ->param('queries', [], new Attributes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Attributes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Authorization $auth) {
         /** @var Document $database */
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1805,7 +1827,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/attributes/:key')
     ->param('key', '', new Key(), 'Attribute Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -1874,9 +1897,11 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/stri
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -1913,8 +1938,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/emai
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -1953,8 +1980,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/enum
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?array $elements, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -1993,8 +2022,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/ip/:
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2032,8 +2063,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/url/
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2073,8 +2106,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/inte
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2122,8 +2157,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/floa
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2169,8 +2206,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/bool
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?bool $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2207,8 +2246,10 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/date
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, ?bool $required, ?string $default, Response $response, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
         $attribute = updateAttribute(
+            auth: $auth,
             databaseId: $databaseId,
             collectionId: $collectionId,
             key: $key,
@@ -2244,6 +2285,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
     ->inject('response')
     ->inject('dbForProject')
     ->inject('queueForEvents')
+    ->inject('auth')
     ->action(function (
         string $databaseId,
         string $collectionId,
@@ -2251,9 +2293,11 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/attributes/:key
         ?string $onDelete,
         Response $response,
         Database $dbForProject,
-        Event $queueForEvents
+        Event $queueForEvents,
+        Authorization $auth
     ) {
         $attribute = updateAttribute(
+            $auth,
             $databaseId,
             $collectionId,
             $key,
@@ -2298,7 +2342,8 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/attributes/:ke
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2411,7 +2456,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, string $type, array $attributes, array $orders, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2573,7 +2619,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes')
     ->param('queries', [], new Indexes(), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long. You may filter on the following attributes: ' . implode(', ', Indexes::ALLOWED_ATTRIBUTES), true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, Authorization $auth) {
         /** @var Document $database */
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2643,7 +2690,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->param('key', null, new Key(), 'Index Key.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2686,7 +2734,8 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/indexes/:key')
     ->inject('dbForProject')
     ->inject('queueForDatabase')
     ->inject('queueForEvents')
-    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $key, Response $response, Database $dbForProject, EventDatabase $queueForDatabase, Event $queueForEvents, Authorization $auth) {
 
         $db = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -2759,7 +2808,8 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('user')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $documentId, string $collectionId, string|array $data, ?array $permissions, Response $response, Database $dbForProject, Document $user, Event $queueForEvents, string $mode, Authorization $auth) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -2830,17 +2880,16 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         $data['$permissions'] = $permissions;
         $document = new Document($data);
 
-        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database) {
+        $checkPermissions = function (Document $collection, Document $document, string $permission) use (&$checkPermissions, $dbForProject, $database, $auth) {
             $documentSecurity = $collection->getAttribute('documentSecurity', false);
-            $validator = new Authorization($permission);
 
-            $valid = $validator->isValid($collection->getPermissionsByType($permission));
+            $valid = $auth->isValid(new Input($permission, $collection->getPermissionsByType($permission)));
             if (($permission === Database::PERMISSION_UPDATE && !$documentSecurity) || !$valid) {
                 throw new Exception(Exception::USER_UNAUTHORIZED);
             }
 
             if ($permission === Database::PERMISSION_UPDATE) {
-                $valid = $valid || $validator->isValid($document->getUpdate());
+                $valid = $valid || $auth->isValid($document->getUpdate());
                 if ($documentSecurity && !$valid) {
                     throw new Exception(Exception::USER_UNAUTHORIZED);
                 }
@@ -2921,7 +2970,7 @@ Http::post('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $auth) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -2987,7 +3036,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, array $queries, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
         $isAPIKey = Auth::isAppUser($auth->getRoles());
         $isPrivilegedUser = Auth::isPrivilegedUser($auth->getRoles());
@@ -3039,7 +3089,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents')
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database): bool {
+        $processDocument = (function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $auth): bool {
             if ($document->isEmpty()) {
                 return false;
             }
@@ -3144,7 +3194,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -3174,7 +3225,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $auth) {
             if ($document->isEmpty()) {
                 return;
             }
@@ -3235,7 +3286,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
     ->inject('dbForProject')
     ->inject('locale')
     ->inject('geodb')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, array $queries, Response $response, Database $dbForProject, Locale $locale, Reader $geodb, Authorization $auth) {
 
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -3265,7 +3317,7 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/documents/:docume
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new Audit($dbForProject);
+        $audit = new Audit($dbForProject, $auth);
         $resource = 'database/' . $databaseId . '/collection/' . $collectionId . '/document/' . $document->getId();
         $logs = $audit->getLogsByResource($resource, $limit, $offset);
 
@@ -3349,7 +3401,8 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, string|array $data, ?array $permissions, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Event $queueForEvents, string $mode, Authorization $auth) {
 
         $data = (\is_string($data)) ? \json_decode($data, true) : $data; // Cast to JSON array
 
@@ -3416,7 +3469,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         $data['$permissions'] = $permissions;
         $newDocument = new Document($data);
 
-        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database) {
+        $setCollection = (function (Document $collection, Document $document) use (&$setCollection, $dbForProject, $database, $auth) {
             $relationships = \array_filter(
                 $collection->getAttribute('attributes', []),
                 fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
@@ -3502,7 +3555,7 @@ Http::patch('/v1/databases/:databaseId/collections/:collectionId/documents/:docu
         }
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $auth) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3575,7 +3628,8 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:doc
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('mode')
-    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, string $mode) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $collectionId, string $documentId, ?\DateTime $requestTimestamp, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, string $mode, Authorization $auth) {
         $database = $auth->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -3612,7 +3666,7 @@ Http::delete('/v1/databases/:databaseId/collections/:collectionId/documents/:doc
         });
 
         // Add $collectionId and $databaseId for all documents
-        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database) {
+        $processDocument = function (Document $collection, Document $document) use (&$processDocument, $dbForProject, $database, $auth) {
             $document->setAttribute('$databaseId', $database->getId());
             $document->setAttribute('$collectionId', $collection->getId());
 
@@ -3674,7 +3728,8 @@ Http::get('/v1/databases/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -3753,7 +3808,8 @@ Http::get('/v1/databases/:databaseId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d'], true), '`Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $database =  $dbForProject->getDocument('databases', $databaseId);
 
@@ -3838,7 +3894,8 @@ Http::get('/v1/databases/:databaseId/collections/:collectionId/usage')
     ->param('collectionId', '', new UID(), 'Collection ID.')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $databaseId, string $range, string $collectionId, Response $response, Database $dbForProject, Authorization $auth) {
 
         $database = $dbForProject->getDocument('databases', $databaseId);
         $collectionDocument = $dbForProject->getDocument('database_' . $database->getInternalId(), $collectionId);

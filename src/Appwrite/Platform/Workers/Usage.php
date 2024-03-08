@@ -4,10 +4,10 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Event\UsageDump;
 use Exception;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 use Utopia\Queue\Message;
 

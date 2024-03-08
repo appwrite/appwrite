@@ -6,8 +6,8 @@ use Appwrite\Event\Event;
 use Appwrite\URL\URL;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
-use Utopia\Http\Http;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 use Utopia\Queue;
 use Utopia\Queue\Client;
 

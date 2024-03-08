@@ -8,7 +8,6 @@ use Appwrite\Event\Delete;
 use Appwrite\Event\Func;
 use Appwrite\Event\Hamster;
 use Appwrite\Platform\Appwrite;
-use Utopia\Http\Http;
 use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\CLI\CLI;
@@ -17,6 +16,7 @@ use Utopia\Config\Config;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Http\Http;
 use Utopia\Logger\Log;
 use Utopia\Platform\Service;
 use Utopia\Pools\Group;
@@ -24,8 +24,6 @@ use Utopia\Queue\Connection;
 use Utopia\Registry\Registry;
 
 global $register;
-
-$auth->disable();
 
 CLI::setResource('register', fn () => $register);
 
@@ -48,7 +46,7 @@ CLI::setResource('pools', function (Registry $register) {
     return $register->get('pools');
 }, ['register']);
 
-CLI::setResource('dbForConsole', function ($pools, $cache) {
+CLI::setResource('dbForConsole', function ($pools, $cache, $auth) {
     $sleep = 3;
     $maxAttempts = 5;
     $attempts = 0;
@@ -64,6 +62,7 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
                 ->getResource();
 
             $dbForConsole = new Database($dbAdapter, $cache);
+            $dbForConsole->setAuthorization($auth);
 
             $dbForConsole
                 ->setNamespace('_console')
@@ -91,12 +90,12 @@ CLI::setResource('dbForConsole', function ($pools, $cache) {
     }
 
     return $dbForConsole;
-}, ['pools', 'cache']);
+}, ['pools', 'cache', 'auth']);
 
-CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache) {
+CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole, $cache, $auth) {
     $databases = []; // TODO: @Meldiron This should probably be responsibility of utopia-php/pools
 
-    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases) {
+    return function (Document $project) use ($pools, $dbForConsole, $cache, &$databases, $auth) {
         if ($project->isEmpty() || $project->getId() === 'console') {
             return $dbForConsole;
         }
@@ -115,6 +114,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
             ->getResource();
 
         $database = new Database($dbAdapter, $cache);
+        $database->setAuthorization($auth);
 
         $databases[$databaseName] = $database;
 
@@ -125,7 +125,7 @@ CLI::setResource('getProjectDB', function (Group $pools, Database $dbForConsole,
 
         return $database;
     };
-}, ['pools', 'dbForConsole', 'cache']);
+}, ['pools', 'dbForConsole', 'cache', 'auth']);
 
 CLI::setResource('queue', function (Group $pools) {
     return $pools->get('queue')->pop()->getResource();
@@ -178,10 +178,19 @@ CLI::setResource('logError', function (Registry $register) {
     };
 }, ['register']);
 
+CLI::setResource('auth', fn () => new Authorization());
+
 $platform = new Appwrite();
 $platform->init(Service::TYPE_CLI);
 
 $cli = $platform->getCli();
+
+$cli
+    ->init()
+    ->inject('auth')
+    ->action(function (Authorization $auth) {
+        $auth->disable();
+    });
 
 $cli
     ->error()

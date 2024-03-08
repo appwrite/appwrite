@@ -5,7 +5,6 @@ use Appwrite\URL\URL as URLParse;
 use Appwrite\Utopia\Response;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -14,15 +13,16 @@ use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Domains\Domain;
-use Utopia\Image\Image;
-use Utopia\Logger\Log;
-use Utopia\Logger\Logger;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\HexColor;
 use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\URL;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Image\Image;
+use Utopia\Logger\Log;
+use Utopia\Logger\Logger;
 
 $avatarCallback = function (string $type, string $code, int $width, int $height, int $quality, Response $response) {
 
@@ -61,7 +61,7 @@ $avatarCallback = function (string $type, string $code, int $width, int $height,
     unset($image);
 };
 
-$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger) {
+$getUserGitHub = function (string $userId, Document $project, Database $dbForProject, Database $dbForConsole, ?Logger $logger, Authorization $auth) {
     try {
         $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
@@ -593,7 +593,8 @@ Http::get('/v1/cards/cloud')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+    ->inject('authp')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
         $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
@@ -605,7 +606,7 @@ Http::get('/v1/cards/cloud')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 
@@ -800,7 +801,8 @@ Http::get('/v1/cards/cloud-back')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
         $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
@@ -811,7 +813,7 @@ Http::get('/v1/cards/cloud-back')
             $userId = $user->getId();
             $email = $user->getAttribute('email', '');
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubId = $gitHub['id'] ?? '';
 
             $isHero = \array_key_exists($email, $heroes);
@@ -878,7 +880,8 @@ Http::get('/v1/cards/cloud-og')
     ->inject('contributors')
     ->inject('employees')
     ->inject('logger')
-    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger) use ($getUserGitHub) {
+    ->inject('auth')
+    ->action(function (string $userId, string $mock, int $width, int $height, Document $user, Document $project, Database $dbForProject, Database $dbForConsole, Response $response, array $heroes, array $contributors, array $employees, ?Logger $logger, Authorization $auth) use ($getUserGitHub) {
         $user = $auth->skip(fn () => $dbForConsole->getDocument('users', $userId));
 
         if ($user->isEmpty() && empty($mock)) {
@@ -894,7 +897,7 @@ Http::get('/v1/cards/cloud-og')
             $email = $user->getAttribute('email', '');
             $createdAt = new \DateTime($user->getCreatedAt());
 
-            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger);
+            $gitHub = $getUserGitHub($user->getId(), $project, $dbForProject, $dbForConsole, $logger, $auth);
             $githubName = $gitHub['name'] ?? '';
             $githubId = $gitHub['id'] ?? '';
 

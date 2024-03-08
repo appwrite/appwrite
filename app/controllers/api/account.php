@@ -28,7 +28,6 @@ use Appwrite\Utopia\Database\Validator\Queries\Identities;
 use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\Audit\Audit as EventAudit;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -45,7 +44,7 @@ use Utopia\Database\Validator\Queries;
 use Utopia\Database\Validator\Query\Limit;
 use Utopia\Database\Validator\Query\Offset;
 use Utopia\Database\Validator\UID;
-use Utopia\Locale\Locale;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Boolean;
@@ -53,6 +52,7 @@ use Utopia\Http\Validator\Host;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\URL;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Locale\Locale;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
 $oauthDefaultFailure = '/auth/oauth2/failure';
@@ -85,7 +85,8 @@ Http::post('/v1/account')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks) {
+    ->inject('auth')
+    ->action(function (string $userId, string $email, string $password, string $name, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
 
         $email = \strtolower($email);
         if ('console' === $project->getId()) {
@@ -186,7 +187,7 @@ Http::post('/v1/account')
             throw new Exception(Exception::USER_ALREADY_EXISTS);
         }
 
-        $auth->unsetRole(Role::guests()->toString());
+        $auth->removeRole(Role::guests()->toString());
         $auth->addRole(Role::user($user->getId())->toString());
         $auth->addRole(Role::users()->toString());
 
@@ -227,7 +228,8 @@ Http::post('/v1/account/sessions/email')
     ->inject('geodb')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks) {
+    ->inject('auth')
+    ->action(function (string $email, string $password, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
         $email = \strtolower($email);
         $protocol = $request->getProtocol();
 
@@ -551,7 +553,8 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents) use ($oauthDefaultSuccess) {
+    ->inject('auth')
+    ->action(function (string $provider, string $code, string $state, string $error, string $error_description, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $auth) use ($oauthDefaultSuccess) {
         $protocol = $request->getProtocol();
         $callback = $protocol . '://' . $request->getHostname() . '/v1/account/sessions/oauth2/callback/' . $provider . '/' . $project->getId();
         $defaultState = ['success' => $project->getAttribute('url', ''), 'failure' => ''];
@@ -1098,7 +1101,8 @@ Http::post('/v1/account/tokens/magic-url')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('Auth')
+    ->action(function (string $userId, string $email, string $url, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
 
         if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
@@ -1340,7 +1344,8 @@ Http::post('/v1/account/tokens/email')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('auth')
+    ->action(function (string $userId, string $email, bool $phrase, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
         if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP disabled');
         }
@@ -1541,7 +1546,7 @@ Http::post('/v1/account/tokens/email')
         ;
     });
 
-$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents) {
+$createSession = function (string $userId, string $secret, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Reader $geodb, Event $queueForEvents, Authorization $auth) {
     $roles = $auth->getRoles();
     $isPrivilegedUser = Auth::isPrivilegedUser($roles);
     $isAppUser = Auth::isAppUser($roles);
@@ -1676,6 +1681,7 @@ Http::put('/v1/account/sessions/magic-url')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('auth')
     ->action($createSession);
 
 Http::put('/v1/account/sessions/phone')
@@ -1706,6 +1712,7 @@ Http::put('/v1/account/sessions/phone')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('auth')
     ->action($createSession);
 
 Http::post('/v1/account/sessions/token')
@@ -1735,6 +1742,7 @@ Http::post('/v1/account/sessions/token')
     ->inject('locale')
     ->inject('geodb')
     ->inject('queueForEvents')
+    ->inject('auth')
     ->action($createSession);
 
 Http::post('/v1/account/tokens/phone')
@@ -1765,7 +1773,8 @@ Http::post('/v1/account/tokens/phone')
     ->inject('queueForEvents')
     ->inject('queueForMessaging')
     ->inject('locale')
-    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale) {
+    ->inject('auth')
+    ->action(function (string $userId, string $phone, Request $request, Response $response, Document $user, Document $project, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Locale $locale, Authorization $auth) {
         if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -1933,7 +1942,8 @@ Http::post('/v1/account/sessions/anonymous')
     ->inject('dbForProject')
     ->inject('geodb')
     ->inject('queueForEvents')
-    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (Request $request, Response $response, Locale $locale, Document $user, Document $project, Database $dbForProject, Reader $geodb, Event $queueForEvents, Authorization $auth) {
         $protocol = $request->getProtocol();
         $roles = $auth->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -2153,7 +2163,8 @@ Http::get('/v1/account/sessions')
     ->inject('user')
     ->inject('locale')
     ->inject('project')
-    ->action(function (Response $response, Document $user, Locale $locale, Document $project) {
+    ->inject('auth')
+    ->action(function (Response $response, Document $user, Locale $locale, Document $project, Authorization $auth) {
 
         $roles = $auth->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -2195,7 +2206,8 @@ Http::get('/v1/account/logs')
     ->inject('locale')
     ->inject('geodb')
     ->inject('dbForProject')
-    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (array $queries, Response $response, Document $user, Locale $locale, Reader $geodb, Database $dbForProject, Authorization $auth) {
 
         try {
             $queries = Query::parseQueries($queries);
@@ -2207,7 +2219,7 @@ Http::get('/v1/account/logs')
         $limit = $grouped['limit'] ?? APP_LIMIT_COUNT;
         $offset = $grouped['offset'] ?? 0;
 
-        $audit = new EventAudit($dbForProject);
+        $audit = new EventAudit($dbForProject, $auth);
 
         $logs = $audit->getLogsByUser($user->getInternalId(), $limit, $offset);
 
@@ -2261,7 +2273,8 @@ Http::get('/v1/account/sessions/:sessionId')
     ->inject('user')
     ->inject('locale')
     ->inject('project')
-    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project) {
+    ->inject('auth')
+    ->action(function (?string $sessionId, Response $response, Document $user, Locale $locale, Document $project, Authorization $auth) {
 
         $roles = $auth->getRoles();
         $isPrivilegedUser = Auth::isPrivilegedUser($roles);
@@ -2416,7 +2429,8 @@ Http::patch('/v1/account/email')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('auth')
+    ->action(function (string $email, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $auth) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2508,7 +2522,8 @@ Http::patch('/v1/account/phone')
     ->inject('queueForEvents')
     ->inject('project')
     ->inject('hooks')
-    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks) {
+    ->inject('auth')
+    ->action(function (string $phone, string $password, ?\DateTime $requestTimestamp, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Document $project, Hooks $hooks, Authorization $auth) {
         // passwordUpdate will be empty if the user has never set a password
         $passwordUpdate = $user->getAttribute('passwordUpdate');
 
@@ -2888,7 +2903,8 @@ Http::post('/v1/account/recovery')
     ->inject('locale')
     ->inject('queueForMails')
     ->inject('queueForEvents')
-    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $email, string $url, Request $request, Response $response, Document $user, Database $dbForProject, Document $project, Locale $locale, Mail $queueForMails, Event $queueForEvents, Authorization $auth) {
 
         if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3065,7 +3081,8 @@ Http::put('/v1/account/recovery')
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('hooks')
-    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks) {
+    ->inject('auth')
+    ->action(function (string $userId, string $secret, string $password, Response $response, Document $user, Database $dbForProject, Document $project, Event $queueForEvents, Hooks $hooks, Authorization $auth) {
         $profile = $dbForProject->getDocument('users', $userId);
 
         if ($profile->isEmpty()) {
@@ -3149,7 +3166,8 @@ Http::post('/v1/account/verification')
     ->inject('locale')
     ->inject('queueForEvents')
     ->inject('queueForMails')
-    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails) {
+    ->inject('auth')
+    ->action(function (string $url, Request $request, Response $response, Document $project, Document $user, Database $dbForProject, Locale $locale, Event $queueForEvents, Mail $queueForMails, Authorization $auth) {
 
         if (empty(Http::getEnv('_APP_SMTP_HOST'))) {
             throw new Exception(Exception::GENERAL_SMTP_DISABLED, 'SMTP Disabled');
@@ -3307,7 +3325,8 @@ Http::put('/v1/account/verification')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $profile = $auth->skip(fn () => $dbForProject->getDocument('users', $userId));
 
@@ -3370,7 +3389,8 @@ Http::post('/v1/account/verification/phone')
     ->inject('queueForMessaging')
     ->inject('project')
     ->inject('locale')
-    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale) {
+    ->inject('auth')
+    ->action(function (Request $request, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Messaging $queueForMessaging, Document $project, Locale $locale, Authorization $auth) {
         if (empty(Http::getEnv('_APP_SMS_PROVIDER'))) {
             throw new Exception(Exception::GENERAL_PHONE_DISABLED, 'Phone provider not configured');
         }
@@ -3479,7 +3499,8 @@ Http::put('/v1/account/verification/phone')
     ->inject('user')
     ->inject('dbForProject')
     ->inject('queueForEvents')
-    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents) {
+    ->inject('auth')
+    ->action(function (string $userId, string $secret, Response $response, Document $user, Database $dbForProject, Event $queueForEvents, Authorization $auth) {
 
         $profile = $auth->skip(fn () => $dbForProject->getDocument('users', $userId));
 
@@ -4227,7 +4248,8 @@ Http::post('/v1/account/targets/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $targetId, string $identifier, string $providerId, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
         $targetId = $targetId == 'unique()' ? ID::unique() : $targetId;
 
         $provider = $auth->skip(fn () => $dbForProject->getDocument('providers', $providerId));
@@ -4299,7 +4321,8 @@ Http::put('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $targetId, string $identifier, Event $queueForEvents, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
 
         $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
@@ -4354,7 +4377,8 @@ Http::delete('/v1/account/targets/:targetId/push')
     ->inject('request')
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $targetId, Event $queueForEvents, Delete $queueForDeletes, Document $user, Request $request, Response $response, Database $dbForProject, Authorization $auth) {
         $target = $auth->skip(fn () => $dbForProject->getDocument('targets', $targetId));
 
         if ($target->isEmpty()) {

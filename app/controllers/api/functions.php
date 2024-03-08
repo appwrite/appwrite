@@ -15,11 +15,11 @@ use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Queries\Deployments;
 use Appwrite\Utopia\Database\Validator\Queries\Executions;
 use Appwrite\Utopia\Database\Validator\Queries\Functions;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Appwrite\Utopia\Response\Model\Rule;
 use Executor\Executor;
 use MaxMind\Db\Reader;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -32,20 +32,21 @@ use Utopia\Database\Helpers\Permission;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Database\Validator\Authorization\Input;
 use Utopia\Database\Validator\Roles;
 use Utopia\Database\Validator\UID;
-use Utopia\Storage\Device;
-use Utopia\Storage\Validator\File;
-use Utopia\Storage\Validator\FileExt;
-use Utopia\Storage\Validator\FileSize;
-use Utopia\Storage\Validator\Upload;
-use Utopia\Swoole\Request;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\ArrayList;
 use Utopia\Http\Validator\Assoc;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Range;
 use Utopia\Http\Validator\Text;
 use Utopia\Http\Validator\WhiteList;
+use Utopia\Storage\Device;
+use Utopia\Storage\Validator\File;
+use Utopia\Storage\Validator\FileExt;
+use Utopia\Storage\Validator\FileSize;
+use Utopia\Storage\Validator\Upload;
 use Utopia\VCS\Adapter\Git\GitHub;
 use Utopia\VCS\Exception\RepositoryNotFound;
 
@@ -479,7 +480,8 @@ Http::get('/v1/functions/:functionId/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -576,7 +578,8 @@ Http::get('/v1/functions/usage')
     ->param('range', '30d', new WhiteList(['24h', '30d', '90d']), 'Date range.', true)
     ->inject('response')
     ->inject('dbForProject')
-    ->action(function (string $range, Response $response, Database $dbForProject) {
+    ->inject('auth')
+    ->action(function (string $range, Response $response, Database $dbForProject, Authorization $auth) {
 
         $periods = Config::getParam('usage', []);
         $stats = $usage = [];
@@ -694,7 +697,8 @@ Http::put('/v1/functions/:functionId')
     ->inject('queueForBuilds')
     ->inject('dbForConsole')
     ->inject('gitHub')
-    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github) use ($redeployVcs) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $name, string $runtime, array $execute, array $events, string $schedule, int $timeout, bool $enabled, bool $logging, string $entrypoint, string $commands, string $installationId, string $providerRepositoryId, string $providerBranch, bool $providerSilentMode, string $providerRootDirectory, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Database $dbForConsole, GitHub $github, Authorization $auth) use ($redeployVcs) {
         // TODO: If only branch changes, re-deploy
 
         $function = $dbForProject->getDocument('functions', $functionId);
@@ -940,7 +944,8 @@ Http::patch('/v1/functions/:functionId/deployments/:deploymentId')
     ->inject('dbForProject')
     ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $deploymentId, Response $response, Database $dbForProject, Event $queueForEvents, Database $dbForConsole, Authorization $auth) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
         $deployment = $dbForProject->getDocument('deployments', $deploymentId);
@@ -1001,7 +1006,8 @@ Http::delete('/v1/functions/:functionId')
     ->inject('queueForDeletes')
     ->inject('queueForEvents')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole) {
+    ->inject('auth')
+    ->action(function (string $functionId, Response $response, Database $dbForProject, Delete $queueForDeletes, Event $queueForEvents, Database $dbForConsole, Authorization $auth) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1451,7 +1457,8 @@ Http::post('/v1/functions/:functionId/deployments/:deploymentId/builds/:buildId'
     ->inject('project')
     ->inject('queueForEvents')
     ->inject('queueForBuilds')
-    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $deploymentId, string $buildId, Request $request, Response $response, Database $dbForProject, Document $project, Event $queueForEvents, Build $queueForBuilds, Authorization $auth) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -1522,7 +1529,8 @@ Http::post('/v1/functions/:functionId/executions')
     ->inject('mode')
     ->inject('queueForFunctions')
     ->inject('geodb')
-    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $body, bool $async, string $path, string $method, array $headers, Response $response, Document $project, Database $dbForProject, Document $user, Event $queueForEvents, Usage $queueForUsage, string $mode, Func $queueForFunctions, Reader $geodb, Authorization $auth) {
 
         $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
@@ -1562,10 +1570,8 @@ Http::post('/v1/functions/:functionId/executions')
             throw new Exception(Exception::BUILD_NOT_READY);
         }
 
-        $validator = new Authorization('execute');
-
-        if (!$validator->isValid($function->getAttribute('execute'))) { // Check if user has write access to execute function
-            throw new Exception(Exception::USER_UNAUTHORIZED, $validator->getDescription());
+        if (!$auth->isValid(new Input('execute', $function->getAttribute('execute')))) { // Check if user has write access to execute function
+            throw new Exception(Exception::USER_UNAUTHORIZED, $auth->getDescription());
         }
 
         $jwt = ''; // initialize
@@ -1803,7 +1809,8 @@ Http::get('/v1/functions/:functionId/executions')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $functionId, array $queries, string $search, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -1883,7 +1890,8 @@ Http::get('/v1/functions/:functionId/executions/:executionId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('mode')
-    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $executionId, Response $response, Database $dbForProject, string $mode, Authorization $auth) {
         $function = $auth->skip(fn () => $dbForProject->getDocument('functions', $functionId));
 
         $isAPIKey = Auth::isAppUser($auth->getRoles());
@@ -1935,7 +1943,8 @@ Http::post('/v1/functions/:functionId/variables')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $key, string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {
@@ -2066,7 +2075,8 @@ Http::put('/v1/functions/:functionId/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $variableId, string $key, ?string $value, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
 
         $function = $dbForProject->getDocument('functions', $functionId);
 
@@ -2124,7 +2134,8 @@ Http::delete('/v1/functions/:functionId/variables/:variableId')
     ->inject('response')
     ->inject('dbForProject')
     ->inject('dbForConsole')
-    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole) {
+    ->inject('auth')
+    ->action(function (string $functionId, string $variableId, Response $response, Database $dbForProject, Database $dbForConsole, Authorization $auth) {
         $function = $dbForProject->getDocument('functions', $functionId);
 
         if ($function->isEmpty()) {

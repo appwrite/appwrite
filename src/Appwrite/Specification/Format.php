@@ -3,13 +3,13 @@
 namespace Appwrite\Specification;
 
 use Appwrite\Utopia\Response\Model;
-use Utopia\Http\Http;
 use Utopia\Config\Config;
+use Utopia\Http\Http;
 use Utopia\Http\Route;
 
 abstract class Format
 {
-    protected Http $app;
+    protected Http $http;
 
     /**
      * @var Route[]
@@ -50,9 +50,9 @@ abstract class Format
         ]
     ];
 
-    public function __construct(Http $app, array $services, array $routes, array $models, array $keys, int $authCount)
+    public function __construct(Http $http, array $services, array $routes, array $models, array $keys, int $authCount)
     {
-        $this->app = $app;
+        $this->http = $http;
         $this->services = $services;
         $this->routes = $routes;
         $this->models = $models;

@@ -102,7 +102,6 @@ use Appwrite\Utopia\Response\Model\User;
 use Appwrite\Utopia\Response\Model\Variable;
 use Appwrite\Utopia\Response\Model\Webhook;
 use Exception;
-use Swoole\Http\Response as SwooleHTTPResponse;
 // Keep last
 use Utopia\Database\Document;
 use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
@@ -313,8 +312,10 @@ class Response extends SwooleResponse
      *
      * @param float $time
      */
-    public function __construct(SwooleHTTPResponse $response)
+    public function __construct(SwooleResponse $swooleResponse)
     {
+        $response = $swooleResponse->getSwooleResponse();
+
         $this
             // General
             ->setModel(new None())

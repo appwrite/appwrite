@@ -3,7 +3,6 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
 use Utopia\Database\Database;
@@ -11,6 +10,7 @@ use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Query;
+use Utopia\Http\Http;
 
 class V19 extends Migration
 {

@@ -6,8 +6,8 @@ use Appwrite\GraphQL\Types\Mapper;
 use GraphQL\Type\Definition\ObjectType;
 use GraphQL\Type\Definition\Type;
 use GraphQL\Type\Schema as GQLSchema;
-use Utopia\Http\Http;
 use Utopia\Exception;
+use Utopia\Http\Http;
 use Utopia\Http\Route;
 
 class Schema
@@ -17,7 +17,7 @@ class Schema
 
     /**
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity  Function to calculate complexity
      * @param callable $attributes  Function to get attributes
      * @param array $urls           Array of functions to get urls for specific method types
@@ -80,7 +80,7 @@ class Schema
      * This function iterates all API routes and builds a GraphQL
      * schema defining types and resolvers for all response models.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @return array
      * @throws Exception
@@ -134,7 +134,7 @@ class Schema
      * Iterates all of a projects attributes and builds GraphQL
      * queries and mutations for the collections they make up.
      *
-     * @param App $utopia
+     * @param Http $utopia
      * @param callable $complexity
      * @param callable $attributes
      * @param array $urls

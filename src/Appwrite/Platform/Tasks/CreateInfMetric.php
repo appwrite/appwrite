@@ -8,8 +8,8 @@ use Utopia\Database\Document;
 use Utopia\Database\Exception;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Database\Query;
-use Utopia\Platform\Action;
 use Utopia\Http\Validator\Text;
+use Utopia\Platform\Action;
 
 class CreateInfMetric extends Action
 {

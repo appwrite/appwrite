@@ -2,9 +2,9 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Http\Http;
 use Utopia\Platform\Action;
 
 class Vars extends Action

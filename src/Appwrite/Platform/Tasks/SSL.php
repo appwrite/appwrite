@@ -3,12 +3,12 @@
 namespace Appwrite\Platform\Tasks;
 
 use Appwrite\Event\Certificate;
-use Utopia\Http\Http;
 use Utopia\CLI\Console;
 use Utopia\Database\Document;
-use Utopia\Platform\Action;
+use Utopia\Http\Http;
 use Utopia\Http\Validator\Boolean;
 use Utopia\Http\Validator\Hostname;
+use Utopia\Platform\Action;
 
 class SSL extends Action
 {

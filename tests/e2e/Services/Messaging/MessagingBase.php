@@ -4,13 +4,13 @@ namespace Tests\E2E\Services\Messaging;
 
 use Appwrite\Messaging\Status as MessageStatus;
 use Tests\E2E\Client;
-use Utopia\Http\Http;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Query;
 use Utopia\DSN\DSN;
+use Utopia\Http\Http;
 
 trait MessagingBase
 {

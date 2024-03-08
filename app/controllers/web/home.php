@@ -1,8 +1,8 @@
 <?php
 
 use Appwrite\Utopia\Response;
-use Utopia\Http\Http;
 use Utopia\Config\Config;
+use Utopia\Http\Http;
 
 Http::get('/versions')
     ->desc('Get Version')

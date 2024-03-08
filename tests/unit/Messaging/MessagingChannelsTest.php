@@ -6,7 +6,6 @@ use Appwrite\Auth\Auth;
 use Appwrite\Messaging\Adapter\Realtime;
 use PHPUnit\Framework\TestCase;
 use Utopia\Database\Document;
-use Utopia\Database\Exception\Authorization;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
 use Utopia\Database\Validator\Authorization as ValidatorAuthorization;
