@@ -419,7 +419,7 @@ App::post('/v1/project/backups-policy')
         $schedule = Authorization::skip(
             fn () => $dbForConsole->createDocument('schedules', new Document([
                 'region' => App::getEnv('_APP_REGION', 'default'), // Todo replace with projects region
-                'resourceType' => BACKUP_RESOURCE_DATABASE,
+                'resourceType' => BACKUP_RESOURCE_PROJECT,
                 'resourceId' => $project->getId(),
                 'resourceInternalId' => $project->getInternalId(),
                 'resourceUpdatedAt' => DateTime::now(),
