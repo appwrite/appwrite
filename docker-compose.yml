@@ -50,8 +50,8 @@ services:
     build:
       context: .
       args:
-        DEBUG: true
-        TESTING: true
+        DEBUG: false
+        TESTING: false
         VERSION: dev
     ports:
       - 9501:80
