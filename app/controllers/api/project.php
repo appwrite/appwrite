@@ -618,3 +618,102 @@ App::delete('/v1/project/backups-policy/:policyId')
 
         $response->noContent();
     });
+
+App::get('/v1/databases/:databaseId/backups-policy/:policyId/backups')
+    ->groups(['api'])
+    ->desc('Get database backups by policy id')
+    ->label('scope', 'projects.read')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'getBackups')
+    ->label('sdk.description', '/docs/references/databases/get-backups.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_OK)
+    ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
+    ->label('sdk.response.model', Response::MODEL_BACKUP_LIST)
+    ->param('policyId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->param('queries', [], new ArrayList(new Text(APP_LIMIT_ARRAY_ELEMENT_SIZE), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of query strings generated using the Query class provided by the SDK. [Learn more about queries](https://appwrite.io/docs/queries). Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' queries are allowed, each ' . APP_LIMIT_ARRAY_ELEMENT_SIZE . ' characters long.', true)
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->inject('dbForConsole')
+    ->action(function (string $policyId, array $queries, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+        $policy = $dbForProject->getDocument('backupsPolicy', $policyId);
+
+        if ($policy->isEmpty()) {
+            throw new Exception(Exception::BACKUP_POLICY_NOT_FOUND);
+        }
+
+        try {
+            $queries = Query::parseQueries($queries);
+        } catch (QueryException $e) {
+            throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
+        }
+
+        $queries[] = Query::equal('policyInternalId', [$policy->getInternalId()]);
+
+        /**
+         * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
+         */
+        $cursor = \array_filter($queries, function ($query) {
+            return \in_array($query->getMethod(), [Query::TYPE_CURSOR_AFTER, Query::TYPE_CURSOR_BEFORE]);
+        });
+        $cursor = reset($cursor);
+        if ($cursor) {
+            /** @var Query $cursor */
+            $backupId = $cursor->getValue();
+            $cursorDocument = $dbForProject->getDocument('backups', $backupId);
+
+            if ($cursorDocument->isEmpty()) {
+                throw new Exception(Exception::GENERAL_CURSOR_NOT_FOUND, "Collection '{$backupId}' for the 'cursor' value not found.");
+            }
+
+            $cursor->setValue($cursorDocument);
+        }
+
+        $response->dynamic(new Document([
+            'backups' => $dbForProject->find('backups', $queries),
+            'total' => $dbForProject->count('backups', $queries, APP_LIMIT_COUNT),
+        ]), Response::MODEL_BACKUP_LIST);
+    });
+
+App::delete('/v1/project/:databaseId/backups/:backupId')
+    ->groups(['api'])
+    ->desc('delete database backup')
+    ->label('scope', 'projects.write')
+    ->label('sdk.auth', [APP_AUTH_TYPE_ADMIN])
+    //->label('event', 'backupPolicy.[functionId].delete')
+    ->label('audits.event', 'backup.delete')
+    ->label('audits.resource', 'backup/{response.$id}')
+    ->label('abuse-key', 'ip:{ip},method:{method},url:{url},userId:{userId}')
+    ->label('abuse-limit', APP_LIMIT_WRITE_RATE_DEFAULT)
+    ->label('abuse-time', APP_LIMIT_WRITE_RATE_PERIOD_DEFAULT)
+    ->label('sdk.auth', [APP_AUTH_TYPE_SESSION, APP_AUTH_TYPE_KEY, APP_AUTH_TYPE_JWT])
+    ->label('sdk.namespace', 'databases')
+    ->label('sdk.method', 'deleteBackup')
+    ->label('sdk.description', '/docs/references/databases/delete-backup.md')
+    ->label('sdk.response.code', Response::STATUS_CODE_NOCONTENT)
+    ->label('sdk.response.model', Response::MODEL_NONE)
+    ->param('databaseId', '', new UID(), 'Database ID.')
+    ->param('backupId', '', new CustomId(), 'Policy ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.')
+    ->inject('request')
+    ->inject('response')
+    ->inject('dbForProject')
+    ->action(function (string $backupId, \Utopia\Swoole\Request $request, Response $response, Database $dbForProject) {
+        $backup = $dbForProject->getDocument('backups', $backupId);
+
+        if ($backup->isEmpty()) {
+            throw new Exception(Exception::BACKUP_NOT_FOUND);
+        }
+
+        // todo worker delete the backup relevant files
+
+        try {
+            Authorization::skip(fn () =>  $dbForProject->deleteDocument('backups', $backupId));
+        } catch (AuthorizationException) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        } catch (RestrictedException) {
+            throw new Exception(Exception::DOCUMENT_DELETE_RESTRICTED);
+        }
+
+        $response->noContent();
+    });

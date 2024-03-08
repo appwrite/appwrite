@@ -4189,7 +4189,7 @@ App::delete('/v1/databases/:databaseId/backups-policy/:policyId')
         $response->noContent();
     });
 
-App::get('/v1/databases/:databaseId/backups/:policyId')
+App::get('/v1/databases/:databaseId/backups-policy/:policyId/backups')
     ->groups(['api', 'database'])
     ->desc('Get database backups by policy id')
     ->label('scope', 'databases.read')
@@ -4225,6 +4225,8 @@ App::get('/v1/databases/:databaseId/backups/:policyId')
         } catch (QueryException $e) {
             throw new Exception(Exception::GENERAL_QUERY_INVALID, $e->getMessage());
         }
+
+        $queries[] = Query::equal('policyInternalId', [$policy->getInternalId()]);
 
         /**
          * Get cursor document if there was a cursor query, we use array_filter and reset for reference $cursor to $queries
@@ -4285,6 +4287,8 @@ App::delete('/v1/databases/:databaseId/backups/:backupId')
         if ($backup->isEmpty()) {
             throw new Exception(Exception::BACKUP_NOT_FOUND);
         }
+
+        // todo worker delete the backup relevant files
 
         try {
             Authorization::skip(fn () =>  $dbForProject->deleteDocument('backups', $backupId));
