@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "Nordamerika",
     "continents.oc": "Ozeanien",
-    "continents.sa": "Südamerika"
+    "continents.sa": "Südamerika",
+    "emails.magicSession.optionButton": "Klicken Sie auf den unten stehenden Button, um sicher in Ihr {{project}}-Konto einzuloggen. Er verfällt in 1 Stunde.",
+    "emails.magicSession.buttonText": "Melden Sie sich bei {{project}} an",
+    "emails.magicSession.clientInfo": "Dieser Anmeldeversuch wurde über {{agentClient}} auf {{agentDevice}} {{agentOs}} angefordert. Wenn Sie die Anmeldung nicht angefordert haben, können Sie diese E-Mail getrost ignorieren.",
+    "sms.verification.body": "{{secret}} ist Ihr {{project}}-Verifizierungscode.",
+    "emails.magicSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wurde.",
+    "emails.magicSession.optionUrl": "Wenn Sie sich nicht über den obigen Button anmelden können, besuchen Sie bitte den folgenden Link:",
+    "emails.otpSession.subject": "{{project}} Anmeldung",
+    "emails.otpSession.hello": "Hallo,",
+    "emails.otpSession.description": "Geben Sie den folgenden Verifizierungscode ein, wenn Sie aufgefordert werden, um sich sicher in Ihrem {{project}} Konto anzumelden. Er verfällt in 15 Minuten.",
+    "emails.otpSession.clientInfo": "Diese Anmeldung wurde über {{agentClient}} auf {{agentDevice}} {{agentOs}} angefordert. Wenn Sie die Anmeldung nicht angefordert haben, können Sie diese E-Mail getrost ignorieren.",
+    "emails.otpSession.securityPhrase": "Die Sicherheitsphrase für diese E-Mail lautet {{phrase}}. Sie können dieser E-Mail vertrauen, wenn diese Phrase mit der Phrase übereinstimmt, die beim Anmelden angezeigt wird.",
+    "emails.otpSession.thanks": "Danke,",
+    "emails.otpSession.signature": "{{project}} Team"
 }

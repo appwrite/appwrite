@@ -1,5 +1,5 @@
 {
-    "settings.inspire": "\"Kunsten at være klog er kunsten at vide, hvad man skal overse.\"",  
+    "settings.inspire": "\"Kunsten at være klog er kunsten at vide, hvad man skal overse.\"",
     "settings.locale": "da",
     "settings.direction": "ltr",
     "emails.sender": "%s Team",
@@ -228,5 +228,18 @@
     "continents.eu": "Europa",
     "continents.na": "Nordamerica",
     "continents.oc": "Oceanien",
-    "continents.sa": "Sydamerica"
+    "continents.sa": "Sydamerica",
+    "emails.magicSession.optionButton": "Klik på knappen nedenfor for sikkert at logge ind på din {{project}} konto. Den udløber om 1 time.",
+    "emails.magicSession.buttonText": "Log ind på {{project}}",
+    "emails.magicSession.clientInfo": "Denne log ind blev anmodet ved hjælp af {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke anmodede om log ind, kan du trygt ignorere denne e-mail.",
+    "sms.verification.body": "{{secret}} er din {{project}} bekræftelseskode.",
+    "emails.magicSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher den viste frase under log ind.",
+    "emails.magicSession.optionUrl": "Hvis du ikke kan logge ind ved at bruge knappen ovenfor, besøg venligst følgende link:",
+    "emails.otpSession.subject": "{{project}} Login",
+    "emails.otpSession.hello": "Hej,",
+    "emails.otpSession.description": "Indtast følgende bekræftelseskode, når du bliver bedt om det, for sikkert at logge ind på din {{project}} konto. Den udløber om 15 minutter.",
+    "emails.otpSession.clientInfo": "Denne indlogning blev anmodet om ved hjælp af {{agentClient}} på {{agentDevice}} {{agentOs}}. Hvis du ikke har anmodet om indlogningen, kan du trygt ignorere denne e-mail.",
+    "emails.otpSession.securityPhrase": "Sikkerhedsfrasen for denne e-mail er {{phrase}}. Du kan stole på denne e-mail, hvis denne frase matcher frasen vist under login.",
+    "emails.otpSession.thanks": "Tak,",
+    "emails.otpSession.signature": "{{project}} team"
 }

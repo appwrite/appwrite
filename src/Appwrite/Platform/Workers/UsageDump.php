@@ -4,11 +4,11 @@ namespace Appwrite\Platform\Workers;
 
 use Appwrite\Extend\Exception;
 use Utopia\App;
+use Utopia\CLI\Console;
+use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate;
 use Utopia\Platform\Action;
-use Utopia\CLI\Console;
-use Utopia\Database\DateTime;
 use Utopia\Queue\Message;
 
 class UsageDump extends Action
@@ -30,14 +30,12 @@ class UsageDump extends Action
      */
     public function __construct()
     {
-
         $this
             ->inject('message')
             ->inject('getProjectDB')
             ->callback(function (Message $message, callable $getProjectDB) {
                 $this->action($message, $getProjectDB);
-            })
-        ;
+            });
     }
 
     /**
@@ -49,13 +47,12 @@ class UsageDump extends Action
      */
     public function action(Message $message, callable $getProjectDB): void
     {
-
         $payload = $message->getPayload() ?? [];
         if (empty($payload)) {
             throw new Exception('Missing payload');
         }
 
-        //Todo rename both usage workers @shimonewman
+        // TODO: rename both usage workers @shimonewman
         foreach ($payload['stats'] ?? [] as $stats) {
             $project = new Document($stats['project'] ?? []);
             $numberOfKeys = !empty($stats['keys']) ? count($stats['keys']) : 0;

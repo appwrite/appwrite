@@ -692,7 +692,7 @@ App::get('/v1/health/queue/usage-dump')
     ->label('scope', 'health.read')
     ->label('sdk.auth', [APP_AUTH_TYPE_KEY])
     ->label('sdk.namespace', 'health')
-    ->label('sdk.method', 'getQueueUsage')
+    ->label('sdk.method', 'getQueueUsageDump')
     ->label('sdk.description', '/docs/references/health/get-queue-usage-dump.md')
     ->label('sdk.response.code', Response::STATUS_CODE_OK)
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
@@ -768,11 +768,11 @@ App::get('/v1/health/storage')
     ->label('sdk.response.type', Response::CONTENT_TYPE_JSON)
     ->label('sdk.response.model', Response::MODEL_HEALTH_STATUS)
     ->inject('response')
-    ->inject('deviceFiles')
-    ->inject('deviceFunctions')
-    ->inject('deviceBuilds')
-    ->action(function (Response $response, Device $deviceFiles, Device $deviceFunctions, Device $deviceBuilds) {
-        $devices = [$deviceFiles, $deviceFunctions, $deviceBuilds];
+    ->inject('deviceForFiles')
+    ->inject('deviceForFunctions')
+    ->inject('deviceForBuilds')
+    ->action(function (Response $response, Device $deviceForFiles, Device $deviceForFunctions, Device $deviceForBuilds) {
+        $devices = [$deviceForFiles, $deviceForFunctions, $deviceForBuilds];
         $checkStart = \microtime(true);
 
         foreach ($devices as $device) {
@@ -828,7 +828,7 @@ App::get('/v1/health/anti-virus')
             try {
                 $output['version'] = @$antivirus->version();
                 $output['status'] = (@$antivirus->ping()) ? 'pass' : 'fail';
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 throw new Exception(Exception::GENERAL_SERVER_ERROR, 'Antivirus is not available');
             }
         }
@@ -888,8 +888,8 @@ App::get('/v1/health/stats') // Currently only used internally
     ->label('docs', false)
     ->inject('response')
     ->inject('register')
-    ->inject('deviceFiles')
-    ->action(function (Response $response, Registry $register, Device $deviceFiles) {
+    ->inject('deviceForFiles')
+    ->action(function (Response $response, Registry $register, Device $deviceForFiles) {
 
         $cache = $register->get('cache');
 
@@ -898,9 +898,9 @@ App::get('/v1/health/stats') // Currently only used internally
         $response
             ->json([
                 'storage' => [
-                    'used' => Storage::human($deviceFiles->getDirectorySize($deviceFiles->getRoot() . '/')),
-                    'partitionTotal' => Storage::human($deviceFiles->getPartitionTotalSpace()),
-                    'partitionFree' => Storage::human($deviceFiles->getPartitionFreeSpace()),
+                    'used' => Storage::human($deviceForFiles->getDirectorySize($deviceForFiles->getRoot() . '/')),
+                    'partitionTotal' => Storage::human($deviceForFiles->getPartitionTotalSpace()),
+                    'partitionFree' => Storage::human($deviceForFiles->getPartitionFreeSpace()),
                 ],
                 'cache' => [
                     'uptime' => $cacheStats['uptime_in_seconds'] ?? 0,

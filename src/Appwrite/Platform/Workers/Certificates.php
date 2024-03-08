@@ -47,7 +47,7 @@ class Certificates extends Action
             ->inject('queueForEvents')
             ->inject('queueForFunctions')
             ->inject('log')
-            ->callback(fn(Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
+            ->callback(fn (Message $message, Database $dbForConsole, Mail $queueForMails, Event $queueForEvents, Func $queueForFunctions, Log $log) => $this->action($message, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log));
     }
 
     /**
@@ -56,6 +56,7 @@ class Certificates extends Action
      * @param Mail $queueForMails
      * @param Event $queueForEvents
      * @param Func $queueForFunctions
+     * @param Log $log
      * @return void
      * @throws Throwable
      * @throws \Utopia\Database\Exception
@@ -71,6 +72,8 @@ class Certificates extends Action
         $document = new Document($payload['domain'] ?? []);
         $domain   = new Domain($document->getAttribute('domain', ''));
         $skipRenewCheck = $payload['skipRenewCheck'] ?? false;
+
+        $log->addTag('domain', $domain->get());
 
         $this->execute($domain, $dbForConsole, $queueForMails, $queueForEvents, $queueForFunctions, $log, $skipRenewCheck);
     }
@@ -433,12 +436,17 @@ class Certificates extends Action
         // Log error into console
         Console::warning('Cannot renew domain (' . $domain . ') on attempt no. ' . $attempt . ' certificate: ' . $errorMessage);
 
-        // Send mail to administratore mail
-
         $locale = new Locale(App::getEnv('_APP_LOCALE', 'en'));
-        if (!$locale->getText('emails.sender') || !$locale->getText("emails.certificate.hello") || !$locale->getText("emails.certificate.subject") || !$locale->getText("emails.certificate.body") || !$locale->getText("emails.certificate.footer") || !$locale->getText("emails.certificate.thanks") || !$locale->getText("emails.certificate.signature")) {
-            $locale->setDefault('en');
-        }
+
+        // Send mail to administratore mail
+        $template = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-certificate-failed.tpl');
+        $template->setParam('{{domain}}', $domain);
+        $template->setParam('{{error}}', \nl2br($errorMessage));
+        $template->setParam('{{attempts}}', $attempt);
+
+        // TODO: Use setbodyTemplate once #7307 is merged
+        $subject = 'Certificate failed to generate';
+        $body = Template::fromFile(__DIR__ . '/../../../../app/config/locale/templates/email-base-styled.tpl');
 
         $subject = \sprintf($locale->getText("emails.certificate.subject"), $domain);
 
@@ -461,11 +469,11 @@ class Certificates extends Action
         ];
 
         $queueForMails
-            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->setSubject($subject)
             ->setBody($body)
-            ->setVariables($emailVariables)
             ->setName('Appwrite Administrator')
+            ->setVariables($emailVariables)
+            ->setRecipient(App::getEnv('_APP_SYSTEM_SECURITY_EMAIL_ADDRESS'))
             ->trigger();
     }
 
@@ -526,7 +534,7 @@ class Certificates extends Action
                 'ruleId' => $rule->getId(),
             ]);
             $target = Realtime::fromPayload(
-            // Pass first, most verbose event pattern
+                // Pass first, most verbose event pattern
                 event: $allEvents[0],
                 payload: $rule,
                 project: $project

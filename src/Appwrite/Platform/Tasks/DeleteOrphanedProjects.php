@@ -3,13 +3,13 @@
 namespace Appwrite\Platform\Tasks;
 
 use Utopia\App;
+use Utopia\Cache\Cache;
+use Utopia\CLI\Console;
 use Utopia\Config\Config;
+use Utopia\Database\Database;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Query;
 use Utopia\Platform\Action;
-use Utopia\Cache\Cache;
-use Utopia\CLI\Console;
-use Utopia\Database\Database;
 use Utopia\Pools\Group;
 use Utopia\Registry\Registry;
 use Utopia\Validator\Boolean;
@@ -90,12 +90,12 @@ class DeleteOrphanedProjects extends Action
                         ->getResource();
 
                     $dbForProject = new Database($adapter, $cache);
-                    $dbForProject->setDefaultDatabase('appwrite');
+                    $dbForProject->setDatabase('appwrite');
                     $dbForProject->setNamespace('_' . $project->getInternalId());
 
                     $collectionsCreated = 0;
                     $cnt++;
-                    if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
+                    if ($dbForProject->exists($dbForProject->getDatabase(), Database::METADATA)) {
                         $collectionsCreated = $dbForProject->count(Database::METADATA);
                     }
 
@@ -113,7 +113,7 @@ class DeleteOrphanedProjects extends Action
                         foreach ($collections as $collection) {
                             if ($commit) {
                                 $dbForProject->deleteCollection($collection->getId());
-                                $dbForConsole->deleteCachedCollection($collection->getId());
+                                $dbForConsole->purgeCachedCollection($collection->getId());
                             }
                             Console::info('--Deleting collection  (' . $collection->getId() . ') project no (' . $project->getInternalId() . ')');
                         }
@@ -121,12 +121,12 @@ class DeleteOrphanedProjects extends Action
 
                     if ($commit) {
                         $dbForConsole->deleteDocument('projects', $project->getId());
-                        $dbForConsole->deleteCachedDocument('projects', $project->getId());
+                        $dbForConsole->purgeCachedDocument('projects', $project->getId());
 
                         if ($dbForProject->exists($dbForProject->getDefaultDatabase(), Database::METADATA)) {
                             try {
                                 $dbForProject->deleteCollection(Database::METADATA);
-                                $dbForProject->deleteCachedCollection(Database::METADATA);
+                                $dbForProject->purgeCachedCollection(Database::METADATA);
                             } catch (\Throwable $th) {
                                 Console::warning('Metadata collection does not exist');
                             }
