@@ -1351,18 +1351,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             throw new Exception(Exception::STORAGE_BUCKET_NOT_FOUND);
         }
 
-        $fileSecurity = $bucket->getAttribute('fileSecurity', false);
-        $validator = new Authorization(Database::PERMISSION_READ);
-        $valid = $validator->isValid($bucket->getRead());
-        if (!$fileSecurity && !$valid) {
-            throw new Exception(Exception::USER_UNAUTHORIZED);
-        }
-
-        if ($fileSecurity && !$valid) {
-            $file = $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId);
-        } else {
-            $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
-        }
+        $file = Authorization::skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getInternalId(), $fileId));
 
         if ($file->isEmpty()) {
             throw new Exception(Exception::STORAGE_FILE_NOT_FOUND);
@@ -1388,8 +1377,7 @@ App::get('/v1/storage/buckets/:bucketId/files/:fileId/push')
             ->addHeader('X-Content-Type-Options', 'nosniff')
             ->addHeader('Content-Disposition', 'inline; filename="' . $file->getAttribute('name', '') . '"')
             ->addHeader('Expires', \date('D, d M Y H:i:s', \time() + (60 * 60 * 24 * 45)) . ' GMT') // 45 days cache
-            ->addHeader('X-Peak', \memory_get_peak_usage())
-        ;
+            ->addHeader('X-Peak', \memory_get_peak_usage());
 
         $size = $file->getAttribute('sizeOriginal', 0);
 
