@@ -1,3 +1,9 @@
+# Version 1.5.1
+## What's Changed
+* fix: usage containers by @TorstenDittmann in https://github.com/appwrite/appwrite/pull/7757
+
+**Full Changelog**: https://github.com/appwrite/appwrite/compare/1.5.0...1.5.
+
 # Version 1.5.0
 ## What's Changed
 ### New features
